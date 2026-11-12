@@ -3,6 +3,7 @@ import { Clock, GitBranch, Server, Tag } from 'lucide-react'
 import { useState } from 'react'
 
 import { Chip, type ChipTone } from '@winterop-com/sokkel-ui/Chip'
+import { KIND_COLORS } from '@winterop-com/sokkel-ui/lib/kind'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
@@ -39,6 +40,20 @@ export const Hues: StoryObj = {
             <Chip hue={3}>check</Chip>
             <Chip hue={4}>sink</Chip>
             <Chip hue={5}>notice</Chip>
+        </Row>
+    ),
+}
+
+/** Every kind color by name, the one a label, a calendar or a person wears, for a chip whose category already has a kind color. */
+export const KindHues: StoryObj = {
+    name: 'Kind hues',
+    render: () => (
+        <Row gap="xs" wrap>
+            {KIND_COLORS.map((color) => (
+                <Chip key={color} hue={color}>
+                    {color}
+                </Chip>
+            ))}
         </Row>
     ),
 }

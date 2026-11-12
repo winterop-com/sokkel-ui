@@ -159,12 +159,17 @@ export interface NodeWidthBounds {
     max?: number
 }
 
-/** The size a node box is drawn at, so none of its words is cut short of the widest a box may be. */
+/**
+ * The size a node box is drawn at, so none of its words is cut short of the widest a box may be.
+ * Each measured run of words is rounded up to a whole pixel before the parts of a line are summed,
+ * so the line never comes out a fraction narrower than the browser draws it.
+ */
 export function graphNodeSize(
     data: GraphNodeData,
-    measure: Measure,
+    exact: Measure,
     { min = NODE_MIN_WIDTH, max = NODE_MAX_WIDTH }: NodeWidthBounds = {},
 ): { width: number; height: number } {
+    const measure: Measure = (text, font) => Math.ceil(exact(text, font))
     const { title, named, line, duration } = linesOf(data)
     const counted = data.count === undefined ? 0 : GAP + countWidth(data, measure)
     const onLine = data.countPlacement === 'line'

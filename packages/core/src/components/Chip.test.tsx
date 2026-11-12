@@ -26,6 +26,16 @@ describe('Chip', () => {
         expect(html).not.toContain('critical')
     })
 
+    it('wears a kind color by name as its wash and ink', () => {
+        const html = renderToStaticMarkup(
+            <Chip tone="warning" hue="violet">
+                transform
+            </Chip>,
+        )
+        expect(html).toContain('bg-kind-violet/15 text-kind-violet-ink')
+        expect(html).not.toContain('warning')
+    })
+
     it('is words alone without handlers, the code face with mono, and says its title on hover', () => {
         const html = renderToStaticMarkup(
             <Chip mono title="nightly-export">

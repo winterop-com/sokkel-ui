@@ -197,6 +197,16 @@ describe('node width from words', () => {
         expect(chip('retry in 9s')).toEqual(chip('retry in 12s'))
     })
 
+    test('rounds each measured part of a line up, so a sub-pixel never cuts the title beside its badge', () => {
+        // Fractions that sum to a whole pixel less than the parts as drawn: 'archive' at 49.4 and
+        // 'not installed' at 70.4 make 119.8, rounded once to 120, where the browser lays out 50 + 71.
+        const fractional: Measure = (text) => (text === 'archive' ? 49.4 : text === 'not installed' ? 70.4 : text.length * 10)
+        const whole: Measure = (text, font) => Math.ceil(fractional(text, font))
+        const data = { code: 'archive', badge: { label: 'not installed', tone: 'critical' as const } }
+        expect(graphNodeSize(data, fractional)).toEqual(graphNodeSize(data, whole))
+        expect(graphNodeSize(data, fractional).width).toBe(22 + 50 + 6 + 10 + 71)
+    })
+
     test('keeps room for the badges and the issue mark a box may come to wear', () => {
         const room = { reserveBadges: ['edited', 'not installed'], reserveIssue: true }
         const plain = graphNodeSize({ code: 'transform', ...room }, tens)
