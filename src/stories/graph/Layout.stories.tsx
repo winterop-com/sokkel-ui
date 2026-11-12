@@ -65,7 +65,14 @@ function InSection() {
                 actions={
                     <>
                         <GraphLayoutMenu value={layout} onValueChange={setLayout} closeOnChoice />
-                        <GraphViewButtons controls={controls} />
+                        <GraphViewButtons
+                            controls={controls}
+                            words={{
+                                zoomInHint: 'Zoom in, or scroll up over the graph',
+                                zoomOutHint: 'Zoom out, or scroll down over the graph',
+                                fitHint: 'Fit the whole graph in view',
+                            }}
+                        />
                     </>
                 }
             >
@@ -152,7 +159,7 @@ export const Wrapped: Story = {
 
 /**
  * A run filling a section (`frame="filled"`: the section's own ground, no dots, each wheel notch one
- * zoom step), its head carrying a `GraphLayoutMenu` that closes on a choice and zoom buttons reached through `onControls`.
- * Choosing another layout fits the graph again, even after it was moved.
+ * zoom step), its head carrying a `GraphLayoutMenu` that closes on a choice and zoom buttons reached through `onControls`,
+ * each with a tooltip saying how else the graph zooms. Choosing another layout fits the graph again, even after it was moved.
  */
 export const InASection: Story = { name: 'In a section', render: () => <InSection /> }

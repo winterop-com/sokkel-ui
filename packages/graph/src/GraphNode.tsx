@@ -67,7 +67,10 @@ export interface GraphNodeData extends Record<string, unknown> {
 /** A short word on a node box's title line. */
 export interface GraphNodeBadge {
     label: string
-    /** Neutral by default. */
+    /**
+     * Neutral by default. A critical or warning badge also gives the box the edge an issue of its tone
+     * gives, so a step that cannot run reads so on the graph without an issue of its own.
+     */
     tone?: 'neutral' | 'critical' | 'warning'
     /** What pointing at the badge says. */
     title?: string
@@ -120,6 +123,11 @@ const DURATION_ROOM = '59m 59s'
 /** A node box's padding and border across, and the room a dot, a glyph and a gap take. */
 const CHROME = 22
 const GAP = 6
+/**
+ * The gap on the code line between its words and what ends it (a duration, a count): the one number
+ * the measure counts and the class the line is drawn with.
+ */
+export const LINE_GAP = { px: 8, className: 'gap-2' } as const
 const DOT = 8
 const GLYPH = 12
 /** The room an issue mark takes. */
@@ -172,10 +180,11 @@ export function graphNodeSize(
     )
     // A box with a state keeps room for a duration, so its step ending does not widen it.
     const timed = duration !== null || data.status !== undefined
-    const took = timed
-        ? GAP + 2 + Math.max(duration === null ? 0 : measure(duration, 'small-mono'), measure(DURATION_ROOM, 'small-mono'))
-        : 0
-    const foot = said + took + (onLine ? counted : 0)
+    const ends = [
+        ...(timed ? [Math.max(duration === null ? 0 : measure(duration, 'small-mono'), measure(DURATION_ROOM, 'small-mono'))] : []),
+        ...(onLine && data.count !== undefined ? [countWidth(data, measure)] : []),
+    ]
+    const foot = said + (ends.length === 0 ? 0 : LINE_GAP.px + ends.reduce((sum, each) => sum + each, 0) + GAP * (ends.length - 1))
     const chips = (data.items ?? []).map((item) => chipWidth(item, measure))
     const strip = data.itemsSummary !== undefined ? measure(data.itemsSummary, 'small') : Math.min(STRIP_ROOM, rowWidth(chips))
     const widest = Math.max(head + (onLine ? 0 : counted), foot, strip, ...chips)
@@ -232,6 +241,11 @@ const ISSUE_BOX = {
     critical: 'border-critical/80 hover:border-critical',
     warning: 'border-warning/80 hover:border-warning',
 } as const
+
+/** The worst of a box's tones that take an edge: critical over warning, and null when none does. */
+function worstTone(tones: readonly (string | null | undefined)[]): keyof typeof ISSUE_BOX | null {
+    return tones.includes('critical') ? 'critical' : tones.includes('warning') ? 'warning' : null
+}
 
 /**
  * The border and ground each status gives a box: an ended state its ink, a live one its hue, a
@@ -347,9 +361,10 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
     const look = useStatus(status ?? '')
     // A run state wears its own classes; an app's state the run state its color is, or the edge an issue of its color gives.
     const run = status === undefined ? undefined : isRunStatus(status) ? status : isRunStatus(look.color) ? look.color : undefined
-    const edge = run === undefined && (look.color === 'critical' || look.color === 'warning') ? ISSUE_BOX[look.color] : undefined
     const progress = data.progress === undefined ? null : Math.min(1, Math.max(0, data.progress))
     const issue = data.issues === undefined ? null : worst(data.issues)
+    // The edge is the worst tone among the issues, the badge and an app's state with no run color.
+    const edge = worstTone([issue, data.badge?.tone, run === undefined ? look.color : undefined])
     const hint = data.hint === undefined || data.hint === '' ? undefined : data.hint
     // What the box is doing has no line of its own, so it follows whichever word is pointed at.
     const titled = (words: string) => (hint === undefined ? words : `${words}\n${hint}`)
@@ -368,8 +383,7 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                 data.shape === 'round' ? 'rounded-[calc(var(--radius-node)*3)] px-3.5' : 'rounded-node',
                 data.source === true && SOURCE,
                 run !== undefined && BOX[run],
-                edge,
-                issue !== null && ISSUE_BOX[issue],
+                edge !== null && ISSUE_BOX[edge],
                 selected && 'outline-2 outline-offset-2 outline-foreground outline-solid',
                 className,
             )}
@@ -417,7 +431,10 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
             {(line !== '' || duration !== null || status !== undefined || countOnLine || (data.reserve ?? []).length > 0) && (
                 <div
                     data-slot="graph-node-line"
-                    className="flex min-h-4 min-w-0 items-baseline gap-2 font-mono text-graph-small text-muted-foreground"
+                    className={cn(
+                        'flex min-h-4 min-w-0 items-baseline font-mono text-graph-small text-muted-foreground',
+                        LINE_GAP.className,
+                    )}
                 >
                     <span title={titled(data.lineHint ?? line)} className="min-w-0 truncate">
                         {line}

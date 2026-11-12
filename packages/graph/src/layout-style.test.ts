@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { graphNodeSize, NODE_MAX_WIDTH, NODE_MIN_WIDTH } from './GraphNode'
+import { graphNodeSize, LINE_GAP, NODE_MAX_WIDTH, NODE_MIN_WIDTH } from './GraphNode'
 import {
     edgePath,
     elkOptions,
@@ -218,6 +218,15 @@ describe('node width from words', () => {
         expect(onLine.height).toBe(44)
         const wide = { code: 'split', kind: 'python', status: 'running', count: '64 items' }
         expect(graphNodeSize({ ...wide, countPlacement: 'line' }, tens).width).toBeGreaterThan(graphNodeSize(wide, tens).width)
+    })
+
+    test('counts the gap the code line is drawn with before a count placed on it', () => {
+        // The class is a step of the spacing scale, a quarter of a rem (4px) each.
+        expect(Number(LINE_GAP.className.replace('gap-', '')) * 4).toBe(LINE_GAP.px)
+        const counted = { code: 'transform', kind: 'python-script', count: '×4', countPlacement: 'line' as const }
+        expect(graphNodeSize(counted, tens).width).toBe(130 + LINE_GAP.px + 20 + 22)
+        const timed = { ...counted, status: 'running', duration_ms: 1000 }
+        expect(graphNodeSize(timed, tens).width).toBe(130 + LINE_GAP.px + 70 + 6 + 20 + 22)
     })
 
     test('grows a fan-out taller as its chips wrap, and wider only up to the strip', () => {

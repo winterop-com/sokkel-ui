@@ -63,7 +63,7 @@ export function BlockRow({ block, active = false, showDescription = false }: Blo
                 )}
             </span>
             {badge !== null && (
-                <Chip tone={badge.tone} title={badge.title} className="self-start">
+                <Chip tone={badge.tone} hue={badge.hue} title={badge.title} className="self-start">
                     {badge.label}
                 </Chip>
             )}

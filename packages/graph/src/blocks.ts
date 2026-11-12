@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 
-import type { ChipTone } from '@winterop-com/sokkel-ui/Chip'
+import type { ChipHue, ChipTone } from '@winterop-com/sokkel-ui/Chip'
 
 /** A kind of step a pipeline can be built from, as a palette or a picker offers it. */
 export interface PipelineBlock {
@@ -12,17 +12,19 @@ export interface PipelineBlock {
     /** The id of the group it is listed under. */
     group: string
     icon?: ComponentType<{ className?: string }>
-    /** A short word at the row's end, such as what sort of block it is: plain words in a neutral chip, or a label in a tone. */
+    /** A short word at the row's end, such as what sort of block it is: plain words in a neutral chip, or a label in a tone or a category's hue. */
     badge?: string | PipelineBlockBadge
     /** Other words a search finds the block by. */
     keywords?: readonly string[]
 }
 
-/** A block's badge in a tone of its own, as a chip wears it. */
+/** A block's badge in a tone or a category's hue, as a chip wears it. */
 export interface PipelineBlockBadge {
     label: string
     /** Neutral by default. */
     tone?: ChipTone
+    /** The hue of the block's category, from the chart palette, worn in place of the tone: the same hue for every block of one category. */
+    hue?: ChipHue
     /** What pointing at the badge says. */
     title?: string
 }

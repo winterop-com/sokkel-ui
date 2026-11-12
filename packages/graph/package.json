@@ -34,6 +34,10 @@
             "types": "./dist/blocks.d.ts",
             "import": "./dist/blocks.js"
         },
+        "./cycles": {
+            "types": "./dist/cycles.d.ts",
+            "import": "./dist/cycles.js"
+        },
         "./DependencyGraph": {
             "types": "./dist/DependencyGraph.d.ts",
             "import": "./dist/DependencyGraph.js"

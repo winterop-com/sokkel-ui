@@ -18,8 +18,11 @@ import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
 import { NIGHTLY_EXPORT } from './data'
 import { BLOCKS, GROUPS } from './editor/blocks'
 
-/** Every way a node box is drawn: named or not, with a kind, a status, a duration, progress, and chosen. */
-const BOXES: { data: GraphNodeData; selected?: boolean; width: number }[] = [
+/**
+ * Every way a node box is drawn: named or not, with a kind, a status, a duration, progress, a count
+ * on the code line, a badge in a tone, and chosen. A box with no width is sized from its words.
+ */
+const BOXES: { data: GraphNodeData; selected?: boolean; width?: number }[] = [
     { data: { code: 'fetch' }, width: 120 },
     { data: { code: 'transform', kind: 'sql' }, width: 140 },
     { data: { code: 'upload', name: 'Upload to storage', kind: 's3' }, width: 170 },
@@ -30,6 +33,16 @@ const BOXES: { data: GraphNodeData; selected?: boolean; width: number }[] = [
     { data: { code: 'notify', kind: 'webhook', status: 'skipped' }, width: 150 },
     { data: { code: 'import-orders', name: 'Import orders', status: 'completed_with_errors', duration_ms: 64_000 }, width: 190 },
     { data: { code: 'rebuild-index', status: 'cancelled', duration_ms: 4000 }, width: 170 },
+    { data: { code: 'transform', name: 'Reshape', kind: 'python', count: '4 items', countPlacement: 'line' } },
+    { data: { code: 'validate', kind: 'schema', badge: { label: 'beta', tone: 'warning', title: 'Its settings may still change' } } },
+    {
+        data: {
+            code: 'upload',
+            name: 'Upload to storage',
+            kind: 's3',
+            badge: { label: 'not installed', tone: 'critical', title: 'The s3 block is not installed on worker' },
+        },
+    },
     { data: { code: 'sync-inventory', name: 'Sync inventory', kind: 'http', status: 'succeeded' }, selected: true, width: 170 },
 ]
 
@@ -37,7 +50,10 @@ function Boxes() {
     return (
         <Row gap="xl" align="stretch" wrap className="min-h-svh content-start bg-canvas p-6">
             {BOXES.map((box, index) => (
-                <div key={index} style={{ width: box.width, height: graphNodeSize(box.data, measureByCharacters).height }}>
+                <div
+                    key={index}
+                    style={{ ...graphNodeSize(box.data, measureByCharacters), ...(box.width === undefined ? {} : { width: box.width }) }}
+                >
                     <GraphNodeBox data={box.data} selected={box.selected} />
                 </div>
             ))}
@@ -216,7 +232,7 @@ export const Empty: Story = { render: () => <Nothing /> }
  */
 export const EmptyWithTools: Story = { name: 'Empty with tools', render: () => <Adding initial={[]} opened="button" /> }
 
-/** A node box in every state it is drawn in; the last one is chosen. */
+/** A node box in every state it is drawn in, a critical or warning badge edging it as an issue of its tone would; the last one is chosen. */
 export const NodeBoxes: Story = { name: 'Node boxes', render: () => <Boxes /> }
 
 /** A graph none of the views cover, built from the canvas, the node box and the layout hook, with labeled edges. */
