@@ -21,6 +21,7 @@ function Laid({
     minNodeWidth,
     maxNodeWidth,
     wrapWidth,
+    wrapToCanvas,
 }: {
     steps: PipelineStep[]
     title: string
@@ -28,6 +29,7 @@ function Laid({
     routing?: GraphRouting
     spacing?: GraphSpacing
     wrapWidth?: number
+    wrapToCanvas?: boolean
     minNodeWidth?: number
     maxNodeWidth?: number
 }) {
@@ -43,6 +45,7 @@ function Laid({
                 minNodeWidth={minNodeWidth}
                 maxNodeWidth={maxNodeWidth}
                 wrapWidth={wrapWidth}
+                wrapToCanvas={wrapToCanvas}
                 words={{ label: title }}
             />
         </Stage>
@@ -62,7 +65,7 @@ function InSection() {
                 className="min-w-0 flex-1"
                 actions={
                     <>
-                        <GraphLayoutMenu value={layout} onValueChange={setLayout} />
+                        <GraphLayoutMenu value={layout} onValueChange={setLayout} closeOnChoice />
                         <GraphToolbarButton label="Zoom out" onClick={controls?.zoomOut} disabled={controls === null || controls.empty}>
                             <Minus aria-hidden />
                         </GraphToolbarButton>
@@ -147,14 +150,18 @@ export const RunInSplines: Story = {
     ),
 }
 
-/** `wrapWidth={1120}`: rebuild-index, too wide for one row, cut into rows stacked down, each carrying on from the one above. */
+/**
+ * `wrapToCanvas` with `wrapWidth={1120}`: rebuild-index, too wide for one row, cut into rows as wide
+ * as the canvas holds at the least fit zoom and never past 1120px, stacked down, each carrying on
+ * from the one above.
+ */
 export const Wrapped: Story = {
-    render: () => <Laid steps={LARGE} title="rebuild-index" meta="harbor, 57 steps wrapped at 1120px" wrapWidth={1120} />,
+    render: () => <Laid steps={LARGE} title="rebuild-index" meta="harbor, 57 steps wrapped to the canvas" wrapWidth={1120} wrapToCanvas />,
 }
 
 /**
  * A run filling a section (`frame="filled"`: the section's own ground, no dots, each wheel notch one
- * zoom step), its head carrying a `GraphLayoutMenu` and zoom buttons reached through `onControls`.
+ * zoom step), its head carrying a `GraphLayoutMenu` that closes on a choice and zoom buttons reached through `onControls`.
  * Choosing another layout fits the graph again, even after it was moved.
  */
 export const InASection: Story = { name: 'In a section', render: () => <InSection /> }

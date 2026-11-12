@@ -69,8 +69,9 @@ export interface GraphLayoutStyle {
     /** `normal` when left out. */
     spacing?: GraphSpacing
     /**
-     * A graph running right that would be wider than this many pixels is cut into rows stacked
-     * down, each carrying on from the one above; left out, it is never cut.
+     * A graph running right that would be wider than this many pixels is cut into as many rows,
+     * stacked down, as keep each about this wide, each carrying on from the one above; left out,
+     * it is never cut.
      */
     wrapWidth?: number
 }
@@ -78,8 +79,22 @@ export interface GraphLayoutStyle {
 /** What elk is told to cut a graph too wide into rows by. */
 const WRAP_OPTIONS: Record<string, string> = {
     'elk.layered.wrapping.strategy': 'MULTI_EDGE',
-    'elk.aspectRatio': '2.0',
     'elk.layered.wrapping.additionalEdgeSpacing': '24',
+}
+
+/**
+ * How many rows a graph running right is cut into so each is no wider than `wrapWidth`, and the
+ * shape elk aims for to get them: one row when it is narrow enough, or runs down, or has no width
+ * to wrap at.
+ */
+export function wrapRows(shape: GraphShape, direction: GraphDirection, style: GraphLayoutStyle = {}): { rows: number; aspect: number } {
+    if (direction !== 'right' || style.wrapWidth === undefined || style.wrapWidth <= 0 || shape.nodes.length < 2)
+        return { rows: 1, aspect: 0 }
+    const bounds = boundsOf(rankLayout(shape, 'right', style.spacing).nodes)
+    const rows = Math.min(shape.nodes.length, Math.ceil(bounds.width / style.wrapWidth))
+    if (rows <= 1) return { rows: 1, aspect: 0 }
+    // n rows of a graph W wide and H tall stand about W/n wide and n·H tall.
+    return { rows, aspect: bounds.width / (rows * rows * Math.max(1, bounds.height)) }
 }
 
 /** The gaps one spacing keeps, in pixels: between ranks, between nodes of a rank, and around edges. */
@@ -246,13 +261,13 @@ export function elkOptions(
 
 /** The graph elk is handed for a shape. */
 export function toElk(shape: GraphShape, direction: GraphDirection = 'right', style: GraphLayoutStyle = {}): ElkGraph {
-    const wraps =
-        direction === 'right' &&
-        style.wrapWidth !== undefined &&
-        boundsOf(rankLayout(shape, 'right', style.spacing).nodes).width > style.wrapWidth
+    const wrap = wrapRows(shape, direction, style)
     return {
         id: 'root',
-        layoutOptions: wraps ? { ...elkOptions(direction, style), ...WRAP_OPTIONS } : elkOptions(direction, style),
+        layoutOptions:
+            wrap.rows > 1
+                ? { ...elkOptions(direction, style), ...WRAP_OPTIONS, 'elk.aspectRatio': wrap.aspect.toFixed(3) }
+                : elkOptions(direction, style),
         children: shape.nodes.map((node) => ({ id: node.id, width: node.width, height: node.height })),
         edges: knownEdges(shape).map((edge) => ({
             id: edge.id,
@@ -408,7 +423,8 @@ export function shapeSignature(shape: GraphShape, direction: GraphDirection, sty
         direction,
         style.routing ?? 'orthogonal',
         style.spacing ?? 'normal',
-        style.wrapWidth ?? '',
+        // The rows a wrap cuts into, not the width it was asked at, so a width that moves without changing them lays nothing out again.
+        wrapRows(shape, direction, style).rows,
         shape.nodes.map((node) => `${node.id}:${String(node.width)}x${String(node.height)}`).join(','),
         shape.edges
             .map((edge) => `${edge.source}>${edge.target}${edge.label === undefined ? '' : `:${String(edge.label.width)}`}`)

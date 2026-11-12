@@ -2,7 +2,7 @@ import { Cog, Database } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
-import { fitDirection, GraphCanvas, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, wrapWidthFor, type GraphViewProps } from './GraphCanvas'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
 /** One thing in a lineage: a dataset, or a job that reads datasets and writes others. */
@@ -39,6 +39,8 @@ export function DependencyGraph({
     fitMinZoom,
     narrowFit,
     onControls,
+    fillFloor,
+    wrapToCanvas,
     controls,
     wrapWidth,
     routing,
@@ -50,6 +52,7 @@ export function DependencyGraph({
 }: DependencyGraphProps) {
     const [width, setWidth] = useState<number>()
     const direction = given ?? fitDirection(width)
+    const wrapAt = wrapWidthFor(wrapWidth, wrapToCanvas, width, fitMinZoom)
     const items = useMemo<GraphItem[]>(
         () =>
             nodes.map((node) => ({
@@ -66,7 +69,7 @@ export function DependencyGraph({
         [nodes],
     )
     const links = useMemo<GraphLink[]>(() => edges.map((edge) => ({ source: edge.from, target: edge.to, arrow: true })), [edges])
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth, minNodeWidth, maxNodeWidth })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth: wrapAt, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
@@ -78,9 +81,10 @@ export function DependencyGraph({
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}
             onControls={onControls}
+            fillFloor={fillFloor}
             controls={controls}
             fitMinZoom={fitMinZoom}
-            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}`}
+            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}|${String(wrapToCanvas)}`}
             onSelect={onSelect}
             words={words}
             className={className}
