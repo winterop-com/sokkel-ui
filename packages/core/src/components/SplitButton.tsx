@@ -4,7 +4,14 @@ import { useRef, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { Button } from './ui/button'
 import { ButtonGroup, ButtonGroupSeparator } from './ui/button-group'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 
 /** One other way to do the action, in the split button's menu. */
 export interface SplitButtonItem {
@@ -15,11 +22,18 @@ export interface SplitButtonItem {
     onSelect: () => void
     disabled?: boolean
     destructive?: boolean
+    /**
+     * Whether this way is the one chosen. Given on any item, the menu's items are one set of
+     * choices, read out as such, with a check by the chosen one: a cadence, a mode.
+     */
+    checked?: boolean
 }
 
 export interface SplitButtonWords {
     /** The name of the button that opens the menu. */
     more: string
+    /** What the chevron says on hover, beside its name: how its menu's choices differ. */
+    moreHint?: string
 }
 
 const WORDS: SplitButtonWords = { more: 'More ways' }
@@ -61,6 +75,7 @@ export interface SplitButtonProps {
  * menu under the whole control. Variants and sizes are Button's; `reason` disables both halves and
  * says why on hover and focus, and `disabled` without a reason disables them quietly. `label` and
  * `title` name the main half apart from its face, for a face that leans on the page around it.
+ * Items that say `checked` are one set of choices, the chosen one checked.
  */
 export function SplitButton({
     children,
@@ -82,6 +97,16 @@ export function SplitButton({
     const group = useRef<HTMLDivElement>(null)
     const held = reason !== undefined && reason !== null && reason !== false
     const separator = SEPARATOR[variant]
+    const choices = items.some((item) => item.checked !== undefined)
+    const body = (item: SplitButtonItem) => (
+        <>
+            {item.icon}
+            <span className="flex min-w-0 flex-col">
+                <span>{item.label}</span>
+                {item.description !== undefined && <span className="text-help text-muted-foreground">{item.description}</span>}
+            </span>
+        </>
+    )
     return (
         <ButtonGroup ref={group} data-slot="split-button" className={className}>
             <Button variant={variant} size={size} onClick={onClick} disabled={disabled} reason={reason} aria-label={label} title={title}>
@@ -90,34 +115,52 @@ export function SplitButton({
             {separator !== undefined && <ButtonGroupSeparator className={cn('data-vertical:my-0', separator)} />}
             {held ? (
                 // Shut as the face is: reachable, saying why, with no menu to open.
-                <Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} reason={reason}>
+                <Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} title={words.moreHint} reason={reason}>
                     <ChevronDown aria-hidden />
                 </Button>
             ) : (
                 <DropdownMenu open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
                     <DropdownMenuTrigger
-                        render={<Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} disabled={disabled} />}
+                        render={
+                            <Button
+                                variant={variant}
+                                size={ICON_SIZE[size]}
+                                aria-label={words.more}
+                                title={words.moreHint}
+                                disabled={disabled}
+                            />
+                        }
                     >
                         <ChevronDown aria-hidden />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent anchor={group} align="end" className="w-auto min-w-(--anchor-width)">
-                        {items.map((item, index) => (
-                            <DropdownMenuItem
-                                key={index}
-                                disabled={item.disabled}
-                                variant={item.destructive === true ? 'destructive' : 'default'}
-                                onClick={item.onSelect}
-                                className={cn(item.description !== undefined && 'items-start')}
-                            >
-                                {item.icon}
-                                <span className="flex min-w-0 flex-col">
-                                    <span>{item.label}</span>
-                                    {item.description !== undefined && (
-                                        <span className="text-help text-muted-foreground">{item.description}</span>
-                                    )}
-                                </span>
-                            </DropdownMenuItem>
-                        ))}
+                        {choices ? (
+                            <DropdownMenuRadioGroup value={String(items.findIndex((item) => item.checked === true))}>
+                                {items.map((item, index) => (
+                                    <DropdownMenuRadioItem
+                                        key={index}
+                                        value={String(index)}
+                                        disabled={item.disabled}
+                                        onClick={item.onSelect}
+                                        className={cn(item.description !== undefined && 'items-start')}
+                                    >
+                                        {body(item)}
+                                    </DropdownMenuRadioItem>
+                                ))}
+                            </DropdownMenuRadioGroup>
+                        ) : (
+                            items.map((item, index) => (
+                                <DropdownMenuItem
+                                    key={index}
+                                    disabled={item.disabled}
+                                    variant={item.destructive === true ? 'destructive' : 'default'}
+                                    onClick={item.onSelect}
+                                    className={cn(item.description !== undefined && 'items-start')}
+                                >
+                                    {body(item)}
+                                </DropdownMenuItem>
+                            ))
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             )}

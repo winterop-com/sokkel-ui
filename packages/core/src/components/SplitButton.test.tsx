@@ -29,6 +29,15 @@ describe('SplitButton', () => {
         expect(html).not.toMatch(/\sdisabled=""/)
     })
 
+    it('says on hover what its chevron chooses', () => {
+        const html = renderToStaticMarkup(
+            <SplitButton items={[]} words={{ more: 'Refresh on its own', moreHint: 'How often this refreshes on its own' }}>
+                Refresh
+            </SplitButton>,
+        )
+        expect(html).toContain('title="How often this refreshes on its own"')
+    })
+
     it('mixes its separator in oklab, so a warm primary never turns it green', () => {
         const html = renderToStaticMarkup(<SplitButton items={[]}>New</SplitButton>)
         expect(html).toContain('in_oklab,var(--primary)')
