@@ -18,7 +18,8 @@ export const NIGHTLY_EXPORT: PipelineStep[] = [
 /**
  * The import-orders job open in an editor: a source listening for orders, a split that fans out (its
  * count after a glyph of its own, with a tooltip of its own), a
- * transform edited since it was last saved and an upload whose block is not installed. Every box
+ * transform edited since it was last saved and an upload whose block is not installed, its critical
+ * badge edging the box as an issue would. Every box
  * keeps room for either badge and an issue mark, so one arriving moves nothing.
  */
 export const EDITED_PIPELINE: PipelineStep[] = (

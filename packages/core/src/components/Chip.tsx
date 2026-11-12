@@ -18,6 +18,20 @@ const TONE: Record<ChipTone, string> = {
     absent: 'border-dashed border-border-strong text-muted-foreground',
 }
 
+/**
+ * A category's hue, one of the chart palette's five, for a chip that tells kinds apart rather than
+ * says how something is: a block's category, a tag's group. A theme sets the hues with the charts'.
+ */
+export type ChipHue = 1 | 2 | 3 | 4 | 5
+
+const HUE: Record<ChipHue, string> = {
+    1: 'bg-chart-1/15 text-chart-1',
+    2: 'bg-chart-2/15 text-chart-2',
+    3: 'bg-chart-3/15 text-chart-3',
+    4: 'bg-chart-4/15 text-chart-4',
+    5: 'bg-chart-5/15 text-chart-5',
+}
+
 const RING = 'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid'
 
 export interface ChipWords {
@@ -43,6 +57,8 @@ export interface ChipProps {
     children: ReactNode
     /** Neutral by default. */
     tone?: ChipTone
+    /** A category's hue from the chart palette, worn in place of the tone's wash and ink. */
+    hue?: ChipHue
     /** The words in the code face, for an id, a tag or a key. */
     mono?: boolean
     /** Drawn before the words, at the chip's icon size. */
@@ -64,7 +80,8 @@ export interface ChipProps {
 
 /**
  * A short value as a chip: a tag on a job, a state that has no run color, a value that is absent.
- * Its tone is neutral, a semantic color's wash with its own ink, or `absent`, dashed. `mono` sets
+ * Its tone is neutral, a semantic color's wash with its own ink, or `absent`, dashed; `hue` gives
+ * it a category's color from the chart palette instead. `mono` sets
  * the words in the code face and `icon` goes before them. With `onSelect` the chip is a button,
  * named by `selectLabel` where a press does more than its words say; with `onRemove` it ends in a
  * remove button, its own stop in the tab order with its own focus ring. Neither press reaches a
@@ -73,6 +90,7 @@ export interface ChipProps {
 export function Chip({
     children,
     tone = 'neutral',
+    hue,
     mono = false,
     icon,
     title,
@@ -97,7 +115,7 @@ export function Chip({
             className={cn(
                 'inline-flex h-5 max-w-full min-w-0 shrink-0 items-center rounded-chip border border-transparent text-badge whitespace-nowrap [&_svg]:size-3 [&_svg]:shrink-0',
                 mono && 'font-mono',
-                TONE[tone],
+                hue === undefined ? TONE[tone] : HUE[hue],
                 className,
             )}
         >

@@ -31,6 +31,8 @@ export const BLOCK_PICKER_WORDS: BlockPickerWords = {
     loading: 'Reading the blocks',
 }
 
+const WIDTH = { md: 'w-64', lg: 'w-80', xl: 'w-96' } as const
+
 export interface BlockPickerProps {
     blocks: readonly PipelineBlock[]
     groups: readonly BlockGroup[]
@@ -42,6 +44,11 @@ export interface BlockPickerProps {
     loading?: boolean
     /** Draws each block's description as a line of its own under its title. */
     showDescription?: boolean
+    /**
+     * How wide the picker is drawn: `md` (16rem) by default, `lg` (20rem) or `xl` (24rem) for a longer
+     * placeholder or descriptions. Over a canvas it never grows past the canvas's own width.
+     */
+    width?: 'md' | 'lg' | 'xl'
     words?: Partial<BlockPickerWords>
     className?: string
 }
@@ -60,6 +67,7 @@ export function BlockPicker({
     title,
     loading = false,
     showDescription = false,
+    width = 'md',
     words: given,
     className,
 }: BlockPickerProps) {
@@ -97,7 +105,8 @@ export function BlockPicker({
         <div
             data-slot="block-picker"
             className={cn(
-                'flex max-h-[min(20rem,var(--graph-overlay-room,20rem))] w-64 flex-col overflow-hidden rounded-control border border-border bg-popover text-popover-foreground shadow-pop',
+                'flex max-h-[min(20rem,var(--graph-overlay-room,20rem))] max-w-[var(--graph-overlay-width,none)] flex-col overflow-hidden rounded-control border border-border bg-popover text-popover-foreground shadow-pop',
+                WIDTH[width],
                 className,
             )}
         >
@@ -119,7 +128,7 @@ export function BlockPicker({
                         setActive(0)
                     }}
                     onKeyDown={onKeyDown}
-                    className="flex-1 text-sm placeholder:text-faint"
+                    className="min-w-0 flex-1 text-sm placeholder:text-faint"
                 />
             </label>
             <div id={`${base}-list`} role="listbox" aria-label={words.list} className="min-h-0 flex-1 overflow-y-auto p-1">

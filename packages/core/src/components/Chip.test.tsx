@@ -16,6 +16,16 @@ describe('Chip', () => {
         expect(renderToStaticMarkup(<Chip tone="absent">no owner</Chip>)).toContain('border-dashed')
     })
 
+    it("wears a category's hue from the chart palette in place of its tone", () => {
+        const html = renderToStaticMarkup(
+            <Chip tone="critical" hue={3}>
+                check
+            </Chip>,
+        )
+        expect(html).toContain('bg-chart-3/15 text-chart-3')
+        expect(html).not.toContain('critical')
+    })
+
     it('is words alone without handlers, the code face with mono, and says its title on hover', () => {
         const html = renderToStaticMarkup(
             <Chip mono title="nightly-export">

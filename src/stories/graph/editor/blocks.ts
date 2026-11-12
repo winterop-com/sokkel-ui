@@ -82,6 +82,7 @@ export const BLOCKS: BlockSpec[] = [
     {
         kind: 'sql.query',
         name: 'SQL query',
+        badge: { label: 'database', hue: 2, title: 'Reads from a database' },
         description: 'Run a query and pass on its rows as records.',
         group: 'source',
         icon: Database,
@@ -193,6 +194,7 @@ export const BLOCKS: BlockSpec[] = [
     {
         kind: 'upload.s3',
         name: 'Upload',
+        badge: { label: 'storage', hue: 4, title: 'Writes to a storage bucket' },
         description: 'Upload a file to a storage bucket.',
         group: 'output',
         icon: CloudUpload,

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { blockBadge, blockMatches, groupBlocks, type PipelineBlock } from './blocks'
-import { cyclePath, wouldCycle, type PipelineStep } from './PipelineGraph'
+import { cyclePath, wouldCycle } from './cycles'
+import type { PipelineStep } from './PipelineGraph'
 import { historyKey, historyStep, type HistoryState } from './use-graph-history'
 
 const STEPS: PipelineStep[] = [
@@ -76,6 +77,10 @@ describe('blocks', () => {
         expect(blockBadge(toned)).toEqual({ label: 'beta', tone: 'warning', title: 'Still changing' })
         expect(blockBadge({ kind: 'dedupe', group: 'transform', badge: '' })).toBeNull()
         expect(blockMatches(toned, 'beta')).toBe(true)
+        expect(blockBadge({ kind: 'sql.query', group: 'source', badge: { label: 'database', hue: 2 } })).toEqual({
+            label: 'database',
+            hue: 2,
+        })
     })
     it('lists matching blocks under their groups in order, leaving empty groups out', () => {
         expect(groupBlocks(BLOCKS, GROUPS).map((entry) => entry.group.id)).toEqual(['source', 'transform', 'output'])

@@ -153,7 +153,8 @@ export interface GraphOverlayProps {
  * Something held over a canvas, such as a `BlockPicker`: beside a place in the graph, following it
  * as the view pans and zooms, or beside a place on the screen, such as the button that opened it.
  * It opens on the side with room, never over the button it stands beside, and stays inside the
- * canvas, giving its content the height it has as `--graph-overlay-room`. Given `link`, a dashed
+ * canvas, giving its content the height it has as `--graph-overlay-room` and the width as
+ * `--graph-overlay-width`. Given `link`, a dashed
  * line runs from that node's output to the place, routed in right-angled steps as the edges are,
  * for a step about to be added there. Escape and a press outside close it; a press on its `element`
  * anchor or on `ignore` does not, so the button that opened it can close it. Render it as a child of
@@ -274,7 +275,14 @@ export function GraphOverlay({ at, link, onClose, ignore, children, className }:
                 }}
                 data-slot="graph-overlay"
                 className={cn('nodrag nopan nowheel absolute z-20', className)}
-                style={{ left, top, '--graph-overlay-room': `${String(room)}px` } as CSSProperties}
+                style={
+                    {
+                        left,
+                        top,
+                        '--graph-overlay-room': `${String(room)}px`,
+                        '--graph-overlay-width': canvas.width > 0 ? `${String(canvas.width - MARGIN * 2)}px` : undefined,
+                    } as CSSProperties
+                }
             >
                 {children}
             </div>

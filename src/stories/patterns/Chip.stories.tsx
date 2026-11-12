@@ -30,6 +30,19 @@ export const Tones: StoryObj = {
     ),
 }
 
+/** A category's hue from the chart palette, for chips that tell kinds apart rather than say how something is. */
+export const Hues: StoryObj = {
+    render: () => (
+        <Row gap="xs" wrap>
+            <Chip hue={1}>source</Chip>
+            <Chip hue={2}>transform</Chip>
+            <Chip hue={3}>check</Chip>
+            <Chip hue={4}>sink</Chip>
+            <Chip hue={5}>notice</Chip>
+        </Row>
+    ),
+}
+
 /** In the code face, with an icon before the words, and a long value cut short with the whole of it on hover. */
 export const MonoAndIcons: StoryObj = {
     name: 'Mono and icons',
