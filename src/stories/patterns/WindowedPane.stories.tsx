@@ -131,6 +131,20 @@ export const Open: StoryObj = {
 }
 
 /**
+ * A step's output in a pane whose expand button sits beside the code's copy button, in a head row of
+ * its own over the code (`button="none"` on the pane, the button in the code's `actions`, `header`
+ * set), so neither covers the first lines.
+ */
+export const InCodeActions: StoryObj = {
+    name: 'In code actions',
+    render: () => (
+        <WindowedPane title="fetch output" button="none">
+            <Code language="yaml" value={CONFIG} header actions={<WindowedPaneButton />} />
+        </WindowedPane>
+    ),
+}
+
+/**
  * The pane set inset on the page with a hairline edge (`frame="inset"`), as `Surface`'s inset tone
  * draws it, around an editor drawn edge to edge.
  */
