@@ -11,12 +11,25 @@ import type { TimeRangeValue } from '@winterop-com/sokkel-ui/dashboard/TimeRange
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { LogView } from '@winterop-com/sokkel-ui/LogView'
 import { useWindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
+import { ChartArea, ChartColumn, Gauge, Grid3x3, type LucideIcon, ScrollText, SquareSigma, Table2, TextAlignStart } from 'lucide-react'
 import { useMemo, type ReactNode } from 'react'
 
-import type { Panel } from './model'
+import type { Panel, PanelKind } from './model'
 import { type GroupRow, panelData } from './panel-data'
 import type { Zone } from './query'
 import type { Variables } from './source'
+
+/** The icon each kind of panel goes by in the palettes. */
+export const KIND_ICONS: Record<PanelKind, LucideIcon> = {
+    timeseries: ChartArea,
+    stat: SquareSigma,
+    gauge: Gauge,
+    bargauge: TextAlignStart,
+    bar: ChartColumn,
+    heatmap: Grid3x3,
+    table: Table2,
+    logs: ScrollText,
+}
 
 export interface PanelViewProps {
     panel: Panel

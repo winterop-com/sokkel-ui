@@ -1,20 +1,11 @@
-/** A list a person puts in order, as a funnel's steps or a report's panels: each row moved up or down, or taken out. */
+/** A list a person puts in order, as a funnel's steps or a report's panels: each row dragged by its grip to its place, or taken out. */
 
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
-import { Row } from '@winterop-com/sokkel-ui/Layout'
-import { ArrowDown, ArrowUp, XIcon } from 'lucide-react'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
+import { XIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-
-/** Moves the item at `from` one place up or down. */
-export function moved<T>(items: readonly T[], from: number, by: -1 | 1): T[] {
-    const to = from + by
-    if (to < 0 || to >= items.length) return [...items]
-    const next = [...items]
-    const [item] = next.splice(from, 1)
-    if (item !== undefined) next.splice(to, 0, item)
-    return next
-}
 
 interface Ordered<T> {
     item: T
@@ -28,15 +19,15 @@ export interface OrderListProps<T extends string> {
     name: (item: T) => string
     /** A column of figures after the name, such as how many reached a step. */
     figure?: { header: string; cell: (item: T, index: number) => ReactNode }
-    /** Why an item cannot move up now, when it cannot. */
-    stuck?: (item: T, index: number, by: -1 | 1) => string | undefined
+    /** Why an order cannot stand, when it cannot; the move is put back and the reason said. */
+    refuse?: (items: readonly T[]) => string | undefined
     /** What the list is called, in its buttons' names: a step, a panel. */
     noun: string
     empty: ReactNode
 }
 
-/** The items in order, numbered, each with buttons that move it up and down and take it out. */
-export function OrderList<T extends string>({ items, onChange, name, figure, stuck, noun, empty }: OrderListProps<T>) {
+/** The items in order, numbered, each dragged by its grip (or moved with Alt and the arrows) and taken out with its button. */
+export function OrderList<T extends string>({ items, onChange, name, figure, refuse, noun, empty }: OrderListProps<T>) {
     const rows: Ordered<T>[] = items.map((item, index) => ({ item, index }))
     const columns: DataColumn<Ordered<T>>[] = [
         {
@@ -60,45 +51,21 @@ export function OrderList<T extends string>({ items, onChange, name, figure, stu
                   },
               ]),
         {
-            id: 'move',
-            header: 'Order',
-            width: '6.5rem',
+            id: 'remove',
+            header: '',
+            width: '2.5rem',
             align: 'end',
             resizable: false,
-            cell: (row) => {
-                const up = row.index === 0 ? 'It is first.' : stuck?.(row.item, row.index, -1)
-                const down = row.index === items.length - 1 ? 'It is last.' : stuck?.(row.item, row.index, 1)
-                return (
-                    <Row gap="none" inline>
-                        <IconButton
-                            label={`Move ${name(row.item)} up`}
-                            size="icon-xs"
-                            variant="ghost"
-                            reason={up}
-                            onClick={() => onChange(moved(items, row.index, -1))}
-                        >
-                            <ArrowUp aria-hidden />
-                        </IconButton>
-                        <IconButton
-                            label={`Move ${name(row.item)} down`}
-                            size="icon-xs"
-                            variant="ghost"
-                            reason={down}
-                            onClick={() => onChange(moved(items, row.index, 1))}
-                        >
-                            <ArrowDown aria-hidden />
-                        </IconButton>
-                        <IconButton
-                            label={`Take ${name(row.item)} out`}
-                            size="icon-xs"
-                            variant="ghost"
-                            onClick={() => onChange(items.filter((_, index) => index !== row.index))}
-                        >
-                            <XIcon aria-hidden />
-                        </IconButton>
-                    </Row>
-                )
-            },
+            cell: (row) => (
+                <IconButton
+                    label={`Take ${name(row.item)} out`}
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={() => onChange(items.filter((_, index) => index !== row.index))}
+                >
+                    <XIcon aria-hidden />
+                </IconButton>
+            ),
         },
     ]
     return (
@@ -110,6 +77,13 @@ export function OrderList<T extends string>({ items, onChange, name, figure, stu
             columns={columns}
             rows={rows}
             rowKey={(row) => row.item}
+            rowLabel={(row) => name(row.item)}
+            onReorder={(from, to) => {
+                const next = moveItem(items, from, to)
+                const why = refuse?.(next)
+                if (why === undefined) onChange(next)
+                else toast.add({ type: 'warning', title: `${name(items[from] as T)} stays where it was`, description: why })
+            }}
             empty={empty}
         />
     )

@@ -10,27 +10,7 @@ import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
-import {
-    Bell,
-    BellPlus,
-    ChartArea,
-    ChartColumn,
-    Gauge,
-    Grid3x3,
-    LayoutDashboard,
-    LayoutGrid,
-    type LucideIcon,
-    Pause,
-    Play,
-    Plus,
-    RefreshCw,
-    ScrollText,
-    Settings2,
-    Share2,
-    SquareSigma,
-    Table2,
-    TextAlignStart,
-} from 'lucide-react'
+import { Bell, BellPlus, LayoutDashboard, LayoutGrid, Pause, Play, Plus, RefreshCw, Settings2, Share2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
@@ -45,24 +25,14 @@ import { dashboards, DEFAULT_PREFERENCES, events, preferences, rules } from './d
 import { DashboardDialog, ShareDialog } from './dialogs'
 import { EditorPage } from './Editor'
 import { scraped, useDashboardTime, useScrapeClock } from './live'
-import type { PanelKind } from './model'
+import type { Dashboard } from './model'
+import { KIND_ICONS } from './PanelView'
 import { go, patchParams, type Place, placeOf, rangeOf, rangeParams, usePlace, variablesOf, viewParams } from './place'
 import { clockOf } from './query'
 import { RuleDialog } from './RuleDialog'
 import { SettingsPage } from './Settings'
 import type { Variables } from './source'
 import type { View } from './view'
-
-export const KIND_ICONS: Record<PanelKind, LucideIcon> = {
-    timeseries: ChartArea,
-    stat: SquareSigma,
-    gauge: Gauge,
-    bargauge: TextAlignStart,
-    bar: ChartColumn,
-    heatmap: Grid3x3,
-    table: Table2,
-    logs: ScrollText,
-}
 
 /** The states the alert parts say, in the app's words and colors. */
 const ALERT_STATUSES = {
@@ -138,7 +108,7 @@ export function MetricsApp({ frame }: { frame: Frame }) {
         setPaused,
     }
 
-    const all = boards.rows ?? []
+    const all = useMemo(() => inOrder(boards.rows ?? [], prefs.order ?? []), [boards.rows, prefs.order])
     const [section, id, mode, panelId] = place.path
     const board = section === 'd' ? all.find((one) => one.id === id) : undefined
     const kept = viewParams(place.params)
@@ -293,7 +263,12 @@ export function MetricsApp({ frame }: { frame: Frame }) {
                         {null}
                     </PageState>
                 ) : page === 'dashboards' ? (
-                    <DashboardsPage dashboards={all} kept={kept} onCreate={() => setCreating(true)} />
+                    <DashboardsPage
+                        dashboards={all}
+                        kept={kept}
+                        onCreate={() => setCreating(true)}
+                        onReorder={(order) => preferences.update(prefs.id, { order })}
+                    />
                 ) : page === 'dashboard' && board !== undefined ? (
                     <DashboardPage dashboard={board} view={view} params={place.params} all={all} onShare={() => setSharing(true)} />
                 ) : page === 'editor' && board !== undefined ? (
@@ -313,6 +288,13 @@ export function MetricsApp({ frame }: { frame: Frame }) {
             <Toaster position="bottom-right" />
         </StatusProvider>
     )
+}
+
+/** The dashboards in the order the person put them; those not in it follow, in the order they were made. */
+function inOrder(boards: readonly Dashboard[], order: readonly string[]): Dashboard[] {
+    const place = new Map(order.map((id, index) => [id, index]))
+    const ranked = boards.filter((board) => place.has(board.id)).sort((a, b) => (place.get(a.id) ?? 0) - (place.get(b.id) ?? 0))
+    return [...ranked, ...boards.filter((board) => !place.has(board.id))]
 }
 
 type PageName = 'loading' | 'error' | 'dashboards' | 'dashboard' | 'editor' | 'alerts' | 'missing'

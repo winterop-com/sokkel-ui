@@ -217,12 +217,8 @@ function Builder({ funnel: start }: { funnel: Funnel | undefined }) {
                                         <span className="tabular-nums">{(stages[index]?.count ?? 0).toLocaleString('en-US')}</span>
                                     ),
                                 }}
-                                stuck={(step, index, by) =>
-                                    step === 'visited'
-                                        ? 'Visiting the site comes first.'
-                                        : by === -1 && index === 1 && steps[0] === 'visited'
-                                          ? 'Visiting the site comes first.'
-                                          : undefined
+                                refuse={(next) =>
+                                    next.includes('visited') && next[0] !== 'visited' ? 'Visiting the site comes first.' : undefined
                                 }
                                 empty="No steps yet. Add the first below."
                             />

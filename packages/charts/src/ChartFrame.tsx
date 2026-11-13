@@ -267,10 +267,20 @@ export function ChartFrame({
                 className,
             )}
         >
-            {/* A frame's own actions move under its title, with the export tools, when the two do not fit on one line. */}
+            {/* A frame's own actions, or an arranged grid's tools, move under its title, with the export tools, when the two do not fit on one line. */}
             {head && (
-                <header className={cn('flex min-h-8 shrink-0 items-center gap-1 pr-1.5 pl-3', actions !== undefined && 'flex-wrap')}>
-                    <div className={cn('flex min-h-8 min-w-0 items-center gap-1.5', actions !== undefined ? 'grow basis-40' : 'flex-1')}>
+                <header
+                    className={cn(
+                        'flex min-h-8 shrink-0 items-center gap-1 pr-1.5 pl-3',
+                        (actions !== undefined || tools !== null) && 'flex-wrap',
+                    )}
+                >
+                    <div
+                        className={cn(
+                            'flex min-h-8 min-w-0 items-center gap-1.5',
+                            actions !== undefined ? 'grow basis-40' : tools !== null ? 'grow basis-24' : 'flex-1',
+                        )}
+                    >
                         {/* The title keeps its whole width while the subtitle gives up room, and truncates only past the head's. */}
                         {title !== undefined && <h3 className="max-w-full shrink-0 truncate text-xs font-medium">{title}</h3>}
                         {stale !== undefined && stale !== false && !failed && <StaleMark stale={stale} words={words} />}
@@ -284,7 +294,7 @@ export function ChartFrame({
                         )}
                         {subtitle !== undefined && <span className="truncate text-xs text-muted-foreground">{subtitle}</span>}
                     </div>
-                    <div className="ml-auto flex items-center gap-1">
+                    <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-1">
                         {actions}
                         {rows !== null && (
                             <button
