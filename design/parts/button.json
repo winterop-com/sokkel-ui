@@ -199,13 +199,13 @@
         "invalid": {
             "means": "Marked invalid by a form, as a control in a refused group.",
             "reached": "aria-invalid",
-            "sokkel-ui": "aria-invalid:border-destructive, the edge alone at rest; no prop sets it"
+            "sokkel-ui": "aria-invalid: the shared issue edge (INVALID_EDGE in lib/issue-edge.ts), critical/80 in both schemes, the edge alone at rest; no prop sets it"
         },
         "invalid+focus": {
             "means": "An invalid button with keyboard focus: the focus outline and a 3px ring. The ring shows only with focus, never at rest.",
             "reached": "Tab onto an invalid button",
             "on": "keyboard",
-            "sokkel-ui": "aria-invalid:focus-visible:ring-3 ring-destructive/20, dark ring-destructive/40"
+            "sokkel-ui": "aria-invalid:focus-visible: a 3px ring critical/20, dark critical/40 (the shared issue edge)"
         },
         "busy": {
             "means": "A press started work that is under way.",
@@ -277,8 +277,8 @@
     "pieces": {
         "container": {
             "rest": {"radius": "radius-control", "note": "Over every variant: what is the same whatever the variant."},
-            "invalid": {"edge": "destructive", "dark": {"edge": "destructive/50"}},
-            "invalid+focus": {"ring": {"color": "destructive/20", "width": 3, "dark": {"color": "destructive/40"}}}
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {"ring": {"color": "critical/20", "width": 3, "dark": {"color": "critical/40"}}}
         }
     },
     "keyboard": [

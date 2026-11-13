@@ -1070,14 +1070,6 @@ const SHELL_ADAPTER: Adapter = {
  * for a drift no class or word shows.
  */
 const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>> = {
-    'text-field': {
-        'invalid tints': [
-            'pieces.control.invalid.edge (dark)',
-            'pieces.control.invalid+focus.edge (dark)',
-            'states.invalid+focus.effect.ring.color',
-            'states.invalid+focus.effect.ring.color (dark)',
-        ],
-    },
     table: {
         'words formatted for one locale': () => /toLocaleString\('en-US'\)/.test(DATA_TABLE),
     },
