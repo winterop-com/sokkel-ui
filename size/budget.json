@@ -13,8 +13,8 @@
     },
     "dashboard": {
         "engines": ["echarts", "dnd-kit"],
-        "start": 204,
-        "lazy": 455,
+        "start": 205,
+        "lazy": 465,
         "css": 52
     },
     "map": {

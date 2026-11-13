@@ -69,7 +69,8 @@ export interface ChartLegendProps {
 /**
  * The legend for a chart drawn beside it rather than inside it: a swatch and label per series that
  * a click or Enter hides or shows, and hover or focus emphasizes. In table mode each series is a
- * `DataTable` row with its min, max, mean and current value, worked out from `values`.
+ * `DataTable` row with its min, max, mean and current value, worked out from `values`. Below `md`
+ * each toggle in list mode is a finger tall.
  */
 export function ChartLegend({
     items,
@@ -154,7 +155,7 @@ export function ChartLegend({
                             aria-pressed={!off}
                             {...handlers(item.key, off)}
                             className={cn(
-                                'inline-flex h-6 items-center gap-1.5 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-hover hover:text-foreground',
+                                'inline-flex h-6 items-center gap-1.5 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-hover hover:text-foreground max-md:h-finger',
                                 ITEM,
                                 off && 'opacity-60',
                             )}
