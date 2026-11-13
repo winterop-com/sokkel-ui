@@ -527,7 +527,7 @@ export function Shell({
                         title={words.menu}
                         aria-expanded={drawer}
                         className={cn(
-                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground hover:bg-hover',
+                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground hover:bg-hover max-md:size-finger',
                             !railHidden && 'md:hidden',
                         )}
                         onClick={() => setDrawer(true)}
