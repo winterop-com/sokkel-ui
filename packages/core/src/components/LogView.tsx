@@ -101,8 +101,17 @@ export function LogView({
     told.current = onFollowChange
     useEffect(() => {
         const element = scroller.current
-        if (follow && pinned.current && element !== null) element.scrollTop = element.scrollHeight
-    }, [follow, lines.length])
+        if (element === null) return
+        // Lines that no longer fill the box (a filter took some away) leave nothing to be away from.
+        if (!pinned.current && element.scrollHeight - element.clientHeight < 8) {
+            pinned.current = true
+            if (follow) {
+                setAway(false)
+                told.current?.(true)
+            }
+        }
+        if (follow && pinned.current) element.scrollTop = element.scrollHeight
+    }, [follow, lines])
     const columns = {
         at: lines.some((line) => line.at !== undefined),
         level: lines.some((line) => line.level !== undefined),

@@ -21,7 +21,10 @@ import { CapabilityPicker, type Capability, type PickerItem } from '@winterop-co
 import { CopyButton } from '@winterop-com/sokkel-ui/CopyButton'
 import { CronField } from '@winterop-com/sokkel-ui/CronField'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { Code } from '@winterop-com/sokkel-ui/Code'
+import { CodeEditor } from '@winterop-com/sokkel-ui/CodeEditor'
 import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
+import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { IssueCount, type Issue } from '@winterop-com/sokkel-ui/IssueMark'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
@@ -128,22 +131,24 @@ export function Refused() {
                 title="Run import-orders now"
                 description="Runs once, outside its schedule, with today’s file."
                 confirm={{ label: tries > 0 ? 'Try again' : 'Run now', busyLabel: 'Starting', busy, onConfirm: run }}
+                status={
+                    tries > 0 && !busy ? (
+                        <Problem
+                            title="The worker refused the run"
+                            detail="`worker-2` is draining for maintenance and takes no new runs until 03:00 UTC. Try again to place it on another worker."
+                            technical={
+                                'POST https://api.example.org/v1/jobs/import-orders/runs\n503 Service Unavailable\n{"error":"worker_draining","worker":"worker-2","until":"2026-11-05T03:00:00Z"}'
+                            }
+                            actions={
+                                <Button size="sm" variant="outline" onClick={run}>
+                                    <RotateCw aria-hidden />
+                                    Retry
+                                </Button>
+                            }
+                        />
+                    ) : undefined
+                }
             >
-                {tries > 0 && !busy && (
-                    <Problem
-                        title="The worker refused the run"
-                        detail="`worker-2` is draining for maintenance and takes no new runs until 03:00 UTC. Try again to place it on another worker."
-                        technical={
-                            'POST https://api.example.org/v1/jobs/import-orders/runs\n503 Service Unavailable\n{"error":"worker_draining","worker":"worker-2","until":"2026-11-05T03:00:00Z"}'
-                        }
-                        actions={
-                            <Button size="sm" variant="outline" onClick={run}>
-                                <RotateCw aria-hidden />
-                                Retry
-                            </Button>
-                        }
-                    />
-                )}
                 <TextField
                     id="run-note"
                     label="Note"
@@ -940,6 +945,58 @@ export function RunNote() {
                 }}
             >
                 <TextField id="run-note-text" label="Note" multiline rows={4} value={note} onChange={setNote} />
+            </DialogShell>
+        </Behind>
+    )
+}
+
+/** A run with nothing to fill: the confirm takes focus as the dialog opens, so Enter runs it. */
+export function RunNow() {
+    const [open, setOpen] = useState(true)
+    return (
+        <Behind action="Run now" onAction={() => setOpen(true)}>
+            <DialogShell
+                open={open}
+                onOpenChange={setOpen}
+                title="Run send-digest now"
+                description="Runs once, outside its schedule, with no parameters to set."
+                phone="fit"
+                initialFocus="confirm"
+                confirm={{ label: 'Run', onConfirm: () => setOpen(false) }}
+            />
+        </Behind>
+    )
+}
+
+const SAMPLE = `{
+  "job": "import-orders",
+  "rows": 2184,
+  "currency": "EUR"
+}`
+
+/** A tester as a workbench: the dialog fills the window but a margin, the value tried on one side and what it gives on the other. */
+export function Workbench() {
+    const [open, setOpen] = useState(true)
+    const [value, setValue] = useState(SAMPLE)
+    let result: string
+    try {
+        const parsed = JSON.parse(value) as Record<string, unknown>
+        result =
+            `valid: ${Object.keys(parsed).length} fields\n` +
+            Object.entries(parsed)
+                .map(([key, one]) => `${key}: ${typeof one}`)
+                .join('\n')
+    } catch (error) {
+        result = `invalid: ${(error as Error).message}`
+    }
+    return (
+        <Behind action="Test the schema" onAction={() => setOpen(true)}>
+            <DialogShell open={open} onOpenChange={setOpen} title="Test the order schema" width="full" finalFocus={false}>
+                <SplitPane
+                    className="h-full"
+                    first={<CodeEditor label="Value" value={value} onChange={setValue} language="json" className="h-full" />}
+                    second={<Code value={result} className="h-full" />}
+                />
             </DialogShell>
         </Behind>
     )

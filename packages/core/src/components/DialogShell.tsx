@@ -10,6 +10,7 @@ const WIDTHS = {
     md: 'sm:max-w-lg',
     lg: 'sm:max-w-2xl',
     xl: 'sm:max-w-4xl',
+    full: 'sm:h-[calc(100svh-2rem)] sm:max-h-[calc(100svh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)]',
 } as const
 
 /** The one verb a dialog confirms with. */
@@ -60,6 +61,7 @@ export function shellParts({
 export interface DialogShellProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    /** The dialog's width; `full` fills the window but a margin, its height too, for a workbench such as a tester beside its input. */
     width?: keyof typeof WIDTHS
     /** On a phone: `sheet` covers the screen, for a form; `fit` is sized to its content inside the screen's margins, for a short question. */
     phone?: 'sheet' | 'fit'
@@ -79,8 +81,15 @@ export interface DialogShellProps {
     dismissible?: boolean
     /** When false a press outside leaves the dialog open, while Cancel, the close and Escape still close it. */
     closeOnOutsidePress?: boolean
-    /** The element focused when the dialog opens, in place of the first field in the body. */
-    initialFocus?: RefObject<HTMLElement | null>
+    /**
+     * The element focused when the dialog opens, in place of the first field in the body; `confirm`
+     * focuses the confirming verb, so Enter confirms a dialog with nothing to fill.
+     */
+    initialFocus?: RefObject<HTMLElement | null> | 'confirm'
+    /** Where focus goes when the dialog closes: the element that opened it unless given, nowhere when false. */
+    finalFocus?: RefObject<HTMLElement | null> | boolean
+    /** Held between the body and the footer, outside the scroll: a form's refusal, a status line. */
+    status?: ReactNode
     /** Something at the footer's left: a note, a secondary link. */
     footer?: ReactNode
     /** The form's `IssueCount`, set just before the verbs it stops. */
@@ -98,7 +107,7 @@ export interface DialogShellProps {
  * are always in reach; `phone="fit"` keeps a short one sized to its content inside the screen's
  * margins instead, as a confirm is. The verbs stand in a row at the right while they fit it, and
  * each takes the whole width, the confirm on top, once they do not. A shut confirm stays focusable and carries its reason as a tooltip rather
- * than going dead. Opening focuses the first field in the body, or `initialFocus`. While the confirm is busy, Cancel, Back, Escape and the backdrop do nothing.
+ * than going dead. Opening focuses the first field in the body, or `initialFocus` (the confirm, with `'confirm'`). While the confirm is busy, Cancel, Back, Escape and the backdrop do nothing.
  *
  * A dialog with nothing to confirm, one thing to read, closes from the corner; its `actions` (Copy,
  * Download) stand alone in the footer, with no Cancel.
@@ -117,6 +126,8 @@ export function DialogShell({
     dismissible = true,
     closeOnOutsidePress = true,
     initialFocus,
+    finalFocus,
+    status,
     footer,
     count,
     children,
@@ -129,16 +140,18 @@ export function DialogShell({
     const shut = confirm?.why !== undefined || busy
     const held = busy || !dismissible
     const body = useRef<HTMLDivElement>(null)
+    const verb = useRef<HTMLButtonElement>(null)
+    const first = initialFocus === 'confirm' ? verb : initialFocus
     // A dialog drawn open from its first render asks for its first field before its body is there,
     // and the popup takes focus; this moves it on to the field once the body is drawn.
     useEffect(() => {
-        if (!open || initialFocus !== undefined) return
+        if (!open || first !== undefined) return
         const frame = requestAnimationFrame(() => {
             const field = body.current?.querySelector<HTMLElement>(FIELD)
             if (field != null && !body.current?.contains(document.activeElement)) field.focus()
         })
         return () => cancelAnimationFrame(frame)
-    }, [open, initialFocus])
+    }, [open, first])
     return (
         <Dialog
             open={open}
@@ -150,7 +163,8 @@ export function DialogShell({
         >
             <DialogContent
                 showCloseButton={parts.close}
-                initialFocus={initialFocus ?? (() => body.current?.querySelector<HTMLElement>(FIELD) ?? true)}
+                initialFocus={first ?? (() => body.current?.querySelector<HTMLElement>(FIELD) ?? true)}
+                finalFocus={finalFocus}
                 aria-busy={busy || undefined}
                 className={cn(
                     'flex max-h-[calc(100svh-4rem)] flex-col gap-4',
@@ -171,6 +185,7 @@ export function DialogShell({
                         {children}
                     </div>
                 )}
+                {status !== undefined && <div data-slot="dialog-status">{status}</div>}
                 {parts.footer && (
                     <DialogFooter
                         className={cn(
@@ -195,6 +210,7 @@ export function DialogShell({
                             {actions}
                             {confirm !== undefined && (
                                 <Button
+                                    ref={verb}
                                     variant={confirm.destructive === true ? 'destructive' : 'default'}
                                     aria-disabled={shut || undefined}
                                     title={confirm.why}
