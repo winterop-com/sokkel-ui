@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
@@ -9,7 +9,10 @@ export interface Description {
     code?: boolean
     /** A number, time or duration, its figures set at one width so values line up down the list. */
     numeric?: boolean
-    /** Spans the full width in a two-column list. */
+    /**
+     * Takes the list's full width. In the side layout its value goes under its term, for a value too
+     * long to sit beside it (a JSON body, a rule); in a two-column stacked list it spans both columns.
+     */
     wide?: boolean
 }
 
@@ -17,8 +20,13 @@ export interface DescriptionListProps {
     items: readonly Description[]
     columns?: 1 | 2
     layout?: 'side' | 'stacked' | 'row'
-    /** How wide the term column is in the side-by-side layout. */
+    /**
+     * How wide the term column is in the side-by-side layout: a CSS length, or `auto` for as wide
+     * as the longest term in the list (up to two fifths of it), so every value starts at one line.
+     */
     termWidth?: string
+    /** `sm` sets the values at the size of help text with tighter gaps, for a narrow inspector. */
+    size?: 'default' | 'sm'
     className?: string
 }
 
@@ -27,34 +35,58 @@ export interface DescriptionListProps {
  * URL. A value that is missing is drawn as a quiet dash, never as a blank. `layout` sets the pairs:
  * `side` (the default) puts each term in a column beside its value, `stacked` each term above its
  * value, and `row` the pairs one after another in a line that wraps, for a strip of facts under a
- * title. `columns={2}` sets the side and stacked pairs two to a row on wide screens. A value edited
- * in place with `InlineEdit` lines its text up with the plain values, its box reaching into the gap.
+ * title. `columns={2}` sets the side and stacked pairs two to a row on wide screens. In the side
+ * layout every pair shares the list's term column, so `termWidth="auto"` lines the values up at the
+ * longest term, and a `wide` pair puts its value under its term across the full width. `size="sm"`
+ * fits a narrow inspector. A value edited in place with `InlineEdit` lines its text up with the
+ * plain values, its box reaching into the gap.
  */
-export function DescriptionList({ items, columns = 1, layout = 'side', termWidth = '6rem', className }: DescriptionListProps) {
+export function DescriptionList({
+    items,
+    columns = 1,
+    layout = 'side',
+    termWidth = '6rem',
+    size = 'default',
+    className,
+}: DescriptionListProps) {
+    const small = size === 'sm'
+    const side = layout === 'side'
+    const pairGap = small ? 'gap-x-2' : 'gap-x-3'
     return (
         <dl
+            data-size={size}
             className={cn(
-                'text-sm leading-5',
-                layout === 'row' ? 'flex flex-wrap gap-x-5 gap-y-1' : 'grid gap-x-6 gap-y-2',
-                layout !== 'row' && columns === 2 && 'md:grid-cols-2',
+                small ? 'text-xs leading-4' : 'text-sm leading-5',
+                layout === 'row' && (small ? 'flex flex-wrap gap-x-4 gap-y-0.5' : 'flex flex-wrap gap-x-5 gap-y-1'),
+                layout !== 'row' && (small ? 'grid gap-y-1' : 'grid gap-y-2'),
+                layout === 'stacked' && (small ? 'gap-x-4' : 'gap-x-6'),
+                layout === 'stacked' && columns === 2 && 'md:grid-cols-2',
+                // The pairs are subgrids of these tracks, so every term in the list shares one column.
+                side && ['grid-cols-[var(--term-width)_minmax(0,1fr)]', pairGap],
+                side &&
+                    columns === 2 && [
+                        'md:grid-cols-[var(--term-width)_minmax(0,1fr)_var(--term-width)_minmax(0,1fr)]',
+                        small ? 'md:gap-x-4' : 'md:gap-x-6',
+                    ],
                 className,
             )}
-            style={{ '--term-width': termWidth } as React.CSSProperties}
+            style={side ? ({ '--term-width': termWidth === 'auto' ? 'fit-content(40%)' : termWidth } as CSSProperties) : undefined}
         >
             {items.map((item, index) => {
                 const empty = item.value === null || item.value === undefined || item.value === ''
+                const wide = item.wide === true
                 return (
                     <div
                         key={index}
                         className={cn(
                             'min-w-0',
-                            layout === 'stacked' && 'flex flex-col gap-0.5',
-                            layout === 'side' && 'grid grid-cols-[var(--term-width)_minmax(0,1fr)] items-baseline gap-3',
+                            (layout === 'stacked' || (side && wide)) && 'flex flex-col gap-0.5',
+                            side && (wide ? 'col-span-full' : ['col-span-2 grid grid-cols-subgrid items-baseline', pairGap]),
                             layout === 'row' && 'flex items-baseline gap-1.5',
-                            layout !== 'row' && item.wide === true && 'md:col-span-full',
+                            layout === 'stacked' && wide && 'md:col-span-full',
                         )}
                     >
-                        <dt className="text-xs leading-5 text-muted-foreground">{item.term}</dt>
+                        <dt className={cn('min-w-0 text-xs text-muted-foreground', small ? 'leading-4' : 'leading-5')}>{item.term}</dt>
                         <dd
                             className={cn(
                                 'min-w-0 break-words',
