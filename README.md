@@ -421,7 +421,8 @@ registerPlugins([dhis2Plugin({ functions: DHIS2_FUNCTIONS.filter((name) => name 
 ```
 
 The core's own dependencies are what every app's frame draws with: Base UI, lucide, cmdk (the
-command palette `Shell` opens), the class helpers and the IBM Plex fonts. Every other library is an
+command palette `Shell` opens), the class helpers and the IBM Plex fonts, and dnd-kit, the drag
+and drop engine, which only the parts that drag load. Every other library is an
 optional peer dependency, installed by an app that uses a part needing it. A part that needs one
 loads it on first use where it can, so a page that never draws the part fetches none of it, but the
 app's bundler still resolves the import when it builds, so the app installs it all the same:

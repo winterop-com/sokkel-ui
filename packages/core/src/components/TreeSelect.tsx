@@ -27,7 +27,7 @@ function index(
     return out
 }
 
-export interface TreeSelectWords extends TreeWords {
+export interface TreeSelectWords extends Omit<TreeWords, 'moved' | 'topLevel'> {
     placeholder: string
     search: string
     clear: string

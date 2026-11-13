@@ -10,7 +10,8 @@ controls and a table), `map` (regions and sites on maplibre with a legend and a 
 `scripts/size-budget.ts` builds each with Vite against the built packages and measures it gzipped:
 the JavaScript loaded with the page (`start`), what a dynamic import fetches later (`lazy`) and the
 CSS. It fails when one grows past its budget in `budget.json`, or bundles an engine (ECharts,
-maplibre, React Flow, CodeMirror, Mermaid) its budget does not list. CI runs it after building the
+maplibre, React Flow, CodeMirror, Mermaid, dnd-kit) its budget does not list. The dashboard lists
+dnd-kit for its table, whose drag layer is in a lazy chunk that loads only for a table that reorders. CI runs it after building the
 packages.
 
 The apps have no install of their own: they import the packages by their names from inside the

@@ -70,6 +70,9 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
         'components/table-cell':
             'what a cell knows of the table it is drawn in, apart from `DataTable` so `TagChips` reads it without the table; `useTableCell` and `TableCell` are exported by `DataTable`',
+        'components/table-reorder':
+            "what `DataTable` drags its rows with, loaded the first time a table with `onReorder` is drawn; its words are `DataTable`'s",
+        'components/tree-drag': "the tree's drag layer, loaded the first time a `Tree` with `onMove` or `onDrop` is drawn",
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
         'components/ui/checkbox-look':
@@ -318,6 +321,9 @@ const CORE_AREAS: Record<string, string> = {
     StepIndicator: 'Data display',
     Timeline: 'Data display',
     Tree: 'Data display',
+    // Drag and drop: things put in order or moved between places in a page.
+    DragDrop: 'Drag and drop',
+    Sortable: 'Drag and drop',
     UptimeBar: 'Data display',
     // Actions, dialogs and feedback.
     Banner: 'Actions, dialogs and feedback',
@@ -402,6 +408,7 @@ const AREA_ORDER = [
     'Chat and messaging',
     'Files and attachments',
     'Code, text and documents',
+    'Drag and drop',
     'Dashboard frame',
     'Board',
     'Calendar',

@@ -296,6 +296,8 @@ function FileTree() {
                         { id: 'line', separator: true },
                         { id: 'delete', label: 'Delete', icon: <Trash2 />, destructive: true, onSelect: () => remove(node.id) },
                     ]}
+                    // The vault sorts each folder by name, so a row only moves to another folder.
+                    canMove={(id, into) => items.find((item) => item.id === id)?.parent !== into}
                     onMove={(id, into) => setItems((now) => now.map((item) => (item.id === id ? { ...item, parent: into } : item)))}
                 />
             </div>
