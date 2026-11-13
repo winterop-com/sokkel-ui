@@ -52,7 +52,10 @@ import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
-import { AvatarGroup } from '@winterop-com/sokkel-ui/primitives/avatar'
+import { Board, type BoardMove } from '@winterop-com/sokkel-ui/board/Board'
+import { BoardCard } from '@winterop-com/sokkel-ui/board/BoardCard'
+import { BoardColumn } from '@winterop-com/sokkel-ui/board/BoardColumn'
+import { insertItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -532,51 +535,42 @@ const EDITED: Grants = {
     operator: ['projects:read', 'runs:read', 'runs:start', 'runs:schedule', 'secrets:list', 'secrets:read', 'billing:read'],
 }
 
-const holders = (role: Role) => MEMBERS.filter((member) => member.role === role && member.state !== 'invited')
+const holders = (people: readonly Member[], role: Role) => people.filter((member) => member.role === role && member.state !== 'invited')
 
-const ROLES: MatrixRole[] = ROLE_IDS.map((id) => {
-    const count = holders(id).length
-    return {
-        id,
-        label: ROLE_LABEL[id],
-        locked: id !== 'operator',
-        note: count === 1 ? '1 member' : `${String(count)} members`,
-    }
-})
+const rolesOf = (people: readonly Member[]): MatrixRole[] =>
+    ROLE_IDS.map((id) => {
+        const count = holders(people, id).length
+        return {
+            id,
+            label: ROLE_LABEL[id],
+            locked: id !== 'operator',
+            note: count === 1 ? '1 member' : `${String(count)} members`,
+        }
+    })
 
-const HOLDER_COLUMNS: DataColumn<Role>[] = [
-    { id: 'role', header: 'Role', width: '8rem', cell: (id) => <span className="font-medium">{ROLE_LABEL[id]}</span> },
-    {
-        id: 'kind',
-        header: 'Kind',
-        width: '6rem',
-        cell: (id) => <span className="text-muted-foreground">{id === 'operator' ? 'custom' : 'built in'}</span>,
-    },
-    {
-        id: 'members',
-        header: 'Members',
-        width: 'minmax(0,1fr)',
-        cell: (id) => (
-            <Row as="span" gap="md" className="min-w-0">
-                <AvatarGroup className="shrink-0">
-                    {holders(id).map((person) => (
-                        <PersonAvatar key={person.email} name={person.username} image={pictureOf(person.username)} />
-                    ))}
-                </AvatarGroup>
-                <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">
-                    {holders(id)
-                        .map((person) => person.username)
-                        .join(', ')}
-                </span>
-            </Row>
-        ),
-    },
-]
+const ROLES = rolesOf(MEMBERS)
+
+/** How many members hold another role than the one saved. */
+const regiven = (people: readonly Member[], saved: readonly Member[]) =>
+    people.filter((member) => saved.find((each) => each.email === member.email)?.role !== member.role).length
+
+/** Gives a member the role they were dragged to, at their place among its holders; the owner is never given nor taken. */
+function giveRole(people: readonly Member[], { card, from, to, index }: BoardMove): Member[] {
+    if (from === 'owner' || to === 'owner') return [...people]
+    const moving = people.find((member) => member.email === card)
+    if (moving === undefined) return [...people]
+    const rest = people.filter((member) => member.email !== card)
+    const inRole = holders(rest, to as Role)
+    const at = index >= inRole.length ? rest.length : rest.indexOf(inRole[index])
+    return insertItem(rest, { ...moving, role: to as Role }, at)
+}
 
 function RolesPage() {
     const [grants, setGrants] = useState<Grants>(EDITED)
     const [saved, setSaved] = useState<Grants>(SAVED)
-    const changes = countChanges(grants, saved, ROLES, PERMISSIONS)
+    const [people, setPeople] = useState<Member[]>(MEMBERS)
+    const [kept, setKept] = useState<Member[]>(MEMBERS)
+    const changes = countChanges(grants, saved, ROLES, PERMISSIONS) + regiven(people, kept)
     const toggle = (role: string, permission: string, granted: boolean) =>
         setGrants({
             ...grants,
@@ -595,12 +589,48 @@ function RolesPage() {
                         </Button>
                     }
                 />
-                <PermissionMatrix roles={ROLES} groups={PERMISSIONS} value={grants} saved={saved} onChange={toggle} />
-                <Section title="Who holds each role" variant="flat">
-                    <DataTable variant="list" columns={HOLDER_COLUMNS} rows={[...ROLE_IDS]} rowKey={(id) => id} hover={false} />
+                <PermissionMatrix roles={rolesOf(people)} groups={PERMISSIONS} value={grants} saved={saved} onChange={toggle} />
+                <Section title="Who holds each role" variant="flat" description="Drag a member to another role to give it to them.">
+                    <Board onMove={(move) => setPeople(giveRole(people, move))} columnWidth="11rem">
+                        <Row gap="md" align="start">
+                            {ROLE_IDS.map((id) => {
+                                const held = holders(people, id)
+                                return (
+                                    <BoardColumn
+                                        key={id}
+                                        id={id}
+                                        title={ROLE_LABEL[id]}
+                                        icon={<ShieldCheck className="size-4 text-muted-foreground" aria-hidden />}
+                                        count={held.length}
+                                        empty="No one"
+                                    >
+                                        {held.map((member) => (
+                                            <BoardCard
+                                                key={member.email}
+                                                id={member.email}
+                                                code={member.username}
+                                                title={member.name}
+                                                assignee={{ name: member.username, image: pictureOf(member.username) }}
+                                            />
+                                        ))}
+                                    </BoardColumn>
+                                )
+                            })}
+                        </Row>
+                    </Board>
                 </Section>
             </Page>
-            <SaveBar count={changes} onSave={() => setSaved(grants)} onDiscard={() => setGrants(saved)} />
+            <SaveBar
+                count={changes}
+                onSave={() => {
+                    setSaved(grants)
+                    setKept(people)
+                }}
+                onDiscard={() => {
+                    setGrants(saved)
+                    setPeople(kept)
+                }}
+            />
         </Stack>
     )
 }
@@ -1334,7 +1364,11 @@ export const Invite: StoryObj = {
     ),
 }
 
-/** The roles against what each may do: the built-in roles read-only, the custom one with four unsaved changes and the save bar. */
+/**
+ * The roles against what each may do: the built-in roles read-only, the custom one with four
+ * unsaved changes and the save bar, and who holds each role on a board: a member dragged to another
+ * role is given it, counted on the save bar. The owner is never given nor taken there.
+ */
 export const Roles: StoryObj = {
     render: () => (
         <AdminApp view="roles">

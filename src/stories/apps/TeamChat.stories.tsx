@@ -9,6 +9,7 @@ import {
     Eye,
     FileText,
     Files,
+    Link2,
     Hash,
     House,
     MessageSquare,
@@ -24,7 +25,7 @@ import {
     UserPlus,
     Users,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { ChannelHeader, type ChannelHeaderAction, type ChannelHeaderTab } from '@winterop-com/sokkel-ui/ChannelHeader'
 import { ChannelList, type ChannelSection } from '@winterop-com/sokkel-ui/ChannelList'
@@ -39,10 +40,13 @@ import {
 import { Conversation, ConversationStart, ThreadView } from '@winterop-com/sokkel-ui/Conversation'
 import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
 import { MessageComposer, type MessageSchedule } from '@winterop-com/sokkel-ui/MessageComposer'
+import { ListRow } from '@winterop-com/sokkel-ui/ListRow'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
+import { SortableList } from '@winterop-com/sokkel-ui/Sortable'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import {
@@ -55,7 +59,7 @@ import {
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row } from '@winterop-com/sokkel-ui/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A team chat in the library's frame: a strip of places on the far left, the channels and direct
@@ -278,28 +282,64 @@ const ERROR =
 
 const STARTER = 'Morning. `nightly-export` failed at **validate** again: 37 rows carry an amount that is not a number.'
 
-function ChannelPage({ onThread, threadOpen }: { onThread: () => void; threadOpen: boolean }) {
-    const { of, flip } = useReactions({ check: true })
-    const [tab, setTab] = useState('messages')
+interface PinnedItem {
+    id: string
+    title: string
+    detail: string
+    icon: ReactNode
+}
+
+/** What harbor-ops keeps pinned, in the order the channel put them. */
+const PINNED: PinnedItem[] = [
+    { id: 'cutover', title: 'Cutover plan for Saturday', detail: 'Pinned by grace', icon: <FileText aria-hidden /> },
+    { id: 'rota', title: 'On-call rota', detail: 'docs.example.org/harbor/on-call, pinned by margaret', icon: <Link2 aria-hidden /> },
+    { id: 'failed', title: 'orders-failed.csv', detail: 'Pinned by margaret', icon: <FileText aria-hidden /> },
+    { id: 'retry', title: 'How to retry a failed sync', detail: 'Pinned by linus', icon: <Pin aria-hidden /> },
+]
+
+/** The channel's pins in its own order, each dragged by its grip or moved with the arrows from it. */
+function Pins() {
+    const [pins, setPins] = useState(PINNED)
     return (
-        <Conversation
-            header={
-                <ChannelHeader
-                    name="harbor-ops"
-                    topic="Deploys, runs and incidents for harbor. On call this week: grace."
-                    onDetails={noop}
-                    members={[GRACE, LINUS, MARGARET]}
-                    memberCount={12}
-                    onMembers={noop}
-                    actions={ACTIONS}
-                    tabs={TABS}
-                    tab={tab}
-                    onTabChange={setTab}
-                />
-            }
-            typing="linus is typing"
-            composer={<Composer placeholder="Message #harbor-ops" />}
-        >
+        <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto px-(--density-chat-inset) py-4">
+            <SortableList
+                label="Pinned in harbor-ops"
+                items={pins}
+                itemKey={(pin) => pin.id}
+                itemLabel={(pin) => pin.title}
+                onMove={(from, to) => setPins(moveItem(pins, from, to))}
+                renderItem={(pin) => <ListRow icon={pin.icon} title={pin.title} detail={pin.detail} />}
+            />
+        </Stack>
+    )
+}
+
+function ChannelPage({ onThread, threadOpen, startTab = 'messages' }: { onThread: () => void; threadOpen: boolean; startTab?: string }) {
+    const { of, flip } = useReactions({ check: true })
+    const [tab, setTab] = useState(startTab)
+    const header = (
+        <ChannelHeader
+            name="harbor-ops"
+            topic="Deploys, runs and incidents for harbor. On call this week: grace."
+            onDetails={noop}
+            members={[GRACE, LINUS, MARGARET]}
+            memberCount={12}
+            onMembers={noop}
+            actions={ACTIONS}
+            tabs={TABS}
+            tab={tab}
+            onTabChange={setTab}
+        />
+    )
+    if (tab === 'pins')
+        return (
+            <Stack gap="none" className="h-full min-h-0">
+                {header}
+                <Pins />
+            </Stack>
+        )
+    return (
+        <Conversation header={header} typing="linus is typing" composer={<Composer placeholder="Message #harbor-ops" />}>
             <ChatDay label="Yesterday">
                 <ChatMessage
                     author="grace"
@@ -456,7 +496,7 @@ function NewChannelPage() {
     )
 }
 
-function TeamChat({ start = 'harbor-ops', thread = false }: { start?: string; thread?: boolean }) {
+function TeamChat({ start = 'harbor-ops', thread = false, tab }: { start?: string; thread?: boolean; tab?: string }) {
     const [active, setActive] = useState(start)
     const [panel, setPanel] = useState(thread)
     const body =
@@ -465,7 +505,7 @@ function TeamChat({ start = 'harbor-ops', thread = false }: { start?: string; th
         ) : active === 'juniper-launch' ? (
             <NewChannelPage />
         ) : (
-            <ChannelPage threadOpen={panel} onThread={() => setPanel(true)} />
+            <ChannelPage threadOpen={panel} onThread={() => setPanel(true)} startTab={tab} />
         )
     return (
         <TooltipProvider>
@@ -501,3 +541,6 @@ export const DirectMessage: StoryObj = { name: 'Direct message', render: () => <
 
 /** A channel just created: nothing said yet, and the ways to get it started. */
 export const NewChannel: StoryObj = { name: 'New channel', render: () => <TeamChat start="juniper-launch" /> }
+
+/** The channel's Pins tab: what it keeps pinned, put in its own order by dragging a grip, or with the arrows from a focused grip. */
+export const Pinned: StoryObj = { name: 'Pins', render: () => <TeamChat tab="pins" /> }
