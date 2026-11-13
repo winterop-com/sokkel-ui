@@ -2,6 +2,7 @@ import { CornerDownLeft, Plus } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 
 import { cn } from '../lib/cn'
+import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { failureOf } from '../lib/edit'
 import { ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
 import { Input } from './ui/input'
@@ -120,7 +121,7 @@ export function QuickAdd({
             aria-busy={adding || undefined}
             className={cn(
                 'relative flex h-(--density-control) min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
-                error !== null && 'border-critical/80 pr-9 focus-within:border-critical focus-within:ring-critical/25',
+                error !== null && ['pr-9', ISSUE_WITHIN_EDGE.critical],
                 className,
             )}
         >

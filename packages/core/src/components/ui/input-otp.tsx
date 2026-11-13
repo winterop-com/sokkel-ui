@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '../../lib/cn'
+import { HOLDS_INVALID_EDGE } from '../../lib/issue-edge'
 import { OTPInput, OTPInputContext } from 'input-otp'
 import { MinusIcon } from 'lucide-react'
 
@@ -22,16 +23,7 @@ function InputOTP({ className, containerClassName, ...props }: InputOTPProps) {
 export type InputOTPGroupProps = React.ComponentProps<'div'>
 
 function InputOTPGroup({ className, ...props }: InputOTPGroupProps) {
-    return (
-        <div
-            data-slot="input-otp-group"
-            className={cn(
-                'flex items-center rounded-control has-aria-invalid:border-destructive has-aria-invalid:focus-within:ring-3 has-aria-invalid:focus-within:ring-destructive/20 dark:has-aria-invalid:focus-within:ring-destructive/40',
-                className,
-            )}
-            {...props}
-        />
-    )
+    return <div data-slot="input-otp-group" className={cn('flex items-center rounded-control', HOLDS_INVALID_EDGE, className)} {...props} />
 }
 
 export type InputOTPSlotProps = React.ComponentProps<'div'> & {
@@ -47,7 +39,7 @@ function InputOTPSlot({ index, className, ...props }: InputOTPSlotProps) {
             data-slot="input-otp-slot"
             data-active={isActive}
             className={cn(
-                'relative flex size-(--density-control) items-center justify-center border-y border-r border-input text-sm transition-all outline-none first:rounded-l-control first:border-l last:rounded-r-control aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40',
+                'relative flex size-(--density-control) items-center justify-center border-y border-r border-input text-sm transition-all outline-none first:rounded-l-control first:border-l last:rounded-r-control aria-invalid:border-critical/80 data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-critical data-[active=true]:aria-invalid:ring-critical/20 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-critical/40',
                 className,
             )}
             {...props}

@@ -23,12 +23,11 @@ export interface Issue {
 const INK = { critical: 'text-critical-ink', warning: 'text-warning-ink' } as const
 const ICON = { critical: CircleAlert, warning: TriangleAlert } as const
 
-/** An input's edge for the worst of its issues, overriding the primitive's own invalid ring. */
-export const ISSUE_EDGE = {
-    critical:
-        'border-critical/80 focus-visible:border-critical aria-invalid:border-critical/80 aria-invalid:ring-0 aria-invalid:focus-visible:ring-3 aria-invalid:focus-visible:ring-critical/25 dark:aria-invalid:border-critical/80',
-    warning: 'border-warning/80 focus-visible:border-warning focus-visible:ring-warning/25',
-} as const
+/**
+ * An input's edge for the worst of its issues, in the same tints a primitive draws from its own
+ * `aria-invalid` and `Field` draws on its control.
+ */
+export { ISSUE_EDGE } from '../lib/issue-edge'
 
 /** The tone of the worst issue, or null for none. */
 export function worst(issues: readonly Issue[]): Issue['tone'] | null {

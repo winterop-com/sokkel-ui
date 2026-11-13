@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { Combobox as ComboboxPrimitive } from '@base-ui/react'
+import { HOLDS_INVALID_EDGE } from '../../lib/issue-edge'
 import { cn } from '../../lib/utils'
 
 import { Button } from './button'
@@ -202,7 +203,8 @@ function ComboboxChips({ className, ...props }: ComboboxChipsProps) {
         <ComboboxPrimitive.Chips
             data-slot="combobox-chips"
             className={cn(
-                'flex min-h-(--density-control) flex-wrap items-center gap-1 rounded-control border border-input bg-field bg-clip-padding px-2.5 py-1 text-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring has-aria-invalid:border-destructive has-aria-invalid:focus-within:ring-3 has-aria-invalid:focus-within:ring-destructive/20 has-data-[slot=combobox-chip]:px-1 max-md:min-h-finger dark:has-aria-invalid:border-destructive/50 dark:has-aria-invalid:focus-within:ring-destructive/40',
+                'flex min-h-(--density-control) flex-wrap items-center gap-1 rounded-control border border-input bg-field bg-clip-padding px-2.5 py-1 text-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring has-data-[slot=combobox-chip]:px-1 max-md:min-h-finger',
+                HOLDS_INVALID_EDGE,
                 className,
             )}
             {...props}

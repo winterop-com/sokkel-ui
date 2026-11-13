@@ -95,6 +95,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'lib/edit': "the edit cycle `InlineEdit` and `DataTable`'s editable cells share; their types are exported by both",
         'lib/finger': "the finger-sized hit area the primitives' bare triggers wear on a phone",
         'lib/focus': 'where focus goes when a popup closes',
+        'lib/issue-edge':
+            'the edge a control wears for an issue, which the primitives, `Field` and `IssueMark` draw from; `ISSUE_EDGE` is exported by `IssueMark`',
         'lib/jq-grammar': 'the jq grammar the highlighter loads',
         'lib/katex': "`Markdown`'s math engine, loaded the first time a message holds math",
         'lib/markdown-html':

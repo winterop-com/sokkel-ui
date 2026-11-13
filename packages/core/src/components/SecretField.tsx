@@ -2,6 +2,7 @@ import { Eye, EyeOff, KeyRound } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type HTMLInputAutoCompleteAttribute, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { FRAME_BUTTON } from './entry'
 import { describedBy, Field, FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
@@ -160,8 +161,7 @@ export function SecretField({
                 'flex h-(--density-control) w-full min-w-0 items-center gap-1 rounded-control border border-input bg-field pr-1 pl-2.5 text-base transition-colors md:text-sm',
                 open ? 'cursor-text focus-within:border-ring focus-within:ring-1 focus-within:ring-ring' : 'bg-muted/40',
                 disabled && 'cursor-not-allowed bg-input/50 opacity-50',
-                bare && tone === 'critical' && 'border-critical/80 focus-within:border-critical focus-within:ring-critical/25',
-                bare && tone === 'warning' && 'border-warning/80 focus-within:border-warning focus-within:ring-warning/25',
+                bare && tone !== null && ISSUE_WITHIN_EDGE[tone],
                 bare && className,
             )}
         >
