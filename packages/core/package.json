@@ -246,6 +246,10 @@
             "types": "./dist/components/Field.d.ts",
             "import": "./dist/components/Field.js"
         },
+        "./FieldGroup": {
+            "types": "./dist/components/FieldGroup.d.ts",
+            "import": "./dist/components/FieldGroup.js"
+        },
         "./FileField": {
             "types": "./dist/components/FileField.d.ts",
             "import": "./dist/components/FileField.js"

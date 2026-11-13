@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import { useEffect, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '../lib/cn'
-import { describedBy, Field, type RequiredMark } from './Field'
+import { describedBy, Field, type FieldWords, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { Input } from './ui/input'
 
@@ -165,6 +165,8 @@ export interface TypedFieldProps<V extends string | number> extends EntryFieldPr
     /** What is said of typed text that does not read. */
     unreadable: (text: string) => Issue
     bounds: BoundWords
+    /** The field's own words, such as the one said of a required field. */
+    fieldWords?: Partial<FieldWords>
     /** The clear button's label, for a field that can be emptied while it is not required. */
     clear?: string
     /** Text before the input, such as a currency. */
@@ -212,6 +214,7 @@ export function TypedField<V extends string | number>({
     className,
     bare = false,
     read,
+    fieldWords,
     write,
     before,
     unreadable,
@@ -326,6 +329,7 @@ export function TypedField<V extends string | number>({
             required={required}
             requiredMark={requiredMark}
             issues={issues}
+            words={fieldWords}
             issueOpen={issueOpen}
             onIssueOpenChange={onIssueOpenChange}
             className={className}

@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react'
+
 import { cn } from '../lib/cn'
-import { Field, describedBy, type RequiredMark } from './Field'
+import { Field, describedBy, type FieldWords, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
@@ -7,6 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 export interface SelectFieldOption {
     value: string
     label: string
+    /** Drawn before the label, in the list and in the select once chosen, such as a status dot or a kind's icon. */
+    icon?: ReactNode
+    /** A quiet fact at the row's end in the list, such as the value it would inherit; the select itself never shows it. */
+    detail?: ReactNode
     /** Shown in the list but not chosen. */
     disabled?: boolean
 }
@@ -46,13 +52,16 @@ export interface SelectFieldProps {
     onChange?: (value: string) => void
     /** Classes for the field, such as its span in a grid. */
     className?: string
+    words?: Partial<FieldWords>
 }
 
 /**
  * A labeled choice from a list: a `Field` with the library's select inside, wired together, laid
  * out as `TextField` and `NumberField` are. The label names the select, the help line describes
  * it, and an issue marks it invalid and draws its edge. `placeholder` shows while nothing is
- * chosen; `readOnly` shows the value with its list closed.
+ * chosen; `readOnly` shows the value with its list closed. An option's `icon` goes before its label
+ * in the list and in the select once chosen; its `detail` is a quiet fact at the end of its row in
+ * the list only.
  */
 export function SelectField({
     id,
@@ -78,11 +87,18 @@ export function SelectField({
     disabled,
     onChange,
     className,
+    words,
 }: SelectFieldProps) {
     const all: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issues]
     const invalid = worst(all) === 'critical' || undefined
     const known = (given: string | undefined) =>
         given === undefined ? undefined : options.some((option) => option.value === given) ? given : null
+    // With icons, the select draws the chosen option's icon before its label; without, its label alone.
+    const marked = options.some((option) => option.icon !== undefined)
+    const shown = (chosen: string | null) => {
+        const option = options.find((one) => one.value === chosen)
+        return option === undefined ? placeholder : <OptionRow icon={option.icon} label={option.label} />
+    }
     return (
         <Field
             id={id}
@@ -98,6 +114,7 @@ export function SelectField({
             issueOpen={issueOpen}
             onIssueOpenChange={onIssueOpenChange}
             className={className}
+            words={words}
         >
             <Select
                 items={options}
@@ -116,16 +133,34 @@ export function SelectField({
                     aria-describedby={describedBy(id, { help, description, fallback })}
                     className={cn('w-full', mono && 'font-mono')}
                 >
-                    <SelectValue placeholder={placeholder} />
+                    {marked ? <SelectValue placeholder={placeholder}>{shown}</SelectValue> : <SelectValue placeholder={placeholder} />}
                 </SelectTrigger>
                 <SelectContent>
                     {options.map((option) => (
-                        <SelectItem key={option.value} value={option.value} disabled={option.disabled} className={cn(mono && 'font-mono')}>
-                            {option.label}
+                        <SelectItem
+                            key={option.value}
+                            value={option.value}
+                            disabled={option.disabled}
+                            detail={option.detail}
+                            className={cn(mono && 'font-mono')}
+                        >
+                            {option.icon === undefined ? option.label : <OptionRow icon={option.icon} label={option.label} />}
                         </SelectItem>
                     ))}
                 </SelectContent>
             </Select>
         </Field>
+    )
+}
+
+/** An option's icon before its label, the icon sized and toned as the rest of the field's. */
+function OptionRow({ icon, label }: { icon: ReactNode; label: string }) {
+    return (
+        <>
+            <span aria-hidden className="flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">
+                {icon}
+            </span>
+            <span className="min-w-0 truncate">{label}</span>
+        </>
     )
 }

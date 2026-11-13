@@ -2,11 +2,12 @@ import { Minus, Plus } from 'lucide-react'
 
 import { readNumber, stepNumber, writeNumber } from '../lib/numbers'
 import { FRAME_BUTTON, TypedField, type EntryFieldProps } from './entry'
+import type { FieldWords } from './Field'
 
 export type { EntryFieldProps } from './entry'
 
 /** The words a number field says; each bound is written as the field writes a number. */
-export interface NumberFieldWords {
+export interface NumberFieldWords extends FieldWords {
     /** Said when what is typed is not a number. */
     unreadable: string
     /** Said when a field of whole numbers is given a fraction. */
@@ -26,6 +27,7 @@ export interface NumberFieldWords {
 }
 
 const WORDS: NumberFieldWords = {
+    required: 'required',
     unreadable: 'Enter a number',
     whole: 'Enter a whole number',
     example: (sample) => `As in ${sample}.`,
@@ -93,6 +95,7 @@ export function NumberField({
                 detail: words.example(format(integer ? 1250 : 1250.5)),
             })}
             bounds={words}
+            fieldWords={{ required: words.required }}
             onKeyDown={(event, entry) => {
                 const steps = { ArrowUp: 1, ArrowDown: -1, PageUp: 10, PageDown: -10 }[event.key]
                 if (steps === undefined) return

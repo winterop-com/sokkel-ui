@@ -5,7 +5,7 @@ import { useFileDrop } from '../hooks/use-file-drop'
 import { cn } from '../lib/cn'
 import { acceptList, checkFiles, type CheckedRefusal, type RefusalReason } from '../lib/uploads'
 import { AttachmentList, type AttachmentListWords } from './AttachmentList'
-import { Field, describedBy } from './Field'
+import { Field, describedBy, type FieldWords } from './Field'
 import { formatSize } from './FileList'
 import type { Issue } from './IssueMark'
 import { Button } from './ui/button'
@@ -21,7 +21,7 @@ export interface FileRefusal {
 }
 
 /** The words a file field says. */
-export interface FileFieldWords {
+export interface FileFieldWords extends FieldWords {
     /** The button that opens the picker, by how many files the field takes. */
     choose: (many: boolean) => string
     /** What the zone says it takes, by how many files the field takes. */
@@ -51,6 +51,7 @@ export interface FileFieldWords {
 const listFormat = new Intl.ListFormat('en-US', { type: 'disjunction' })
 
 export const FILE_FIELD_WORDS: FileFieldWords = {
+    required: 'required',
     choose: (many) => (many ? 'Choose files' : 'Choose a file'),
     drop: (many) => (many ? 'Drop files here' : 'Drop a file here'),
     dropping: 'Drop to add',
@@ -324,6 +325,7 @@ export function FileField({
                 description={description}
                 help={help}
                 required={required}
+                words={{ required: words.required }}
                 error={error}
                 issues={issues}
                 issueOpen={issueOpen}

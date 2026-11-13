@@ -105,9 +105,12 @@ function SelectLabel({ className, ...props }: SelectLabelProps) {
     )
 }
 
-export type SelectItemProps = SelectPrimitive.Item.Props
+export type SelectItemProps = SelectPrimitive.Item.Props & {
+    /** A quiet fact at the row's end, before the check, such as the value it would inherit; the chosen value never shows it. */
+    detail?: React.ReactNode
+}
 
-function SelectItem({ className, children, ...props }: SelectItemProps) {
+function SelectItem({ className, children, detail, ...props }: SelectItemProps) {
     return (
         <SelectPrimitive.Item
             data-slot="select-item"
@@ -118,6 +121,7 @@ function SelectItem({ className, children, ...props }: SelectItemProps) {
             {...props}
         >
             <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">{children}</SelectPrimitive.ItemText>
+            {detail !== undefined && <span className="shrink-0 pl-2 text-xs text-muted-foreground">{detail}</span>}
             <SelectPrimitive.ItemIndicator
                 render={<span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />}
             >

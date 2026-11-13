@@ -153,4 +153,26 @@ describe('CronField', () => {
         )
         expect(html).toContain('>Hver dag kl. 02:00<')
     })
+
+    it('required, stars its label, says the word to a screen reader and marks its input', () => {
+        const html = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} required />)
+        expect(html).toContain('aria-required="true"')
+        expect(html).toContain('<span class="sr-only">required</span>')
+        expect(html).toContain('>*</span>')
+    })
+
+    it('required with the word, draws the word in its own language after the label', () => {
+        const html = renderToStaticMarkup(
+            <CronField value="0 2 * * *" onChange={noop} from={FROM} required requiredMark="word" words={{ required: 'påkrevd' }} />,
+        )
+        expect(html).toContain('>påkrevd</span>')
+        expect(html).not.toContain('sr-only')
+        expect(html).not.toContain('>*</span>')
+    })
+
+    it('not required, says nothing of it', () => {
+        const html = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} />)
+        expect(html).not.toContain('aria-required')
+        expect(html).not.toContain('>required<')
+    })
 })

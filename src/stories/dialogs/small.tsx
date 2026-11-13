@@ -552,6 +552,7 @@ export function Schedule() {
                     id="schedule-cron"
                     value={cron}
                     onChange={setCron}
+                    required
                     from={new Date('2026-11-05T10:17:00Z')}
                     placeholder="0 2 * * *"
                     presets={PRESETS}
