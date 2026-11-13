@@ -79,7 +79,7 @@ export interface ChartSpec {
     showScale?: boolean
     /** A ring's total written in its middle, with this word under it, such as `runs`; under a gauge's figure, the word alone. */
     total?: string
-    /** A scatter's axes fitted to its points rather than starting at zero. */
+    /** A scatter's axes, or a line's, an area's or a step's value axis, fitted to the figures rather than starting at zero. */
     fit?: boolean
     /** How many bins a histogram splits its numbers into, or how wide each is. */
     bins?: number | { width: number }

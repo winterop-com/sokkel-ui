@@ -38,6 +38,8 @@ export interface InlineEditorProps {
     inCell?: boolean
     align?: 'start' | 'end'
     placeholder?: string
+    /** The day a date editor's calendar starts its weeks on: 1 for Monday (the default), 0 for Sunday. */
+    weekStartsOn?: 0 | 1
     /** A key, or a button, that saves, drops or moves. */
     onMove: (move: EditMove) => void
     /** A select's choice, saved at once. */
@@ -96,6 +98,7 @@ export function InlineEditor({
     inCell = false,
     align = 'start',
     placeholder,
+    weekStartsOn,
     onMove,
     onChoose,
     onLeave,
@@ -221,7 +224,12 @@ export function InlineEditor({
                     onValueChange={(value) => onDraftChange(value === null ? '' : String(value))}
                 />
             ) : kind === 'date' ? (
-                <DateField {...shared} defaultValue={draft === '' ? null : draft} onValueChange={(value) => onDraftChange(value ?? '')} />
+                <DateField
+                    {...shared}
+                    weekStartsOn={weekStartsOn}
+                    defaultValue={draft === '' ? null : draft}
+                    onValueChange={(value) => onDraftChange(value ?? '')}
+                />
             ) : (
                 <TimeField {...shared} defaultValue={draft === '' ? null : draft} onValueChange={(value) => onDraftChange(value ?? '')} />
             )

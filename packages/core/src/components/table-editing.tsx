@@ -309,6 +309,7 @@ function contentOf<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: 
                 selectAll={table.open.selectAll}
                 inCell
                 align={column.align === 'end' ? 'end' : 'start'}
+                weekStartsOn={spec.editor === 'date' ? spec.weekStartsOn : undefined}
                 onMove={(move) => moveEdit(table, move)}
                 onChoose={(value) => {
                     if (saveEdit(table, false, value)) closeEdit(table, true)

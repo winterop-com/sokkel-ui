@@ -79,6 +79,8 @@ export interface Prefs {
     view: 'list' | 'board'
     /** How a list orders its rows: by the day they are due, or in the person's own order. */
     order: 'due' | 'mine'
+    /** The day the due date's calendar starts its weeks on. */
+    weekStart: 'monday' | 'sunday'
     /** Who a task added from the quick add is given to. */
     assignee: Person
     /** The project a task added outside a project's list goes into. */
@@ -91,6 +93,7 @@ export const DEFAULT_PREFS: Prefs = {
     showDone: false,
     view: 'list',
     order: 'mine',
+    weekStart: 'monday',
     assignee: 'ada',
     project: 'harbor',
 }

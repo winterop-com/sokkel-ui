@@ -33,7 +33,12 @@ function StateSelect({
 } & Omit<React.ComponentProps<typeof Select<string>>, 'items' | 'children'>) {
     return (
         <Select items={STATES} {...props}>
-            <SelectTrigger size={size} className="w-40" aria-label="Run state" {...triggerProps}>
+            <SelectTrigger
+                size={size}
+                widest={[placeholder, ...STATES.map((state) => state.label)]}
+                aria-label="Run state"
+                {...triggerProps}
+            >
                 <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
@@ -50,6 +55,7 @@ function StateSelect({
 const meta: Meta = { title: 'Primitives/Inputs/Select', parameters: { frame: 'column' } }
 export default meta
 
+/** The sizes and a placeholder; each select keeps room for its widest label with `widest`, so it holds one width whatever is chosen. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="end" wrap>
@@ -77,7 +83,7 @@ export const States: StoryObj = {
             </Specimen>
             <Specimen label="empty">
                 <Select items={[]}>
-                    <SelectTrigger className="w-40" aria-label="Webhook">
+                    <SelectTrigger aria-label="Webhook">
                         <SelectValue placeholder="No webhooks yet" />
                     </SelectTrigger>
                     <SelectContent />

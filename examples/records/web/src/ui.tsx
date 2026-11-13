@@ -1,6 +1,7 @@
 import type { StatusMap } from '@winterop-com/sokkel-ui/lib/status'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import type { Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { createContext, useContext, useEffect, type ReactNode } from 'react'
 
 import type { AnswerValue, Form, Question } from './data/forms'
@@ -22,6 +23,14 @@ export const STATE_DOT: Record<string, string> = {
     forwarded: 'var(--status-succeeded)',
     rejected: 'var(--status-failed)',
     withdrawn: 'var(--status-cancelled)',
+}
+
+/** The places above a page reached from a section's list: the project, then the section, for the top bar. */
+export function sectionTrail(label: string, path: string): Crumb[] {
+    return [
+        { label: 'juniper', href: '#/', code: true },
+        { label, href: `#${path}` },
+    ]
 }
 
 export function KindBadge({ form }: { form: Form }) {

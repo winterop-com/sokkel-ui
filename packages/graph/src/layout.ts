@@ -70,15 +70,16 @@ export interface GraphLayoutStyle {
     spacing?: GraphSpacing
     /**
      * A graph running right that would be wider than this many pixels is cut into as many rows,
-     * stacked down, as keep each about this wide, each carrying on from the one above; left out,
+     * stacked down, as keep each about this wide, each carrying on from the one above; a graph
+     * running down whose rank is wider has the rank cut into rows of as many nodes as fit. Left out,
      * it is never cut.
      */
     wrapWidth?: number
     /**
      * The room the graph is fitted into, in its own pixels at the least zoom a fit goes to, such as
-     * its canvas's: a graph running right that fits across it stays in one row, and one that does
-     * not is cut into the rows that fit the room at the larger zoom, or kept whole when cutting only
-     * adds height. A height of 0 cuts by the width alone.
+     * its canvas's: a graph that fits across it stays whole, and one that does not is cut (a graph
+     * running right into rows, one running down its wide ranks into rows) as fits the room at the
+     * larger zoom, or kept whole when cutting only adds height. A height of 0 cuts by the width alone.
      */
     wrapRoom?: { width: number; height: number }
 }
@@ -109,8 +110,18 @@ function wrapLimit(style: GraphLayoutStyle): number {
 /** Whether a graph may need cutting into rows at all, from the rank layout, which is never narrower than elk's. */
 function mayWrap(shape: GraphShape, direction: GraphDirection, style: GraphLayoutStyle): boolean {
     const limit = wrapLimit(style)
-    if (direction !== 'right' || !(limit > 0) || limit === Infinity || shape.nodes.length < 2) return false
-    return boundsOf(rankLayout(shape, 'right', style.spacing).nodes).width > limit
+    if (!(limit > 0) || limit === Infinity || shape.nodes.length < 2) return false
+    return boundsOf(rankLayout(shape, direction, style.spacing).nodes).width > limit
+}
+
+/**
+ * The most nodes a rank of a graph running down keeps side by side to stay `limit` wide: as many
+ * of its widest node as fit with the gaps between them, and never fewer than one.
+ */
+export function rankBound(shape: GraphShape, limit: number, spacing: GraphSpacing = 'normal'): number {
+    const widest = Math.max(1, ...shape.nodes.map((node) => node.width))
+    const gap = GRAPH_SPACING[spacing].node
+    return Math.max(1, Math.floor((limit + gap) / (widest + gap)))
 }
 
 /** How wide and tall a placed graph is drawn, its edges' bends included. */
@@ -395,7 +406,49 @@ export async function layoutGraph(
     const using = elk ?? (await loadElk())
     const flat = fromElk(shape, await using.layout(toElk(shape, direction, style)))
     if (!mayWrap(shape, direction, style)) return flat
+    if (direction === 'down') return narrowed(shape, style, using, flat)
     return wrapped(shape, direction, style, using, flat)
+}
+
+/**
+ * A graph running down whose ranks are too wide, its wide ranks cut into rows: each rank holds at
+ * most as many nodes as fit across the limit, the rest moved to ranks of their own under it, where
+ * a long chain running right is cut into rows. The bound is stepped down while the drawing, its
+ * edges included, is still too wide. Given a room, the cut is kept only when it fits the room at
+ * a larger zoom than the graph whole, so a cut that only adds height is not.
+ */
+async function narrowed(shape: GraphShape, style: GraphLayoutStyle, using: ElkEngine, flat: PlacedGraph): Promise<PlacedGraph> {
+    const limit = wrapLimit(style)
+    const size = placedBounds(flat)
+    if (size.width <= limit) return flat
+    const lay = async (bound: number) => {
+        const graph = toElk(shape, 'down', style)
+        const placed = fromElk(
+            shape,
+            await using.layout({
+                ...graph,
+                layoutOptions: {
+                    ...graph.layoutOptions,
+                    'elk.layered.layering.strategy': 'COFFMAN_GRAHAM',
+                    'elk.layered.layering.coffmanGraham.layerBound': String(bound),
+                },
+            }),
+        )
+        return { placed, ...placedBounds(placed) }
+    }
+    let best: { placed: PlacedGraph; width: number; height: number } | null = null
+    for (let bound = rankBound(shape, limit, style.spacing), tries = 0; bound >= 1 && tries < WRAP_TRIES; bound -= 1, tries += 1) {
+        const laid = await lay(bound)
+        if (best === null || laid.width < best.width) best = laid
+        if (laid.width <= limit) break
+    }
+    if (best === null || best.width >= size.width) return flat
+    const room = style.wrapRoom
+    if (room === undefined || room.height <= 0) return best.placed
+    const zoomOf = (drawn: { width: number; height: number }) =>
+        Math.min(room.width / Math.max(1, drawn.width), room.height / Math.max(1, drawn.height))
+    const whole = size.width <= (style.wrapWidth ?? Infinity)
+    return whole && zoomOf(size) >= zoomOf(best) ? flat : best.placed
 }
 
 /**

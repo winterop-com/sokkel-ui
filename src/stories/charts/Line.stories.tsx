@@ -15,6 +15,17 @@ const TWO: ChartSpec = { rows: STEP_ROWS, x: 'time', y: ['Runs', 'Failures'], co
 const BY_JOB: ChartSpec = { rows: JOB_STEP_ROWS, x: 'time', y: 'runs', series: 'job', labelEvery: 16 }
 const PERCENTILES: ChartSpec = { rows: STEP_ROWS, x: 'time', y: ['p50', 'p90', 'p99'], colors: STEP_COLORS, unit: 's', labelEvery: 16 }
 
+const MEMORY: ChartSpec = {
+    rows: Array.from({ length: 24 }, (_, hour) => ({
+        hour: `${String(hour).padStart(2, '0')}:00`,
+        memory: Math.round(430 + 18 * Math.sin(hour / 3) + 6 * Math.cos(hour * 1.7)),
+    })),
+    x: 'hour',
+    y: 'memory',
+    unit: ' MB',
+    fit: true,
+}
+
 const TWO_LEGEND = chartLegend('line', TWO)
 const BY_JOB_LEGEND = chartLegend('line', BY_JOB)
 const PERCENTILE_LEGEND = chartLegend('line', PERCENTILES)
@@ -63,6 +74,17 @@ export const Percentiles: StoryObj = {
                 file="run-duration"
             >
                 {(state) => <Chart kind="line" label="Run duration percentiles across the day" {...PERCENTILES} {...state} />}
+            </ChartFrame>
+        </Ground>
+    ),
+}
+
+/** The worker's memory across the day, its value axis fitted to the figures with `fit` rather than starting at zero, so a swing of a few percent reads. */
+export const Fitted: StoryObj = {
+    render: () => (
+        <Ground title="Worker, today" columns={1}>
+            <ChartFrame title="Worker memory" subtitle="hourly" file="worker-memory">
+                {(state) => <Chart kind="line" label="Worker memory across the day" {...MEMORY} {...state} />}
             </ChartFrame>
         </Ground>
     ),

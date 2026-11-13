@@ -21,7 +21,7 @@ import { go } from 'tidevann-shared/router'
 import { eventsOf, households, receipts } from '../data/backend'
 import { formOf, PROGRAMS, questionsOf } from '../data/forms'
 import { placeName, regionNameOf } from '../data/geo'
-import { answerText, count, onDay, StateChip, useFoot, when } from '../ui'
+import { answerText, count, onDay, sectionTrail, StateChip, useFoot, when } from '../ui'
 
 const ENROLL = formOf('FRM-ENROLL')
 const question = (id: string) => (ENROLL === undefined ? undefined : questionsOf(ENROLL).find((one) => one.id === id))
@@ -68,8 +68,8 @@ export function Household({ id }: { id: string }) {
             <PageHeader
                 title={home?.identifier ?? 'Household'}
                 code={home?.id}
-                onBack={() => go('/people')}
-                words={{ back: 'All households' }}
+                trail={sectionTrail('Households', '/people')}
+                trailInTop
                 meta={
                     home === undefined ? undefined : (
                         <>

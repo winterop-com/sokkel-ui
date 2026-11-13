@@ -365,10 +365,6 @@ to `plan.md` when it ships.
 
 ## Next
 
-- A graph running down whose rank is too wide for a phone (five or six sources side by side) is
-  cut into rows the way a long chain running right is, so neither direction hangs off a 358px
-  canvas.
-
 - **The reviews of 2026-11-09.** A visual review of the published catalog and a review of the
   twelve example apps on the web; every round of fixes from them shipped in 0.10.13 to 0.10.16.
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
