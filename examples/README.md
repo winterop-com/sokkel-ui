@@ -60,6 +60,11 @@ examples/
                  data values (a chart over the year, violations listed, a form whose fields react
                  to the rules), its data elements and organization units, and a server version
                  that hands the plugin another list of names
+  dashboard/     a home of live dashboards (Overview, Operations, Team and any made) of many kinds of
+                 widget: stats, charts, a gauge, runs, activity, a log, a map, a note, a to-do list,
+                 what is coming up, uptime and on call; Edit moves, resizes, configures, removes and
+                 adds them from a palette by drag, Cancel throws the edits away and Reset puts the
+                 dashboard back; dashboards made, renamed, duplicated, deleted and ordered by drag
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -96,7 +101,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
