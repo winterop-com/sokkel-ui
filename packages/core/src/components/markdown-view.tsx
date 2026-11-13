@@ -495,6 +495,9 @@ export type MarkdownInlineCode = 'chip' | 'plain' | 'wash'
  * with no padding to speak of and drops the fill in a table, whose cells already set the values
  * apart.
  */
+/** Paragraphs, lists, quotes and headings held to the reading measure; tables, code, diagrams, math and parts keep the full width. */
+const MEASURE = '[&>:is(p,ul,ol,dl,blockquote,h1,h2,h3,h4,h5,h6)]:max-w-(--reading-measure)'
+
 const INLINE_CODE: Record<MarkdownInlineCode, string> = {
     chip: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1',
     plain: '[&_td]:tabular-nums',
@@ -538,6 +541,12 @@ export interface MarkdownProps {
     math?: boolean
     /** Heading sizes: within a message (the default), or a document's from a page title down. */
     scale?: 'message' | 'document'
+    /**
+     * Holds paragraphs, lists, quotes and headings to a reading measure (`--reading-measure`, 68
+     * characters), while tables, code, diagrams, math and parts keep the full width: a document
+     * read in a wide pane. Off, every block takes the full width, as a message in a narrow column does.
+     */
+    measure?: boolean
     /** The app's own parts by ID, a map or a function, each drawn where the text has the marker `<!-- part:ID -->`. */
     parts?: MarkdownParts
     /** The word a part's marker starts with: `part` by default. */
@@ -603,6 +612,8 @@ export interface MarkdownProps {
  * down, so `#` in a text set under the page's own headings is no second h1, and `inline` draws only
  * the content of paragraphs, for one line of help, laying out any block as its text. A table whose
  * header cells are all empty, as a key/value table written `| | |` has, is drawn without the header.
+ *
+ * `measure` holds the prose to a reading measure in a wide pane, tables and code keeping the full width.
  */
 export type MarkdownViewProps = MarkdownProps & {
     /** Loads the math engine when a text needs it, called on every render of the view. */
@@ -631,6 +642,7 @@ export const MarkdownView = memo(function MarkdownView({
     caret = false,
     math = true,
     scale = 'message',
+    measure = false,
     parts,
     partMarker: word = 'part',
     links,
@@ -803,7 +815,15 @@ export const MarkdownView = memo(function MarkdownView({
     return (
         <Root
             data-settling={(needsMath && katex === undefined) || (allowHtml && htmlEngine === undefined) ? '' : undefined}
-            className={cn(PROSE, !inline && PROSE_TYPE, HEADINGS[scale], INLINE_CODE[inlineCode], caret && streaming && CARET, className)}
+            className={cn(
+                PROSE,
+                !inline && PROSE_TYPE,
+                HEADINGS[scale],
+                INLINE_CODE[inlineCode],
+                measure && !inline && MEASURE,
+                caret && streaming && CARET,
+                className,
+            )}
         >
             <ReactMarkdown
                 remarkPlugins={remark}

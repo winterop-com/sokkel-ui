@@ -7,7 +7,8 @@ export { createStore, setStoredPrefix, type Store, type StoredOptions } from '..
 /**
  * State kept in `localStorage` as JSON under `key`, so it outlasts a reload: a panel's width, a
  * folded section, a chosen tab. It reads back `initial` when nothing is kept, what is kept does
- * not parse, or `check` refuses it; holds the value in memory when storage is missing or refused;
+ * not parse, or `check` refuses it, and a kept value as `normalize` repairs it, such as a width
+ * clamped to the room allowed now; holds the value in memory when storage is missing or refused;
  * and follows a change made under the same key anywhere: another `useStored` in the page, a store
  * made by `createStore` with that key, or another tab.
  *
@@ -18,7 +19,7 @@ export { createStore, setStoredPrefix, type Store, type StoredOptions } from '..
 export function useStored<V>(
     key: string,
     initial: V,
-    { prefix, check }: StoredOptions = {},
+    { prefix, check, normalize }: StoredOptions<V> = {},
 ): [V, (next: V | ((current: V) => V)) => void, () => void] {
     const full = storedKey(key, prefix)
     const subscribe = useCallback((listener: () => void) => subscribeStored(full, listener), [full])
@@ -27,11 +28,11 @@ export function useStored<V>(
         () => readStored(full),
         () => null,
     )
-    const first = useRef({ initial, check })
-    const value = useMemo(() => parseStored(raw, first.current.initial, first.current.check), [raw])
+    const first = useRef({ initial, check, normalize })
+    const value = useMemo(() => parseStored(raw, first.current.initial, first.current.check, first.current.normalize), [raw])
     const set = useCallback(
         (next: V | ((current: V) => V)) => {
-            const current = parseStored(readStored(full), first.current.initial, first.current.check)
+            const current = parseStored(readStored(full), first.current.initial, first.current.check, first.current.normalize)
             const value = typeof next === 'function' ? (next as (current: V) => V)(current) : next
             writeStored(full, JSON.stringify(value))
         },

@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { createContext, useContext, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
@@ -52,9 +52,12 @@ export function DescriptionList({
     const small = size === 'sm'
     const side = layout === 'side'
     const pairGap = small ? 'gap-x-2' : 'gap-x-3'
+    // In a group, a one-column side list is a subgrid of the group's tracks and takes its term column.
+    const grouped = useContext(GroupContext) && side && columns === 1
     return (
         <dl
             data-size={size}
+            data-grouped={grouped ? '' : undefined}
             className={cn(
                 small ? 'text-xs leading-4' : 'text-sm leading-5',
                 layout === 'row' && (small ? 'flex flex-wrap gap-x-4 gap-y-0.5' : 'flex flex-wrap gap-x-5 gap-y-1'),
@@ -62,7 +65,7 @@ export function DescriptionList({
                 layout === 'stacked' && (small ? 'gap-x-4' : 'gap-x-6'),
                 layout === 'stacked' && columns === 2 && 'md:grid-cols-2',
                 // The pairs are subgrids of these tracks, so every term in the list shares one column.
-                side && ['grid-cols-[var(--term-width)_minmax(0,1fr)]', pairGap],
+                side && [grouped ? 'col-span-full grid-cols-subgrid' : 'grid-cols-[var(--term-width)_minmax(0,1fr)]', pairGap],
                 side &&
                     columns === 2 && [
                         'md:grid-cols-[var(--term-width)_minmax(0,1fr)_var(--term-width)_minmax(0,1fr)]',
@@ -70,7 +73,9 @@ export function DescriptionList({
                     ],
                 className,
             )}
-            style={side ? ({ '--term-width': termWidth === 'auto' ? 'fit-content(40%)' : termWidth } as CSSProperties) : undefined}
+            style={
+                side && !grouped ? ({ '--term-width': termWidth === 'auto' ? 'fit-content(40%)' : termWidth } as CSSProperties) : undefined
+            }
         >
             {items.map((item, index) => {
                 const empty = item.value === null || item.value === undefined || item.value === ''
@@ -104,5 +109,42 @@ export function DescriptionList({
                 )
             })}
         </dl>
+    )
+}
+
+/** Whether a list is inside a `DescriptionListGroup`, whose term column it takes. */
+const GroupContext = createContext(false)
+
+export interface DescriptionListGroupProps {
+    /** The lists and whatever sits between them, such as a form or a heading. */
+    children: ReactNode
+    /** How wide the shared term column is: a CSS length, or `auto` for as wide as the longest term in any of the lists (up to two fifths). */
+    termWidth?: string
+    /** `sm` sets the gap between terms and values as a list of `size="sm"` does. */
+    size?: 'default' | 'sm'
+    className?: string
+}
+
+/**
+ * Lists of facts that share one term column across what sits between them: the facts of a thing
+ * split around a form or a heading, every value starting at one line. Each one-column side-by-side
+ * `DescriptionList` inside takes the group's column, so `termWidth="auto"` sizes it to the longest
+ * term of them all; anything else inside takes the group's full width.
+ */
+export function DescriptionListGroup({ children, termWidth = '6rem', size = 'default', className }: DescriptionListGroupProps) {
+    return (
+        <GroupContext value={true}>
+            <div
+                data-slot="description-list-group"
+                className={cn(
+                    'grid grid-cols-[var(--term-width)_minmax(0,1fr)] gap-y-4 *:col-span-full',
+                    size === 'sm' ? 'gap-x-2' : 'gap-x-3',
+                    className,
+                )}
+                style={{ '--term-width': termWidth === 'auto' ? 'fit-content(40%)' : termWidth } as CSSProperties}
+            >
+                {children}
+            </div>
+        </GroupContext>
     )
 }

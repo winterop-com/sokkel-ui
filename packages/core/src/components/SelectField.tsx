@@ -11,7 +11,11 @@ export interface SelectFieldOption {
     label: string
     /** Drawn before the label, in the list and in the select once chosen, such as a status dot or a kind's icon. */
     icon?: ReactNode
-    /** A quiet fact at the row's end in the list, such as the value it would inherit; the select itself never shows it. */
+    /**
+     * A quiet fact about the option in the list, such as the value it would inherit or what a role
+     * may do: at the row's end, or under the label with `detailPlacement="below"`. The select shows
+     * it only with `chosenDetail`.
+     */
     detail?: ReactNode
     /** Shown in the list but not chosen. */
     disabled?: boolean
@@ -46,6 +50,10 @@ export interface SelectFieldProps {
     placeholder?: string
     /** The options' labels set in the code face, for keys and names. */
     mono?: boolean
+    /** Where each option's `detail` goes in the list: at the row's end, or on a second line under its label. */
+    detailPlacement?: 'end' | 'below'
+    /** The select shows the chosen option's `detail` after its label, quiet, on its one line. */
+    chosenDetail?: boolean
     autoFocus?: boolean
     readOnly?: boolean
     disabled?: boolean
@@ -60,8 +68,9 @@ export interface SelectFieldProps {
  * out as `TextField` and `NumberField` are. The label names the select, the help line describes
  * it, and an issue marks it invalid and draws its edge. `placeholder` shows while nothing is
  * chosen; `readOnly` shows the value with its list closed. An option's `icon` goes before its label
- * in the list and in the select once chosen; its `detail` is a quiet fact at the end of its row in
- * the list only.
+ * in the list and in the select once chosen. Its `detail` is a quiet fact at the end of its row in
+ * the list, or on a second line under its label with `detailPlacement="below"`; `chosenDetail`
+ * shows the chosen option's detail in the select too, after its label.
  */
 export function SelectField({
     id,
@@ -82,6 +91,8 @@ export function SelectField({
     defaultValue,
     placeholder,
     mono = false,
+    detailPlacement = 'end',
+    chosenDetail = false,
     autoFocus,
     readOnly,
     disabled,
@@ -93,11 +104,15 @@ export function SelectField({
     const invalid = worst(all) === 'critical' || undefined
     const known = (given: string | undefined) =>
         given === undefined ? undefined : options.some((option) => option.value === given) ? given : null
-    // With icons, the select draws the chosen option's icon before its label; without, its label alone.
-    const marked = options.some((option) => option.icon !== undefined)
+    // With icons or a chosen detail, the select draws the chosen option's icon and detail with its label; without, its label alone.
+    const drawn = chosenDetail || options.some((option) => option.icon !== undefined)
     const shown = (chosen: string | null) => {
         const option = options.find((one) => one.value === chosen)
-        return option === undefined ? placeholder : <OptionRow icon={option.icon} label={option.label} />
+        return option === undefined ? (
+            placeholder
+        ) : (
+            <OptionRow icon={option.icon} label={option.label} detail={chosenDetail ? option.detail : undefined} />
+        )
     }
     return (
         <Field
@@ -133,7 +148,7 @@ export function SelectField({
                     aria-describedby={describedBy(id, { help, description, fallback })}
                     className={cn('w-full', mono && 'font-mono')}
                 >
-                    {marked ? <SelectValue placeholder={placeholder}>{shown}</SelectValue> : <SelectValue placeholder={placeholder} />}
+                    {drawn ? <SelectValue placeholder={placeholder}>{shown}</SelectValue> : <SelectValue placeholder={placeholder} />}
                 </SelectTrigger>
                 <SelectContent>
                     {options.map((option) => (
@@ -142,6 +157,7 @@ export function SelectField({
                             value={option.value}
                             disabled={option.disabled}
                             detail={option.detail}
+                            detailPlacement={detailPlacement}
                             className={cn(mono && 'font-mono')}
                         >
                             {option.icon === undefined ? option.label : <OptionRow icon={option.icon} label={option.label} />}
@@ -153,14 +169,17 @@ export function SelectField({
     )
 }
 
-/** An option's icon before its label, the icon sized and toned as the rest of the field's. */
-function OptionRow({ icon, label }: { icon: ReactNode; label: string }) {
+/** An option's icon before its label, the icon sized and toned as the rest of the field's, and its detail after it in the select. */
+function OptionRow({ icon, label, detail }: { icon: ReactNode; label: string; detail?: ReactNode }) {
     return (
         <>
-            <span aria-hidden className="flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">
-                {icon}
-            </span>
+            {icon !== undefined && (
+                <span aria-hidden className="flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">
+                    {icon}
+                </span>
+            )}
             <span className="min-w-0 truncate">{label}</span>
+            {detail !== undefined && <span className="min-w-0 shrink-[2] truncate text-xs text-muted-foreground">{detail}</span>}
         </>
     )
 }

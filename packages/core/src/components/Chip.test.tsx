@@ -22,17 +22,17 @@ describe('Chip', () => {
                 check
             </Chip>,
         )
-        expect(html).toContain('bg-chart-3/15 text-chart-3')
+        expect(html).toContain('border-chart-3/30 bg-chart-3/12 text-chart-3')
         expect(html).not.toContain('critical')
     })
 
-    it('wears a kind color by name as its wash and ink', () => {
+    it('wears a kind color by name as the kind chip look, its wash and ink edged faintly', () => {
         const html = renderToStaticMarkup(
             <Chip tone="warning" hue="violet">
                 transform
             </Chip>,
         )
-        expect(html).toContain('bg-kind-violet/15 text-kind-violet-ink')
+        expect(html).toContain('border-kind-violet/30 bg-kind-violet/12 text-kind-violet-ink')
         expect(html).not.toContain('warning')
     })
 
@@ -101,14 +101,15 @@ describe('Chip', () => {
         expect(removed).toHaveBeenCalledWith(expect.objectContaining({ stopPropagation: expect.any(Function) }))
     })
 
-    it('says a toggle chip is pressed and rings it while it is on', () => {
+    it('says a toggle chip is pressed and edges it in its ink on a stronger wash while it is on', () => {
         const on = renderToStaticMarkup(
             <Chip selected onSelect={() => undefined}>
                 harbor
             </Chip>,
         )
         expect(on).toContain('aria-pressed="true"')
-        expect(on).toContain('ring-current')
+        expect(on).toContain('border-current')
+        expect(on).toContain('data-selected:bg-faint/35')
         expect(on).toContain('data-selected')
         const off = renderToStaticMarkup(
             <Chip selected={false} onSelect={() => undefined}>
@@ -116,7 +117,7 @@ describe('Chip', () => {
             </Chip>,
         )
         expect(off).toContain('aria-pressed="false"')
-        expect(off).not.toContain('ring-current')
+        expect(off).not.toContain('border-current')
         expect(renderToStaticMarkup(<Chip onSelect={() => undefined}>harbor</Chip>)).not.toContain('aria-pressed')
     })
 
@@ -130,6 +131,34 @@ describe('Chip', () => {
         expect(html).toContain('aria-haspopup="menu"')
         expect(html).toContain('aria-label="harbor actions"')
         expect(html).not.toContain('aria-pressed')
+    })
+
+    it('draws an outline tone as a hairline edge with no wash', () => {
+        const html = renderToStaticMarkup(<Chip tone="outline">harbor</Chip>)
+        expect(html).toContain('border-border text-foreground')
+        expect(html).not.toContain('bg-faint/15')
+    })
+
+    it('is a link with href, opening a new tab with a mark and words when external', () => {
+        const inside = renderToStaticMarkup(<Chip href="#/projects/harbor">harbor</Chip>)
+        expect(inside).toMatch(/<a[^>]*href="#\/projects\/harbor"[^>]*data-slot="chip-link"/)
+        expect(inside).not.toContain('target=')
+        const outside = renderToStaticMarkup(
+            <Chip href="https://api.example.org" external words={{ newTab: 'ny fane' }}>
+                api
+            </Chip>,
+        )
+        expect(outside).toContain('target="_blank"')
+        expect(outside).toContain('rel="noopener noreferrer"')
+        expect(outside).toContain('data-slot="external-mark"')
+        expect(outside).toContain('(ny fane)')
+    })
+
+    it('stands as tall as a control, a finger tall below md, with size="control"', () => {
+        const html = renderToStaticMarkup(<Chip size="control">api</Chip>)
+        expect(html).toContain('h-(--density-control)')
+        expect(html).toContain('max-md:h-finger')
+        expect(renderToStaticMarkup(<Chip>api</Chip>)).toContain('h-5')
     })
 })
 

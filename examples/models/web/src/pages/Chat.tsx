@@ -3,6 +3,7 @@ import { AttachmentList } from '@winterop-com/sokkel-ui/AttachmentList'
 import { Composer, type ComposerAttachment } from '@winterop-com/sokkel-ui/Composer'
 import { Conversation } from '@winterop-com/sokkel-ui/Conversation'
 import { ConversationHistory } from '@winterop-com/sokkel-ui/ConversationHistory'
+import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { useStore } from '@winterop-com/sokkel-ui/hooks/use-store'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
@@ -31,19 +32,6 @@ import { chatKey, giveFeedback, regenerate, send, showVersion, stopConversation 
 import { live, usageOf, writing, type Live } from '../engine/stream'
 import { useApp } from '../state'
 import { ModelSelect } from './ChatSettings'
-
-/** Whether the window is a phone's or a folded foldable's width, where the history moves into a sheet. */
-function useNarrow(): boolean {
-    const query = '(max-width: 767px)'
-    const [narrow, setNarrow] = useState(() => window.matchMedia(query).matches)
-    useEffect(() => {
-        const list = window.matchMedia(query)
-        const change = () => setNarrow(list.matches)
-        list.addEventListener('change', change)
-        return () => list.removeEventListener('change', change)
-    }, [])
-    return narrow
-}
 
 const SUGGESTIONS = [
     { title: 'Write a parser', prompt: 'Write a Python function to parse amounts that may use a decimal comma, like 12,50.' },
@@ -222,7 +210,8 @@ function History({ current, framed = false }: { current: string | undefined; fra
 /** The chat: conversations beside the one open, its messages streaming in, and the composer with its files. */
 export function ChatPage({ id }: { id: string | undefined }) {
     const { conversations, models, modelOf, prefs, loading } = useApp()
-    const narrow = useNarrow()
+    // A phone's or a folded foldable's width, where the history moves into a sheet.
+    const narrow = useIsMobile()
     const [showHistory, setShowHistory] = useStored('chat.history', true)
     const [historyOpen, setHistoryOpen] = useState(false)
     const [drafts, setDrafts] = useStored<Record<string, string>>('chat.drafts', {})

@@ -29,12 +29,18 @@ export interface Refresher {
 
 /**
  * Runs `run` on asking and on a clock, one at a time: a refresh asked while one runs is dropped,
- * and a tick of the clock while the page is hidden is skipped. `changed` hears when a refresh starts
- * and ends; a refresh that fails ends without a new `updated`, its problem the app's to show.
+ * and a tick of the clock while the page is hidden is skipped. When the page shows again it
+ * refreshes at once if a tick was skipped or one is due, and the clock starts over from there.
+ * `changed` hears when a refresh starts and ends; a refresh that fails ends without a new
+ * `updated`, its problem the app's to show.
  */
 export function refresher(run: () => unknown, changed: (state: Partial<RefreshState>) => void): Refresher {
     let running = false
     let timer: ReturnType<typeof setInterval> | undefined
+    let stopShown: (() => void) | undefined
+    // When the clock last ran or started, and whether a tick was skipped while the page was hidden.
+    let ticked = 0
+    let missed = false
     const refresh = () => {
         if (running) return
         running = true
@@ -50,13 +56,34 @@ export function refresher(run: () => unknown, changed: (state: Partial<RefreshSt
                 () => end(),
             )
     }
-    const stop = () => clearInterval(timer)
+    const hidden = () => typeof document !== 'undefined' && document.hidden
+    const stop = () => {
+        clearInterval(timer)
+        stopShown?.()
+        stopShown = undefined
+    }
     const every = (interval: number, paused: boolean) => {
         stop()
         if (interval <= 0 || paused) return
-        timer = setInterval(() => {
-            if (typeof document === 'undefined' || !document.hidden) refresh()
-        }, interval * 1000)
+        const start = () => {
+            ticked = Date.now()
+            missed = false
+            timer = setInterval(() => {
+                ticked = Date.now()
+                if (hidden()) missed = true
+                else refresh()
+            }, interval * 1000)
+        }
+        start()
+        if (typeof document === 'undefined') return
+        const shown = () => {
+            if (hidden() || !(missed || Date.now() - ticked >= interval * 1000)) return
+            clearInterval(timer)
+            refresh()
+            start()
+        }
+        document.addEventListener('visibilitychange', shown)
+        stopShown = () => document.removeEventListener('visibilitychange', shown)
     }
     return { refresh, every, stop }
 }
@@ -64,7 +91,8 @@ export function refresher(run: () => unknown, changed: (state: Partial<RefreshSt
 /**
  * Refreshes what an app shows on `RefreshControl`'s interval and pause, so no app writes the effect
  * itself: `run` (which may answer a promise) every `interval` seconds unless `paused`, and at once
- * on `refresh`, one at a time and never while the page is hidden. `refreshing` holds while it runs,
+ * on `refresh`, one at a time and never while the page is hidden, and at once when the page shows
+ * again if a refresh fell due while it was hidden. `refreshing` holds while it runs,
  * for the control's spin, and `updated` says when the last refresh ended.
  *
  *     const live = useRefresh(load, { interval, paused })

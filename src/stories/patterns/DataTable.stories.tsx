@@ -60,6 +60,7 @@ import { JOB_OWNERS, JOB_SETTINGS, type JobSetting, saveJobSetting } from '../fi
 import { tableEditing } from '@winterop-com/sokkel-ui/table-editing'
 import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } from '../fixtures/tableRuns'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
 
 /**
  * A table for many rows. Only the rows in view are drawn, so the 10k and 50k tables scroll like
@@ -721,29 +722,11 @@ const JOB_COLUMNS: DataColumn<Job>[] = [
     { id: 'runs', header: 'Runs', width: '5rem', align: 'end', cell: (job) => job.runs.toLocaleString('en-US') },
 ]
 
-/** About how wide a chip of a short name is with the gap after it, and the chip that counts the rest, in pixels. */
-const CHIP = 88
-const MORE_CHIP = 40
-
-/** A job's tags as chips, as many as its own column's room holds (`useTableCell().columnWidth`) and a count of the rest. */
-function JobTags({ tags }: { tags: readonly string[] }) {
-    const { columnWidth } = useTableCell()
-    const fit = tags.length * CHIP <= columnWidth ? tags.length : Math.max(1, Math.floor((columnWidth - MORE_CHIP) / CHIP))
-    return (
-        <Row gap="2xs" inline>
-            {tags.slice(0, fit).map((tag) => (
-                <Chip key={tag}>{tag}</Chip>
-            ))}
-            {tags.length > fit && <Chip>+{tags.length - fit}</Chip>}
-        </Row>
-    )
-}
-
 const DELIVERY_COLUMNS: DataColumn<Job>[] = [
     JOB_COLUMNS[0],
     JOB_COLUMNS[1],
     { id: 'service', header: 'Delivers through', width: 'content', cell: (job) => <span className="font-mono">{job.service}</span> },
-    { id: 'projects', header: 'Projects', width: 'minmax(6rem,1fr)', cell: (job) => <JobTags tags={job.projects} /> },
+    { id: 'projects', header: 'Projects', width: 'minmax(6rem,1fr)', cell: (job) => <TagChips tags={job.projects} /> },
     JOB_COLUMNS[2],
 ]
 
@@ -796,7 +779,7 @@ export const CellFill: StoryObj = {
 /**
  * Two sections of jobs in one `DataTableGroup`, so their content columns take the widest of both
  * tables and line up. Each job's projects show as many chips as their column's room holds
- * (`useTableCell`); stacked, every line's name is as wide as the widest, "Delivers through" whole.
+ * (`TagChips`, through `useTableCell`); stacked, every line's name is as wide as the widest, "Delivers through" whole.
  */
 export const SharedWidths: StoryObj = {
     name: 'Shared widths',
@@ -834,7 +817,7 @@ const TAG_COLUMNS: DataColumn<Job>[] = [
         id: 'tags',
         header: 'Tags',
         width: 'minmax(6rem,1fr)',
-        cell: (job) => <JobTags tags={[...job.projects, job.service, job.step]} />,
+        cell: (job) => <TagChips tags={[...job.projects, job.service, job.step]} />,
     },
     JOB_COLUMNS[2],
     JOB_COLUMNS[4],
@@ -842,8 +825,8 @@ const TAG_COLUMNS: DataColumn<Job>[] = [
 
 /**
  * Each job's tags on a column that shares the table's room: as many chips as the column's own
- * width holds (`useTableCell().columnWidth`) and a count of the rest, folding as the column
- * narrows, and to its line's room once the rows stack.
+ * width holds (`TagChips`, through `useTableCell().columnWidth`) and a count of the rest named by
+ * the tags it stands for, folding as the column narrows, and wrapping whole once the rows stack.
  */
 export const FoldingTags: StoryObj = {
     name: 'Folding tags',

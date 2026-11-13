@@ -144,6 +144,8 @@ export interface EntryFieldProps<V> {
     /** The highest value allowed. */
     max?: V
     placeholder?: string
+    /** The value set in the code face, as keys and stamps are. */
+    mono?: boolean
     disabled?: boolean
     readOnly?: boolean
     autoFocus?: boolean
@@ -207,6 +209,7 @@ export function TypedField<V extends string | number>({
     min,
     max,
     placeholder,
+    mono = false,
     disabled,
     readOnly,
     autoFocus,
@@ -311,7 +314,7 @@ export function TypedField<V extends string | number>({
                     onBlur?.()
                 }}
                 onKeyDown={(event) => onKeyDown?.(event, entry)}
-                className="h-full min-w-0 flex-1 tabular-nums"
+                className={cn('h-full min-w-0 flex-1 tabular-nums', mono && 'font-mono')}
             />
             {suffix !== undefined && <span className="shrink-0 text-muted-foreground select-none">{suffix}</span>}
             {buttons}

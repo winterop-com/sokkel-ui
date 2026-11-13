@@ -32,6 +32,7 @@ import {
 
 import { cn } from '../lib/cn'
 import { ResizeHandle } from './ResizeHandle'
+import { NO_CELL, TableCellContext } from './table-cell'
 import { ListingBar } from './ListingBar'
 import { SelectionBar } from './SelectionBar'
 import { Button } from './ui/button'
@@ -46,6 +47,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnBands, columnName, columnOrder } from '../lib/table'
 import type { CellAt, EditedValue, EditOption, EditorKind, EditValue } from '../lib/edit'
 import type { CellEdit, CellFocus, OpenCell, TableEditing, TableEditingContext } from './table-editing'
+
+export { useTableCell, type TableCell } from './table-cell'
 
 export type { CellAt, CellFocus, EditedValue, EditOption, EditorKind, EditValue, TableEditing }
 
@@ -654,32 +657,6 @@ export function outgrown(
     capped: ReadonlySet<string>,
 ): boolean {
     return cells.some((cell) => !capped.has(cell.column) && cell.scrollWidth > cell.clientWidth + 0.5)
-}
-
-/** What a cell can know of the table it is drawn in. */
-export interface TableCell {
-    /** The width of the table's own box, in pixels; 0 until it is measured. */
-    width: number
-    /** Whether the rows are stacked as cards. */
-    stacked: boolean
-    /**
-     * The room the cell's own content has, in pixels: its column's track inside the cell's padding
-     * in a table row, the value's part of its line on a stacked card. 0 until it is measured, and
-     * outside a column's cell.
-     */
-    columnWidth: number
-}
-
-const NO_CELL: TableCell = { width: 0, stacked: false, columnWidth: 0 }
-const TableCellContext = createContext<TableCell>(NO_CELL)
-
-/**
- * The table a cell is drawn in: its box's width, whether its rows are stacked and the room its own
- * column gives it, so a cell can fit its content to that room, such as how many chips it shows
- * before a count of the rest. The room is measured once a column, never once a cell.
- */
-export function useTableCell(): TableCell {
-    return useContext(TableCellContext)
 }
 
 /**

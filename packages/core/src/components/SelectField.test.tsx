@@ -71,4 +71,17 @@ describe('SelectField', () => {
         expect(empty).toContain('Pick a service')
         expect(empty).not.toContain('data-mark')
     })
+
+    it("shows the chosen option's detail in the select with chosenDetail", () => {
+        const options = [
+            { value: 'viewer', label: 'Viewer', detail: 'Reads runs.' },
+            { value: 'owner', label: 'Owner', detail: 'Everything.' },
+        ]
+        const html = renderToStaticMarkup(<SelectField id="role" label="Role" options={options} value="owner" chosenDetail />)
+        expect(html).toContain('Owner')
+        expect(html).toContain('Everything.')
+        expect(html).not.toContain('Reads runs.')
+        const plain = renderToStaticMarkup(<SelectField id="role" label="Role" options={options} value="owner" detailPlacement="below" />)
+        expect(plain).not.toContain('Everything.')
+    })
 })

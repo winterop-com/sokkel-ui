@@ -95,4 +95,11 @@ describe('Markdown links', () => {
         expect(html).toContain('data-wiki-link="Nightly export"')
         expect(html).toContain('data-tag="on-call"')
     })
+
+    it('holds prose to the reading measure only with measure', () => {
+        const measured = renderToStaticMarkup(<Markdown content="Some text." measure />)
+        expect(measured).toContain('max-w-(--reading-measure)')
+        expect(renderToStaticMarkup(<Markdown content="Some text." />)).not.toContain('reading-measure')
+        expect(renderToStaticMarkup(<Markdown content="Some text." measure inline />)).not.toContain('reading-measure')
+    })
 })

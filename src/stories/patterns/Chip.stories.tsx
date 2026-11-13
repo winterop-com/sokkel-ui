@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Clock, Copy, Filter, GitBranch, Server, SquareArrowOutUpRight, Tag } from 'lucide-react'
+import { BookOpen, Clock, Copy, Filter, GitBranch, Radio, Server, SquareArrowOutUpRight, Tag } from 'lucide-react'
 import { useState } from 'react'
 
 import { Chip, type ChipTone } from '@winterop-com/sokkel-ui/Chip'
@@ -15,9 +15,9 @@ import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 const meta: Meta = { title: 'Patterns/Chip', parameters: { frame: 'padded' } }
 export default meta
 
-const TONES: ChipTone[] = ['neutral', 'good', 'critical', 'warning', 'info', 'absent']
+const TONES: ChipTone[] = ['neutral', 'good', 'critical', 'warning', 'info', 'outline', 'absent']
 
-/** Every tone: neutral, the semantic colors in their own ink, and a dashed chip for a value that is absent. */
+/** Every tone: neutral, the semantic colors in their own ink, a hairline outline, and a dashed chip for a value that is absent. */
 export const Tones: StoryObj = {
     render: () => (
         <Row gap="xs" wrap>
@@ -26,12 +26,13 @@ export const Tones: StoryObj = {
             <Chip tone="critical">over budget</Chip>
             <Chip tone="warning">slow</Chip>
             <Chip tone="info">new</Chip>
+            <Chip tone="outline">draft</Chip>
             <Chip tone="absent">no owner</Chip>
         </Row>
     ),
 }
 
-/** A category's hue from the chart palette, for chips that tell kinds apart rather than say how something is. */
+/** A category's hue from the chart palette, edged faintly in it, for chips that tell kinds apart rather than say how something is. */
 export const Hues: StoryObj = {
     render: () => (
         <Row gap="xs" wrap>
@@ -44,7 +45,7 @@ export const Hues: StoryObj = {
     ),
 }
 
-/** Every kind color by name, the one a label, a calendar or a person wears, for a chip whose category already has a kind color. */
+/** Every kind color by name, the one a label, a calendar or a person wears, drawn as a kind badge is, for a chip whose category already has a kind color. */
 export const KindHues: StoryObj = {
     name: 'Kind hues',
     render: () => (
@@ -85,6 +86,36 @@ export const MonoAndIcons: StoryObj = {
     ),
 }
 
+/**
+ * Chips that stand alone as controls, as tall as a field or a button beside them and a finger tall
+ * on a phone: the service a page talks to, a channel picked from a strip.
+ */
+export const ControlSize: StoryObj = {
+    name: 'Control size',
+    render: function Render() {
+        const [channel, setChannel] = useState('nightly')
+        return (
+            <Stack gap="md">
+                <Row gap="xs" wrap>
+                    <Chip size="control" mono icon={<Server aria-hidden />} href="#/services/api">
+                        api.example.org
+                    </Chip>
+                    <Chip size="control" tone="good" icon={<Radio aria-hidden />}>
+                        connected
+                    </Chip>
+                </Row>
+                <Row gap="xs" wrap>
+                    {['nightly', 'hourly', 'on demand'].map((name) => (
+                        <Chip key={name} size="control" selected={name === channel} onSelect={() => setChannel(name)}>
+                            {name}
+                        </Chip>
+                    ))}
+                </Row>
+            </Stack>
+        )
+    },
+}
+
 /** Chips a press acts on: a tag that filters by itself, named for what the press does, and tags a job carries, each with a remove button named for its tag. */
 export const Interactive: StoryObj = {
     render: function Render() {
@@ -121,7 +152,27 @@ export const Interactive: StoryObj = {
     },
 }
 
-/** Many toggles, each turned on and off by itself: the projects a list shows, each pressed and ringed while on. */
+/**
+ * Chips that are links: a project opened through the app's router, and the service's guide on
+ * another site, opened in a new tab with a trailing mark.
+ */
+export const Links: StoryObj = {
+    render: () => (
+        <Row gap="xs" wrap>
+            <Chip mono href="#/projects/harbor" selectLabel="Open harbor">
+                harbor
+            </Chip>
+            <Chip mono hue="teal" href="#/projects/juniper">
+                juniper
+            </Chip>
+            <Chip icon={<BookOpen aria-hidden />} href="https://docs.example.org/api" external>
+                api guide
+            </Chip>
+        </Row>
+    ),
+}
+
+/** Many toggles, each turned on and off by itself: the projects a list shows, each edged in its ink on a stronger wash while on. */
 export const Toggles: StoryObj = {
     render: function Render() {
         const [on, setOn] = useState<readonly string[]>(['harbor', 'larkspur'])
@@ -141,8 +192,20 @@ export const Toggles: StoryObj = {
                 </Row>
                 <Row gap="xs" wrap>
                     {TONES.filter((tone) => tone !== 'absent').map((tone) => (
-                        <Chip key={tone} tone={tone} selected={tone === 'critical' || tone === 'info'} onSelect={() => undefined}>
+                        <Chip
+                            key={tone}
+                            tone={tone}
+                            selected={tone === 'critical' || tone === 'info' || tone === 'outline'}
+                            onSelect={() => undefined}
+                        >
                             {tone}
+                        </Chip>
+                    ))}
+                </Row>
+                <Row gap="xs" wrap>
+                    {KIND_COLORS.map((color, index) => (
+                        <Chip key={color} hue={color} selected={index % 2 === 0} onSelect={() => undefined}>
+                            {color}
                         </Chip>
                     ))}
                 </Row>
@@ -152,7 +215,7 @@ export const Toggles: StoryObj = {
     },
 }
 
-/** A chip that opens a menu of what to do with its value: filter by the project, copy it, or open it. */
+/** A chip that opens a menu of what to do with its value: filter by the project, copy it, or open it; the second lines its menu up at its end. */
 export const Menu: StoryObj = {
     render: () => (
         <Row gap="xs" wrap>
@@ -168,7 +231,7 @@ export const Menu: StoryObj = {
             >
                 harbor
             </Chip>
-            <Chip mono menu={[{ label: 'Filter by juniper', onSelect: () => undefined }]}>
+            <Chip mono menuAlign="end" menu={[{ label: 'Filter by juniper', onSelect: () => undefined }]}>
                 juniper
             </Chip>
         </Row>

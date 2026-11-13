@@ -23,4 +23,32 @@ describe('ListRow', () => {
         expect(html).toContain('aria-label="Failed runs"')
         expect(html.match(/<li/g)).toHaveLength(2)
     })
+
+    it('says its tooltip on hover and wraps its lines with wrap', () => {
+        const cut = renderToStaticMarkup(<ListRow title="sync-inventory" detail="14 rows have no site" tooltip="Open the run" />)
+        expect(cut).toContain('title="Open the run"')
+        expect(cut).toContain('truncate')
+        const wrapped = renderToStaticMarkup(<ListRow title="sync-inventory" detail="14 rows have no site" wrap />)
+        expect(wrapped).not.toContain('truncate')
+        expect(wrapped).toContain('break-words')
+    })
+
+    it('sets its rows flush in a panel with flush: square, at the panel inset, parted by hairlines', () => {
+        const flush = renderToStaticMarkup(
+            <ListRows flush>
+                <ListRow title="sync-inventory" onPress={() => undefined} />
+                <ListRow title="import-orders" />
+            </ListRows>,
+        )
+        expect(flush).toContain('divide-y')
+        expect(flush).toContain('px-(--density-panel-pad)')
+        expect(flush).not.toContain('rounded-control')
+        const boxed = renderToStaticMarkup(
+            <ListRows>
+                <ListRow title="sync-inventory" />
+            </ListRows>,
+        )
+        expect(boxed).toContain('rounded-control')
+        expect(boxed).not.toContain('divide-y')
+    })
 })

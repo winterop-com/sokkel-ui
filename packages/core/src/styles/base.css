@@ -40,6 +40,17 @@
     }
 }
 
+/*
+ * A scroller's thin, stable track: the room for its bar is kept whether or not it scrolls, so a box
+ * beside it with the same utility (and no scrolling of its own) ends at the same right edge, and its
+ * thumb is drawn in the scroll area's line color.
+ */
+@utility scroller-thin {
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;

@@ -16,7 +16,7 @@ export default meta
 const NOW = new Date('2026-11-09T10:00:00Z')
 const SET_AT = '2026-11-06T08:30:00Z'
 
-function Token({ sealed = false, replacing = false }: { sealed?: boolean; replacing?: boolean }) {
+function Token({ sealed = false, replacing = false, mark }: { sealed?: boolean; replacing?: boolean; mark?: 'star' | 'word' }) {
     const [token, setToken] = useState<string | undefined>(undefined)
     return (
         <TooltipProvider>
@@ -26,6 +26,7 @@ function Token({ sealed = false, replacing = false }: { sealed?: boolean; replac
                     label="API token"
                     hint="sync-inventory"
                     required
+                    requiredMark={mark}
                     help={
                         token === undefined
                             ? sealed
@@ -53,3 +54,6 @@ export const Sealed: StoryObj = { name: 'Set', render: () => <Token sealed /> }
 
 /** The set token being replaced: an empty input for the new one, and Cancel (or Escape) to seal it again. */
 export const Replacing: StoryObj = { render: () => <Token sealed replacing /> }
+
+/** Required said as the word after the label (`requiredMark="word"`) rather than a star. */
+export const RequiredWord: StoryObj = { name: 'Required word', render: () => <Token mark="word" /> }
