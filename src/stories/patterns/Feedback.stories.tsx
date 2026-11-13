@@ -5,7 +5,7 @@ import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import { Callout } from '@winterop-com/sokkel-ui/Callout'
 import { CheckList } from '@winterop-com/sokkel-ui/CheckList'
 import { ListSkeleton, Pending } from '@winterop-com/sokkel-ui/Loading'
-import { Problem } from '@winterop-com/sokkel-ui/Problem'
+import { Problem, ProblemLine } from '@winterop-com/sokkel-ui/Problem'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 
@@ -157,6 +157,8 @@ function Problems() {
                 title="12 rows had no currency"
                 detail="They were read as `EUR`. Set `currency` on the source to stop guessing."
             />
+            <ProblemLine>The server refused the export: `harbor` has no storage bucket.</ProblemLine>
+            <ProblemLine tone="warning">The digest went out without the `juniper` totals.</ProblemLine>
         </Ground>
     )
 }

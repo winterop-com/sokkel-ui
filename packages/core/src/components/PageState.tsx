@@ -47,12 +47,17 @@ export function pageStateHeading(
     return tone === 'warning' ? words.partRefused : words.refused
 }
 
-/** The frame the three states share: a box that keeps its height inside a flex column. */
-function Frame({ children, className }: { children: ReactNode; className?: string }) {
+/**
+ * The frame the three states share: a box that keeps its height inside a flex column, or, unframed,
+ * the same row with no edge or ground of its own and a panel's padding, for a state inside a panel.
+ */
+function Frame({ children, framed, className }: { children: ReactNode; framed: boolean; className?: string }) {
     return (
         <div
+            data-slot="page-state"
             className={cn(
-                'flex shrink-0 items-start gap-3 rounded-surface border border-border-strong bg-card px-4 py-6 text-sm',
+                'flex shrink-0 items-start gap-3 text-sm',
+                framed ? 'rounded-surface border border-border-strong bg-card px-4 py-6' : 'px-(--density-panel-pad) py-3',
                 className,
             )}
         >
@@ -65,6 +70,8 @@ export interface PageStateProps {
     loading: boolean
     /** What the server said when it refused, or a sentence the caller wrote in its place. */
     error?: ReactNode
+    /** Each failure a refusal named, listed under the diagnostic, such as a problem document's errors. */
+    problems?: readonly ReactNode[]
     status?: ReadOutcome | null
     empty?: boolean
     /** The one line an empty read states. */
@@ -84,6 +91,11 @@ export interface PageStateProps {
      * under the page's own; a plain line (`p`) otherwise.
      */
     headingLevel?: PageStateHeadingLevel
+    /**
+     * Draws the state in its own box (the default). `false` drops the box, for a state that sits in
+     * a panel already: a table's `empty`, a section's body.
+     */
+    frame?: boolean
     words?: Partial<PageStateWords>
     children: ReactNode
 }
@@ -100,11 +112,14 @@ export type PageStateHeadingLevel = 'h1' | 'h2' | 'p'
  * content, as a warning rather than the page's failure, announced politely rather than as an alert,
  * and a refusal headed as a part of the page that could not be read (`partRefused`).
  * `headingLevel="h1"` makes a failure's heading the page's own where the state stands in for the
- * whole page, so `Shell`'s `routeKey` has a heading to move the focus to.
+ * whole page, so `Shell`'s `routeKey` has a heading to move the focus to. `problems` lists each
+ * failure a refusal named under its diagnostic, and `frame={false}` drops the box for a state inside
+ * a panel, such as a table's `empty`.
  */
 export function PageState({
     loading,
     error,
+    problems,
     status,
     empty = false,
     emptyMessage,
@@ -112,13 +127,14 @@ export function PageState({
     onRetry,
     tone = 'critical',
     headingLevel: Heading = 'p',
+    frame = true,
     words: given,
     children,
 }: PageStateProps) {
     const words = { ...WORDS, ...given }
     if (loading) {
         return (
-            <Frame className="items-center text-muted-foreground">
+            <Frame framed={frame} className="items-center text-muted-foreground">
                 <Loader2 className="size-4 animate-spin" aria-hidden />
                 <span role="status">{words.loading}</span>
             </Frame>
@@ -127,7 +143,7 @@ export function PageState({
     if (error !== undefined && error !== null && error !== false) {
         const warning = tone === 'warning'
         return (
-            <Frame className={cn(warning && 'border-warning/35 bg-warning/8')}>
+            <Frame framed={frame} className={cn(warning && 'border-warning/35 bg-warning/8')}>
                 {warning ? (
                     <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
                 ) : (
@@ -136,9 +152,16 @@ export function PageState({
                 <div className="flex min-w-0 flex-col gap-3">
                     <div role={warning ? 'status' : 'alert'} className="flex min-w-0 flex-col gap-1">
                         <Heading className="font-medium">{pageStateHeading(status, words, tone)}</Heading>
-                        <p className="text-xs break-words text-muted-foreground">
+                        <div className="text-xs break-words text-muted-foreground">
                             {typeof error === 'string' ? <ProseText text={error} /> : error}
-                        </p>
+                        </div>
+                        {problems !== undefined && problems.length > 0 && (
+                            <ul data-slot="page-state-problems" className="list-disc pl-4 text-xs break-words text-muted-foreground">
+                                {problems.map((problem, index) => (
+                                    <li key={index}>{typeof problem === 'string' ? <ProseText text={problem} /> : problem}</li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                     {onRetry !== undefined && (
                         <Button size="sm" variant="outline" className="self-start" onClick={onRetry}>
@@ -152,7 +175,11 @@ export function PageState({
     }
     if (empty) {
         if (emptyRender !== undefined) return <>{emptyRender}</>
-        return <Frame className="text-muted-foreground">{emptyMessage}</Frame>
+        return (
+            <Frame framed={frame} className="text-muted-foreground">
+                {emptyMessage}
+            </Frame>
+        )
     }
     return <>{children}</>
 }

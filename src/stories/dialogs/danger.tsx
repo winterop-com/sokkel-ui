@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 import { ConsequenceList } from '@winterop-com/sokkel-ui/ConsequenceList'
 import { ConfirmDialog, DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
+import { ProblemLine } from '@winterop-com/sokkel-ui/Problem'
 import { TypedConfirmDialog } from '@winterop-com/sokkel-ui/TypedConfirmDialog'
 import { pictureOf } from '../fixtures/portraits'
 import { Behind, wait } from './parts'
@@ -20,6 +21,22 @@ export function ConfirmDelete() {
                 question="Delete import-orders?"
                 detail="Its runs stay in the history; the job stops running."
                 confirm={{ label: 'Delete', destructive: true, onConfirm: () => setOpen(false) }}
+            />
+        </Behind>
+    )
+}
+
+export function ConfirmRefused() {
+    const [open, setOpen] = useState(true)
+    return (
+        <Behind action="Delete" onAction={() => setOpen(true)}>
+            <ConfirmDialog
+                open={open}
+                onOpenChange={setOpen}
+                question="Delete import-orders?"
+                detail="Its runs stay in the history; the job stops running."
+                status={<ProblemLine>The server refused: `import-orders` has a run in progress.</ProblemLine>}
+                confirm={{ label: 'Delete', destructive: true, onConfirm: () => undefined }}
             />
         </Behind>
     )
