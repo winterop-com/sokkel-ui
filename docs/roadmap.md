@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.22.6** is the latest release (2026-11-13): DescriptionList `termWidth="auto"`, wide values
+- **0.22.7** is the latest release (2026-11-13): PageState `frame={false}` and `problems`;
+  ConfirmDialog `status`; `ProblemLine`.
+- **0.22.6** (2026-11-13): DescriptionList `termWidth="auto"`, wide values
   in the side layout and `size="sm"`; `Group`; Chip `menu` and `selected`; TagChips `onSelect`;
   TextLink `quiet`; `ListRow`; every field takes `words.required`; select options with `icon` and
   `detail`; CronField `required`; `FieldGroup`.
