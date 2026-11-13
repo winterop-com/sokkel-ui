@@ -1,0 +1,4 @@
+{
+    "name": "FHIR Workbench",
+    "summary": "A FHIR server's resources edited as JSON, FHIRPath evaluated live, CQL libraries in versions and search by parameters."
+}

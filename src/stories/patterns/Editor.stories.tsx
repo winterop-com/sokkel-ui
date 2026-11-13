@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { CodeEditor, languageForMediaType, type CodeCompletion, type CodeRange } from '@winterop-com/sokkel-ui/CodeEditor'
+import { CodeEditor, languageForMediaType, type CodeCompletion, type CodeMark, type CodeRange } from '@winterop-com/sokkel-ui/CodeEditor'
 import { JQ_BUILTINS } from '@winterop-com/sokkel-ui/code/jq'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { SourceSheet } from '@winterop-com/sokkel-ui/SourceSheet'
@@ -45,6 +45,34 @@ const RECORD = {
 }
 
 const NOTE = `Write a short note to the team about why nightly-export failed last night. Say which step failed, how many rows it rejected and why, and what we changed so it does not happen again. Keep it under a hundred words.`
+
+/** The words a run query completes from. */
+const QUERY_WORDS: CodeCompletion[] = [
+    { label: 'job', detail: 'nightly-export, sync-inventory, …', kind: 'property' },
+    { label: 'state', detail: 'succeeded, failed, running, …', kind: 'property' },
+    { label: 'step', detail: 'fetch, transform, validate, …', kind: 'property' },
+    { label: 'project', detail: 'harbor, juniper, larkspur', kind: 'property' },
+]
+
+function QueryLine() {
+    const [query, setQuery] = useState('job=nightly-export&state=failed')
+    const [ran, setRan] = useState<string | undefined>(undefined)
+    return (
+        <Ground>
+            <Field id="query-line" label="Query" hint={ran === undefined ? 'Enter runs it.' : `Ran ${ran}`}>
+                <CodeEditor
+                    label="Query"
+                    variant="line"
+                    value={query}
+                    onChange={setQuery}
+                    completions={QUERY_WORDS}
+                    onRun={setRan}
+                    placeholder="job=nightly-export"
+                />
+            </Field>
+        </Ground>
+    )
+}
 
 function WrappedText() {
     const [note, setNote] = useState(NOTE)
@@ -342,6 +370,24 @@ function Revealing() {
     )
 }
 
+/** What a server said about the record when it refused it, each at the value it is about. */
+const FINDINGS: CodeMark[] = [
+    { path: ['project'], tone: 'error', message: 'larkspur is archived; a job runs in harbor or juniper.' },
+    { path: ['schedule', 'timezone'], tone: 'warning', message: 'UTC is kept, but the workspace runs on Europe/Oslo.' },
+    { path: ['labels', 1], tone: 'info', message: 'orders is a new label; it is made when the job is saved.' },
+]
+
+function PathMarks() {
+    const [record, setRecord] = useState(RECORD_TEXT)
+    return (
+        <Ground>
+            <Field id="refused" label="Job" hint="Edit around a mark: it stays on its value.">
+                <CodeEditor label="Job" language="json" value={record} onChange={setRecord} marks={FINDINGS} className="h-72" />
+            </Field>
+        </Ground>
+    )
+}
+
 const LOG = Array.from({ length: 40 }, (_, index) => {
     const job = ['nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest'][index % 4]
     const state = ['succeeded', 'failed', 'succeeded', 'running', 'skipped'][index % 5]
@@ -443,12 +489,23 @@ export default meta
 export const Editors_: StoryObj = { name: 'Code editor', render: () => <Editors /> }
 /** Prose in the editor with its long lines folded at the edge rather than scrolling sideways. */
 export const Wrapped: StoryObj = { name: 'Wrapped text', render: () => <WrappedText /> }
+/**
+ * A query typed on one line at an input's height: its words completed as typed, Enter running it
+ * rather than breaking the line, and a pasted line break read as a space.
+ */
+export const Line: StoryObj = { name: 'One line', render: () => <QueryLine /> }
 /** A JSON record with a fold gutter: each object and array folds from the gutter or Mod-Alt-[. */
 export const Folded: StoryObj = { name: 'Folding', render: () => <Folding /> }
 /** A run log, read only and small, with the find bar open on a query. Mod-f opens it, Escape closes it. */
 export const Searched: StoryObj = { name: 'Search', render: () => <Searching /> }
 /** A range selected and scrolled into view, as when a check names where it failed; each button moves there again. */
 export const Revealed: StoryObj = { name: 'Reveal', render: () => <Revealing /> }
+/**
+ * A server's findings marked on the values they are about, by their path in the JSON rather than by
+ * line: the value and its key underlined in the finding's tone, its dot in the gutter and its message
+ * on hover. A mark follows its value as the text around it is edited.
+ */
+export const AtPaths: StoryObj = { name: 'Marks at paths', render: () => <PathMarks /> }
 /**
  * A jq filter: its keywords, strings and their interpolation, fields, variables and formats
  * highlighted; the run's fields offered after a dot and jq's built-ins while typing a name; a
