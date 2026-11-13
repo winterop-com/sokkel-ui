@@ -1,11 +1,13 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 
 import { chartLegend } from '../chart-legend'
 import type { ChartLook } from '../look'
-import { bandLabel, fanShape } from './fan'
+import { bandLabel, fanShape, LEGENDS, ringFigures } from './legends'
+import { loadKind } from './load'
 import { dialSplits } from './gauge'
 import { linkedLayout, SHARED_SCALE } from './linked'
-import { ringFigures } from './rings'
 import { KINDS, type ChartKind, type ChartSpec } from '.'
 
 /** A look whose colors are the tokens' own names, so a test can read which token a part takes. */
@@ -484,5 +486,78 @@ describe('the chart kinds', () => {
         expect(chartLegend('bar', spec).find((item) => item.key === 'succeeded')?.color).toBe(
             'color-mix(in oklab, var(--muted-foreground) 45%, transparent)',
         )
+    })
+
+    it('writes the categories by formatCategory on the axis and in the tooltip title', () => {
+        const hour = (category: string) => `${category}-${String(Number(category.slice(0, 2)) + 1).padStart(2, '0')}:00`
+        const rows = [
+            { time: '14:00', runs: 4, fails: 1 },
+            { time: '15:00', runs: 6, fails: 0 },
+        ]
+        type Axis = { axisLabel?: { formatter?: (value: string, index: number) => string } }
+        type Tooltip = { tooltip: { formatter: (points: unknown) => string } }
+        const label = (axis: Axis | Axis[]) => (Array.isArray(axis) ? axis[0] : axis).axisLabel?.formatter?.('15:00', 1)
+        for (const kind of ['bar', 'line', 'area', 'step', 'heatmap', 'dual', 'linked', 'boxplot', 'waterfall', 'range', 'fan'] as const) {
+            const spec: ChartSpec = { rows, x: 'time', y: kind === 'dual' ? ['runs', 'fails'] : 'runs', formatCategory: hour }
+            const option = KINDS[kind].build(spec, LOOK) as unknown as { xAxis: Axis | Axis[] }
+            expect([kind, label(option.xAxis)]).toEqual([kind, '15:00-16:00'])
+        }
+        const bullet = KINDS.bullet.build({ rows, x: 'time', y: 'runs', formatCategory: hour }, LOOK) as unknown as { yAxis: Axis[] }
+        expect(label(bullet.yAxis)).toBe('15:00-16:00')
+        const waterfall = KINDS.waterfall.build({ rows, x: 'time', y: 'runs', formatCategory: hour }, LOOK) as unknown as { xAxis: Axis }
+        expect(waterfall.xAxis.axisLabel?.formatter?.('Total', 2)).toBe('Total')
+        const bar = KINDS.bar.build({ rows, x: 'time', y: 'runs', formatCategory: hour }, LOOK) as unknown as Tooltip
+        const title = bar.tooltip.formatter([{ axisValueLabel: '15:00', seriesName: 'runs', seriesIndex: 0, value: 6, color: 'chart-2' }])
+        expect(title).toContain('15:00-16:00')
+        const plain = KINDS.bar.build({ rows, x: 'time', y: 'runs' }, LOOK) as unknown as { xAxis: Axis }
+        expect(plain.xAxis.axisLabel?.formatter).toBeUndefined()
+    })
+
+    it('leaves a series with no figure at a category out of the tooltip', () => {
+        type Tooltip = { tooltip: { formatter: (points: unknown) => string } }
+        const point = (seriesName: string, value: unknown) => ({
+            axisValueLabel: 'nightly-export',
+            seriesName,
+            seriesIndex: 0,
+            value,
+            color: 'c',
+        })
+        const points = [point('succeeded', 3), point('failed', null), point('skipped', '-')]
+        for (const kind of ['bar', 'line', 'dual', 'rose'] as const) {
+            const option = KINDS[kind].build(
+                { rows: ROWS, x: 'job', y: 'runs', series: 'state', stack: 'stacked' },
+                LOOK,
+            ) as unknown as Tooltip
+            const html = option.tooltip.formatter(points)
+            expect([kind, html.includes('succeeded'), html.includes('failed'), html.includes('skipped')]).toEqual([
+                kind,
+                true,
+                false,
+                false,
+            ])
+        }
+    })
+})
+
+describe('the kinds apart', () => {
+    it('loads the same builder for every kind on its own', async () => {
+        for (const kind of Object.keys(KINDS) as ChartKind[]) expect([kind, await loadKind(kind)]).toEqual([kind, KINDS[kind].build])
+    })
+
+    it('lists a legend for every kind', () => {
+        expect(Object.keys(LEGENDS).sort()).toEqual(Object.keys(KINDS).sort())
+    })
+
+    it('reads no builder for a legend', () => {
+        const builders = Object.keys(import.meta.glob('./*.ts'))
+            .map((path) => path.slice(2, -3))
+            .filter((name) => !['index', 'legends', 'load', 'spec'].includes(name) && !name.endsWith('.test'))
+        const reached = (file: string) =>
+            [...readFileSync(new URL(file, import.meta.url), 'utf8').matchAll(/^import (?!type )[^']*'([^']+)'/gm)].map((match) => match[1])
+        const found = ['./legends.ts', '../chart-legend.ts'].flatMap((file) =>
+            reached(file).filter((target) => builders.some((name) => target.endsWith(`/${name}`) || target === `./kinds/${name}`)),
+        )
+        expect(builders).toContain('categories')
+        expect(found).toEqual([])
     })
 })

@@ -9,7 +9,7 @@ import { useFrameData } from './frame-data'
 import type { ChartKind, ChartSpec } from './kinds'
 import { SERIES_ORDER, type ChartLook } from './look'
 import { shareScales } from './scales'
-import { useKinds } from './use-kinds'
+import { useBuilder } from './use-builder'
 
 export type ChartGridProps = ChartSpec & {
     kind: ChartKind
@@ -70,17 +70,17 @@ export function ChartGrid({
                 spec: { ...kept, rows: kept.rows.filter((row) => labelOf(row[facet]) === name), colors, order, seriesOrder },
             }))
     }, [kept, facet, facetOrder])
-    const kinds = useKinds()
+    const build = useBuilder(kind)
     const options = useMemo(() => {
-        if (kinds === undefined) return panels.map(() => null)
+        if (build === undefined) return panels.map(() => null)
         let built: { key: string; options: EChartsCoreOption[] } | null = null
         const all = (look: ChartLook) => {
             if (built?.key !== look.key)
-                built = { key: look.key, options: shareScales(panels.map((panel) => kinds[kind].build(panel.spec, look, hidden))) }
+                built = { key: look.key, options: shareScales(panels.map((panel) => build(panel.spec, look, hidden))) }
             return built.options
         }
         return panels.map((_, index) => (look: ChartLook) => all(look)[index])
-    }, [kinds, kind, panels, hidden])
+    }, [build, panels, hidden])
     return (
         <Columns count={columns} min={narrowest} gap="md" className={className}>
             {panels.map((panel, index) => (

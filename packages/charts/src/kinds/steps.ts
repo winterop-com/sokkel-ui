@@ -1,8 +1,7 @@
-import { SERIES_ORDER, tooltipMarkup } from '../look'
-import { spread } from '../shapes'
+import { tooltipMarkup } from '../look'
 import { area, edgeAxis, line, valueTicks, written } from './categories'
-import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
-import type { LegendItem } from '../ChartLegend'
+import { spreadOf } from './legends'
+import { categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
 
 /**
  * A line that holds each figure flat until the next category, then steps: for a level that changes
@@ -14,20 +13,6 @@ export const step: ChartBuilder = (spec, look) => {
     const option = (spec.fill === undefined || spec.fill === 'none' ? line : area)({ ...spec, smooth: false }, look)
     const series = (option.series ?? []) as Record<string, unknown>[]
     return { ...option, series: series.map((entry) => ({ ...entry, step: 'end' })) }
-}
-
-/** The spread a range chart draws, from its x, y and series fields. */
-function spreadOf(spec: ChartSpec) {
-    if (spec.x === undefined || spec.y === undefined) throw new Error('A range chart needs x and y fields.')
-    return spread({
-        rows: spec.rows,
-        x: spec.x,
-        y: spec.y,
-        series: spec.series,
-        aggregate: spec.aggregate,
-        order: spec.order,
-        seriesOrder: spec.seriesOrder,
-    })
 }
 
 /**
@@ -45,9 +30,11 @@ export const range: ChartBuilder = (spec, look) => {
             axisPointer: { type: 'line' },
             formatter: (points: { dataIndex: number; seriesName: string; seriesIndex: number; color: string }[]) => {
                 const index = points[0]?.dataIndex ?? 0
-                const shown = series.filter((entry) => points.some((point) => point.seriesName === entry.name))
+                const shown = series.filter(
+                    (entry) => isFigure(entry.middle[index]) && points.some((point) => point.seriesName === entry.name),
+                )
                 return tooltipMarkup(
-                    categories[index] ?? '',
+                    categoryText(spec, categories[index] ?? ''),
                     shown.map((entry) => ({
                         label: entry.name,
                         value: `${written(spec, entry.middle[index])} (${written({ ...spec, unit: '' }, entry.low[index])} to ${written({ ...spec, unit: '' }, entry.high[index])})`,
@@ -90,14 +77,4 @@ export const range: ChartBuilder = (spec, look) => {
             ]
         }),
     }
-}
-
-/** A range chart's legend: one entry per band, with its middle line's figures. */
-export function rangeLegend(spec: ChartSpec): LegendItem[] {
-    return spreadOf(spec).series.map((entry, index) => ({
-        key: entry.name,
-        label: entry.name,
-        color: legendColor(spec, entry.name, index, SERIES_ORDER),
-        values: entry.middle,
-    }))
 }
