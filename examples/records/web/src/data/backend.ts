@@ -1,6 +1,18 @@
-import { collection, storageKey } from 'tidevann-shared/backend'
+import { collection, storageKey, type Row } from 'tidevann-shared/backend'
 
-import { type AnswerValue, type Answers, cellKey, formOf, FORMS, questionsOf, answerIssue, testAnswers, testPlace } from './forms'
+import {
+    type AnswerValue,
+    type Answers,
+    cellKey,
+    formOf,
+    FORMS,
+    questionsOf,
+    answerIssue,
+    testAnswers,
+    testPlace,
+    type Form,
+    type FormSection,
+} from './forms'
 import { COUNTRY, PLACES, placeOf } from './geo'
 
 /** Where a response is now: received here, sent on and taken by the register, refused by it, or taken back out of it. */
@@ -439,6 +451,86 @@ export function eventsOf(all: readonly Receipt[], householdId: string): Receipt[
 export function cellOf(answers: Answers, row: string, category: string): number | null {
     const value = answers[cellKey(row, category)]
     return typeof value === 'number' ? value : null
+}
+
+/** One section of a form's layout: the section, and its questions in the order they are asked. */
+export interface LayoutSection {
+    id: string
+    questions: readonly string[]
+}
+
+/** The order a form asks its sections and questions in, as arranged on its Layout page; the form's own order where none was kept. */
+export interface Layout extends Row {
+    sections: readonly LayoutSection[]
+}
+
+export const layouts = collection<Layout>('layouts', () => [])
+
+/** A form's sections and questions in the order it asks them now. */
+export function layoutOf(form: Form): LayoutSection[] {
+    return form.sections.map((section) => ({ id: section.id, questions: section.questions.map((question) => question.id) }))
+}
+
+/**
+ * The form with its sections and questions in the layout's order. A section or a question the
+ * layout does not place keeps its place in the form's own order, so a form changed since stays whole.
+ */
+export function arranged(form: Form, layout: Layout | undefined): Form {
+    if (layout === undefined) return form
+    const questions = new Map(questionsOf(form).map((question) => [question.id, question]))
+    const placed = new Set<string>()
+    const sections: FormSection[] = []
+    for (const entry of layout.sections) {
+        const section = form.sections.find((one) => one.id === entry.id)
+        if (section === undefined || sections.some((one) => one.id === section.id)) continue
+        const asked = entry.questions.flatMap((id) => {
+            const question = questions.get(id)
+            if (question === undefined || placed.has(id)) return []
+            placed.add(id)
+            return [question]
+        })
+        sections.push({ ...section, questions: asked })
+    }
+    for (const section of form.sections) if (!sections.some((one) => one.id === section.id)) sections.push({ ...section, questions: [] })
+    for (const section of form.sections)
+        for (const question of section.questions) {
+            if (placed.has(question.id)) continue
+            const home = sections.find((one) => one.id === section.id)
+            if (home !== undefined) home.questions = [...home.questions, question]
+        }
+    return { ...form, sections }
+}
+
+/** Keeps a form's layout on the server, the order every later fill asks it in. */
+export async function saveLayout(formId: string, sections: readonly LayoutSection[]): Promise<void> {
+    await guard()
+    const kept = (await layouts.list()).some((layout) => layout.id === formId)
+    if (kept) await layouts.update(formId, { sections })
+    else await layouts.create({ sections }, formId)
+}
+
+/** Drops a form's layout, so it asks in the order the form was made with. */
+export async function resetLayout(formId: string): Promise<void> {
+    await guard()
+    if ((await layouts.list()).some((layout) => layout.id === formId)) await layouts.remove(formId)
+}
+
+/** What the person keeps for themselves: the order of the forms they start records from. */
+export interface Preferences extends Row {
+    /** Form ids in the order Start a record lists them; forms it leaves out follow in the server's order. */
+    formOrder: readonly string[]
+}
+
+export const preferences = collection<Preferences>('preferences', () => [{ id: ME, formOrder: [] }])
+
+/** The forms in the person's order. */
+export function inOrder(order: readonly string[] | undefined): Form[] {
+    const rank = new Map((order ?? []).map((id, index) => [id, index]))
+    return [...FORMS].sort(
+        (left, right) =>
+            (rank.get(left.id) ?? order?.length ?? 0) - (rank.get(right.id) ?? order?.length ?? 0) ||
+            FORMS.indexOf(left) - FORMS.indexOf(right),
+    )
 }
 
 export { FORMS }

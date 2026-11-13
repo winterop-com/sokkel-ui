@@ -196,3 +196,36 @@ export async function remove(key: string): Promise<void> {
         `${key}/_history/${String(versionId)}`,
     )
 }
+
+/** A search the person kept, run again from Saved. */
+export interface SavedSearch {
+    id: string
+    label: string
+    query: string
+}
+
+/** The searches a person kept, in the order they put them. */
+export interface SavedSearches extends Row {
+    searches: readonly SavedSearch[]
+}
+
+export const saved = collection<SavedSearches>('saved-searches', () => [
+    {
+        id: ME,
+        searches: [
+            {
+                id: 'saved-1',
+                label: 'High systolic pressure',
+                query: 'Observation?code=http://loinc.org|8480-6&value-quantity=ge150&_sort=-date',
+            },
+            { id: 'saved-2', label: 'Active hypertension', query: 'Condition?code=38341003&clinical-status=active' },
+            { id: 'saved-3', label: 'Draft libraries', query: 'Library?status=draft' },
+        ],
+    },
+])
+
+/** Keeps the person's saved searches, in the order given. */
+export async function keepSearches(searches: readonly SavedSearch[]): Promise<void> {
+    if ((await saved.list()).some((row) => row.id === ME)) await saved.update(ME, { searches })
+    else await saved.create({ searches }, ME)
+}

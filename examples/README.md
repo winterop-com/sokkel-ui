@@ -12,8 +12,10 @@ examples/
                  board whose cards move between To do, Doing and Done
   runs/          a jobs console: an overview arranged by drag, runs, a run's page, jobs, schedules and settings
   records/       a records app: forms filled in sections, responses and receipts, households and
-                 their visits, places on a map, an API playground and metadata health (GAPS.md
-                 maps the records app it rehearses onto the library)
+                 their visits, places on a map, an API playground and metadata health; a form's
+                 sections and questions dragged into the order every fill asks them, and the forms
+                 to start a record from in the person's own order (GAPS.md maps the records app it
+                 rehearses onto the library)
   metrics/       live dashboards over a simulated source, arranged by drag from a palette of panels
                  and listed in the order dragged, a panel editor with a live preview, and alerts
   status/        a live operations board arranged by drag: services in the order dragged, regions
@@ -53,7 +55,8 @@ examples/
   fhir/          a FHIR workbench over the fhir add-on: a server's resources edited as JSON, checked
                  as typed and again by the server, its findings marked on their values, saved as
                  versions and compared; FHIRPath evaluated live by the FHIRPath engine; CQL libraries
-                 kept in versions and published; FHIR search by the server's parameters
+                 kept in versions and published; FHIR search by the server's parameters, with
+                 searches saved and put in order by drag
   dhis2/         a metadata and expression workbench on a simulated DHIS2-shaped server, showing the
                  dhis2 add-on: indicators, validation rules and program rules written in its two
                  expression languages, offered, checked and named as typed, run on the server's
