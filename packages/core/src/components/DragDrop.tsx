@@ -200,10 +200,9 @@ export function carriedTo(code: string, from: DragRect, places: readonly DragRec
     if (way === undefined) return undefined
     const probe = middle(from)
     const size = (rect: DragRect) => rect.width * rect.height
-    const here = places.filter((rect) => holds(rect, probe)).reduce<DragRect | undefined>(
-        (least, rect) => (least === undefined || size(rect) < size(least) ? rect : least),
-        undefined,
-    )
+    const here = places
+        .filter((rect) => holds(rect, probe))
+        .reduce<DragRect | undefined>((least, rect) => (least === undefined || size(rect) < size(least) ? rect : least), undefined)
     const nearest = (lined: boolean) => {
         let best: DragRect | undefined
         let bestScore = Number.POSITIVE_INFINITY
@@ -240,7 +239,11 @@ const keyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
     const own = activeNode?.getBoundingClientRect()
     const from =
         own !== undefined && holds(own, middle(collisionRect))
-            ? { ...collisionRect, left: own.left + (own.width - collisionRect.width) / 2, top: own.top + (own.height - collisionRect.height) / 2 }
+            ? {
+                  ...collisionRect,
+                  left: own.left + (own.width - collisionRect.width) / 2,
+                  top: own.top + (own.height - collisionRect.height) / 2,
+              }
             : collisionRect
     const drag = dragData(active)
     const places = droppableContainers.getEnabled().flatMap((entry) => {
