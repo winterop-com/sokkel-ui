@@ -122,6 +122,26 @@ export const Formatted: StoryObj = {
     ),
 }
 
+/** An hour as the range it covers: `15:00` as `15:00-16:00`. */
+const hourRange = (hour: string) => `${hour}-${String((Number(hour.slice(0, 2)) + 1) % 24).padStart(2, '0')}:00`
+const HOUR_RANGES: ChartSpec = { ...STACKED, rows: STATE_HOUR_ROWS.filter((row) => row.runs > 0), formatCategory: hourRange }
+
+/**
+ * Runs per hour by state, the hours written as the ranges they cover by `formatCategory`, on the
+ * axis and as the tooltip's title. Only the states with runs in an hour have rows, so a tooltip
+ * lists those and leaves the others out.
+ */
+export const HourRanges: StoryObj = {
+    name: 'Hour ranges',
+    render: () => (
+        <Ground title="Runs by state, today" columns={1}>
+            <ChartFrame title="Runs by state" subtitle="per hour" legend={chartLegend('bar', HOUR_RANGES)} file="runs-by-hour">
+                {(state) => <Chart kind="bar" label="Runs per hour, stacked by state" {...HOUR_RANGES} {...state} />}
+            </ChartFrame>
+        </Ground>
+    ),
+}
+
 const RECENT_STATES = [
     'succeeded',
     'succeeded',

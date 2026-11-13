@@ -21,8 +21,12 @@ export interface KeyBinding extends KeyChord {
      * as a list or an editor, and then before the same chord bound outside it.
      */
     scope?: string
-    /** Heard while typing in a field too, as a chord such as ⌘K or ⌘S may be. */
-    inFields?: boolean
+    /**
+     * Heard while typing in a field too, as a chord such as ⌘K or ⌘S may be: in every field (`true`),
+     * in inputs, text areas and selects but not in an editable region such as a code editor, which
+     * keeps its own keys (`'inputs'`), or in the fields a function says yes to.
+     */
+    inFields?: FieldReach
     /** Heard while a dialog, a menu or an overlay is open over the page too. */
     inDialogs?: boolean
     /** Heard again while the key is held down, as a step through a list may be. */
@@ -39,6 +43,9 @@ export interface KeyBinding extends KeyChord {
     next?: string | KeyChord
     run: (event: KeyboardEvent) => void
 }
+
+/** The fields a binding is heard in while typing: none, all, inputs only, or those a function picks. */
+export type FieldReach = boolean | 'inputs' | ((field: Element) => boolean)
 
 /** The second key of a sequence as a chord, or undefined for a single-key binding. */
 export function secondKey(binding: Pick<KeyBinding, 'next'>): KeyChord | undefined {
@@ -127,7 +134,13 @@ export interface PressPlace {
     dialog: boolean
     /** The `data-shortcut-scope` names around the focus, innermost first. */
     scopes: readonly string[]
+    /** The field is an input, a text area or a select, not an editable region. */
+    input?: boolean
+    /** The focused element, for a binding that picks the fields it is heard in. */
+    target?: KeyTarget | null
 }
+
+const INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
 const ARROWS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'])
 const ARROW_ROLES = new Set([
@@ -186,12 +199,15 @@ export function pressPlace(target: unknown, key: string, overlaid = false): Pres
     const scopes: string[] = []
     let dialog = overlaid
     let field = false
+    let input = false
     let node = typeof target === 'object' && target !== null && 'tagName' in target ? (target as KeyTarget) : null
     const focused = node
     if (focused !== null) {
         const tag = (focused.tagName ?? '').toUpperCase()
         const range = tag === 'INPUT' && (focused.getAttribute?.('type') ?? '').toLowerCase() === 'range'
-        field = textEntry(focused) || (range && ARROWS.has(name)) || ((name === ' ' || name === 'Enter') && pressable(focused))
+        const typed = textEntry(focused)
+        input = typed && INPUT_TAGS.has(tag)
+        field = typed || (range && ARROWS.has(name)) || ((name === ' ' || name === 'Enter') && pressable(focused))
     }
     while (node !== null) {
         const role = node.getAttribute?.('role') ?? ''
@@ -201,7 +217,15 @@ export function pressPlace(target: unknown, key: string, overlaid = false): Pres
         if (scope !== null && scope !== undefined && scope !== '') scopes.push(scope)
         node = node.parentElement ?? null
     }
-    return { field, dialog, scopes }
+    return { field, dialog, scopes, input, target: focused }
+}
+
+/** Whether a binding reaches into the field a press lands in. */
+function reaches(reach: FieldReach | undefined, place: PressPlace): boolean {
+    if (reach === true) return true
+    if (reach === 'inputs') return place.input === true
+    if (typeof reach === 'function') return place.target !== null && place.target !== undefined && reach(place.target as Element)
+    return false
 }
 
 /**
@@ -214,7 +238,7 @@ export function heard(binding: KeyBinding, press: Pick<KeyPress, 'repeat'>, plac
     if (press.repeat === true && binding.repeat !== true) return false
     const scoped = binding.scope !== undefined
     if (scoped && !place.scopes.includes(binding.scope as string)) return false
-    if (place.field && (binding.inFields !== true || binding.next !== undefined)) return false
+    if (place.field && (binding.next !== undefined || !reaches(binding.inFields, place))) return false
     if (place.dialog && binding.inDialogs !== true && !scoped) return false
     return true
 }

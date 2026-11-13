@@ -3,6 +3,8 @@ import { BookOpen, Clock, Copy, Filter, GitBranch, Radio, Server, SquareArrowOut
 import { useState } from 'react'
 
 import { Chip, type ChipTone } from '@winterop-com/sokkel-ui/Chip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { TidevannMark } from '../fixtures/TidevannMark'
 import { KIND_COLORS } from '@winterop-com/sokkel-ui/lib/kind'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -281,6 +283,29 @@ const COLUMNS: DataColumn<Job>[] = [
         ),
     },
 ]
+
+/**
+ * A chip as a tooltip trigger's `render` target, with no wrapper around it: the chip takes the
+ * trigger's attributes, handlers and ref on its root. Its mark carries its own `size-4`, so it is
+ * drawn at 16px rather than at the chip's icon size.
+ */
+export const TooltipTarget: StoryObj = {
+    name: 'Tooltip target',
+    render: () => (
+        <Row gap="xs">
+            <Tooltip defaultOpen>
+                <TooltipTrigger
+                    render={
+                        <Chip size="control" mono icon={<TidevannMark className="size-4" />} data-service="api">
+                            api.example.org
+                        </Chip>
+                    }
+                />
+                <TooltipContent>The service this page talks to</TooltipContent>
+            </Tooltip>
+        </Row>
+    ),
+}
 
 /** A table of jobs: each run's state as a status chip, its tags as chips, and an absent owner or tag list dashed. */
 export const InATable: StoryObj = {

@@ -1,23 +1,7 @@
-import { SERIES_ORDER, tokenColor, tooltipMarkup } from '../look'
-import { shaped, written } from './categories'
-import { wordsOf, type ChartBuilder, type ChartSpec } from './spec'
-import type { LegendItem } from '../ChartLegend'
-
-/** The stages in order with their figures, and each one's share of the first, in percent. */
-function stages(spec: ChartSpec) {
-    const { categories, series } = shaped({ ...spec, series: undefined, stack: undefined })
-    const values = (series[0]?.values ?? []).map((value) => value ?? 0)
-    const first = values[0] ?? 0
-    return categories.map((name, index) => ({ name, value: values[index], share: first === 0 ? 0 : (values[index] / first) * 100 }))
-}
-
-/** A stage's color as CSS: the token `colors` names for it, or the first series color fading with each stage. */
-function stageColor(spec: ChartSpec, name: string, index: number, count: number): string {
-    const token = spec.colors?.[name]
-    if (token !== undefined) return tokenColor(token)
-    const strength = count <= 1 ? 80 : Math.round(80 - (45 * index) / (count - 1))
-    return `color-mix(in oklab, var(--${SERIES_ORDER[0]}) ${String(strength)}%, var(--card))`
-}
+import { tooltipMarkup } from '../look'
+import { written } from './categories'
+import { funnelStages, stageColor } from './legends'
+import { wordsOf, type ChartBuilder } from './spec'
 
 /**
  * Stages narrowing by their figure: the categories of `x` in `order`, each as wide as its combined
@@ -27,7 +11,7 @@ function stageColor(spec: ChartSpec, name: string, index: number, count: number)
  */
 export const funnel: ChartBuilder = (spec, look) => {
     const words = wordsOf(spec)
-    const list = stages(spec)
+    const list = funnelStages(spec)
     const share = (value: number) => `${value >= 10 || value === 0 ? Math.round(value) : value.toFixed(1)}%`
     return {
         tooltip: {
@@ -74,15 +58,4 @@ export const funnel: ChartBuilder = (spec, look) => {
             },
         ],
     }
-}
-
-/** A funnel's legend: its stages in their colors, each with its figure. */
-export function funnelLegend(spec: ChartSpec): LegendItem[] {
-    const list = stages(spec)
-    return list.map((stage, index) => ({
-        key: stage.name,
-        label: stage.name,
-        color: stageColor(spec, stage.name, index, list.length),
-        values: [stage.value],
-    }))
 }

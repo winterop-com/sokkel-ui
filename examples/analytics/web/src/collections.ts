@@ -8,10 +8,12 @@ import { collection } from 'tidevann-shared/backend'
 
 import {
     DAY,
+    DEFAULT_LAYOUTS,
     DEFAULT_PREFS,
     dayOf,
     dayOfDate,
     isoDay,
+    type BoardLayout,
     type Change,
     type Funnel,
     type Goal,
@@ -30,6 +32,12 @@ export const changes = collection<Change>('changes', () => [])
 export const invoiceChanges = collection<InvoiceChange>('invoice-changes', () => [])
 export const teamEdits = collection<TeamEdit>('team-edits', () => [])
 export const prefs = collection<Prefs>('prefs', () => [{ ...DEFAULT_PREFS, feedSeen: Date.now() }])
+
+/** How each dashboard is arranged. */
+export const layouts = collection<BoardLayout>('layouts', () => [
+    { id: 'overview', panels: DEFAULT_LAYOUTS.overview },
+    { id: 'revenue', panels: DEFAULT_LAYOUTS.revenue },
+])
 
 export const invoiceViews = collection<InvoiceView>('invoice-views', () => [
     { id: 'all', name: 'All invoices', state: EMPTY_VIEW, locked: true },

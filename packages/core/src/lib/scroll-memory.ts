@@ -60,3 +60,64 @@ export function keepScroll(key: string): void {
         // Storage refused (a private window, blocked site data, full): the page's memory holds it.
     }
 }
+
+/** How long a return waits for what it scrolls to load before it gives up on the place, in milliseconds. */
+export const SCROLL_WAIT = 10_000
+
+/**
+ * Puts a scroller back at `wanted` and holds it there while what it scrolls loads, until the place
+ * is reached, the person moves it, or `wait` runs out. It follows the scroller's own size, its
+ * children's, and every change below it (rows added, text set, an image loaded), so a page of fixed
+ * height whose content arrives after it is drawn is put back too. `onSettled` hears when the wait
+ * ends. Returns what stops it.
+ */
+export function holdScroll(
+    area: HTMLElement,
+    wanted: ScrollPlace,
+    { wait = SCROLL_WAIT, onSettled }: { wait?: number; onSettled?: () => void } = {},
+): () => void {
+    let pending = true
+    const stops: (() => void)[] = []
+    const settle = () => {
+        if (!pending) return
+        pending = false
+        for (const stop of stops.splice(0)) stop()
+        onSettled?.()
+    }
+    const place = () => {
+        if (!pending) return
+        area.scrollTop = wanted.top
+        area.scrollLeft = wanted.left
+        if (Math.abs(area.scrollTop - wanted.top) <= 1 && Math.abs(area.scrollLeft - wanted.left) <= 1) settle()
+    }
+    place()
+    if (!pending) return () => undefined
+    // The person moving it ends the wait for the place to be reached.
+    const intents = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
+    for (const intent of intents) {
+        area.addEventListener(intent, settle, { passive: true })
+        stops.push(() => area.removeEventListener(intent, settle))
+    }
+    // An image or a frame below it finishing its load grows it without a change to the tree.
+    area.addEventListener('load', place, true)
+    stops.push(() => area.removeEventListener('load', place, true))
+    if (typeof ResizeObserver !== 'undefined') {
+        const sized = new ResizeObserver(place)
+        for (const element of [area, ...Array.from(area.children)]) sized.observe(element)
+        stops.push(() => sized.disconnect())
+    }
+    if (typeof MutationObserver !== 'undefined') {
+        // Content set below a box of fixed height overflows it without resizing it: the tree changing is the sign.
+        let height = area.scrollHeight
+        const changed = new MutationObserver(() => {
+            if (area.scrollHeight === height) return
+            height = area.scrollHeight
+            place()
+        })
+        changed.observe(area, { childList: true, subtree: true, characterData: true, attributes: true })
+        stops.push(() => changed.disconnect())
+    }
+    const timer = setTimeout(settle, wait)
+    stops.push(() => clearTimeout(timer))
+    return settle
+}

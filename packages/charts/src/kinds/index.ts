@@ -1,56 +1,57 @@
 import { boxplot } from './boxplot'
-import { bullet, bulletLegend } from './bullet'
+import { bullet } from './bullet'
 import { calendar } from './calendar'
-import { area, bar, donut, donutLegend, heatmap, line, pie } from './categories'
+import { area, bar, donut, heatmap, line, pie } from './categories'
 import { dual } from './dual'
-import { fan, fanLegend } from './fan'
-import { sankey, sankeyLegend } from './flows'
-import { funnel, funnelLegend } from './funnel'
+import { fan } from './fan'
+import { sankey } from './flows'
+import { funnel } from './funnel'
 import { gauge } from './gauge'
-import { sunburst, treeLegend, treemap } from './hierarchy'
-import { histogram, histogramLegend } from './histogram'
+import { sunburst, treemap } from './hierarchy'
+import { histogram } from './histogram'
 import { linked } from './linked'
 import { parallel } from './parallel'
-import { scatter, scatterLegend } from './points'
+import { scatter } from './points'
 import { radar } from './radar'
-import { rings, ringsLegend } from './rings'
-import { rose, roseLegend } from './rose'
-import { range, rangeLegend, step } from './steps'
+import { rings } from './rings'
+import { rose } from './rose'
+import { range, step } from './steps'
 import { stream } from './stream'
-import { waterfall, waterfallLegend } from './waterfall'
+import { waterfall } from './waterfall'
 import type { ChartKindDef } from './spec'
 
 /**
  * Every kind a `Chart` draws, by name. A kind lives in its own file under this folder and is added
- * here; its builder's doc comment says which of the spec's fields it reads.
+ * here, its legend in `LEGENDS` in `legends.ts` and its file in `FILES` in `load.ts`; its
+ * builder's doc comment says which of the spec's fields it reads.
  */
 export const KINDS = {
     bar: { build: bar },
     line: { build: line },
     area: { build: area },
-    donut: { build: donut, legend: donutLegend },
-    pie: { build: pie, legend: donutLegend },
-    heatmap: { build: heatmap, legend: () => [] },
-    scatter: { build: scatter, legend: scatterLegend },
-    histogram: { build: histogram, legend: histogramLegend },
-    boxplot: { build: boxplot, legend: () => [] },
-    waterfall: { build: waterfall, legend: waterfallLegend },
-    funnel: { build: funnel, legend: funnelLegend },
-    bullet: { build: bullet, legend: bulletLegend },
+    donut: { build: donut },
+    pie: { build: pie },
+    heatmap: { build: heatmap },
+    scatter: { build: scatter },
+    histogram: { build: histogram },
+    boxplot: { build: boxplot },
+    waterfall: { build: waterfall },
+    funnel: { build: funnel },
+    bullet: { build: bullet },
     radar: { build: radar },
-    rose: { build: rose, legend: roseLegend },
-    gauge: { build: gauge, legend: () => [] },
-    rings: { build: rings, legend: ringsLegend },
+    rose: { build: rose },
+    gauge: { build: gauge },
+    rings: { build: rings },
     dual: { build: dual },
-    treemap: { build: treemap, legend: treeLegend },
-    sunburst: { build: sunburst, legend: treeLegend },
-    sankey: { build: sankey, legend: sankeyLegend },
-    calendar: { build: calendar, legend: () => [] },
-    parallel: { build: parallel, legend: scatterLegend },
+    treemap: { build: treemap },
+    sunburst: { build: sunburst },
+    sankey: { build: sankey },
+    calendar: { build: calendar },
+    parallel: { build: parallel },
     stream: { build: stream },
     step: { build: step },
-    range: { build: range, legend: rangeLegend },
-    fan: { build: fan, legend: fanLegend },
+    range: { build: range },
+    fan: { build: fan },
     linked: { build: linked },
 } satisfies Record<string, ChartKindDef>
 

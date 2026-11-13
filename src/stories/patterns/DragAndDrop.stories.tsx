@@ -22,6 +22,7 @@ import { SortableGrid, SortableList } from '@winterop-com/sokkel-ui/Sortable'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { moveTreeNode, Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { GaugePanel } from '@winterop-com/sokkel-ui-charts/dashboard/GaugePanel'
 import { TimeSeriesPanel } from '@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel'
 import type { PanelSeries } from '@winterop-com/sokkel-ui-charts/dashboard/series'
 import { FAILURES, QUEUE, RUNS, TIMES } from '../fixtures/runs'
@@ -363,13 +364,14 @@ export const ListToTree: StoryObj = {
 
 const HIGH_IS_GOOD: Threshold[] = [{ color: 'critical' }, { value: 95, color: 'warning' }, { value: 99, color: 'good' }]
 const QUEUE_STEPS: Threshold[] = [{ color: 'good' }, { value: 20, color: 'warning' }, { value: 40, color: 'critical' }]
+const LOAD_STEPS: Threshold[] = [{ color: 'good' }, { value: 70, color: 'warning' }, { value: 85, color: 'critical' }]
 const RUN_SERIES: PanelSeries[] = [
     { name: 'Runs', values: RUNS, color: 'chart-2' },
     { name: 'Failures', values: FAILURES, color: 'status-failed' },
 ]
 const QUEUE_SERIES: PanelSeries[] = Object.entries(QUEUE).map(([name, values]) => ({ name, values }))
 
-type PanelKind = 'success' | 'runs' | 'queue' | 'activity' | 'depth' | 'failures'
+type PanelKind = 'success' | 'runs' | 'queue' | 'load' | 'activity' | 'depth' | 'failures'
 
 interface Placed extends DashboardLayoutItem {
     kind: PanelKind
@@ -379,6 +381,7 @@ const NAMES: Record<PanelKind, string> = {
     success: 'Success rate',
     runs: 'Runs',
     queue: 'Queue depth',
+    load: 'Worker load',
     activity: 'Runs and failures',
     depth: 'Queue depth by worker',
     failures: 'Recent failures',
@@ -393,6 +396,8 @@ function panelOf(item: Placed): ReactNode {
             return <StatPanel title={NAMES.runs} value={3526} color="chart-2" sparkline={RUNS} delta="+6%" compared="vs yesterday" good />
         case 'queue':
             return <StatPanel title={NAMES.queue} value={30} thresholds={QUEUE_STEPS} sparkline={QUEUE['worker-3']} />
+        case 'load':
+            return <GaugePanel title={NAMES.load} value={72} unit="%" thresholds={LOAD_STEPS} />
         case 'activity':
             return <TimeSeriesPanel title={NAMES.activity} subtitle="every 15 min" x={TIMES} series={RUN_SERIES} labelEvery={16} />
         case 'depth':
@@ -421,7 +426,8 @@ const LAYOUT: Placed[] = [
     { id: 'success', kind: 'success', span: 'sixth' },
     { id: 'runs', kind: 'runs', span: 'sixth' },
     { id: 'queue', kind: 'queue', span: 'sixth' },
-    { id: 'activity', kind: 'activity', span: 'half' },
+    { id: 'load', kind: 'load', span: 'sixth' },
+    { id: 'activity', kind: 'activity', span: 'third' },
     { id: 'depth', kind: 'depth', span: 'two-thirds' },
     { id: 'failures', kind: 'failures', span: 'third' },
 ]
@@ -479,7 +485,8 @@ function Arranged({ palette = false }: { palette?: boolean }) {
 /**
  * A dashboard arranged by drag: each panel's head holds a grip, its width and a remove while
  * arranging, a line shows where a dragged panel lands, and the layout comes back as `{ id, span }`
- * in order. With a grip focused the arrows move its panel; View draws the plain dashboard.
+ * in order. A narrow panel, as the gauge, gives the tools a line of their own under its title. With
+ * a grip focused the arrows move its panel; View draws the plain dashboard.
  */
 export const Dashboard: StoryObj = { name: 'Dashboard', render: () => <Arranged /> }
 

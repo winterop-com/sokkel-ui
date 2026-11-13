@@ -1,6 +1,7 @@
 /** What Tidevann's analytics are made of: its plans and prices, the world it sells in, its team, and the shapes the backend keeps. */
 
 import type { SavedView } from '@winterop-com/sokkel-ui/SavedViews'
+import type { PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 
 export const PEOPLE = ['ada', 'grace', 'linus', 'margaret'] as const
 export type Person = (typeof PEOPLE)[number]
@@ -215,6 +216,76 @@ export interface Report {
     panels: PanelId[]
     by: Person
     updated: number
+}
+
+/** The widgets a dashboard can be arranged from: each key figure as a tile, and the panels. */
+export const WIDGETS = [
+    'revenue',
+    'mrr',
+    'arr',
+    'active',
+    'paying',
+    'arpa',
+    'signups',
+    'conversion',
+    'churn',
+    'refunded',
+    'revenue-chart',
+    'plans',
+    'funnel',
+    'countries',
+    'feed',
+    'customers',
+    'movements',
+    'regions',
+    'cohorts',
+] as const
+export type WidgetId = (typeof WIDGETS)[number]
+
+/** A widget's place on an arranged dashboard: which it is and how wide. */
+export interface Placed {
+    id: WidgetId
+    span: PanelSpan
+}
+
+/** The dashboards a person arranges. */
+export type BoardId = 'overview' | 'revenue'
+
+/** How a person arranged a dashboard, kept by the backend. */
+export interface BoardLayout {
+    id: BoardId
+    panels: Placed[]
+}
+
+/** Each dashboard as it comes, and as Reset layout puts it back. */
+export const DEFAULT_LAYOUTS: Record<BoardId, Placed[]> = {
+    overview: [
+        { id: 'revenue', span: 'sixth' },
+        { id: 'mrr', span: 'sixth' },
+        { id: 'active', span: 'sixth' },
+        { id: 'signups', span: 'sixth' },
+        { id: 'conversion', span: 'sixth' },
+        { id: 'churn', span: 'sixth' },
+        { id: 'revenue-chart', span: 'two-thirds' },
+        { id: 'funnel', span: 'third' },
+        { id: 'countries', span: 'two-thirds' },
+        { id: 'feed', span: 'third' },
+        { id: 'customers', span: 'half' },
+        { id: 'regions', span: 'half' },
+    ],
+    revenue: [
+        { id: 'mrr', span: 'sixth' },
+        { id: 'arr', span: 'sixth' },
+        { id: 'paying', span: 'sixth' },
+        { id: 'arpa', span: 'sixth' },
+        { id: 'revenue', span: 'sixth' },
+        { id: 'refunded', span: 'sixth' },
+        { id: 'revenue-chart', span: 'two-thirds' },
+        { id: 'plans', span: 'third' },
+        { id: 'movements', span: 'half' },
+        { id: 'regions', span: 'half' },
+        { id: 'cohorts', span: 'full' },
+    ],
 }
 
 export const METRICS = ['mrr', 'revenue', 'paying', 'active', 'signups'] as const

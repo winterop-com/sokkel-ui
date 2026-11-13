@@ -1,10 +1,11 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useContext, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
 import { identityOf } from './ItemHeading'
 import { Link } from './Link'
+import { ShellTrailAsk, useShellTrail } from './shell-context'
 import { Toolbar, type ToolbarItem } from './Toolbar'
 import type { Crumb } from './TopBar'
 
@@ -58,6 +59,11 @@ export interface PageHeaderProps {
     actionsFill?: boolean
     /** The places above this page, the furthest first. */
     trail?: readonly Crumb[]
+    /**
+     * Inside a `Shell`, states `trail` for the top bar (`useShellTrail`, ending at the place above
+     * this page) rather than drawing it, as the trail lives in the top bar; outside one it is drawn here.
+     */
+    trailInTop?: boolean
     /** Draws a back button before the title. */
     onBack?: () => void
     /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
@@ -88,7 +94,8 @@ const ROWS = ['row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-
  *
  * A page reached from another can say where it sits: `trail` draws the places above it small over
  * the title, nearest last, each a link back up, and `onBack` draws a back button level with the
- * title, the rest of the header lined up after it.
+ * title, the rest of the header lined up after it. With `trailInTop`, inside a `Shell` the trail
+ * goes to the shell's top bar instead, and the header draws none.
  *
  * A long title wraps; `singleLine` keeps it to one line, cut short with the whole of it on hover,
  * as a code standing as the title is by default.
@@ -107,10 +114,14 @@ export function PageHeader({
     wordsOnly,
     actionsFill,
     trail,
+    trailInTop = false,
     onBack,
     singleLine,
     words,
 }: PageHeaderProps) {
+    const inShell = useContext(ShellTrailAsk) !== undefined
+    const toTop = trailInTop && inShell
+    useShellTrail(toTop ? trail : undefined, { ends: 'ancestor' })
     const said = { ...WORDS, ...words }
     const identity = identityOf(title, code)
     const showCode = identity.code !== undefined
@@ -119,7 +130,7 @@ export function PageHeader({
     const back = onBack !== undefined
     const beside = aside !== undefined && aside !== null
     const led = lead !== undefined && lead !== null && lead !== false
-    const trailed = trail !== undefined && trail.length > 0
+    const trailed = !toTop && trail !== undefined && trail.length > 0
     const folding = (items !== undefined && items.length > 0) || primary !== undefined
     const fill = actionsFill ?? folding
     // Beside actions that fill, from 32rem up the row stays one line: the title takes its own width up

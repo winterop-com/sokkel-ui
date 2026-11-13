@@ -8,7 +8,7 @@ import { Stat } from '../Stat'
 import { WindowedPane } from '../WindowedPane'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { PanelTools } from './panel-tools'
+import { PanelTools, usePanelTools } from './panel-tools'
 
 /**
  * How much of the grid's width a panel takes in a wide grid. Every panel is full width in a
@@ -181,6 +181,7 @@ export function DashboardPanel({
         if (expandedProp === undefined) setOwnExpanded(next)
         onExpandedChange?.(next)
     }
+    const tools = usePanelTools()
     const failed = error !== undefined && error !== false
     const body = failed ? (
         <PanelFailure error={error} technical={technical} onRetry={onRetry} words={words} />
@@ -199,8 +200,14 @@ export function DashboardPanel({
                 className,
             )}
         >
-            <header className="flex min-h-10 shrink-0 items-center gap-2 border-b border-border px-3 py-1.5">
-                <div className="flex min-w-0 flex-1 items-baseline gap-2">
+            {/* A head holding an arranged grid's tools lets them and the actions take a line of their own when the panel is narrow. */}
+            <header
+                className={cn(
+                    'flex min-h-10 shrink-0 items-center gap-2 border-b border-border px-3 py-1.5',
+                    tools !== null && 'flex-wrap',
+                )}
+            >
+                <div className={cn('flex min-w-0 items-baseline gap-2', tools !== null ? 'grow basis-32' : 'flex-1')}>
                     <h3 className="truncate text-sm font-medium">{title}</h3>
                     {subtitle !== undefined && <span className="truncate text-xs text-muted-foreground">{subtitle}</span>}
                 </div>

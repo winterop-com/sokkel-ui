@@ -9,6 +9,30 @@ import { StatusChip } from './StatusChip'
 import { StatusProvider } from './StatusProvider'
 
 describe('Chip', () => {
+    it('hands other attributes to its root, so it can be a trigger’s render target', () => {
+        const html = renderToStaticMarkup(
+            <Chip data-run="run-4812" aria-describedby="hint" tabIndex={0}>
+                nightly
+            </Chip>,
+        )
+        expect(html).toMatch(/^<span data-run="run-4812" aria-describedby="hint" tabindex="0" data-slot="chip"/)
+    })
+
+    it('sizes an icon to the chip unless the icon carries its own size', () => {
+        const html = renderToStaticMarkup(<Chip icon={<svg className="size-4" />}>harbor</Chip>)
+        expect(html).toContain('[&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-3')
+        expect(html).toContain('class="size-4"')
+    })
+
+    it('lets a link or a button cover the chip’s edge, as tall as the chip', () => {
+        const html = renderToStaticMarkup(
+            <Chip href="/projects/harbor" size="control">
+                harbor
+            </Chip>,
+        )
+        expect(html).toMatch(/data-slot="chip-link"[^>]*class="-my-px [^"]*h-\[calc\(100%\+2px\)\]/)
+    })
+
     it('draws its tone, neutral by default, and an absent value dashed', () => {
         expect(renderToStaticMarkup(<Chip>nightly</Chip>)).toContain('bg-faint/15 text-muted-foreground')
         expect(renderToStaticMarkup(<Chip tone="good">healthy</Chip>)).toContain('bg-good/15 text-good-ink')

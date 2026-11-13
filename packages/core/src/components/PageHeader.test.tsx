@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import { PageHeader } from './PageHeader'
+import { ShellTrailAsk } from './shell-context'
 
 describe('a page header', () => {
     it('keeps its actions to their own width unless asked', () => {
@@ -103,5 +104,14 @@ describe('a page header', () => {
         )
         expect(html).toContain('grid-cols-[auto_auto_minmax(0,1fr)]')
         expect(html).toMatch(/col-start-2 row-span-3"><span>mark/)
+    })
+
+    it('draws its trail, or inside a shell leaves it to the top bar when told', () => {
+        const trail = [{ label: 'Jobs', href: '#/jobs' }]
+        const header = <PageHeader title="nightly-export" trail={trail} trailInTop />
+        expect(renderToStaticMarkup(header)).toContain('aria-label="Where you are"')
+        const inShell = renderToStaticMarkup(<ShellTrailAsk value={() => () => undefined}>{header}</ShellTrailAsk>)
+        expect(inShell).not.toContain('aria-label="Where you are"')
+        expect(inShell).toContain('nightly-export')
     })
 })

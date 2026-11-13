@@ -1,18 +1,9 @@
 import { distinct, labelOf } from '../data'
-import { SERIES_ORDER, tooltipMarkup } from '../look'
+import { tooltipMarkup } from '../look'
 import { flows } from '../shapes'
 import { written } from './categories'
-import { colorOf, legendColor, measureName, type ChartBuilder, type ChartSpec } from './spec'
-import type { LegendItem } from '../ChartLegend'
-
-/** The stages a flow runs through, first to last. */
-function stagesOf(spec: ChartSpec): readonly string[] {
-    if (spec.path === undefined || spec.path.length < 2) throw new Error('A sankey chart needs a path of at least two fields.')
-    return spec.path
-}
-
-/** The field whose sum is a link's width, or none where rows are counted. */
-const weightOf = (spec: ChartSpec) => (typeof spec.y === 'string' ? spec.y : spec.y?.[0])
+import { stagesOf, weightOf } from './legends'
+import { colorOf, measureName, type ChartBuilder } from './spec'
 
 /**
  * Flows through stages: one column of nodes per field of `path`, first to last, and a band from a
@@ -92,19 +83,4 @@ export const sankey: ChartBuilder = (spec, look, hidden) => {
             },
         ],
     }
-}
-
-/** A sankey's legend: the labels of its first stage, each with its figure. */
-export function sankeyLegend(spec: ChartSpec): LegendItem[] {
-    const stages = stagesOf(spec)
-    const flow = flows({ rows: spec.rows, path: stages.slice(0, 1), y: weightOf(spec) })
-    const value = new Map(flow.nodes.map((node) => [node.name, node.value]))
-    return distinct(spec.rows, stages[0], spec.order)
-        .filter((name) => name !== '')
-        .map((name, index) => ({
-            key: name,
-            label: name,
-            color: legendColor(spec, name, index, SERIES_ORDER),
-            values: [value.get(name) ?? null],
-        }))
 }

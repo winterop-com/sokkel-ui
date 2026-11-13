@@ -4,7 +4,7 @@ import * as React from 'react'
 import type { Menu as BaseMenu } from '@base-ui/react/menu'
 
 import { cn } from '../../lib/utils'
-import { FINGER_HIT } from '../../lib/finger'
+import { FINGER_HIT, takesFinger } from '../../lib/finger'
 import { returnFocusOnKeyboard } from '../../lib/focus'
 import { menu as MenuPrimitive } from './deferred-menu'
 import { ChevronRightIcon, CheckIcon } from 'lucide-react'
@@ -27,10 +27,10 @@ function DropdownMenuPortal({ ...props }: DropdownMenuPortalProps) {
 
 export type DropdownMenuTriggerProps = BaseMenu.Trigger.Props
 
-/** A trigger the menu draws itself, given no `render`, takes a finger-sized hit area on a phone. */
+/** A trigger takes a finger-sized hit area on a phone, drawn by the menu or given as a `render` element that allows it (`takesFinger`). */
 function DropdownMenuTrigger({ className, ...props }: DropdownMenuTriggerProps) {
-    const own = props.render === undefined && typeof className !== 'function'
-    return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" className={own ? cn(FINGER_HIT, className) : className} {...props} />
+    const finger = takesFinger(props.render, className)
+    return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" className={finger ? cn(FINGER_HIT, className) : className} {...props} />
 }
 
 export type DropdownMenuContentProps = BaseMenu.Popup.Props &

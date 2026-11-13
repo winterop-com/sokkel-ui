@@ -2,6 +2,7 @@ import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { PencilLine, Plus, Presentation, Trash2 } from 'lucide-react'
@@ -9,9 +10,9 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { go } from 'tidevann-shared/router'
 
-import { boards as boardStore } from '../backend'
+import { boards as boardStore, preferences } from '../backend'
 import { BoardDialog } from '../dialogs'
-import { type Board, counted } from '../model'
+import { type Board, counted, type Preferences } from '../model'
 
 /** Deletes a board after asking; its charts stay saved. */
 export function useDeleteBoard() {
@@ -40,9 +41,30 @@ export function useDeleteBoard() {
     return { ask: setDeleting, dialog }
 }
 
-/** Every board, with how many charts it holds; one opens, or is presented full screen. */
-export function BoardsPage({ boards, loading, onCreate }: { boards: readonly Board[]; loading: boolean; onCreate: () => void }) {
+/**
+ * Every board, with how many charts it holds; one opens, or is presented full screen. Unsorted, the
+ * boards stand in the person's order, dragged by their grips, and the rail lists them so.
+ */
+export function BoardsPage({
+    boards,
+    prefs,
+    loading,
+    onCreate,
+}: {
+    boards: readonly Board[]
+    prefs: Preferences
+    loading: boolean
+    onCreate: () => void
+}) {
     const [editing, setEditing] = useState<Board | undefined>(undefined)
+    // Held here as it changes and kept in the preferences behind it, so a quick second move never reads a stale first.
+    const [order, setOrder] = useState<readonly Board[] | null>(null)
+    const shown = order !== null && order.length === boards.length && order.every((board) => boards.includes(board)) ? order : boards
+    const reorder = (from: number, to: number) => {
+        const next = moveItem(shown, from, to)
+        setOrder(next)
+        void preferences.update(prefs.id, { boardOrder: next.map((board) => board.id) })
+    }
     const remove = useDeleteBoard()
     const columns: DataColumn<Board>[] = [
         {
@@ -82,7 +104,7 @@ export function BoardsPage({ boards, loading, onCreate }: { boards: readonly Boa
             <PageHeader
                 title="Boards"
                 count={counted(boards.length, 'board')}
-                description="Saved charts arranged on a page, filtered together and presented full screen."
+                description="Saved charts arranged on a page, filtered together and presented full screen. Drag a board by its grip to order them."
                 actions={
                     <Button size="sm" onClick={onCreate}>
                         <Plus aria-hidden />
@@ -93,10 +115,11 @@ export function BoardsPage({ boards, loading, onCreate }: { boards: readonly Boa
             <DataTable
                 className="min-h-0 flex-1"
                 columns={columns}
-                rows={boards}
+                rows={shown}
                 rowKey={(board) => board.id}
+                rowLabel={(board) => board.name}
                 loading={loading}
-                defaultSort={{ column: 'name', direction: 'asc' }}
+                onReorder={reorder}
                 onOpen={(board) => go(`/boards/${board.id}`)}
                 chevron
                 rowActions={(board) => [

@@ -3,7 +3,9 @@ import { CalendarClock, Play } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { AsyncSelect, type AsyncPage } from '@winterop-com/sokkel-ui/AsyncSelect'
+import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import { Field } from '@winterop-com/sokkel-ui/Field'
+import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { REGIONS } from '../fixtures/weekRuns'
 
 /**
@@ -171,6 +173,44 @@ function LocalJobs() {
  */
 export const Local: StoryObj = { name: 'Local list', render: () => <LocalJobs /> }
 
+const SERVICES: Record<string, string> = {
+    'nightly-export': 'worker',
+    'sync-inventory': 'worker',
+    'rebuild-index': 'scheduler',
+    'send-digest': 'api',
+    'import-orders': 'api',
+}
+
+/** A job picker whose rows end in the service that runs the job, a code, shown beside the chosen job too. */
+function ServiceJobs({ open = false }: { open?: boolean }) {
+    const [value, setValue] = useState<Job | null>(JOB_OPTIONS[1] ?? null)
+    return (
+        <Ground>
+            <Field label="Job" id="service-job">
+                <AsyncSelect
+                    id="service-job"
+                    value={value}
+                    onValueChange={setValue}
+                    items={JOB_OPTIONS}
+                    itemKey={(job) => job.code}
+                    itemLabel={(job) => job.name}
+                    itemMeta={(job) => SERVICES[job.code]}
+                    monoMeta
+                    metaInValue
+                    defaultOpen={open}
+                    words={{ placeholder: 'Choose a job' }}
+                />
+            </Field>
+        </Ground>
+    )
+}
+
+/**
+ * `monoMeta` sets each row's end in the code face, here the service that runs the job, and
+ * `metaInValue` shows it at the chosen value's end too. The list grows to its longest row.
+ */
+export const CodeMeta: StoryObj = { name: 'Code at the end', render: () => <ServiceJobs open /> }
+
 /** Places to run in: each country's parts, 240 in all, too many to send at once. */
 const PLACES = REGIONS.flatMap((country) =>
     ['North', 'South', 'East', 'West', 'Central', 'Coast', 'Highlands', 'Lakes'].map((part) => `${country} ${part}`),
@@ -211,6 +251,37 @@ function Places({ chosen = [], open = false, query = '' }: { chosen?: string[]; 
 
 /** Several values chosen, each a chip with its remove button, the search typed in the field after them. */
 export const Several: StoryObj = { render: () => <Places chosen={['Norway North', 'Kenya Coast', 'Peru Highlands']} /> }
+
+const STEPS = ['fetch', 'transform', 'validate', 'upload', 'notify']
+
+/** A run's steps as codes, chosen and shown but not changed. */
+function Steps({ disabled = false }: { disabled?: boolean }) {
+    const [value, setValue] = useState<string[]>(['fetch', 'validate', 'notify'])
+    return (
+        <Ground>
+            <Field label="Steps" id={disabled ? 'steps-off' : 'steps'}>
+                <AsyncSelect
+                    id={disabled ? 'steps-off' : 'steps'}
+                    multiple
+                    mono
+                    readOnly={!disabled}
+                    disabled={disabled}
+                    value={value}
+                    onValueChange={setValue}
+                    items={STEPS}
+                    itemKey={(step) => step}
+                    itemLabel={(step) => step}
+                />
+            </Field>
+        </Ground>
+    )
+}
+
+/** Several values that are codes (`mono`), read only: the chips have no remove button and no list opens. */
+export const ReadOnly: StoryObj = { name: 'Read only', render: () => <Steps /> }
+
+/** The same, disabled: dimmed, and not focusable. */
+export const Disabled: StoryObj = { render: () => <Steps disabled /> }
 
 /** Picking several: the list stays open as each is ticked, the first page of a long answer listed. */
 export const PickSeveral: StoryObj = { name: 'Pick several', render: () => <Places chosen={['Austria Central']} open /> }
@@ -272,3 +343,35 @@ function Place() {
 
 /** One value from a long answer: scrolling near the list's end loads the next page, the line under it saying so. */
 export const Paged: StoryObj = { render: () => <Place /> }
+
+/** A schedule form in a dialog, its job picked from a list that matches nothing for what is typed. */
+function ScheduleDialog() {
+    const [open, setOpen] = useState(true)
+    const [name, setName] = useState('Weekly digest')
+    const [job, setJob] = useState<Job | null>(null)
+    return (
+        <DialogShell open={open} onOpenChange={setOpen} title="New schedule" confirm={{ label: 'Create', onConfirm: () => setOpen(false) }}>
+            <TextField id="schedule-name" label="Name" value={name} onChange={setName} />
+            <Field label="Job" id="schedule-job">
+                <AsyncSelect
+                    id="schedule-job"
+                    value={job}
+                    onValueChange={setJob}
+                    items={JOB_OPTIONS}
+                    itemKey={(option) => option.code}
+                    itemLabel={(option) => option.name}
+                    itemDetail={(option) => option.code}
+                    defaultOpen
+                    defaultQuery="ferry"
+                    words={{ placeholder: 'Choose a job' }}
+                />
+            </Field>
+        </DialogShell>
+    )
+}
+
+/**
+ * The picker in a dialog with a query that matches nothing: Escape closes the picker's list and
+ * leaves the dialog, and what was typed in it, open.
+ */
+export const InDialog: StoryObj = { name: 'In a dialog', render: () => <ScheduleDialog /> }

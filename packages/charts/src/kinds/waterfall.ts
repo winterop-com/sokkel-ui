@@ -1,26 +1,7 @@
-import { tokenColor, tooltipMarkup } from '../look'
-import { runningTotals } from '../stats'
-import { shaped, valueTicks, written } from './categories'
-import { wordsOf, type ChartBuilder, type ChartSpec } from './spec'
-import type { LegendItem } from '../ChartLegend'
-
-/** The changes per category, the stretch of the running total each one covers, and the total. */
-function stretches(spec: ChartSpec) {
-    const { categories, series } = shaped({ ...spec, series: undefined, stack: undefined })
-    const steps = runningTotals(series[0]?.values ?? [])
-    const total = steps.length === 0 ? 0 : steps[steps.length - 1].to
-    return { categories, steps, total }
-}
-
-/** The tokens of the rises, the falls and the total: what `colors` names for each word, or good, critical and the first series color. */
-function tones(spec: ChartSpec) {
-    const words = wordsOf(spec)
-    return {
-        rise: spec.colors?.[words.rise] ?? 'good',
-        fall: spec.colors?.[words.fall] ?? 'critical',
-        total: spec.colors?.[words.total] ?? 'chart-2',
-    }
-}
+import { tooltipMarkup } from '../look'
+import { valueTicks, written } from './categories'
+import { stretches, tones } from './legends'
+import { categoryText, wordsOf, type ChartBuilder } from './spec'
 
 interface Api {
     value: (dimension: number) => number
@@ -34,7 +15,7 @@ interface Api {
  * or falls from where the one before it ended, joined by a thin line, and a bar for the total at the
  * end. Rises take the `good` tone and falls the `critical` one, unless `colors` names others for
  * the words `Rise`, `Fall` and `Total`. Reads `x`, `y`, `aggregate`, `order`, `colors`, `format`,
- * `unit` and `words`.
+ * `unit`, `words` and `formatCategory`.
  */
 export const waterfall: ChartBuilder = (spec, look) => {
     const words = wordsOf(spec)
@@ -86,14 +67,18 @@ export const waterfall: ChartBuilder = (spec, look) => {
                 const [index, , to, change] = point.value
                 if (index === names.length - 1)
                     return tooltipMarkup(words.total, [{ label: words.total, value: written(spec, to), color: point.color }])
-                return tooltipMarkup(names[index], [
+                return tooltipMarkup(categoryText(spec, names[index]), [
                     { label: words.change, value: `${change > 0 ? '+' : ''}${written(spec, change)}`, color: point.color },
                     { label: words.total, value: written(spec, to) },
                 ])
             },
         },
         grid: { left: 4, right: 10, top: 10, bottom: 4 },
-        xAxis: { type: 'category', data: names },
+        xAxis: {
+            type: 'category',
+            data: names,
+            axisLabel: { formatter: (name: string, index: number) => (index === categories.length ? name : categoryText(spec, name)) },
+        },
         yAxis: { type: 'value', ...valueTicks(spec) },
         series: [
             series(words.rise, tone.rise, (bar) => bar.index < steps.length && bar.change >= 0),
@@ -101,26 +86,4 @@ export const waterfall: ChartBuilder = (spec, look) => {
             series(words.total, tone.total, (bar) => bar.index === steps.length),
         ],
     }
-}
-
-/** A waterfall's legend: the rises, the falls and the total, each with its figures. */
-export function waterfallLegend(spec: ChartSpec): LegendItem[] {
-    const words = wordsOf(spec)
-    const tone = tones(spec)
-    const { steps, total } = stretches(spec)
-    return [
-        {
-            key: words.rise,
-            label: words.rise,
-            color: tokenColor(tone.rise),
-            values: steps.filter((step) => step.change >= 0).map((step) => step.change),
-        },
-        {
-            key: words.fall,
-            label: words.fall,
-            color: tokenColor(tone.fall),
-            values: steps.filter((step) => step.change < 0).map((step) => step.change),
-        },
-        { key: words.total, label: words.total, color: tokenColor(tone.total), values: [total] },
-    ]
 }

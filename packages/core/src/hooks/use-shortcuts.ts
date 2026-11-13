@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useId, useSyncExternalStore, type
 
 import { createShortcutRegistry, type KeyBinding, type ShortcutRegistryHandle } from '../lib/shortcuts'
 
-export type { KeyBinding, ShortcutRegistryHandle } from '../lib/shortcuts'
+export type { FieldReach, KeyBinding, ShortcutRegistryHandle } from '../lib/shortcuts'
 
 /**
  * The registry `useShortcuts` binds in. `Shell` holds one around its content and answers its keys;
@@ -27,7 +27,7 @@ export function useShortcutRegistry(): ShortcutRegistryHandle {
  * Binds a screen's keys while the screen is mounted, and takes them away when it unmounts. Each
  * binding names its key by the character it types, with `mod` (⌘ on a Mac, Ctrl elsewhere), `shift`
  * and `alt`, and is quiet while typing in a field and while a dialog, a menu or an overlay is open,
- * unless it asks (`inFields`, `inDialogs`). `next` makes it a two-key sequence (G then D), the
+ * unless it asks (`inFields`, `'inputs'` to leave an editable region such as a code editor its own keys, or a function; `inDialogs`). `next` makes it a two-key sequence (G then D), the
  * second key pressed within a second and never in a field. A `label` lists it in the shortcuts dialog under its
  * `group`. `deps` are what the bindings are made from, as for `useMemo`: they are set again, in the
  * same place, when one changes. A screen's binding comes before the shell's own for the same keys.

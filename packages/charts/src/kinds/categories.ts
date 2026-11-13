@@ -1,7 +1,19 @@
-import { asShares, formatNumber, formatTick, pivot, type Series } from '../data'
-import { SERIES_ORDER, tokenColor, tooltipMarkup, type ChartLook } from '../look'
-import { colorOf, isDashed, legendColor, measureName, paletteToken, stackOf, unitAt, type ChartBuilder, type ChartSpec } from './spec'
-import type { LegendItem } from '../ChartLegend'
+import { formatNumber, formatTick, type Series } from '../data'
+import { tokenColor, tooltipMarkup, type ChartLook } from '../look'
+import { shaped } from './legends'
+import {
+    categoryLabels,
+    categoryText,
+    colorOf,
+    isDashed,
+    isFigure,
+    measureName,
+    paletteToken,
+    stackOf,
+    unitAt,
+    type ChartBuilder,
+    type ChartSpec,
+} from './spec'
 
 /** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
 export function written(spec: ChartSpec, value: number | null | undefined, field = 0): string {
@@ -31,27 +43,12 @@ export function tickWriter(format: ((value: number) => string) | undefined, unit
     return (value) => `${compactWritten(format(value), value)}${unit}`
 }
 
-/** The rows as categories and series, as shares when the spec stacks them to 100%. */
-export function shaped(spec: ChartSpec) {
-    if (spec.x === undefined) throw new Error('This chart needs an x field.')
-    const data = pivot({
-        rows: spec.rows,
-        x: spec.x,
-        y: spec.y,
-        series: spec.series,
-        aggregate: spec.aggregate,
-        order: spec.order,
-        seriesOrder: spec.seriesOrder,
-    })
-    return spec.stack === 'percent' ? { ...data, series: asShares(data.series) } : data
-}
-
-/** The category axis, its labels every `labelEvery`th category when the spec asks. */
+/** The category axis, its labels every `labelEvery`th category when the spec asks, written by `formatCategory`. */
 function categoryAxis(spec: ChartSpec, categories: string[]) {
     return {
         type: 'category',
         data: categories,
-        ...(spec.labelEvery === undefined ? {} : { axisLabel: { interval: spec.labelEvery - 1 } }),
+        axisLabel: { ...(spec.labelEvery === undefined ? {} : { interval: spec.labelEvery - 1 }), ...categoryLabels(spec) },
     }
 }
 
@@ -142,7 +139,7 @@ export function stepLines(spec: ChartSpec, look: ChartLook) {
     return { silent: true, symbol: 'none', data }
 }
 
-/** A tooltip listing every series at the category under the pointer. */
+/** A tooltip listing every series with a figure at the category under the pointer; a series with none there draws nothing, so it is left out. */
 function axisTooltip(spec: ChartSpec) {
     const unit = spec.stack === 'percent' ? { ...spec, format: (value: number) => value.toFixed(1), unit: '%' } : spec
     return {
@@ -150,12 +147,14 @@ function axisTooltip(spec: ChartSpec) {
         axisPointer: { type: 'shadow' },
         formatter: (points: { axisValueLabel: string; seriesName: string; seriesIndex: number; value: number | null; color: string }[]) =>
             tooltipMarkup(
-                points[0]?.axisValueLabel ?? '',
-                points.map((point) => ({
-                    label: point.seriesName,
-                    value: written(unit, point.value, spec.series === undefined ? point.seriesIndex : 0),
-                    color: point.color,
-                })),
+                categoryText(spec, points[0]?.axisValueLabel ?? ''),
+                points
+                    .filter((point) => isFigure(point.value))
+                    .map((point) => ({
+                        label: point.seriesName,
+                        value: written(unit, point.value, spec.series === undefined ? point.seriesIndex : 0),
+                        color: point.color,
+                    })),
             ),
     }
 }
@@ -251,7 +250,14 @@ export function edgeAxis(spec: ChartSpec, categories: string[]) {
         type: 'category',
         data: categories,
         boundaryGap: false,
-        axisLabel: { showMinLabel: true, showMaxLabel: true, alignMinLabel: 'left', alignMaxLabel: 'right', hideOverlap: true },
+        axisLabel: {
+            showMinLabel: true,
+            showMaxLabel: true,
+            alignMinLabel: 'left',
+            alignMaxLabel: 'right',
+            hideOverlap: true,
+            ...categoryLabels(spec),
+        },
     }
 }
 
@@ -377,7 +383,7 @@ export const heatmap: ChartBuilder = (spec, look) => {
         tooltip: {
             trigger: 'item',
             formatter: (point: { value: [number, number, number | null] }) =>
-                tooltipMarkup(`${categories[point.value[0]]}, ${series[point.value[1]].name}`, [
+                tooltipMarkup(`${categoryText(spec, categories[point.value[0]])}, ${series[point.value[1]].name}`, [
                     {
                         label: spec.y === undefined ? measureName(spec, undefined) : measureName(spec, String(spec.y)),
                         value: written(spec, point.value[2]),
@@ -411,15 +417,4 @@ export const heatmap: ChartBuilder = (spec, look) => {
             },
         ],
     }
-}
-
-/** A ring's legend: its slices, each with its figure. */
-export function donutLegend(spec: ChartSpec): LegendItem[] {
-    const { categories, series } = shaped(spec)
-    return categories.map((name, index) => ({
-        key: name,
-        label: name,
-        color: legendColor(spec, name, index, SERIES_ORDER),
-        values: [series[0]?.values[index] ?? null],
-    }))
 }
