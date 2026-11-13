@@ -345,7 +345,10 @@ the pointer.
 inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
 and its panel over a narrow window use it. `useScrollMemory(key, ref)` keeps a scroller's place per
 key for the session (in session storage, in memory where that is refused) and puts it back on
-return, the shell's content when no ref is given. `useReducedMotion()` says whether motion is
+return, the shell's content when no ref is given. A `DataTable` that scrolls itself keeps its place
+with `scrollKey` the same way, drawing the rows in view at it and, while it lies past the rows loaded
+(`hasMore`), asking for more until they reach it, by the button's way too; `scrollerRef` hands the
+app its scroller. `useReducedMotion()` says whether motion is
 reduced, from the look's own `motion` and else the system's, following both, for motion a script
 draws.
 
@@ -685,7 +688,7 @@ phone's, or wherever its columns stop fitting, so a list in a narrow panel on a 
 rows it says `empty`, a sentence or a node such as an `Empty` with an action, alone without the column
 heads unless a search or tools in the bar may have emptied it. While its rows are on their way
 (`loading`) it draws placeholder rows under its heads, filling the view or three after the last row
-loaded: its one loading look, chosen over `PageState`'s spinner line because it keeps the table's
+loaded, as bars in the shape of its stacked cards or listed rows once the rows stack: its one loading look, chosen over `PageState`'s spinner line because it keeps the table's
 shape, so the bar, a search being typed in, the heads and the frame stand where the rows will and
 nothing moves or unmounts as they come. A read that failed is said in the rows' place under the
 heads (`error`, with `status`, `problems` and `onRetry`), drawn as an unframed `PageState` with its

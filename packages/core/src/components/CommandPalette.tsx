@@ -537,7 +537,10 @@ export function CommandPalette({
                     )}
                 </CommandList>
                 {refusal !== undefined && (
-                    <ProblemLine className="-mx-(--palette-inset) border-t border-border px-3 py-2">{refusal}</ProblemLine>
+                    // Across the palette as the foot is, its words inset as the rows' are.
+                    <ProblemLine className="-mx-(--palette-inset) border-t border-border px-[calc(var(--palette-inset)+var(--palette-row-inset-x))] py-2">
+                        {refusal}
+                    </ProblemLine>
                 )}
                 {foot === undefined ? (
                     <div className="hidden justify-end border-t border-border p-1.5 pointer-coarse:flex">

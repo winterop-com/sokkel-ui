@@ -20,6 +20,8 @@ import {
     type MouseEvent,
     type ReactElement,
     type ReactNode,
+    type Ref,
+    type RefObject,
     createContext,
     useCallback,
     useContext,
@@ -31,8 +33,10 @@ import {
     useState,
 } from 'react'
 
+import { useScrollMemory } from '../hooks/use-scroll-memory'
 import { cn } from '../lib/cn'
 import { stepTo } from '../lib/reorder'
+import { recallScroll, SCROLL_WAIT } from '../lib/scroll-memory'
 import type { DragHandleProps } from './DragDrop'
 import type { IssueWords } from './IssueMark'
 import { PageState, type PageStateWords, type ReadOutcome } from './PageState'
@@ -796,6 +800,62 @@ export function rangeKeys<T>(flat: readonly FlatRow<T>[], from: string, to: stri
     return flat.slice(start, end + 1).map((entry) => entry.key)
 }
 
+/** What decides whether a table asks for more rows. */
+export interface MoreAsked {
+    /** More rows exist than are given. */
+    hasMore: boolean
+    /** Rows are on their way, or the last read failed. */
+    busy: boolean
+    /** The reader asks for more by the Load more button. */
+    byButton: boolean
+    /** The end of what has loaded is near the view. */
+    nearEnd: boolean
+    /** How far down the place the table was left at lies, while it is still on its way there. */
+    seeking?: number
+    /** The farthest down the rows loaded can scroll. */
+    reach: number
+}
+
+/**
+ * Whether a table asks for more rows now: only while more exist and none are on their way, as the
+ * end of what has loaded comes near unless the reader asks by the button, and, by either way, while
+ * the place it was left at lies past where the rows loaded can scroll, so a return to a long
+ * listing loads the pages that reach its place.
+ */
+export function asksForMore({ hasMore, busy, byButton, nearEnd, seeking, reach }: MoreAsked): boolean {
+    if (!hasMore || busy) return false
+    return (!byButton && nearEnd) || (seeking !== undefined && reach < seeking - 1)
+}
+
+/**
+ * Where a table kept under `key` was left, while it is still on its way there: the place's distance
+ * from the top, until `reached` says it is there, the reader scrolls, or the wait for the rows runs
+ * out. Undefined for a table with no key, or one left at the top.
+ */
+function useSeeking(key: string | undefined, scroller: RefObject<HTMLElement | null>): [number | undefined, () => void] {
+    const placeOf = (of: string | undefined) => {
+        const top = of === undefined ? undefined : recallScroll(of)?.top
+        return top === undefined || top <= 0 ? undefined : top
+    }
+    const [seek, setSeek] = useState(() => ({ key, top: placeOf(key) }))
+    if (seek.key !== key) setSeek({ key, top: placeOf(key) })
+    const seeking = seek.key === key ? seek.top : undefined
+    const stop = useCallback(() => setSeek((now) => (now.top === undefined ? now : { ...now, top: undefined })), [])
+    const going = seeking !== undefined
+    useEffect(() => {
+        const area = scroller.current
+        if (!going) return undefined
+        const intents = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
+        for (const intent of intents) area?.addEventListener(intent, stop, { passive: true })
+        const timer = setTimeout(stop, SCROLL_WAIT)
+        return () => {
+            for (const intent of intents) area?.removeEventListener(intent, stop)
+            clearTimeout(timer)
+        }
+    }, [going, scroller, stop])
+    return [seeking, stop]
+}
+
 /** A value its owner may hold, or the table holds itself when the owner passes none. */
 function useHeld<V>(value: V | undefined, initial: V, onChange?: (value: V) => void): [V, (value: V) => void] {
     const [own, setOwn] = useState(initial)
@@ -815,6 +875,12 @@ const NO_WIDTHS: Readonly<Record<string, number>> = {}
 const NO_ORDER: readonly string[] = []
 const NO_CHILDREN: ReadonlyMap<string, readonly unknown[]> = new Map()
 const CHECK = '2.5rem'
+/** The widths of the bars a placeholder row draws, taken in turn so the rows on their way do not line up. */
+const PLACEHOLDER_WIDTHS = ['w-2/5', 'w-1/2', 'w-1/3', 'w-3/5']
+/** The heights of a listed placeholder's title, of each of its lines and of a bar, in pixels. */
+const LISTED_TITLE = 20
+const LISTED_LINE = 16
+const LISTED_BAR = 10
 /** Rows drawn above and below the visible ones, so a quick scroll does not show blank space. */
 const OVERSCAN = 8
 /** The space between cards, and around them, in pixels. */
@@ -986,6 +1052,17 @@ export interface DataTableProps<T> {
     /** Reads the rows again, from Try again under a failure. */
     onRetry?: () => void
     onLoadMore?: () => void
+    /**
+     * Keeps where the rows were scrolled under this key for the session, as `useScrollMemory` does,
+     * and puts them back there when a table with the same key returns: rows drawn only in view are
+     * drawn at that place, and while it lies past the rows loaded so far (`hasMore`) the table asks
+     * for more through `onLoadMore`, by the button's way too, until they reach it, the reader
+     * scrolls, or ten seconds pass. For a table that scrolls itself; a table drawn whole in a
+     * scrolling page leaves its place to the page's own memory.
+     */
+    scrollKey?: string
+    /** The element the rows scroll in, for an app's own scroll memory or jump. */
+    scrollerRef?: Ref<HTMLDivElement>
     /**
      * With server pages, the app selects every row on every page itself, as the table holds only the
      * page shown; given this, the bar offers it once the page shown is selected.
@@ -1178,9 +1255,15 @@ export interface DataTableProps<T> {
  * rows keep their selection box and their menu.
  *
  * With no rows the table says `empty`: a sentence, or a node such as an `Empty` with an icon and
- * an action. While `loading` it draws placeholder rows under its heads, its one loading look, and a
- * read that failed (`error`, with `status` and `onRetry`) is said in place of its rows, as
- * `PageState` says it, the heads and the bar kept.
+ * an action. While `loading` it draws placeholder rows under its heads, its one loading look, in the
+ * shape of its stacked cards or listed rows once the rows stack, and a read that failed (`error`,
+ * with `status` and `onRetry`) is said in place of its rows, as `PageState` says it, the heads and
+ * the bar kept.
+ *
+ * A table that scrolls itself keeps its place with `scrollKey`, as `useScrollMemory` keeps a page's:
+ * back to a long listing is back where it was left, the rows in view drawn there and, while the place
+ * lies past the rows loaded so far, more asked for until they reach it, by either way of loading
+ * more. `scrollerRef` hands the app the element the rows scroll in.
  *
  * The table draws its own box, a border with rounded corners; `framed={false}` drops both, for a
  * table set into a panel or a card that already frames it.
@@ -1241,6 +1324,8 @@ export function DataTable<T>({
     problems,
     onRetry,
     onLoadMore,
+    scrollKey,
+    scrollerRef,
     onSelectAllPages,
     card,
     view: viewValue,
@@ -1433,6 +1518,15 @@ export function DataTable<T>({
     const gridBox = useRef<HTMLDivElement>(null)
     const headBox = useRef<HTMLDivElement>(null)
     const scroller = useRef<HTMLDivElement>(null)
+    // The rows' scroller, handed to the app's `scrollerRef` too.
+    const setScroller = useCallback(
+        (element: HTMLDivElement | null) => {
+            scroller.current = element
+            if (typeof scrollerRef === 'function') scrollerRef(element)
+            else if (scrollerRef !== undefined && scrollerRef !== null) scrollerRef.current = element
+        },
+        [scrollerRef],
+    )
     const probe = useRef<HTMLDivElement>(null)
     const cardProbe = useRef<HTMLDivElement>(null)
     const widthProbe = useRef<HTMLDivElement>(null)
@@ -1494,15 +1588,14 @@ export function DataTable<T>({
     useLayoutEffect(() => {
         if (scroller.current !== null) scroller.current.scrollTop = 0
     }, [current, pageSize, shownView])
+    // A table with a key keeps its place, once its first rows are there.
+    useScrollMemory(scrollKey ?? '', scroller, { ready: scrollKey !== undefined && !(loading && flat.length === 0) })
 
     // Nearing the end of what has loaded asks for more, and so does a first load too short to fill the view.
     // Details are drawn under their rows at their own heights, so a table with them draws every row.
     const detailed = detail !== undefined && !chosenGrid
     const nearEnd = view.top + view.height >= ((auto && !gridView) || detailed ? view.full : lines * lineHeight) - lineHeight * over
     const moreByButton = loadMore === 'button'
-    useEffect(() => {
-        if (hasMore && !moreByButton && !loading && !failed && nearEnd) onLoadMore?.()
-    }, [hasMore, moreByButton, loading, failed, nearEnd, onLoadMore])
 
     // Rows that grow are all drawn, as their heights are not known before they are.
     // A narrow list is a plain list of rows as tall as their lines.
@@ -1510,6 +1603,25 @@ export function DataTable<T>({
     // Grouped cards are drawn group by group, every one of them.
     const every = (auto && !gridView) || listed || (gridView && groupHeads !== undefined)
     const whole = every || detailed
+
+    // A place kept under `scrollKey` past the rows loaded asks for more until they reach it.
+    const [seeking, stopSeeking] = useSeeking(scrollKey, scroller)
+    const arrived = seeking !== undefined && (!hasMore || view.top >= seeking - 1)
+    useEffect(() => {
+        if (arrived) stopSeeking()
+    }, [arrived, stopSeeking])
+    const reach = Math.max(0, (whole ? view.full : lines * lineHeight) - view.height)
+    const asks = asksForMore({
+        hasMore,
+        busy: loading || failed,
+        byButton: moreByButton,
+        nearEnd,
+        seeking: arrived ? undefined : seeking,
+        reach,
+    })
+    useEffect(() => {
+        if (asks) onLoadMore?.()
+    }, [asks, onLoadMore])
     const firstLine = whole ? 0 : Math.max(0, Math.floor(view.top / lineHeight) - over)
     const lastLine = whole ? lines : Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
     const first = firstLine * perLine
@@ -2504,6 +2616,90 @@ export function DataTable<T>({
         return stacked ? withDetail(entry, withMenu(entry, actions, reorderRow(entry, draw)), 'card') : withMenu(entry, actions, draw())
     }
 
+    /**
+     * A placeholder for a stacked row on its way, in the shape its rows draw: a card, or a listed
+     * row, with its title and each of its lines as a bar, as a table's placeholder rows bar each cell.
+     */
+    const stackedPlaceholder = (index: number, item: boolean) => {
+        const bar = (width: string, height = 'h-2.5') => <Skeleton className={cn(height, width)} />
+        const head = (
+            <div className={cn('flex min-w-0 items-center gap-2', item ? 'h-5' : 'h-6')}>
+                {selectable && <Skeleton className="size-4 shrink-0 rounded-sm" />}
+                {bar(PLACEHOLDER_WIDTHS[index % PLACEHOLDER_WIDTHS.length], 'h-3')}
+            </div>
+        )
+        const facts = stackParts.facts.length > 0 && (
+            <div className={cn('flex items-center gap-3', item ? 'h-4' : 'h-6')}>
+                {stackParts.facts.slice(0, 4).map((column) => (
+                    <Skeleton key={column.id} className="h-2.5 w-12" />
+                ))}
+            </div>
+        )
+        const lines = compact ? null : (
+            <>
+                {stackParts.primary.map((column) => (
+                    <div
+                        key={column.id}
+                        className="flex flex-col justify-center gap-1.5"
+                        style={item ? undefined : { height: (column.stackLines ?? 2) * STACK_PRIMARY_LINE }}
+                    >
+                        {Array.from({ length: column.stackLines ?? 2 }, (_, line) => (
+                            <Skeleton key={line} className={cn('h-2.5', line === 0 ? 'w-4/5' : 'w-3/5')} />
+                        ))}
+                    </div>
+                ))}
+                {stackParts.lines.map((column, line) => (
+                    <div key={column.id} className={cn('flex min-w-0 items-center gap-2', item ? 'h-4' : 'min-h-5')}>
+                        {column.stackLabel !== false && bar('w-16 shrink-0')}
+                        {bar(PLACEHOLDER_WIDTHS[(index + line + 1) % PLACEHOLDER_WIDTHS.length])}
+                    </div>
+                ))}
+            </>
+        )
+        if (item)
+            return (
+                <li
+                    key={`loading-${String(index)}`}
+                    aria-hidden
+                    className={cn('flex flex-col gap-1 overflow-hidden px-(--density-panel-pad)', compact ? 'py-2' : 'py-2.5')}
+                    style={{ height: listedPixels }}
+                >
+                    {head}
+                    {lines}
+                    {facts}
+                </li>
+            )
+        return (
+            <div
+                key={`loading-${String(index)}`}
+                aria-hidden
+                className="flex min-w-0 flex-col overflow-hidden rounded-surface border border-border bg-card px-3 py-2"
+                style={{ height: cardPixels }}
+            >
+                {head}
+                {lines}
+                {facts}
+            </div>
+        )
+    }
+    // A listed placeholder's height: its padding, its title, and its lines with the gaps between them.
+    const listedLines = [
+        LISTED_TITLE,
+        ...(compact
+            ? []
+            : [
+                  ...stackParts.primary.map((column) => (column.stackLines ?? 2) * (LISTED_BAR + 6) - 6),
+                  ...stackParts.lines.map(() => LISTED_LINE),
+              ]),
+        ...(stackParts.facts.length > 0 ? [LISTED_LINE] : []),
+    ]
+    const listedPixels = (compact ? 16 : 20) + listedLines.reduce((sum, line) => sum + line + 4, -4)
+    /**
+     * How many placeholders stand for rows on their way: as many as fill the view while there are
+     * none, never more, so a table as tall as its rows does not grow with them; a few after rows.
+     */
+    const placeholderCount = (tall: number) => (flat.length === 0 ? Math.max(3, Math.floor(view.height / tall)) : 3)
+
     return (
         // Contained, so the table takes its width from its container and never widens a grid, a flex row or the page;
         // at least 15rem, so a container that sizes itself to its content still gets a readable table.
@@ -2827,7 +3023,7 @@ export function DataTable<T>({
                         </div>
                     )}
                     <div
-                        ref={scroller}
+                        ref={setScroller}
                         onScroll={(event) => {
                             if (headBox.current !== null) headBox.current.scrollLeft = event.currentTarget.scrollLeft
                             setView({
@@ -2979,6 +3175,10 @@ export function DataTable<T>({
                                         )
                                         return withDetail(entry, withMenu(entry, actions, reorderRow(entry, item)), 'item')
                                     })}
+                                    {placeholders &&
+                                        Array.from({ length: placeholderCount(listedPixels + 1) }, (_, index) =>
+                                            stackedPlaceholder(index, true),
+                                        )}
                                 </ul>,
                             )
                         ) : gridView && groupHeads !== undefined ? (
@@ -3010,21 +3210,25 @@ export function DataTable<T>({
                                     >
                                         {flat.slice(first, last).map((entry) => cardFor(entry))}
                                         {placeholders &&
-                                            Array.from(
-                                                {
-                                                    length:
-                                                        flat.length === 0
-                                                            ? perLine * Math.max(1, Math.ceil(view.height / lineHeight))
-                                                            : perLine,
-                                                },
-                                                (_, index) => (
-                                                    <Skeleton
-                                                        key={`loading-${String(index)}`}
-                                                        className="rounded-surface"
-                                                        style={{ height: cardPixels }}
-                                                    />
-                                                ),
-                                            )}
+                                            (stacked
+                                                ? Array.from({ length: placeholderCount(lineHeight) }, (_, index) =>
+                                                      stackedPlaceholder(index, false),
+                                                  )
+                                                : Array.from(
+                                                      {
+                                                          length:
+                                                              flat.length === 0
+                                                                  ? perLine * Math.max(1, Math.ceil(view.height / lineHeight))
+                                                                  : perLine,
+                                                      },
+                                                      (_, index) => (
+                                                          <Skeleton
+                                                              key={`loading-${String(index)}`}
+                                                              className="rounded-surface"
+                                                              style={{ height: cardPixels }}
+                                                          />
+                                                      ),
+                                                  ))}
                                     </div>
                                 </div>,
                             )

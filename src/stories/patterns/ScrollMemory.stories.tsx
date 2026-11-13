@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Play, Workflow } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { useScrollMemory } from '@winterop-com/sokkel-ui/hooks/use-scroll-memory'
@@ -92,3 +92,69 @@ function Lists() {
 
 /** Two lists in the shell's content, each back where it was left when switched to again. */
 export const TwoLists: StoryObj = { name: 'Two lists', render: () => <Lists /> }
+
+const MANY = makeRuns(1000)
+
+const PAGED: Record<View, readonly TableRun[]> = {
+    all: MANY,
+    failed: MANY.filter((run) => run.state !== 'succeeded'),
+}
+
+/** Runs fifty at a time as the end comes near, in a table that scrolls itself, its place kept under its own key. */
+function PagedRuns({ view }: { view: View }) {
+    const all = PAGED[view]
+    const [count, setCount] = useState(50)
+    const [loading, setLoading] = useState(false)
+    const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+    useEffect(() => () => clearTimeout(timer.current), [])
+    const more = useCallback(() => {
+        setLoading(true)
+        clearTimeout(timer.current)
+        timer.current = setTimeout(() => {
+            setCount((now) => Math.min(all.length, now + 50))
+            setLoading(false)
+        }, 300)
+    }, [all.length])
+    return (
+        <Page className="h-full">
+            <PageHeader title={view === 'all' ? 'Runs' : 'Failed runs'} count={all.length} />
+            <DataTable
+                className="min-h-0 flex-1"
+                columns={COLUMNS}
+                rows={all.slice(0, count)}
+                rowKey={(run) => run.id}
+                total={all.length}
+                hasMore={count < all.length}
+                loading={loading}
+                onLoadMore={more}
+                scrollKey={`paged-runs.${view}`}
+            />
+        </Page>
+    )
+}
+
+function PagedLists() {
+    const [view, setView] = useState<View>('all')
+    return (
+        <TooltipProvider>
+            <Shell
+                rail={<Rail mark={<TidevannMark />} name="Tidevann" groups={PLACES} />}
+                top={
+                    <TopBar
+                        trail={[{ label: 'Runs' }]}
+                        actions={<Segmented size="sm" label="Runs to show" value={view} options={VIEWS} onValueChange={setView} />}
+                    />
+                }
+            >
+                <PagedRuns key={view} view={view} />
+            </Shell>
+        </TooltipProvider>
+    )
+}
+
+/**
+ * A table that scrolls itself keeps its place with `scrollKey`: scroll far down the runs, switch to
+ * the failed ones and back, and the table asks for the pages that reach where it was left, fifty
+ * runs at a time, and stands there.
+ */
+export const PagedTable: StoryObj = { name: 'Paged table', render: () => <PagedLists /> }
