@@ -62,6 +62,8 @@ export interface InlineEditProps<K extends EditorKind = 'text'> {
     disabled?: boolean
     /** Drawn for an empty value, and in an empty editor. */
     placeholder?: string
+    /** The day a date editor's calendar starts its weeks on: 1 for Monday (the default), 0 for Sunday. */
+    weekStartsOn?: 0 | 1
     /**
      * Opens with the editor showing, as a story draws a state still: `true`, or what is typed
      * with a save running or refused.
@@ -177,6 +179,7 @@ export function InlineEdit<K extends EditorKind = 'text'>(props: InlineEditProps
                 error={state.error}
                 selectAll
                 placeholder={placeholder}
+                weekStartsOn={props.weekStartsOn}
                 onMove={onMove}
                 onChoose={(choice) => {
                     refocus.current = true

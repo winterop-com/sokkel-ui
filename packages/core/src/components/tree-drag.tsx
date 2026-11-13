@@ -9,11 +9,14 @@ import { DragDrop, dragData, dragPoint, useDragItem, useDropTarget, type DragDat
 import {
     canMoveTo,
     isBranch,
+    treePlace,
     treeTarget,
+    treeTopTarget,
     dropPart,
     type TreeDropPart,
     type TreeLoads,
     type TreeNode,
+    type TreeOrder,
     type TreeRow,
     type TreeRowDragProps,
     type TreeTarget,
@@ -45,6 +48,8 @@ export interface TreeDragAreaProps {
     canMove?: (id: string, into: string | null) => boolean
     onDrop?: (drag: DragData, into: string | null, index: number) => void
     accepts?: (drag: DragData) => boolean
+    nodeOf?: (drag: DragData) => string | undefined
+    order?: TreeOrder
     /** Draws where a drag would land, or nothing. */
     show: (at: TreeDropAt | undefined) => void
     /** Opens the closed branch a row is held inside after a moment; null lets go. */
@@ -62,35 +67,43 @@ export function TreeDragArea({
     canMove,
     onDrop,
     accepts,
+    nodeOf,
+    order,
     show,
     hold,
     children,
 }: TreeDragAreaProps) {
     const kind = useId()
-    const takes = (drag: DragData) => drag.kind === kind || (onDrop !== undefined && (accepts?.(drag) ?? true))
+    const takes = (drag: DragData) => drag.kind === kind || ((onDrop !== undefined || nodeOf !== undefined) && (accepts?.(drag) ?? true))
+    /** The tree's node a drag moves: a row of its own, or the node a thing from outside stands for. */
+    const moving = (drag: DragData): string | null => {
+        if (drag.kind === kind) return (drag.value as TreeNode).id
+        const id = nodeOf?.(drag)
+        return id !== undefined && treePlace(nodes, id, loads) !== null ? id : null
+    }
     const aimed = useRef<{ at: TreeDropAt; target: TreeTarget } | undefined>(undefined)
 
     const aim = (event: DragMoveEvent | DragEndEvent): { at: TreeDropAt; target: TreeTarget } | undefined => {
         const drag = dragData(event.active)
         const over = dragData(event.over)
         if (drag === undefined || over?.kind !== kind || event.over === null || !takes(drag)) return undefined
-        const own = drag.kind === kind
-        const id = own ? (drag.value as TreeNode).id : null
+        const id = moving(drag)
+        if (id === null && onDrop === undefined) return undefined
         let at: TreeDropAt
         let target: TreeTarget | undefined
         if (over.value === TOP) {
             at = { id: null, part: 'inside' }
-            target = { into: null, index: nodes.filter((node) => node.id !== id).length }
+            target = treeTopTarget(nodes, id, loads, order)
         } else {
             const row = over.value as TreeRow
             const point = dragPoint(event)
             const box = event.over.rect
             const part = dropPart(point?.y ?? box.top + box.height / 2, box.top, box.height, !searching && isBranch(row.node, loads))
             at = { id: row.node.id, part }
-            target = treeTarget(nodes, id, row, part, loads)
+            target = treeTarget(nodes, id, row, part, loads, order)
         }
         if (target === undefined) return undefined
-        if (id !== null && (!canMoveTo(nodes, id, target, loads) || canMove?.(id, target.into) === false)) return undefined
+        if (id !== null && (!canMoveTo(nodes, id, target, loads, order) || canMove?.(id, target.into) === false)) return undefined
         return { at, target }
     }
     const follow = (event: DragMoveEvent) => {
@@ -116,7 +129,8 @@ export function TreeDragArea({
                     done()
                     const drag = dragData(event.active)
                     if (landed === undefined || drag === undefined) return
-                    if (drag.kind === kind) onMove?.((drag.value as TreeNode).id, landed.target.into, landed.target.index)
+                    const id = moving(drag)
+                    if (id !== null) onMove?.(id, landed.target.into, landed.target.index)
                     else onDrop?.(drag, landed.target.into, landed.target.index)
                 }}
                 onDragCancel={done}

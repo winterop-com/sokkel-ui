@@ -2,17 +2,18 @@ import { ComputedField } from '@winterop-com/sokkel-ui/ComputedField'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { DateField } from '@winterop-com/sokkel-ui/DateField'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
-import { Inspector, InspectorSection } from '@winterop-com/sokkel-ui/Inspector'
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
 import { Columns, Fill, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { NumberField } from '@winterop-com/sokkel-ui/NumberField'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { RepeatedDrag } from '@winterop-com/sokkel-ui/RepeatedDrag'
 import { RepeatedGroup } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { SaveBar } from '@winterop-com/sokkel-ui/SaveBar'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { SelectField } from '@winterop-com/sokkel-ui/SelectField'
+import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
@@ -126,8 +127,13 @@ export function ProgramRules({ selected }: { selected?: string }) {
                     emptyMessage="The program has no rules. Add one with New."
                 >
                     {saved !== undefined && editing !== undefined && (
-                        <Row gap="none" align="stretch" className="h-full min-h-0">
-                            <Fill>
+                        <SplitPane
+                            id="program-rules-split"
+                            direction="across"
+                            defaultShare={0.58}
+                            minShare={0.4}
+                            maxShare={0.75}
+                            first={
                                 <Editor
                                     key={saved.id}
                                     saved={saved}
@@ -135,9 +141,9 @@ export function ProgramRules({ selected }: { selected?: string }) {
                                     onDraft={(rule) => setDraft({ id: saved.id, rule })}
                                     onDiscard={() => setDraft(null)}
                                 />
-                            </Fill>
-                            <TryForm rules={rules} />
-                        </Row>
+                            }
+                            second={<TryForm rules={rules} />}
+                        />
                     )}
                 </PageState>
             </Fill>
@@ -206,10 +212,7 @@ function Editor({
                     </Button>
                 }
             />
-            <Section
-                title="Rule"
-                description="The condition is written in the program rule language: #{} names the form's fields by their rule variables, V{} the program's variables and d2: its functions."
-            >
+            <Section title="Rule">
                 <Stack gap="lg">
                     <Columns count={2} min="xs" gap="md">
                         <TextField
@@ -234,6 +237,13 @@ function Editor({
                         value={draft.description}
                         onChange={(value) => set('description', value)}
                     />
+                </Stack>
+            </Section>
+            <Section
+                title="Condition and actions"
+                description="The condition is written in the program rule language: #{} names the form's fields by their rule variables, V{} the program's variables and d2: its functions."
+            >
+                <Stack gap="lg">
                     <ExpressionField
                         id="program-rule-condition"
                         label="Condition"
@@ -243,33 +253,29 @@ function Editor({
                         checked={condition}
                         context={CONTEXT}
                     />
-                    <RepeatedGroup
-                        id="program-rule-actions"
-                        label="Actions"
-                        description="What happens on the form while the condition holds."
-                        rows={draft.actions}
-                        min={1}
-                        onAdd={() => set('actions', [...draft.actions, newAction()])}
-                        onRemove={(key) =>
-                            set(
-                                'actions',
-                                draft.actions.filter((one) => one.key !== key),
-                            )
-                        }
-                        onMove={(key, by) => {
-                            const at = draft.actions.findIndex((one) => one.key === key)
-                            const next = [...draft.actions]
-                            const [moved] = next.splice(at, 1)
-                            next.splice(at + by, 0, moved)
-                            set('actions', next)
-                        }}
-                    >
-                        {(key) => {
-                            const one = draft.actions.find((action) => action.key === key)
-                            if (one === undefined) return null
-                            return <ActionFields action={one} onChange={(patch) => setAction(key, patch)} />
-                        }}
-                    </RepeatedGroup>
+                    <RepeatedDrag>
+                        <RepeatedGroup
+                            id="program-rule-actions"
+                            label="Actions"
+                            description="What happens on the form while the condition holds."
+                            rows={draft.actions}
+                            min={1}
+                            onAdd={() => set('actions', [...draft.actions, newAction()])}
+                            onRemove={(key) =>
+                                set(
+                                    'actions',
+                                    draft.actions.filter((one) => one.key !== key),
+                                )
+                            }
+                            onMove={(from, to) => set('actions', moveItem(draft.actions, from, to))}
+                        >
+                            {(key) => {
+                                const one = draft.actions.find((action) => action.key === key)
+                                if (one === undefined) return null
+                                return <ActionFields action={one} onChange={(patch) => setAction(key, patch)} />
+                            }}
+                        </RepeatedGroup>
+                    </RepeatedDrag>
                 </Stack>
             </Section>
             {changed > 0 && <SaveBar count={changed} busy={busy} onSave={save} onDiscard={onDiscard} />}
@@ -352,11 +358,12 @@ function TryForm({ rules }: { rules: readonly ProgramRule[] }) {
 
     const ruleName = (id: string) => rules.find((one) => one.id === id)?.name ?? id
     const columns: DataColumn<Effect & { id: string }>[] = [
-        { id: 'rule', header: 'Rule', width: 'minmax(8rem,1fr)', cell: (effect) => ruleName(effect.rule), stack: 'lead' },
+        { id: 'rule', header: 'Rule', width: 'minmax(8rem,1fr)', cell: (effect) => ruleName(effect.rule) },
         {
             id: 'effect',
             header: 'Effect',
             width: 'minmax(10rem,1.4fr)',
+            stackLabel: false,
             cell: (effect) => (
                 <span>
                     <span className="font-medium">{ACTIONS[effect.type].label}</span>
@@ -370,18 +377,18 @@ function TryForm({ rules }: { rules: readonly ProgramRule[] }) {
     ]
 
     return (
-        <Inspector
-            title="Try the form"
-            code={PROGRAM.stage}
-            defaultSize={380}
-            actions={
-                <Button size="sm" variant="ghost" onClick={() => setValues({})}>
-                    <RotateCcw aria-hidden />
-                    Clear
-                </Button>
-            }
-        >
-            <InspectorSection title={PROGRAM.name}>
+        <Page>
+            <Section
+                title="Try the form"
+                meta={PROGRAM.stage}
+                description={`${PROGRAM.name}, every rule run on it as it is filled.`}
+                actions={
+                    <Button size="sm" variant="ghost" onClick={() => setValues({})}>
+                        <RotateCcw aria-hidden />
+                        Clear
+                    </Button>
+                }
+            >
                 <Stack gap="md">
                     <DateField
                         id="try-event-date"
@@ -464,10 +471,12 @@ function TryForm({ rules }: { rules: readonly ProgramRule[] }) {
                         )
                     })}
                 </Stack>
-            </InspectorSection>
-            <InspectorSection title={`What the rules did (${String(run.effects.length)})`}>
+            </Section>
+            <Section title="What the rules did" meta={String(run.effects.length)} flush>
                 <DataTable
                     variant="list"
+                    framed={false}
+                    bar={false}
                     columns={columns}
                     rows={run.effects.map((effect, index) => ({ ...effect, id: `${effect.rule}-${String(index)}` }))}
                     rowKey={(effect) => effect.id}
@@ -476,14 +485,16 @@ function TryForm({ rules }: { rules: readonly ProgramRule[] }) {
                     columnHeads={false}
                     words={{ empty: 'No rule acts on the form as it is filled.' }}
                 />
-            </InspectorSection>
+            </Section>
             {run.broken.length > 0 && (
-                <InspectorSection title={`Cannot run (${String(run.broken.length)})`}>
+                <Section title="Cannot run" meta={String(run.broken.length)} tone="critical" flush>
                     <DataTable
                         variant="list"
+                        framed={false}
+                        bar={false}
                         columns={[
-                            { id: 'rule', header: 'Rule', width: 'minmax(8rem,1fr)', cell: (one) => ruleName(one.rule), stack: 'lead' },
-                            { id: 'why', header: 'Why', width: 'minmax(10rem,1.4fr)', cell: (one) => one.message },
+                            { id: 'rule', header: 'Rule', width: 'minmax(8rem,1fr)', cell: (one) => ruleName(one.rule) },
+                            { id: 'why', header: 'Why', width: 'minmax(10rem,1.4fr)', cell: (one) => one.message, stackLabel: false },
                         ]}
                         rows={run.broken.map((one, index) => ({ ...one, id: `${one.rule}-${String(index)}` }))}
                         rowKey={(one) => one.id}
@@ -491,8 +502,8 @@ function TryForm({ rules }: { rules: readonly ProgramRule[] }) {
                         minWidth="auto"
                         columnHeads={false}
                     />
-                </InspectorSection>
+                </Section>
             )}
-        </Inspector>
+        </Page>
     )
 }

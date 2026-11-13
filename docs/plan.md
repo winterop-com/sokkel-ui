@@ -633,7 +633,8 @@ the grid alike. Below its stack width a row becomes a card of labeled lines, or 
 row of its leads (a done box) and its title over one quiet line of the other columns, its values
 edited on a press rather than drawn as fields; a stacked list keeps each row's box and menu. The
 stack width is the table's own box's, never the window's, in pixels or a CSS length (`stackBelow="64rem"`
-for an app whose listings go to cards under its own width). With no
+for an app whose listings go to cards under its own width): 576 pixels for a table, and for a list 480, a
+phone's, or wherever its columns stop fitting, so a list in a narrow panel on a wide screen keeps its rows. With no
 rows it says `empty`, a sentence or a node such as an `Empty` with an action, alone without the column
 heads unless a search or tools in the bar may have emptied it. A row opens into a `detail` of its own,
 such as its own nested `DataTable`; `hasDetail` says which rows have one, so `detail` is built only for
@@ -942,7 +943,10 @@ tree's rows, and dropping a row of one part onto a target of another. Its stable
 (`@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`), about 17 kB gzipped, and only the
 modules that drag import it, so a page that drags nothing never carries it: `Tree` and `DataTable`
 load their drag layers (`tree-drag`, `table-reorder`) the first time they are drawn with `onMove`,
-`onDrop` or `onReorder`, and the forms page's budget holds the rest to that. A file dragged in from
+`onDrop`, `onReorder` or a `dragKind`, and the forms page's budget holds the rest to that. A part an
+engine-free page draws, such as the rail or a form's repeated group, drags only inside a scope the app
+draws around it (`RailDrops`, `RepeatedDrag`), which hands it the drag parts through a context, so
+the part itself never imports the engine. A file dragged in from
 the desktop stays on the browser's own drag events (`use-file-drop`), React Flow keeps its own node
 dragging, and the resize handles, a split's seam and a lightbox's panning are pointer drags of their
 own, not drops.
@@ -960,8 +964,12 @@ row is found before the list around it. Each part that drags draws a `DragDrop` 
 one an app draws around several parts makes them one, each part hearing every drag through
 `useDragDrop` and acting on its own: a list's rows given a `kind` a tree's `accepts` takes are dropped
 into its folders through the tree's `onDrop`, and inside a `RailDrops` drawn around the shell a rail
-entry's `drop` makes its row a place such things land (a song onto a playlist); a rail outside one
-never loads the engine. A thing carried to another part rather than put in order says `compact` in its data,
+entry's `drop` makes its row a place such things land (a song onto a playlist), and a group's
+`onReorder` lets its entries drag into another order (dashboards, playlists), Alt and the arrows
+moving one from the keyboard; a rail outside one never loads the engine. A tree
+told the order its app keeps (`order`: a `band` such as folders before notes, and `sorted` for a
+level the app sorts by name) counts every place in that order and offers no place the order would
+undo, and `nodeOf` makes a row dragged from a list beside it the move of the tree's own node. A thing carried to another part rather than put in order says `compact` in its data,
 and a small card with its label follows at the pointer in place of a copy its own size, so the
 target stays in sight.
 
@@ -974,14 +982,23 @@ engine. `DraggableTrackList` lends a track list's rows to targets elsewhere on t
 order of its own: a row drags as a whole, its grip carrying it from the keyboard. A board's cards
 drag between its columns with a line where they land and a grip for the keyboard; `DataTable`'s
 `onReorder` draws a grip at each row's start, a stacked card's and a stacked list's items included, and moves the active
-row with Alt and the arrows, while the rows are drawn as given; and `DashboardArrange` draws a
+row with Alt and the arrows, while the rows are drawn as given, and a `dragKind` alone lends its rows
+by the same grips to targets elsewhere, sorted or not; a `RepeatedGroup` inside a `RepeatedDrag`
+draws a grip on each row that drags it and moves it with the arrows (`onMove(from, to)`); and `DashboardArrange` draws a
 dashboard whose panels are arranged while `arranging`: a grip, a width and a remove in each panel's
 head (`PanelTools`, which the library's panels draw), with `onConfigure` a button that opens a
 panel's options, a line where a dragged panel lands, a palette of widgets dragged onto the grid to
 add one, and the layout handed back as an order of `{ id, span }` to keep. `DashboardEdit` puts it
 behind an Edit button, the one word every dashboard uses: `useDashboardEdit` holds the changes in a
 draft that Done keeps, Cancel throws away and Reset fills with the default, and
-`DashboardEditActions` draws Edit, Reset, Cancel and Done in the page header.
+`DashboardEditActions` draws Edit, Reset, Cancel and Done in the page header; a panel's menu
+actions taken while editing, a copy or a removal, go into the same draft.
+
+On a phone the rail is the shell's drawer, closed while the page is used, so a thing dragged on the
+page has no rail row to land on there. The drawer is not opened by a held drag: it is a modal sheet
+over the page, its left edge is where the system's back swipe lives, and its rows would be measured
+as targets while they slide in. Every drop onto the rail has a menu path beside it (Add to playlist,
+Add to queue, Move to), which is the way a phone reader takes.
 
 ## Maps at scale
 

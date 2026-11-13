@@ -434,6 +434,84 @@ export const ListToTree: StoryObj = {
     },
 }
 
+interface Runbook {
+    id: string
+    title: string
+    folder: string | null
+}
+
+const SHELVED: Runbook[] = [
+    { id: 'r-export', title: 'Run the nightly export', folder: 'harbor' },
+    { id: 'r-keys', title: 'Rotate the archive keys', folder: 'harbor' },
+    { id: 'r-sync', title: 'Retry a failed sync', folder: 'juniper' },
+    { id: 'r-index', title: 'Rebuild the index', folder: 'larkspur' },
+    { id: 'r-oncall', title: 'On call', folder: null },
+    { id: 'r-digest', title: 'Change the digest time', folder: null },
+]
+
+const byTitle = (left: { title: string }, right: { title: string }) => left.title.localeCompare(right.title)
+
+/**
+ * A list and a tree that both keep their own order, by name with folders first: the list's rows
+ * drag out by their grips though the list is sorted and never reorders, and the tree, told its order
+ * (`order` with a band for folders and `sorted`), offers only its folders and the top level as
+ * places, never a place beside a row the sort would move. A row dropped there moves the runbook it
+ * stands for (`nodeOf`), as a drag in the tree itself does.
+ */
+export const SortedToFolders: StoryObj = {
+    name: 'Sorted to folders',
+    render: function Render() {
+        const [runbooks, setRunbooks] = useState(SHELVED)
+        const level = (folder: string | null) =>
+            runbooks
+                .filter((one) => one.folder === folder)
+                .sort(byTitle)
+                .map((one) => file(one.id, one.title))
+        const nodes: TreeNode[] = [...['harbor', 'juniper', 'larkspur'].map((name) => folder(name, name, level(name))), ...level(null)]
+        const move = (id: string, into: string | null) =>
+            setRunbooks(runbooks.map((one) => (one.id === id ? { ...one, folder: into } : one)))
+        return (
+            <DragDrop>
+                <Columns count={2} min="sm" gap="lg" className="mx-auto max-w-4xl">
+                    <DataTable
+                        variant="list"
+                        minWidth="auto"
+                        columns={[
+                            {
+                                id: 'title',
+                                header: 'Name',
+                                width: 'minmax(10rem,2fr)',
+                                cell: (one: Runbook) => one.title,
+                                sortValue: (one) => one.title,
+                            },
+                            { id: 'folder', header: 'Folder', width: '7rem', cell: (one: Runbook) => one.folder ?? 'Top level' },
+                        ]}
+                        rows={runbooks}
+                        rowKey={(one) => one.id}
+                        rowLabel={(one) => one.title}
+                        defaultSort={{ column: 'title', direction: 'asc' }}
+                        dragKind="runbook"
+                    />
+                    <Section title="Runbooks" flush>
+                        <Tree
+                            label="Runbooks"
+                            nodes={nodes}
+                            selection="none"
+                            defaultExpanded={['harbor']}
+                            order={{ band: (node) => (node.children === undefined ? 'file' : 'folder'), sorted: true }}
+                            canMove={(id) => runbooks.some((one) => one.id === id)}
+                            onMove={(id, into) => move(id, into)}
+                            accepts={(drag) => drag.kind === 'runbook'}
+                            nodeOf={(drag) => (drag.value as { row?: Runbook } | undefined)?.row?.id}
+                            className="p-1"
+                        />
+                    </Section>
+                </Columns>
+            </DragDrop>
+        )
+    },
+}
+
 const HIGH_IS_GOOD: Threshold[] = [{ color: 'critical' }, { value: 95, color: 'warning' }, { value: 99, color: 'good' }]
 const QUEUE_STEPS: Threshold[] = [{ color: 'good' }, { value: 20, color: 'warning' }, { value: 40, color: 'critical' }]
 const LOAD_STEPS: Threshold[] = [{ color: 'good' }, { value: 70, color: 'warning' }, { value: 85, color: 'critical' }]

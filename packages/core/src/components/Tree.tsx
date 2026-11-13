@@ -175,16 +175,53 @@ export function treePlace(
     return { parent, index }
 }
 
+/**
+ * The order an app keeps a tree's levels in, beyond the order the reader gives them. `band` names
+ * the run of rows a node keeps to in its level, such as folders before notes: a node is put only
+ * among the rows of its own band, a place beside a row of another band is not offered, and every
+ * place is counted among its band alone. `sorted` says the app sorts each band itself, by name or
+ * by date: a node then goes only into a branch or to the top level, never beside a row, and never
+ * back into the level it is in.
+ */
+export interface TreeOrder {
+    band?: (node: TreeNode) => string
+    sorted?: boolean
+}
+
 /** Where a node lands: the branch it goes into (null for the top level) and its place among the children it joins, counted without it. */
 export interface TreeTarget {
     into: string | null
     index: number
 }
 
+/** The node with `id`, as far as the tree is loaded. */
+export function treeNode(nodes: readonly TreeNode[], id: string, loads: TreeLoads = NO_LOADS): TreeNode | undefined {
+    for (const node of nodes) {
+        if (node.id === id) return node
+        const found = treeNode(childrenOf(node, loads) ?? [], id, loads)
+        if (found !== undefined) return found
+    }
+    return undefined
+}
+
+/** The rows of a level a node is counted among: the others of its band, or every other without a band. */
+function peers(level: readonly TreeNode[], id: string | null, band: string | undefined, order: TreeOrder | undefined): TreeNode[] {
+    return level.filter((node) => node.id !== id && (band === undefined || order?.band?.(node) === band))
+}
+
+/** The band of the node with `id` under `order`, undefined without one. */
+function bandOf(nodes: readonly TreeNode[], id: string | null, order: TreeOrder | undefined, loads: TreeLoads): string | undefined {
+    if (id === null || order?.band === undefined) return undefined
+    const node = treeNode(nodes, id, loads)
+    return node === undefined ? undefined : order.band(node)
+}
+
 /**
  * Where a node dropped on a part of a row lands: at the end of the row's branch, or beside the row
  * in the row's own level. `id` is the node moved, left out of the count, or null for a thing from
- * outside the tree. Undefined when the level is not loaded.
+ * outside the tree. Under an `order` the place is counted among the node's band, and a place beside
+ * a row of another band, or beside any row in a sorted tree, is undefined. Undefined too when the
+ * level is not loaded.
  */
 export function treeTarget(
     nodes: readonly TreeNode[],
@@ -192,51 +229,87 @@ export function treeTarget(
     row: Pick<TreeRow, 'node' | 'parent'>,
     part: TreeDropPart,
     loads: TreeLoads = NO_LOADS,
+    order?: TreeOrder,
 ): TreeTarget | undefined {
     const into = part === 'inside' ? row.node.id : row.parent
     const level = treeLevel(nodes, into, loads)
     if (level === undefined) return part === 'inside' ? { into, index: 0 } : undefined
-    const others = level.filter((node) => node.id !== id)
+    const others = peers(level, id, bandOf(nodes, id, order, loads), order)
     if (part === 'inside') return { into, index: others.length }
+    if (order?.sorted === true) return undefined
     const at = others.findIndex((node) => node.id === row.node.id)
     return at === -1 ? undefined : { into, index: part === 'before' ? at : at + 1 }
 }
 
+/** Where a node dropped on the tree's own ground lands: at the top level's end, among its band under an `order`. */
+export function treeTopTarget(nodes: readonly TreeNode[], id: string | null, loads: TreeLoads = NO_LOADS, order?: TreeOrder): TreeTarget {
+    return { into: null, index: peers(nodes, id, bandOf(nodes, id, order, loads), order).length }
+}
+
+/** A node's parent and its place among its parent's children, counted among its band under an `order`. */
+function placeIn(nodes: readonly TreeNode[], id: string, loads: TreeLoads, order: TreeOrder | undefined) {
+    const place = treePlace(nodes, id, loads)
+    const band = bandOf(nodes, id, order, loads)
+    if (place === null || band === undefined) return place
+    const level = treeLevel(nodes, place.parent, loads) ?? []
+    return { parent: place.parent, index: peers(level, null, band, order).findIndex((node) => node.id === id) }
+}
+
 /**
  * Whether a node may be moved to a place: never into itself or below itself, and never to where it
- * already is. A place in its own level reorders it.
+ * already is. A place in its own level reorders it, save in a sorted tree, where it changes nothing.
  */
-export function canMoveTo(nodes: readonly TreeNode[], id: string, target: TreeTarget, loads: TreeLoads = NO_LOADS): boolean {
+export function canMoveTo(
+    nodes: readonly TreeNode[],
+    id: string,
+    target: TreeTarget,
+    loads: TreeLoads = NO_LOADS,
+    order?: TreeOrder,
+): boolean {
     if (target.into === id) return false
-    const place = treePlace(nodes, id, loads)
+    const place = placeIn(nodes, id, loads, order)
     if (place === null) return false
     if (target.into !== null && (treeAncestors(nodes, target.into, loads) ?? []).includes(id)) return false
+    if (order?.sorted === true && place.parent === target.into) return false
     return !(place.parent === target.into && place.index === target.index)
 }
 
 /** The way a key moves a node: a place up or down its level, into the branch above it, or out beside its parent. */
 export type TreeKeyMove = 'up' | 'down' | 'in' | 'out'
 
-/** Where a node goes on a key, or undefined when it cannot go that way. */
+/**
+ * Where a node goes on a key, or undefined when it cannot go that way. Under an `order` it steps
+ * among its band, goes in at its band's end, and out beside its parent when they share a band, else
+ * to its band's start; in a sorted tree it only goes in and out, at its band's end.
+ */
 export function treeKeyTarget(
     nodes: readonly TreeNode[],
     id: string,
     by: TreeKeyMove,
     loads: TreeLoads = NO_LOADS,
+    order?: TreeOrder,
 ): TreeTarget | undefined {
-    const place = treePlace(nodes, id, loads)
-    if (place === null || place.index === -1) return undefined
+    const whole = treePlace(nodes, id, loads)
+    const place = placeIn(nodes, id, loads, order)
+    if (whole === null || place === null || whole.index === -1) return undefined
+    const sorted = order?.sorted === true
+    const band = bandOf(nodes, id, order, loads)
     const level = treeLevel(nodes, place.parent, loads) ?? []
-    if (by === 'up') return place.index > 0 ? { into: place.parent, index: place.index - 1 } : undefined
-    if (by === 'down') return place.index < level.length - 1 ? { into: place.parent, index: place.index + 1 } : undefined
+    const count = peers(level, null, band, order).length
+    if (by === 'up') return !sorted && place.index > 0 ? { into: place.parent, index: place.index - 1 } : undefined
+    if (by === 'down') return !sorted && place.index < count - 1 ? { into: place.parent, index: place.index + 1 } : undefined
     if (by === 'in') {
-        const above = level[place.index - 1]
+        const above = level[whole.index - 1]
         const inside = above === undefined || !isBranch(above, loads) ? undefined : childrenOf(above, loads)
-        return above === undefined || inside === undefined ? undefined : { into: above.id, index: inside.length }
+        return above === undefined || inside === undefined ? undefined : { into: above.id, index: peers(inside, id, band, order).length }
     }
     if (place.parent === null) return undefined
-    const parent = treePlace(nodes, place.parent, loads)
-    return parent === null ? undefined : { into: parent.parent, index: parent.index + 1 }
+    const parent = placeIn(nodes, place.parent, loads, order)
+    if (parent === null) return undefined
+    if (sorted) return { into: parent.parent, index: peers(treeLevel(nodes, parent.parent, loads) ?? [], id, band, order).length }
+    const above = treeNode(nodes, place.parent, loads)
+    const together = band === undefined || (above !== undefined && order?.band?.(above) === band)
+    return { into: parent.parent, index: together ? parent.index + 1 : 0 }
 }
 
 /**
@@ -401,8 +474,20 @@ export interface TreeProps {
      * and the place among its children.
      */
     onDrop?: (drag: DragData, into: string | null, index: number) => void
-    /** Which things from outside the tree `onDrop` takes; every one without it. */
+    /** Which things from outside the tree `onDrop` and `nodeOf` take; every one without it. */
     accepts?: (drag: DragData) => boolean
+    /**
+     * Which of the tree's own nodes a thing dragged from another part is, such as a note listed beside
+     * the tree: let go on the tree, it moves that node through `onMove`, counted out of its own level
+     * as a dragged row is, in place of reaching `onDrop`.
+     */
+    nodeOf?: (drag: DragData) => string | undefined
+    /**
+     * The order the app keeps each level in, such as folders before notes (`band`) or sorted by name
+     * (`sorted`): `onMove` then counts a place among the node's band, and a place the app's
+     * order would not keep is never offered.
+     */
+    order?: TreeOrder
     /**
      * Why a node cannot be chosen, such as a place outside a form's assignment, or `undefined` when
      * it can. Such a row is drawn shut: quiet, with the reason at its end, never chosen, though a
@@ -439,7 +524,10 @@ export interface TreeProps {
  * the up and down arrows moves the focused row a place in its level, with the right arrow into the
  * branch above it and with the left arrow out beside its parent. A node never goes into itself or
  * below itself, and `canMove` refuses more. Inside a `DragDrop` drawn around other parts, `onDrop`
- * takes their things, such as a list's files dropped into a folder.
+ * takes their things, such as a list's files dropped into a folder, and `nodeOf` moves the node a
+ * thing from another part stands for. An app that keeps its own order in each level, folders before
+ * files or every level by name, says so in `order`, so places are counted in its terms and a drop
+ * its order would undo is never offered.
  *
  * `unavailable` shuts the rows a reader may not choose and says why on each, such as the places
  * outside what a form is assigned to; their branches still open to the rows under them.
@@ -459,6 +547,8 @@ export function Tree({
     canMove,
     onDrop,
     accepts,
+    nodeOf,
+    order,
     unavailable,
     words: given,
     label,
@@ -671,12 +761,13 @@ export function Tree({
     const keyMove = (row: TreeRow, by: TreeKeyMove) => {
         if (onMove === undefined || row.trail !== undefined || matches !== null) return false
         const id = row.node.id
-        const target = treeKeyTarget(nodes, id, by, loads)
-        if (target === undefined || !canMoveTo(nodes, id, target, loads) || canMove?.(id, target.into) === false) return true
+        const target = treeKeyTarget(nodes, id, by, loads, order)
+        if (target === undefined || !canMoveTo(nodes, id, target, loads, order) || canMove?.(id, target.into) === false) return true
         if (target.into !== null) toggle(target.into, true)
         pendingFocus.current = id
         onMove(id, target.into, target.index)
-        const level = treeLevel(nodes, target.into, loads) ?? []
+        const band = order?.band?.(row.node)
+        const level = (treeLevel(nodes, target.into, loads) ?? []).filter((node) => band === undefined || order?.band?.(node) === band)
         const count = level.some((node) => node.id === id) ? level.length : level.length + 1
         const parent =
             target.into === null ? words.topLevel : (items.find((each) => each.node.id === target.into)?.node.label ?? target.into)
@@ -965,6 +1056,8 @@ export function Tree({
             canMove={canMove}
             onDrop={onDrop}
             accepts={accepts}
+            nodeOf={nodeOf}
+            order={order}
             show={show}
             hold={hold}
         >

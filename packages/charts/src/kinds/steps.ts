@@ -1,7 +1,8 @@
 import { tooltipMarkup } from '../look'
-import { area, edgeAxis, line, valueTicks, written } from './categories'
+import { area, line } from './categories'
+import { edgeAxis, valueTicks } from './axes'
 import { spreadOf } from './legends'
-import { categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
+import { written, categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
 
 /**
  * A line that holds each figure flat until the next category, then steps: for a level that changes

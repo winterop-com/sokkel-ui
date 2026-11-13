@@ -280,7 +280,6 @@ function Builder({ funnel: start }: { funnel: Funnel | undefined }) {
                         variant="list"
                         framed={false}
                         minWidth="auto"
-                        stackBelow={480}
                         columns={stageColumns}
                         rows={stages}
                         rowKey={(stage) => stage.step}

@@ -17,12 +17,11 @@ import { FileJson, Send, Undo2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useCollection } from 'tidevann-shared/backend'
-import { go } from 'tidevann-shared/router'
 
 import { cellOf, forward, households, receiptOf, receipts, STATE_WORDS, withdraw, type Receipt } from '../data/backend'
 import { formOf, gridCells, PERIOD_LABEL, type Form, type Question } from '../data/forms'
 import { placeName } from '../data/geo'
-import { answerText, count, KindBadge, NUMBER, onDay, StateChip, useFoot, when } from '../ui'
+import { answerText, count, KindBadge, NUMBER, onDay, sectionTrail, StateChip, useFoot, when } from '../ui'
 
 interface AnswerRow {
     id: string
@@ -278,8 +277,8 @@ export function ReceiptPage({ code }: { code: string }) {
             <PageHeader
                 title={form?.title ?? 'Response'}
                 code={code}
-                onBack={() => go('/responses')}
-                words={{ back: 'All responses' }}
+                trail={sectionTrail('Responses', '/responses')}
+                trailInTop
                 meta={
                     receipt === undefined || form === undefined ? undefined : (
                         <>

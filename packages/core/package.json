@@ -28,6 +28,10 @@
             "types": "./dist/components/PlainMarkdown.d.ts",
             "import": "./dist/components/PlainMarkdown.js"
         },
+        "./RepeatedDrag": {
+            "types": "./dist/components/RepeatedDrag.d.ts",
+            "import": "./dist/components/RepeatedDrag.js"
+        },
         "./RepeatedGroup": {
             "types": "./dist/components/RepeatedGroup.d.ts",
             "import": "./dist/components/RepeatedGroup.js"

@@ -1,7 +1,7 @@
 import { distinct, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
-import { tickWriter, written } from './categories'
-import { colorOf, type ChartBuilder, type ChartSpec } from './spec'
+import { tickWriter } from './axes'
+import { written, colorOf, type ChartBuilder, type ChartSpec } from './spec'
 
 /** The fields a parallel chart draws an axis for, in order. */
 function axesOf(spec: ChartSpec): string[] {

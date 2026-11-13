@@ -14,6 +14,7 @@ import {
     splinePath,
     toElk,
     placedBounds,
+    rankBound,
     type GraphShape,
 } from './layout'
 import { wrapFor } from './GraphCanvas'
@@ -113,7 +114,25 @@ describe('wrapping', () => {
         expect(placedBounds(tall).width).toBeLessThan(flat.width)
     })
 
-    test('a cut fits across its room, down to one column when the room holds no more', async () => {
+    test('cuts a wide rank of a graph running down into rows that fit, and keeps one that fits whole', async () => {
+        const sources = ['nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest', 'import-orders', 'fetch']
+        const wide: GraphShape = {
+            nodes: [...sources.map(box), box('validate'), box('upload')],
+            edges: [...sources.map((one) => edge(one, 'validate')), edge('validate', 'upload')],
+        }
+        expect(rankBound(wide, 340)).toBe(3)
+        expect(rankBound(wide, 50)).toBe(1)
+        const flat = placedBounds(await layoutGraph(wide, 'down'))
+        const kept = await layoutGraph(wide, 'down', undefined, { wrapWidth: Math.ceil(flat.width) + 1 })
+        expect(placedBounds(kept).width).toBe(flat.width)
+        const cut = placedBounds(await layoutGraph(wide, 'down', undefined, { wrapWidth: 358 }))
+        expect(cut.width).toBeLessThanOrEqual(358)
+        expect(cut.height).toBeGreaterThan(flat.height)
+    })
+
+    // Each cut tries up to a dozen elk layouts, four cuts in all: well under a second alone, but longer than the
+    // default 5 s when the machine is loaded.
+    test('a cut fits across its room, down to one column when the room holds no more', { timeout: 30_000 }, async () => {
         const fan: GraphShape = {
             nodes: ['fetch', 'transform', 'a', 'b', 'c', 'validate', 'upload', 'notify', 'done'].map(box),
             edges: [
@@ -124,10 +143,11 @@ describe('wrapping', () => {
                 edge('notify', 'done'),
             ],
         }
+        const one = placedBounds(await layoutGraph({ nodes: [box('s0')], edges: [] }, 'right'))
         for (const shape of [long, fan]) {
-            const one = placedBounds(await layoutGraph({ nodes: [shape.nodes[0]], edges: [] }, 'right'))
+            const height = placedBounds(await layoutGraph(shape, 'right')).height * 8
             for (const width of [one.width * 2.5, one.width * 4]) {
-                const room = { width, height: placedBounds(await layoutGraph(shape, 'right')).height * 8 }
+                const room = { width, height }
                 const cut = await layoutGraph(shape, 'right', undefined, { wrapWidth: 1120, wrapRoom: room })
                 expect(placedBounds(cut).width).toBeLessThanOrEqual(room.width)
             }

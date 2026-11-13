@@ -65,13 +65,15 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/schema/checks': 'what the checker loads in one fetch: `validate` and the words for its issues',
         'components/schema/issue-words': "`SchemaForm`'s words for each issue, loaded with the checker",
         'components/schema/MapField': "`SchemaForm`'s key/value table for a map of scalars",
+        'components/drag-parts':
+            'what `RailDrops` and `RepeatedDrag` hand the rail and a `RepeatedGroup` to drag with, so neither part loads the drag engine itself',
         'components/settings-parts':
             'the search, the sections, the rows and the reset `SettingsDialog` draws with; their types are exported by it',
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
         'components/table-cell':
             'what a cell knows of the table it is drawn in, apart from `DataTable` so `TagChips` reads it without the table; `useTableCell` and `TableCell` are exported by `DataTable`',
         'components/table-reorder':
-            "what `DataTable` drags its rows with, loaded the first time a table with `onReorder` is drawn; its words are `DataTable`'s",
+            "what `DataTable` drags its rows with, loaded the first time a table with `onReorder` or a `dragKind` is drawn; its words are `DataTable`'s",
         'components/tree-drag': "the tree's drag layer, loaded the first time a `Tree` with `onMove` or `onDrop` is drawn",
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
@@ -107,6 +109,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'frame-data': "where a chart in a `ChartFrame` says what it draws, for the frame's data view",
         EChart: 'the raw ECharts wrapper `Chart` and the panels draw through; an app draws a chart with `Chart` and a kind, never with an ECharts option it builds',
         engine: 'the ECharts parts a chart loads on first use',
+        'kinds/axes': 'the axes, ticks and marks the builders share, apart from any builder',
         'kinds/boxplot': KIND_BUILDER,
         'kinds/bullet': KIND_BUILDER,
         'kinds/calendar': KIND_BUILDER,
@@ -126,7 +129,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'kinds/radar': KIND_BUILDER,
         'kinds/rings': KIND_BUILDER,
         'kinds/rose': KIND_BUILDER,
-        'kinds/spec': "the spec's types, exported by `kinds`, and the helpers the builders share",
+        'kinds/spec': "the spec's types, exported by `kinds`, and the helpers the builders and the panels share",
         'kinds/steps': KIND_BUILDER,
         'kinds/stream': KIND_BUILDER,
         'kinds/waterfall': KIND_BUILDER,
@@ -327,6 +330,7 @@ const CORE_AREAS: Record<string, string> = {
     DragDrop: 'Drag and drop',
     Sortable: 'Drag and drop',
     RailDrops: 'Drag and drop',
+    RepeatedDrag: 'Drag and drop',
     UptimeBar: 'Data display',
     // Actions, dialogs and feedback.
     Banner: 'Actions, dialogs and feedback',

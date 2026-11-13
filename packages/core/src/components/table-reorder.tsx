@@ -1,6 +1,7 @@
 /**
- * What `DataTable` draws its rows' drag with, loaded the first time a table with `onReorder` is
- * drawn: the rows dragged on the engine by their grips, and where a row lands among the others.
+ * What `DataTable` draws its rows' drag with, loaded the first time a table with `onReorder` or a
+ * `dragKind` is drawn: the rows dragged on the engine by their grips, and where a row lands among
+ * the others.
  */
 import type { DragEndEvent, DragMoveEvent } from '@dnd-kit/core'
 import { createContext, useContext, useId, useRef, type ReactElement, type ReactNode } from 'react'
@@ -38,7 +39,8 @@ export interface TableReorderAreaProps {
     keys: readonly string[]
     /** What a target outside the table takes its rows as; only the table takes them without it. */
     kind?: string
-    onReorder: (from: number, to: number) => void
+    /** Hears a row put in order among the others; without it the rows only drag out to other targets. */
+    onReorder?: (from: number, to: number) => void
     /** Draws where a row would land, or nothing. */
     show: (at: RowDropAt | undefined) => void
     children: ReactNode
@@ -51,7 +53,7 @@ export function TableReorderArea({ keys, kind, onReorder, show, children }: Tabl
     const aim = (event: DragMoveEvent | DragEndEvent): RowDropAt | undefined => {
         const drag = dragData(event.active)
         const over = dragData(event.over)
-        if (drag === undefined || over === undefined || event.over === null) return undefined
+        if (onReorder === undefined || drag === undefined || over === undefined || event.over === null) return undefined
         if ((drag.value as { table?: string } | undefined)?.table !== ownKind) return undefined
         const target = over.value as { table?: string; key?: string } | undefined
         if (target?.table !== ownKind || target.key === undefined) return undefined
@@ -77,7 +79,7 @@ export function TableReorderArea({ keys, kind, onReorder, show, children }: Tabl
                     const drag = dragData(event.active)
                     if (at === undefined || drag === undefined) return
                     const landed = rowLanding(keys, (drag.value as { key: string }).key, at)
-                    if (landed !== undefined) onReorder(landed.from, landed.to)
+                    if (landed !== undefined) onReorder?.(landed.from, landed.to)
                 }}
                 onDragCancel={() => {
                     aimed.current = undefined

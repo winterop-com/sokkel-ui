@@ -44,7 +44,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 260 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 261 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -386,7 +386,8 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **DragDrop**, DragGrip | `@winterop-com/sokkel-ui/DragDrop` | Where things are dragged and dropped. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-draggable-track-list--onto-playlist) |
-| **RailDrops** | `@winterop-com/sokkel-ui/RailDrops` | One drag scope over a shell whose rail takes drops: a `DragDrop` the page's parts and the rail share, inside which a rail entry with a `drop` becomes a place things dragged from the page land on, such as a song onto a playlist. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-draggable-track-list--onto-playlist) |
+| **RailDrops** | `@winterop-com/sokkel-ui/RailDrops` | One drag scope over a shell whose rail takes drops: a `DragDrop` the page's parts and the rail share, inside which a rail entry with a `drop` becomes a place things dragged from the page land on, such as a song onto a playlist. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
+| **RepeatedDrag** | `@winterop-com/sokkel-ui/RepeatedDrag` | One drag scope over a form whose repeated groups put their rows in order by drag: inside it, each row of a `RepeatedGroup` with `onMove`, `SchemaForm`'s lists among them, has a grip that drags it and moves it with the arrow keys. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-repeated-group--one-control) |
 | **SortableGroup**, SortableItem, SortableGrip, SortableList, SortableGrid | `@winterop-com/sokkel-ui/Sortable` | The order of a set of `SortableItem`s, the library's layer over the drag engine for anything put in order by hand. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
 
 ### Dashboard frame

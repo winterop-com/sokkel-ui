@@ -127,7 +127,7 @@ function Editor({ saved }: { saved: ValidationRule }) {
         {
             id: 'unit',
             header: 'Site',
-            width: 'minmax(12rem,1.4fr)',
+            width: 'minmax(10rem,1fr)',
             cell: (one) => (
                 <span>
                     <span className="font-medium">{unitName(one.unit)}</span>
@@ -140,13 +140,13 @@ function Editor({ saved }: { saved: ValidationRule }) {
                 </span>
             ),
             sortValue: (one) => unitName(one.unit),
-            stack: 'lead',
+            stackTitle: 'free',
         },
-        { id: 'period', header: 'Month', width: '8rem', cell: (one) => periodLabel(one.period), sortValue: (one) => one.period },
+        { id: 'period', header: 'Month', width: 'content', cell: (one) => periodLabel(one.period), sortValue: (one) => one.period },
         {
             id: 'left',
             header: 'Left side',
-            width: '7rem',
+            width: 'content',
             align: 'end',
             cell: (one) => figure(one.left),
             sortValue: (one) => one.left ?? -Infinity,
@@ -154,14 +154,14 @@ function Editor({ saved }: { saved: ValidationRule }) {
         {
             id: 'operator',
             header: 'Must be',
-            width: '6rem',
+            width: 'content',
             align: 'center',
             cell: () => <span className="font-mono">{OPERATORS[draft.operator].sign}</span>,
         },
         {
             id: 'right',
             header: 'Right side',
-            width: '7rem',
+            width: 'content',
             align: 'end',
             cell: (one) => figure(one.right),
             sortValue: (one) => one.right ?? -Infinity,
