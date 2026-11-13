@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.22.2** is the latest release (2026-11-13): `LogView` follow state (`onFollowChange`,
+- **0.22.3** is the latest release (2026-11-13): `Code` `actions` beside copy and a `header` row
+  without a title; `PlainMarkdown` for untrusted text (`images={false}`, `linkSchemes`, `inline`,
+  `headingOffset`, an all-empty header row dropped) with raw-HTML support loaded only when allowed.
+- **0.22.2** (2026-11-13): `LogView` follow state (`onFollowChange`,
   a jump to the newest line), line `item` and `fields`, `sourceLink`, kept columns and slots;
   `Dock` section props and a wrapping head; `Unfoldable` finger-tall rows on a phone, static while
   forced, slots and `wrapSummary`.
