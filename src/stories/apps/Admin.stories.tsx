@@ -554,9 +554,8 @@ const ROLES = rolesOf(MEMBERS)
 const regiven = (people: readonly Member[], saved: readonly Member[]) =>
     people.filter((member) => saved.find((each) => each.email === member.email)?.role !== member.role).length
 
-/** Gives a member the role they were dragged to, at their place among its holders; the owner is never given nor taken. */
-function giveRole(people: readonly Member[], { card, from, to, index }: BoardMove): Member[] {
-    if (from === 'owner' || to === 'owner') return [...people]
+/** Gives a member the role they were dragged to, at their place among its holders. */
+function giveRole(people: readonly Member[], { card, to, index }: BoardMove): Member[] {
     const moving = people.find((member) => member.email === card)
     if (moving === undefined) return [...people]
     const rest = people.filter((member) => member.email !== card)
@@ -590,7 +589,11 @@ function RolesPage() {
                     }
                 />
                 <PermissionMatrix roles={rolesOf(people)} groups={PERMISSIONS} value={grants} saved={saved} onChange={toggle} />
-                <Section title="Who holds each role" variant="flat" description="Drag a member to another role to give it to them.">
+                <Section
+                    title="Who holds each role"
+                    variant="flat"
+                    description="Drag a member to another role to give it to them. The owner is set under Settings, so that column stays as it is."
+                >
                     <Board onMove={(move) => setPeople(giveRole(people, move))} columnWidth="11rem">
                         <Row gap="md" align="start">
                             {ROLE_IDS.map((id) => {
@@ -602,6 +605,7 @@ function RolesPage() {
                                         title={ROLE_LABEL[id]}
                                         icon={<ShieldCheck className="size-4 text-muted-foreground" aria-hidden />}
                                         count={held.length}
+                                        locked={id === 'owner'}
                                         empty="No one"
                                     >
                                         {held.map((member) => (
@@ -1367,7 +1371,8 @@ export const Invite: StoryObj = {
 /**
  * The roles against what each may do: the built-in roles read-only, the custom one with four
  * unsaved changes and the save bar, and who holds each role on a board: a member dragged to another
- * role is given it, counted on the save bar. The owner is never given nor taken there.
+ * role is given it, counted on the save bar. The Owner column is locked: its member stays, and no
+ * one lands in it.
  */
 export const Roles: StoryObj = {
     render: () => (

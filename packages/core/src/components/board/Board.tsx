@@ -18,7 +18,6 @@ import {
     DragGrip,
     dragData,
     dragPoint,
-    fromKeyboard,
     useDragItem,
     useDropTarget,
     type DragData,
@@ -40,17 +39,28 @@ export interface BoardMove {
 /** The card being dragged and where it would land. */
 export interface BoardDragState {
     card: string
+    /** The zone it would land in; null where it would go back, as over its own place or a refused one. */
     zone: string | null
     before: string | null
+}
+
+/** A column being dragged and where it would land: beside the column `at`, or back where it was while `at` is null. */
+export interface BoardColumnDragState {
+    column: string
+    at: string | null
+    side: 'before' | 'after'
 }
 
 interface BoardScope {
     kind: string
     drag: BoardDragState | null
+    /** What columns drag as, while the board moves them. */
+    columnKind: string | null
+    columnDrag: BoardColumnDragState | null
 }
 
 const BoardContext = createContext<BoardScope | null>(null)
-const ZoneContext = createContext<string | null>(null)
+const ZoneContext = createContext<{ id: string; locked: boolean } | null>(null)
 
 /** The card being dragged and where it would land, for a card or a zone to draw itself by. */
 export function useBoardDrag(): BoardDragState | null {
@@ -59,7 +69,17 @@ export function useBoardDrag(): BoardDragState | null {
 
 /** The drop zone a card sits in. */
 export function useBoardZone(): string | null {
-    return useContext(ZoneContext)
+    return useContext(ZoneContext)?.id ?? null
+}
+
+/** The column being dragged and where it would land, for a column to draw itself by. */
+export function useBoardColumnDrag(): BoardColumnDragState | null {
+    return useContext(BoardContext)?.columnDrag ?? null
+}
+
+/** What the nearest `Board`'s columns drag as, or null where it does not move them. */
+export function useBoardColumnKind(): string | null {
+    return useContext(BoardContext)?.columnKind ?? null
 }
 
 /** What a card or a zone hands the drag about itself. */
@@ -78,8 +98,41 @@ export function landingBefore(others: readonly string[], over: string, below: bo
     return at === -1 ? null : (others[at + 1] ?? null)
 }
 
+/**
+ * Where a column dragged beside another lands, as places among the columns in their order; undefined
+ * where it would land where it was, or would cross a locked column, which keeps its place.
+ */
+export function columnLanding(
+    order: readonly string[],
+    locked: readonly string[],
+    moved: string,
+    at: string,
+    side: 'before' | 'after',
+): { from: number; to: number } | undefined {
+    const from = order.indexOf(moved)
+    const others = order.filter((id) => id !== moved)
+    const beside = others.indexOf(at)
+    if (from === -1 || beside === -1 || locked.includes(moved)) return undefined
+    const to = beside + (side === 'after' ? 1 : 0)
+    if (to === from) return undefined
+    const crossed = from < to ? order.slice(from + 1, to + 1) : order.slice(to, from)
+    return crossed.some((id) => locked.includes(id)) ? undefined : { from, to }
+}
+
 export interface BoardProps {
     onMove?: (move: BoardMove) => void
+    /**
+     * Whether a card may land where a move would put it. A refused place shows no line, and a card
+     * let go there goes back. A locked zone or column refuses every card without it.
+     */
+    canDrop?: (move: BoardMove) => boolean
+    /**
+     * Moves a column from one place to another among the board's `BoardColumn`s, both counted from
+     * 0 in the order they are drawn. With it a column drags by its head, and from the keyboard by
+     * the grip in its head, the arrows carrying it beside the next column; a locked column keeps
+     * its place, and no column moves across it. The board holds no order of its own.
+     */
+    onColumnMove?: (from: number, to: number) => void
     /** The width of a column, and of a lane's cell. */
     columnWidth?: string
     children: ReactNode
@@ -98,60 +151,108 @@ export interface BoardProps {
  * it landed; the board holds no order of its own, so the app moves the card in its state.
  *
  * Cards are `BoardCard`s, or any content in a `BoardItem`, inside a `BoardDrop`. Anything inside a
- * card marked `data-no-drag`, such as its menu, keeps its own press.
+ * card marked `data-no-drag`, such as its menu, keeps its own press. A `locked` card stays where it
+ * is, a `locked` zone or column neither gives nor takes a card, and `canDrop` refuses any other
+ * place, so no line shows where a card cannot go.
  */
-export function Board({ onMove, columnWidth = '18rem', children, className }: BoardProps) {
+export function Board({ onMove, canDrop, onColumnMove, columnWidth = '18rem', children, className }: BoardProps) {
     const kind = useId()
+    const columnKind = `${kind}:column`
     const root = useRef<HTMLDivElement>(null)
     const [drag, setDrag] = useState<BoardDragState | null>(null)
     const target = useRef<BoardDragState | null>(null)
+    const [columnDrag, setColumnDrag] = useState<BoardColumnDragState | null>(null)
+    const columnTarget = useRef<BoardColumnDragState | null>(null)
 
-    /** Where the card would land now: in the zone under it, before the card it is above. */
+    /** The move a card would make landing before `before` in `zone`. */
+    const moveOf = (card: DragData, zone: string, before: string | null): BoardMove => {
+        const held = (card.value as Place).card ?? ''
+        const others = cardsIn(root.current, zone).filter((each) => each !== held)
+        const index = before === null ? others.length : others.indexOf(before)
+        return { card: held, from: (card.value as Place).zone, to: zone, before, index }
+    }
+
+    /** Where the card would land now: in the zone under it, before the card it is above; nowhere over its own place or a refused one. */
     const aim = (event: DragMoveEvent | DragEndEvent): BoardDragState | null => {
         const card = dragData(event.active)
         if (card?.kind !== kind) return null
         const held = (card.value as Place).card ?? ''
         const over = dragData(event.over)
-        if (event.over === null || over?.kind !== kind) return { card: held, zone: null, before: null }
+        const nowhere = { card: held, zone: null, before: null }
+        if (event.over === null || over?.kind !== kind) return nowhere
         const place = over.value as Place
-        if (place.card === undefined) return { card: held, zone: place.zone, before: null }
-        // Over its own place the card lands where it was.
-        if (place.card === held) return { card: held, zone: place.zone, before: target.current?.before ?? null }
+        if (place.card === held) return nowhere
+        let before: string | null = null
+        if (place.card !== undefined) {
+            const box = event.over.rect
+            const point = dragPoint(event)
+            const below = point !== null && point.y > box.top + box.height / 2
+            const others = cardsIn(root.current, place.zone).filter((each) => each !== held)
+            before = landingBefore(others, place.card, below)
+        }
+        const move = moveOf(card, place.zone, before)
+        const home = cardsIn(root.current, move.from)
+        if (move.to === move.from && (home[home.indexOf(held) + 1] ?? null) === before) return nowhere
+        if (canDrop !== undefined && !canDrop(move)) return nowhere
+        return { card: held, zone: place.zone, before }
+    }
+
+    /** Where the column would land now: beside the column under it, on the side the pointer is; nowhere where it cannot go. */
+    const aimColumn = (event: DragMoveEvent | DragEndEvent): BoardColumnDragState | null => {
+        const held = dragData(event.active)
+        if (held?.kind !== columnKind) return null
+        const column = (held.value as { column: string }).column
+        const over = dragData(event.over)
+        const nowhere: BoardColumnDragState = { column, at: null, side: 'before' }
+        if (event.over === null || over?.kind !== columnKind) return nowhere
+        const at = (over.value as { column: string }).column
         const box = event.over.rect
         const point = dragPoint(event)
-        const start = event.active.rect.current.initial
-        const below = fromKeyboard(event) ? start !== null && box.top > start.top : point !== null && point.y > box.top + box.height / 2
-        const others = cardsIn(root.current, place.zone).filter((each) => each !== held)
-        return { card: held, zone: place.zone, before: landingBefore(others, place.card, below) }
+        const side = point !== null && point.x > box.left + box.width / 2 ? 'after' : 'before'
+        const { order, locked } = columnsIn(root.current)
+        return columnLanding(order, locked, column, at, side) === undefined ? nowhere : { column, at, side }
     }
+
     const follow = (event: DragMoveEvent) => {
         const next = aim(event)
         const last = target.current
-        if (next === null) return
-        if (last === null || last.zone !== next.zone || last.before !== next.before) {
+        if (next !== null && (last === null || last.zone !== next.zone || last.before !== next.before)) {
             target.current = next
             setDrag(next)
+        }
+        const column = aimColumn(event)
+        const lastColumn = columnTarget.current
+        if (column !== null && (lastColumn === null || lastColumn.at !== column.at || lastColumn.side !== column.side)) {
+            columnTarget.current = column
+            setColumnDrag(column)
         }
     }
     const done = () => {
         target.current = null
         setDrag(null)
+        columnTarget.current = null
+        setColumnDrag(null)
     }
 
     return (
-        <BoardContext.Provider value={{ kind, drag }}>
+        <BoardContext.Provider value={{ kind, drag, columnKind: onColumnMove === undefined ? null : columnKind, columnDrag }}>
             <DragDrop
                 onDragMove={follow}
                 onDragOver={follow}
                 onDragEnd={(event) => {
-                    const card = dragData(event.active)
+                    const held = dragData(event.active)
                     const landed = target.current
+                    const column = columnTarget.current
                     done()
-                    if (card?.kind !== kind || landed === null || landed.zone === null) return
-                    const from = (card.value as Place).zone
-                    const others = cardsIn(root.current, landed.zone).filter((each) => each !== landed.card)
-                    const index = landed.before === null ? others.length : others.indexOf(landed.before)
-                    onMove?.({ card: landed.card, from, to: landed.zone, before: landed.before, index })
+                    if (held?.kind === columnKind) {
+                        if (column === null || column.at === null) return
+                        const { order, locked } = columnsIn(root.current)
+                        const moved = columnLanding(order, locked, column.column, column.at, column.side)
+                        if (moved !== undefined) onColumnMove?.(moved.from, moved.to)
+                        return
+                    }
+                    if (held?.kind !== kind || landed === null || landed.zone === null) return
+                    onMove?.(moveOf(held, landed.zone, landed.before))
                 }}
                 onDragCancel={done}
             >
@@ -166,6 +267,15 @@ export function Board({ onMove, columnWidth = '18rem', children, className }: Bo
             </DragDrop>
         </BoardContext.Provider>
     )
+}
+
+/** The board's columns in the order they are drawn, and which of them are locked. */
+function columnsIn(root: HTMLElement | null): { order: string[]; locked: string[] } {
+    const columns = [...(root?.querySelectorAll<HTMLElement>('[data-board-column]') ?? [])]
+    return {
+        order: columns.map((column) => column.dataset.boardColumn ?? ''),
+        locked: columns.filter((column) => column.dataset.locked !== undefined).map((column) => column.dataset.boardColumn ?? ''),
+    }
 }
 
 /** The cards of a zone in the order they are drawn. */
@@ -184,28 +294,35 @@ export interface BoardDropProps {
     empty?: ReactNode
     /** What a screen reader calls the zone as a card is carried over it; its id without it. */
     label?: string
+    /** Neither gives nor takes a card: its cards stay, and none lands in it. */
+    locked?: boolean
     className?: string
 }
 
 /**
  * Where cards lie and land: a column's list, or one cell of a lane. Its `id` is what a move
  * names; a board with lanes gives each cell an id that says both its lane and its column. While
- * a card is over it, it washes, and a line at its end shows a card landing last.
+ * a card is over it, it washes, and a line at its end shows a card landing last. A `locked` zone
+ * neither gives nor takes a card.
  */
-export function BoardDrop({ id, children, empty, label, className }: BoardDropProps) {
+export function BoardDrop({ id, children, empty, label, locked = false, className }: BoardDropProps) {
     const board = useContext(BoardContext)
     const drag = board?.drag ?? null
     const kind = board?.kind ?? ''
     const place: Place = { zone: id }
-    const { ref } = useDropTarget({ id: `${kind}:zone:${id}`, data: { kind, label: label ?? id, value: place }, disabled: board === null })
+    const data: DragData = { kind, label: label ?? id, value: place }
+    const { ref } = useDropTarget({ id: `${kind}:zone:${id}`, data, disabled: board === null || locked })
+    // The zone's end as a place of its own, so the arrows carry a card past the last one.
+    const end = useDropTarget({ id: `${kind}:end:${id}`, data, disabled: board === null || locked })
     const over = drag !== null && drag.zone === id
     const hasCards = Array.isArray(children) ? children.some((child) => child !== null && child !== false) : children != null
     return (
-        <ZoneContext.Provider value={id}>
+        <ZoneContext.Provider value={{ id, locked }}>
             <div
                 ref={ref}
                 data-board-drop={id}
                 data-over={over || undefined}
+                data-locked={locked || undefined}
                 className={cn('flex min-h-20 flex-col gap-2 rounded-surface p-1.5 transition-colors', over && 'bg-primary/5', className)}
             >
                 {children}
@@ -214,7 +331,9 @@ export function BoardDrop({ id, children, empty, label, className }: BoardDropPr
                         {empty}
                     </div>
                 )}
-                <div className="relative h-0 shrink-0">{over && drag.before === null && <DropLine />}</div>
+                <div ref={end.ref} className="relative h-0 shrink-0">
+                    {over && drag.before === null && <DropLine />}
+                </div>
             </div>
         </ZoneContext.Provider>
     )
@@ -239,6 +358,8 @@ export interface BoardItemProps extends Omit<HTMLAttributes<HTMLElement>, 'id'> 
     label: string
     /** What follows the pointer while it is dragged: the card drawn again, without its drag. */
     preview?: () => ReactNode
+    /** Stays where it is: it does not drag, and draws no grip. */
+    locked?: boolean
     as?: ElementType
     children?: ReactNode
     className?: string
@@ -247,22 +368,25 @@ export interface BoardItemProps extends Omit<HTMLAttributes<HTMLElement>, 'id'> 
 /**
  * Anything a board moves as a card: pressed anywhere it drags, and picked up from the keyboard by
  * the `BoardGrip` inside it. It fades while it is dragged, and a line above it shows a card
- * landing before it. `BoardCard` is one.
+ * landing before it. A `locked` card, or any card of a locked zone, stays where it is. `BoardCard`
+ * is one.
  */
-export function BoardItem({ id, label, preview, as: Tag = 'div', children, className, ...props }: BoardItemProps) {
+export function BoardItem({ id, label, preview, locked = false, as: Tag = 'div', children, className, ...props }: BoardItemProps) {
     const board = useContext(BoardContext)
-    const zone = useContext(ZoneContext) ?? ''
+    const zoneScope = useContext(ZoneContext)
+    const zone = zoneScope?.id ?? ''
     const kind = board?.kind ?? ''
     const drag = board?.drag ?? null
+    const fixed = board === null || locked || zoneScope?.locked === true
     const place: Place = { card: id, zone }
     const data: DragData = { kind, label, value: place, preview }
-    const item = useDragItem({ id: `${kind}:card:${id}`, data, disabled: board === null })
-    const target = useDropTarget({ id: `${kind}:at:${id}`, data, disabled: board === null })
+    const item = useDragItem({ id: `${kind}:card:${id}`, data, disabled: fixed })
+    const target = useDropTarget({ id: `${kind}:at:${id}`, data, disabled: board === null || zoneScope?.locked === true })
     const { ref: grip, onKeyDown, onPointerDown, onTouchStart, ...attributes } = item.handle
     const dragged = drag?.card === id
     const landing = drag !== null && !dragged && drag.zone === zone && drag.before === id
     return (
-        <ItemContext.Provider value={{ handle: { ...attributes, ref: grip }, label }}>
+        <ItemContext.Provider value={fixed ? null : { handle: { ...attributes, ref: grip }, label }}>
             <Tag
                 {...props}
                 ref={(element: HTMLElement | null) => {
@@ -271,9 +395,10 @@ export function BoardItem({ id, label, preview, as: Tag = 'div', children, class
                 }}
                 data-board-card={id}
                 data-dragging={dragged || undefined}
-                onKeyDown={onKeyDown}
-                onPointerDown={onPointerDown}
-                onTouchStart={onTouchStart}
+                data-locked={fixed || undefined}
+                onKeyDown={fixed ? undefined : onKeyDown}
+                onPointerDown={fixed ? undefined : onPointerDown}
+                onTouchStart={fixed ? undefined : onTouchStart}
                 className={cn('relative', dragged && 'opacity-40', className)}
             >
                 {landing && <DropLine />}

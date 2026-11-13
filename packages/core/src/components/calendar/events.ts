@@ -152,6 +152,10 @@ export interface CalendarWords {
     more: (count: number) => string
     now: string
     empty: string
+    /** Said once an event is moved or resized from the keyboard: where it now is. */
+    changed: (title: string, start: Date, end: Date, allDay: boolean) => string
+    /** What an event that can be changed says of its keys. */
+    changeKeys: string
 }
 
 export const CALENDAR_WORDS: CalendarWords = {
@@ -163,4 +167,9 @@ export const CALENDAR_WORDS: CalendarWords = {
     more: (count) => `+${count} more`,
     now: 'Now',
     empty: 'Nothing scheduled',
+    changed: (title, start, end, allDay) =>
+        allDay
+            ? `${title}: ${format(start, 'EEE d MMM')} to ${format(end, 'EEE d MMM')}`
+            : `${title}: ${format(start, 'EEE d MMM, HH:mm')} to ${format(end, 'HH:mm')}`,
+    changeKeys: 'Alt and the arrow keys move it; with Shift they move its end.',
 }

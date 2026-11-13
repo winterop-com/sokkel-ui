@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { FileGrid, FileList, sortFiles, type FileEntry, type FileSort } from '@winterop-com/sokkel-ui/FileList'
 import { FilePreview } from '@winterop-com/sokkel-ui/FilePreview'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { DropZone, UploadTray, type Upload } from '@winterop-com/sokkel-ui/UploadTray'
 import { CHART, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
@@ -118,6 +119,20 @@ function Rows() {
     )
 }
 
+function Ordered() {
+    const [files, setFiles] = useState(FILES)
+    return (
+        <Stack gap="none" className="h-svh p-6">
+            <FileList
+                entries={files}
+                onReorder={(from, to) => setFiles(moveItem(files, from, to))}
+                onOpen={() => undefined}
+                className="min-h-0"
+            />
+        </Stack>
+    )
+}
+
 function Tiles() {
     const [selected, setSelected] = useState<string[]>(['bergen'])
     return (
@@ -226,6 +241,12 @@ export default meta
 
 /** A folder as rows, newest first, two selected and one open; the headers sort. */
 export const List: StoryObj = { name: 'File list', render: () => <Rows /> }
+
+/**
+ * The folder in the reader's own order: a row dragged by the grip at its start goes to a new place,
+ * a line showing where, and Alt (Option) with the up and down arrows moves the active row.
+ */
+export const Ordered_: StoryObj = { name: 'Manual order', render: () => <Ordered /> }
 
 /** The same folder as tiles: pictures for images, icons for the rest. */
 export const Grid: StoryObj = { name: 'File grid', render: () => <Tiles /> }

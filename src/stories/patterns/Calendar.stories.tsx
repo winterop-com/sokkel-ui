@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { DayAgenda as DayAgendaPart } from '@winterop-com/sokkel-ui/calendar/DayAgenda'
 import { DayStrip as DayStripPart } from '@winterop-com/sokkel-ui/calendar/DayStrip'
+import type { CalendarEventChange } from '@winterop-com/sokkel-ui/calendar/event-change'
 import { weekOf, type CalendarEvent } from '@winterop-com/sokkel-ui/calendar/events'
 import { MiniMonth as MiniMonthPart } from '@winterop-com/sokkel-ui/calendar/MiniMonth'
 import { MonthGrid as MonthGridPart } from '@winterop-com/sokkel-ui/calendar/MonthGrid'
@@ -86,4 +87,49 @@ export const WeekGrid: StoryObj = {
 export const MonthGrid: StoryObj = {
     name: 'Month grid',
     render: () => <MonthGridPart month={NOW} events={EVENTS} now={NOW} max={2} className="h-svh" />,
+}
+
+/** The events in the story's state, each change put in its place. */
+function useEvents() {
+    const [events, setEvents] = useState(EVENTS)
+    const change = ({ event, start, end }: CalendarEventChange) =>
+        setEvents((now) => now.map((each) => (each.id === event.id ? { ...each, start, end } : each)))
+    return { events, change }
+}
+
+/**
+ * The week with its events moved and resized: an event drags to another day and time, an outline
+ * showing where it lands at the quarter hour; a block's lower edge, and an all-day bar's right end,
+ * drag its end. With an event focused, Alt and the arrows move it a quarter hour or a day, and with
+ * Shift its end. The muted sync-inventory run stays where it is.
+ */
+export const WeekMoves: StoryObj = {
+    name: 'Week moves',
+    render: function Render() {
+        const { events, change } = useEvents()
+        return (
+            <WeekGridPart
+                days={weekOf(NOW)}
+                events={events}
+                now={NOW}
+                onEventMove={change}
+                onEventResize={change}
+                canChange={(event) => event.muted !== true}
+                className="h-svh"
+            />
+        )
+    },
+}
+
+/**
+ * The month with its events moved and resized: an event drags to another day, the days it would
+ * cover washed, and its right end on its last day drags that day. Alt and the arrows move the
+ * focused event a day or a week, and with Shift its last day.
+ */
+export const MonthMoves: StoryObj = {
+    name: 'Month moves',
+    render: function Render() {
+        const { events, change } = useEvents()
+        return <MonthGridPart month={NOW} events={events} now={NOW} max={3} onEventMove={change} onEventResize={change} className="h-svh" />
+    },
 }
