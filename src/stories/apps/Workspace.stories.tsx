@@ -40,6 +40,7 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 import { fromGlobals } from '../themes/themes'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { WizardView } from '@winterop-com/sokkel-ui/StepIndicator'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { NEW_JOB_STEPS, useNewJob } from '../dialogs/flows'
@@ -133,6 +134,16 @@ const RUNS: Run[] = [
         ago: 2_160,
         seconds: 3.9,
     },
+]
+
+/** The runs waiting for a worker, in the order the scheduler takes them. */
+const QUEUE: Run[] = [
+    { id: 'q1', job: 'sync-inventory', state: 'queued', by: 'grace', started: '-', duration: '-', ago: 0, seconds: 0 },
+    { id: 'q2', job: 'nightly-export', state: 'queued', by: 'ada', started: '-', duration: '-', ago: 0, seconds: 0 },
+    { id: 'q3', job: 'rebuild-index', state: 'queued', by: 'schedule', started: '-', duration: '-', ago: 0, seconds: 0 },
+    { id: 'q4', job: 'send-digest', state: 'queued', by: 'margaret', started: '-', duration: '-', ago: 0, seconds: 0 },
+    { id: 'q5', job: 'import-orders', state: 'queued', by: 'schedule', started: '-', duration: '-', ago: 0, seconds: 0 },
+    { id: 'q6', job: 'sync-inventory', state: 'queued', by: 'linus', started: '-', duration: '-', ago: 0, seconds: 0 },
 ]
 
 const COLUMNS: DataColumn<Run>[] = [
@@ -237,6 +248,7 @@ function Workspace({
     palette = false,
     grouped = false,
     views = false,
+    queue = false,
     tab = 'details',
 }: {
     tab?: string
@@ -248,20 +260,27 @@ function Workspace({
     grouped?: boolean
     /** Starts with the command palette open and no one signed in. */
     palette?: boolean
+    /** The runs waiting for a worker in place of today's runs, put in the order the scheduler takes them by drag. */
+    queue?: boolean
 }) {
     const defaults = fromGlobals(globals)
     const { settings, setSettings } = useAppearance(defaults)
     const [dockOpen, setDockOpen] = useStored('runs.dock', true, KEPT)
     const [logLevel, setLogLevel] = useState('all')
-    const [group, setGroup] = useStored<'none' | 'job'>(grouped ? 'runs.group-job' : 'runs.group', grouped ? 'job' : 'none', {
-        ...KEPT,
-        check: (value) => value === 'none' || value === 'job',
-    })
+    const [group, setGroup] = useStored<'none' | 'job'>(
+        grouped ? 'runs.group-job' : queue ? 'runs.group-queue' : 'runs.group',
+        grouped ? 'job' : 'none',
+        {
+            ...KEPT,
+            check: (value) => value === 'none' || value === 'job',
+        },
+    )
     const [collapsed, setCollapsed] = useState(false)
     const [query, setQuery] = useState('')
-    const [chosen, setChosen] = useState<Shown>(views ? WEEK_RUNS[0] : RUNS[1])
+    const [chosen, setChosen] = useState<Shown>(views ? WEEK_RUNS[0] : queue ? QUEUE[0] : RUNS[1])
     const [panelOpen, setPanelOpen] = useState<boolean | undefined>(undefined)
-    const rows = RUNS.filter((run) => run.job.includes(query.trim()))
+    const [waiting, setWaiting] = useState(QUEUE)
+    const rows = (queue ? waiting : RUNS).filter((run) => run.job.includes(query.trim()))
     return (
         <TooltipProvider>
             <Shell
@@ -297,7 +316,7 @@ function Workspace({
                         }
                     />
                 }
-                top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]} />}
+                top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: queue ? 'Queue' : 'Runs' }]} />}
                 foot={
                     <StatusLine note="import-orders is running" tone="live" live>
                         <StatusItem label="runs today">248</StatusItem>
@@ -343,8 +362,8 @@ function Workspace({
                         ) : (
                             <Page>
                                 <PageHeader
-                                    title="Runs"
-                                    count="248 today"
+                                    title={queue ? 'Queue' : 'Runs'}
+                                    count={queue ? `${String(waiting.length)} waiting` : '248 today'}
                                     actions={
                                         <Button size="sm">
                                             <Plus aria-hidden />
@@ -387,7 +406,14 @@ function Workspace({
                                         setPanelOpen(true)
                                     }}
                                     opened={(run) => run.id === chosen.id}
-                                    total={248}
+                                    rowLabel={(run) => run.job}
+                                    onReorder={
+                                        queue
+                                            ? (from, to) =>
+                                                  setWaiting(moveItem(waiting, waiting.indexOf(rows[from]), waiting.indexOf(rows[to])))
+                                            : undefined
+                                    }
+                                    total={queue ? undefined : 248}
                                     groupBy={group === 'job' ? 'job' : undefined}
                                     words={{ groupCount: (count) => `${String(count)} ${count === 1 ? 'run' : 'runs'}` }}
                                     minWidth="36rem"
@@ -497,6 +523,13 @@ export default meta
 export const ListAndPanel: StoryObj = { name: 'List and panel', render: (_, { globals }) => <Workspace globals={globals} /> }
 /** The chosen run's command output in the side panel, colored as the program printed it. */
 export const Output: StoryObj = { name: 'Run output', render: (_, { globals }) => <Workspace globals={globals} tab="output" /> }
+
+/**
+ * The runs waiting for a worker, in the order the scheduler takes them: a row dragged by its grip
+ * goes to a new place, a line showing where, and Alt (Option) with the up and down arrows moves the
+ * active row. Sorting or grouping the table draws it in that order instead, without the grips.
+ */
+export const Queue: StoryObj = { render: (_, { globals }) => <Workspace globals={globals} queue /> }
 
 export const WithDock: StoryObj = { name: 'Log dock', render: (_, { globals }) => <Workspace globals={globals} dock /> }
 

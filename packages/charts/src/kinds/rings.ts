@@ -1,7 +1,6 @@
 import { tooltipMarkup } from '../look'
-import { written } from './categories'
 import { ringFigures } from './legends'
-import { colorOf, type ChartBuilder } from './spec'
+import { written, colorOf, type ChartBuilder } from './spec'
 
 /** How thick each ring is drawn, in pixels, and the card-colored line that parts it from the next. */
 const RING = 12

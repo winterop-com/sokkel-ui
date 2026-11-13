@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
-import { Fill, Row } from '@winterop-com/sokkel-ui/Layout'
+import { Fill, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
@@ -17,7 +17,11 @@ import { StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
 import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
-import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
+import { moveTreeNode, Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
+import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
+import { ListRow } from '@winterop-com/sokkel-ui/ListRow'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { SortableList } from '@winterop-com/sokkel-ui/Sortable'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { BoundaryLayer } from '@winterop-com/sokkel-ui-maps/BoundaryLayer'
 import { boundsOfIds, isReadable, type Bounds } from '@winterop-com/sokkel-ui-maps/geometry'
@@ -31,7 +35,9 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
  * Tidevann's sites page: where each project's jobs run, as a hierarchy of the country, its regions
- * and their sites. The tree and the map share one selection: the selected place is drawn in the
+ * and their sites, with the reader's pinned sites over it. The pinned sites are put in order by
+ * their grips, and a region or a site is dragged to another place among its siblings, never out of
+ * the place it lies in. The tree and the map share one selection: the selected place is drawn in the
  * selection color, what lies under it in the highlight color, and the map frames it. The side
  * panel holds the selected place's facts, and the notes under the map say what it could not draw
  * and how it frames a place with no geometry of its own.
@@ -100,6 +106,19 @@ const TREE: TreeNode[] = [
     },
 ]
 
+/** The sites pinned over the hierarchy, in the reader's order. */
+const PINNED = places.features.slice(0, 3).map((site) => String(site.id))
+
+/** The id of the node holding `id`, or null at the top. */
+function parentOf(nodes: readonly TreeNode[], id: string, parent: string | null = null): string | null | undefined {
+    for (const node of nodes) {
+        if (node.id === id) return parent
+        const found = node.children === undefined ? undefined : parentOf(node.children, id, node.id)
+        if (found !== undefined) return found
+    }
+    return undefined
+}
+
 type Place =
     | { kind: 'country' }
     | { kind: 'region'; region: Feature }
@@ -117,6 +136,12 @@ function nameOf(place: Place): string {
     if (place.kind === 'country') return 'Sierra Leone'
     if (place.kind === 'region') return regionName[String(place.region.id)]
     return place.site.properties.name
+}
+
+/** The name of the region a site lies in. */
+function regionOf(id: string): string | undefined {
+    const place = placeOf(id)
+    return place.kind === 'site' ? regionName[place.site.properties.region] : undefined
 }
 
 /** What the map draws for a place: the ids it highlights under it, what it frames, and a note when the place has no geometry. */
@@ -221,6 +246,8 @@ function Facts({ id, place }: { id: string; place: Place }) {
 
 function SitesApp({ initial = COUNTRY, offerBasemaps = true }: { initial?: string; offerBasemaps?: boolean }) {
     const [selected, setSelected] = useState(initial)
+    const [tree, setTree] = useState(TREE)
+    const [pinned, setPinned] = useState(PINNED)
     const [query, setQuery] = useState('')
     const [collapsed, setCollapsed] = useState(false)
     const place = placeOf(selected)
@@ -279,14 +306,42 @@ function SitesApp({ initial = COUNTRY, offerBasemaps = true }: { initial?: strin
                         search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                         defaultSize={272}
                     >
-                        <Tree
-                            label="Hierarchy"
-                            nodes={TREE}
-                            selected={[selected]}
-                            onSelect={(ids) => setSelected(ids[0] ?? COUNTRY)}
-                            defaultExpanded={expanded}
-                            query={query}
-                        />
+                        <Stack gap="md">
+                            <Stack as="section" gap="2xs">
+                                <GroupLabel as="h3" className="px-1.5 pb-1">
+                                    Pinned
+                                </GroupLabel>
+                                <SortableList
+                                    label="Pinned sites"
+                                    variant="plain"
+                                    gripSide="end"
+                                    items={pinned}
+                                    itemKey={(id) => id}
+                                    itemLabel={(id) => nameOf(placeOf(id))}
+                                    onMove={(from, to) => setPinned(moveItem(pinned, from, to))}
+                                    renderItem={(id) => (
+                                        <ListRow
+                                            dense
+                                            title={nameOf(placeOf(id))}
+                                            detail={regionOf(id)}
+                                            icon={<MapPin className="size-4" aria-hidden />}
+                                            current={id === selected}
+                                            onPress={() => setSelected(id)}
+                                        />
+                                    )}
+                                />
+                            </Stack>
+                            <Tree
+                                label="Hierarchy"
+                                nodes={tree}
+                                selected={[selected]}
+                                onSelect={(ids) => setSelected(ids[0] ?? COUNTRY)}
+                                defaultExpanded={expanded}
+                                query={query}
+                                canMove={(id, into) => into !== null && into === parentOf(tree, id)}
+                                onMove={(id, into, index) => setTree(moveTreeNode(tree, id, { into, index }))}
+                            />
+                        </Stack>
                     </SubNav>
                     <Fill>
                         <Page className="h-full min-h-0">

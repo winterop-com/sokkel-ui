@@ -6,7 +6,7 @@ import { chartLegend } from '../chart-legend'
 import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../ChartFrame'
 import type { LegendStat } from '../ChartLegend'
 import type { ChartKind, ChartSpec } from '../kinds'
-import { written } from '../kinds/categories'
+import { written } from '../kinds/spec'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 
 export type ChartPanelProps = ChartSpec & {

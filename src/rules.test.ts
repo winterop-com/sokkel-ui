@@ -165,14 +165,17 @@ function exported(path: string): string | undefined {
     return undefined
 }
 
-/** Every script, test and stylesheet under `dir` that may import a package path, outside installed and built folders. */
+/**
+ * Every script, test and stylesheet under `dir` that may import a package path, outside installed,
+ * built and hidden folders (a shared Cargo target alone holds tens of thousands of entries).
+ */
 function importers(dir: string): string[] {
     if (!existsSync(dir)) return []
-    return readdirSync(dir).flatMap((name) => {
-        const path = join(dir, name)
-        if (['node_modules', 'dist', 'target'].includes(name)) return []
-        if (statSync(path).isDirectory()) return importers(path)
-        return /\.(tsx?|css)$/.test(name) ? [path] : []
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const path = join(dir, entry.name)
+        if (entry.isDirectory())
+            return ['node_modules', 'dist', 'target'].includes(entry.name) || entry.name.startsWith('.') ? [] : importers(path)
+        return /\.(tsx?|css)$/.test(entry.name) ? [path] : []
     })
 }
 
@@ -232,7 +235,8 @@ describe('the exports maps', () => {
         expect(missing, missing.join('\n')).toEqual([])
     })
 
-    it('export every package path the packages, stories, examples, tools and docs import', () => {
+    // Reads some 1,500 files, which takes a few hundred milliseconds alone and longer than the default 5 s on a loaded machine.
+    it('export every package path the packages, stories, examples, tools and docs import', { timeout: 30_000 }, () => {
         const unexported: string[] = []
         for (const path of IMPORTERS) {
             const text = readFileSync(path, 'utf8')
