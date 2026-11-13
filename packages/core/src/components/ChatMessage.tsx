@@ -4,7 +4,7 @@ import { isValidElement, useState, type CSSProperties, type ReactNode } from 're
 
 import { cn } from '../lib/cn'
 import type { DragData } from './DragDrop'
-import { DragSource, DragSourceGrip } from './DragSource'
+import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSource'
 import { AudioPlayer } from './media/AudioPlayer'
 import { VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { PersonAvatar } from './PersonAvatar'
@@ -291,7 +291,7 @@ export function ChatMessage({
                                             <span
                                                 ref={source.ref}
                                                 {...source.press}
-                                                className={cn('group/file relative block', source.dragging && 'opacity-40')}
+                                                className={cn(DRAG_GROUP, 'relative block', source.dragging && 'opacity-40')}
                                             >
                                                 <img
                                                     src={file.url}
@@ -304,7 +304,7 @@ export function ChatMessage({
                                                     size="icon-xs"
                                                     variant="secondary"
                                                     label={words.dragFile(file.name)}
-                                                    className="absolute top-1.5 right-1.5 shadow-sm pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-hover/file:opacity-100 pointer-fine:focus-visible:opacity-100"
+                                                    className={cn('absolute top-1.5 right-1.5 shadow-sm', GRIP_ON_HOVER)}
                                                 />
                                             </span>
                                         ) : (
@@ -312,7 +312,8 @@ export function ChatMessage({
                                                 ref={source.ref}
                                                 {...source.press}
                                                 className={cn(
-                                                    'group/file flex w-[min(100%,18rem)] items-center gap-3 rounded-surface border border-border bg-card px-3 py-2',
+                                                    DRAG_GROUP,
+                                                    'flex w-[min(100%,18rem)] items-center gap-3 rounded-surface border border-border bg-card px-3 py-2',
                                                     source.dragging && 'opacity-40',
                                                 )}
                                             >
@@ -329,7 +330,7 @@ export function ChatMessage({
                                                     source={source}
                                                     size="icon-xs"
                                                     label={words.dragFile(file.name)}
-                                                    className="-mr-1.5 pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-hover/file:opacity-100 pointer-fine:focus-visible:opacity-100"
+                                                    className={cn('-mr-1.5', GRIP_ON_HOVER)}
                                                 />
                                             </div>
                                         )

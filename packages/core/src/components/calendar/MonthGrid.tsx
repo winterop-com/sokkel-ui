@@ -168,7 +168,7 @@ export function MonthGrid<E extends CalendarEvent>({
                                 index >= 7 && 'border-t',
                                 !inMonth && 'bg-muted/40 dark:bg-muted/20',
                                 chosen && 'max-md:bg-accent',
-                                covered(index) && 'bg-primary/5 shadow-[inset_0_0_0_2px_var(--color-primary)]',
+                                covered(index) && 'bg-primary/5 outline-2 -outline-offset-2 outline-ring outline-solid',
                             )}
                         >
                             {onSelectDay !== undefined && (

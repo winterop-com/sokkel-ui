@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import type { DragData } from './DragDrop'
-import { DragSource, DragSourceGrip } from './DragSource'
+import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSource'
 import { AudioPlayer } from './media/AudioPlayer'
 import { VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
@@ -129,7 +129,7 @@ export function AttachmentList({ files, onRemove, onCancel, size = 'sm', drag, w
                                         {...source.press}
                                         size={size}
                                         data-dragging={source.dragging || undefined}
-                                        className={cn('min-w-0', audio && 'w-80 max-w-full', source.dragging && 'opacity-40')}
+                                        className={cn(DRAG_GROUP, 'min-w-0', audio && 'w-80 max-w-full', source.dragging && 'opacity-40')}
                                     >
                                         <AttachmentMedia variant={file.image === undefined || uploading ? 'icon' : 'image'}>
                                             {uploading ? (
@@ -171,7 +171,7 @@ export function AttachmentList({ files, onRemove, onCancel, size = 'sm', drag, w
                                             source={source}
                                             size="icon-xs"
                                             label={words.drag(file.name)}
-                                            className="self-center pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-hover/attachment:opacity-100 pointer-fine:focus-visible:opacity-100"
+                                            className={cn('self-center', GRIP_ON_HOVER)}
                                         />
                                         {drop !== undefined && (
                                             <AttachmentAction

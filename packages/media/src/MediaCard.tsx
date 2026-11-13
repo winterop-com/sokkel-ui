@@ -2,7 +2,7 @@ import { MoreHorizontal, Play, Volume2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
-import { DragSource, DragSourceGrip } from '@winterop-com/sokkel-ui/DragSource'
+import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from '@winterop-com/sokkel-ui/DragSource'
 import { Link } from '@winterop-com/sokkel-ui/Link'
 import { useClamped } from '@winterop-com/sokkel-ui/hooks/use-clamped'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
@@ -112,6 +112,7 @@ export function MediaCard({
                     data-dragging={source.dragging || undefined}
                     className={cn(
                         'group/media relative flex min-w-0',
+                        source.enabled && DRAG_GROUP,
                         layout === 'row' ? 'flex-row items-start gap-3' : 'flex-col gap-2.5',
                         source.dragging && 'opacity-40',
                         className,
@@ -191,7 +192,7 @@ export function MediaCard({
                             )}
                         </div>
                         {source.enabled && (
-                            <div className="pointer-events-auto relative z-10 -mr-1.5 pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-focus-within/media:opacity-100 pointer-fine:group-hover/media:opacity-100">
+                            <div className={cn('pointer-events-auto relative z-10 -mr-1.5', GRIP_ON_HOVER)}>
                                 <DragSourceGrip source={source} size="icon-xs" label={words.drag(title)} className="size-7" />
                             </div>
                         )}

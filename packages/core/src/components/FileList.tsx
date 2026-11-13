@@ -4,7 +4,7 @@ import type { KeyboardEvent, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { DataTable, type DataColumn, type DataSort } from './DataTable'
 import type { DragData } from './DragDrop'
-import { DragSource, DragSourceGrip, type DragSourceState } from './DragSource'
+import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER, type DragSourceState } from './DragSource'
 import { Checkbox } from './ui/checkbox'
 
 /** What a file is, which picks its icon and how it previews. */
@@ -344,6 +344,7 @@ function TileFace({
                 onOpen !== undefined && 'cursor-pointer hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring',
                 selected && 'border-primary ring-1 ring-primary',
                 active && !selected && 'border-border-strong ring-1 ring-border-strong',
+                source.enabled && DRAG_GROUP,
                 source.dragging && 'opacity-40',
             )}
         >
@@ -380,7 +381,7 @@ function TileFace({
             )}
             {source.enabled && (
                 <span
-                    className="absolute top-2 right-2 flex rounded-md bg-card/90 shadow-sm pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-focus-within/tile:opacity-100 pointer-fine:group-hover/tile:opacity-100"
+                    className={cn('absolute top-2 right-2 flex rounded-md bg-card/90 shadow-sm', GRIP_ON_HOVER)}
                     onClick={(event) => event.stopPropagation()}
                 >
                     <DragSourceGrip source={source} size="icon-xs" label={words.drag(entry.name)} />

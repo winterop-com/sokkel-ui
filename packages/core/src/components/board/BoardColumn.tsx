@@ -2,6 +2,7 @@ import { useId, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { DragGrip, useDragItem, useDropTarget, type DragHandleProps } from '../DragDrop'
+import { DRAG_GROUP, GRIP_ON_HOVER } from '../DragSource'
 import { BoardDrop, useBoardColumnDrag, useBoardColumnKind } from './Board'
 
 export interface BoardColumnWords {
@@ -41,7 +42,7 @@ export function BoardColumnHead({ title, count, limit, icon, actions, grip, clas
     const words = { ...WORDS, ...given }
     const over = limit !== undefined && count > limit
     return (
-        <div className={cn('group/column-head flex h-9 items-center gap-2 px-1.5', className)}>
+        <div className={cn('flex h-9 items-center gap-2 px-1.5', grip !== undefined && DRAG_GROUP, className)}>
             {icon}
             <h3 className="truncate text-sm font-medium">{title}</h3>
             <span
@@ -139,7 +140,7 @@ export function BoardColumn({
                     aria-hidden
                     className={cn(
                         'pointer-events-none absolute inset-y-0 w-0.5 rounded-full bg-primary',
-                        drag.side === 'before' ? '-left-[7px]' : '-right-[7px]',
+                        drag.side === 'before' ? '-left-1.5' : '-right-1.5',
                     )}
                 />
             )}
@@ -159,12 +160,7 @@ export function BoardColumn({
                     className="px-3 pt-1.5"
                     grip={
                         movable ? (
-                            <DragGrip
-                                size="icon-xs"
-                                handle={handle}
-                                label={words.move(name)}
-                                className="-mr-1.5 md:opacity-0 md:group-hover/column-head:opacity-100 md:focus-visible:opacity-100"
-                            />
+                            <DragGrip size="icon-xs" handle={handle} label={words.move(name)} className={cn('-mr-1.5', GRIP_ON_HOVER)} />
                         ) : undefined
                     }
                 />

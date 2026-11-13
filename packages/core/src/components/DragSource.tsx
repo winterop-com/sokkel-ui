@@ -20,6 +20,16 @@ export function DragGrip({ handle, className, ...props }: DragGripProps) {
     )
 }
 
+/** The group a thing that drags is, so its grip shows while the thing is pointed at or focused. */
+export const DRAG_GROUP = 'group/drag'
+
+/**
+ * A grip shown only while its thing (a `DRAG_GROUP`) is pointed at or holds the focus; a finger,
+ * which drags the thing itself, never sees it.
+ */
+export const GRIP_ON_HOVER =
+    'pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-hover/drag:opacity-100 pointer-fine:group-focus-within/drag:opacity-100'
+
 /** What a thing that drags spreads on itself, from `DragSource`. */
 export interface DragSourceState {
     /** Goes on the element that drags; undefined while it does not drag. */

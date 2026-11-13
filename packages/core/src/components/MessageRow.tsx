@@ -2,7 +2,7 @@ import { Paperclip, Star } from 'lucide-react'
 
 import { cn } from '../lib/cn'
 import type { DragData } from './DragDrop'
-import { DragSource, DragSourceGrip } from './DragSource'
+import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSource'
 import { Checkbox } from './ui/checkbox'
 import { Highlight } from './Highlight'
 import { literalRanges } from '../lib/search'
@@ -113,7 +113,8 @@ export function MessageRow({
                     data-open={open || undefined}
                     data-dragging={source.dragging || undefined}
                     className={cn(
-                        'group/message relative flex gap-3 border-b border-border px-3 py-2.5 text-sm transition-colors',
+                        'relative flex gap-3 border-b border-border px-3 py-2.5 text-sm transition-colors',
+                        DRAG_GROUP,
                         open ? 'bg-sidebar-accent' : checked ? 'bg-accent' : 'hover:bg-hover',
                         source.dragging && 'opacity-40',
                         className,
@@ -144,7 +145,7 @@ export function MessageRow({
                                 source={source}
                                 size="icon-xs"
                                 label={words.drag(subject)}
-                                className="-mr-1.5 pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-hover/message:opacity-100 pointer-fine:focus-visible:opacity-100"
+                                className={cn('-mr-1.5', GRIP_ON_HOVER)}
                             />
                         </div>
                     )}
