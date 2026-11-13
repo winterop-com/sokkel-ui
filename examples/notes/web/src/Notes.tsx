@@ -47,7 +47,7 @@ import { Daily } from './pages/Daily'
 import { SearchPage, searchVault } from './pages/SearchPage'
 import { Tags } from './pages/Tags'
 import { useVault } from './state'
-import { foldersIn, notesIn, vaultTree } from './vault'
+import { vaultTree } from './vault'
 
 // The graph loads React Flow and elk the first time it is opened, and a note and settings the
 // editor (CodeMirror), so the list a reader lands on carries none of them.
@@ -144,29 +144,16 @@ export function Notes({ frame }: { frame: Frame }) {
 
     /** The folder a tree row's id names, or null for the top of the vault. */
     const folderOf = (into: string | null) => (into === null ? null : into.slice('folder:'.length))
-    /**
-     * Puts a note or a folder where the tree says, its place among the level's rows (folders first,
-     * then notes) turned into a place among the notes or the folders alone.
-     */
+    /** Puts a note or a folder where the tree says: into a folder, at its place among the notes or the folders there. */
     const placeAt = (id: string, into: string | null, index: number) => {
-        const target = folderOf(into)
-        if (id.startsWith('folder:')) {
-            const own = id.slice('folder:'.length)
-            const folders = foldersIn(vault, target, order).filter((one) => one.id !== own).length
-            void place('folder', own, target, Math.min(index, folders))
-            return
-        }
-        const folders = foldersIn(vault, target, order).length
-        void place('note', id, target, Math.max(0, index - folders))
+        const folder = id.startsWith('folder:')
+        void place(folder ? 'folder' : 'note', folder ? id.slice('folder:'.length) : id, folderOf(into), index)
     }
-    /** Puts a note dragged from a list into the tree, where the tree's count of the level still holds the note when it is in it. */
-    const dropAt = (note: Note, into: string | null, index: number) => {
-        const target = folderOf(into)
-        const folders = foldersIn(vault, target, order).length
-        const was = note.folder === target ? notesIn(vault, target, order, prefs.dailyFolder).findIndex((one) => one.id === note.id) : -1
-        const at = Math.max(0, index - folders)
-        void place('note', note.id, target, was !== -1 && was < at ? at - 1 : at)
-    }
+    /** Folders stand before notes in every level, and by name the vault sorts each level itself. */
+    const treeOrder = useMemo(
+        () => ({ band: (node: TreeNode) => (node.id.startsWith('folder:') ? 'folder' : 'note'), sorted: order !== 'manual' }),
+        [order],
+    )
     const chosen = noteId ?? (folderId === undefined ? undefined : `folder:${folderId}`)
 
     const switcher = (title: string, ids: readonly string[]) => ({
@@ -360,21 +347,9 @@ export function Notes({ frame }: { frame: Frame }) {
                                     defaultExpanded={['folder:runbooks', 'folder:jobs']}
                                     actions={rowActions}
                                     onMove={placeAt}
-                                    canMove={(id, into) => {
-                                        if (into !== null && !into.startsWith('folder:')) return false
-                                        // In the reader's own order a row also moves within its folder; by name only a move to another folder changes anything.
-                                        if (order === 'manual') return true
-                                        const from = id.startsWith('folder:')
-                                            ? vault.folderById.get(id.slice('folder:'.length))?.parent
-                                            : vault.byId.get(id)?.folder
-                                        return from !== folderOf(into)
-                                    }}
+                                    order={treeOrder}
                                     accepts={(drag) => drag.kind === NOTE_KIND}
-                                    onDrop={(drag, into, index) => {
-                                        if (into !== null && !into.startsWith('folder:')) return
-                                        const note = (drag.value as { row?: Note } | undefined)?.row
-                                        if (note !== undefined) dropAt(note, into, index)
-                                    }}
+                                    nodeOf={(drag) => (drag.value as { row?: Note } | undefined)?.row?.id}
                                 />
                             ),
                         }}

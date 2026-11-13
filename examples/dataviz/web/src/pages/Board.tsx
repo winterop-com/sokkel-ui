@@ -1,4 +1,5 @@
 import { DashboardArrange, type DashboardWidget } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
+import { DashboardEditActions, useDashboardEdit } from '@winterop-com/sokkel-ui/dashboard/DashboardEdit'
 import { DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { type Filter, type FilterField, FilterBar } from '@winterop-com/sokkel-ui/FilterBar'
 import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
@@ -19,7 +20,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { useWindowedPane, WindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
 import { CopyPlus, FileSpreadsheet, LayoutDashboard, Pencil, MoreHorizontal, PencilLine, Plus, Presentation, Trash2, X } from 'lucide-react'
-import { createElement, type ReactNode, useMemo, useRef, useState } from 'react'
+import { createElement, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { go } from 'tidevann-shared/router'
 
@@ -148,8 +149,9 @@ function BoardGrid({
 }
 
 /**
- * A board: its saved charts in a grid, filtered together and presented full screen. Arranged, its
- * panels are moved, resized and taken off by drag, and saved charts are dragged onto it.
+ * A board: its saved charts in a grid, filtered together and presented full screen. Edit holds every
+ * move, width, chart dragged on and chart taken off in a draft until Done keeps it, and Cancel throws
+ * it away.
  */
 export function BoardPage({
     board,
@@ -166,13 +168,23 @@ export function BoardPage({
 }) {
     const [adding, setAdding] = useState(false)
     const [details, setDetails] = useState(false)
-    // An empty board opens arranged, with the saved charts ready to drag onto it.
-    const [arranging, setArranging] = useState(() => board?.items.length === 0 && charts.length > 0)
     const remove = useDeleteBoard()
-    // The items as last changed here, shown until the backend answers with them, so a quick second move never reads a stale first.
+    const edit = useDashboardEdit<BoardItem>({
+        layout: board?.items ?? [],
+        onSave: (next) => (board === undefined ? undefined : boardStore.update(board.id, { items: next, updatedAt: now() })),
+    })
+    const arranging = edit.editing
+    // An empty board opens in Edit, with the saved charts ready to drag onto it.
+    const opened = useRef(false)
+    useEffect(() => {
+        if (opened.current) return
+        opened.current = true
+        if (board?.items.length === 0 && charts.length > 0) edit.edit()
+    })
+    // The items as last changed outside Edit, shown until the backend answers with them, so a quick second change never reads a stale first.
     const [pending, setPending] = useState<BoardItem[] | null>(null)
     const latest = useRef<BoardItem[] | null>(null)
-    const items = pending ?? board?.items ?? []
+    const items = arranging ? edit.layout : (pending ?? edit.layout)
     const placed: Placed[] = useMemo(
         () =>
             items.map((item) => {
@@ -213,11 +225,13 @@ export function BoardPage({
                           },
                           {
                               id: 'board-arrange',
-                              label: arranging ? 'Stop editing the board' : 'Edit the board',
+                              label: arranging ? 'Keep the edits to the board' : 'Edit the board',
                               icon: Pencil,
-                              onSelect: () => setArranging(!arranging),
+                              onSelect: arranging ? edit.done : edit.edit,
                           },
-                          { id: 'board-add', label: 'Add a chart to the board', icon: Plus, onSelect: () => setAdding(true) },
+                          ...(arranging
+                              ? [{ id: 'board-cancel', label: 'Throw the edits to the board away', icon: X, onSelect: edit.cancel }]
+                              : [{ id: 'board-add', label: 'Add a chart to the board', icon: Plus, onSelect: () => setAdding(true) }]),
                           ...(filters.length > 0
                               ? [
                                     {
@@ -231,7 +245,7 @@ export function BoardPage({
                       ],
                   },
               ],
-        [board, presenting, filters, arranging],
+        [board, presenting, filters, arranging, edit.layout],
     )
 
     if (board === undefined)
@@ -256,6 +270,7 @@ export function BoardPage({
         download(`${fileName(entry.chart.name)}.csv`, toCsv(shaped.table.names, shaped.table.rows), 'text/csv')
     }
     const takeOff = (entry: Placed) => {
+        if (arranging) return edit.change(items.filter((item) => item.id !== entry.item.id))
         const before = items
         void save(items.filter((item) => item.id !== entry.item.id)).then(() =>
             toast.success(`${entry.chart?.name ?? 'The chart'} taken off ${board.name}`, {
@@ -265,7 +280,8 @@ export function BoardPage({
     }
     const menu = (entry: Placed) => (
         <>
-            {entry.chart !== undefined && (
+            {/* The chart's editor is a page of its own, which would leave the draft behind. */}
+            {entry.chart !== undefined && !arranging && (
                 <DropdownMenuItem onClick={() => go(`/charts/${entry.item.chartId}`)}>
                     <PencilLine aria-hidden />
                     Edit chart
@@ -277,7 +293,7 @@ export function BoardPage({
                     Download CSV
                 </DropdownMenuItem>
             )}
-            <DropdownMenuItem onClick={() => setArranging(true)} disabled={arranging}>
+            <DropdownMenuItem onClick={edit.edit} disabled={arranging}>
                 <Pencil aria-hidden />
                 Edit the board
             </DropdownMenuItem>
@@ -333,7 +349,15 @@ export function BoardPage({
                           : board.description
                 }
                 actions={
-                    <>
+                    <DashboardEditActions
+                        edit={edit}
+                        primary={
+                            <Button size="sm" onClick={() => setAdding(true)}>
+                                <Plus aria-hidden />
+                                Add chart
+                            </Button>
+                        }
+                    >
                         <DropdownMenu>
                             <DropdownMenuTrigger render={<Button variant="outline" size="icon-sm" aria-label="More" title="More" />}>
                                 <MoreHorizontal aria-hidden />
@@ -381,26 +405,7 @@ export function BoardPage({
                             <Presentation aria-hidden />
                             Present
                         </Button>
-                        {arranging ? (
-                            <Button size="sm" onClick={() => setArranging(false)}>
-                                Done
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setArranging(true)}
-                                reason={items.length === 0 && charts.length === 0 ? 'Save a chart first.' : undefined}
-                            >
-                                <Pencil aria-hidden />
-                                Edit
-                            </Button>
-                        )}
-                        <Button size="sm" onClick={() => setAdding(true)}>
-                            <Plus aria-hidden />
-                            Add chart
-                        </Button>
-                    </>
+                    </DashboardEditActions>
                 }
             />
             {items.length === 0 && !arranging ? (
@@ -415,7 +420,7 @@ export function BoardPage({
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent>
-                        <Button size="sm" onClick={() => (charts.length === 0 ? setAdding(true) : setArranging(true))}>
+                        <Button size="sm" onClick={() => (charts.length === 0 ? setAdding(true) : edit.edit())}>
                             <Pencil aria-hidden />
                             Edit
                         </Button>
@@ -440,8 +445,8 @@ export function BoardPage({
                             menu={menu}
                             arranging={arranging}
                             palette={palette}
-                            onItemsChange={(next) => void save(next)}
-                            onAdd={(chartId, span, index) => void save(insertItem(items, { id: freshId('it'), chartId, span }, index))}
+                            onItemsChange={edit.change}
+                            onAdd={(chartId, span, index) => edit.change(insertItem(items, { id: freshId('it'), chartId, span }, index))}
                         />
                     </Stack>
                 </WindowedPane>

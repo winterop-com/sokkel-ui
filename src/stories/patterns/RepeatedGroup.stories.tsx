@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useRepeated } from '@winterop-com/sokkel-ui/hooks/use-repeated'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { NumberField } from '@winterop-com/sokkel-ui/NumberField'
+import { RepeatedDrag } from '@winterop-com/sokkel-ui/RepeatedDrag'
 import { RepeatedGroup } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
@@ -137,6 +138,18 @@ export const OneControl: StoryObj = { name: 'One control', render: () => <Recipi
 
 /** A run's three steps, each with its code and retries: Add, Move up, Move down and Remove, which goes at the last step. */
 export const Editable: StoryObj = { name: 'Steps', render: () => <Steps /> }
+
+/**
+ * The same steps inside a `RepeatedDrag`: a grip before each step's number drags it to another
+ * place, the others moving aside, and with the grip focused the up and down arrows move it a place.
+ */
+export const Dragged: StoryObj = {
+    render: () => (
+        <RepeatedDrag>
+            <Steps />
+        </RepeatedDrag>
+    ),
+}
 
 /** The same steps read only: no Add, Move or Remove, and the fields locked. */
 export const ReadOnly: StoryObj = { name: 'Read only', render: () => <Steps readOnly /> }

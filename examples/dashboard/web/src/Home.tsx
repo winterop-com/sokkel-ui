@@ -3,10 +3,12 @@ import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
@@ -57,7 +59,9 @@ export function Home({ frame }: { frame: Frame }) {
     const boards = useCollection(dashboards)
     const prefsRows = useCollection(prefsStore)
     const prefs: Prefs = prefsRows.rows?.[0] ?? { id: 'prefs', order: [], ...DEFAULT_PREFS }
-    const all = useMemo(() => inOrder(boards.rows ?? [], prefs.order), [boards.rows, prefs.order])
+    // The order as last dragged in the rail or on All dashboards, drawn until the backend has kept it.
+    const [held, setHeld] = useState<string[] | null>(null)
+    const all = useMemo(() => inOrder(boards.rows ?? [], held ?? prefs.order), [boards.rows, held, prefs.order])
     const [asking, setAsking] = useState<Asking>(null)
 
     useEffect(() => (prefs.live ? startLive(PACES[prefs.pace].every) : undefined), [prefs.live, prefs.pace])
@@ -70,6 +74,10 @@ export function Home({ frame }: { frame: Frame }) {
     }, [section, all, settings.open])
 
     const order = all.map((one) => one.id)
+    const keepOrder = (next: string[]) => {
+        setHeld(next)
+        return prefsStore.update(prefs.id, { order: next }).finally(() => setHeld(null))
+    }
     const setLive = (live: boolean) => void prefsStore.update(prefs.id, { live })
     const groups: RailGroup[] = [
         {
@@ -89,6 +97,7 @@ export function Home({ frame }: { frame: Frame }) {
         {
             id: 'boards',
             title: 'Dashboards',
+            onReorder: (from, to) => void keepOrder(moveItem(order, from, to)),
             entries: all.map((one) => ({
                 id: one.id,
                 label: one.name,
@@ -151,7 +160,7 @@ export function Home({ frame }: { frame: Frame }) {
         content = (
             <DashboardsPage
                 boards={all}
-                onReorder={(next) => prefsStore.update(prefs.id, { order: next })}
+                onReorder={keepOrder}
                 onCreate={() => setAsking({ kind: 'new' })}
                 onRename={(one) => setAsking({ kind: 'rename', board: one })}
                 onDuplicate={(one) => void duplicateDashboard(one, prefs, order)}
@@ -186,83 +195,85 @@ export function Home({ frame }: { frame: Frame }) {
         )
 
     return (
-        <Shell
-            palette={palette}
-            desktop={frame.desktop}
-            route={route.join('/')}
-            rail={
-                <Rail
-                    mark={<TidevannMark />}
-                    markHref="#/"
-                    name="Tidevann"
-                    groups={groups}
-                    foot={
-                        <AccountMenu
-                            name="ada"
-                            where="tidevann.example.org"
-                            local
-                            onSettings={() => go('/settings')}
-                            scheme={frame.appearance.settings.scheme}
-                            onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
-                        />
-                    }
-                />
-            }
-            top={
-                <TopBar
-                    trail={trail}
-                    actions={
-                        <>
-                            <IconButton label="New dashboard" variant="ghost" size="icon-sm" onClick={() => setAsking({ kind: 'new' })}>
-                                <Plus aria-hidden />
-                            </IconButton>
-                            <IconButton
-                                label={prefs.live ? 'Pause live data' : 'Follow live data'}
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => setLive(!prefs.live)}
-                            >
-                                {prefs.live ? <Pause aria-hidden /> : <Play aria-hidden />}
-                            </IconButton>
-                        </>
-                    }
-                />
-            }
-            foot={<Foot prefs={prefs} />}
-        >
-            <Page className={section === 'dashboards' ? 'h-full' : undefined}>{content}</Page>
-            {settings.open && prefsRows.rows !== undefined && <Settings prefs={prefs} frame={frame} onClose={settings.close} />}
-            {(asking?.kind === 'new' || asking?.kind === 'rename') && (
-                <DashboardDialog
-                    renaming={asking.kind === 'rename' ? asking.board : undefined}
-                    taken={all.map((one) => one.name)}
-                    onClose={() => setAsking(null)}
-                    onCreate={(name, from) => createDashboard(name, from, prefs)}
-                    onRename={renameDashboard}
-                />
-            )}
-            <ConfirmDialog
-                open={asking?.kind === 'delete'}
-                onOpenChange={(open) => {
-                    if (!open) setAsking(null)
-                }}
-                question={`Delete ${asking?.kind === 'delete' ? asking.board.name : 'the dashboard'}?`}
-                detail={
-                    asking?.kind === 'delete'
-                        ? `Its ${String(asking.board.widgets.length)} widgets and their to-dos go with it. This cannot be undone.`
-                        : undefined
+        <RailDrops>
+            <Shell
+                palette={palette}
+                desktop={frame.desktop}
+                route={route.join('/')}
+                rail={
+                    <Rail
+                        mark={<TidevannMark />}
+                        markHref="#/"
+                        name="Tidevann"
+                        groups={groups}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                where="tidevann.example.org"
+                                local
+                                onSettings={() => go('/settings')}
+                                scheme={frame.appearance.settings.scheme}
+                                onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
+                            />
+                        }
+                    />
                 }
-                confirm={{
-                    label: 'Delete',
-                    destructive: true,
-                    onConfirm: () => {
-                        if (asking?.kind !== 'delete') return
-                        const gone = asking.board
-                        setAsking(null)
-                        void deleteDashboard(gone, prefs, all)
-                    },
-                }}
-            />
-        </Shell>
+                top={
+                    <TopBar
+                        trail={trail}
+                        actions={
+                            <>
+                                <IconButton label="New dashboard" variant="ghost" size="icon-sm" onClick={() => setAsking({ kind: 'new' })}>
+                                    <Plus aria-hidden />
+                                </IconButton>
+                                <IconButton
+                                    label={prefs.live ? 'Pause live data' : 'Follow live data'}
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    onClick={() => setLive(!prefs.live)}
+                                >
+                                    {prefs.live ? <Pause aria-hidden /> : <Play aria-hidden />}
+                                </IconButton>
+                            </>
+                        }
+                    />
+                }
+                foot={<Foot prefs={prefs} />}
+            >
+                <Page className={section === 'dashboards' ? 'h-full' : undefined}>{content}</Page>
+                {settings.open && prefsRows.rows !== undefined && <Settings prefs={prefs} frame={frame} onClose={settings.close} />}
+                {(asking?.kind === 'new' || asking?.kind === 'rename') && (
+                    <DashboardDialog
+                        renaming={asking.kind === 'rename' ? asking.board : undefined}
+                        taken={all.map((one) => one.name)}
+                        onClose={() => setAsking(null)}
+                        onCreate={(name, from) => createDashboard(name, from, prefs)}
+                        onRename={renameDashboard}
+                    />
+                )}
+                <ConfirmDialog
+                    open={asking?.kind === 'delete'}
+                    onOpenChange={(open) => {
+                        if (!open) setAsking(null)
+                    }}
+                    question={`Delete ${asking?.kind === 'delete' ? asking.board.name : 'the dashboard'}?`}
+                    detail={
+                        asking?.kind === 'delete'
+                            ? `Its ${String(asking.board.widgets.length)} widgets and their to-dos go with it. This cannot be undone.`
+                            : undefined
+                    }
+                    confirm={{
+                        label: 'Delete',
+                        destructive: true,
+                        onConfirm: () => {
+                            if (asking?.kind !== 'delete') return
+                            const gone = asking.board
+                            setAsking(null)
+                            void deleteDashboard(gone, prefs, all)
+                        },
+                    }}
+                />
+            </Shell>
+        </RailDrops>
     )
 }

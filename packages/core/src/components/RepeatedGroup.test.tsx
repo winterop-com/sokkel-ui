@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
+import { RepeatedDrag } from './RepeatedDrag'
 import { RepeatedGroup } from './RepeatedGroup'
 import { SchemaForm, useSchemaForm } from './schema/SchemaForm'
 import type { JsonSchema } from './schema/read'
@@ -59,5 +60,17 @@ describe("a schema form's list of records", () => {
         expect(html).toContain('<fieldset')
         expect(html).toContain('<span class="sr-only">required</span>')
         expect(html).toContain('aria-label="Remove Item 1"')
+    })
+
+    it('draws a grip on each row only inside a RepeatedDrag', () => {
+        const group = (
+            <RepeatedGroup label="Services" rows={ROWS} onMove={() => undefined}>
+                {(key) => <span>{key}</span>}
+            </RepeatedGroup>
+        )
+        expect(renderToStaticMarkup(group)).not.toContain('aria-label="Move Item 1"')
+        const dragged = renderToStaticMarkup(<RepeatedDrag>{group}</RepeatedDrag>)
+        expect(dragged).toContain('aria-label="Move Item 1"')
+        expect(dragged).toContain('aria-label="Move Item 2"')
     })
 })

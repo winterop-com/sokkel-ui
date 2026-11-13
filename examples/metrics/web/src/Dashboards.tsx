@@ -53,14 +53,7 @@ export function DashboardsPage({
     onReorder: (order: string[]) => Promise<unknown>
 }) {
     const [deleting, setDeleting] = useState<Dashboard | null>(null)
-    // The order as last dragged here, drawn until the backend has kept it.
-    const [held, setHeld] = useState<readonly Dashboard[] | null>(null)
-    const shown = held ?? all
-    const reorder = (from: number, to: number) => {
-        const next = moveItem(shown, from, to)
-        setHeld(next)
-        void onReorder(next.map((board) => board.id)).finally(() => setHeld(null))
-    }
+    const reorder = (from: number, to: number) => void onReorder(moveItem(all, from, to).map((board) => board.id))
     const open = (board: Dashboard) => go(`/d/${board.id}`, kept)
     const actions = (board: Dashboard): DataAction[] => [
         { id: 'open', label: 'Open', icon: <ExternalLink />, onSelect: () => open(board) },
@@ -84,7 +77,7 @@ export function DashboardsPage({
                 variant="list"
                 minWidth="auto"
                 columns={COLUMNS}
-                rows={shown}
+                rows={all}
                 rowLabel={(board) => board.title}
                 onReorder={reorder}
                 rowKey={(board) => board.id}

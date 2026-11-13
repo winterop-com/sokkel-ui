@@ -6,7 +6,7 @@ import { BoardCard } from './board/BoardCard'
 import { DataTable } from './DataTable'
 import { arrangedIndex, DashboardArrange } from './dashboard/DashboardArrange'
 import { DashboardPanel } from './dashboard/DashboardGrid'
-import { takes, type DragData } from './DragDrop'
+import { carriedTo, takes, type DragData } from './DragDrop'
 import { SortableGrid, SortableList } from './Sortable'
 import { rowLanding } from './table-reorder'
 
@@ -19,6 +19,23 @@ describe('a drag target', () => {
         expect(takes({ kind: 'cards', label: 'Larkspur' }, row)).toBe(false)
         expect(takes({ kind: 'cards', label: 'Larkspur', accepts: (drag) => drag.kind === 'files' }, row)).toBe(true)
         expect(takes(undefined, row)).toBe(false)
+    })
+})
+
+describe('a thing carried by the arrow keys', () => {
+    // Four table rows, 40 pixels apart, the first picked up.
+    const rows = [0, 40, 80, 120].map((top) => ({ left: 0, top }))
+    it('goes to the nearest place that way, just past its middle going down and just before it going up', () => {
+        expect(carriedTo('ArrowDown', rows[0], rows)).toEqual({ x: 0, y: 41 })
+        expect(carriedTo('ArrowDown', { left: 0, top: 41 }, rows)).toEqual({ x: 0, y: 81 })
+        expect(carriedTo('ArrowUp', { left: 0, top: 81 }, rows)).toEqual({ x: 0, y: 79 })
+        expect(carriedTo('ArrowUp', { left: 0, top: 79 }, rows)).toEqual({ x: 0, y: 39 })
+    })
+
+    it('stays where it is with nothing that way, or on a key that is no arrow', () => {
+        expect(carriedTo('ArrowUp', rows[0], rows)).toBeUndefined()
+        expect(carriedTo('ArrowDown', { left: 0, top: 121 }, rows)).toBeUndefined()
+        expect(carriedTo('Space', rows[0], rows)).toBeUndefined()
     })
 })
 
