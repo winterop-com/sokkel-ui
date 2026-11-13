@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 
+import { DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
@@ -87,6 +88,31 @@ function FailedPage() {
             >
                 {null}
             </PageState>
+        </Ground>
+    )
+}
+
+/** A table whose read was refused, the state drawn in the table's own panel without a box of its own. */
+function InTable() {
+    return (
+        <Ground>
+            <DataTable
+                rows={[] as { job: string }[]}
+                columns={[{ id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (row) => row.job }]}
+                rowKey={(row) => row.job}
+                empty={
+                    <PageState
+                        loading={false}
+                        status={422}
+                        frame={false}
+                        error="The filter names fields the server does not know."
+                        problems={['`owner` is not a field of a run', '`since` must be a date, such as `2026-03-01`']}
+                        onRetry={() => undefined}
+                    >
+                        {null}
+                    </PageState>
+                }
+            />
         </Ground>
     )
 }
@@ -238,6 +264,11 @@ export const Failed: StoryObj = { name: 'Failed page', render: () => <FailedPage
  * a part of the page that could not be read (`partRefused`) rather than as the server refusing the page.
  */
 export const Secondary: StoryObj = { name: 'Secondary read', render: () => <SecondaryRead /> }
+/**
+ * A refused read inside a table: `frame={false}` drops the state's box, so the table's panel is
+ * its only edge, and `problems` lists each failure the refusal named.
+ */
+export const InATable: StoryObj = { name: 'In a table', render: () => <InTable /> }
 export const Unfold: StoryObj = { name: 'Unfoldable', render: () => <Unfolding /> }
 /**
  * A run's steps as a list of mixed rows, held from outside (`open`, `onOpenChange`) so Open all

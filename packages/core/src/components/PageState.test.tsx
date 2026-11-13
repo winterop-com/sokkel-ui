@@ -113,3 +113,27 @@ describe('PageState headingLevel', () => {
         expect(failed({ headingLevel: 'h2' })).toContain('<h2 class="font-medium">The server refused this read</h2>')
     })
 })
+
+describe('PageState frame and problems', () => {
+    it('draws its own box by default and none with frame={false}', () => {
+        expect(failed()).toContain('bg-card')
+        expect(failed({ frame: false })).not.toContain('bg-card')
+        expect(failed({ frame: false })).not.toContain('border-border-strong')
+    })
+
+    it('lists each problem under the diagnostic', () => {
+        const html = failed({ problems: ['`owner` is not a field', 'since must be a date'] })
+        expect(html).toMatch(/<ul[^>]*data-slot="page-state-problems"[^>]*><li>.*owner.*<\/li><li>.*since must be a date.*<\/li><\/ul>/)
+    })
+
+    it('holds a diagnostic that is a list, in a block rather than a paragraph', () => {
+        const html = failed({
+            error: (
+                <ul>
+                    <li>one</li>
+                </ul>
+            ),
+        })
+        expect(html).not.toMatch(/<p[^>]*><ul>/)
+    })
+})

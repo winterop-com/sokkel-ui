@@ -246,6 +246,8 @@ export interface ConfirmDialogProps {
     closeOnOutsidePress?: boolean
     /** The element focused when the question opens, such as a field in its body. */
     initialFocus?: RefObject<HTMLElement | null>
+    /** Held above the answers: why the server refused the last one, as a `ProblemLine`. */
+    status?: ReactNode
     words?: Partial<DialogShellWords>
 }
 
@@ -263,6 +265,7 @@ export function ConfirmDialog({
     children,
     closeOnOutsidePress,
     initialFocus,
+    status,
     words,
 }: ConfirmDialogProps) {
     return (
@@ -276,6 +279,7 @@ export function ConfirmDialog({
             confirm={confirm}
             closeOnOutsidePress={closeOnOutsidePress}
             initialFocus={initialFocus}
+            status={status}
             words={words}
         >
             {children}

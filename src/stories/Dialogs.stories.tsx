@@ -17,6 +17,9 @@ export default meta
 /** A question with one answer, and no body. */
 export const Confirm: StoryObj = { render: () => <danger.ConfirmDelete /> }
 
+/** The answer refused by the server, said in one line above the answers (`status`, a `ProblemLine`). */
+export const ConfirmRefused: StoryObj = { name: 'Confirm refused', render: () => <danger.ConfirmRefused /> }
+
 /** One field, prefilled; Rename is shut while the name is unchanged, and Enter renames. */
 export const Rename: StoryObj = { name: 'Rename', render: () => <small.Rename /> }
 
