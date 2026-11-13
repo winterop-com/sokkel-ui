@@ -1,8 +1,7 @@
 import { distinct, labelOf, numberOf } from '../data'
-import { SERIES_ORDER, tooltipMarkup } from '../look'
+import { tooltipMarkup } from '../look'
 import { tickWriter, valueLabels, written } from './categories'
-import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
-import type { LegendItem } from '../ChartLegend'
+import { colorOf, type ChartBuilder } from './spec'
 
 /**
  * One point per row, `x` against `y`, both numbers; `series` colors the points by a field's label
@@ -57,10 +56,4 @@ export const scatter: ChartBuilder = (spec, look) => {
                 ),
         })),
     }
-}
-
-/** A scatter's legend: one entry per group of points. */
-export function scatterLegend(spec: ChartSpec): LegendItem[] {
-    const groups = spec.series === undefined ? ['All'] : distinct(spec.rows, spec.series, spec.seriesOrder)
-    return groups.map((name, index) => ({ key: name, label: name, color: legendColor(spec, name, index, SERIES_ORDER) }))
 }

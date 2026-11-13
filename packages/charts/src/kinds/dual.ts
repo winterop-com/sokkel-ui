@@ -1,6 +1,19 @@
 import { tooltipMarkup } from '../look'
-import { compactWritten, endsStack, farCorners, shaped, tickWriter, written } from './categories'
-import { colorOf, fieldsOf, isDashed, stackOf, unitAt, type ChartBuilder, type ChartLayer, type ChartSpec } from './spec'
+import { compactWritten, endsStack, farCorners, tickWriter, written } from './categories'
+import { shaped } from './legends'
+import {
+    categoryLabels,
+    categoryText,
+    colorOf,
+    isFigure,
+    fieldsOf,
+    isDashed,
+    stackOf,
+    unitAt,
+    type ChartBuilder,
+    type ChartLayer,
+    type ChartSpec,
+} from './spec'
 
 type Side = 'left' | 'right'
 
@@ -20,7 +33,7 @@ function layerOf(spec: ChartSpec, name: string, index: number): Required<ChartLa
  * `stacks`, never lines, and a `dashed` series is a thin dashed line, as a target is. The right
  * axis keeps the left one's grid unless its range is fixed. Reads `x`, `y`, `series`,
  * `aggregate`, `order`, `seriesOrder`, `layers`, `axes`, `stack`, `stacks`, `dashed`, `colors`,
- * `format`, `unit`, `smooth` and `labelEvery`.
+ * `format`, `unit`, `smooth`, `labelEvery` and `formatCategory`.
  */
 export const dual: ChartBuilder = (spec, look) => {
     const fields = fieldsOf(spec)
@@ -76,19 +89,25 @@ export const dual: ChartBuilder = (spec, look) => {
                 points: { axisValueLabel: string; seriesName: string; seriesIndex: number; value: number | null; color: string }[],
             ) =>
                 tooltipMarkup(
-                    points[0]?.axisValueLabel ?? '',
-                    points.map((point) => ({
-                        label: point.seriesName,
-                        value: sideOf(point.seriesIndex).write(point.value),
-                        color: point.color,
-                    })),
+                    categoryText(spec, points[0]?.axisValueLabel ?? ''),
+                    points
+                        .filter((point) => isFigure(point.value))
+                        .map((point) => ({
+                            label: point.seriesName,
+                            value: sideOf(point.seriesIndex).write(point.value),
+                            color: point.color,
+                        })),
                 ),
         },
         grid: { left: 4, right: 10, top: named ? 26 : 10, bottom: 4 },
         xAxis: {
             type: 'category',
             data: categories,
-            axisLabel: { interval: spec.labelEvery === undefined ? 'auto' : spec.labelEvery - 1, hideOverlap: true },
+            axisLabel: {
+                interval: spec.labelEvery === undefined ? 'auto' : spec.labelEvery - 1,
+                hideOverlap: true,
+                ...categoryLabels(spec),
+            },
         },
         yAxis: twoAxes ? [valueAxis('left'), valueAxis('right')] : [valueAxis('left')],
         series: series.map((entry, index) => {

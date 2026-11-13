@@ -4,7 +4,7 @@ import { EChart, type ChartHandle } from './EChart'
 import { useFrameData } from './frame-data'
 import type { ChartKind, ChartSpec } from './kinds'
 import type { ChartLook } from './look'
-import { useKinds } from './use-kinds'
+import { useBuilder } from './use-builder'
 
 export type ChartProps = ChartSpec & {
     kind: ChartKind
@@ -23,16 +23,13 @@ export type ChartProps = ChartSpec & {
  * `kind` and the fields alone, so a view of data is a choice, not code. Inside a `ChartFrame`,
  * pass the frame's state through so its legend hides and highlights series; `chartLegend` gives
  * the frame its legend for the same spec. Keep `rows` stable between renders, as the chart is
- * built again when they change. The kinds' builders load with the first chart, beside the engine.
+ * built again when they change. A kind's builder loads with the first chart of that kind, beside the engine.
  */
 export function Chart({ kind, label, hidden, hovered, handle, animate, className, ...spec }: ChartProps) {
     const kept = useSpec(spec)
     useFrameData(kind, kept)
-    const kinds = useKinds()
-    const option = useMemo(
-        () => (kinds === undefined ? null : (look: ChartLook) => kinds[kind].build(kept, look, hidden)),
-        [kinds, kind, kept, hidden],
-    )
+    const build = useBuilder(kind)
+    const option = useMemo(() => (build === undefined ? null : (look: ChartLook) => build(kept, look, hidden)), [build, kept, hidden])
     return (
         <EChart option={option} label={label} hidden={hidden} hovered={hovered} handle={handle} animate={animate} className={className} />
     )
