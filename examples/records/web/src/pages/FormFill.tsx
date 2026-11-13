@@ -53,7 +53,7 @@ import {
     type Question,
 } from '../data/forms'
 import { LEVEL_LABEL, PLACE_TREE, pathOf, placeOf } from '../data/geo'
-import { count, KindBadge, useFoot } from '../ui'
+import { count, KindBadge, sectionTrail, useFoot } from '../ui'
 
 /** Where a kind of form is filed from, said under the place's label. */
 const PLACE_MEANING: Record<Form['kind'], string> = {
@@ -84,7 +84,7 @@ export function FormFill({ formId, householdId, keepPlace }: { formId: string; h
     if (form === undefined)
         return (
             <Page>
-                <PageHeader title="No such form" onBack={() => go('/forms')} words={{ back: 'All forms' }} />
+                <PageHeader title="No such form" trail={sectionTrail('Forms', '/forms')} trailInTop />
                 <PageState
                     loading={false}
                     status={404}
@@ -253,8 +253,8 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
                 <PageHeader
                     title={form.title}
                     code={form.id}
-                    onBack={() => go('/forms')}
-                    words={{ back: 'All forms' }}
+                    trail={sectionTrail('Forms', '/forms')}
+                    trailInTop
                     description={form.description}
                     meta={
                         <>

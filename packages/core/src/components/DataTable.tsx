@@ -81,7 +81,11 @@ export type DataCellEdit<T> =
     | (CellEditing<T, 'text'> & { options?: undefined })
     | (CellEditing<T, 'multiline'> & { options?: undefined })
     | (CellEditing<T, 'number'> & { options?: undefined })
-    | (CellEditing<T, 'date'> & { options?: undefined })
+    | (CellEditing<T, 'date'> & {
+          options?: undefined
+          /** The day the date editor's calendar starts its weeks on, the app's: 1 for Monday (the default), 0 for Sunday. */
+          weekStartsOn?: 0 | 1
+      })
     | (CellEditing<T, 'time'> & { options?: undefined })
     | (CellEditing<T, 'select'> & {
           /** The choices, the same for every row or a row's own. */
@@ -581,6 +585,11 @@ export function columnLeast(
     return column.width === 'content' ? contentTrack(needs[column.id], column) : trackMin(column.width)
 }
 
+/** The width a table stacks below when it names none: a phone's for a list, which also stacks once its columns no longer fit, and a little wider for a table. */
+export function stackDefault(auto: boolean): number {
+    return auto ? 480 : 576
+}
+
 /**
  * Whether the rows stack as cards: below `stackBelow` (`stackWidth`, in pixels) once the columns'
  * least width (`columnsWidth`) no longer fits too, or with `minWidth="auto"` below `stackBelow` or
@@ -973,7 +982,9 @@ export interface DataTableProps<T> {
      * is narrower than `minWidth` too, the table shows each row as a card: the first column its title
      * and every other a labeled line. A table whose columns fit stays a table, so a small panel on a
      * wide screen keeps its rows. It is the box's width, never the window's, so the table holds up in
-     * any container. `false` keeps the table, which then scrolls sideways.
+     * any container. `false` keeps the table, which then scrolls sideways. 576 for a table; 480, a
+     * phone's width, for a list, which stacks once its columns no longer fit too, so a list in a
+     * narrow panel on a wide screen keeps its rows while they fit.
      */
     stackBelow?: number | string | false
     /**
@@ -1200,7 +1211,7 @@ export function DataTable<T>({
     onViewChange,
     cardWidth = '12rem',
     cardHeight = '16rem',
-    stackBelow = 576,
+    stackBelow: ownStackBelow,
     stackLayout = 'labeled',
     cellFocus = 'underline',
     minWidth: ownMinWidth,
@@ -1241,6 +1252,7 @@ export function DataTable<T>({
     const auto = rowSizing === 'auto'
     const list = variant === 'list'
     const minWidth = ownMinWidth ?? (list ? 'auto' : '48rem')
+    const stackBelow = ownStackBelow ?? stackDefault(minWidth === 'auto')
 
     // Children loaded on demand, kept by the table unless `childRows` gives them.
     const [loaded, setLoaded] = useState(NO_CHILDREN as ReadonlyMap<string, readonly T[]>)

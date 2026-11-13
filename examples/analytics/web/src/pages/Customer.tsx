@@ -294,7 +294,6 @@ export function Customer({ id }: { id: string }) {
                         variant="list"
                         framed={false}
                         minWidth="auto"
-                        stackBelow={480}
                         columns={invoiceColumns}
                         rows={invoices}
                         rowKey={(invoice) => invoice.id}

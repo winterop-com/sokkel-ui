@@ -157,7 +157,7 @@ type Patch = Partial<Omit<Task, 'id'>>
 
 const save = (task: Task, patch: Patch) => tasks.update(task.id, patch).then(() => undefined)
 
-function columns(now: Date, save: (task: Task, patch: Patch) => Promise<void>): DataColumn<Task>[] {
+function columns(now: Date, save: (task: Task, patch: Patch) => Promise<void>, weekStartsOn: 0 | 1): DataColumn<Task>[] {
     return [
         {
             id: 'done',
@@ -190,11 +190,12 @@ function columns(now: Date, save: (task: Task, patch: Patch) => Promise<void>): 
         {
             id: 'due',
             header: 'Due',
-            width: '8rem',
+            width: '9.5rem',
             cell: (task) => <DueText date={task.due === null ? undefined : dateOf(task.due)} now={now} done={isDone(task)} />,
             sortValue: (task) => task.due ?? '9999',
             edit: {
                 editor: 'date',
+                weekStartsOn,
                 value: (task) => task.due,
                 save: (task, value) => save(task, { due: value }),
             },
@@ -505,7 +506,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                             variant="list"
                             minWidth="auto"
                             stackLayout="compact"
-                            columns={columns(now, change)}
+                            columns={columns(now, change, mine.weekStart === 'sunday' ? 0 : 1)}
                             rows={shown}
                             rowKey={(task) => task.id}
                             rowLabel={(task) => task.title}

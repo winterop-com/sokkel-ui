@@ -14,7 +14,7 @@ import { DEFAULT_PREFS, PEOPLE, PROJECTS, type Person, type Prefs, type Project 
 
 /** The preferences each section holds, so Reset to defaults puts back those and leaves the rest. */
 const HELD: Record<string, (keyof Omit<Prefs, 'id'>)[]> = {
-    lists: ['startList', 'view', 'order', 'showDone'],
+    lists: ['startList', 'view', 'order', 'weekStart', 'showDone'],
     adding: ['assignee', 'project'],
 }
 
@@ -32,7 +32,7 @@ function Choose<T extends string>({
 }) {
     return (
         <Select items={items} value={value} onValueChange={(next) => onChange(String(next) as T)}>
-            <SelectTrigger aria-label={label} className="w-40">
+            <SelectTrigger aria-label={label} widest={items.map((item) => item.label)}>
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -125,6 +125,23 @@ export function Settings({
                                         { value: 'due', label: 'Due date' },
                                     ]}
                                     onChange={(order) => setPrefs({ order })}
+                                />
+                            ),
+                        },
+                        {
+                            id: 'week-start',
+                            title: 'Weeks start on',
+                            description: 'The first day of each week in the calendar a due date is picked from.',
+                            keywords: ['monday', 'sunday', 'calendar', 'due'],
+                            control: (
+                                <Choose<Prefs['weekStart']>
+                                    label="Weeks start on"
+                                    value={prefs.weekStart}
+                                    items={[
+                                        { value: 'monday', label: 'Monday' },
+                                        { value: 'sunday', label: 'Sunday' },
+                                    ]}
+                                    onChange={(weekStart) => setPrefs({ weekStart })}
                                 />
                             ),
                         },

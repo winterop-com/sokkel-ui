@@ -9,7 +9,7 @@ import type { GraphRouting, GraphSpacing } from '@winterop-com/sokkel-ui-graph/l
 import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { RunGraph } from '@winterop-com/sokkel-ui-graph/RunGraph'
 import { Stage } from './Frame'
-import { FAILED, FAN_OUT_RUN, LARGE, LONG_NAMES, NIGHTLY_EXPORT } from './data'
+import { FAILED, FAN_OUT_RUN, LARGE, LONG_NAMES, NIGHTLY_EXPORT, WIDE_SOURCES } from './data'
 
 function Laid({
     steps,
@@ -21,7 +21,9 @@ function Laid({
     maxNodeWidth,
     wrapWidth,
     wrapToCanvas,
+    direction,
 }: {
+    direction?: 'right' | 'down'
     steps: PipelineStep[]
     title: string
     meta: string
@@ -45,6 +47,7 @@ function Laid({
                 maxNodeWidth={maxNodeWidth}
                 wrapWidth={wrapWidth}
                 wrapToCanvas={wrapToCanvas}
+                direction={direction}
                 words={{ label: title }}
             />
         </Stage>
@@ -155,6 +158,16 @@ export const RunInSplines: Story = {
  */
 export const Wrapped: Story = {
     render: () => <Laid steps={LARGE} title="rebuild-index" meta="harbor, 57 steps wrapped to the canvas" wrapWidth={1120} wrapToCanvas />,
+}
+
+/**
+ * `wrapToCanvas` on a graph running down: send-digest's six sources stand side by side in one rank,
+ * which is cut into rows of as many as the canvas holds, so on a phone the graph runs down without
+ * hanging off the sides.
+ */
+export const WideRank: Story = {
+    name: 'Wide rank',
+    render: () => <Laid steps={WIDE_SOURCES} title="send-digest" meta="larkspur, six sources run down" direction="down" wrapToCanvas />,
 }
 
 /**

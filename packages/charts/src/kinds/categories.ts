@@ -29,6 +29,11 @@ function quietCategory<T extends { axisLabel?: object }>(spec: ChartSpec, look: 
 }
 
 /** The value axis' range: from `min` to `max`, or 0 to 100% in quarters where the figures stack to 100%. */
+/** Whether a line's value axis fits its figures: `fit` on a chart not stacked to shares. */
+function fitted(spec: ChartSpec) {
+    return spec.fit === true && spec.stack !== 'percent'
+}
+
 function valueRange(spec: ChartSpec) {
     return spec.stack === 'percent' ? { min: 0, max: 100, interval: 25 } : { min: spec.min, max: spec.max }
 }
@@ -99,8 +104,9 @@ export const bar: ChartBuilder = (spec, look) => {
  * A line per series across the categories, or areas filled under them, evenly or fading by `fill`;
  * `stacks` puts series in stacks of their own, a `dashed` series is drawn as a reference with no
  * area, the steps after the first are dashed lines across at their values, the `marks` dashed
- * lines down at their categories, and `min` and `max` fix the value axis. `quiet` hides the value
- * axis and its lines and writes the categories in mono.
+ * lines down at their categories, and `min` and `max` fix the value axis; `fit` fits it to the
+ * figures rather than starting it at zero, for readings that never near zero, such as a pulse.
+ * `quiet` hides the value axis and its lines and writes the categories in mono.
  */
 function lines(filled: boolean): ChartBuilder {
     return (spec, look) => {
@@ -110,7 +116,7 @@ function lines(filled: boolean): ChartBuilder {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
             grid: { left: 4, right: 10, top: markRoom(spec, look), bottom: 4 },
             xAxis: quietCategory(spec, look, edgeAxis(spec, categories)),
-            yAxis: quietValue(spec, { type: 'value', ...valueRange(spec), ...valueLabels(spec) }),
+            yAxis: quietValue(spec, { type: 'value', scale: fitted(spec), ...valueRange(spec), ...valueLabels(spec) }),
             series: series.map((entry, index) => {
                 const color = colorOf(spec, look, entry.name, index)
                 const stack = stackOf(spec, entry.name)

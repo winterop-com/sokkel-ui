@@ -1394,7 +1394,7 @@ export const RowMenus: StoryObj = {
 
 const OWNER_OPTIONS = JOB_OWNERS.map((owner) => ({ value: owner }))
 
-/** Tidevann's jobs with their settings edited in place, each cell saved on its own after a short wait. */
+/** Tidevann's jobs with their settings edited in place, each cell saved on its own after a short wait; the pause date's calendar starts its weeks on Sunday with `weekStartsOn`. */
 function EditableJobs({ cellFocus, count, fill = true }: { cellFocus?: CellFocus; count?: number; fill?: boolean }) {
     const [jobs, setJobs] = useState(count === undefined ? JOB_SETTINGS : JOB_SETTINGS.slice(0, count))
     const change = <K extends keyof JobSetting>(job: JobSetting, field: K, value: JobSetting[K]) =>
@@ -1472,6 +1472,7 @@ function EditableJobs({ cellFocus, count, fill = true }: { cellFocus?: CellFocus
             sortValue: (job) => job.pausedUntil ?? '',
             edit: {
                 editor: 'date',
+                weekStartsOn: 0,
                 value: (job) => job.pausedUntil ?? null,
                 save: (job, day) => change(job, 'pausedUntil', day),
             },

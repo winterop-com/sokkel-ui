@@ -318,3 +318,21 @@ export const JOB_RUNS: JobRun[] = [
         steps: runOf(LONG_NAMES, {}),
     },
 ]
+
+/** The send-digest job: six sources side by side feeding one join, a rank too wide for a phone when run down. */
+export const WIDE_SOURCES: PipelineStep[] = [
+    { code: 'fetch-orders', name: 'Fetch orders', kind: 'http', needs: [] },
+    { code: 'fetch-inventory', name: 'Fetch inventory', kind: 'http', needs: [] },
+    { code: 'fetch-runs', name: 'Fetch runs', kind: 'http', needs: [] },
+    { code: 'fetch-sites', name: 'Fetch sites', kind: 'http', needs: [] },
+    { code: 'fetch-people', name: 'Fetch people', kind: 'http', needs: [] },
+    { code: 'fetch-projects', name: 'Fetch projects', kind: 'http', needs: [] },
+    {
+        code: 'transform',
+        name: 'Join and reshape',
+        kind: 'sql',
+        needs: ['fetch-orders', 'fetch-inventory', 'fetch-runs', 'fetch-sites', 'fetch-people', 'fetch-projects'],
+    },
+    { code: 'validate', kind: 'schema', needs: ['transform'] },
+    { code: 'send-digest', name: 'Send digest', kind: 'email', needs: ['validate'] },
+]
