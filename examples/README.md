@@ -42,6 +42,12 @@ examples/
   podcast/       podcasts that really play: episodes spoken in the page with a transcript that
                  follows, chapters, speed, a sleep timer, the queue, New as an inbox, downloads,
                  Discover, stats and settings
+  dhis2/         a metadata and expression workbench on a simulated DHIS2-shaped server, showing the
+                 dhis2 add-on: indicators, validation rules and program rules written in its two
+                 expression languages, offered, checked and named as typed, run on the server's
+                 data values (a chart over the year, violations listed, a form whose fields react
+                 to the rules), its data elements and organization units, and a server version
+                 that hands the plugin another list of names
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -78,7 +84,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, Workbench on 4194)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
