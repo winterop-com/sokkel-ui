@@ -2,10 +2,11 @@ import { ArrowRight, SearchIcon, type LucideIcon } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
-import { activeRow, filterCommands, mergeCommands, termScore } from '../lib/commands'
+import { activeRow, filterCommands, mergeCommands, runCommand, termScore } from '../lib/commands'
 import { keyLabels } from '../lib/keys'
 import { cn } from '../lib/utils'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
+import { ProblemLine } from './problem-line'
 import { SearchResultBody, type SearchDetailTone } from './Search'
 import { Button } from './ui/button'
 import { Kbd, KbdGroup } from './ui/kbd'
@@ -33,6 +34,12 @@ export interface PaletteCommand {
     hint?: string
     /** An addressable code after the label, in the code face, such as a record's or a job's id. */
     code?: string
+    /**
+     * A quiet summary at the row's end, in the code face and set to the right where the row has
+     * room, such as a count, a size or when it last ran: a fact that need not become a second line.
+     * On a phone it folds under the label; a two-line row draws it at its end in the hint's place.
+     */
+    meta?: string
     /** Sets the label in the code face, for a command named by a code rather than words. */
     mono?: boolean
     /**
@@ -73,7 +80,12 @@ export interface PaletteCommand {
      * apart; left out where its group's `kind` already says it.
      */
     kind?: string
-    onSelect: () => void
+    /**
+     * Runs the command. A promise keeps the palette open, the row busy, until it settles: once it
+     * is fulfilled the palette closes, and a rejection keeps it open with why in a line over its
+     * foot, so a choice the app refuses is said where it was made.
+     */
+    onSelect: () => void | Promise<unknown>
 }
 
 /** The status inks a command's second line or hint can take. */
@@ -153,6 +165,10 @@ export interface CommandPaletteWords {
     /** Between the two presses of a row's sequence, as G then D. */
     /** The word between the keys of a sequence; "then" when absent. */
     sequence?: string
+    /** Names the spinner of a row whose command is running. */
+    running: string
+    /** Said where a command was refused with no words of its own. */
+    refused: string
 }
 
 /** The palette's own words in English; a palette with words of its own starts from these. */
@@ -164,6 +180,8 @@ export const COMMAND_PALETTE_WORDS: CommandPaletteWords = {
     open: 'Open',
     palette: 'Command palette',
     sequence: 'then',
+    running: 'Running',
+    refused: 'The command did not run.',
 }
 
 /** The strip along the palette's foot: the app's mark and name at its start, the keys at its end. */
@@ -220,8 +238,12 @@ export interface CommandPaletteProps {
 /**
  * The command palette: one search over everything an app can do, grouped, each row with its
  * icon, a hint in words or a code, and the keys that run it directly, a sequence's two presses with
- * the word `sequence` between them as the shortcuts dialog draws them. Choosing a row closes the
- * palette and runs it. A row with a `detail` or `artwork` is two lines tall, a picture or its icon
+ * the word `sequence` between them as the shortcuts dialog draws them. Choosing a row runs it and
+ * closes the palette; a command whose `onSelect` answers a promise keeps it open, its row busy,
+ * until the promise settles, closing once it is fulfilled and saying why under the rows when it is
+ * rejected (`words.refused` where the refusal has no words of its own). A row's `meta` is a quiet
+ * summary in the code face at its end, folding under the label on a phone, so a fact such as a
+ * count or a time need not become a second line. A row with a `detail` or `artwork` is two lines tall, a picture or its icon
  * on a tile at its start and its hint or code at its end, as a record found by a search is; the
  * second line may be a node, and a row's `tone` sets it, or a one-line row's hint, in a status ink,
  * so the palette serves as a standalone chooser whose rows say their state. The
@@ -263,12 +285,38 @@ export function CommandPalette({
     const [shown, setShown] = useState(open)
     // The chosen row, held so the foot can say its verb; each opening starts at the first row.
     const [chosen, setChosen] = useState('')
+    // The row whose command is running, and why the last one was refused; each opening starts with neither.
+    const [busy, setBusy] = useState<string | undefined>(undefined)
+    const [refusal, setRefusal] = useState<string | undefined>(undefined)
+    // Counts the openings, so a command that settles after the palette closed or opened again is let go.
+    const opening = useRef(0)
     if (open !== shown) {
         setShown(open)
+        setBusy(undefined)
+        setRefusal(undefined)
         if (open) {
             setQuery(defaultQuery)
             setChosen('')
         }
+    }
+    useLayoutEffect(() => {
+        opening.current += 1
+    }, [open])
+    /** Runs a command: the palette closes at once, or once the promise it returns is fulfilled. */
+    const run = (command: PaletteCommand) => {
+        if (busy !== undefined) return
+        setRefusal(undefined)
+        const at = opening.current
+        runCommand(command.onSelect, {
+            done: () => onOpenChange(false),
+            busy: (pending) => setBusy(pending ? rowValue(command) : undefined),
+            refused: (reason) => setRefusal(reason ?? words.refused),
+            current: () => opening.current === at,
+        })
+    }
+    const ask = (next: string) => {
+        setQuery(next)
+        setRefusal(undefined)
     }
     const score = filter === 'fuzzy' ? undefined : filter === 'terms' ? termScore : filter
     const listed = useMemo(() => (score === undefined ? merged : filterCommands(merged, query, score)), [merged, query, score])
@@ -315,7 +363,7 @@ export function CommandPalette({
                         {description}
                     </p>
                 )}
-                <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
+                <CommandInput placeholder={words.placeholder} value={query} onValueChange={ask} />
                 <CommandList ref={list} className={cn('max-h-[min(24rem,60svh)]', seeAll ? 'scroll-pb-12' : 'scroll-fade-b pb-1.5')}>
                     {found.length === 0 && (answer.state === 'idle' || answer.state === 'done') && (
                         <CommandEmpty>{words.empty}</CommandEmpty>
@@ -328,6 +376,43 @@ export function CommandPalette({
                                     const Icon = command.icon
                                     const hint = hintOf(command)
                                     const kind = command.kind === group.kind ? undefined : command.kind
+                                    const running = busy === rowValue(command)
+                                    const label = (
+                                        // On one line the hint gives way first, then the code, and the label last.
+                                        <span
+                                            className={cn(
+                                                'flex min-w-0 flex-1 items-baseline gap-x-2',
+                                                wrap && 'flex-wrap [&>*]:break-words',
+                                            )}
+                                        >
+                                            <span
+                                                className={cn('min-w-0', !wrap && 'truncate', command.mono === true && 'font-mono text-xs')}
+                                            >
+                                                {command.label}
+                                            </span>
+                                            {hint !== undefined && (
+                                                <span
+                                                    className={cn(
+                                                        'min-w-0 shrink-[4] text-xs',
+                                                        !wrap && 'truncate',
+                                                        command.tone === undefined ? 'text-muted-foreground' : TONE_INK[command.tone],
+                                                    )}
+                                                >
+                                                    {hint}
+                                                </span>
+                                            )}
+                                            {command.code !== undefined && (
+                                                <span
+                                                    className={cn(
+                                                        'min-w-0 shrink-[2] font-mono text-xs text-muted-foreground',
+                                                        !wrap && 'truncate',
+                                                    )}
+                                                >
+                                                    {command.code}
+                                                </span>
+                                            )}
+                                        </span>
+                                    )
                                     return (
                                         <CommandItem
                                             key={command.id}
@@ -335,10 +420,8 @@ export function CommandPalette({
                                             value={rowValue(command)}
                                             keywords={findBy(command)}
                                             disabled={Boolean(command.disabled)}
-                                            onSelect={() => {
-                                                onOpenChange(false)
-                                                command.onSelect()
-                                            }}
+                                            aria-busy={running || undefined}
+                                            onSelect={() => run(command)}
                                         >
                                             {twoLines(command) ? (
                                                 <SearchResultBody
@@ -352,63 +435,40 @@ export function CommandPalette({
                                             ) : (
                                                 <>
                                                     {Icon !== undefined && <Icon className="text-muted-foreground" aria-hidden />}
-                                                    {/* On one line the hint gives way first, then the code, and the label last. */}
-                                                    <span
-                                                        className={cn(
-                                                            'flex min-w-0 flex-1 items-baseline gap-x-2',
-                                                            wrap && 'flex-wrap [&>*]:break-words',
-                                                        )}
-                                                    >
-                                                        <span
-                                                            className={cn(
-                                                                'min-w-0',
-                                                                !wrap && 'truncate',
-                                                                command.mono === true && 'font-mono text-xs',
-                                                            )}
-                                                        >
-                                                            {command.label}
-                                                        </span>
-                                                        {hint !== undefined && (
-                                                            <span
-                                                                className={cn(
-                                                                    'min-w-0 shrink-[4] text-xs',
-                                                                    !wrap && 'truncate',
-                                                                    command.tone === undefined
-                                                                        ? 'text-muted-foreground'
-                                                                        : TONE_INK[command.tone],
-                                                                )}
-                                                            >
-                                                                {hint}
+                                                    {command.meta === undefined ? (
+                                                        label
+                                                    ) : (
+                                                        // The summary stands at the row's end, and under the label on a phone.
+                                                        <span className="flex min-w-0 flex-1 items-baseline gap-x-3 max-sm:flex-col max-sm:items-stretch">
+                                                            {label}
+                                                            <span className="min-w-0 shrink-0 truncate font-mono text-xs text-muted-foreground tabular-nums max-sm:shrink">
+                                                                {command.meta}
                                                             </span>
-                                                        )}
-                                                        {command.code !== undefined && (
-                                                            <span
-                                                                className={cn(
-                                                                    'min-w-0 shrink-[2] font-mono text-xs text-muted-foreground',
-                                                                    !wrap && 'truncate',
-                                                                )}
-                                                            >
-                                                                {command.code}
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                </>
-                                            )}
-                                            {(kind !== undefined || command.keys !== undefined) && (
-                                                <CommandShortcut className="flex shrink-0 items-center gap-2">
-                                                    {kind !== undefined && <span className="text-faint">{kind}</span>}
-                                                    {command.keys !== undefined && (
-                                                        <span className="flex items-center gap-1.5">
-                                                            <Keys keys={command.keys} />
-                                                            {command.next !== undefined && (
-                                                                <>
-                                                                    {words.sequence}
-                                                                    <Keys keys={command.next} />
-                                                                </>
-                                                            )}
                                                         </span>
                                                     )}
+                                                </>
+                                            )}
+                                            {running ? (
+                                                <CommandShortcut className="flex shrink-0 items-center">
+                                                    <Spinner aria-label={words.running} />
                                                 </CommandShortcut>
+                                            ) : (
+                                                (kind !== undefined || command.keys !== undefined) && (
+                                                    <CommandShortcut className="flex shrink-0 items-center gap-2">
+                                                        {kind !== undefined && <span className="text-faint">{kind}</span>}
+                                                        {command.keys !== undefined && (
+                                                            <span className="flex items-center gap-1.5">
+                                                                <Keys keys={command.keys} />
+                                                                {command.next !== undefined && (
+                                                                    <>
+                                                                        {words.sequence}
+                                                                        <Keys keys={command.next} />
+                                                                    </>
+                                                                )}
+                                                            </span>
+                                                        )}
+                                                    </CommandShortcut>
+                                                )
                                             )}
                                         </CommandItem>
                                     )
@@ -476,6 +536,9 @@ export function CommandPalette({
                         </CommandItem>
                     )}
                 </CommandList>
+                {refusal !== undefined && (
+                    <ProblemLine className="-mx-(--palette-inset) border-t border-border px-3 py-2">{refusal}</ProblemLine>
+                )}
                 {foot === undefined ? (
                     <div className="hidden justify-end border-t border-border p-1.5 pointer-coarse:flex">
                         <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
@@ -548,7 +611,7 @@ function asResult(command: PaletteCommand): SearchResult {
         id: command.id,
         title: command.label,
         detail: typeof command.detail === 'string' ? command.detail : undefined,
-        meta: hintOf(command) ?? command.code,
+        meta: typeof command.disabled === 'string' ? command.disabled : (command.meta ?? command.hint ?? command.code),
         icon: command.icon,
         round: command.round,
         ...(typeof picture === 'string' ? { thumbnail: picture } : { artwork: picture }),

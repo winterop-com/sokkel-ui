@@ -28,6 +28,7 @@ export type PackageDir = (typeof PACKAGES)[number]
 const folders = (pkg: PackageDir): string[] => (pkg === 'core' ? ['components', 'hooks', 'lib'] : [''])
 
 const KIND_BUILDER = "a chart kind's builder, reached through the registry `kinds` exports"
+const KIND_LEGEND = "the legends of some kinds and the shaping they share with those kinds' builders, loaded through `kinds/legends`"
 
 /**
  * The modules a package builds but does not export, each with the reason, by their path under the
@@ -57,6 +58,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             "the captions button and menu `VideoPlayer` draws; its words are `VideoPlayer`'s and its options are in `media/captions`",
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
+        'components/problem-line':
+            "`ProblemLine` apart from `Problem`'s fold, for the palette to draw a refusal with; exported by `Problem`",
         'components/pickers': 'the popup the date and time fields pick in, and the list of times',
         'components/reasoning':
             "a model's thinking folded behind a line, which `AssistantReply` and `AnswerColumn` draw; `wordCount` is exported by `AssistantReply`",
@@ -128,7 +131,16 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'kinds/gauge': KIND_BUILDER,
         'kinds/hierarchy': KIND_BUILDER,
         'kinds/histogram': KIND_BUILDER,
-        'kinds/legends': "every kind's legend and the shaping it shares with the kind's builder, which `chart-legend` reads",
+        'kinds/legend-bullet': KIND_LEGEND,
+        'kinds/legend-fan': KIND_LEGEND,
+        'kinds/legend-flows': KIND_LEGEND,
+        'kinds/legend-histogram': KIND_LEGEND,
+        'kinds/legend-range': KIND_LEGEND,
+        'kinds/legend-rings': KIND_LEGEND,
+        'kinds/legend-series': KIND_LEGEND,
+        'kinds/legend-tree': KIND_LEGEND,
+        'kinds/legend-waterfall': KIND_LEGEND,
+        'kinds/legends': "each kind's legend, fetched the first time a frame lists one of its kind",
         'kinds/linked': KIND_BUILDER,
         'kinds/load': "each kind's builder, fetched the first time a chart of that kind is drawn",
         'kinds/parallel': KIND_BUILDER,

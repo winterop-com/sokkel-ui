@@ -330,6 +330,40 @@ export const SearchFailed: StoryObj = { name: 'Search failed', render: () => <Re
 /** Records as two lines, a drawn cover or a picture at the start, a person's round; one-line commands keep their height. */
 export const TwoLines: StoryObj = { name: 'Two lines', render: () => <Palette initial groups={TWO_LINES} /> }
 
+const SUMMARIES: PaletteGroup[] = [
+    {
+        title: 'Jobs',
+        commands: [
+            {
+                id: 'nightly-export',
+                label: 'nightly-export',
+                mono: true,
+                icon: Workflow,
+                meta: '4m 12s · 02:00',
+                onSelect: () => undefined,
+            },
+            { id: 'sync-inventory', label: 'sync-inventory', mono: true, icon: Workflow, meta: '38s · 01:30', onSelect: () => undefined },
+            { id: 'rebuild-index', label: 'rebuild-index', mono: true, icon: Workflow, meta: '12m 05s · 03:15', onSelect: () => undefined },
+            { id: 'send-digest', label: 'send-digest', mono: true, icon: Workflow, meta: 'not run yet', onSelect: () => undefined },
+        ],
+    },
+    {
+        title: 'Projects',
+        commands: [
+            { id: 'harbor', label: 'harbor', hint: 'exports and imports', icon: FolderGit2, meta: '12 jobs', onSelect: () => undefined },
+            { id: 'juniper', label: 'juniper', icon: FolderGit2, meta: '4 jobs', onSelect: () => undefined },
+            { id: 'larkspur', label: 'larkspur', icon: FolderGit2, meta: '7 jobs', keys: ['G', 'L'], onSelect: () => undefined },
+        ],
+    },
+]
+
+/**
+ * A summary at each row's end (`meta`): how long a job last ran and when, how many jobs a project
+ * holds. Quiet and in the code face, it stands to the right on one line and folds under the label
+ * on a phone, so a fact need not become a second line.
+ */
+export const Summaries: StoryObj = { render: () => <Palette initial groups={SUMMARIES} /> }
+
 const RUNS: PaletteGroup[] = [
     {
         title: 'Runs of nightly-export',
@@ -415,6 +449,33 @@ export const WideChooser: StoryObj = {
     name: 'Wide chooser',
     render: () => <Palette initial groups={STARTS} width="md" description="Choose how the new job starts." wrap />,
 }
+
+/** A command that answers after a moment, as a call to the server does. */
+const later = (answer: 'fulfil' | 'refuse', reason = '') =>
+    new Promise<void>((resolve, reject) => setTimeout(() => (answer === 'fulfil' ? resolve() : reject(new Error(reason))), 900))
+
+const ACTIONS: PaletteGroup[] = [
+    {
+        title: 'Run 4812',
+        commands: [
+            {
+                id: 'rerun',
+                label: 'Rerun nightly-export',
+                icon: RotateCcw,
+                onSelect: () => later('refuse', 'Only an owner of `harbor` can rerun `nightly-export`; ask ada.'),
+            },
+            { id: 'cancel', label: 'Cancel the run', icon: CircleStop, onSelect: () => later('fulfil') },
+            { id: 'log', label: 'Show the log', icon: ScrollText, keys: ['L'], onSelect: () => undefined },
+        ],
+    },
+]
+
+/**
+ * Commands that call the server: choosing one whose `onSelect` answers a promise keeps the palette
+ * open, the row busy, until it settles. Rerun is refused, so the palette stays and says why under
+ * its rows; Cancel the run is done, and the palette closes.
+ */
+export const Refused: StoryObj = { render: () => <Palette initial groups={ACTIONS} /> }
 
 const LOOKS = [
     { value: 'paper', label: 'Paper' },

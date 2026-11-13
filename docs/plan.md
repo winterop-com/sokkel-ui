@@ -61,8 +61,9 @@ selects, has a content column or draws a column or sort menu, its selection boxe
 until then and taking a press the same, so a plain table carries none of it. `CheckboxField` and
 `SchemaForm`'s sets of choices draw a plain box in the same look (`PlainCheckbox`, a button that
 ticks), so a forms page carries none of Base UI's checkbox either. A module that only asks whether a node is a part tells it by a mark, so it
-need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
-reads every kind.
+need not import the part (`isSoundVisualizer`), and `chartLegend` names a kind's legend without
+importing it: a frame loads that kind's legend the first time it lists one, and a legend's table
+mode loads `DataTable` the first time it is drawn.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
 blocks such a dependency's install scripts). The tag workflow publishes the eight packages to GitHub
@@ -268,7 +269,11 @@ mounted and takes it away when it unmounts; the shell holds the registry and lis
 its own by each group's `rank`, a screen's first at equal rank, groups of one title as one. An app
 that draws its own palette holds a registry with `useCommandRegistry`. A palette row with a `detail`
 or `artwork` (an image's address or a node, round for a person) is two lines tall, drawn as a search
-result is, and the palette's search results take `artwork` too. The palette matches by letters in
+result is, and the palette's search results take `artwork` too; a one-line row's `meta` is a quiet
+summary in the code face at its end, folding under the label on a phone. A command whose `onSelect`
+answers a promise keeps the palette open, its row busy, until it settles: fulfilled, the palette
+closes; rejected, it stays and says why in a `ProblemLine` under the rows, so a refusal is said
+where the choice was made. The palette matches by letters in
 order unless its `filter` (`paletteFilter` on `Shell`) is `terms`, the library's own: every word
 typed must be found in a command's label, `keywords`, hint, code, second line or group, and a label
 starting with the query comes first. `keywords` on a command, and on a rail entry through
