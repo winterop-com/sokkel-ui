@@ -38,10 +38,27 @@ export function Chart({ kind, label, hidden, hovered, handle, animate, className
     )
 }
 
-/** Whether two specs hold the same value in every field. */
-function sameSpec(a: ChartSpec, b: ChartSpec): boolean {
+/** Whether two values are the same, or a list or a record of the same entries, such as a `fieldNames` written inline. */
+function sameField(a: unknown, b: unknown): boolean {
+    if (Object.is(a, b)) return true
+    if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null || Array.isArray(a) !== Array.isArray(b)) return false
+    const one = a as Record<string, unknown>
+    const other = b as Record<string, unknown>
+    const keys = Object.keys(one)
+    return keys.length === Object.keys(other).length && keys.every((key) => Object.is(one[key], other[key]))
+}
+
+/**
+ * Whether two specs hold the same value in every field: the rows by identity, and a field holding
+ * a list or a record (`y`, `fieldNames`, `colors`) by its entries, so one written inline does not
+ * build the chart again on every draw.
+ */
+export function sameSpec(a: ChartSpec, b: ChartSpec): boolean {
     const keys = Object.keys(a) as (keyof ChartSpec)[]
-    return keys.length === Object.keys(b).length && keys.every((key) => Object.is(a[key], b[key]))
+    return (
+        keys.length === Object.keys(b).length &&
+        keys.every((key) => (key === 'rows' ? Object.is(a[key], b[key]) : sameField(a[key], b[key])))
+    )
 }
 
 /** The spec, kept as the same object while every field holds the same value, so a chart is built again only when one changes. */
