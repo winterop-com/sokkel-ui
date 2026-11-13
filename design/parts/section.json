@@ -1,0 +1,190 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "section",
+    "kind": "part",
+    "status": "draft",
+    "summary": "A titled part of a page. Boxed (the default): a bordered surface whose head is a bar of its own, its title set like a table's column heads. Flat: a heading over a rule with the content on the page's own ground. Either takes a count or fact beside the title, a description under it and actions at the head's end; a tone draws the body as a graph's dot grid or marks the section critical.",
+    "sources": {
+        "sokkel-ui": ["packages/core/src/components/Section.tsx", "packages/core/src/components/PaneHeader.tsx"],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/display.rs (Card with bar: no Section yet)",
+            "examples/storybook/src/stories/display.rs (Primitives/Display/Card)"
+        ]
+    },
+    "anatomy": {
+        "box": "The boxed variant's surface: the card's ground inside a 1px edge, rounded as a surface, clipping its content to its corners.",
+        "head": "The boxed variant's head bar across the box's top, on the section heads' ground over their rule: the mark, the title with its meta, the description under them, and the actions at its end. At least as tall as a listing's head row; it grows to hold a description.",
+        "flatHead": "The flat variant's heading line over a rule, on the page's own ground, with no inset of its own: the same pieces as the boxed head.",
+        "mark": "With tone critical: a warning mark before the title.",
+        "title": "The section's heading, an h2 cut short on one line. In the boxed head it is set like a table's column heads, in the text color; the section is labelled by it.",
+        "flatTitle": "The flat head's title, set as a section title.",
+        "meta": "A count or a short fact beside the title, in the code face, quieter than it; it drops under the title when both do not fit, cut short past that.",
+        "description": "A sentence under the title saying what the section holds; the head grows to hold it.",
+        "actions": "Controls at the head's end. They go under the title when they would leave it less than its room, and wrap from the end when wider than the head.",
+        "body": "The section's content: padded in the box unless flush; on the page's ground under the flat head, a section gap below it. With fill the box takes the height it is given and the body scrolls within it."
+    },
+    "options": {
+        "title": {"type": "node", "does": "The section's title."},
+        "meta": {"type": "node", "does": "A count or a short fact beside the title, drawn quieter than it."},
+        "description": {"type": "node", "does": "A sentence under the title: what this part of the page holds."},
+        "actions": {"type": "node", "does": "Controls at the head's end."},
+        "variant": {
+            "values": ["boxed", "flat"],
+            "default": "boxed",
+            "does": "boxed: a bordered surface with a head bar of its own. flat: a heading over a rule with the content on the page's own ground, for the rare page that wants it."
+        },
+        "tone": {
+            "values": ["plain", "graph", "critical"],
+            "default": "plain",
+            "does": "graph: the body on a graph canvas's dot grid, for a drawing with no ground of its own. critical: a rule in the critical tone (across the box's top, or under the flat head) and a warning mark before the title."
+        },
+        "headingId": {
+            "type": "text",
+            "does": "The heading's id, for something else to point at; the section is labelled by its heading either way."
+        },
+        "flush": {
+            "type": "boolean",
+            "default": false,
+            "does": "The body takes no padding, for content that fills the box to its edges, such as a list or a graph."
+        },
+        "fill": {
+            "type": "boolean",
+            "default": false,
+            "does": "The box takes the height its container gives it and its body scrolls within it, as an editor or a preview wants."
+        }
+    },
+    "sizes": {
+        "head": {
+            "height": "density.panel-head",
+            "padX": "density.panel-pad",
+            "gap": 8,
+            "note": "At least this tall: the mark, the title's column and the actions centered in it. The same height as a listing's head row."
+        },
+        "describedHead": {
+            "padY": 8,
+            "note": "With a description: the head grows to hold it, padded 8 down and up, its pieces set at the top."
+        },
+        "flatHead": {
+            "height": "density.panel-head",
+            "gap": 8,
+            "note": "At least this tall, with no inset: on the page's own edge."
+        },
+        "titleLine": {"padY": 4, "note": "The title's column, padded 4 down and up when there is no description."},
+        "mark": {"icon": 16},
+        "actions": {"gap": 4},
+        "body": {"padX": "density.panel-pad", "padY": "density.panel-pad", "note": "In the box, unless flush."}
+    },
+    "layout": {
+        "flatGap": {"value": "density.section-gap", "note": "Between the flat head and its content."},
+        "titleMetaGap": {"value": 8, "note": "Between the title and its meta."},
+        "titleBasis": {
+            "value": 160,
+            "note": "The actions stay beside the title while it keeps this or its own width, and go under it otherwise."
+        },
+        "metaBasis": {
+            "value": 96,
+            "note": "The meta stays beside the title while the title keeps this or its own width, and drops under it otherwise."
+        },
+        "criticalRule": {"value": 2, "note": "The critical rule across the box's top."},
+        "graphGrid": {"value": 18, "note": "The dot grid's step: a dot every 18 both ways, centered on the body."},
+        "graphDot": {"value": 1, "note": "Each dot's radius."}
+    },
+    "states": {
+        "rest": {"means": "A titled part of the page, its body drawn."},
+        "described": {
+            "means": "With a description: the head grows to hold it, its pieces set at the top.",
+            "reached": "description"
+        },
+        "toneCritical": {
+            "means": "Something here went wrong: a rule in the critical tone (2 wide across the box's top, or the flat head's own rule) and a warning mark before the title.",
+            "reached": "tone critical"
+        },
+        "toneGraph": {
+            "means": "The body is a graph canvas's dot grid, for a drawing with no ground of its own; under a flat head it is rounded as a surface.",
+            "reached": "tone graph"
+        },
+        "fill": {
+            "means": "The box takes the height its container gives it, and its body scrolls within it.",
+            "reached": "fill, boxed"
+        }
+    },
+    "pieces": {
+        "box": {
+            "rest": {"ground": "card", "edge": "border-strong", "radius": "radius-surface"},
+            "toneCritical": {
+                "rule": "critical",
+                "note": "2 wide across the box's top only; the rest of the edge stays."
+            }
+        },
+        "head": {
+            "rest": {
+                "ground": "section-head-ground",
+                "rule": "section-head-line",
+                "note": "The rule is under the bar, 1 wide."
+            }
+        },
+        "flatHead": {
+            "rest": {"ground": "none", "rule": "border", "note": "The rule is under the heading line, 1 wide."},
+            "toneCritical": {"rule": "critical"}
+        },
+        "mark": {"rest": {"note": "Not drawn."}, "toneCritical": {"ink": "critical"}},
+        "title": {
+            "rest": {
+                "ink": "section-head-ink|foreground",
+                "text": "text.head",
+                "note": "In typeface-heading; the table head's size, weight and tracking, but not its case."
+            }
+        },
+        "flatTitle": {
+            "rest": {"ink": "section-head-ink|foreground", "text": "text.section-title", "note": "In typeface-heading."}
+        },
+        "meta": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face."}},
+        "description": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "body": {
+            "rest": {"note": "On the box's ground, or under a flat head on the page's."},
+            "toneGraph": {
+                "ground": "canvas",
+                "mark": "panel-dot",
+                "note": "The dots: one every 18, 1 in radius. Under a flat head the grid is rounded radius-surface."
+            }
+        }
+    },
+    "keyboard": [],
+    "words": {},
+    "appText": {
+        "title": "Each section's title, its meta and its description.",
+        "actions": "The head's actions, which follow their context: in a Runs section, Retry failed rather than Retry failed runs."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "A section element labelled by its heading (aria-labelledby), whose id is headingId or one of its own.",
+            "The box clips its content to its corners (overflow-hidden).",
+            "The head is PaneHeader: variant panel in the box, plain with inset false under a flat section. Its pieces wrap by flex basis, with no width the part measures.",
+            "className and bodyClassName lay the section and its body out in their container.",
+            "Surface, beside Section in the same module, is the bordered surface with no heading of its own, for content that is a surface under a flat heading."
+        ],
+        "sokkel-ui-egui": [
+            "There is no Section yet: Card with bar(true) is the nearest, a box with the section heads' bar and its title."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "insets",
+            "spec": "density.panel-pad (12, 8 compact) across the head and round the body.",
+            "today": "As of dfb6079 (display.rs unchanged since b73200b): Card pads the head's title 16 and its body 16 at both densities."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "description",
+            "spec": "In the head under the title, in text.help; the head grows to hold it.",
+            "today": "Card draws it in the body, in text.body."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of dfb6079 there is no Section. Card with bar(true) draws the boxed head: density.panel-head tall, section-head-ground over a section-head-line rule, the title in text.head and section-head-ink (else card-foreground, which is foreground in every theme), cut short. Not yet: the flat variant, the meta, the actions, the tones critical and graph, flush, fill, and the head growing to hold a description."
+        }
+    ]
+}
