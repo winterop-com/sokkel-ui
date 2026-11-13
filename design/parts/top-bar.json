@@ -1,0 +1,255 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "top-bar",
+    "kind": "part",
+    "status": "draft",
+    "summary": "The thin bar over the content: a search field at its start, the trail to the current screen, the button that opens the command palette, and the screen's actions at its end. On a phone the trail keeps its last crumb and the palette's button is an icon.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/TopBar.tsx",
+            "packages/core/src/components/Shell.tsx",
+            "packages/core/src/components/AppBar.tsx",
+            "packages/core/src/components/shell-context.ts",
+            "packages/core/src/components/SearchField.tsx",
+            "packages/core/src/components/ui/kbd.tsx",
+            "packages/core/src/lib/keys.ts"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/frame.rs (TopBar, search_button)",
+            "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
+        ]
+    },
+    "anatomy": {
+        "bar": "The strip over the content, as tall as the rail's head: the sidebar ground and a rule under it. Shell's header draws it around the top bar, and AppBar for a screen drawn without the shell.",
+        "menu": "The button at the bar's start that opens the rail as the shell's drawer: below 768, or at every width while the rail is hidden. The shell's, named by its words.menu.",
+        "mark": "The app's mark on a small tile before the rest, for a screen without the rail that carries it.",
+        "search": "The app's search field at the bar's start, before the trail, so it stays in one place from screen to screen; / focuses it. Below 768 it gives way to the palette's button.",
+        "trail": "The crumbs to the current screen, after the search field, taking the room left; named by words.trail.",
+        "crumb": "One step of the trail: a link with href, else plain words; the current screen's crumb is marked as the page. A code crumb is in the code face.",
+        "chevron": "Between crumbs, and after the last when the trail ends at an ancestor; not drawn below 768.",
+        "backChevron": "Below 768, with the trail ending at an ancestor: a chevron pointing back before the last crumb, which is the way back.",
+        "palette": "The button that opens the command palette. With no search field: field-like, 224 wide, a magnifier, the word Search and the keys. Beside a search field: the keys alone when bound, else the magnifier. Below 768: an icon, a finger square, with no edge or ground.",
+        "keys": "The keys that open the palette, drawn only when bound: in a key cap with no search field, as plain small code text beside one.",
+        "actions": "The screen's actions at the bar's end, after the palette's button."
+    },
+    "options": {
+        "trail": {
+            "type": "rows",
+            "does": "[{ label, href?, code? }]: the screens above and the current one. In a Shell, a mounted screen's own trail (useShellTrail) is drawn in place of the bar's.",
+            "sokkel-ui": "trail, useShellTrail"
+        },
+        "trailEnds": {
+            "values": ["current", "ancestor"],
+            "default": "current",
+            "does": "current: the last crumb is the current screen, plain words marked as the page, and on a phone the only crumb shown. ancestor: the trail holds only the screens above, whose page heading names the current one; every crumb with an href is a link, a chevron follows the last, and on a phone the last crumb alone is the way back."
+        },
+        "mark": {"type": "node", "does": "The app's mark before the rest, where no rail shows it."},
+        "search": {
+            "type": "node",
+            "does": "A search field at the bar's start, such as SearchField or Search with its results under it."
+        },
+        "palette": {
+            "type": "boolean",
+            "default": true,
+            "does": "Whether the palette's button is drawn; false leaves it out even in a shell that holds a palette, as for a top bar drawn as a specimen on a page."
+        },
+        "onSearch": {
+            "type": "callback",
+            "does": "Opens the palette from its button; in a Shell with a palette the button opens the shell's. No button without either."
+        },
+        "shortcut": {
+            "type": "text",
+            "does": "The keys shown in the palette's button: given by an app that binds them itself, or the shell's Mod+K as the device writes it (shortcutLabel). Shown only when bound."
+        },
+        "actions": {"type": "node", "does": "The screen's actions, at the bar's end."},
+        "inShell": {
+            "type": "boolean",
+            "default": false,
+            "does": "In a Shell: a mounted screen's stated trail replaces the bar's own, and the palette's button opens the shell's palette with its keys shown.",
+            "context": "ShellTrail, ShellPalette from Shell"
+        },
+        "menu": {
+            "type": "boolean",
+            "default": false,
+            "does": "The menu button at the bar's start, for the rail's drawer: below 768, or at every width while the shell's rail is hidden.",
+            "context": "Shell: md:hidden unless railMode is hidden"
+        },
+        "panelToggle": {
+            "type": "boolean",
+            "default": false,
+            "does": "A shell panel's toggle stands in the window's corner over the bar's end while the panel is closed or a sheet: the bar keeps 48 at its end for it.",
+            "context": "Shell panel, pr-12"
+        },
+        "trafficLights": {
+            "type": "boolean",
+            "default": false,
+            "does": "In a desktop window with its title bar hidden: the bar is the window's drag region, and leaves spacing-traffic-lights at its start where no rail head does.",
+            "context": "ShellDesktop from Shell, AppBar desktop"
+        }
+    },
+    "sizes": {
+        "bar": {
+            "height": "spacing-shell-top",
+            "padX": 12,
+            "gap": 8,
+            "note": "gap: between the menu button and the top bar's own row."
+        },
+        "content": {
+            "gap": 12,
+            "note": "The top bar's own row: the mark, the search field, the trail, the palette's button and the actions, 12 apart."
+        },
+        "menu": {
+            "height": "density.control",
+            "width": "density.control",
+            "icon": 16,
+            "radius": "radius-md",
+            "phoneMinHeight": null,
+            "phoneMinWidth": null,
+            "note": "It keeps the control's size below 768 (open-questions.md)."
+        },
+        "mark": {"height": 28, "width": 28, "radius": "radius-md"},
+        "search": {"width": 224, "note": "224, 256 from 1024, at most 320; it may shrink."},
+        "trail": {"gap": 4, "text": "text.body"},
+        "chevron": {"icon": 14},
+        "backChevron": {"icon": 16, "note": "2 before the crumb."},
+        "palette": {
+            "height": "density.control",
+            "width": 224,
+            "padX": 10,
+            "gap": 8,
+            "icon": 16,
+            "radius": "radius-control",
+            "text": "text.body",
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "224 wide with no search field (from 768). Below 768 a finger square, its icon centered, no pad."
+        },
+        "paletteBesideField": {
+            "padX": 8,
+            "note": "Beside a search field, from 768: as wide as the keys or the magnifier."
+        },
+        "keys": {"height": 20, "padX": 4, "radius": "radius-sm", "text": "text.badge", "note": "At least 20 wide."},
+        "actions": {"gap": 6}
+    },
+    "layout": {
+        "searchWidthLg": {"value": 256, "note": "The search field from 1024."},
+        "searchWidthMax": 320,
+        "panelToggleRoom": {"value": 48, "note": "The bar's end pad while a shell panel's toggle stands in the corner."},
+        "trafficLights": {
+            "value": "spacing-traffic-lights",
+            "note": "The bar's start pad in a desktop window where no rail head leaves the room."
+        },
+        "phoneBelow": {
+            "value": 768,
+            "note": "The md breakpoint: below it the last crumb alone, the palette as an icon, the search field gone."
+        }
+    },
+    "states": {
+        "rest": {"means": "Nothing over the bar's controls."},
+        "hover": {
+            "means": "The pointer over a crumb that is a link, the palette's button or the menu button.",
+            "reached": "pointer over"
+        },
+        "focus": {
+            "means": "Keyboard focus on the palette's button or a crumb.",
+            "reached": "Tab",
+            "on": "keyboard",
+            "sokkel-ui": "The palette's button: focus-visible:border-ring ring-1. A crumb's link and the menu button take the browser's outline, in ring/50 (base.css)."
+        },
+        "current": {
+            "means": "The current screen's crumb, the last when the trail ends at the current screen.",
+            "reached": "trailEnds current",
+            "sokkel-ui": "aria-current=page"
+        },
+        "phone": {"means": "The window is narrower than 768.", "reached": "the window's width"}
+    },
+    "pieces": {
+        "bar": {"rest": {"ground": "sidebar", "rule": "border-strong"}},
+        "menu": {"rest": {"ink": "muted-foreground", "radius": "radius-md"}, "hover": {"ground": "hover"}},
+        "mark": {"rest": {"ground": "primary", "ink": "primary-foreground", "radius": "radius-md"}},
+        "crumb": {
+            "rest": {
+                "ink": "muted-foreground",
+                "note": "In the trail's text.body; cut short with an ellipsis when the trail runs out of room."
+            },
+            "hover": {"ink": "foreground", "note": "A crumb that is a link."},
+            "current": {"ink": "foreground", "weight": 500}
+        },
+        "chevron": {"rest": {"ink": "faint"}},
+        "backChevron": {"rest": {"ink": "faint"}},
+        "palette": {
+            "rest": {"ground": "field", "edge": "border", "ink": "muted-foreground", "radius": "radius-control"},
+            "hover": {"edge": "border-strong", "ink": "foreground"},
+            "focus": {"edge": "ring", "ring": {"color": "ring", "width": 1}},
+            "phone": {"ground": "none", "edge": "none"}
+        },
+        "keys": {
+            "rest": {
+                "ground": "muted",
+                "ink": "muted-foreground",
+                "radius": "radius-sm",
+                "text": "text.badge",
+                "note": "The key cap with no search field. Beside one, the keys are 13/20 code text in the button's ink, with no cap."
+            }
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the menu button, the search field, each crumb that is a link, the palette's button and the actions, in that order."
+        },
+        {
+            "keys": ["/"],
+            "does": "Focuses the search field.",
+            "when": "a search field that binds it, focus outside a field"
+        },
+        {"keys": ["Enter", "Space"], "does": "Opens the command palette.", "when": "the palette's button has focus"}
+    ],
+    "words": {"search": "Search", "palette": "Open the command palette", "trail": "Where you are"},
+    "appText": {
+        "trail": "Every crumb's label.",
+        "shortcut": "The keys that open the palette, as the device writes them (shortcutLabel in sokkel-ui).",
+        "actions": "The actions follow their context: on Runs the button is New, not New run."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Shell's header (and AppBar) draws the bar; TopBar draws the row inside it. A screen draws its own bar with ShellTop, or states its trail with useShellTrail.",
+            "Crumbs are Link, drawn as the app's LinkProvider says.",
+            "The breakpoint is a media query (max-md, md:hidden): the crumbs before the last, the chevrons and the search field are hidden below 768.",
+            "With no search field the palette's button is named words.search and says it; beside one it is named words.palette, which its title shows.",
+            "In a desktop window (Shell desktop, AppBar desktop) the bar is a window drag region (data-window-drag)."
+        ],
+        "sokkel-ui-egui": [
+            "A crumb with an href is a route the app goes to on a press; there are no URLs.",
+            "The bar is a fixed strip the Shell gives a rect; the trail is laid out left to right and the end's controls right to left, so a long trail is cut short before them.",
+            "The window's width is the available rect: the phone layout below 768 is chosen by width, not a media query."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "order at the end",
+            "spec": "The palette's button, then the screen's actions at the very end, 12 apart; the actions 6 apart.",
+            "today": "As of 267236c: the actions, then the palette's button at the very end, 6 apart."
+        },
+        {"renderer": "sokkel-ui-egui", "what": "chevron size", "spec": "14.", "today": "12."},
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "crumb gap",
+            "spec": "4 between a crumb and a chevron.",
+            "today": "6 (item_spacing)."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "palette focus",
+            "spec": "On keyboard focus only: the edge in ring and a 1px ring.",
+            "today": "The shared focus_ring: 2 wide, 2 off the box, on any focus."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 267236c, TopBar draws the bar, a trail of plain words (the last in the action weight), the palette's button with its word and a key cap, and actions. Not yet: crumbs as links with a hover, code crumbs, trailEnds ancestor and the back chevron, the mark, the search field and /, the button beside a search field, keys shown only when bound, the menu button, the phone layout (last crumb, palette as a finger-square icon), the room for a panel toggle and for the window's buttons."
+        }
+    ]
+}

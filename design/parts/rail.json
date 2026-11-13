@@ -1,0 +1,500 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "rail",
+    "kind": "part",
+    "status": "draft",
+    "summary": "The app's places down the window's start: a head with the mark and the name, groups of entries, and a foot cell for the account. Expanded, collapsed to its icons, or a strip of labeled icons; its end edge resizes it, and pulled outward expands a collapsed rail.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/Rail.tsx",
+            "packages/core/src/components/ResizeHandle.tsx",
+            "packages/core/src/components/GroupLabel.tsx",
+            "packages/core/src/components/Count.tsx",
+            "packages/core/src/components/RailDrops.tsx",
+            "packages/core/src/components/shell-context.ts",
+            "packages/core/src/components/Shell.tsx",
+            "packages/core/src/hooks/use-panel-size.ts"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/frame.rs (Rail, RailGroup, RailEntry)",
+            "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
+        ]
+    },
+    "anatomy": {
+        "frame": "The rail's column, the window's full height: the sidebar ground and a 1px edge at its end.",
+        "head": "As tall as the top bar, so the top bar's rule ends level with it; it draws no rule of its own. Expanded: the mark and the name (a link home with markHref), and at its end the collapse control, or in the shell's drawer the control that closes the drawer. Collapsed: the mark alone, which is the control that expands the rail.",
+        "mark": "The app's mark on a square tile. Collapsed, under the pointer the expand icon shows in the mark's place.",
+        "name": "The app's name beside the mark, cut short with an ellipsis.",
+        "home": "The mark and the name as one link to the app's home, given markHref.",
+        "collapse": "The control at the expanded head's end: narrows the rail to its icons, or in the drawer closes the drawer.",
+        "groupTitle": "A group's title over its entries, upper case. A group without a title stands at the top.",
+        "groupRule": "A collapsed rail's rule in a group title's place.",
+        "entry": "One place in the expanded rail: its mark (an icon, a color dot, or nothing for a rail of text), its label, an optional description under the label, and at its end a count, an unread dot or a parent's chevron. The active one wears a bar at its start over a wash.",
+        "description": "An entry's second line, under its label, saying what the place holds; it wraps.",
+        "count": "How many wait at a place, at the expanded row's end.",
+        "cornerCount": "A count at an icon's upper corner, in a collapsed rail and a strip, cut out of the rail's ground.",
+        "unreadDot": "Something new at a place without a number: a dot where a count would stand.",
+        "chevron": "A parent's fold mark at its row's end, turned while its entries are unfolded under it.",
+        "chevronButton": "The chevron's own button, for a parent that has a page of its own; a parent without one folds on a press anywhere on its row.",
+        "children": "A parent's entries, unfolded under it in the expanded rail, their labels lined up under the parent's label.",
+        "iconEntry": "One place in the collapsed rail: a tile with its icon alone, named in a tooltip beside it.",
+        "tooltip": "A collapsed entry's label, then its description, beside it at the rail's end.",
+        "flyout": "A parent's entries in a popover beside a collapsed rail or a strip, under the parent's label as a group title; a link chosen there closes it.",
+        "edge": "The resize handle along the rail's end edge: a line in the accent while hovered, focused or dragged, nothing otherwise.",
+        "footCell": "The account control's cell at the rail's foot, as tall as the status line and level with it.",
+        "back": "With a body: the row at the top that shows the places again (words.places), under the head.",
+        "body": "App content the expanded rail holds in place of its groups, such as a tree with its search; kept as it was while the places or the icons show.",
+        "strip": "The strip variant's column: the workspace's tile at the top, each entry a tile over its short label, the foot's items stacked at the bottom.",
+        "stripEntry": "One place in the strip: a tile with its icon, a count or dot at the tile's corner, and its short label under it.",
+        "stripTile": "A strip entry's tile, washed while its place is shown."
+    },
+    "options": {
+        "groups": {
+            "type": "rows",
+            "does": "The places: [{ id, title?, entries, onReorder? }], each entry { id, label, description?, icon?, href?, active?, count?, unread?, dot?, keywords?, entries?, drop? }. Data, the same on every target; the palette lists them too.",
+            "sokkel-ui": "Rail groups (RailGroup, RailEntry)"
+        },
+        "variant": {
+            "values": ["nav", "strip"],
+            "default": "nav",
+            "does": "nav: the app's navigation, expanded or collapsed. strip: a narrow column of labeled icons, which neither collapses nor resizes."
+        },
+        "collapsed": {
+            "type": "boolean",
+            "default": false,
+            "does": "Narrowed to its icons; kept by the app, which hears the reader's change in onCollapsedChange. Without onCollapsedChange the rail draws no collapse control."
+        },
+        "mark": {"type": "node", "does": "The app's mark on the head's tile; in a strip, the workspace's tile."},
+        "markHref": {
+            "type": "text",
+            "does": "Makes the expanded head's mark and name, and a strip's tile, a link to the app's home."
+        },
+        "foot": {
+            "type": "node",
+            "does": "What stands in the foot cell, normally the account control; in a strip, the items stacked at its foot."
+        },
+        "resizable": {
+            "type": "boolean",
+            "default": true,
+            "does": "Whether the expanded rail's edge drags to resize it, and a collapsed rail's to expand it."
+        },
+        "size": {
+            "type": "length",
+            "default": 240,
+            "does": "The expanded width; held by the rail itself from defaultSize unless the app holds it with onSizeChange. minSize 200 and maxSize 360 bound a drag.",
+            "sokkel-ui": "size, onSizeChange, defaultSize, minSize, maxSize"
+        },
+        "expanded": {
+            "type": "rows",
+            "does": "The ids of the unfolded parents. A parent holding the active entry starts unfolded; defaultExpanded adds to those.",
+            "sokkel-ui": "expanded, onExpandedChange, defaultExpanded"
+        },
+        "defaultFlyout": {
+            "type": "text",
+            "does": "The parent whose flyout stands open at the start, in a collapsed rail or a strip."
+        },
+        "body": {
+            "type": "node",
+            "does": "Content held in place of the groups in the expanded rail: { content, title?, search? }, under the back row. Collapsed, the rail draws the places' icons."
+        },
+        "view": {
+            "values": ["places", "body"],
+            "default": "body",
+            "does": "With a body, whether the expanded rail shows its places or the body; a place chosen among the places brings the body back.",
+            "sokkel-ui": "view, onViewChange"
+        },
+        "narrowed": {
+            "type": "boolean",
+            "default": false,
+            "does": "The shell asks the rail narrowed to its icons (railMode collapsed, useRailMode, or an open panel on a window under 1280): it draws collapsed whatever the app holds, and its mark and edge widen it for the reader until the ask changes.",
+            "context": "ShellRailMode from Shell"
+        },
+        "inDrawer": {
+            "type": "boolean",
+            "default": false,
+            "does": "Drawn in the shell's drawer below 768: expanded whatever the app holds, without its edge, the head's end control closing the drawer (the shell's words.close).",
+            "context": "ShellDrawer from Shell"
+        },
+        "docked": {
+            "type": "boolean",
+            "default": false,
+            "does": "In a shell with a foot or a bottom strip: the foot cell stands in the shell's foot row under the rail's column, level with the status line, on the foot's ground.",
+            "context": "ShellFootCell from Shell"
+        },
+        "trafficLights": {
+            "type": "boolean",
+            "default": false,
+            "does": "In a desktop window with its title bar hidden: the head is the window's drag region and leaves spacing-traffic-lights at its start for the window's buttons; a collapsed rail or a strip, narrower than that room, keeps its head empty and its mark just below it.",
+            "context": "ShellDesktop from Shell"
+        }
+    },
+    "sizes": {
+        "head": {"height": "spacing-shell-top", "padX": 12, "gap": 8},
+        "mark": {
+            "height": 32,
+            "width": 32,
+            "radius": "radius-md",
+            "note": "In a strip the workspace's tile is 36 square."
+        },
+        "collapse": {"height": 32, "width": 32, "icon": 16, "radius": "radius-md"},
+        "entry": {
+            "height": "density.row",
+            "padX": 12,
+            "gap": 12,
+            "icon": 16,
+            "text": "text.body",
+            "phoneMinHeight": "spacing-finger",
+            "note": "The start pad holds the active bar: 2, then 10 to the icon. A finger tall below 768. A row with a chevron button pads its end 36."
+        },
+        "describedEntry": {
+            "height": "density.row",
+            "padX": 12,
+            "padY": 6,
+            "gap": 12,
+            "icon": 16,
+            "text": "text.body",
+            "phoneMinHeight": "spacing-finger",
+            "note": "At least density.row, growing to hold the description (text.help) under the label; the icon, the count and the dot stand level with the label's line."
+        },
+        "iconEntry": {"height": "density.row", "width": 36, "icon": 16, "radius": "radius-md"},
+        "groupTitle": {
+            "padX": 8,
+            "text": "text.badge",
+            "note": "Inside the group's own 8: 16 from the rail's start. Upper case, tracked 0.025em."
+        },
+        "chevronButton": {"height": 28, "width": 28, "radius": "radius-md", "note": "4 from the row's end."},
+        "tooltip": {"padX": 8, "padY": 4, "text": "text.help", "radius": "radius-md"},
+        "footCell": {"height": "spacing-shell-foot"},
+        "edge": {"width": 8, "note": "The hit area, straddling the rail's end edge; the line drawn in it is 2 wide."},
+        "strip": {"width": 72},
+        "stripTile": {"height": 36, "width": 36, "icon": 20, "radius": "radius-md"}
+    },
+    "layout": {
+        "width": {
+            "value": 240,
+            "note": "Expanded, by default (defaultSize); a double click on the edge or Enter puts it back."
+        },
+        "minWidth": 200,
+        "maxWidth": 360,
+        "collapsedWidth": {"value": 57, "note": "3.5rem and its 1px edge."},
+        "groupPadX": {
+            "value": 8,
+            "note": "Each group's own pad, across: an expanded entry runs from 8 to 9 short of the rail's end (8 and the edge)."
+        },
+        "entryGap": {"value": 4, "note": "Between entries, and between a group title and its first entry."},
+        "groupTitleTop": {
+            "value": 16,
+            "note": "Above a group's title; a collapsed rail keeps the same room around its rule."
+        },
+        "groupTitleBottom": 6,
+        "groupTitleLine": {
+            "value": 20,
+            "note": "The title's line (text.badge); a collapsed rail centers its 1px rule in it."
+        },
+        "placesBottom": {"value": 12, "note": "Under the last group, inside the scroller."},
+        "entryCornerStart": {
+            "value": "radius-sm",
+            "note": "An expanded entry's start corners, beside the bar, in every state."
+        },
+        "entryCornerEnd": {"value": "radius-md", "note": "An expanded entry's end corners."},
+        "activeBar": {"value": 2, "note": "The active entry's bar, inside the start of its row."},
+        "childInsetIcon": {
+            "value": 38,
+            "note": "A child row's start pad under a parent with an icon, so its label stands under the parent's."
+        },
+        "childInsetText": {"value": 22, "note": "A child row's start pad in a rail of text."},
+        "cornerCount": {
+            "value": 16,
+            "note": "Tall and at least as wide, fully round, 11 text at 600; 4 above the icon's tile and 6 past its end; 99+ above 99."
+        },
+        "unreadDot": {
+            "value": 8,
+            "note": "Round. Over an icon's corner it stands 4 in from the tile's corner (2 in a strip)."
+        },
+        "resizeStep": {"value": 16, "note": "What an arrow on the edge moves it."},
+        "edgeLine": 2,
+        "flyoutMinWidth": {"value": 176, "note": "Padded 4, its entries 4 apart."},
+        "flyoutGap": {"value": 12, "note": "Beside a collapsed rail; 8 beside a strip."},
+        "tooltipGap": 8,
+        "stripGap": {
+            "value": 12,
+            "note": "Between a strip's entries and between its groups, a 32 wide rule between groups."
+        },
+        "stripLabel": {
+            "value": 11,
+            "note": "A strip entry's label: 11/16 (text-2xs), the one size no text role has; 2 under its tile."
+        },
+        "trafficLights": {
+            "value": "spacing-traffic-lights",
+            "note": "The head's start pad in a desktop window with its title bar hidden."
+        },
+        "widthEase": {
+            "value": 200,
+            "note": "ms the width eases over as the rail collapses or expands, as far as motion allows; no motion token yet."
+        }
+    },
+    "states": {
+        "rest": {"means": "An entry that is not the place shown, nothing over it."},
+        "hover": {
+            "means": "The pointer over an entry, a head control, a strip entry or the edge.",
+            "reached": "pointer over"
+        },
+        "focus": {
+            "means": "Keyboard focus on the home link, a head control, an entry or the edge.",
+            "reached": "Tab",
+            "on": "keyboard",
+            "sokkel-ui": "focus-visible: the head's controls and the strip's entries draw their own ring; an expanded entry and an icon entry take the browser's outline, in ring/50 (base.css)."
+        },
+        "active": {
+            "means": "The entry of the place shown; a parent folded over the active entry wears it too.",
+            "reached": "the route (an entry's active)",
+            "sokkel-ui": "aria-current=page"
+        },
+        "holding": {
+            "means": "A parent unfolded over the active entry: its label set apart while its child wears the accent.",
+            "reached": "the route"
+        },
+        "open": {
+            "means": "A parent's entries shown: unfolded under its row in the expanded rail (the chevron turned 90 degrees), or in a flyout beside a collapsed rail or a strip.",
+            "reached": "a press on a parent or its chevron, ArrowRight, defaultExpanded, defaultFlyout"
+        },
+        "collapsed": {
+            "means": "The rail narrowed to its icons: icon entries named in tooltips, a rule in each group title's place, the mark the control that expands it.",
+            "reached": "collapsed, the head's collapse control, narrowed"
+        },
+        "dragging": {"means": "The edge is being dragged.", "reached": "pointer down on the edge"},
+        "docked": {
+            "means": "The foot cell in the shell's foot row, level with the status line, on the foot's ground.",
+            "reached": "a Shell with a foot or a bottom strip"
+        },
+        "drawer": {
+            "means": "Below 768, the rail in the shell's drawer: expanded, without its edge, its head's control closing the drawer.",
+            "reached": "the top bar's menu button"
+        }
+    },
+    "pieces": {
+        "frame": {
+            "rest": {
+                "ground": "sidebar",
+                "ink": "sidebar-foreground",
+                "edge": "border-strong",
+                "note": "The edge is at the end only, 1px."
+            }
+        },
+        "mark": {"rest": {"ground": "primary", "ink": "primary-foreground", "radius": "radius-md"}},
+        "name": {
+            "rest": {
+                "ink": "sidebar-foreground",
+                "text": "text.detail-title",
+                "note": "Tracked -0.025em (tracking-tight)."
+            }
+        },
+        "home": {"rest": {"radius": "radius-md"}, "focus": {"ring": {"color": "ring/50", "width": 2}}},
+        "collapse": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}
+        },
+        "groupTitle": {"rest": {"ink": "faint", "text": "text.badge", "note": "Upper case, tracked 0.025em."}},
+        "groupRule": {
+            "rest": {
+                "ground": "border-strong",
+                "note": "1 tall across the group's width, centered in the title's line."
+            }
+        },
+        "entry": {
+            "rest": {
+                "ground": "none",
+                "edge": "none",
+                "ink": "muted-foreground",
+                "note": "The edge is the 2 wide bar inside the row's start, drawn only when active."
+            },
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "active": {
+                "ground": "sidebar-accent",
+                "edge": "sidebar-primary",
+                "ink": "sidebar-accent-foreground",
+                "weight": 500
+            },
+            "active+hover": {"ground": "sidebar-accent", "ink": "sidebar-accent-foreground"},
+            "holding": {"ink": "foreground", "weight": 500},
+            "holding+hover": {"ground": "hover", "ink": "foreground"}
+        },
+        "description": {
+            "rest": {"ink": "muted-foreground", "text": "text.help"},
+            "active": {"ink": "sidebar-accent-foreground/75"}
+        },
+        "count": {
+            "rest": {
+                "ink": "foreground",
+                "weight": 600,
+                "note": "13/20 (text-xs) at 600 with tabular figures; no text role has that weight."
+            }
+        },
+        "cornerCount": {
+            "rest": {
+                "ground": "critical",
+                "ink": "critical-foreground",
+                "weight": 600,
+                "ring": {"color": "sidebar", "width": 2},
+                "note": "The ring cuts it out of the rail's ground."
+            }
+        },
+        "unreadDot": {
+            "rest": {
+                "ground": "foreground",
+                "note": "Over an icon's corner, ringed 2 in sidebar so it reads as cut out."
+            }
+        },
+        "chevron": {"rest": {"ink": "muted-foreground", "note": "16; turned 90 degrees while open."}},
+        "chevronButton": {"rest": {"radius": "radius-md"}, "hover": {"ground": "hover"}},
+        "iconEntry": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "active": {"ground": "sidebar-accent", "ink": "sidebar-accent-foreground"},
+            "open": {"ground": "hover", "note": "A parent while its flyout is open."}
+        },
+        "tooltip": {
+            "rest": {
+                "ground": "popover",
+                "ink": "popover-foreground",
+                "radius": "radius-md",
+                "text": "text.help",
+                "note": "The label, then the description in muted-foreground; elevation-pop under it."
+            }
+        },
+        "edge": {
+            "rest": {"ground": "primary", "opacity": 0, "note": "A 2 wide line centered on the rail's end edge."},
+            "hover": {"opacity": 1},
+            "focus": {"opacity": 1},
+            "dragging": {"opacity": 1}
+        },
+        "footCell": {
+            "rest": {"rule": "border-strong", "note": "On the rail's own ground, a rule above it."},
+            "docked": {
+                "ground": "page-foot-ground",
+                "rule": "page-foot-line",
+                "ink": "sidebar-foreground",
+                "note": "Its end edge in border-strong, continuing the rail's."
+            }
+        },
+        "stripEntry": {
+            "rest": {"ink": "muted-foreground"},
+            "hover": {"ink": "foreground"},
+            "active": {"ink": "foreground", "weight": 500},
+            "focus": {"ring": {"color": "ring/50", "width": 2}}
+        },
+        "stripTile": {
+            "rest": {"radius": "radius-md"},
+            "hover": {"ground": "hover"},
+            "active": {"ground": "sidebar-accent", "ink": "sidebar-accent-foreground"},
+            "open": {"ground": "hover", "note": "A parent while its flyout is open."}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the home link, the head's control, each entry (a parent's row, or its link and its chevron button), and the edge."
+        },
+        {
+            "keys": ["Enter"],
+            "does": "Follows an entry's link; on a parent without a page of its own, folds or unfolds it; on a collapsed parent, opens its flyout."
+        },
+        {
+            "keys": ["ArrowRight"],
+            "does": "Unfolds the parent whose row has focus.",
+            "when": "a folded parent in the expanded rail"
+        },
+        {
+            "keys": ["ArrowLeft"],
+            "does": "Folds the parent whose row has focus; from one of its entries, folds it and moves focus to its row.",
+            "when": "an unfolded parent in the expanded rail, or one of its entries"
+        },
+        {
+            "keys": ["Enter", "Space", "ArrowRight"],
+            "does": "On a collapsed rail's edge: expands the rail.",
+            "when": "collapsed, with onCollapsedChange"
+        },
+        {
+            "keys": ["ArrowLeft", "ArrowRight", "Home", "End", "Enter"],
+            "does": "On the expanded rail's edge: 16 narrower or wider a press, the narrowest or the widest, and Enter (or a double click) puts back defaultSize.",
+            "when": "the expanded rail's edge has focus"
+        },
+        {
+            "keys": ["Alt+ArrowUp", "Alt+ArrowDown"],
+            "does": "Moves the focused entry a place in its group; focus stays on it.",
+            "when": "a group with onReorder, inside RailDrops"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes an open flyout, focus back on its parent; in the shell's drawer, closes the drawer."
+        }
+    ],
+    "words": {
+        "collapse": "Collapse the navigation",
+        "expand": "Expand the navigation",
+        "resize": "Resize the navigation",
+        "unread": "Unread",
+        "places": "All places"
+    },
+    "appText": {
+        "name": "The app's name beside its mark; the name of each group without a title.",
+        "places": "Every group's title, every entry's label and description, and the keywords the palette finds a place by.",
+        "body": "A body's title and its content."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Each entry's link and the home link are Link, drawn as the app's LinkProvider says, so a middle click opens a tab; the active entry says aria-current=page.",
+            "The collapsed rail's tooltips and the flyouts are Base UI's; a flyout opened from the keyboard focuses its first entry.",
+            "An expanded or icon entry has no ring of its own: it takes the browser's focus outline, in ring/50 from base.css.",
+            "The width eases over 200 ms (transition-[width]) as far as the document's motion allows.",
+            "Reordering loads the drag engine only inside RailDrops; a press that does not move still follows the link, and a finger holds a moment before it drags.",
+            "A body stays mounted while hidden, so a tree's open levels and its scroll come back as left.",
+            "In a desktop window (Shell desktop) the head is a window drag region (data-window-drag)."
+        ],
+        "sokkel-ui-egui": [
+            "There are no URLs: a press on an entry sets the app's active place, which the app routes by.",
+            "The rail fills the rect the Shell gives it; a width the reader drags is app state the Shell is told.",
+            "A collapsed entry's name shows with on_hover_text.",
+            "Keyboard-only focus needs the last input kind tracked, as for every part."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "entry inset",
+            "spec": "An entry pads 12 at its start, the 2 wide bar inside it: the icon at 12, the label at 40.",
+            "today": "As of 267236c: the icon at 10 and the label at 38, 2 toward the start."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "entry corners",
+            "spec": "radius-sm at the start (3.5, floored to 3) and radius-md at the end, in every state.",
+            "today": "The active row's start corners are 2; the hover wash rounds radius-md all round."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "count weight",
+            "spec": "An expanded row's count at 600.",
+            "today": "TextRole::Badge, at 500."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "collapsed group rule",
+            "spec": "The rule keeps the title's room: 16 above, its 20 line, 6 below and 4 to the first entry (46 from the last entry before), the rule 26 down.",
+            "today": "26 from the last entry before to the next group's first, the rule 20 down."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "keyboard focus",
+            "spec": "Entries take keyboard focus and show it.",
+            "today": "An entry senses clicks but paints no focus."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 267236c, Rail has groups with titles, entries with an icon and a count, the active entry's bar and wash, the hover wash, and collapse at 240 / 57 with tooltips. Not yet: descriptions, the unread and color dots, entries without icons, parents (fold, chevron, flyout), counts over a collapsed icon, the head's collapse control and the mark as the expand control, markHref, resize and expand by the edge, the strip variant, a body, reordering, the drawer, finger-tall rows below 768, and room for the window's buttons."
+        }
+    ]
+}
