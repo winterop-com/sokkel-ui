@@ -5,14 +5,17 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { AssistantReply, type AssistantReplyLayout } from '@winterop-com/sokkel-ui/AssistantReply'
-import { AttachmentList } from '@winterop-com/sokkel-ui/AttachmentList'
+import { AttachmentList, type AttachmentFile } from '@winterop-com/sokkel-ui/AttachmentList'
 import { Composer, type ComposerAttachment } from '@winterop-com/sokkel-ui/Composer'
 import { ConversationHistory, type ConversationEntry } from '@winterop-com/sokkel-ui/ConversationHistory'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { useUploads } from '@winterop-com/sokkel-ui/hooks/use-uploads'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import type { ConfirmState } from '@winterop-com/sokkel-ui/ConfirmCard'
-import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { Rail, type RailEntry, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import type { ToolCallEntry } from '@winterop-com/sokkel-ui/ToolCall'
@@ -45,35 +48,63 @@ import { waveformOf } from '../media/fixtures/waveform'
  * folded behind one line, the model's thinking behind another, the answer in markdown, a held
  * change and the reply's actions. The stories after the first conversation show the states an
  * answer passes through, from waiting for the first word to failing, and files that go both ways.
+ * The pinned conversations are in ada's order, an entry dragged to a new place or moved with Alt
+ * and the arrows, and a file in a message dragged onto a conversation in the rail opens it with the
+ * file attached to its composer.
  */
-const GROUPS: RailGroup[] = [
-    {
-        id: 'top',
-        entries: [
-            { id: 'new', label: 'New chat', icon: PenSquare, href: '#' },
-            { id: 'search', label: 'Search chats', icon: Search, href: '#' },
-        ],
-    },
-    {
-        id: 'pinned',
-        title: 'Pinned',
-        entries: [
-            { id: 'c1', label: 'Why nightly-export failed', icon: MessageSquare, href: '#', active: true },
-            { id: 'c2', label: 'Index rebuild timings', icon: MessageSquare, href: '#' },
-            { id: 'p1', label: 'Harbor launch', icon: Folder, href: '#' },
-        ],
-    },
-    {
-        id: 'recent',
-        title: 'Recent',
-        entries: [
-            { id: 'c3', label: 'Digest email wording', icon: MessageSquare, href: '#' },
-            { id: 'c4', label: 'Orders CSV columns', icon: MessageSquare, href: '#' },
-            { id: 'c5', label: 'Cron syntax for weekdays', icon: MessageSquare, href: '#' },
-            { id: 'c6', label: 'Retry policy for the api', icon: MessageSquare, href: '#' },
-        ],
-    },
+const TOP: RailEntry[] = [
+    { id: 'new', label: 'New chat', icon: PenSquare, href: '#' },
+    { id: 'search', label: 'Search chats', icon: Search, href: '#' },
 ]
+
+const PINNED: RailEntry[] = [
+    { id: 'c1', label: 'Why nightly-export failed', icon: MessageSquare, href: '#' },
+    { id: 'c2', label: 'Index rebuild timings', icon: MessageSquare, href: '#' },
+    { id: 'p1', label: 'Harbor launch', icon: Folder, href: '#' },
+]
+
+const RECENT: RailEntry[] = [
+    { id: 'c3', label: 'Digest email wording', icon: MessageSquare, href: '#' },
+    { id: 'c4', label: 'Orders CSV columns', icon: MessageSquare, href: '#' },
+    { id: 'c5', label: 'Cron syntax for weekdays', icon: MessageSquare, href: '#' },
+    { id: 'c6', label: 'Retry policy for the api', icon: MessageSquare, href: '#' },
+]
+
+/** What a file in a message drags as, onto a conversation in the rail. */
+const CHAT_FILE = 'chat-file'
+
+/** A file from a message as one waiting in a composer. */
+function waiting(file: AttachmentFile): ComposerAttachment {
+    return {
+        id: `${file.id}-again`,
+        name: file.name,
+        kind: file.kind === 'audio' ? 'audio' : file.image !== undefined ? 'image' : 'file',
+        url: file.image ?? file.src,
+        detail: typeof file.detail === 'string' ? file.detail : undefined,
+    }
+}
+
+/** The rail: the pinned in the reader's order, and every conversation a place a file is dropped on. */
+function railGroups(
+    pinned: readonly RailEntry[],
+    active: string,
+    onPinned: (from: number, to: number) => void,
+    onFile: (to: string, file: AttachmentFile) => void,
+): RailGroup[] {
+    const conversation = (entry: RailEntry): RailEntry => ({
+        ...entry,
+        active: entry.id === active,
+        drop: {
+            accepts: (drag: DragData) => drag.kind === CHAT_FILE,
+            onDrop: (drag: DragData) => onFile(entry.id, drag.value as AttachmentFile),
+        },
+    })
+    return [
+        { id: 'top', entries: TOP },
+        { id: 'pinned', title: 'Pinned', entries: pinned.map(conversation), onReorder: onPinned },
+        { id: 'recent', title: 'Recent', entries: RECENT.map(conversation) },
+    ]
+}
 
 const ANSWER = `The run failed at **\`validate\`**: 37 rows of \`orders-2026-10.csv\` carry an \`amount\` that is not a number.
 
@@ -332,6 +363,7 @@ function Attached() {
             <Message align="end">
                 <MessageContent>
                     <AttachmentList
+                        drag={(file) => ({ kind: CHAT_FILE, label: file.name, value: file })}
                         files={[
                             { id: 'orders', name: 'orders-2026-10.csv', detail: 'CSV, 2.1 MB', icon: <FileSpreadsheet aria-hidden /> },
                             { id: 'rejections', name: 'rejections.png', detail: 'PNG, 184 KB', image: HARBOR_DUSK },
@@ -522,6 +554,18 @@ function ChatApp({
     const [showHistory, setShowHistory] = useStored('chat.history', true, KEPT)
     const [conversations, setConversations] = useState(CONVERSATIONS)
     const [current, setCurrent] = useState('c1')
+    const [pinned, setPinned] = useState(PINNED)
+    const [opened, setOpened] = useState('c1')
+    const groups = railGroups(
+        pinned,
+        opened,
+        (from, to) => setPinned(moveItem(pinned, from, to)),
+        (to, file) => {
+            setOpened(to)
+            setFiles((now) => [...now.filter((each) => each.id !== waiting(file).id), waiting(file)])
+        },
+    )
+    const openedLabel = [...PINNED, ...RECENT].find((entry) => entry.id === opened)?.label
     const fake = useFakeUploader()
     const uploads = useUploads({ accept: '.csv,.yaml,.json,.log', maxSize: PICKED_LIMIT, upload: fake.upload })
     // Two files are on their way up when the story opens, added once.
@@ -558,86 +602,88 @@ function ChatApp({
     )
     return (
         <TooltipProvider>
-            <Shell
-                rail={
-                    <Rail
-                        mark={<TidevannMark />}
-                        name="Tidevann"
-                        groups={GROUPS}
-                        collapsed={collapsed}
-                        onCollapsedChange={setCollapsed}
-                        foot={
-                            <AccountMenu
-                                name="ada"
-                                image={pictureOf('ada')}
-                                where="tidevann.example.org"
-                                collapsed={collapsed}
-                                onSettings={() => undefined}
-                            />
-                        }
-                    />
-                }
-                top={
-                    <TopBar
-                        trail={[{ label: title }]}
-                        actions={
-                            <>
-                                {uploading && (
-                                    <>
-                                        <Button variant="outline" size="sm" onClick={() => uploads.add(PICKED_FILES)}>
-                                            Add files
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={fake.step}>
-                                            Move uploads on
-                                        </Button>
-                                    </>
-                                )}
-                                {history && (
-                                    <IconButton
-                                        label={showHistory ? 'Hide history' : 'Show history'}
-                                        pressed={showHistory}
-                                        onClick={() => setShowHistory(!showHistory)}
-                                    >
-                                        <History aria-hidden />
+            <RailDrops>
+                <Shell
+                    rail={
+                        <Rail
+                            mark={<TidevannMark />}
+                            name="Tidevann"
+                            groups={groups}
+                            collapsed={collapsed}
+                            onCollapsedChange={setCollapsed}
+                            foot={
+                                <AccountMenu
+                                    name="ada"
+                                    image={pictureOf('ada')}
+                                    where="tidevann.example.org"
+                                    collapsed={collapsed}
+                                    onSettings={() => undefined}
+                                />
+                            }
+                        />
+                    }
+                    top={
+                        <TopBar
+                            trail={[{ label: opened === 'c1' ? title : (openedLabel ?? title) }]}
+                            actions={
+                                <>
+                                    {uploading && (
+                                        <>
+                                            <Button variant="outline" size="sm" onClick={() => uploads.add(PICKED_FILES)}>
+                                                Add files
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={fake.step}>
+                                                Move uploads on
+                                            </Button>
+                                        </>
+                                    )}
+                                    {history && (
+                                        <IconButton
+                                            label={showHistory ? 'Hide history' : 'Show history'}
+                                            pressed={showHistory}
+                                            onClick={() => setShowHistory(!showHistory)}
+                                        >
+                                            <History aria-hidden />
+                                        </IconButton>
+                                    )}
+                                    <ModelPicker />
+                                    <IconButton label="Notifications">
+                                        <Bell aria-hidden />
                                     </IconButton>
-                                )}
-                                <ModelPicker />
-                                <IconButton label="Notifications">
-                                    <Bell aria-hidden />
-                                </IconButton>
-                            </>
-                        }
-                    />
-                }
-            >
-                {history && showHistory ? (
-                    <SplitPane
-                        defaultShare={0.24}
-                        minShare={0.18}
-                        maxShare={0.4}
-                        narrow="second"
-                        first={
-                            <ConversationHistory
-                                framed={false}
-                                conversations={conversations}
-                                current={current}
-                                now={NOW}
-                                onSelect={setCurrent}
-                                onRename={(id, name) =>
-                                    setConversations((all) => all.map((one) => (one.id === id ? { ...one, title: name } : one)))
-                                }
-                                onPin={(id, pinned) =>
-                                    setConversations((all) => all.map((one) => (one.id === id ? { ...one, pinned } : one)))
-                                }
-                                onDelete={(id) => setConversations((all) => all.filter((one) => one.id !== id))}
-                            />
-                        }
-                        second={conversation}
-                    />
-                ) : (
-                    conversation
-                )}
-            </Shell>
+                                </>
+                            }
+                        />
+                    }
+                >
+                    {history && showHistory ? (
+                        <SplitPane
+                            defaultShare={0.24}
+                            minShare={0.18}
+                            maxShare={0.4}
+                            narrow="second"
+                            first={
+                                <ConversationHistory
+                                    framed={false}
+                                    conversations={conversations}
+                                    current={current}
+                                    now={NOW}
+                                    onSelect={setCurrent}
+                                    onRename={(id, name) =>
+                                        setConversations((all) => all.map((one) => (one.id === id ? { ...one, title: name } : one)))
+                                    }
+                                    onPin={(id, pinned) =>
+                                        setConversations((all) => all.map((one) => (one.id === id ? { ...one, pinned } : one)))
+                                    }
+                                    onDelete={(id) => setConversations((all) => all.filter((one) => one.id !== id))}
+                                />
+                            }
+                            second={conversation}
+                        />
+                    ) : (
+                        conversation
+                    )}
+                </Shell>
+            </RailDrops>
         </TooltipProvider>
     )
 }

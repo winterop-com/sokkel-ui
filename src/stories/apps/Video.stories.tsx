@@ -290,6 +290,9 @@ const rowOf = (video: Video): Track => ({
     duration: video.length,
 })
 
+/** A video card's drag, carrying the video as a list's row, onto Watch later or a playlist in the rail. */
+const dragOf = (video: Video): DragData => ({ kind: VIDEO, label: video.title, value: rowOf(video) })
+
 const byId = (...ids: string[]) => ids.map((id) => rowOf(VIDEOS.find((video) => video.id === id) ?? VIDEOS[0]))
 
 /** What each list holds as the story opens. */
@@ -401,6 +404,7 @@ function HomePage() {
                             progress={video.watched}
                             href="#"
                             menu={videoMenu}
+                            drag={dragOf(video)}
                         />
                     ))}
                 </MediaGrid>
@@ -533,6 +537,7 @@ function WatchPage() {
                                     progress={video.watched}
                                     href="#"
                                     menu={videoMenu}
+                                    drag={dragOf(video)}
                                 />
                             ))}
                         </Stack>
@@ -671,13 +676,20 @@ function VideoApp({ view }: { view: View }) {
     )
 }
 
-/** The videos of the channels followed, under topic chips, in a grid that fills the width. */
+/**
+ * The videos of the channels followed, under topic chips, in a grid that fills the width. A card
+ * dragged onto Watch later or a playlist in the rail is added there, and from the keyboard by the
+ * grip beside its title.
+ */
 export const HomeGrid: StoryObj = {
     name: 'Home',
     render: () => <VideoApp view="home" />,
 }
 
-/** One video playing, with its channel, actions, description and comments, and what plays next beside it. */
+/**
+ * One video playing, with its channel, actions, description and comments, and what plays next
+ * beside it; a video up next dragged onto a list in the rail is added there.
+ */
 export const Watch: StoryObj = {
     name: 'Watch',
     render: () => <VideoApp view="watch" />,

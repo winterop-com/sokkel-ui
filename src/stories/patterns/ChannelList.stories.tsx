@@ -17,6 +17,7 @@ import {
 import { useState, type ReactNode } from 'react'
 
 import { ChannelList, type ChannelEntry, type ChannelPlace, type ChannelSection } from '@winterop-com/sokkel-ui/ChannelList'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail } from '@winterop-com/sokkel-ui/Rail'
 import { pictureOf } from '../fixtures/portraits'
@@ -141,6 +142,35 @@ export const Channels: StoryObj = {
             />
         </Frame>
     ),
+}
+
+/**
+ * Channels in the reader's own order: a channel's row drags to a new place, the rest moving aside,
+ * a finger holding it a moment first, and Alt (Option) with the up and down arrows moves the focused
+ * one, the focus following it.
+ */
+export const Ordered: StoryObj = {
+    name: 'Own order',
+    render: function Render() {
+        const [channels, setChannels] = useState(CHANNELS)
+        return (
+            <Frame>
+                <ChannelList
+                    className={COLUMN}
+                    sections={[
+                        {
+                            id: 'channels',
+                            title: 'Channels',
+                            icon: <Hash aria-hidden />,
+                            entries: channels,
+                            onMove: (from, to) => setChannels(moveItem(channels, from, to)),
+                        },
+                    ]}
+                    active="harbor-ops"
+                />
+            </Frame>
+        )
+    },
 }
 
 /** Direct messages: each person a small round avatar with a dot outside the letter, active, away or offline, and grace's conversation open. */

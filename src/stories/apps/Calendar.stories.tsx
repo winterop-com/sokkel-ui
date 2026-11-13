@@ -23,7 +23,7 @@ import { EventDetails, type EventFact } from '@winterop-com/sokkel-ui/calendar/E
 import { weekOf, type CalendarEvent } from '@winterop-com/sokkel-ui/calendar/events'
 import { MiniMonth } from '@winterop-com/sokkel-ui/calendar/MiniMonth'
 import { MonthGrid } from '@winterop-com/sokkel-ui/calendar/MonthGrid'
-import { WeekGrid } from '@winterop-com/sokkel-ui/calendar/WeekGrid'
+import { WeekGrid, type CalendarEventChange } from '@winterop-com/sokkel-ui/calendar/WeekGrid'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -309,7 +309,12 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
     const [shown, setShown] = useState<CalendarId[]>(CALENDARS.map((calendar) => calendar.id))
     const [openEvent, setOpenEvent] = useState<string | null>(open)
     const [collapsed, setCollapsed] = useState(false)
-    const events = EVENTS.filter((event) => shown.includes(event.calendar))
+    const [everything, setEverything] = useState(EVENTS)
+    const events = everything.filter((event) => shown.includes(event.calendar))
+    // A run is the scheduler's, so only the rest move and resize.
+    const canChange = (event: Entry) => event.calendar !== 'runs'
+    const change = ({ event, start, end }: CalendarEventChange<Entry>) =>
+        setEverything((now) => now.map((each) => (each.id === event.id ? { ...each, start, end } : each)))
     const week = weekOf(anchor)
     const go = (day: Date) => {
         setAnchor(day)
@@ -363,9 +368,9 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                 onValueChange={go}
                                 now={NOW}
                                 range={view === 'week' ? { start: week[0], end: week[6] } : undefined}
-                                marked={EVENTS.filter((event) => event.calendar !== 'runs' && shown.includes(event.calendar)).map(
-                                    (event) => event.start,
-                                )}
+                                marked={everything
+                                    .filter((event) => event.calendar !== 'runs' && shown.includes(event.calendar))
+                                    .map((event) => event.start)}
                             />
                             <CalendarToggles calendars={calendars} onReorder={setCalendars} shown={shown} onChange={setShown} />
                         </Stack>
@@ -438,6 +443,9 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                 renderDetail={detail}
                                 openEvent={openEvent}
                                 onOpenEventChange={setOpenEvent}
+                                onEventMove={change}
+                                onEventResize={change}
+                                canChange={canChange}
                                 className="flex-1"
                             />
                         ) : (
@@ -452,6 +460,9 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                     go(day)
                                     setView('week')
                                 }}
+                                onEventMove={change}
+                                onEventResize={change}
+                                canChange={canChange}
                                 className="flex-1"
                             />
                         )}
@@ -465,10 +476,17 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
 const meta: Meta = { title: 'Apps/Calendar' }
 export default meta
 
-/** The week of 2 November from 07:00, with today's line at 09:30 and the events at 13:00 on Thursday sharing its width. */
+/**
+ * The week of 2 November from 07:00, with today's line at 09:30 and the events at 13:00 on Thursday
+ * sharing its width. An event other than a job run drags to another day and time, its lower edge
+ * drags its end, and Alt with the arrows moves the focused one (with Shift, its end).
+ */
 export const Week: StoryObj = { name: 'Week', render: () => <CalendarApp /> }
 
-/** November as a grid; a day with more events than it has room for says how many more. */
+/**
+ * November as a grid; a day with more events than it has room for says how many more. An event
+ * other than a job run drags to another day, and its right end on its last day drags that day.
+ */
 export const Month: StoryObj = { name: 'Month', render: () => <CalendarApp view="month" /> }
 
 /** The board review on Thursday open in its popover, with its calendar, people and notes. */

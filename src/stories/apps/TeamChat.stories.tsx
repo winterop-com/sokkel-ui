@@ -28,7 +28,7 @@ import {
 import { useState, type ReactNode } from 'react'
 
 import { ChannelHeader, type ChannelHeaderAction, type ChannelHeaderTab } from '@winterop-com/sokkel-ui/ChannelHeader'
-import { ChannelList, type ChannelSection } from '@winterop-com/sokkel-ui/ChannelList'
+import { ChannelList, type ChannelEntry, type ChannelSection } from '@winterop-com/sokkel-ui/ChannelList'
 import {
     ChatDay,
     ChatMessage,
@@ -43,7 +43,9 @@ import { MessageComposer, type MessageSchedule } from '@winterop-com/sokkel-ui/M
 import { ListRow } from '@winterop-com/sokkel-ui/ListRow'
 import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { SortableList } from '@winterop-com/sokkel-ui/Sortable'
@@ -64,6 +66,9 @@ import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 /**
  * A team chat in the library's frame: a strip of places on the far left, the channels and direct
  * messages beside it, the conversation with its header and composer, and a thread in the side panel.
+ * The starred and the channels are in ada's own order, an entry dragged to a new place or moved
+ * with Alt and the arrows, and a file or a picture dragged from a message onto a conversation is
+ * shared there.
  */
 const meta: Meta = { title: 'Apps/Team chat' }
 export default meta
@@ -100,32 +105,37 @@ const STRIP_FOOT = (
     </>
 )
 
+const STARRED: ChannelEntry[] = [
+    { id: 'larkspur', label: 'larkspur', kind: 'channel', unread: true, mentions: 2 },
+    { id: 'dm-margaret', label: 'margaret', kind: 'direct', person: MARGARET, presence: 'offline' },
+    { id: 'on-call', label: 'on-call', kind: 'private' },
+]
+
+const CHANNELS: ChannelEntry[] = [
+    { id: 'harbor-ops', label: 'harbor-ops', kind: 'channel', unread: true },
+    { id: 'juniper-launch', label: 'juniper-launch', kind: 'channel' },
+    { id: 'deploys', label: 'deploys', kind: 'channel', unread: true, muted: true },
+    { id: 'incident-review', label: 'incident-review', kind: 'private', unread: true },
+    { id: 'random', label: 'random', kind: 'channel' },
+]
+
+/** What a file in a message drags as, onto a conversation it is shared to. */
+const SHARED_FILE = 'chat-file'
+
+/** The starred and the channels in the reader's order, and what a file let go on a conversation does. */
+interface Order {
+    starred: ChannelEntry[]
+    channels: ChannelEntry[]
+    onStarred: (from: number, to: number) => void
+    onChannels: (from: number, to: number) => void
+    onShare: (to: string, file: ChatFile) => void
+}
+
 /** The sections, with the open conversation read. */
-function sections(active: string): ChannelSection[] {
+function sections(active: string, order: Order): ChannelSection[] {
     const all: ChannelSection[] = [
-        {
-            id: 'starred',
-            title: 'Starred',
-            icon: <Star aria-hidden />,
-            entries: [
-                { id: 'larkspur', label: 'larkspur', kind: 'channel', unread: true, mentions: 2 },
-                { id: 'dm-margaret', label: 'margaret', kind: 'direct', person: MARGARET, presence: 'offline' },
-            ],
-        },
-        {
-            id: 'channels',
-            title: 'Channels',
-            icon: <Hash aria-hidden />,
-            onAdd: noop,
-            entries: [
-                { id: 'harbor-ops', label: 'harbor-ops', kind: 'channel', unread: true },
-                { id: 'juniper-launch', label: 'juniper-launch', kind: 'channel' },
-                { id: 'deploys', label: 'deploys', kind: 'channel', unread: true, muted: true },
-                { id: 'on-call', label: 'on-call', kind: 'private' },
-                { id: 'incident-review', label: 'incident-review', kind: 'private', unread: true },
-                { id: 'random', label: 'random', kind: 'channel' },
-            ],
-        },
+        { id: 'starred', title: 'Starred', icon: <Star aria-hidden />, entries: order.starred, onMove: order.onStarred },
+        { id: 'channels', title: 'Channels', icon: <Hash aria-hidden />, onAdd: noop, entries: order.channels, onMove: order.onChannels },
         {
             id: 'direct',
             title: 'Direct messages',
@@ -148,11 +158,17 @@ function sections(active: string): ChannelSection[] {
     ]
     return all.map((section) => ({
         ...section,
-        entries: section.entries.map((entry) => (entry.id === active ? { ...entry, unread: false, mentions: undefined } : entry)),
+        entries: section.entries.map((entry) => ({
+            ...(entry.id === active ? { ...entry, unread: false, mentions: undefined } : entry),
+            drop: {
+                accepts: (drag: DragData) => drag.kind === SHARED_FILE,
+                onDrop: (drag: DragData) => order.onShare(entry.id, drag.value as ChatFile),
+            },
+        })),
     }))
 }
 
-function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) => void }) {
+function Sidebar({ active, onSelect, order }: { active: string; onSelect: (id: string) => void; order: Order }) {
     const [query, setQuery] = useState('')
     return (
         <Row gap="none" align="stretch" className="h-full">
@@ -160,7 +176,7 @@ function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) 
             <ChannelList
                 className="border-r border-border-strong"
                 defaultSize={256}
-                sections={sections(active)}
+                sections={sections(active, order)}
                 active={active}
                 onSelect={onSelect}
                 title={
@@ -206,8 +222,23 @@ const MENU = (
     </>
 )
 
-/** What every message offers on hover: react, reply in thread, and the menu. */
-const BAR = { onAddReaction: noop, onReply: noop, menu: MENU }
+/** What every message offers on hover: react, reply in thread, and the menu; its files drag onto a conversation. */
+const BAR = {
+    onAddReaction: noop,
+    onReply: noop,
+    menu: MENU,
+    fileDrag: (file: ChatFile): DragData => ({ kind: SHARED_FILE, label: file.name, value: file }),
+}
+
+/** What ada shared into a conversation by dragging a file onto it. */
+function SharedFiles({ files }: { files: readonly ChatFile[] }) {
+    if (files.length === 0) return null
+    return (
+        <ChatMessage author="ada" image={ADA.image} time="10:41" files={files} {...BAR}>
+            <Markdown content="Shared from #harbor-ops." />
+        </ChatMessage>
+    )
+}
 
 const ACTIONS: ChannelHeaderAction[] = [
     { id: 'pins', label: 'Pinned messages', icon: <Pin aria-hidden /> },
@@ -314,7 +345,17 @@ function Pins() {
     )
 }
 
-function ChannelPage({ onThread, threadOpen, startTab = 'messages' }: { onThread: () => void; threadOpen: boolean; startTab?: string }) {
+function ChannelPage({
+    onThread,
+    threadOpen,
+    startTab = 'messages',
+    shared = [],
+}: {
+    onThread: () => void
+    threadOpen: boolean
+    startTab?: string
+    shared?: readonly ChatFile[]
+}) {
     const { of, flip } = useReactions({ check: true })
     const [tab, setTab] = useState(startTab)
     const header = (
@@ -397,6 +438,7 @@ function ChannelPage({ onThread, threadOpen, startTab = 'messages' }: { onThread
                 >
                     <Markdown content="The queue backed up while it retried. It drained by 08:10." />
                 </ChatMessage>
+                <SharedFiles files={shared} />
             </ChatDay>
         </Conversation>
     )
@@ -429,7 +471,7 @@ function Thread() {
     )
 }
 
-function Direct() {
+function Direct({ shared = [] }: { shared?: readonly ChatFile[] }) {
     return (
         <Conversation
             header={
@@ -461,6 +503,7 @@ function Direct() {
                 <ChatMessage author="grace" time="09:06" continued {...BAR}>
                     <Markdown content="The notes are in [the release checklist](https://docs.example.org/juniper/release)." />
                 </ChatMessage>
+                <SharedFiles files={shared} />
             </ChatDay>
         </Conversation>
     )
@@ -499,33 +542,48 @@ function NewChannelPage() {
 function TeamChat({ start = 'harbor-ops', thread = false, tab }: { start?: string; thread?: boolean; tab?: string }) {
     const [active, setActive] = useState(start)
     const [panel, setPanel] = useState(thread)
+    const [starred, setStarred] = useState(STARRED)
+    const [channels, setChannels] = useState(CHANNELS)
+    const [shared, setShared] = useState<Record<string, ChatFile[]>>({})
+    const order: Order = {
+        starred,
+        channels,
+        onStarred: (from, to) => setStarred(moveItem(starred, from, to)),
+        onChannels: (from, to) => setChannels(moveItem(channels, from, to)),
+        onShare: (to, file) => {
+            setShared((now) => ({ ...now, [to]: [...(now[to] ?? []), file] }))
+            setActive(to)
+        },
+    }
     const body =
         active === 'dm-grace' ? (
-            <Direct />
-        ) : active === 'juniper-launch' ? (
+            <Direct shared={shared[active]} />
+        ) : active === 'juniper-launch' && shared[active] === undefined ? (
             <NewChannelPage />
         ) : (
-            <ChannelPage threadOpen={panel} onThread={() => setPanel(true)} startTab={tab} />
+            <ChannelPage key={active} threadOpen={panel} onThread={() => setPanel(true)} startTab={tab} shared={shared[active]} />
         )
     return (
         <TooltipProvider>
-            <Shell
-                rail={<Sidebar active={active} onSelect={setActive} />}
-                top={<TopBar onSearch={noop} words={{ search: 'Search Tidevann', trail: 'Where you are' }} />}
-                panelOpen={panel}
-                onPanelOpenChange={setPanel}
-                panel={
-                    active === 'harbor-ops' ? (
-                        <SidePanel
-                            tabs={[{ id: 'thread', label: 'Thread in #harbor-ops', content: <Thread /> }]}
-                            defaultSize={384}
-                            words={{ resize: 'Resize the thread' }}
-                        />
-                    ) : undefined
-                }
-            >
-                {body}
-            </Shell>
+            <RailDrops>
+                <Shell
+                    rail={<Sidebar active={active} onSelect={setActive} order={order} />}
+                    top={<TopBar onSearch={noop} words={{ search: 'Search Tidevann', trail: 'Where you are' }} />}
+                    panelOpen={panel}
+                    onPanelOpenChange={setPanel}
+                    panel={
+                        active === 'harbor-ops' ? (
+                            <SidePanel
+                                tabs={[{ id: 'thread', label: 'Thread in #harbor-ops', content: <Thread /> }]}
+                                defaultSize={384}
+                                words={{ resize: 'Resize the thread' }}
+                            />
+                        ) : undefined
+                    }
+                >
+                    {body}
+                </Shell>
+            </RailDrops>
         </TooltipProvider>
     )
 }

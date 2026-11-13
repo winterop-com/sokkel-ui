@@ -242,6 +242,10 @@
             "types": "./dist/components/DragDrop.d.ts",
             "import": "./dist/components/DragDrop.js"
         },
+        "./DragSource": {
+            "types": "./dist/components/DragSource.d.ts",
+            "import": "./dist/components/DragSource.js"
+        },
         "./DueText": {
             "types": "./dist/components/DueText.d.ts",
             "import": "./dist/components/DueText.js"
@@ -737,6 +741,10 @@
         "./calendar/EventPopover": {
             "types": "./dist/components/calendar/EventPopover.d.ts",
             "import": "./dist/components/calendar/EventPopover.js"
+        },
+        "./calendar/event-change": {
+            "types": "./dist/components/calendar/event-change.d.ts",
+            "import": "./dist/components/calendar/event-change.js"
         },
         "./calendar/events": {
             "types": "./dist/components/calendar/events.d.ts",

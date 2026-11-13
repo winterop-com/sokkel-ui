@@ -18,6 +18,7 @@ import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { insertItem, moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { ListRow, ListRows } from '@winterop-com/sokkel-ui/ListRow'
+import { MessageRow } from '@winterop-com/sokkel-ui/MessageRow'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SortableGrid, SortableList } from '@winterop-com/sokkel-ui/Sortable'
@@ -176,7 +177,7 @@ interface Card {
     id: string
     code: string
     title: string
-    column: 'queued' | 'running' | 'succeeded'
+    column: 'queued' | 'running' | 'succeeded' | 'archived'
     assignee: string
 }
 
@@ -220,6 +221,77 @@ export const BoardStory: StoryObj = {
                                 title={column.title}
                                 icon={column.icon}
                                 count={held.length}
+                                empty="No items"
+                            >
+                                {held.map((card) => (
+                                    <BoardCard
+                                        key={card.id}
+                                        id={card.id}
+                                        code={card.code}
+                                        title={card.title}
+                                        assignee={{ name: card.assignee }}
+                                    />
+                                ))}
+                            </BoardColumn>
+                        )
+                    })}
+                </Row>
+            </Board>
+        )
+    },
+}
+
+const ARRANGED_COLUMNS = [
+    ...COLUMNS,
+    { id: 'archived', title: 'Archived', icon: <CircleDashed className="size-4 text-faint" aria-hidden />, locked: true },
+]
+
+/** How many cards Running takes before it refuses another. */
+const RUNNING_LIMIT = 2
+
+/**
+ * A board whose columns move too: a column drags by its head, or from the keyboard by the grip at
+ * the head's end, a line between the columns showing where it lands. Archived is locked: its card
+ * stays, none lands in it, and no column moves across it. Running refuses a third card, so no line
+ * shows there while one is carried over it.
+ */
+export const BoardColumns: StoryObj = {
+    name: 'Board columns',
+    render: function Render() {
+        const [cards, setCards] = useState<Card[]>([
+            ...CARDS,
+            { id: 'f', code: 'TID-1', title: 'Move the export to the new bucket', column: 'archived', assignee: 'grace' },
+        ])
+        const [columns, setColumns] = useState(ARRANGED_COLUMNS)
+        const onMove = ({ card, to, index }: BoardMove) =>
+            setCards((now) => {
+                const moving = now.find((each) => each.id === card)
+                if (moving === undefined) return now
+                const rest = now.filter((each) => each.id !== card)
+                const inColumn = rest.filter((each) => each.column === to)
+                const at = index >= inColumn.length ? rest.length : rest.indexOf(inColumn[index])
+                return insertItem(rest, { ...moving, column: to as Card['column'] }, at)
+            })
+        return (
+            <Board
+                onMove={onMove}
+                canDrop={({ from, to }) =>
+                    to !== 'running' || from === 'running' || cards.filter((card) => card.column === to).length < RUNNING_LIMIT
+                }
+                onColumnMove={(from, to) => setColumns(moveItem(columns, from, to))}
+            >
+                <Row gap="md" align="start">
+                    {columns.map((column) => {
+                        const held = cards.filter((card) => card.column === column.id)
+                        return (
+                            <BoardColumn
+                                key={column.id}
+                                id={column.id}
+                                title={column.title}
+                                icon={column.icon}
+                                count={held.length}
+                                limit={column.id === 'running' ? RUNNING_LIMIT : undefined}
+                                locked={'locked' in column && column.locked}
                                 empty="No items"
                             >
                                 {held.map((card) => (
@@ -436,6 +508,81 @@ export const SortedToFolders: StoryObj = {
                             nodeOf={(drag) => (drag.value as { row?: Runbook } | undefined)?.row?.id}
                             className="p-1"
                         />
+                    </Section>
+                </Columns>
+            </DragDrop>
+        )
+    },
+}
+
+interface Mail {
+    id: string
+    from: string
+    subject: string
+    time: string
+    folder: string
+}
+
+const MAIL: Mail[] = [
+    { id: 'm1', from: 'grace', subject: 'Harbor launch checklist', time: '09:42', folder: 'inbox' },
+    { id: 'm2', from: 'scheduler', subject: 'nightly-export failed at validate', time: '08:15', folder: 'inbox' },
+    { id: 'm3', from: 'margaret', subject: 'Juniper budget for the first quarter', time: '07:58', folder: 'inbox' },
+    { id: 'm4', from: 'linus', subject: 'Re: rebuild-index timings', time: 'Yesterday', folder: 'inbox' },
+    { id: 'm5', from: 'ada', subject: 'Cutover plan for Saturday', time: 'Nov 3', folder: 'harbor' },
+    { id: 'm6', from: 'grace', subject: 'Release notes for 2.1.0', time: 'Nov 2', folder: 'juniper' },
+    { id: 'm7', from: 'scheduler', subject: 'Your weekly digest', time: 'Oct 28', folder: 'archive' },
+]
+
+const MAIL_FOLDERS = [
+    { id: 'harbor', label: 'harbor' },
+    { id: 'juniper', label: 'juniper' },
+    { id: 'archive', label: 'Archive' },
+]
+
+/**
+ * The inbox's messages dragged onto folders, each folder holding its messages: a message drags as
+ * a whole, a small card with its subject at the pointer, and from the keyboard by the grip at its
+ * end (on hover or focus), the arrows carrying it to a folder. Let go on a folder, it moves there.
+ */
+export const MessagesToFolders: StoryObj = {
+    name: 'Messages to folders',
+    render: function Render() {
+        const [mail, setMail] = useState(MAIL)
+        const nodes: TreeNode[] = MAIL_FOLDERS.map((each) =>
+            folder(
+                each.id,
+                each.label,
+                mail.filter((one) => one.folder === each.id).map((one) => file(one.id, one.subject)),
+            ),
+        )
+        const inbox = mail.filter((one) => one.folder === 'inbox')
+        return (
+            <DragDrop>
+                <Columns count={2} min="sm" gap="lg" className="mx-auto max-w-4xl">
+                    <Section title="Folders" flush>
+                        <Tree
+                            label="Folders"
+                            nodes={nodes}
+                            selection="none"
+                            defaultExpanded={['harbor']}
+                            order={{ sorted: true }}
+                            accepts={(drag) => drag.kind === 'mail'}
+                            onDrop={(drag, into) => {
+                                if (into !== null) setMail(mail.map((one) => (one.id === drag.value ? { ...one, folder: into } : one)))
+                            }}
+                            className="p-1"
+                        />
+                    </Section>
+                    <Section title="Inbox" meta={String(inbox.length)} flush>
+                        {inbox.map((one) => (
+                            <MessageRow
+                                key={one.id}
+                                from={one.from}
+                                subject={one.subject}
+                                time={one.time}
+                                drag={{ kind: 'mail', label: one.subject, value: one.id }}
+                            />
+                        ))}
                     </Section>
                 </Columns>
             </DragDrop>

@@ -45,6 +45,7 @@ import {
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { moveItem as reorder } from '@winterop-com/sokkel-ui/lib/reorder'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
@@ -56,7 +57,8 @@ import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
  * A board of work items in the library's frame: columns from the backlog to done, each with its
  * count and a limit that warns when it is passed; cards with their code, labels, due date and
  * assignee; a filter bar; swimlanes by project; and the chosen card in the side panel. Cards move
- * by drag and drop, or by "Move to" in a card's menu, and the order is kept in the story's state.
+ * by drag and drop, or by "Move to" in a card's menu, and the columns move by their heads; the
+ * order is kept in the story's state.
  * "Now" is fixed at 5 November 2026, 09:30, so overdue dates draw the same every time.
  */
 const NOW = new Date(2026, 10, 5, 9, 30)
@@ -485,6 +487,7 @@ function BoardApp({
     filters?: Filters
 }) {
     const [items, setItems] = useState(ITEMS)
+    const [columns, setColumns] = useState(COLUMNS)
     const [filters, setFilters] = useState(initialFilters)
     const [lanes, setLanes] = useState(initialLanes)
     const [folded, setFolded] = useState<Project[]>([])
@@ -628,12 +631,13 @@ function BoardApp({
                     </Stack>
                     <BoardArea
                         onMove={onMove}
+                        onColumnMove={(from, to) => setColumns(reorder(columns, from, to))}
                         columnWidth="min(17rem, calc(100vw - 4rem))"
                         className="flex-1 snap-x snap-mandatory px-(--density-page-inset) pb-4 md:snap-none"
                     >
                         {!lanes ? (
                             <Row gap="md" align="stretch" className="h-full w-max">
-                                {COLUMNS.map((column) => {
+                                {columns.map((column) => {
                                     const cards = shown.filter((item) => item.column === column.id)
                                     return (
                                         <BoardColumn
@@ -654,7 +658,7 @@ function BoardApp({
                         ) : (
                             <Stack gap="2xs" className="w-max">
                                 <Row gap="md" className="sticky top-0 z-20 bg-background">
-                                    {COLUMNS.map((column) => (
+                                    {columns.map((column) => (
                                         <BoardColumnHead
                                             key={column.id}
                                             title={column.title}
@@ -670,13 +674,13 @@ function BoardApp({
                                         key={project.id}
                                         title={<span className="font-mono">{project.title}</span>}
                                         count={shown.filter((item) => item.project === project.id).length}
-                                        columns={COLUMNS.length}
+                                        columns={columns.length}
                                         collapsed={folded.includes(project.id)}
                                         onCollapsedChange={(fold) =>
                                             setFolded(fold ? [...folded, project.id] : folded.filter((other) => other !== project.id))
                                         }
                                     >
-                                        {COLUMNS.map((column) => (
+                                        {columns.map((column) => (
                                             <BoardDrop
                                                 key={column.id}
                                                 id={`${project.id}:${column.id}`}
@@ -699,7 +703,7 @@ function BoardApp({
 const meta: Meta = { title: 'Apps/Board' }
 export default meta
 
-/** The board in columns, from the backlog to done; "In progress" is past its limit of four. */
+/** The board in columns, from the backlog to done; "In progress" is past its limit of four. A column drags by its head. */
 export const Board: StoryObj = { name: 'Board', render: () => <BoardApp /> }
 
 /** Narrowed to ada's and grace's bugs: the counts stay the whole column's, the cards are the matches. */

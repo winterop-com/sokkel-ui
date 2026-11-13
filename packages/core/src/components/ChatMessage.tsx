@@ -3,6 +3,8 @@ import { ChevronRight, Ellipsis, FileText, MessageSquareText, SmilePlus } from '
 import { isValidElement, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import type { DragData } from './DragDrop'
+import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSource'
 import { AudioPlayer } from './media/AudioPlayer'
 import { VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { PersonAvatar } from './PersonAvatar'
@@ -68,6 +70,8 @@ export interface ChatMessageWords {
     viewThread: string
     /** The players' words, for a recording or a video: play, pause, seek, speed, captions, fullscreen and the rest. */
     player: Partial<VideoPlayerWords>
+    /** A file's grip, with `fileDrag`: what the keyboard picks the file up by. */
+    dragFile: (name: string) => string
 }
 
 const WORDS: ChatMessageWords = {
@@ -80,6 +84,7 @@ const WORDS: ChatMessageWords = {
     lastReply: (when) => `Last reply ${when}`,
     viewThread: 'View thread',
     player: {},
+    dragFile: (name) => `Drag ${name}`,
 }
 
 /** The link glyph drawn before every link in a body, as a mask so it takes the link's color. */
@@ -113,6 +118,9 @@ export function ChatFace({ who, className }: ChatFaceProps) {
     return <PersonAvatar name={who.name} image={who.image} size="md" className={cn('size-full rounded-none', className)} />
 }
 
+/** A file's drag with a small card at the pointer, unless its data says otherwise. */
+const dragOf = (drag: DragData | undefined): DragData | undefined => (drag === undefined ? undefined : { compact: true, ...drag })
+
 /** One of the hover bar's icon buttons, its name in a tooltip. */
 function BarButton({ label, onClick, children }: { label: string; onClick?: () => void; children: ReactNode }) {
     return (
@@ -141,6 +149,11 @@ export interface ChatMessageProps {
     /** Held in its hover look, as while a picker opened from it is showing. */
     active?: boolean
     files?: readonly ChatFile[]
+    /**
+     * What a file or a picture carries when it is dragged to a target elsewhere on the page, such as
+     * onto another conversation; one with none, a recording and a video do not drag.
+     */
+    fileDrag?: (file: ChatFile) => DragData | undefined
     reactions?: readonly ChatReaction[]
     onReact?: (id: string) => void
     /** Offers the add-reaction button after the reactions and in the hover bar. */
@@ -165,8 +178,9 @@ export interface ChatMessageProps {
  * each message of a run still reads as its own. Under the body come the files (a recording and a video
  * play in place), the reactions
  * (pressing one adds or takes back yours, the button at the end adds a new one) and the thread
- * line that opens the replies. Links in the body carry a link glyph; an edited message says so
- * after its last line. The actions float at the top right on hover: react, reply in thread and a
+ * line that opens the replies. With `fileDrag` a file or a picture drags to a target elsewhere on
+ * the page, and from the keyboard by its grip, shown on hover or focus. Links in the body carry a
+ * link glyph; an edited message says so after its last line. The actions float at the top right on hover: react, reply in thread and a
  * menu, each given by its handler or items.
  */
 export function ChatMessage({
@@ -181,6 +195,7 @@ export function ChatMessage({
     highlighted = false,
     active = false,
     files,
+    fileDrag,
     reactions,
     onReact,
     onAddReaction,
@@ -269,28 +284,58 @@ export function ChatMessage({
                                     words={words.player}
                                     className="w-[min(100%,24rem)]"
                                 />
-                            ) : file.kind === 'image' && file.url !== undefined ? (
-                                <img
-                                    key={file.id}
-                                    src={file.url}
-                                    alt={file.name}
-                                    className="max-h-60 max-w-[min(100%,24rem)] rounded-lg border border-border object-cover"
-                                />
                             ) : (
-                                <div
-                                    key={file.id}
-                                    className="flex w-[min(100%,18rem)] items-center gap-3 rounded-surface border border-border bg-card px-3 py-2"
-                                >
-                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary-ink">
-                                        <FileText className="size-4.5" aria-hidden />
-                                    </span>
-                                    <span className="min-w-0">
-                                        <span className="block truncate text-sm font-medium">{file.name}</span>
-                                        {file.detail !== undefined && (
-                                            <span className="block text-xs text-muted-foreground">{file.detail}</span>
-                                        )}
-                                    </span>
-                                </div>
+                                <DragSource key={file.id} drag={dragOf(fileDrag?.(file))}>
+                                    {(source) =>
+                                        file.kind === 'image' && file.url !== undefined ? (
+                                            <span
+                                                ref={source.ref}
+                                                {...source.press}
+                                                className={cn(DRAG_GROUP, 'relative block', source.dragging && 'opacity-40')}
+                                            >
+                                                <img
+                                                    src={file.url}
+                                                    alt={file.name}
+                                                    draggable={false}
+                                                    className="max-h-60 max-w-[min(100%,24rem)] rounded-lg border border-border object-cover"
+                                                />
+                                                <DragSourceGrip
+                                                    source={source}
+                                                    size="icon-xs"
+                                                    variant="secondary"
+                                                    label={words.dragFile(file.name)}
+                                                    className={cn('absolute top-1.5 right-1.5 shadow-sm', GRIP_ON_HOVER)}
+                                                />
+                                            </span>
+                                        ) : (
+                                            <div
+                                                ref={source.ref}
+                                                {...source.press}
+                                                className={cn(
+                                                    DRAG_GROUP,
+                                                    'flex w-[min(100%,18rem)] items-center gap-3 rounded-surface border border-border bg-card px-3 py-2',
+                                                    source.dragging && 'opacity-40',
+                                                )}
+                                            >
+                                                <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary-ink">
+                                                    <FileText className="size-4.5" aria-hidden />
+                                                </span>
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block truncate text-sm font-medium">{file.name}</span>
+                                                    {file.detail !== undefined && (
+                                                        <span className="block text-xs text-muted-foreground">{file.detail}</span>
+                                                    )}
+                                                </span>
+                                                <DragSourceGrip
+                                                    source={source}
+                                                    size="icon-xs"
+                                                    label={words.dragFile(file.name)}
+                                                    className={cn('-mr-1.5', GRIP_ON_HOVER)}
+                                                />
+                                            </div>
+                                        )
+                                    }
+                                </DragSource>
                             ),
                         )}
                     </div>
