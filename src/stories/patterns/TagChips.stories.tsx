@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
+import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Surface } from '@winterop-com/sokkel-ui/Section'
 import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
 
-/** A row of tags that shows as many as fit the room left and a +N for the rest. */
+/** A row of tags as mono chips that shows as many as fit the room left and a +N for the rest, named by the tags it stands for. */
 const meta: Meta = { title: 'Patterns/Tag chips', parameters: { frame: 'column' } }
 export default meta
 
@@ -32,14 +33,14 @@ export const Room: StoryObj = {
     ),
 }
 
-/** Held to three even where more would fit, in the outline look. */
+/** Held to three even where more would fit, in the outline look, the +N named by the tags left out. */
 export const Capped: StoryObj = {
     render: () => <TagChips tags={TAGS} max={3} variant="outline" />,
 }
 
 /**
  * Tags a press filters by: each shown tag is a button, and the +N chip opens a menu of the rest,
- * each filtering the same way.
+ * drawn as chips, each filtering the same way.
  */
 export const Selectable: StoryObj = {
     render: function Render() {
@@ -56,4 +57,33 @@ export const Selectable: StoryObj = {
             </Stack>
         )
     },
+}
+
+interface Job {
+    job: string
+    owner: string
+    tags: readonly string[]
+}
+
+const JOBS: Job[] = [
+    { job: 'nightly-export', owner: 'ada', tags: ['nightly', 'harbor', 'csv', 'europe', 'retry-on-failure'] },
+    { job: 'sync-inventory', owner: 'grace', tags: ['hourly', 'juniper', 'critical-path'] },
+    { job: 'rebuild-index', owner: 'linus', tags: ['search', 'larkspur'] },
+    { job: 'import-orders', owner: 'margaret', tags: ['hourly', 'larkspur', 'orders', 'archived-input', 'warehouse', 'api'] },
+]
+
+const COLUMNS: DataColumn<Job>[] = [
+    { id: 'job', header: 'Job', width: 'content', cell: (job) => <span className="font-mono">{job.job}</span> },
+    { id: 'tags', header: 'Tags', width: 'minmax(8rem,1fr)', cell: (job) => <TagChips tags={job.tags} /> },
+    { id: 'owner', header: 'Owner', width: '7rem', cell: (job) => job.owner },
+]
+
+/**
+ * Tags in a table's column: each row shows as many as its column's room holds and a +N for the
+ * rest, folding as the column narrows; once the rows stack as cards, every tag shows, wrapping.
+ */
+export const InATable: StoryObj = {
+    name: 'In a table',
+    parameters: { frame: 'padded' },
+    render: () => <DataTable variant="list" columns={COLUMNS} rows={JOBS} rowKey={(job) => job.job} stackBelow="36rem" />,
 }
