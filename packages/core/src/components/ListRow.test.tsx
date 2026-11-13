@@ -65,4 +65,17 @@ describe('ListRow', () => {
         expect(html).not.toContain('flex-col')
         expect(html).toMatch(/data-slot="list-row-title" class="[^"]*font-mono/)
     })
+
+    it('stands a dense row that presses a finger tall below md, and leaves a plain one dense', () => {
+        const rowClasses = (html: string) => (/data-slot="list-row"[^>]*class="([^"]*)"/.exec(html)?.[1] ?? '').split(/\s+/)
+        for (const html of [
+            renderToStaticMarkup(<ListRow dense title="scheduler" detail="missed 2 ticks" onPress={() => undefined} />),
+            renderToStaticMarkup(<ListRow dense title="scheduler" detail="missed 2 ticks" href="/services/scheduler" />),
+        ]) {
+            expect(rowClasses(html)).toEqual(expect.arrayContaining(['min-h-8', 'max-md:min-h-finger']))
+        }
+        const plain = rowClasses(renderToStaticMarkup(<ListRow dense title="scheduler" detail="missed 2 ticks" />))
+        expect(plain).toContain('min-h-8')
+        expect(plain).not.toContain('max-md:min-h-finger')
+    })
 })
