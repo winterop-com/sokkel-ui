@@ -195,7 +195,7 @@ as one that moves to a larger unit does (`1.50 TB`), is kept as it writes it. `a
 the ticks' unit in place of the spec's on a chart of one value axis, and an axis with a `format` of
 its own in `axes` writes its ticks with it, unit and all. Figures stacked to 100% are written in
 percent; a needle gauge's ticks and a heatmap's scale follow `format` too. A builder that draws a
-value axis writes its ticks with `tickWriter` from `kinds/categories.ts`.
+value axis writes its ticks with `tickWriter` from `kinds/axes.ts`.
 
 **Categories.** `formatCategory` writes a category where the chart shows it: on the category
 axis and as the tooltip's title, on the kinds with a category axis (`bar`, `line`, `area`, `step`,
@@ -303,7 +303,10 @@ series in the legend drops its panel.
    color comes from the look (`look.token`, `colorOf`, `look.mix`) and every size from `look.size`,
    so a theme reaches it; every corner from `look.corner`. Its doc comment says what it draws and
    which fields it reads. Shaping rows into figures goes in a function of its own, in the builder's
-   file or in `data.ts`, `stats.ts` or `shapes.ts`, where a test can reach it.
+   file or in `data.ts`, `stats.ts` or `shapes.ts`, where a test can reach it. A builder imports
+   what it shares with others (`written` from `kinds/spec.ts`, the axes, ticks and marks from
+   `kinds/axes.ts`), and another builder's file only to draw through that builder, as `step` draws
+   through `line`, so a kind loads only the builders it draws with.
 2. **The registry.** Add the builder to `KINDS` in `kinds/index.ts`, its file to `FILES` in
    `kinds/load.ts`, so it loads the first time a chart of the kind is drawn, and its legend to
    `LEGENDS` in `kinds/legends.ts`: `seriesLegend` for one entry per series, a legend of its own

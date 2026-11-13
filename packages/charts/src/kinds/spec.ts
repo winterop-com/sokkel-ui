@@ -1,6 +1,6 @@
 import type { EChartsCoreOption } from 'echarts/core'
 
-import type { Aggregate, Row } from '../data'
+import { formatNumber, type Aggregate, type Row } from '../data'
 import { tokenColor, type ChartLook } from '../look'
 
 /**
@@ -296,6 +296,12 @@ export const measureName = (spec: ChartSpec, field: string | undefined): string 
 export function unitAt(spec: ChartSpec, index = 0): string {
     if (spec.unit === undefined) return ''
     return typeof spec.unit === 'string' ? spec.unit : (spec.unit[index] ?? '')
+}
+
+/** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
+export function written(spec: ChartSpec, value: number | null | undefined, field = 0): string {
+    if (value === null || value === undefined) return '-'
+    return `${(spec.format ?? formatNumber)(value)}${unitAt(spec, field)}`
 }
 
 /** The `y` fields as a list. */

@@ -309,41 +309,49 @@ export function ChartFrame({
                                 {tabled ? words.chart : words.data}
                             </button>
                         )}
-                        <div className="flex items-center transition-opacity group-focus-within/frame:opacity-100 group-hover/frame:opacity-100 [@media(hover:hover)]:opacity-0">
-                            {exportable && (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger aria-label={words.export} title={words.export} className={TOOL} disabled={empty}>
-                                        <Download className="size-3.5" aria-hidden />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" container={root} className="w-40">
-                                        <DropdownMenuItem onClick={() => void exportAs('svg')}>{words.svg}</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => void exportAs('png')}>{words.png}</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            )}
-                            {expandable && (
-                                <button
-                                    type="button"
-                                    aria-label={words.expand}
-                                    title={words.expand}
-                                    className={TOOL}
-                                    onClick={() => setExpanded(true)}
-                                >
-                                    <Maximize2 className="size-3.5" aria-hidden />
-                                </button>
-                            )}
-                            {menu !== undefined && (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger aria-label={words.menu} title={words.menu} className={TOOL}>
-                                        <MoreHorizontal className="size-3.5" aria-hidden />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" container={root} className="w-44">
-                                        {menu}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            )}
+                        {/* The frame's tools and the grid's stay on one line, so tools hidden until hover never leave an empty line of their own. */}
+                        <div className="flex shrink-0 items-center">
+                            <div className="flex items-center transition-opacity group-focus-within/frame:opacity-100 group-hover/frame:opacity-100 [@media(hover:hover)]:opacity-0">
+                                {exportable && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger
+                                            aria-label={words.export}
+                                            title={words.export}
+                                            className={TOOL}
+                                            disabled={empty}
+                                        >
+                                            <Download className="size-3.5" aria-hidden />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" container={root} className="w-40">
+                                            <DropdownMenuItem onClick={() => void exportAs('svg')}>{words.svg}</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => void exportAs('png')}>{words.png}</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                                {expandable && (
+                                    <button
+                                        type="button"
+                                        aria-label={words.expand}
+                                        title={words.expand}
+                                        className={TOOL}
+                                        onClick={() => setExpanded(true)}
+                                    >
+                                        <Maximize2 className="size-3.5" aria-hidden />
+                                    </button>
+                                )}
+                                {menu !== undefined && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger aria-label={words.menu} title={words.menu} className={TOOL}>
+                                            <MoreHorizontal className="size-3.5" aria-hidden />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" container={root} className="w-44">
+                                            {menu}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                            </div>
+                            <PanelTools />
                         </div>
-                        <PanelTools />
                     </div>
                 </header>
             )}

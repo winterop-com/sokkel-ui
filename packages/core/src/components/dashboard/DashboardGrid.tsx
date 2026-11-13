@@ -213,22 +213,33 @@ export function DashboardPanel({
                 </div>
                 {stale !== undefined && stale !== false && !failed && <StaleMark stale={stale} words={words} />}
                 {actions}
-                {expandable && (
-                    <button type="button" aria-label={words.expand} title={words.expand} className={tool} onClick={() => setExpanded(true)}>
-                        <Maximize2 className="size-3.5" aria-hidden />
-                    </button>
+                {/* The panel's tools and the grid's stay on one line together. */}
+                {(expandable || menu !== undefined || tools !== null) && (
+                    <div className="ml-auto flex shrink-0 items-center gap-2">
+                        {expandable && (
+                            <button
+                                type="button"
+                                aria-label={words.expand}
+                                title={words.expand}
+                                className={tool}
+                                onClick={() => setExpanded(true)}
+                            >
+                                <Maximize2 className="size-3.5" aria-hidden />
+                            </button>
+                        )}
+                        {menu !== undefined && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger aria-label={words.menu} title={words.menu} className={tool}>
+                                    <MoreHorizontal className="size-4" aria-hidden />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-44">
+                                    {menu}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                        <PanelTools />
+                    </div>
                 )}
-                {menu !== undefined && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger aria-label={words.menu} title={words.menu} className={tool}>
-                            <MoreHorizontal className="size-4" aria-hidden />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                            {menu}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
-                <PanelTools />
             </header>
             <LoadingOverlay loading={loading} className="flex min-h-0 flex-1 flex-col">
                 {expandable ? (
