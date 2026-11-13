@@ -18,7 +18,7 @@ import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Search as SiteSearch, type SearchSource } from '@winterop-com/sokkel-ui/Search'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
-import { Page, Shell, ShellTop, useRailMode, type RailMode } from '@winterop-com/sokkel-ui/Shell'
+import { Page, Shell, ShellHead, ShellTop, useRailMode, useShellTrail, type RailMode } from '@winterop-com/sokkel-ui/Shell'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { Timeline, type TimelineEvent } from '@winterop-com/sokkel-ui/Timeline'
@@ -202,6 +202,45 @@ function RunScreen({ run }: { run: TableRun }) {
 }
 
 /**
+ * One run's screen that states only its trail with `useShellTrail`: the shell's own top bar draws
+ * it, ending at the run, and keeps its search and its actions.
+ */
+function TrailScreen({ run }: { run: TableRun }) {
+    useShellTrail([
+        { label: 'harbor', href: '#' },
+        { label: 'Runs', href: '#runs' },
+        { label: run.id, code: true },
+    ])
+    return <RunDetail run={run} />
+}
+
+/**
+ * The runs screen holding its head above the shell's scroller with `ShellHead`: the title and its
+ * action stay in view while the runs under them scroll in the shell's content.
+ */
+function HeadScreen() {
+    return (
+        <>
+            <ShellHead>
+                <PageHeader
+                    title="Runs"
+                    description="Every run of every job in harbor, newest first."
+                    actions={
+                        <Button size="sm">
+                            <Play aria-hidden />
+                            Run now
+                        </Button>
+                    }
+                />
+            </ShellHead>
+            <Page>
+                <DataTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} minWidth="36rem" />
+            </Page>
+        </>
+    )
+}
+
+/**
  * Runs as a work page: the list of runs and the chosen run's detail, each a pane of the page's own,
  * beside the rail. While it is shown it asks the shell for the rail in `mode`, which the shell gives
  * back as the app holds it when the page goes. On a phone the panes stand one over the other.
@@ -265,6 +304,8 @@ function Frame({
     work,
     strip,
     screenTop = false,
+    screenTrail = false,
+    screenHead = false,
 }: {
     banner?: ReactNode
     contentKey?: number
@@ -276,6 +317,8 @@ function Frame({
     work?: RailMode
     strip?: 'down' | 'up'
     screenTop?: boolean
+    screenTrail?: boolean
+    screenHead?: boolean
 }) {
     const [sheetUp, setSheetUp] = useState(true)
     const [collapsed, setCollapsed] = useState(start)
@@ -340,6 +383,10 @@ function Frame({
                                 <IconButton label="Search" onClick={() => setSearching(true)}>
                                     <Search aria-hidden />
                                 </IconButton>
+                            ) : screenTrail ? (
+                                <IconButton label="Run now">
+                                    <Play aria-hidden />
+                                </IconButton>
                             ) : undefined
                         }
                     />
@@ -355,6 +402,10 @@ function Frame({
                     <WorkPage mode={work} />
                 ) : screenTop && place === 'runs' && RUNS[0] !== undefined ? (
                     <RunScreen run={RUNS[0]} />
+                ) : screenTrail && place === 'runs' && RUNS[0] !== undefined ? (
+                    <TrailScreen run={RUNS[0]} />
+                ) : screenHead && place === 'runs' ? (
+                    <HeadScreen />
                 ) : (
                     <Page className="h-full">
                         <PageHeader title={labelOf(place)} description="Every run of every job in harbor, newest first." />
@@ -464,11 +515,25 @@ export const WorkPageStory: StoryObj = { name: 'Work page', render: () => <Frame
 export const HiddenRail: StoryObj = { name: 'Hidden rail', render: () => <Frame work="hidden" /> }
 
 /**
+ * A screen that states only its trail with `useShellTrail`: the run's screen puts its trail, ending
+ * at the run, in the shell's own top bar, which keeps its search field and its Run now action.
+ * Schedules, a plain page, gets the bar's own trail back.
+ */
+export const ScreenTrail: StoryObj = { name: 'Screen trail', render: () => <Frame screenTrail search /> }
+
+/**
  * A screen that draws the top bar itself with `ShellTop`: the run's screen puts its own trail, ending
  * at the run, in the shell's top bar in place of the shell's `top` while it is shown. Schedules, a
  * plain page, gets the shell's own top bar back.
  */
 export const ScreenTop: StoryObj = { name: 'Screen top bar', render: () => <Frame screenTop /> }
+
+/**
+ * A screen that holds its head above the content with `ShellHead`: the runs' title and Run now stay
+ * in view while the sixty runs under them scroll in the shell's content, still its one scroller.
+ * The scroller's thin track keeps its room, so the head and the runs end at one right edge.
+ */
+export const ScreenHead: StoryObj = { name: 'Screen head', render: () => <Frame screenHead /> }
 
 function DesktopFrame({ collapsed: start = false, player = false }: { collapsed?: boolean; player?: boolean }) {
     const [collapsed, setCollapsed] = useState(start)

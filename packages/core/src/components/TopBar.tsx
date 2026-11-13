@@ -4,7 +4,7 @@ import { Fragment, useContext, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { shortcutLabel } from '../lib/keys'
 import { Link } from './Link'
-import { ShellPalette } from './shell-context'
+import { ShellPalette, ShellTrail } from './shell-context'
 import { Kbd } from './ui/kbd'
 
 /** One step of the trail to the current screen. */
@@ -19,6 +19,10 @@ export interface Crumb {
 export type TrailEnd = 'current' | 'ancestor'
 
 export interface TopBarProps {
+    /**
+     * The trail to the current screen. In `Shell`'s `top`, a trail a screen states with
+     * `useShellTrail` is drawn in its place while that screen is mounted.
+     */
     trail?: readonly Crumb[]
     /**
      * `current` (the default): the last crumb is the current screen, plain words marked as the page,
@@ -74,11 +78,13 @@ const WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palett
  * its last step and the palette's button becomes an icon, a finger's size. With `trailEnds="ancestor"` the trail
  * holds only the screens above the current one, every crumb a link, and on a phone its last crumb
  * is the way back. `mark` puts the app's mark before the
- * rest where no rail shows it; `AppBar` is the bar itself for a screen drawn without `Shell`.
+ * rest where no rail shows it; `AppBar` is the bar itself for a screen drawn without `Shell`. As
+ * `Shell`'s `top`, it draws the trail a mounted screen states with `useShellTrail` in place of its own,
+ * keeping its search, palette button and actions.
  */
 export function TopBar({
-    trail = [],
-    trailEnds = 'current',
+    trail: ownTrail = [],
+    trailEnds: ownEnds = 'current',
     mark,
     onSearch,
     palette = true,
@@ -88,6 +94,9 @@ export function TopBar({
     words: given,
 }: TopBarProps) {
     const words = { ...WORDS, ...given }
+    const stated = useContext(ShellTrail)
+    const trail = stated?.trail ?? ownTrail
+    const trailEnds = stated === undefined ? ownEnds : (stated.ends ?? 'current')
     const shellPalette = useContext(ShellPalette)
     const search = palette ? (onSearch ?? shellPalette) : undefined
     const shortcut = shortcutGiven ?? (shellPalette === undefined ? undefined : shortcutLabel('k'))

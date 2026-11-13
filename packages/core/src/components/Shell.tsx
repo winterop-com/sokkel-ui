@@ -41,9 +41,15 @@ import {
     ShellRailMode,
     ShellScroller,
     ShellShortcuts,
+    ShellHeadSlot,
     ShellTopSlot,
+    ShellTrail,
+    ShellTrailAsk,
     type RailMode,
+    type ShellSlot,
+    type StatedTrail,
 } from './shell-context'
+import type { Crumb, TrailEnd } from './TopBar'
 
 export type { ShortcutGroup } from '../lib/shortcut-groups'
 export type { RailMode } from './shell-context'
@@ -62,7 +68,8 @@ export interface ShellProps {
     railMode?: RailMode
     /**
      * What the top bar holds: a search, the version, the theme control. A screen draws its own in
-     * its place while it is mounted with `ShellTop`.
+     * its place while it is mounted with `ShellTop`, or states only its trail with `useShellTrail`,
+     * which a `TopBar` here draws in place of its own.
      */
     top?: ReactNode
     /** What the foot strip holds to the right of the rail's foot cell, if anything. */
@@ -247,6 +254,11 @@ export function awaitHeading(area: HTMLElement, before?: HeadingMarks, wait = 30
  * heading (`awaitHeading`), out of the search field or the palette it was opened from, once the page
  * shows it.
  *
+ * A screen holds its own head above the scroller with `ShellHead`, such as its `PageHeader` and its
+ * tabs, so they stay in view while the content under them scrolls; the content stays the one
+ * scroller, so `useScrollMemory` keeps its place. The scroller's track is thin and keeps its room
+ * whether or not the content scrolls, and the head keeps the same room, so both end at one right edge.
+ *
  * `railMode` narrows the rail to its icons or hides it whatever the app holds, for a work page with
  * list and detail panes of its own, and a screen asks the same while it is mounted with
  * `useRailMode`, the latest screen's ask going before the prop; once nothing asks, the rail is as the
@@ -303,15 +315,17 @@ export function Shell({
         return () => setRailAsks((asks) => asks.filter((ask) => ask.id !== id))
     }, [])
     const railMode = railAsks.at(-1)?.mode ?? givenRailMode
-    // The screens that draw the top bar while they are mounted, the latest last.
-    const [topClaims, setTopClaims] = useState<readonly string[]>([])
-    const claimTop = useCallback((id: string) => {
-        setTopClaims((claims) => [...claims.filter((claim) => claim !== id), id])
-        return () => setTopClaims((claims) => claims.filter((claim) => claim !== id))
+    // The screens that draw the top bar, and the head above the scroller, while they are mounted.
+    const [topSlot, setTopTarget] = useSlot()
+    const topShown = topSlot.shown
+    const [headSlot, setHeadTarget] = useSlot()
+    // The trails screens state for the top bar while they are mounted, the latest last.
+    const [trails, setTrails] = useState<readonly { id: string; stated: StatedTrail }[]>([])
+    const stateTrail = useCallback((id: string, stated: StatedTrail) => {
+        setTrails((now) => [...now.filter((one) => one.id !== id), { id, stated }])
+        return () => setTrails((now) => now.filter((one) => one.id !== id))
     }, [])
-    const [topTarget, setTopTarget] = useState<HTMLDivElement | null>(null)
-    const topShown = topClaims.at(-1)
-    const topSlot = useMemo(() => ({ target: topTarget, shown: topShown, claim: claimTop }), [topTarget, topShown, claimTop])
+    const trailShown = trails.at(-1)?.stated
     const railHidden = railMode === 'hidden'
     const [ownDrawer, setOwnDrawer] = useState(false)
     const drawer = drawerOpen ?? ownDrawer
@@ -332,10 +346,10 @@ export function Shell({
         if (drawer) setDrawer(false)
     }, [route, drawer, setDrawer])
     const [footCell, setFootCell] = useState<HTMLDivElement | null>(null)
-    const wide = useMedia(WIDE)
+    const wide = useMedia(WIDE, true)
     const [ownOpen, setOwnOpen] = useState<boolean | null>(null)
     const open = panelOpen ?? ownOpen ?? wide
-    const roomy = useMedia(ROOMY)
+    const roomy = useMedia(ROOMY, true)
     const crowded = panel !== undefined && open && wide && !roomy
     const setOpen = (next: boolean) => {
         if (panelOpen === undefined) setOwnOpen(next)
@@ -447,10 +461,12 @@ export function Shell({
     const drawerRef = useOverlay(drawer && (mobile || railHidden), { onClose: closeDrawer })
     const panelRef = useOverlay(panel !== undefined && !wide && open, { onClose: () => setOpen(false), inert: false })
     const [main, setMain] = useState<HTMLElement | null>(null)
+    // The page's area, its head and its scroller, where its heading is looked for.
+    const [page, setPage] = useState<HTMLElement | null>(null)
     // The headings shown as the route changes are read before the new page draws, so none is taken for the new one's.
     const [moved, setMoved] = useState<[Key | undefined, HeadingMarks?]>([routeKey])
-    if (moved[0] !== routeKey) setMoved([routeKey, headingMarks(main)])
-    useEffect(() => (main && moved[1] ? awaitHeading(main, moved[1]) : undefined), [moved, main])
+    if (moved[0] !== routeKey) setMoved([routeKey, headingMarks(page)])
+    useEffect(() => (page && moved[1] ? awaitHeading(page, moved[1]) : undefined), [moved, page])
 
     const toggle = panel !== undefined && !stripping && (
         <button
@@ -521,13 +537,20 @@ export function Shell({
                     </button>
                     {/* A screen's `ShellTop` draws into this box, in place of `top`, while it is mounted. */}
                     <div ref={setTopTarget} className="contents" />
-                    {topShown === undefined && top}
+                    {topShown === undefined && <ShellTrail value={trailShown}>{top}</ShellTrail>}
                 </header>
             )}
             {banner !== undefined && banner !== null && banner !== false && <div className="shrink-0">{banner}</div>}
-            <main className="@container relative min-h-0 flex-1 overflow-y-auto" ref={setMain}>
-                <Fragment key={contentKey}>{children}</Fragment>
-            </main>
+            <div ref={setPage} className="flex min-h-0 flex-1 flex-col">
+                {/* A screen's `ShellHead` draws into this box, held above the scroller, while it is mounted. */}
+                <div
+                    ref={setHeadTarget}
+                    className="@container shrink-0 scroller-thin overflow-hidden border-border empty:hidden has-[>[data-shell-head-rule]]:border-b"
+                />
+                <main className="@container relative min-h-0 flex-1 scroller-thin overflow-y-auto" ref={setMain}>
+                    <Fragment key={contentKey}>{children}</Fragment>
+                </main>
+            </div>
             {!docked && strip}
         </div>
     )
@@ -621,7 +644,11 @@ export function Shell({
                                     <ShellScroller value={main}>
                                         <ShellPanelStrip value={stripContext}>
                                             <ShellTopSlot value={topSlot}>
-                                                <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                                                <ShellHeadSlot value={headSlot}>
+                                                    <ShellTrailAsk value={stateTrail}>
+                                                        <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                                                    </ShellTrailAsk>
+                                                </ShellHeadSlot>
                                             </ShellTopSlot>
                                         </ShellPanelStrip>
                                     </ShellScroller>
@@ -744,6 +771,18 @@ function useOpened(held: boolean | undefined, initial: boolean) {
     return [open, shown, setOwn] as const
 }
 
+/** A box one screen at a time fills: who has claimed it (the latest mounted drawn) and the element it is drawn into. */
+function useSlot(): [ShellSlot, (target: HTMLDivElement | null) => void] {
+    const [claims, setClaims] = useState<readonly string[]>([])
+    const claim = useCallback((id: string) => {
+        setClaims((now) => [...now.filter((one) => one !== id), id])
+        return () => setClaims((now) => now.filter((one) => one !== id))
+    }, [])
+    const [target, setTarget] = useState<HTMLDivElement | null>(null)
+    const shown = claims.at(-1)
+    return [useMemo(() => ({ target, shown, claim }), [target, shown, claim]), setTarget]
+}
+
 /** A layout effect in the browser, so an asked rail is drawn before the page paints; a plain one on a server. */
 const useBeforePaint = typeof document === 'undefined' ? useEffect : useLayoutEffect
 
@@ -804,4 +843,69 @@ export function ShellTop({ children }: ShellTopProps) {
     const id = useId()
     useBeforePaint(() => claim?.(id), [claim, id])
     return slot?.target && slot.shown === id ? createPortal(children, slot.target) : null
+}
+
+export interface ShellHeadProps {
+    /** The screen's head, such as its `PageHeader` and the tabs under it. */
+    children: ReactNode
+    /**
+     * Whether the head stands in the page's inset over a rule (the default), lined up with a `Page`
+     * under it; false draws it edge to edge with no rule, for a head that draws its own edges.
+     */
+    inset?: boolean
+}
+
+/**
+ * Holds a screen's head above the shell's scroller while the screen is mounted, so its title, its
+ * actions and its tabs stay in view while the content under them scrolls; the content stays the
+ * shell's one scroller. The head stands in the page's inset over a rule, and ends at the content's
+ * right edge, its scroll bar's room kept. The latest screen to draw one goes before an earlier
+ * one. Outside a `Shell` it draws its head in place.
+ */
+export function ShellHead({ children, inset = true }: ShellHeadProps) {
+    const slot = useContext(ShellHeadSlot)
+    const claim = slot?.claim
+    const id = useId()
+    useBeforePaint(() => claim?.(id), [claim, id])
+    // In the shell the rule is the box's, so it runs on under the scroll bar's room.
+    const head = inset ? (
+        <div
+            data-shell-head-rule
+            className={cn(
+                'flex flex-col gap-(--density-page-gap) px-(--density-page-inset) pt-(--density-page-top) pb-(--density-page-gap)',
+                slot === undefined && 'border-b border-border',
+            )}
+        >
+            {children}
+        </div>
+    ) : (
+        children
+    )
+    if (slot === undefined) return <>{head}</>
+    return slot.target && slot.shown === id ? createPortal(head, slot.target) : null
+}
+
+/** Options for a trail a screen states. */
+export interface ShellTrailOptions {
+    /** What the last crumb is, as `TopBar`'s `trailEnds`: the current screen (the default) or the one above it. */
+    ends?: TrailEnd
+}
+
+/**
+ * States the calling screen's trail for the shell's top bar while the screen is mounted: the
+ * `TopBar` in `Shell`'s `top` draws it in place of its own, keeping its search, its palette button
+ * and its actions, rather than the screen drawing the whole bar with `ShellTop`. The latest screen
+ * to state one goes before an earlier one; the bar's own trail is back once none does. Undefined
+ * states nothing. Outside a `Shell` it does nothing.
+ */
+export function useShellTrail(trail: readonly Crumb[] | undefined, { ends }: ShellTrailOptions = {}): void {
+    const state = useContext(ShellTrailAsk)
+    const id = useId()
+    // The trail is compared by what it says, so a screen can build it afresh on every render.
+    const said = trail === undefined ? undefined : JSON.stringify([trail, ends ?? null])
+    useBeforePaint(() => {
+        if (state === undefined || said === undefined) return
+        const [crumbs, end] = JSON.parse(said) as [Crumb[], TrailEnd | null]
+        return state(id, { trail: crumbs, ends: end ?? undefined })
+    }, [state, id, said])
 }

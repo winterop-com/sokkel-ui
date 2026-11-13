@@ -97,6 +97,19 @@ describe('stored values', () => {
         expect(parseStored('"loud"', 0.5, volume)).toBe(0.5)
         expect(parseStored('0.8', 0.5, volume)).toBe(0.8)
     })
+    it('read back a value the check lets through as normalize repairs it, and never normalize a refused one', () => {
+        const isNumber = (value: unknown) => typeof value === 'number'
+        const clamp = vi.fn((width: number) => Math.min(Math.max(width, 200), 640))
+        expect(parseStored('900', 320, isNumber, clamp)).toBe(640)
+        expect(parseStored('120', 320, isNumber, clamp)).toBe(200)
+        expect(parseStored('480', 320, isNumber, clamp)).toBe(480)
+        clamp.mockClear()
+        expect(parseStored('"wide"', 320, isNumber, clamp)).toBe(320)
+        expect(parseStored(null, 320, isNumber, clamp)).toBe(320)
+        expect(parseStored('{', 320, isNumber, clamp)).toBe(320)
+        expect(clamp).not.toHaveBeenCalled()
+        expect(parseStored('["api","gone"]', [], undefined, (list: string[]) => list.filter((name) => name !== 'gone'))).toEqual(['api'])
+    })
 })
 
 describe('stores', () => {
@@ -140,6 +153,23 @@ describe('stores', () => {
         expect(heard).toHaveBeenCalledTimes(1)
         writeStored('tidevann.volume', '"loud"')
         expect(store.get()).toBe(1)
+        stop()
+    })
+
+    it('clamp a kept value with normalize, on load and on a write elsewhere, leaving what is kept as it was', () => {
+        storage.items.set('panel-width', '900')
+        const store = createStore(320, {
+            key: 'panel-width',
+            check: (value) => typeof value === 'number',
+            normalize: (width) => Math.min(width, 640),
+        })
+        expect(store.get()).toBe(640)
+        expect(storage.items.get('panel-width')).toBe('900')
+        const stop = store.subscribe(() => undefined)
+        writeStored('panel-width', '1200')
+        expect(store.get()).toBe(640)
+        writeStored('panel-width', '400')
+        expect(store.get()).toBe(400)
         stop()
     })
 
