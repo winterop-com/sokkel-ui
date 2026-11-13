@@ -1,0 +1,135 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "status-line",
+    "kind": "part",
+    "status": "draft",
+    "summary": "The foot strip across the window's bottom edge: a short note at its start in its tone, short facts at its end, on one row of fixed height that never grows. Level with the rail's foot cell, so the account and the status read as one bar.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/StatusLine.tsx",
+            "packages/core/src/components/Shell.tsx",
+            "packages/core/src/components/Rail.tsx"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/frame.rs (StatusLine, StatusTone)",
+            "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
+        ]
+    },
+    "anatomy": {
+        "strip": "The foot strip: the foot's ground and a rule above it, across the window under the content and the panel, beside the rail's foot cell. Shell's footer draws it around the status line.",
+        "note": "A short note at the start, in its tone's ink, on one line; cut short first when the row runs out of room.",
+        "liveDot": "With live: a dot before the note in the note's ink, a second dot pulsing out from it.",
+        "facts": "The facts at the end, each a status item, kept to most of the row and cut short after the note.",
+        "item": "One fact: an optional label, then its value; an identifier in the code face.",
+        "itemLabel": "A fact's label before its value."
+    },
+    "options": {
+        "note": {"type": "node", "does": "The short note at the start: never a sentence that wraps."},
+        "tone": {
+            "values": ["quiet", "live", "warn", "error"],
+            "default": "quiet",
+            "does": "How the note is inked: quiet in the foot's own ink, live (something going now, information rather than a warning), warn, error."
+        },
+        "live": {
+            "type": "boolean",
+            "default": false,
+            "does": "A pulsing dot before the note, for something happening now."
+        },
+        "facts": {
+            "type": "rows",
+            "does": "The items at the end: [{ label?, value, code? }]; code draws the value as an identifier.",
+            "sokkel-ui": "children: StatusItem (label, children, code)"
+        }
+    },
+    "sizes": {
+        "strip": {"height": "spacing-shell-foot", "padX": 12, "gap": 12, "text": "text.help"},
+        "line": {
+            "gap": 12,
+            "text": "text.help",
+            "note": "The note, the room between, and the facts; one row the strip's height."
+        },
+        "note": {"gap": 8, "note": "Between the live dot and the words."},
+        "liveDot": {"height": 8, "width": 8},
+        "facts": {"gap": 12, "note": "At most 70 percent of the row."},
+        "item": {"gap": 6}
+    },
+    "states": {
+        "rest": {"means": "A quiet note: the foot's own ink."},
+        "toneLive": {"means": "Something going now, said as information.", "reached": "tone live"},
+        "toneWarn": {"means": "Something to look at.", "reached": "tone warn"},
+        "toneError": {"means": "Something failed, such as the server not answering.", "reached": "tone error"},
+        "live": {"means": "The dot before the note pulses.", "reached": "live"},
+        "code": {"means": "A fact that is an identifier.", "reached": "an item's code"}
+    },
+    "pieces": {
+        "strip": {
+            "rest": {
+                "ground": "page-foot-ground",
+                "rule": "page-foot-line",
+                "ink": "page-foot-ink",
+                "text": "text.help"
+            }
+        },
+        "note": {
+            "rest": {"ink": "page-foot-ink"},
+            "toneLive": {"ink": "info"},
+            "toneWarn": {"ink": "warning"},
+            "toneError": {"ink": "destructive"}
+        },
+        "liveDot": {
+            "rest": {"note": "Not drawn."},
+            "live": {
+                "ground": "inherit",
+                "note": "Round, in the note's ink; a second dot of the same size at half opacity pulses out from it (animate-ping), still when motion is reduced."
+            }
+        },
+        "facts": {"rest": {"ink": "page-foot-ink"}},
+        "item": {
+            "rest": {"ink": "page-foot-ink", "note": "One line, never wrapped; a long value is cut short."},
+            "code": {"ink": "foreground", "note": "In the code face."}
+        },
+        "itemLabel": {"rest": {"ink": "faint"}}
+    },
+    "keyboard": [],
+    "words": {},
+    "appText": {
+        "note": "The status note, a short fact rather than a sentence.",
+        "facts": "Every item's label and value."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Shell's footer draws the strip (its ground, rule, height, pad and ink); StatusLine draws the note and the facts inside it. A shell with a bottom strip and a rail foot but no foot draws the strip empty, so the foot cell has a bar to stand beside.",
+            "The live dot's pulse is animate-ping; motion.css stills it when motion is reduced."
+        ],
+        "sokkel-ui-egui": [
+            "StatusLine draws the strip and its contents itself, in the rect the Shell gives its foot.",
+            "The note and the facts are laid out as galleys cut short with an ellipsis; nothing wraps."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "padding and gaps",
+            "spec": "12 at each end; the facts 12 apart.",
+            "today": "As of 267236c: 16 at each end; the facts and items 16 apart."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "the dot",
+            "spec": "A dot only with live, pulsing, in the note's ink.",
+            "today": "A still dot before the note in every tone but quiet; there is no live option."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "item value",
+            "spec": "A value in the foot's ink; an identifier (code) in the code face, in foreground.",
+            "today": "Every item's value in foreground, in the body face."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "room for the facts",
+            "spec": "The facts keep up to 70 percent of the row; the note is cut short first.",
+            "today": "The note takes up to half the row; facts and items have fixed widths of their own."
+        }
+    ]
+}

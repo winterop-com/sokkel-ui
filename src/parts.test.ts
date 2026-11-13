@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { CalendarClock, Folder, Play, Server, Workflow } from 'lucide-react'
 import { createElement, type ComponentType, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
@@ -14,11 +15,12 @@ import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
 import { PAGE_HEADER_WORDS } from '@winterop-com/sokkel-ui/PageHeader'
 import { PAGE_STATE_WORDS } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
-import { RAIL_WORDS } from '@winterop-com/sokkel-ui/Rail'
+import { Rail, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
 import { SETTINGS_DIALOG_WORDS } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { SHELL_WORDS } from '@winterop-com/sokkel-ui/Shell'
+import { Shell, SHELL_WORDS, type ShellProps } from '@winterop-com/sokkel-ui/Shell'
+import { StatusItem, StatusLine, type StatusLineProps } from '@winterop-com/sokkel-ui/StatusLine'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
-import { TOP_BAR_WORDS } from '@winterop-com/sokkel-ui/TopBar'
+import { TopBar, TOP_BAR_WORDS, type TopBarProps } from '@winterop-com/sokkel-ui/TopBar'
 
 /**
  * sokkel-ui against the sokkel-design contract. `design/` holds the contract's parts and patterns
@@ -32,6 +34,7 @@ import { TOP_BAR_WORDS } from '@winterop-com/sokkel-ui/TopBar'
  *   paints    each state's ground, edge, ink, rule, ring, radius, text and opacity are the classes the
  *             state's selector picks, with the cascade's own precedence, in light and in dark
  *   keys      each binding is handled where the source shows it
+ *   layout    each length a part's layout gives that its classes or its source show
  *
  * Where the code and the spec differ, the spec's `drift` entries for sokkel-ui say so on purpose:
  * `DRIFT` names the checks each entry covers, and a covered check that no longer differs fails, so
@@ -91,6 +94,7 @@ interface Spec {
     kind: 'part' | 'pattern'
     options?: Record<string, { values?: string[]; default?: unknown; context?: string }>
     sizes?: Record<string, Record<string, Length | null | undefined>>
+    layout?: Record<string, Length | { value: Length; note?: string }>
     states: Record<string, { status?: 'today' | 'proposed'; effect?: Effect }>
     variants?: Record<string, Record<string, Paint>>
     pieces?: Record<string, Record<string, Paint>>
@@ -542,7 +546,13 @@ function variantKeys(text: string, group: string): string[] {
 }
 
 /** The sources whose named types a prop may take its values from. */
-const SOURCES_FOR_TYPES = [source('components/shell-context.ts'), source('components/TopBar.tsx'), source('components/Field.tsx')]
+const SOURCES_FOR_TYPES = [
+    source('components/shell-context.ts'),
+    source('components/TopBar.tsx'),
+    source('components/Field.tsx'),
+    source('components/Rail.tsx'),
+    source('components/StatusLine.tsx'),
+]
 
 /** The string values a prop takes, read from its declaration (or the type it names) in a source. */
 function propValues(text: string, props: string, prop: string): string[] {
@@ -963,22 +973,627 @@ function moves(keys: string[]): true | string {
     return missing.length === 0 ? true : `no ${missing.join(', ')} in the table's key map`
 }
 
+// What a part's layout gives, against what its classes or its source show
+
+/** A layout length as the spec gives it, bare or with a note. */
+function layoutValue(spec: Spec | undefined, key: string): string {
+    const given = spec?.layout?.[key]
+    const value = typeof given === 'object' && given !== null && 'value' in given ? given.value : given
+    return typeof value === 'object' ? JSON.stringify(value) : String(value)
+}
+
+/** One check per layout key the reader knows; a key it does not know fails, so none passes in silence. */
+function layoutChecks(id: string, readers: Record<string, () => string | undefined>): Check[] {
+    const spec = SPECS.get(id)
+    return Object.keys(spec?.layout ?? {}).map((key) => {
+        const read = readers[key] as (() => string | undefined) | undefined
+        return check(`layout.${key}`, layoutValue(spec, key), read === undefined ? 'a layout length parts.test cannot read' : read())
+    })
+}
+
+/** The first match's group in a source, as a number of px: a spacing step, a rem or a plain number. */
+const numberIn = (text: string, pattern: RegExp, unit: 'px' | 'step' | 'rem' = 'px') => {
+    const found = pattern.exec(text)?.[1]
+    if (found === undefined) return undefined
+    return String(Number(found) * (unit === 'step' ? 4 : unit === 'rem' ? 16 : 1))
+}
+
+/** A class's length on an element, read with one of the length readers. */
+const lengthOn = (element: El | undefined, read: Reader) => (element === undefined ? undefined : resolve([classesOf(element)], [], read))
+
+/** Whether an element stands inside another. */
+function within(element: El, root: El): boolean {
+    for (let up = element.parent; up !== undefined; up = up.parent) if (up === root) return true
+    return false
+}
+
+/** The icon an element draws: its first svg. */
+const iconOf = (elements: El[], element: El | undefined) =>
+    element === undefined ? undefined : elements.find((one) => one.tag === 'svg' && within(one, element))
+
+/** The variants each state of a frame part turns on; a state a drawing reaches turns none on. */
+const FRAME_ON: Record<string, string[]> = {
+    hover: ['hover', 'group-hover/entry', 'group-hover/handle'],
+    focus: ['focus-visible', 'group-focus-visible/handle'],
+    dragging: ['group-data-dragging/handle'],
+    open: ['data-popup-open', 'group-data-popup-open/entry'],
+    phone: ['max-md'],
+}
+const frameOn = (state: string) => state.split('+').flatMap((one) => FRAME_ON[one] ?? [])
+
+function at(element: El | undefined, state = 'rest'): Where | undefined {
+    return element === undefined ? undefined : { layers: [classesOf(element)], on: frameOn(state), around: ancestors(element) }
+}
+
+/** A value made the first time it is asked for, and kept. */
+function once<T>(make: () => T): () => T {
+    let made: { value: T } | undefined
+    return () => (made ??= { value: make() }).value
+}
+
+// Rail
+
+const RAIL = source('components/Rail.tsx')
+const RESIZE_HANDLE = source('components/ResizeHandle.tsx')
+
+const PLACES: RailGroup[] = [
+    {
+        id: 'operate',
+        title: 'Operate',
+        entries: [
+            { id: 'runs', label: 'Runs', icon: Play, href: '#/runs', active: true, count: 3 },
+            { id: 'schedules', label: 'Schedules', icon: CalendarClock, href: '#/schedules' },
+        ],
+    },
+    {
+        id: 'build',
+        title: 'Build',
+        entries: [
+            { id: 'jobs', label: 'Jobs', icon: Workflow, href: '#/jobs', unread: true },
+            {
+                id: 'services',
+                label: 'Services',
+                icon: Server,
+                href: '#/services',
+                entries: [
+                    { id: 'api', label: 'api', href: '#/services/api' },
+                    { id: 'worker', label: 'worker', href: '#/services/worker' },
+                ],
+            },
+            {
+                id: 'projects',
+                label: 'Projects',
+                icon: Folder,
+                entries: [
+                    { id: 'harbor', label: 'harbor', href: '#/projects/harbor' },
+                    { id: 'juniper', label: 'juniper', href: '#/projects/juniper' },
+                ],
+            },
+        ],
+    },
+]
+/** Places with a line under each label, the active one among them. */
+const DESCRIBED: RailGroup[] = [
+    {
+        id: 'places',
+        entries: [
+            { id: 'runs', label: 'Runs', description: 'Every run, newest first', icon: Play, href: '#/runs', active: true },
+            { id: 'schedules', label: 'Schedules', description: 'When each job starts', icon: CalendarClock, href: '#/schedules' },
+        ],
+    },
+]
+/** A parent with a page of its own, unfolded over the active entry. */
+const HOLDING: RailGroup[] = [
+    {
+        id: 'build',
+        entries: [
+            {
+                id: 'services',
+                label: 'Services',
+                icon: Server,
+                href: '#/services',
+                entries: [
+                    { id: 'api', label: 'api', href: '#/services/api', active: true },
+                    { id: 'worker', label: 'worker', href: '#/services/worker' },
+                ],
+            },
+        ],
+    },
+]
+
+const rail = (props: Partial<RailProps> = {}) =>
+    draw(Rail, { name: 'Tidevann', mark: 'T', markHref: '#/', groups: PLACES, onCollapsedChange: () => undefined, foot: 'ada', ...props })
+/** The drawings most checks read, each made once. */
+const RAILS = once(() => ({ expanded: rail(), collapsed: rail({ collapsed: true }), strip: rail({ variant: 'strip' }) }))
+/** An expanded entry's row, by its label: the row that draws the start bar. */
+const railRow = (elements: El[], label: string) =>
+    elements.find((element) => classesOf(element).includes('border-l-2') && element.text.startsWith(label))
+/** A collapsed rail's entry, named by its label: a link, or a parent's button. */
+const iconEntry = (elements: El[], label: string) =>
+    elements.find((element) => (element.tag === 'a' || element.tag === 'button') && element.attrs['aria-label'] === label)
+const railHead = (elements: El[]) => elements.find((element) => classesOf(element).split(' ').includes('h-shell-top'))
+const railMark = (elements: El[]) =>
+    elements.find((element) => element.tag === 'span' && classesOf(element).includes('size-8') && classesOf(element).includes('bg-primary'))
+const collapseControl = (elements: El[]) =>
+    elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === RAIL_WORDS.collapse)
+const groupTitle = (elements: El[]) => byText(elements, 'p', 'Operate')
+const railEdge = (elements: El[]) => elements.find((element) => element.attrs.role === 'separator')
+const stripEntry = (elements: El[], label: string) =>
+    elements.find((element) => element.tag === 'a' && classesOf(element).includes('group/entry') && element.text.endsWith(label))
+const stripTile = (elements: El[], label: string) => {
+    const entry = stripEntry(elements, label)
+    return elements.find((element) => element.parent === entry && classesOf(element).includes('size-9'))
+}
+/** The foot cell the rail draws in its own column; the docked one is drawn into the shell's foot row, a portal no server drawing reaches. */
+const footCell = (elements: El[]) =>
+    elements.find((element) => element.parent?.tag === 'aside' && classesOf(element).includes('h-shell-foot'))
+
+const RAIL_ADAPTER: Adapter = {
+    wordObjects: { RAIL_WORDS },
+    complete: ['RAIL_WORDS'],
+    words: {
+        collapse: 'RAIL_WORDS.collapse',
+        expand: 'RAIL_WORDS.expand',
+        resize: 'RAIL_WORDS.resize',
+        unread: 'RAIL_WORDS.unread',
+        places: 'RAIL_WORDS.places',
+    },
+    options: { variant: propValues(RAIL, 'RailProps', 'variant'), view: propValues(RAIL, 'RailProps', 'view') },
+    size: (size, key) => {
+        const { expanded, collapsed, strip } = RAILS()
+        // An expanded row's pad is its start bar and its start pad against its end pad, which `more` reads.
+        if (key === 'padX' && (size === 'entry' || size === 'describedEntry')) return skip('read in more: the bar and pl against pr')
+        const drawn: Record<string, [El[], El | undefined]> = {
+            head: [expanded, railHead(expanded)],
+            mark: [expanded, railMark(expanded)],
+            collapse: [expanded, collapseControl(expanded)],
+            entry: [expanded, railRow(expanded, 'Schedules')],
+            describedEntry: (() => {
+                const elements = rail({ groups: DESCRIBED })
+                return [elements, railRow(elements, 'Schedules')] as [El[], El | undefined]
+            })(),
+            iconEntry: [collapsed, iconEntry(collapsed, 'Schedules')],
+            groupTitle: [expanded, groupTitle(expanded)],
+            chevronButton: [expanded, expanded.find((element) => element.tag === 'button' && classesOf(element).includes('right-1'))],
+            footCell: [expanded, footCell(expanded)],
+            edge: [expanded, railEdge(expanded)],
+            strip: [strip, strip.find((element) => element.tag === 'aside')],
+            stripTile: [strip, stripTile(strip, 'Schedules')],
+        }
+        // The collapsed rail's tooltip opens in a portal, which a server drawing leaves out: its classes are read from the source.
+        if (size === 'tooltip') return { layers: [literalAfter(RAIL, '<Tooltip.Popup className=')], on: [] }
+        const [elements, element] = drawn[size] ?? [[], undefined]
+        return key === 'icon' ? pieceWhere(iconOf(elements, element)) : pieceWhere(element)
+    },
+    paint: (_, name, state) => {
+        const { expanded, collapsed, strip } = RAILS()
+        const active = state.startsWith('active')
+        switch (name) {
+            case 'frame':
+                return at(
+                    expanded.find((element) => element.tag === 'aside'),
+                    state,
+                )
+            case 'mark':
+                return at(railMark(expanded), state)
+            case 'name':
+                return at(byText(expanded, 'span', 'Tidevann'), state)
+            case 'home':
+                return at(
+                    expanded.find((element) => element.tag === 'a' && element.parent === railHead(expanded)),
+                    state,
+                )
+            case 'collapse':
+                return at(collapseControl(expanded), state)
+            case 'groupTitle':
+                return at(groupTitle(expanded), state)
+            case 'groupRule':
+                return at(
+                    collapsed.find((element) => classesOf(element).includes('h-px') && classesOf(element).includes('bg-border-strong')),
+                    state,
+                )
+            case 'entry':
+                if (state.startsWith('holding')) return at(railRow(rail({ groups: HOLDING }), 'Services'), state)
+                return at(railRow(expanded, active ? 'Runs' : 'Schedules'), state)
+            case 'description':
+                return at(byText(rail({ groups: DESCRIBED }), 'span', active ? 'Every run, newest first' : 'When each job starts'), state)
+            case 'count':
+                return at(
+                    expanded.find((element) => classesOf(element).includes('tabular-nums') && classesOf(element).includes('ml-auto')),
+                    state,
+                )
+            case 'cornerCount':
+                return at(
+                    collapsed.find((element) => element.attrs['data-tone'] !== undefined),
+                    state,
+                )
+            case 'unreadDot':
+                return at(
+                    expanded.find((element) => element.attrs.role === 'img' && element.attrs['aria-label'] === RAIL_WORDS.unread),
+                    state,
+                )
+            case 'chevron':
+                return at(
+                    expanded.find((element) => element.tag === 'svg' && classesOf(element).includes('transition-transform')),
+                    state,
+                )
+            case 'chevronButton':
+                return at(
+                    expanded.find((element) => element.tag === 'button' && classesOf(element).includes('right-1')),
+                    state,
+                )
+            case 'iconEntry':
+                return at(iconEntry(collapsed, active ? 'Runs' : state === 'open' ? 'Projects' : 'Schedules'), state)
+            case 'tooltip':
+                // Opened in a portal, which a server drawing leaves out: its classes are read from the source.
+                return { layers: [literalAfter(RAIL, '<Tooltip.Popup className=')], on: frameOn(state) }
+            case 'edge':
+                return at(
+                    expanded.find((element) => element.parent?.attrs.role === 'separator'),
+                    state,
+                )
+            case 'footCell':
+                // Docked, the cell is drawn into the shell's foot row through a portal: its classes are read from the source.
+                if (state === 'docked') return { layers: [literalAfter(RAIL, 'createPortal(', 'className=')], on: [] }
+                return at(footCell(expanded), state)
+            case 'stripEntry':
+                return at(stripEntry(strip, active ? 'Runs' : 'Schedules'), state)
+            case 'stripTile':
+                return at(stripTile(strip, active ? 'Runs' : 'Schedules'), state)
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the rail states no effects'),
+    keys: {
+        Tab: () => {
+            const elements = RAILS().expanded
+            const home = elements.find((element) => element.tag === 'a' && element.parent === railHead(elements))
+            const entry = railRow(elements, 'Schedules')
+            const reached = [home, collapseControl(elements), entry, railEdge(elements)].every(focusable)
+            return reached && entry?.tag === 'a' && entry.attrs.href !== undefined
+                ? true
+                : 'the home link, the collapse control, an entry or the edge is out of the tab order'
+        },
+        Enter: () => {
+            const { expanded: elements, collapsed } = RAILS()
+            const parent = elements.find((element) => element.tag === 'button' && element.text.startsWith('Projects'))
+            const flyout = iconEntry(collapsed, 'Projects')
+            return railRow(elements, 'Schedules')?.tag === 'a' && parent?.attrs['aria-expanded'] !== undefined && flyout?.tag === 'button'
+                ? true
+                : 'an entry is not a link, or a parent not a button'
+        },
+        'ArrowRight (a folded parent in the expanded rail)': () =>
+            /event\.key === 'ArrowRight' && !inside && !open\) \{\s+event\.preventDefault\(\)\s+onOpen\(true\)/.test(RAIL)
+                ? true
+                : 'no ArrowRight unfolds a parent',
+        'ArrowLeft (an unfolded parent in the expanded rail, or one of its entries)': () =>
+            /event\.key === 'ArrowLeft' && \(open \|\| inside\)\) \{\s+event\.preventDefault\(\)\s+onOpen\(false\)\s+if \(inside\) control\.current\?\.focus\(\)/.test(
+                RAIL,
+            )
+                ? true
+                : 'no ArrowLeft folds a parent and goes back to its row',
+        'Enter, Space, ArrowRight (collapsed, with onCollapsedChange)': () =>
+            /event\.key !== 'Enter' && event\.key !== ' ' && event\.key !== forward/.test(RESIZE_HANDLE) &&
+            /onExpand=\{collapsed \? \(\) => setCollapsed\(false\) : undefined\}/.test(RAIL)
+                ? true
+                : "the collapsed rail's edge does not expand on Enter, Space and the arrow",
+        "ArrowLeft, ArrowRight, Home, End, Enter (the expanded rail's edge has focus)": () =>
+            /event\.key === forward\) step\(16\)\s+else if \(event\.key === back\) step\(-16\)/.test(RESIZE_HANDLE) &&
+            /event\.key === 'Home'\) onSize\(min\)/.test(RESIZE_HANDLE) &&
+            /event\.key === 'End'\) onSize\(max\)/.test(RESIZE_HANDLE) &&
+            /event\.key === 'Enter' && \(onReset !== undefined \|\| reset !== undefined\)\) restore\(\)/.test(RESIZE_HANDLE)
+                ? true
+                : "the rail's edge misses an arrow, Home, End or Enter",
+        'Alt+ArrowUp, Alt+ArrowDown (a group with onReorder, inside RailDrops)': () =>
+            /!event\.altKey \|\| \(event\.key !== 'ArrowUp' && event\.key !== 'ArrowDown'\)/.test(source('components/RailDrops.tsx'))
+                ? true
+                : 'no Alt with the arrows moves an entry',
+        Escape: skip("a flyout is Base UI's popover and the drawer the shell's overlay, both closing on Escape in a browser"),
+    },
+    more: () => {
+        const spec = SPECS.get('rail')
+        const { expanded, collapsed, strip } = RAILS()
+        const row = railRow(expanded, 'Schedules')
+        // The start pad holds the active bar: the bar's width and pl, against pr at the end.
+        const inset = (element: El | undefined) => {
+            const classes = classesOf(element)
+            const start =
+                Number(/(?:^|\s)border-l-(\d+)(?:\s|$)/.exec(classes)?.[1] ?? 0) +
+                Number(length(/(?:^|\s)pl-([\d.]+)(?:\s|$)/.exec(classes)?.[1] ?? '0'))
+            const end = Number(length(/(?:^|\s)pr-([\d.]+)(?:\s|$)/.exec(classes)?.[1] ?? '0'))
+            return start === end ? String(start) : `${String(start)} at the start, ${String(end)} at the end`
+        }
+        const pads = ['entry', 'describedEntry'].map((size) =>
+            check(
+                `sizes.${size}.padX`,
+                String(spec?.sizes?.[size]?.padX),
+                inset(size === 'entry' ? row : railRow(rail({ groups: DESCRIBED }), 'Schedules')),
+            ),
+        )
+        const nav = expanded.find((element) => element.tag === 'nav')
+        const title = groupTitle(expanded)
+        const child = railRow(rail({ groups: HOLDING }), 'api')
+        const corner = (side: 'l' | 'r') => {
+            const found = new RegExp(`(?:^|\\s)rounded-${side}-(\\w+)(?:\\s|$)`).exec(classesOf(row))?.[1]
+            return found === undefined ? undefined : `radius-${found}`
+        }
+        return [
+            ...pads,
+            ...layoutChecks('rail', {
+                width: () => numberIn(RAIL, /defaultSize = (\d+),/),
+                minWidth: () => numberIn(RAIL, /minSize = (\d+),/),
+                maxWidth: () => numberIn(RAIL, /maxSize = (\d+),/),
+                collapsedWidth: () => {
+                    const found = /'w-\[calc\(([\d.]+)rem\+(\d+)px\)\]'/.exec(RAIL)
+                    return found === null ? undefined : String(Number(found[1]) * 16 + Number(found[2]))
+                },
+                groupPadX: () => lengthOn(nav, READ.padX),
+                entryGap: () => lengthOn(nav, READ.gap),
+                groupTitleTop: () => lengthOn(title, lengthOf('pt-')),
+                groupTitleBottom: () => lengthOn(title, lengthOf('pb-')),
+                groupTitleLine: () => {
+                    // The collapsed rule's line is the title's: text-xs's line height.
+                    const line = /h-\(--text-xs--line-height\) w-full items-center/.test(RAIL) ? TEXT.get('xs')?.leading : undefined
+                    return line === undefined ? undefined : String(Number(/^([\d.]+)rem$/.exec(line)?.[1]) * 16)
+                },
+                placesBottom: () =>
+                    lengthOn(
+                        expanded.find((element) => element.attrs['data-rail-places'] !== undefined),
+                        lengthOf('pb-'),
+                    ),
+                entryCornerStart: () => corner('l'),
+                entryCornerEnd: () => corner('r'),
+                activeBar: () => /(?:^|\s)border-l-(\d+)(?:\s|$)/.exec(classesOf(row))?.[1],
+                childInsetIcon: () => lengthOn(child, READ.padStart),
+                childInsetText: () => numberIn(RAIL, /inset === 'icon' \? 'pl-[\d.]+' : 'pl-([\d.]+)'/, 'step'),
+                cornerCount: () =>
+                    lengthOn(
+                        collapsed.find((element) => element.attrs['data-tone'] !== undefined),
+                        READ.height,
+                    ),
+                unreadDot: () =>
+                    lengthOn(
+                        expanded.find((element) => element.attrs.role === 'img'),
+                        READ.square,
+                    ),
+                resizeStep: () => numberIn(RESIZE_HANDLE, /event\.key === forward\) step\((\d+)\)/),
+                edgeLine: () =>
+                    lengthOn(
+                        expanded.find((element) => element.parent?.attrs.role === 'separator'),
+                        READ.width,
+                    ),
+                flyoutMinWidth: () => numberIn(RAIL, /className="w-auto min-w-(\d+) /, 'step'),
+                flyoutGap: () => numberIn(RAIL, /function RailFlyout[\s\S]*?sideOffset=\{(\d+)\}/),
+                tooltipGap: () => numberIn(RAIL, /function Tip[\s\S]*?sideOffset=\{(\d+)\}/),
+                stripGap: () =>
+                    lengthOn(
+                        strip.find((element) => element.tag === 'nav'),
+                        READ.gap,
+                    ),
+                stripLabel: () => {
+                    const size = /["']max-w-full truncate px-0\.5 text-(2xs)["']/.exec(RAIL)?.[1]
+                    const rem = size === undefined ? undefined : /^([\d.]+)rem$/.exec(TEXT.get(size)?.size ?? '')?.[1]
+                    return rem === undefined ? undefined : String(Number(rem) * 16)
+                },
+                trafficLights: () => (/ps-\(--spacing-traffic-lights\)/.test(RAIL) ? 'spacing-traffic-lights' : undefined),
+                widthEase: () => numberIn(RAIL, /transition-\[width\] duration-(\d+)/),
+            }),
+        ]
+    },
+}
+
+// Top bar
+
+const TOP_BAR = source('components/TopBar.tsx')
+const CRUMBS = [{ label: 'harbor', href: '#/harbor' }, { label: 'Runs', href: '#/runs' }, { label: 'Run 1842' }]
+const NEW = createElement('button', { type: 'button' }, 'New')
+const FIELD_GIVEN = createElement('input', { 'aria-label': 'Find a run' })
+
+const topBar = (props: Partial<TopBarProps> = {}) =>
+    draw(TopBar, { trail: CRUMBS, onSearch: () => undefined, shortcut: 'Ctrl K', actions: NEW, ...props })
+/** The top bar in a shell, as an app draws it: in the shell's bar, under the frame's ink. */
+const shell = (props: Partial<ShellProps> = {}) => draw(Shell, { rail: null, children: 'Run 1842', ...props })
+const framedBar = (props: Partial<TopBarProps> = {}) =>
+    shell({ top: createElement(TopBar, { trail: CRUMBS, onSearch: () => undefined, ...props }) })
+const BARS = once(() => ({ bar: topBar(), framed: framedBar() }))
+const paletteButton = (elements: El[], word: string) =>
+    elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === word)
+const menuButton = (elements: El[]) =>
+    elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === SHELL_WORDS.menu)
+
+const TOP_BAR_ADAPTER: Adapter = {
+    wordObjects: { TOP_BAR_WORDS },
+    complete: ['TOP_BAR_WORDS'],
+    words: { search: 'TOP_BAR_WORDS.search', palette: 'TOP_BAR_WORDS.palette', trail: 'TOP_BAR_WORDS.trail' },
+    options: { trailEnds: propValues(TOP_BAR, 'TopBarProps', 'trailEnds') },
+    size: (size, key) => {
+        const { bar, framed } = BARS()
+        const beside = topBar({ search: FIELD_GIVEN })
+        const drawn: Record<string, [El[], El | undefined, string[]?]> = {
+            bar: [framed, framed.find((element) => element.tag === 'header')],
+            content: [bar, bar[0]],
+            menu: [framed, menuButton(framed)],
+            mark: [
+                topBar({ mark: 'T' }),
+                topBar({ mark: 'T' }).find((element) => element.tag === 'span' && classesOf(element).includes('size-7')),
+            ],
+            search: [beside, beside.find((element) => element.tag === 'div' && classesOf(element).includes('w-56'))],
+            trail: [bar, bar.find((element) => element.tag === 'ol')],
+            chevron: [bar, bar.find((element) => element.tag === 'li' && element.attrs['aria-hidden'] !== undefined)],
+            backChevron: [
+                [],
+                topBar({ trailEnds: 'ancestor', trail: CRUMBS.slice(0, 2) }).find(
+                    (element) => element.tag === 'svg' && classesOf(element).includes('md:hidden'),
+                ),
+            ],
+            // From md the button is 224 wide with no field beside it, and as wide as its keys beside one.
+            palette: [bar, paletteButton(bar, TOP_BAR_WORDS.search), key === 'width' ? ['md'] : []],
+            paletteBesideField: [beside, paletteButton(beside, TOP_BAR_WORDS.palette), ['md']],
+            keys: [bar, bar.find((element) => element.attrs['data-slot'] === 'kbd')],
+            actions: [bar, bar.find((element) => element.tag === 'div' && classesOf(element).includes('gap-1.5'))],
+        }
+        const [elements, element, on = []] = drawn[size] ?? [[], undefined]
+        if (key === 'icon') return size === 'backChevron' ? pieceWhere(element) : pieceWhere(iconOf(elements, element))
+        return element === undefined ? undefined : { ...pieceWhere(element), layers: [classesOf(element)], on }
+    },
+    paint: (_, name, state) => {
+        const { bar, framed } = BARS()
+        switch (name) {
+            case 'bar':
+                return at(
+                    framed.find((element) => element.tag === 'header'),
+                    state,
+                )
+            case 'menu':
+                return at(menuButton(framed), state)
+            case 'mark':
+                return at(
+                    topBar({ mark: 'T' }).find((element) => element.tag === 'span' && classesOf(element).includes('size-7')),
+                    state,
+                )
+            case 'crumb':
+                if (state === 'current') return at(framed.find((element) => element.attrs['aria-current'] === 'page'))
+                return at(byText(framed, 'a', 'harbor'), state)
+            case 'chevron':
+                return at(
+                    framed.find((element) => element.tag === 'svg' && element.parent?.tag === 'li'),
+                    state,
+                )
+            case 'backChevron':
+                return at(
+                    topBar({ trailEnds: 'ancestor', trail: CRUMBS.slice(0, 2) }).find(
+                        (element) => element.tag === 'svg' && classesOf(element).includes('md:hidden'),
+                    ),
+                    state,
+                )
+            case 'palette':
+                return at(paletteButton(bar, TOP_BAR_WORDS.search), state)
+            case 'keys':
+                return at(
+                    bar.find((element) => element.attrs['data-slot'] === 'kbd'),
+                    state,
+                )
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the top bar states no effects'),
+    keys: {
+        Tab: () => {
+            const elements = framedBar({ search: FIELD_GIVEN, actions: NEW })
+            const order = [
+                menuButton(elements),
+                elements.find((element) => element.tag === 'input'),
+                byText(elements, 'a', 'harbor'),
+                paletteButton(elements, TOP_BAR_WORDS.palette),
+                byText(elements, 'button', 'New'),
+            ].map((element) => (element === undefined ? -1 : elements.indexOf(element)))
+            return order.every((place, index) => place >= 0 && (index === 0 || place > order[index - 1]))
+                ? true
+                : `drawn in another order: ${order.join(', ')}`
+        },
+        '/ (a search field that binds it, focus outside a field)': () =>
+            /key: '\/'/.test(source('components/SearchField.tsx')) ? true : 'the search field is not focused by /',
+        "Enter, Space (the palette's button has focus)": () =>
+            paletteButton(topBar(), TOP_BAR_WORDS.search)?.attrs.type === 'button' ? true : "the palette's button is not a native button",
+    },
+    more: () => {
+        const shellSource = source('components/Shell.tsx')
+        const beside = topBar({ search: FIELD_GIVEN })
+        const field = beside.find((element) => element.tag === 'div' && classesOf(element).includes('w-56'))
+        return layoutChecks('top-bar', {
+            searchWidthLg: () => (field === undefined ? undefined : resolve([classesOf(field)], ['lg'], READ.width)),
+            searchWidthMax: () => lengthOn(field, lengthOf('max-w-')),
+            panelToggleRoom: () => numberIn(shellSource, /!stripping && 'pr-(\d+)'/, 'step'),
+            trafficLights: () =>
+                /lights && 'ps-\(--spacing-traffic-lights\)/.test(source('components/AppBar.tsx')) ? 'spacing-traffic-lights' : undefined,
+            phoneBelow: () => {
+                const below = /MOBILE_QUERY = '\(max-width: (\d+)px\)'/.exec(source('hooks/use-mobile.ts'))?.[1]
+                return below === undefined || !/max-md:hidden/.test(TOP_BAR) ? undefined : String(Number(below) + 1)
+            },
+        })
+    },
+}
+
+// Status line
+
+const STATUS_LINE = source('components/StatusLine.tsx')
+const FACTS = [
+    createElement(StatusItem, { key: 'run', label: 'run', code: true, children: 'run_01JCF8Q2' }),
+    createElement(StatusItem, { key: 'step', children: 'step 3 of 5' }),
+]
+const statusLine = (props: Partial<StatusLineProps> = {}) =>
+    draw(StatusLine, { note: 'import-orders is running', children: FACTS, ...props })
+const STATUS_TONES: Record<string, StatusLineProps['tone']> = { rest: 'quiet', toneLive: 'live', toneWarn: 'warn', toneError: 'error' }
+
+const STATUS_LINE_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: { tone: propValues(STATUS_LINE, 'StatusLineProps', 'tone') },
+    size: (size) => {
+        const line = statusLine({ live: true })
+        const drawn: Record<string, El | undefined> = {
+            strip: shell({ foot: createElement(StatusLine, { note: 'Ready' }) }).find((element) => element.tag === 'footer'),
+            line: line[0],
+            note: line.find((element) => element.parent === line[0] && element.tag === 'span'),
+            liveDot: line.find((element) => classesOf(element).includes('bg-current') && classesOf(element).includes('relative')),
+            facts: line.find((element) => classesOf(element).includes('max-w-[70%]')),
+            item: line.find((element) => element.tag === 'span' && classesOf(element).includes('gap-1.5')),
+        }
+        return pieceWhere(drawn[size])
+    },
+    paint: (_, name, state) => {
+        const line = statusLine()
+        switch (name) {
+            case 'strip':
+                return at(shell({ foot: createElement(StatusLine, { note: 'Ready' }) }).find((element) => element.tag === 'footer'))
+            case 'note': {
+                const toned = statusLine({ tone: STATUS_TONES[state] })
+                return at(toned.find((element) => element.parent === toned[0] && element.tag === 'span'))
+            }
+            case 'liveDot':
+                return at(
+                    statusLine({ live: state === 'live' }).find(
+                        (element) => classesOf(element).includes('bg-current') && classesOf(element).includes('relative'),
+                    ),
+                )
+            case 'facts':
+                return at(line.find((element) => classesOf(element).includes('max-w-[70%]')))
+            case 'item': {
+                const value = state === 'code' ? 'run_01JCF8Q2' : 'step 3 of 5'
+                return at(line.find((element) => element.text === value && classesOf(element).includes('truncate')))
+            }
+            case 'itemLabel':
+                return at(byText(line, 'span', 'run'))
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the status line states no effects'),
+    keys: {},
+}
+
 // Shell
 
 const SHELL = source('components/Shell.tsx')
 const SHELL_SPEC_ROUTE = () => SPECS.get('shell')?.routes?.settings ?? ''
+/** A shell with a side panel, and the panel's toggle in it. */
+const withPanel = (open: boolean) => {
+    const elements = shell({ top: 'Runs', panel: 'Details', panelOpen: open })
+    return { elements, toggle: elements.find((element) => element.tag === 'button' && element.attrs['aria-pressed'] !== undefined) }
+}
 
 const SHELL_ADAPTER: Adapter = {
     wordObjects: {
         SHELL_WORDS,
-        RAIL_WORDS,
-        TOP_BAR_WORDS,
         PAGE_HEADER_WORDS,
         COMMAND_PALETTE_WORDS,
         SETTINGS_DIALOG_WORDS,
         PAGE_STATE_WORDS,
     },
-    complete: ['SHELL_WORDS', 'RAIL_WORDS', 'TOP_BAR_WORDS', 'PAGE_HEADER_WORDS', 'PAGE_STATE_WORDS'],
+    complete: ['SHELL_WORDS', 'PAGE_HEADER_WORDS', 'PAGE_STATE_WORDS'],
     words: {
         menu: 'SHELL_WORDS.menu',
         close: 'SHELL_WORDS.close',
@@ -987,14 +1602,7 @@ const SHELL_ADAPTER: Adapter = {
         panelTabs: 'SHELL_WORDS.panelTabs',
         openPalette: 'SHELL_WORDS.openPalette',
         openShortcuts: 'SHELL_WORDS.openShortcuts',
-        railCollapse: 'RAIL_WORDS.collapse',
-        railExpand: 'RAIL_WORDS.expand',
-        railResize: 'RAIL_WORDS.resize',
-        unread: 'RAIL_WORDS.unread',
-        places: 'RAIL_WORDS.places',
-        search: 'TOP_BAR_WORDS.search',
-        palette: 'TOP_BAR_WORDS.palette',
-        trail: ['TOP_BAR_WORDS.trail', 'PAGE_HEADER_WORDS.trail'],
+        trail: 'PAGE_HEADER_WORDS.trail',
         back: ['PAGE_HEADER_WORDS.back', 'SETTINGS_DIALOG_WORDS.back'],
         more: 'PAGE_HEADER_WORDS.more',
         moreWays: 'PAGE_HEADER_WORDS.moreWays',
@@ -1026,27 +1634,28 @@ const SHELL_ADAPTER: Adapter = {
         partRefused: 'PAGE_STATE_WORDS.partRefused',
         retry: 'PAGE_STATE_WORDS.retry',
     },
-    options: {
-        railMode: propValues(SHELL, 'ShellProps', 'railMode'),
-        trailEnds: propValues(source('components/TopBar.tsx'), 'TopBarProps', 'trailEnds'),
+    options: { railMode: propValues(SHELL, 'ShellProps', 'railMode') },
+    size: (size, key) => {
+        if (size !== 'panelToggle')
+            return skip(
+                "the shell's own regions (page, page header, page states, dialogs, drawer) get specs of their own as egui needs them",
+            )
+        const { elements, toggle } = withPanel(false)
+        return key === 'icon' ? pieceWhere(iconOf(elements, toggle)) : pieceWhere(toggle)
     },
-    size: () => skip("the frame's parts are drawn by Shell, Rail, TopBar and StatusLine, which get specs of their own"),
-    paint: () => skip("the frame's parts are drawn by Shell, Rail, TopBar and StatusLine, which get specs of their own"),
+    paint: (_, name, state) => {
+        if (name !== 'panelToggle')
+            return skip(
+                "the shell's own regions (page, page header, page states, dialogs, drawer) get specs of their own as egui needs them",
+            )
+        return at(withPanel(state === 'panelOpen').toggle, state)
+    },
     effect: () => skip('the shell states no effects'),
     keys: {
         "Mod+K (nothing but the top bar's search results stands over the page)": () =>
             /key: 'k',\s+mod: true,\s+alsoCtrl: true/.test(SHELL) ? true : 'the palette is not bound to Mod+K and Ctrl+K',
         '?': () => (/key: '\?'/.test(SHELL) ? true : 'the shortcuts dialog is not bound to ?'),
-        '/': () => (/key: '\/'/.test(source('components/SearchField.tsx')) ? true : 'the search field is not focused by /'),
         Escape: skip("each layer is Base UI's (dialog, popover, menu, drawer), which closes on Escape in a browser"),
-        'Enter, Space, ArrowRight': () =>
-            /event\.key !== 'Enter' && event\.key !== ' ' && event\.key !== forward/.test(source('components/ResizeHandle.tsx'))
-                ? true
-                : "the collapsed rail's edge does not expand on Enter, Space and the arrow",
-        'ArrowLeft, ArrowRight': () =>
-            /event\.key === forward\) step\(16\)\s+else if \(event\.key === back\) step\(-16\)/.test(source('components/ResizeHandle.tsx'))
-                ? true
-                : "the rail's edge does not resize on the arrows",
         'G then a letter': () => {
             const shortcuts = source('lib/shortcuts.ts')
             return /\bnext\?: string/.test(shortcuts) && /SEQUENCE_TIMEOUT = 1000\b/.test(shortcuts)
@@ -1082,6 +1691,9 @@ const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
     'text-field': TEXT_FIELD_ADAPTER,
     table: TABLE_ADAPTER,
+    rail: RAIL_ADAPTER,
+    'top-bar': TOP_BAR_ADAPTER,
+    'status-line': STATUS_LINE_ADAPTER,
     shell: SHELL_ADAPTER,
 }
 
@@ -1149,11 +1761,9 @@ function optionChecks(spec: Spec, adapter: Adapter): Check[] {
         })
 }
 
-/** The variants a length is drawn under: below md, inside an icon, on the hit area drawn after the part. */
+/** The variants a length is drawn under: inside an icon, on the hit area drawn after the part below md. */
 const SIZE_ON: Record<string, string[]> = {
     icon: ["[&_svg:not([class*='size-'])]"],
-    phoneMinHeight: ['max-md'],
-    phoneMinWidth: ['max-md'],
     phoneHitArea: ['max-md', 'after'],
 }
 
@@ -1165,10 +1775,23 @@ const SIZE_READERS: Record<string, Reader> = {
     gap: READ.gap,
     icon: READ.square,
     radiusMax: READ.radiusMax,
-    phoneMinHeight: READ.minHeight,
-    phoneMinWidth: READ.minWidth,
     phoneHitArea: READ.square,
 }
+
+/** What a phone size reads below md: a least length, or an exact one, which is at least itself. */
+const PHONE_READERS: Record<string, Reader> = {
+    phoneMinHeight: (name) => READ.minHeight(name) ?? READ.height(name),
+    phoneMinWidth: (name) => READ.minWidth(name) ?? READ.width(name),
+}
+
+/** Only the classes drawn under a variant, such as `max-md`, so a length drawn at every width is not taken for the phone's. */
+const under = (layers: readonly string[], mod: string) =>
+    layers.map((classes) =>
+        classes
+            .split(/\s+/)
+            .filter((token) => utility(token).mods.includes(mod))
+            .join(' '),
+    )
 
 function sizeChecks(spec: Spec, adapter: Adapter): Check[] {
     const checks: Check[] = []
@@ -1199,7 +1822,8 @@ function sizeChecks(spec: Spec, adapter: Adapter): Check[] {
                 const start = resolve(where.layers, ['has-data-[icon=inline-start]'], READ.padStart)
                 const end = resolve(where.layers, ['has-data-[icon=inline-end]'], READ.padEnd)
                 found = start === end ? start : `${String(start)} at the start, ${String(end)} at the end`
-            } else if (key === 'height')
+            } else if (key in PHONE_READERS) found = resolve(under(where.layers, 'max-md'), [...where.on, 'max-md'], PHONE_READERS[key])
+            else if (key === 'height')
                 found = resolve(where.layers, where.on, READ.height) ?? resolve(where.layers, where.on, READ.minHeight)
             else if (key === 'padX') {
                 found =
@@ -1313,7 +1937,7 @@ for (const id of SPECS.keys()) {
         it('draws each size at the lengths the spec gives', () => holds(id, 'sizes.'))
         it('paints each state as the spec does', () => holds(id, 'variants.', 'pieces.', 'states.'))
         it('handles the keys the spec binds', () => holds(id, 'keyboard.'))
-        it('meets the rest of the spec', () => holds(id, 'routes.'))
+        it('meets the rest of the spec', () => holds(id, 'routes.', 'layout.'))
         it("states its drift: each of sokkel-ui's drift entries still differs, and nothing else is allowed to", () => {
             const spec = SPECS.get(id)
             const checks = checksOf(id)
