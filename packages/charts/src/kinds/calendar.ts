@@ -1,8 +1,7 @@
 import { aggregateAt } from '../data'
 import { tooltipMarkup } from '../look'
 import { byDay, calendarRange } from '../shapes'
-import { written } from './categories'
-import { measureName, type ChartBuilder } from './spec'
+import { written, measureName, type ChartBuilder } from './spec'
 
 /** Every day from `start` to `end`, both `YYYY-MM-DD`. */
 function everyDay(start: string, end: string): string[] {

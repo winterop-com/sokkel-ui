@@ -113,7 +113,9 @@ describe('wrapping', () => {
         expect(placedBounds(tall).width).toBeLessThan(flat.width)
     })
 
-    test('a cut fits across its room, down to one column when the room holds no more', async () => {
+    // Each cut tries up to a dozen elk layouts, four cuts in all: well under a second alone, but longer than the
+    // default 5 s when the machine is loaded.
+    test('a cut fits across its room, down to one column when the room holds no more', { timeout: 30_000 }, async () => {
         const fan: GraphShape = {
             nodes: ['fetch', 'transform', 'a', 'b', 'c', 'validate', 'upload', 'notify', 'done'].map(box),
             edges: [
@@ -124,10 +126,11 @@ describe('wrapping', () => {
                 edge('notify', 'done'),
             ],
         }
+        const one = placedBounds(await layoutGraph({ nodes: [box('s0')], edges: [] }, 'right'))
         for (const shape of [long, fan]) {
-            const one = placedBounds(await layoutGraph({ nodes: [shape.nodes[0]], edges: [] }, 'right'))
+            const height = placedBounds(await layoutGraph(shape, 'right')).height * 8
             for (const width of [one.width * 2.5, one.width * 4]) {
-                const room = { width, height: placedBounds(await layoutGraph(shape, 'right')).height * 8 }
+                const room = { width, height }
                 const cut = await layoutGraph(shape, 'right', undefined, { wrapWidth: 1120, wrapRoom: room })
                 expect(placedBounds(cut).width).toBeLessThanOrEqual(room.width)
             }

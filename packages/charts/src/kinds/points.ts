@@ -1,7 +1,7 @@
 import { distinct, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
-import { tickWriter, valueLabels, written } from './categories'
-import { colorOf, type ChartBuilder } from './spec'
+import { tickWriter, valueLabels } from './axes'
+import { written, colorOf, type ChartBuilder } from './spec'
 
 /**
  * One point per row, `x` against `y`, both numbers; `series` colors the points by a field's label

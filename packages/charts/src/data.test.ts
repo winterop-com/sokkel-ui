@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { aggregate, asShares, distinct, formatTick, pivot, quantile } from './data'
-import { compactWritten, tickWriter } from './kinds/categories'
+import { compactWritten, tickWriter } from './kinds/axes'
 
 describe('formatTick', () => {
     it('keeps the ticks of a small range apart', () => {

@@ -15,7 +15,16 @@
         "engines": ["echarts", "dnd-kit"],
         "start": 205.3,
         "lazy": 465,
-        "css": 52
+        "css": 52,
+        "first": {
+            "budget": 406,
+            "fetches": [
+                "packages/charts/dist/engine.js",
+                "packages/charts/dist/kinds/categories.js",
+                "echarts/lib/chart/bar.js",
+                "echarts/lib/component/grid.js"
+            ]
+        }
     },
     "map": {
         "engines": ["maplibre"],

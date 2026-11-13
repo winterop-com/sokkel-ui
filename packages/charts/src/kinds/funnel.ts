@@ -1,7 +1,6 @@
 import { tooltipMarkup } from '../look'
-import { written } from './categories'
 import { funnelStages, stageColor } from './legends'
-import { wordsOf, type ChartBuilder } from './spec'
+import { written, wordsOf, type ChartBuilder } from './spec'
 
 /**
  * Stages narrowing by their figure: the categories of `x` in `order`, each as wide as its combined
