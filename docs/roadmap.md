@@ -6,7 +6,13 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.24.1** is the latest release (2026-11-13): the dashboard example, a home of live widgets
+- **0.25.0** is the latest release (2026-11-13): drag in every Apps story and example; Board
+  columns move and lock, calendar events move and resize, messages, files, video cards and channels
+  drag; rail reorder, rows lent by their grips, RepeatedGroup and Tree order; control heights from
+  density tokens; issue words, `useOverlayRoute` and a table's own loading and failed states; a
+  fitted line axis, a select's `widest`, wide graph ranks cut into rows; a size measure for the
+  first chart.
+- **0.24.1** (2026-11-13): the dashboard example, a home of live widgets
   edited by drag behind an Edit button; `useDashboardEdit` and `DashboardEditActions`;
   DashboardArrange `onConfigure`; every dashboard example says Edit.
 - **0.24.0** (2026-11-13): dnd-kit is the drag and drop engine: `DragDrop`,
