@@ -3,7 +3,7 @@
         "engines": [],
         "start": 194.0,
         "lazy": 78.9,
-        "css": 51.5
+        "css": 51.7
     },
     "forms-lean": {
         "engines": [],
@@ -36,6 +36,6 @@
         "engines": [],
         "start": 174,
         "lazy": 45,
-        "css": 52.6
+        "css": 52.8
     }
 }
