@@ -157,7 +157,7 @@ export function SecretField({
                 input.current?.focus()
             }}
             className={cn(
-                'flex h-8 w-full min-w-0 items-center gap-1 rounded-control border border-input bg-field pr-1 pl-2.5 text-base transition-colors md:text-sm',
+                'flex h-(--density-control) w-full min-w-0 items-center gap-1 rounded-control border border-input bg-field pr-1 pl-2.5 text-base transition-colors md:text-sm',
                 open ? 'cursor-text focus-within:border-ring focus-within:ring-1 focus-within:ring-ring' : 'bg-muted/40',
                 disabled && 'cursor-not-allowed bg-input/50 opacity-50',
                 bare && tone === 'critical' && 'border-critical/80 focus-within:border-critical focus-within:ring-critical/25',

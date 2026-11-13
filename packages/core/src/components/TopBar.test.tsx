@@ -46,10 +46,10 @@ describe('TopBar trail', () => {
 })
 
 describe('TopBar palette button', () => {
-    it('is a finger square below md and keeps its desktop height', () => {
+    it('is a finger square below md and a control tall from md, as the search field beside it is', () => {
         const html = renderToStaticMarkup(<TopBar onSearch={() => undefined} />)
         expect(html).toContain('aria-label="Search"')
-        expect(html).toMatch(/<button[^>]*class="[^"]*\bh-8\b[^"]*max-md:size-finger/)
+        expect(html).toMatch(/<button[^>]*class="[^"]*h-\(--density-control\)[^"]*max-md:size-finger/)
         expect(html).not.toContain('max-md:size-8')
     })
 

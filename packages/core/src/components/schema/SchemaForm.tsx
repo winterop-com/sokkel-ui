@@ -947,11 +947,11 @@ function labelOf(at: JsonSchema, name: string): { label: string; mono: boolean; 
 function ListHead({ form, path, title, onAdd }: { form: SchemaFormState; path: Path; title: ReactNode; onAdd?: () => void }) {
     const at = pointer(path)
     return (
-        <div className="flex min-h-7 items-center gap-2">
+        <div className="flex min-h-(--density-control-sm) items-center gap-2">
             <div id={form.id(path)} tabIndex={-1} className="min-w-0 truncate text-sm font-medium outline-none">
                 {title}
             </div>
-            <span className="relative flex size-7 shrink-0 items-center">
+            <span className="relative flex size-(--density-control-sm) shrink-0 items-center">
                 <IssueMark
                     issues={form.shown(path)}
                     open={form.open === at}
@@ -1084,7 +1084,7 @@ function Property({
                     />
                 </div>
                 {form.shown(path).length > 0 && (
-                    <span className="relative flex size-7 shrink-0">
+                    <span className="relative flex size-(--density-control-sm) shrink-0">
                         <IssueMark
                             issues={form.shown(path)}
                             open={form.open === pointer(path)}

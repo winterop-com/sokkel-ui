@@ -26,12 +26,12 @@ const OPTION: Record<SegmentedVariant, string> = {
     solid: '',
 }
 
-/** A small option's least height, so a line of options with its frame is a finger tall, and 1.75rem from `md`. */
+/** A small option's least height, so a line of options with its frame is a finger tall, and a small control's height from `md`. */
 const LINE: Record<SegmentedVariant, string> = {
-    track: 'min-h-[calc(var(--spacing-finger)-4px)] md:min-h-6',
-    tint: 'min-h-finger md:min-h-7',
-    outline: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(1.75rem-2px)]',
-    solid: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(1.75rem-2px)]',
+    track: 'min-h-[calc(var(--spacing-finger)-4px)] md:min-h-[calc(var(--density-control-sm)-4px)]',
+    tint: 'min-h-finger md:min-h-(--density-control-sm)',
+    outline: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(var(--density-control-sm)-2px)]',
+    solid: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(var(--density-control-sm)-2px)]',
 }
 
 const CHOSEN: Record<SegmentedVariant, string> = {
@@ -113,7 +113,7 @@ export function Segmented<T extends string>({
             className={cn(
                 FRAME[variant],
                 size === 'md'
-                    ? cn('grid w-full grid-cols-2 md:flex md:min-h-8 md:flex-wrap', !fill && 'md:w-auto')
+                    ? cn('grid w-full grid-cols-2 md:flex md:min-h-(--density-control) md:flex-wrap', !fill && 'md:w-auto')
                     : cn('max-w-full flex-wrap', fill ? 'flex w-full' : 'inline-flex w-fit shrink-0'),
                 disabled && 'opacity-50',
                 className,
@@ -134,7 +134,7 @@ export function Segmented<T extends string>({
                             OPTION[variant],
                             size === 'md'
                                 ? cn(
-                                      'min-h-finger px-3 py-1 text-sm last:odd:col-span-2 md:min-h-7 md:py-0 md:whitespace-nowrap',
+                                      'min-h-finger px-3 py-1 text-sm last:odd:col-span-2 md:min-h-(--density-control-sm) md:py-0 md:whitespace-nowrap',
                                       fill ? 'md:flex-1 md:basis-0' : 'md:flex-1',
                                   )
                                 : cn('flex-1 px-2.5 text-xs whitespace-nowrap', LINE[variant]),

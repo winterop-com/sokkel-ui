@@ -12,14 +12,15 @@ import { PanelTools, usePanelTools } from './panel-tools'
 
 /**
  * How much of the grid's width a panel takes in a wide grid. Every panel is full width in a
- * phone-wide grid but a sixth, which takes half, so stat tiles and gauges stand two to a row.
+ * phone-wide grid but a sixth and a quarter, which take half, so stat tiles and gauges stand two to
+ * a row.
  */
 export type PanelSpan = 'sixth' | 'quarter' | 'third' | 'half' | 'two-thirds' | 'full'
 
 /** The grid classes for a panel's span. */
 export const SPAN: Record<PanelSpan, string> = {
     sixth: 'col-span-6 @2xl/dashboard:col-span-4 @4xl/dashboard:col-span-2',
-    quarter: 'col-span-12 @2xl/dashboard:col-span-6 @4xl/dashboard:col-span-3',
+    quarter: 'col-span-6 @4xl/dashboard:col-span-3',
     third: 'col-span-12 @4xl/dashboard:col-span-4',
     half: 'col-span-12 @4xl/dashboard:col-span-6',
     'two-thirds': 'col-span-12 @4xl/dashboard:col-span-8',
@@ -36,8 +37,8 @@ export interface DashboardGridProps {
  * The grid a dashboard's panels sit in: twelve columns, a panel's span following the grid's own
  * width, not the window's, so a dashboard beside a rail or a panel lays out for the room it has.
  * Wide, the spans are as named; tablet-wide, a sixth takes a third and a quarter half, the rest the
- * whole row; phone-wide, every panel takes the row but a sixth, which takes half, so stat tiles
- * and gauges stand two to a row. The grid is its own container, so `className` places it in the
+ * whole row; phone-wide, every panel takes the row but a sixth and a quarter, which take half, so
+ * stat tiles and gauges stand two to a row, arranged or not. The grid is its own container, so `className` places it in the
  * page. Panels in a row stretch to the same height. A dense grid packs panels with small gaps.
  */
 export function DashboardGrid({ dense = false, children, className }: DashboardGridProps) {
@@ -191,7 +192,7 @@ export function DashboardPanel({
         children
     )
     const tool =
-        'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'
+        'flex size-(--density-control-sm) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'
     return (
         <section
             className={cn(

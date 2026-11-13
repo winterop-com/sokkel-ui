@@ -12,9 +12,9 @@ const toggleVariants = cva(
             },
             size: {
                 default:
-                    'h-8 min-w-8 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 max-md:min-h-finger max-md:min-w-finger',
-                sm: "h-7 min-w-7 rounded-[min(var(--control-radius),12px)] px-2.5 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 max-md:min-h-finger max-md:min-w-finger [&_svg:not([class*='size-'])]:size-3.5",
-                lg: 'h-9 min-w-9 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 max-md:min-h-finger max-md:min-w-finger',
+                    'h-(--density-control) min-w-(--density-control) px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 max-md:min-h-finger max-md:min-w-finger',
+                sm: "h-(--density-control-sm) min-w-(--density-control-sm) rounded-[min(var(--control-radius),12px)] px-2.5 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 max-md:min-h-finger max-md:min-w-finger [&_svg:not([class*='size-'])]:size-3.5",
+                lg: 'h-(--density-control-lg) min-w-(--density-control-lg) px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 max-md:min-h-finger max-md:min-w-finger',
             },
         },
         defaultVariants: {

@@ -1,6 +1,8 @@
 import { Paperclip, Star } from 'lucide-react'
 
 import { cn } from '../lib/cn'
+import type { DragData } from './DragDrop'
+import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSource'
 import { Checkbox } from './ui/checkbox'
 import { Highlight } from './Highlight'
 import { literalRanges } from '../lib/search'
@@ -19,6 +21,8 @@ export interface MessageRowWords {
     unread: string
     attachment: string
     thread: (count: number) => string
+    /** The grip's name, with `drag`: what the keyboard picks the message up by. */
+    drag: (subject: string) => string
 }
 
 const WORDS: MessageRowWords = {
@@ -28,6 +32,7 @@ const WORDS: MessageRowWords = {
     unread: 'Unread',
     attachment: 'Has attachments',
     thread: (count) => `${count} messages`,
+    drag: (subject) => `Drag ${subject}`,
 }
 
 export interface MessageRowProps {
@@ -51,6 +56,12 @@ export interface MessageRowProps {
     onOpen?: () => void
     /** A search term to mark wherever it occurs. */
     highlight?: string
+    /**
+     * What the message carries when it is dragged to a target elsewhere on the page, such as a
+     * folder in the rail inside a `RailDrops`; it does not drag without it. A small card with its
+     * label follows the pointer unless the data says otherwise.
+     */
+    drag?: DragData
     className?: string
     words?: Partial<MessageRowWords>
 }
@@ -65,6 +76,9 @@ export interface MessageRowProps {
  * star are drawn only with their handlers, so a list that cannot select or star has no dead
  * controls. `highlight` marks every place a search term occurs in the sender, subject and text,
  * and starts the text shortly before its first match.
+ *
+ * With `drag` the row drags as a whole to a target elsewhere on the page, and from the keyboard by
+ * the grip at its end, shown on hover or focus; it fades while it is dragged.
  */
 export function MessageRow({
     from,
@@ -82,25 +96,94 @@ export function MessageRow({
     onStarredChange,
     onOpen,
     highlight,
+    drag,
     className,
     words: given,
 }: MessageRowProps) {
     const words = { ...WORDS, ...given }
     const gutter = onCheckedChange !== undefined || onStarredChange !== undefined
     return (
-        <div
-            data-slot="message-row"
-            data-unread={unread || undefined}
-            data-open={open || undefined}
-            className={cn(
-                'relative flex gap-3 border-b border-border px-3 py-2.5 text-sm transition-colors',
-                open ? 'bg-sidebar-accent' : checked ? 'bg-accent' : 'hover:bg-hover',
-                className,
+        <DragSource drag={drag === undefined ? undefined : { compact: true, ...drag }}>
+            {(source) => (
+                <div
+                    ref={source.ref}
+                    {...source.press}
+                    data-slot="message-row"
+                    data-unread={unread || undefined}
+                    data-open={open || undefined}
+                    data-dragging={source.dragging || undefined}
+                    className={cn(
+                        'relative flex gap-3 border-b border-border px-3 py-2.5 text-sm transition-colors',
+                        DRAG_GROUP,
+                        open ? 'bg-sidebar-accent' : checked ? 'bg-accent' : 'hover:bg-hover',
+                        source.dragging && 'opacity-40',
+                        className,
+                    )}
+                >
+                    <RowBody
+                        from={from}
+                        subject={subject}
+                        snippet={snippet}
+                        time={time}
+                        unread={unread}
+                        starred={starred}
+                        attachment={attachment}
+                        count={count}
+                        labels={labels}
+                        open={open}
+                        checked={checked}
+                        onCheckedChange={onCheckedChange}
+                        onStarredChange={onStarredChange}
+                        onOpen={onOpen}
+                        highlight={highlight}
+                        words={words}
+                        gutter={gutter}
+                    />
+                    {source.enabled && (
+                        <div className="flex shrink-0 items-center">
+                            <DragSourceGrip
+                                source={source}
+                                size="icon-xs"
+                                label={words.drag(subject)}
+                                className={cn('-mr-1.5', GRIP_ON_HOVER)}
+                            />
+                        </div>
+                    )}
+                </div>
             )}
-        >
+        </DragSource>
+    )
+}
+
+/** A row's contents: the marks in its gutter, and the button that opens it. */
+function RowBody({
+    from,
+    subject,
+    snippet,
+    time,
+    unread,
+    starred,
+    attachment,
+    count,
+    labels,
+    open,
+    checked,
+    onCheckedChange,
+    onStarredChange,
+    onOpen,
+    highlight,
+    words,
+    gutter,
+}: Required<Pick<MessageRowProps, 'from' | 'subject' | 'time' | 'unread' | 'starred' | 'attachment' | 'labels' | 'open' | 'checked'>> &
+    Pick<MessageRowProps, 'snippet' | 'count' | 'onCheckedChange' | 'onStarredChange' | 'onOpen' | 'highlight'> & {
+        words: MessageRowWords
+        gutter: boolean
+    }) {
+    return (
+        <>
             {open && <span className="absolute inset-y-0 left-0 w-0.5 bg-primary" aria-hidden />}
             {gutter && (
-                <div className="flex shrink-0 flex-col items-center gap-2.5 pt-0.5">
+                <div data-no-drag className="flex shrink-0 flex-col items-center gap-2.5 pt-0.5">
                     {onCheckedChange !== undefined && (
                         <Checkbox checked={checked} onCheckedChange={(next) => onCheckedChange(next)} aria-label={words.select(from)} />
                     )}
@@ -170,7 +253,7 @@ export function MessageRow({
                     </span>
                 )}
             </button>
-        </div>
+        </>
     )
 }
 

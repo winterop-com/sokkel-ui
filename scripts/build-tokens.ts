@@ -15,7 +15,9 @@
  * it, as a theme picker's preview swatch is, in the same rule as its `html` one: every scope first
  * takes tidevann's whole set, at no specificity, so a scope shows its own theme whatever the page
  * around it wears, and its theme's overrides go over that. A theme may override any token, the
- * density levels' included.
+ * density levels' included. A density level answers on `html[data-density]` for the whole app and
+ * on `[data-density-scope]` for one element and what is inside it, so one part can be shown at
+ * another level than the page around it.
  *
  * Tidevann sets its surfaces (canvas, node, panel ground and line, critical wash) as fixed
  * colors; every other theme takes them from `derived`, mixed from its own colors, unless it sets
@@ -73,7 +75,7 @@ function darkOf(theme: { light: Vars; dark: Vars }): Vars {
 /** Every file the tokens make, by path. */
 const files = new Map<string, string>()
 
-// Density: the default level answers on `:root`, every level on its own `[data-density]`.
+// Density: the default level answers on `:root`, every level on its own `[data-density]` and on its own scope.
 const levels = Object.keys(tokens.density).filter((key) => key !== 'default' && !key.startsWith('$'))
 const prefixed = (vars: Vars): Vars => Object.fromEntries(Object.entries(vars).map(([name, value]) => [`density-${name}`, value]))
 
@@ -88,7 +90,9 @@ files.set(
         block([':root', ':where([data-theme-scope])'], base.light),
         block(['.dark', ':where(.dark [data-theme-scope])'], base.dark),
         block([':root'], prefixed(tokens.density[tokens.density.default] as Vars)),
-        ...levels.map((level) => block([`html[data-density='${level}']`], prefixed(tokens.density[level] as Vars))),
+        ...levels.map((level) =>
+            block([`html[data-density='${level}']`, `[data-density-scope='${level}']`], prefixed(tokens.density[level] as Vars)),
+        ),
     ].join('\n'),
 )
 

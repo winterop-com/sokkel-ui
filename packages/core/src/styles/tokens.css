@@ -570,7 +570,10 @@
     --density-panel-head: 2.25rem;
     --density-panel-pad: 0.75rem;
     --density-row: 2.5rem;
+    --density-control-xs: 1.5rem;
+    --density-control-sm: 1.75rem;
     --density-control: 2rem;
+    --density-control-lg: 2.25rem;
     --density-section-gap: 1rem;
     --density-inspector-pad: 1.25rem;
     --density-inspector-gap: 1.5rem;
@@ -580,7 +583,8 @@
     --density-channel-row: 1.75rem;
 }
 
-html[data-density='regular'] {
+html[data-density='regular'],
+[data-density-scope='regular'] {
     --density-page-inset-wide: 2rem;
     --density-page-inset-narrow: 1rem;
     --density-overlay-inset: var(--density-page-inset-narrow);
@@ -590,7 +594,10 @@ html[data-density='regular'] {
     --density-panel-head: 2.25rem;
     --density-panel-pad: 0.75rem;
     --density-row: 2.5rem;
+    --density-control-xs: 1.5rem;
+    --density-control-sm: 1.75rem;
     --density-control: 2rem;
+    --density-control-lg: 2.25rem;
     --density-section-gap: 1rem;
     --density-inspector-pad: 1.25rem;
     --density-inspector-gap: 1.5rem;
@@ -600,7 +607,8 @@ html[data-density='regular'] {
     --density-channel-row: 1.75rem;
 }
 
-html[data-density='compact'] {
+html[data-density='compact'],
+[data-density-scope='compact'] {
     --density-page-inset-wide: 1rem;
     --density-page-inset-narrow: 0.75rem;
     --density-overlay-inset: var(--density-page-inset-narrow);
@@ -610,7 +618,10 @@ html[data-density='compact'] {
     --density-panel-head: 2rem;
     --density-panel-pad: 0.5rem;
     --density-row: 2.125rem;
+    --density-control-xs: 1.25rem;
+    --density-control-sm: 1.5rem;
     --density-control: 1.75rem;
+    --density-control-lg: 2rem;
     --density-section-gap: 0.75rem;
     --density-inspector-pad: 0.75rem;
     --density-inspector-gap: 1rem;

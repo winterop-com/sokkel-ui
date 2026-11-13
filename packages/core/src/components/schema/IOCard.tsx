@@ -37,7 +37,7 @@ function Side({ label, side, words }: { label: string; side?: IOSide; words: IOC
     const [view, setView] = useState<'schema' | 'example'>('schema')
     return (
         <section className="flex min-w-0 flex-col gap-2">
-            <header className="flex h-7 items-center gap-2">
+            <header className="flex h-(--density-control-sm) items-center gap-2">
                 <h4 className="flex-1 text-xs leading-4 font-semibold">{label}</h4>
                 {side?.example !== undefined && (
                     <Segmented

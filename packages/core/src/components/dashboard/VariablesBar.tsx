@@ -30,7 +30,7 @@ export type Variable =
 
 // Below md the chip grows to a finger's height with the select inside it, rather than clipping it.
 const CHIP =
-    'flex h-7 min-w-0 items-stretch overflow-hidden rounded-control border border-border bg-field text-xs max-md:h-auto max-md:min-h-finger'
+    'flex h-(--density-control-sm) min-w-0 items-stretch overflow-hidden rounded-control border border-border bg-field text-xs max-md:h-auto max-md:min-h-finger'
 const LABEL = 'flex shrink-0 items-center border-r border-border bg-secondary px-2 font-medium text-muted-foreground'
 
 function SelectVariable({ variable }: { variable: Extract<Variable, { kind: 'select' }> }) {

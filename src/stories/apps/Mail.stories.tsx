@@ -33,7 +33,9 @@ import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
 import { MessageRow, type MessageLabel } from '@winterop-com/sokkel-ui/MessageRow'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { LinkProvider } from '@winterop-com/sokkel-ui/Link'
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SelectionBar } from '@winterop-com/sokkel-ui/SelectionBar'
@@ -60,7 +62,8 @@ import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
  * A mail client in the library's frame: the mailboxes and labels in the rail, the message list
  * with its search, unread filter and bulk toolbar, and the reading pane with the conversation and
  * a reply box under it. Below the `lg` breakpoint it shows the list or the open message, never
- * both, and the message has a way back.
+ * both, and the message has a way back. A conversation dragged onto Inbox, Archive or Trash in the
+ * rail moves there, onto Starred is starred, and onto a label wears it.
  */
 type Box = 'inbox' | 'starred' | 'sent' | 'drafts' | 'archive' | 'trash'
 
@@ -264,10 +267,18 @@ const BOXES: { id: Box; label: string; icon: LucideIcon }[] = [
     { id: 'trash', label: 'Trash', icon: Trash2 },
 ]
 
-function inBox(box: Box): Conversation[] {
-    if (box === 'starred') return MAIL.filter((mail) => mail.starred === true)
-    return MAIL.filter((mail) => mail.box === box)
+function inBox(mail: readonly Conversation[], box: Box): Conversation[] {
+    if (box === 'starred') return mail.filter((each) => each.starred === true)
+    return mail.filter((each) => each.box === box)
 }
+
+/** What a conversation drags as, onto a mailbox or a label in the rail. */
+const CONVERSATION = 'conversation'
+
+/** The mailboxes a conversation dragged onto moves into. */
+const MOVES_TO: readonly Box[] = ['inbox', 'archive', 'trash']
+
+const takesConversation = (drag: DragData) => drag.kind === CONVERSATION
 
 function matches(mail: Conversation, query: string): boolean {
     const term = query.trim().toLowerCase()
@@ -560,6 +571,7 @@ const EMPTY: Record<Box, { title: string; text: string }> = {
 }
 
 function List({
+    mail,
     box,
     query,
     onQuery,
@@ -567,7 +579,9 @@ function List({
     onOpen,
     checked,
     onChecked,
+    onStarred,
 }: {
+    mail: readonly Conversation[]
     box: Box
     query: string
     onQuery: (query: string) => void
@@ -575,10 +589,10 @@ function List({
     onOpen: (id: string) => void
     checked: string[]
     onChecked: (checked: string[]) => void
+    onStarred: (id: string, starred: boolean) => void
 }) {
     const [only, setOnly] = useState<'all' | 'unread'>('all')
-    const [starred, setStarred] = useState(() => new Set(MAIL.filter((mail) => mail.starred === true).map((mail) => mail.id)))
-    const rows = inBox(box).filter((mail) => matches(mail, query) && (only === 'all' || mail.unread === true))
+    const rows = inBox(mail, box).filter((each) => matches(each, query) && (only === 'all' || each.unread === true))
     const all = rows.length > 0 && rows.every((mail) => checked.includes(mail.id))
     const some = checked.length > 0
     const searching = query.trim() !== ''
@@ -653,23 +667,17 @@ function List({
                             snippet={mail.snippet}
                             time={mail.time}
                             unread={mail.unread}
-                            starred={starred.has(mail.id)}
+                            starred={mail.starred === true}
                             attachment={mail.attachment}
                             count={mail.count}
                             labels={(mail.labels ?? []).map((id) => LABELS[id])}
                             open={mail.id === open}
                             checked={checked.includes(mail.id)}
                             onCheckedChange={(on) => onChecked(on ? [...checked, mail.id] : checked.filter((id) => id !== mail.id))}
-                            onStarredChange={(on) =>
-                                setStarred((current) => {
-                                    const next = new Set(current)
-                                    if (on) next.add(mail.id)
-                                    else next.delete(mail.id)
-                                    return next
-                                })
-                            }
+                            onStarredChange={(on) => onStarred(mail.id, on)}
                             onOpen={() => onOpen(mail.id)}
                             highlight={query}
+                            drag={{ kind: CONVERSATION, label: mail.subject, value: mail.id }}
                         />
                     ))
                 )}
@@ -729,8 +737,15 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     )
 }
 
-function rail(box: Box): RailGroup[] {
-    const unread = MAIL.filter((mail) => mail.box === 'inbox' && mail.unread === true).length
+/** What a conversation let go on a place in the rail does to it. */
+type Dropped = { into: Box } | { star: true } | { label: string }
+
+function rail(box: Box, mail: readonly Conversation[], onDrop: (id: string, dropped: Dropped) => void): RailGroup[] {
+    const unread = mail.filter((each) => each.box === 'inbox' && each.unread === true).length
+    const dropping = (dropped: Dropped) => ({
+        accepts: takesConversation,
+        onDrop: (drag: DragData) => onDrop(drag.value as string, dropped),
+    })
     const groups: RailGroup[] = [
         {
             id: 'boxes',
@@ -741,6 +756,11 @@ function rail(box: Box): RailGroup[] {
                 href: `#${entry.id}`,
                 active: entry.id === box,
                 count: entry.id === 'inbox' ? unread : undefined,
+                drop: MOVES_TO.includes(entry.id)
+                    ? dropping({ into: entry.id })
+                    : entry.id === 'starred'
+                      ? dropping({ star: true })
+                      : undefined,
             })),
         },
         {
@@ -752,6 +772,7 @@ function rail(box: Box): RailGroup[] {
                 icon: Circle,
                 href: '#',
                 dot: label.color,
+                drop: dropping({ label: label.id }),
             })),
         },
     ]
@@ -777,7 +798,17 @@ function MailApp({
     const [query, setQuery] = useState(startQuery)
     const [checked, setChecked] = useState<string[]>(startChecked)
     const [compose, setCompose] = useState(composing)
-    const groups = rail(box)
+    const [conversations, setConversations] = useState(MAIL)
+    const change = (id: string, to: (mail: Conversation) => Conversation) =>
+        setConversations((now) => now.map((each) => (each.id === id ? to(each) : each)))
+    const groups = rail(box, conversations, (id, dropped) => {
+        if ('into' in dropped) {
+            change(id, (each) => ({ ...each, box: dropped.into }))
+            if (dropped.into !== box && open === id) setOpen(null)
+            setChecked((now) => now.filter((each) => each !== id))
+        } else if ('star' in dropped) change(id, (each) => ({ ...each, starred: true }))
+        else change(id, (each) => ({ ...each, labels: [...new Set([...(each.labels ?? []), dropped.label])] }))
+    })
     // A box's link opens it; a label's leads nowhere yet.
     const link = routerLink((href) => {
         const next = BOXES.find((entry) => `#${entry.id}` === href)
@@ -786,72 +817,76 @@ function MailApp({
         setOpen(null)
         setChecked([])
     })
-    const mail = MAIL.find((entry) => entry.id === open)
+    const mail = conversations.find((entry) => entry.id === open)
     return (
         <TooltipProvider>
-            <Shell
-                rail={
-                    <LinkProvider render={link}>
-                        <Rail
-                            mark={<TidevannMark />}
-                            name="Tidevann"
-                            groups={groups}
-                            collapsed={collapsed}
-                            onCollapsedChange={setCollapsed}
-                            foot={
-                                <AccountMenu
-                                    name="ada"
-                                    image={pictureOf('ada')}
-                                    where="ada@example.org"
-                                    collapsed={collapsed}
-                                    onSettings={() => undefined}
-                                />
+            <RailDrops>
+                <Shell
+                    rail={
+                        <LinkProvider render={link}>
+                            <Rail
+                                mark={<TidevannMark />}
+                                name="Tidevann"
+                                groups={groups}
+                                collapsed={collapsed}
+                                onCollapsedChange={setCollapsed}
+                                foot={
+                                    <AccountMenu
+                                        name="ada"
+                                        image={pictureOf('ada')}
+                                        where="ada@example.org"
+                                        collapsed={collapsed}
+                                        onSettings={() => undefined}
+                                    />
+                                }
+                            />
+                        </LinkProvider>
+                    }
+                    top={
+                        <TopBar
+                            trail={[{ label: 'Mail', href: '#' }, { label: BOXES.find((entry) => entry.id === box)?.label ?? '' }]}
+                            actions={
+                                <Button size="sm" onClick={() => setCompose(true)} aria-label="Compose">
+                                    <PenSquare aria-hidden />
+                                    <span className="max-sm:hidden">Compose</span>
+                                </Button>
                             }
                         />
-                    </LinkProvider>
-                }
-                top={
-                    <TopBar
-                        trail={[{ label: 'Mail', href: '#' }, { label: BOXES.find((entry) => entry.id === box)?.label ?? '' }]}
-                        actions={
-                            <Button size="sm" onClick={() => setCompose(true)} aria-label="Compose">
-                                <PenSquare aria-hidden />
-                                <span className="max-sm:hidden">Compose</span>
-                            </Button>
+                    }
+                >
+                    <SplitPane
+                        defaultShare={0.36}
+                        minShare={0.28}
+                        maxShare={0.6}
+                        narrow={mail === undefined ? 'first' : 'second'}
+                        narrowBelow={720}
+                        first={
+                            <section aria-label="Messages" className="h-full min-h-0">
+                                <List
+                                    mail={conversations}
+                                    box={box}
+                                    query={query}
+                                    onQuery={setQuery}
+                                    open={open}
+                                    onOpen={setOpen}
+                                    checked={checked}
+                                    onChecked={setChecked}
+                                    onStarred={(id, starred) => change(id, (each) => ({ ...each, starred }))}
+                                />
+                            </section>
+                        }
+                        second={
+                            <section aria-label="Reading" className="h-full min-h-0">
+                                {mail !== undefined ? (
+                                    <Reading key={mail.id} mail={mail} onBack={() => setOpen(null)} />
+                                ) : (
+                                    <Nothing checked={checked.length} onClear={() => setChecked([])} />
+                                )}
+                            </section>
                         }
                     />
-                }
-            >
-                <SplitPane
-                    defaultShare={0.36}
-                    minShare={0.28}
-                    maxShare={0.6}
-                    narrow={mail === undefined ? 'first' : 'second'}
-                    narrowBelow={720}
-                    first={
-                        <section aria-label="Messages" className="h-full min-h-0">
-                            <List
-                                box={box}
-                                query={query}
-                                onQuery={setQuery}
-                                open={open}
-                                onOpen={setOpen}
-                                checked={checked}
-                                onChecked={setChecked}
-                            />
-                        </section>
-                    }
-                    second={
-                        <section aria-label="Reading" className="h-full min-h-0">
-                            {mail !== undefined ? (
-                                <Reading key={mail.id} mail={mail} onBack={() => setOpen(null)} />
-                            ) : (
-                                <Nothing checked={checked.length} onClear={() => setChecked([])} />
-                            )}
-                        </section>
-                    }
-                />
-            </Shell>
+                </Shell>
+            </RailDrops>
             <ComposeDialog open={compose} onOpenChange={setCompose} />
         </TooltipProvider>
     )

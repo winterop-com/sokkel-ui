@@ -113,7 +113,7 @@ export function Dock({
                             title={open ? words.fold : words.unfold}
                             aria-expanded={open}
                             onClick={() => onOpenChange(!open)}
-                            className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground"
+                            className="flex size-(--density-control-sm) items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground"
                         >
                             {open ? <ChevronDown className="size-4" aria-hidden /> : <ChevronUp className="size-4" aria-hidden />}
                         </button>

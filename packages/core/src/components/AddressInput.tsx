@@ -140,7 +140,7 @@ export function AddressInput({
                             key={`${entry.address}-${index}`}
                             title={bad ? `${entry.address}: ${words.invalid}` : entry.address}
                             className={cn(
-                                'inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-control pr-0.5 pl-2 text-xs',
+                                'inline-flex h-(--density-control-xs) max-w-full min-w-0 items-center gap-1 rounded-control pr-0.5 pl-2 text-xs',
                                 bad
                                     ? 'bg-destructive/10 text-destructive ring-1 ring-destructive/40'
                                     : 'bg-secondary text-secondary-foreground',
@@ -175,7 +175,7 @@ export function AddressInput({
                     placeholder={value.length === 0 ? words.placeholder : undefined}
                     aria-label={id !== undefined ? undefined : typeof label === 'string' ? label : words.placeholder}
                     aria-invalid={tone === 'critical' || undefined}
-                    className="h-6 min-w-24 flex-1 px-1 placeholder:text-faint"
+                    className="h-(--density-control-xs) min-w-24 flex-1 px-1 placeholder:text-faint"
                     onChange={(event) => {
                         const text = event.target.value
                         if (/[,;]/.test(text)) commit(text)

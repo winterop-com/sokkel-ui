@@ -382,8 +382,8 @@ function pathOf(folders: readonly TreeNode[], id: string): string[] {
 const FILE_DRAG = 'file'
 
 /** The file a row of the listing carries as it is dragged. */
-const carried = (drag: DragData): StoredFile | undefined =>
-    (drag.value as { row?: StoreRow } | undefined)?.row?.entry as StoredFile | undefined
+/** The file a list's row or a grid's tile carries. */
+const carried = (drag: DragData): StoredFile | undefined => (drag.value as { row?: StoredFile } | undefined)?.row
 
 /** A download of a file in eight parts, one every 400ms once pressed, held by the story. */
 function useDownload() {
@@ -743,12 +743,12 @@ function FilesApp({
                                             words={{ empty: 'Nothing matches.' }}
                                         />
                                     ) : view === 'list' && ordered ? (
-                                        <DataTable
-                                            variant="list"
-                                            columns={STORE_COLUMNS}
-                                            rows={listed.map((each) => ({ id: each.id, entry: each }))}
-                                            rowKey={(row) => row.id}
-                                            rowLabel={(row) => row.entry.name}
+                                        <FileList
+                                            entries={listed}
+                                            selected={selected}
+                                            onSelectedChange={setSelected}
+                                            active={panelOpen ? chosen : undefined}
+                                            onOpen={open}
                                             onReorder={(from, to) =>
                                                 setStore({
                                                     ...store,
@@ -756,8 +756,6 @@ function FilesApp({
                                                 })
                                             }
                                             dragKind={FILE_DRAG}
-                                            onOpen={(row) => open(row.entry)}
-                                            opened={(row) => panelOpen && row.entry.id === chosen}
                                         />
                                     ) : view === 'list' ? (
                                         <FileList
@@ -768,6 +766,7 @@ function FilesApp({
                                             onSelectedChange={setSelected}
                                             active={panelOpen ? chosen : undefined}
                                             onOpen={open}
+                                            dragKind={FILE_DRAG}
                                         />
                                     ) : (
                                         <FileGrid
@@ -776,6 +775,7 @@ function FilesApp({
                                             onSelectedChange={setSelected}
                                             active={panelOpen ? chosen : undefined}
                                             onOpen={open}
+                                            dragKind={FILE_DRAG}
                                         />
                                     )}
                                 </Page>
@@ -837,7 +837,7 @@ function FilesApp({
 const meta: Meta = { title: 'Apps/Files' }
 export default meta
 
-/** The review folder as rows, sorted by name, folders first. */
+/** The review folder as rows, sorted by name, folders first; a row dragged by its grip onto a folder of the tree moves into it. */
 export const List: StoryObj = { render: () => <FilesApp /> }
 
 /**
@@ -847,7 +847,7 @@ export const List: StoryObj = { render: () => <FilesApp /> }
  */
 export const ManualOrder: StoryObj = { name: 'Manual order', render: () => <FilesApp ordered /> }
 
-/** The same folder as tiles: pictures for the images, icons for everything else. */
+/** The same folder as tiles: pictures for the images, icons for everything else; a tile dragged onto a folder of the tree moves into it. */
 export const Grid: StoryObj = { render: () => <FilesApp view="grid" /> }
 
 /** The whole project as a tree: every folder in its folder, opened down to the review folder's files. */

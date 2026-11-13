@@ -48,7 +48,7 @@ export function Group({
     const counted = count !== undefined && count > 0
     return (
         <section aria-labelledby={headingId} className={cn('flex min-w-0 flex-col gap-1.5', className)}>
-            <div className={cn('flex min-w-0 items-center gap-1.5', actions !== undefined && 'min-h-6')}>
+            <div className={cn('flex min-w-0 items-center gap-1.5', actions !== undefined && 'min-h-(--density-control-xs)')}>
                 <GroupLabel as={as} id={headingId} className="min-w-0 truncate">
                     {title}
                 </GroupLabel>

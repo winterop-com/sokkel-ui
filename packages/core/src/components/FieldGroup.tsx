@@ -33,7 +33,7 @@ export function FieldGroup({ label, hint, keyHint = false, description, actions,
     return (
         <fieldset aria-labelledby={labelId} className={cn('flex min-w-0 flex-col gap-3', className)}>
             <div className="flex min-w-0 flex-col gap-0.5">
-                <div className="flex min-h-7 min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                <div className="flex min-h-(--density-control-sm) min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                     <span id={labelId} className="min-w-0 text-sm font-medium">
                         {label}
                     </span>

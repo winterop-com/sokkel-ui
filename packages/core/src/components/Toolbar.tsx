@@ -380,7 +380,9 @@ export function Toolbar({
                 className,
             )}
         >
-            <div className={cn('flex min-h-8 min-w-0 items-center gap-x-3 gap-y-2', nowrap ? 'flex-nowrap' : 'flex-wrap')}>
+            <div
+                className={cn('flex min-h-(--density-control) min-w-0 items-center gap-x-3 gap-y-2', nowrap ? 'flex-nowrap' : 'flex-wrap')}
+            >
                 {search !== undefined && <div className={cn(nowrap ? 'min-w-24 shrink' : 'w-full', '@md/toolbar:w-64')}>{search}</div>}
                 {children}
                 {(items !== undefined || primary !== undefined) && (

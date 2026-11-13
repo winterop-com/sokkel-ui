@@ -132,6 +132,20 @@ never shows through a scope of another. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
 
+Density is a level an app wears on `<html data-density>`, regular (the default) or compact, and on
+`[data-density-scope]` for one element, as a story shows both levels side by side. Each level is a
+set of `--density-*` tokens in `tokens.json`: the page's insets and gaps, a panel's head and
+padding, a row, the inspector's and the chat's spacing, and a control's height at each size,
+`--density-control-xs`, `--density-control-sm`, `--density-control` and `--density-control-lg`
+(1.5, 1.75, 2 and 2.25rem regular; compact takes each one step smaller, 1.25 to 2rem). Every
+control reads its size's height: `Button` (its icon squares too), `Input`, the select triggers,
+`Toggle`, `Segmented`, the tabs list, the menubar, the input group and the frames the fields build on
+it (the typed fields, `SearchField`, `SecretField`, `AsyncSelect`, `TreeSelect`, `InlineEdit`, a
+one-line `CodeEditor`), the issue mark and count, `FilterChip` and a control-sized `Chip`, and
+the lines that hold them (`Toolbar`, `TopBar`'s palette button, a field group's head), so a button
+beside a field beside a select stands level at either density. Below `md` a control keeps its
+finger minimum; an `xs` button keeps its drawn size there and takes a finger's hit area instead.
+
 Beyond its colors a theme can give the frame's parts a look of their own, through tokens the parts
 read (`$parts` in `tokens.json` lists them): the heading face, a section head's ground, rule and
 ink and a page title's ink; a table's head (ground, rule, ink, case) and its zebra; a wash over the
@@ -958,7 +972,9 @@ tree's rows, and dropping a row of one part onto a target of another. Its stable
 (`@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`), about 17 kB gzipped, and only the
 modules that drag import it, so a page that drags nothing never carries it: `Tree` and `DataTable`
 load their drag layers (`tree-drag`, `table-reorder`) the first time they are drawn with `onMove`,
-`onDrop`, `onReorder` or a `dragKind`, and the forms page's budget holds the rest to that. A part an
+`onDrop`, `onReorder` or a `dragKind`, as `ChannelList` does for a section with `onMove`
+(`channel-order`), the week and month views for `onEventMove` (`calendar-drag`), and `DragSource`
+for a `drag`, and the forms page's budget holds the rest to that. A part an
 engine-free page draws, such as the rail or a form's repeated group, drags only inside a scope the app
 draws around it (`RailDrops`, `RepeatedDrag`), which hands it the drag parts through a context, so
 the part itself never imports the engine. A file dragged in from
@@ -969,7 +985,12 @@ own, not drops.
 `DragDrop` is the library's layer over the engine, set once for every part: a mouse or pen drags
 once it moves a few pixels, a finger once it holds still a moment so a swipe still scrolls, and the
 keyboard picks a thing up from its grip with Space or Enter, carries it with the arrows to the
-nearest place that way and drops it with Space or Enter. Escape puts it back, the page and any box
+nearest place that way and drops it with Space or Enter. The arrows carry the thing's middle from
+place to place (`carriedTo`): up and down keep to the places in line with it, as a list's rows are,
+and left and right take those in line first and the nearest that way after, as a column beside or
+a place in the rail is; it stands a pixel past the middle of the place it reaches, so a row carried
+down lands after the row it reaches and one carried up before it, and the place under its middle
+is where it is, as the place under the pointer is for a mouse. Escape puts it back, the page and any box
 under the pointer scroll at their edges, a copy of the thing follows the pointer in a lifted card
 (its label on a card when it draws none), and the release that ends a drag is never also a press on
 what lies under it. Every step is said to a screen reader in `words`, a place in a list as "3 of 7".
@@ -988,6 +1009,15 @@ undo, and `nodeOf` makes a row dragged from a list beside it the move of the tre
 and a small card with its label follows at the pointer in place of a copy its own size, so the
 target stays in sight.
 
+`DragSource` lends any one thing to targets elsewhere on the page, with `DragSourceGrip` for its
+keyboard grip, and the parts that hold such things take a `drag` with it: a `MessageRow` onto a
+folder, an `AttachmentList`'s and a `ChatMessage`'s files onto a conversation, a `FileGrid`'s tiles
+and a `FileList`'s rows (`dragKind`) onto a tree's folders, and a `MediaCard` onto a playlist. Each
+drags as a whole by a mouse or a held finger, its grip shown on hover or focus, and only inside a
+`DragDrop` the app draws around it and its targets. A `ChannelList` entry with a `drop` takes such
+things inside a `RailDrops`, as a rail entry does, and a section with `onMove` is in the reader's
+order, its entries dragged as a whole and moved with Alt and the arrows.
+
 `SortableList` and `SortableGrid` are the sortable parts built on it, with `SortableGroup`,
 `SortableItem` and `SortableGrip` for a part that draws its own items, as `ReorderableTrackList`
 does: an item is dragged by its grip or as a whole, the rest moving aside to show where it lands,
@@ -995,7 +1025,14 @@ the arrow keys on a focused grip move it a place with the focus following, and `
 says where it went; `moveItem` and `insertItem` in `lib/reorder` apply it without loading the
 engine. `DraggableTrackList` lends a track list's rows to targets elsewhere on the page without an
 order of its own: a row drags as a whole, its grip carrying it from the keyboard. A board's cards
-drag between its columns with a line where they land and a grip for the keyboard; `DataTable`'s
+drag between its columns with a line where they land and a grip for the keyboard, and with
+`onColumnMove` its columns move too, by their heads and the grip in each head, a line between the
+columns showing where; a `locked` card, zone or column neither moves nor takes a card, no column
+moves across a locked one, and `canDrop` refuses any other place, so no line shows where a card
+cannot go. The week and month views move an event to another day and time with `onEventMove`,
+snapped to `snapMinutes`, an outline or a wash showing where it lands, and resize it by its lower
+edge or its right end with `onEventResize` (a pointer drag of its own, as a resize handle is); Alt
+with the arrows moves the focused event, and with Shift its end; `DataTable`'s
 `onReorder` draws a grip at each row's start, a stacked card's and a stacked list's items included, and moves the active
 row with Alt and the arrows, while the rows are drawn as given, and a `dragKind` alone lends its rows
 by the same grips to targets elsewhere, sorted or not; a `RepeatedGroup` inside a `RepeatedDrag`
@@ -1395,7 +1432,9 @@ changes, as one passing levels it holds. Both are off while motion is reduced (`
 ## Validation
 
 Option F, picked from the validation research. A field with a problem gets a colored
-edge and a mark at the end of its input; pressing the mark opens what is wrong, what to do, and a
+edge and a mark at the end of its input, the edge alone at rest and a ring in the same tone only
+while the field has focus, in every control that takes `aria-invalid` (`src/rules.test.ts` fails a
+ring drawn at rest); pressing the mark opens what is wrong, what to do, and a
 fix when one is plain. The dialog footer counts what stops the submit, beside the verb, and pressing
 the count opens the first. Nothing is inserted between fields, so a form never changes height.
 Issues show once a field is left with a value, or once the form is submitted, and go the moment the
