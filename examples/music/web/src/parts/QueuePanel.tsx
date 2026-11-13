@@ -15,6 +15,7 @@ import { useState } from 'react'
 import { albumOf, artistName, lengthOfSongs, minutes, songOf } from '../catalog'
 import { clearHistory, history, useRows } from '../data'
 import { clearUpNext, currentSong, dequeue, moveInQueue, playPosition, playSongs, upNext, usePlayer, usePosition } from '../player'
+import { SONG_DRAG } from './actions'
 import { asTrack, Nothing } from './songs'
 
 /** What plays now, its time read on every frame so it runs as smoothly as the bar's. */
@@ -72,6 +73,7 @@ function QueueTab() {
                     <p className="text-sm text-muted-foreground">Nothing after this song. Add songs from their menus, or play an album.</p>
                 ) : (
                     <ReorderableTrackList
+                        kind={SONG_DRAG.queued}
                         variant="plain"
                         className="-mx-2"
                         follow={false}

@@ -1,7 +1,9 @@
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import type { PaletteCommand, PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
-import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { Rail, type RailDrop, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Search } from '@winterop-com/sokkel-ui/Search'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
@@ -11,6 +13,7 @@ import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
+import type { Track } from '@winterop-com/sokkel-ui-media/TrackList'
 import { nextChapterStart, previousChapterStart } from '@winterop-com/sokkel-ui-media/chapters'
 import {
     ChartNoAxesColumn,
@@ -50,6 +53,7 @@ import { ShowPage } from './pages/Show'
 import { Shows } from './pages/Shows'
 import { Starred } from './pages/Starred'
 import { Stats } from './pages/Stats'
+import { EPISODE_DRAG } from './parts'
 import { Player, RATES } from './Player'
 import { usePodcasts } from './state'
 
@@ -88,21 +92,48 @@ export function Podcasts({ frame }: { frame: Frame }) {
     const episode = page === 'episode' && second !== undefined ? episodeById.get(second) : undefined
     const episodeShow = episode === undefined ? undefined : showById.get(episode.show)
 
-    const entry = (id: string, label: string, icon: typeof House, count?: number, active = page === id) => ({
+    const entry = (id: string, label: string, icon: typeof House, count?: number, active = page === id, drop?: RailDrop) => ({
         id,
         label,
         icon,
         href: `#/${id}`,
         active,
+        drop,
         ...(count === undefined || count === 0 ? {} : { count }),
     })
+    /** An episode's row dragged onto a place in the rail, taken when `wants` holds for that episode and then given to `take`. */
+    const episodeDrop = (wants: (id: string) => boolean, take: (id: string) => void): RailDrop => {
+        const idOf = (drag: DragData) => (drag.kind === EPISODE_DRAG ? (drag.value as Track | undefined)?.id : undefined)
+        return {
+            accepts: (drag) => {
+                const id = idOf(drag)
+                return id !== undefined && wants(id)
+            },
+            onDrop: (drag) => {
+                const id = idOf(drag)
+                if (id !== undefined) take(id)
+            },
+        }
+    }
+    const queueDrop = episodeDrop(
+        (id) => id !== state.current && !state.player.queue.includes(id),
+        (id) => state.queueAdd(id, 'end'),
+    )
+    const starDrop = episodeDrop(
+        (id) => state.episodes.get(id)?.starred === false,
+        (id) => state.star(id, true),
+    )
+    const downloadDrop = episodeDrop(
+        (id) => state.episodes.get(id)?.download === 'idle',
+        (id) => state.download(id),
+    )
     const groups: RailGroup[] = [
         {
             id: 'listen',
             entries: [
                 entry('home', 'Listen now', House),
                 entry('inbox', 'New', InboxIcon, fresh),
-                entry('queue', 'Queue', ListOrdered, state.player.queue.length),
+                entry('queue', 'Queue', ListOrdered, state.player.queue.length, page === 'queue', queueDrop),
                 entry('discover', 'Discover', Compass),
             ],
         },
@@ -111,8 +142,8 @@ export function Podcasts({ frame }: { frame: Frame }) {
             title: 'Library',
             entries: [
                 entry('shows', 'Shows', Podcast, followed, page === 'shows' || page === 'show' || page === 'episode'),
-                entry('starred', 'Starred', Star, starred),
-                entry('downloads', 'Downloads', Download, kept + running),
+                entry('starred', 'Starred', Star, starred, page === 'starred', starDrop),
+                entry('downloads', 'Downloads', Download, kept + running, page === 'downloads', downloadDrop),
             ],
         },
         { id: 'you', title: 'You', entries: [entry('stats', 'Stats', ChartNoAxesColumn), entry('settings', 'Settings', Settings)] },
@@ -292,94 +323,97 @@ export function Podcasts({ frame }: { frame: Frame }) {
     else content = <Gone what="page" />
 
     return (
-        <Shell
-            palette={palette}
-            paletteFilter="terms"
-            desktop={frame.desktop}
-            route={settings.route.join('/')}
-            shortcuts={[]}
-            rail={
-                <Rail
-                    mark={<TidevannMark />}
-                    markHref="#/home"
-                    name="Podcasts"
-                    groups={groups}
-                    foot={
-                        <AccountMenu
-                            name="ada"
-                            where="tidevann.example.org"
-                            onSettings={() => go('/settings')}
-                            scheme={look.scheme}
-                            onSchemeChange={(scheme) => setLook({ ...look, scheme })}
-                            onSignOut={() => go('/home')}
-                        />
-                    }
-                />
-            }
-            top={
-                <TopBar
-                    trail={trail}
-                    search={
-                        <Search
-                            query={topQuery}
-                            onQueryChange={setTopQuery}
-                            search={(query) => {
-                                const found = find(query, (id) => state.episodes.get(id)?.out === true)
-                                return [
-                                    {
-                                        kind: 'shows',
-                                        title: 'Shows',
-                                        total: found.shows.length,
-                                        results: found.shows.slice(0, 4).map((one) => ({
-                                            id: `show:${one.id}`,
-                                            title: one.title,
-                                            detail: one.blurb,
-                                            artwork: <Artwork cover={one.cover} />,
-                                        })),
-                                    },
-                                    {
-                                        kind: 'episodes',
-                                        title: 'Episodes',
-                                        total: found.episodes.length,
-                                        results: found.episodes.slice(0, 6).map((one) => ({
-                                            id: `episode:${one.id}`,
-                                            title: one.title,
-                                            detail: showById.get(one.show)?.title,
-                                            artwork: <Artwork cover={showById.get(one.show)?.cover} />,
-                                        })),
-                                    },
-                                ]
-                            }}
-                            onOpen={(result) => {
-                                setTopQuery('')
-                                const [kind, id] = result.id.split(':')
-                                go(`/${kind ?? 'show'}/${id ?? ''}`)
-                            }}
-                            onSeeAll={(query) => {
-                                setTopQuery('')
-                                go(`/discover/all/${encodeURIComponent(query)}`)
-                            }}
-                            words={{ placeholder: 'Search podcasts' }}
-                        />
-                    }
-                />
-            }
-            bottom={<Player fullscreen={fullscreen} onFullscreenChange={setFullscreen} queueShown={page === 'queue'} />}
-            foot={
-                <StatusLine note={running > 0 ? `Downloading ${String(running)}` : 'All changes saved'} live={running > 0}>
-                    <StatusItem label="new">{fresh}</StatusItem>
-                    <StatusItem label="queued">{state.player.queue.length}</StatusItem>
-                    <StatusItem label="downloaded">{kept}</StatusItem>
-                </StatusLine>
-            }
-        >
-            <Page>
-                <PageState loading={state.loading} error={state.error}>
-                    {content}
-                </PageState>
-            </Page>
-            {settings.open && <SettingsPage frame={frame} open onClose={settings.close} />}
-        </Shell>
+        // One drag scope over the shell, so an episode's row on the page drops onto the queue, Starred or Downloads in the rail.
+        <RailDrops>
+            <Shell
+                palette={palette}
+                paletteFilter="terms"
+                desktop={frame.desktop}
+                route={settings.route.join('/')}
+                shortcuts={[]}
+                rail={
+                    <Rail
+                        mark={<TidevannMark />}
+                        markHref="#/home"
+                        name="Podcasts"
+                        groups={groups}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                where="tidevann.example.org"
+                                onSettings={() => go('/settings')}
+                                scheme={look.scheme}
+                                onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                                onSignOut={() => go('/home')}
+                            />
+                        }
+                    />
+                }
+                top={
+                    <TopBar
+                        trail={trail}
+                        search={
+                            <Search
+                                query={topQuery}
+                                onQueryChange={setTopQuery}
+                                search={(query) => {
+                                    const found = find(query, (id) => state.episodes.get(id)?.out === true)
+                                    return [
+                                        {
+                                            kind: 'shows',
+                                            title: 'Shows',
+                                            total: found.shows.length,
+                                            results: found.shows.slice(0, 4).map((one) => ({
+                                                id: `show:${one.id}`,
+                                                title: one.title,
+                                                detail: one.blurb,
+                                                artwork: <Artwork cover={one.cover} />,
+                                            })),
+                                        },
+                                        {
+                                            kind: 'episodes',
+                                            title: 'Episodes',
+                                            total: found.episodes.length,
+                                            results: found.episodes.slice(0, 6).map((one) => ({
+                                                id: `episode:${one.id}`,
+                                                title: one.title,
+                                                detail: showById.get(one.show)?.title,
+                                                artwork: <Artwork cover={showById.get(one.show)?.cover} />,
+                                            })),
+                                        },
+                                    ]
+                                }}
+                                onOpen={(result) => {
+                                    setTopQuery('')
+                                    const [kind, id] = result.id.split(':')
+                                    go(`/${kind ?? 'show'}/${id ?? ''}`)
+                                }}
+                                onSeeAll={(query) => {
+                                    setTopQuery('')
+                                    go(`/discover/all/${encodeURIComponent(query)}`)
+                                }}
+                                words={{ placeholder: 'Search podcasts' }}
+                            />
+                        }
+                    />
+                }
+                bottom={<Player fullscreen={fullscreen} onFullscreenChange={setFullscreen} queueShown={page === 'queue'} />}
+                foot={
+                    <StatusLine note={running > 0 ? `Downloading ${String(running)}` : 'All changes saved'} live={running > 0}>
+                        <StatusItem label="new">{fresh}</StatusItem>
+                        <StatusItem label="queued">{state.player.queue.length}</StatusItem>
+                        <StatusItem label="downloaded">{kept}</StatusItem>
+                    </StatusLine>
+                }
+            >
+                <Page>
+                    <PageState loading={state.loading} error={state.error}>
+                        {content}
+                    </PageState>
+                </Page>
+                {settings.open && <SettingsPage frame={frame} open onClose={settings.close} />}
+            </Shell>
+        </RailDrops>
     )
 }
 

@@ -16,7 +16,8 @@ import {
 import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
 import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
 import { ReorderableTrackList } from '@winterop-com/sokkel-ui-media/ReorderableTrackList'
-import { TrackList, type Track } from '@winterop-com/sokkel-ui-media/TrackList'
+import { DraggableTrackList } from '@winterop-com/sokkel-ui-media/DraggableTrackList'
+import type { Track } from '@winterop-com/sokkel-ui-media/TrackList'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import {
     Archive,
@@ -235,7 +236,13 @@ export function useEpisodeTrack(withShow: boolean): (episode: Episode) => Track 
     }
 }
 
-/** Episodes as a list: a press plays one, or pauses the one playing; each row ends in its actions. */
+/** What an episode's row is dragged as, onto the queue, Starred or Downloads in the rail; its value is the row's `Track`, keyed by the episode. */
+export const EPISODE_DRAG = 'episode'
+
+/**
+ * Episodes as a list: a press plays one, or pauses the one playing; each row ends in its actions,
+ * and drags onto the queue, Starred or Downloads in the rail.
+ */
 export function EpisodeList({
     episodes,
     withShow = true,
@@ -275,7 +282,11 @@ export function EpisodeList({
         follow,
         className,
     }
-    return onMove === undefined ? <TrackList {...list} /> : <ReorderableTrackList {...list} onMove={onMove} />
+    return onMove === undefined ? (
+        <DraggableTrackList {...list} kind={EPISODE_DRAG} />
+    ) : (
+        <ReorderableTrackList {...list} kind={EPISODE_DRAG} onMove={onMove} />
+    )
 }
 
 /** Shows as a grid of covers, each opening the show's page, with a play button for its latest episode and a menu to follow it. */

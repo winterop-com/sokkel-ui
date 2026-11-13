@@ -10,7 +10,9 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
+import type { Track } from '@winterop-com/sokkel-ui-media/TrackList'
 import { Disc3, ListEnd, ListMusic, ListPlus, ListStart, MicVocal, MoreHorizontal, Plus, Radio, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -49,6 +51,26 @@ export function startRadio(kind: 'artist' | 'album' | 'song', ref: string): void
     queueMicrotask(() => playStation(id, made.name))
 }
 
+/** Adds songs at the end of a playlist and says so. */
+export function addSongsTo(playlist: { id: string; name: string }, songs: readonly string[], what?: string): void {
+    addToPlaylist(playlist.id, songs)
+    toast.add({ type: 'success', title: `Added to ${playlist.name}`, description: what ?? songsWord(songs.length), timeout: 2500 })
+}
+
+/** What a song's row is dragged as from a page's list, the queue and a playlist, each list's rows being only its own to reorder. */
+export const SONG_DRAG = { song: 'song', queued: 'queued-song', listed: 'playlist-song' } as const
+
+const DRAGGED: ReadonlySet<string> = new Set(Object.values(SONG_DRAG))
+
+/** Whether a drag is a song's row, which a playlist in the rail takes. */
+export const isSongDrag = (drag: DragData | undefined) => drag !== undefined && DRAGGED.has(drag.kind)
+
+/** The song a dragged row holds: a queue's or a playlist's row is keyed by its song's id and then its own mark after a `~`. */
+export function songOfDrag(drag: DragData): string | undefined {
+    const track = drag.value as Track | undefined
+    return track?.id.split('~')[0]
+}
+
 /** The items of "Add to playlist": a new playlist with them, then each playlist. */
 export function PlaylistItems({ songs, what }: { songs: readonly string[]; what?: string }) {
     const rows = useRows(playlists)
@@ -60,18 +82,7 @@ export function PlaylistItems({ songs, what }: { songs: readonly string[]; what?
             </DropdownMenuItem>
             {rows.length > 0 && <DropdownMenuSeparator />}
             {rows.map((playlist) => (
-                <DropdownMenuItem
-                    key={playlist.id}
-                    onClick={() => {
-                        addToPlaylist(playlist.id, songs)
-                        toast.add({
-                            type: 'success',
-                            title: `Added to ${playlist.name}`,
-                            description: what ?? songsWord(songs.length),
-                            timeout: 2500,
-                        })
-                    }}
-                >
+                <DropdownMenuItem key={playlist.id} onClick={() => addSongsTo(playlist, songs, what)}>
                     <ListMusic aria-hidden />
                     {playlist.name}
                 </DropdownMenuItem>

@@ -13,7 +13,7 @@ import { ListMusic, Pencil, Play, Plus, Shuffle, Trash2 } from 'lucide-react'
 import { go } from 'tidevann-shared/router'
 import { lengthOfSongs, minutes, songOf, type Song } from '../catalog'
 import { changePlaylist, playlists, useRows, type Playlist } from '../data'
-import { queueSongs, RowMenu, SongActions, useStarredSongs } from '../parts/actions'
+import { queueSongs, RowMenu, SONG_DRAG, SongActions, useStarredSongs } from '../parts/actions'
 import { askDelete, askNewPlaylist, askRename } from '../parts/dialogs'
 import { asTrack, Nothing, useNowPlaying } from '../parts/songs'
 import { player, playSongs, setPlaying, usePlayer } from '../player'
@@ -202,6 +202,7 @@ export function PlaylistPage({ id }: { id: string }) {
                 </Nothing>
             ) : (
                 <ReorderableTrackList
+                    kind={SONG_DRAG.listed}
                     tracks={entries.map((entry) => {
                         const song = songOf(entry.song)
                         return song === undefined
