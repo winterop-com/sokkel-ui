@@ -1,7 +1,7 @@
 import { tooltipMarkup } from '../look'
 import { area, line } from './categories'
 import { edgeAxis, valueTicks } from './axes'
-import { spreadOf } from './legends'
+import { spreadOf } from './legend-range'
 import { written, categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
 
 /**

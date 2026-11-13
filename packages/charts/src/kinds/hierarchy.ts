@@ -1,8 +1,8 @@
 import { labelOf } from '../data'
 import { tooltipMarkup, type ChartLook } from '../look'
 import { nest, type TreeNode } from '../shapes'
-import { pathOf, topOf, weightOf } from './legends'
-import { written, colorOf, measureName, type ChartBuilder, type ChartSpec } from './spec'
+import { pathOf, topOf } from './legend-tree'
+import { written, colorOf, measureName, weightOf, type ChartBuilder, type ChartSpec } from './spec'
 
 /** A node as ECharts takes it, its style holding its fill. */
 interface Drawn {

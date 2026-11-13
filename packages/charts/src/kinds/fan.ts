@@ -1,6 +1,6 @@
 import { tooltipMarkup, type ChartLook, type TooltipRow } from '../look'
 import { edgeAxis, markRoom, stepLines, valueLabels } from './axes'
-import { fanShape, partNames, type Fan } from './legends'
+import { fanShape, partNames, type Fan } from './legend-fan'
 import { written, categoryText, colorOf, type ChartBuilder, type ChartSpec } from './spec'
 
 /** A band's opacity: deeper inward, where it also lies over the bands outside it. */

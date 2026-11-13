@@ -1,5 +1,5 @@
 import { tooltipMarkup } from '../look'
-import { shaped } from './legends'
+import { shaped } from './legend-series'
 import { written, categoryLabels, categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
 
 /**

@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs'
 
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
-import { chartLegend } from '../chart-legend'
 import type { ChartLook } from '../look'
-import { bandLabel, fanShape, LEGENDS, ringFigures } from './legends'
+import { bandLabel, fanShape } from './legend-fan'
+import { ringFigures } from './legend-rings'
+import { LEGENDS, loadedLegend, loadLegend } from './legends'
 import { loadKind } from './load'
 import { dialSplits } from './gauge'
 import { linkedLayout, SHARED_SCALE } from './linked'
@@ -55,12 +56,24 @@ const SPECS: Record<string, ChartSpec> = {
 
 type Option = { series: { type: string; name?: string; data?: unknown[] }[] }
 
+// Every kind's legend, loaded once, so a test reads a legend as a frame does once it is there.
+beforeAll(async () => {
+    await Promise.all((Object.keys(LEGENDS) as ChartKind[]).map((kind) => loadLegend(kind)))
+})
+
+/** A kind's legend for a spec, its file loaded. */
+function legendOf(kind: ChartKind, spec: ChartSpec) {
+    const legend = loadedLegend(kind)
+    if (legend === undefined) throw new Error(`The ${kind} legend has not loaded.`)
+    return legend(spec)
+}
+
 describe('the chart kinds', () => {
     for (const [kind, spec] of Object.entries(SPECS)) {
         it(`draws ${kind} from rows`, () => {
             const option = KINDS[kind as ChartKind].build(spec, LOOK) as unknown as Option
             expect(option.series.length).toBeGreaterThan(0)
-            expect(() => chartLegend(kind as ChartKind, spec)).not.toThrow()
+            expect(() => legendOf(kind as ChartKind, spec)).not.toThrow()
         })
     }
 
@@ -80,7 +93,7 @@ describe('the chart kinds', () => {
     })
 
     it('writes each funnel stage as a share of the first', () => {
-        const legend = chartLegend('funnel', SPECS.funnel)
+        const legend = legendOf('funnel', SPECS.funnel)
         expect(legend.map((item) => [item.key, item.values])).toEqual([
             ['fetch', [2]],
             ['transform', [1]],
@@ -195,7 +208,7 @@ describe('the chart kinds', () => {
         const spec: ChartSpec = { rows: ROWS, x: 'job', y: 'duration' }
         expect((KINDS.pie.build(spec, LOOK) as unknown as Slices).series[0].radius).toEqual([0, '82%'])
         expect((KINDS.donut.build(spec, LOOK) as unknown as Slices).series[0].radius).toEqual(['58%', '82%'])
-        expect(chartLegend('pie', spec).map((item) => item.key)).toEqual(['nightly-export', 'sync-inventory', 'rebuild-index'])
+        expect(legendOf('pie', spec).map((item) => item.key)).toEqual(['nightly-export', 'sync-inventory', 'rebuild-index'])
     })
 
     it('colors series from the palette in turn, after the colors named', () => {
@@ -206,13 +219,13 @@ describe('the chart kinds', () => {
             ['succeeded', 'kind-teal'],
             ['failed', 'status-failed'],
         ])
-        expect(chartLegend('bar', spec).map((item) => item.color)).toEqual(['var(--kind-teal)', 'var(--status-failed)'])
-        const pie = chartLegend('pie', { rows: ROWS, x: 'job', palette: ['kind-blue', 'kind-pink'] })
+        expect(legendOf('bar', spec).map((item) => item.color)).toEqual(['var(--kind-teal)', 'var(--status-failed)'])
+        const pie = legendOf('pie', { rows: ROWS, x: 'job', palette: ['kind-blue', 'kind-pink'] })
         expect(pie.map((item) => item.color)).toEqual(['var(--kind-blue)', 'var(--kind-pink)', 'var(--kind-blue)'])
     })
 
     it('reads a bullet target combined as its figure is', () => {
-        const legend = chartLegend('bullet', SPECS.bullet)
+        const legend = legendOf('bullet', SPECS.bullet)
         expect(legend.map((item) => [item.key, item.values])).toEqual([
             ['duration', [70, 480, -30]],
             ['Target', [120, 50, 80]],
@@ -313,7 +326,7 @@ describe('the chart kinds', () => {
         expect(marks.data).toEqual([])
         expect(marks.markLine?.data.map((line) => [line.xAxis, line.label.show])).toEqual([['w3', true]])
         expect(option.grid.top).toBeGreaterThan(10)
-        expect(chartLegend('fan', FAN).map((item) => [item.key, item.color])).toEqual([
+        expect(legendOf('fan', FAN).map((item) => [item.key, item.color])).toEqual([
             ['Median', 'var(--chart-2)'],
             ['10-90', 'color-mix(in oklab, var(--chart-2) 24%, var(--card))'],
             ['25-75', 'color-mix(in oklab, var(--chart-2) 48%, var(--card))'],
@@ -347,7 +360,7 @@ describe('the chart kinds', () => {
         expect(shaped.fans[1].history).toEqual([null, null, null, null, null])
         const option = KINDS.fan.build(spec, LOOK, new Set(['harbor'])) as unknown as Option
         expect(new Set(option.series.map((entry) => entry.name))).toEqual(new Set(['harbor', 'juniper', 'Observed', '']))
-        expect(chartLegend('fan', spec).map((item) => item.key)).toEqual(['harbor', 'juniper', 'Observed'])
+        expect(legendOf('fan', spec).map((item) => item.key)).toEqual(['harbor', 'juniper', 'Observed'])
     })
 
     it('names a band by its fields, or by its own label', () => {
@@ -494,7 +507,7 @@ describe('the chart kinds', () => {
         type Bars = { series: { name: string; itemStyle: { color: string } }[] }
         const option = KINDS.bar.build(spec, LOOK) as unknown as Bars
         expect(option.series.find((entry) => entry.name === 'succeeded')?.itemStyle.color).toBe('muted-foreground/45')
-        expect(chartLegend('bar', spec).find((item) => item.key === 'succeeded')?.color).toBe(
+        expect(legendOf('bar', spec).find((item) => item.key === 'succeeded')?.color).toBe(
             'color-mix(in oklab, var(--muted-foreground) 45%, transparent)',
         )
     })
@@ -557,6 +570,21 @@ describe('the kinds apart', () => {
 
     it('lists a legend for every kind', () => {
         expect(Object.keys(LEGENDS).sort()).toEqual(Object.keys(KINDS).sort())
+    })
+
+    it("keeps each kind's legend in a file of its own legends, never a builder's or another family's", () => {
+        const registry = readFileSync(new URL('legends.ts', import.meta.url), 'utf8')
+        expect(registry).not.toMatch(/^import (?!type)/m)
+        const files = new Set([...registry.matchAll(/import\('([^']+)'\)/g)].map((match) => match[1]))
+        for (const file of files) {
+            expect(file).toMatch(/^\.\/legend-[a-z]+$/)
+            const source = readFileSync(new URL(`${file}.ts`, import.meta.url), 'utf8')
+            const imports = [...source.matchAll(/from '([^']+)'/g)].map((match) => match[1])
+            // A legend reads the shaping it shares, never a builder or the registry of every kind.
+            for (const imported of imports)
+                expect(imported).toMatch(/^(\.\.\/(ChartLegend|data|look|shapes|stats)|\.\/(spec|legend-[a-z]+))$/)
+        }
+        expect(files.size).toBeGreaterThan(5)
     })
 
     it('reads no builder for a legend', () => {

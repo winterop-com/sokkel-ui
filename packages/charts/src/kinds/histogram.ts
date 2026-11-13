@@ -1,6 +1,6 @@
 import { formatNumber } from '../data'
 import { tooltipMarkup, withAlpha } from '../look'
-import { binned } from './legends'
+import { binned } from './legend-histogram'
 import { colorOf, type ChartBuilder } from './spec'
 
 /**

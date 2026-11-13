@@ -307,6 +307,9 @@ export function written(spec: ChartSpec, value: number | null | undefined, field
 /** The `y` fields as a list. */
 export const fieldsOf = (spec: ChartSpec): string[] => (spec.y === undefined ? [] : typeof spec.y === 'string' ? [spec.y] : [...spec.y])
 
+/** The field whose sum is a sankey link's width, or a nesting node's size, or none where rows are counted. */
+export const weightOf = (spec: ChartSpec) => (typeof spec.y === 'string' ? spec.y : spec.y?.[0])
+
 /** The stack a series joins: the one `stacks` names for it, or the one stack `stack` draws. */
 export const stackOf = (spec: ChartSpec, name: string): string | undefined =>
     spec.stacks?.[name] ?? (spec.stack === undefined ? undefined : 'all')
