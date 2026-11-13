@@ -2,7 +2,8 @@ import { X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { ISSUE_EDGE, ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
+import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
+import { ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
 import { Input } from './ui/input'
 
 /** One recipient: the address, and the name to show in its place when there is one. */
@@ -127,7 +128,7 @@ export function AddressInput({
                     bare
                         ? 'py-1'
                         : 'rounded-control border border-input bg-field px-1.5 py-1 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
-                    tone !== null && cn('pr-9', !bare && ISSUE_EDGE[tone]),
+                    tone !== null && cn('pr-9', !bare && ISSUE_WITHIN_EDGE[tone]),
                 )}
                 onClick={() => input.current?.focus()}
             >

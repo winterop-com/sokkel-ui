@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Select as SelectPrimitive } from '@base-ui/react/select'
 
+import { INVALID_EDGE } from '../../lib/issue-edge'
 import { cn } from '../../lib/utils'
 import { returnFocusOnKeyboard } from '../../lib/focus'
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from 'lucide-react'
@@ -44,7 +45,8 @@ function SelectTrigger({ className, size = 'default', variant = 'field', widest,
             data-size={size}
             data-variant={variant}
             className={cn(
-                "flex w-fit items-center justify-between gap-1.5 rounded-control border border-input bg-field py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus-visible:ring-3 aria-invalid:focus-visible:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-(--density-control) data-[size=sm]:h-(--density-control-sm) data-[size=sm]:rounded-[min(var(--control-radius),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 max-md:min-h-finger dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:focus-visible:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                "flex w-fit items-center justify-between gap-1.5 rounded-control border border-input bg-field py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-placeholder:text-muted-foreground data-[size=default]:h-(--density-control) data-[size=sm]:h-(--density-control-sm) data-[size=sm]:rounded-[min(var(--control-radius),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 max-md:min-h-finger dark:hover:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                INVALID_EDGE,
                 variant === 'quiet' &&
                     'border-transparent bg-transparent pr-1.5 pl-2 font-medium hover:bg-hover focus-visible:border-transparent data-popup-open:bg-hover',
                 className,

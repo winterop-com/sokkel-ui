@@ -2,6 +2,7 @@ import { ChevronsUpDown, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'
+import { INVALID_EDGE } from '../lib/issue-edge'
 import { Tree, treeHolding, type TreeLoad, type TreeNode, type TreeTrail, type TreeWords } from './Tree'
 import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
@@ -178,7 +179,8 @@ export function TreeSelect({
                 id={id}
                 aria-invalid={invalid || undefined}
                 className={cn(
-                    'flex h-(--density-control) w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring aria-invalid:border-destructive',
+                    'flex h-(--density-control) w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring',
+                    INVALID_EDGE,
                     className,
                 )}
             >

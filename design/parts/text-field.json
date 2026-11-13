@@ -283,12 +283,6 @@
             "what": "missing",
             "spec": "hint, keyHint, description, fallback, required marks, warning tone, issue actions, multiline, mono, numeric, readOnly, phone sizes.",
             "today": "Not built."
-        },
-        {
-            "renderer": "sokkel-ui",
-            "what": "invalid tints",
-            "spec": "invalid+focus rings critical/20 (dark critical/40); invalid edges critical/80 in both schemes.",
-            "today": "In light, Field's critical tone rings the control at critical/25, as its class follows the primitive's destructive/20 at equal weight. In dark, the primitive's dark:aria-invalid classes outweigh Field's: the edge at rest is destructive/50 and the ring destructive/40. See open questions."
         }
     ]
 }

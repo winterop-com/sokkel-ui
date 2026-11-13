@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '../../lib/cn'
+import { INVALID_EDGE } from '../../lib/issue-edge'
 import { ChevronDownIcon } from 'lucide-react'
 
 export type NativeSelectProps = Omit<React.ComponentProps<'select'>, 'size'> & {
@@ -16,7 +17,10 @@ function NativeSelect({ className, size = 'default', ...props }: NativeSelectPro
             <select
                 data-slot="native-select"
                 data-size={size}
-                className="h-(--density-control) w-full min-w-0 appearance-none rounded-control border border-input bg-field py-1 pr-8 pl-2.5 text-sm transition-colors outline-none select-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:focus-visible:ring-3 aria-invalid:focus-visible:ring-destructive/20 data-[size=sm]:h-(--density-control-sm) data-[size=sm]:rounded-[min(var(--control-radius),10px)] data-[size=sm]:py-0.5 max-md:min-h-finger dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:focus-visible:ring-destructive/40"
+                className={cn(
+                    'h-(--density-control) w-full min-w-0 appearance-none rounded-control border border-input bg-field py-1 pr-8 pl-2.5 text-sm transition-colors outline-none select-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-(--density-control-sm) data-[size=sm]:rounded-[min(var(--control-radius),10px)] data-[size=sm]:py-0.5 max-md:min-h-finger dark:hover:bg-input/50',
+                    INVALID_EDGE,
+                )}
                 {...props}
             />
             <ChevronDownIcon

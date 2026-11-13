@@ -61,6 +61,12 @@ const RULES: Rule[] = [
         in: ALL,
     },
     {
+        name: 'an invalid look in the destructive color instead of the issue edge',
+        // A refused value wears the critical tints of `lib/issue-edge`, so a bare primitive and a field agree.
+        pattern: /invalid[^\s"'`]*:(?:border|ring)-destructive/,
+        in: ALL,
+    },
+    {
         name: 'a hex color outside a picture',
         pattern: /#[0-9a-fA-F]{6}\b/,
         in: ALL,
