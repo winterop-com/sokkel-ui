@@ -161,7 +161,7 @@ export function RepeatedGroup({
     ))
     return (
         <fieldset aria-labelledby={titleId} className={cn('flex min-w-0 flex-col gap-2', className)}>
-            <div className="flex min-h-7 items-center gap-2">
+            <div className="flex min-h-(--density-control-sm) items-center gap-2">
                 <span id={titleId} tabIndex={-1} className="flex min-w-0 items-baseline gap-1 text-sm font-medium outline-none">
                     <span className="min-w-0 truncate">{label}</span>
                     {required && requiredMark === 'star' && (
@@ -175,7 +175,7 @@ export function RepeatedGroup({
                 </span>
                 {required && requiredMark === 'word' && <span className="shrink-0 text-xs text-muted-foreground">{words.required}</span>}
                 {worst(issues) !== null && (
-                    <span className="relative flex size-7 shrink-0 items-center">
+                    <span className="relative flex size-(--density-control-sm) shrink-0 items-center">
                         <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} className="inset-0 right-0" />
                     </span>
                 )}

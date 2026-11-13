@@ -485,7 +485,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     ref={anchorRef}
                     aria-invalid={invalid || undefined}
                     className={cn(
-                        'flex min-h-8 w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring aria-invalid:border-destructive',
+                        'flex min-h-(--density-control) w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring aria-invalid:border-destructive',
                         disabled && 'cursor-not-allowed bg-input/50 opacity-50',
                         className,
                     )}
@@ -496,7 +496,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                                 key={itemKey(item)}
                                 aria-label={itemLabel(item)}
                                 className={cn(
-                                    'flex h-6 max-w-full min-w-0 items-center gap-0.5 rounded-sm bg-muted pl-2 outline-none focus-within:bg-accent data-highlighted:bg-accent',
+                                    'flex h-(--density-control-xs) max-w-full min-w-0 items-center gap-0.5 rounded-sm bg-muted pl-2 outline-none focus-within:bg-accent data-highlighted:bg-accent',
                                     locked ? 'pr-2' : 'pr-0.5',
                                 )}
                             >
@@ -519,7 +519,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                             placeholder={chosen.length === 0 ? words.placeholder : undefined}
                             aria-label={chosen.length === 0 ? undefined : words.search}
                             className={cn(
-                                'h-6 flex-1 bg-transparent px-1.5 text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-sm',
+                                'h-(--density-control-xs) flex-1 bg-transparent px-1.5 text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-sm',
                                 locked && chosen.length > 0 ? 'w-0 min-w-0' : 'min-w-24',
                             )}
                         />
@@ -528,7 +528,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     {!locked && (
                         <Combobox.Trigger
                             aria-label={words.search}
-                            className="flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-hover"
+                            className="flex size-(--density-control-xs) shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-hover"
                         >
                             <ChevronsUpDown className="size-4" aria-hidden />
                         </Combobox.Trigger>
@@ -563,7 +563,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 id={id}
                 aria-invalid={invalid || undefined}
                 className={cn(
-                    'flex h-8 w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring aria-invalid:border-destructive',
+                    'flex h-(--density-control) w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring aria-invalid:border-destructive',
                     disabled && 'cursor-not-allowed bg-input/50 opacity-50',
                     className,
                 )}

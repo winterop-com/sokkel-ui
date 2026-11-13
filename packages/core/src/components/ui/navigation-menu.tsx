@@ -38,7 +38,7 @@ function NavigationMenuItem({ className, ...props }: NavigationMenuItemProps) {
 }
 
 const navigationMenuTriggerStyle = cva(
-    'group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-control px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-hover data-popup-open:hover:bg-hover data-open:bg-hover data-open:hover:bg-hover data-open:focus:bg-hover',
+    'group/navigation-menu-trigger inline-flex h-(--density-control-lg) w-max items-center justify-center rounded-control px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-hover data-popup-open:hover:bg-hover data-open:bg-hover data-open:hover:bg-hover data-open:focus:bg-hover',
 )
 
 export type NavigationMenuTriggerProps = NavigationMenuPrimitive.Trigger.Props

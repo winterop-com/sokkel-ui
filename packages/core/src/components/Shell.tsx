@@ -475,7 +475,7 @@ export function Shell({
             title={open ? words.hidePanel : words.showPanel}
             data-window-no-drag
             className={cn(
-                'absolute top-[calc(env(safe-area-inset-top)+(var(--spacing-shell-top)-2rem)/2)] right-[calc(env(safe-area-inset-right)+0.5rem)] z-50 flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                'absolute top-[calc(env(safe-area-inset-top)+(var(--spacing-shell-top)-var(--density-control))/2)] right-[calc(env(safe-area-inset-right)+0.5rem)] z-50 flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
                 open && 'text-foreground',
             )}
             onClick={() => setOpen(!open)}
@@ -527,7 +527,7 @@ export function Shell({
                         title={words.menu}
                         aria-expanded={drawer}
                         className={cn(
-                            'flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover',
+                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground hover:bg-hover',
                             !railHidden && 'md:hidden',
                         )}
                         onClick={() => setDrawer(true)}

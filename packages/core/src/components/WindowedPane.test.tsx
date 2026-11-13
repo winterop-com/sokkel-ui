@@ -68,10 +68,10 @@ describe('WindowedPane', () => {
                     {button}
                 </WindowedPane>,
             )
-        expect(at(<WindowedPaneButton />)).toContain('size-6')
+        expect(at(<WindowedPaneButton />)).toContain('size-(--density-control-xs)')
         const small = at(<WindowedPaneButton size="icon-sm" />)
-        expect(small).toContain('size-7')
-        expect(small).not.toContain('size-6')
+        expect(small).toContain('size-(--density-control-sm)')
+        expect(small).not.toContain('size-(--density-control-xs)')
         expect(renderToStaticMarkup(<WindowedPaneButton />)).toBe('')
     })
 })

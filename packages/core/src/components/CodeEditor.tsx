@@ -1233,7 +1233,8 @@ export function CodeEditor({
                     ? 'h-full min-h-0 bg-background [--editor-paper:var(--background)]'
                     : 'rounded-control border border-input bg-field [--editor-paper:var(--field)] focus-within:border-ring/80 aria-invalid:border-destructive',
                 variant === 'field' && 'min-h-24',
-                oneLine && 'h-8 max-md:min-h-finger [&_.cm-content]:py-0 [&_.cm-scroller]:items-center [&_.cm-scroller]:overflow-y-hidden',
+                oneLine &&
+                    'h-(--density-control) max-md:min-h-finger [&_.cm-content]:py-0 [&_.cm-scroller]:items-center [&_.cm-scroller]:overflow-y-hidden',
                 readOnly &&
                     variant !== 'pane' &&
                     'bg-(--editor-paper) [--editor-paper:color-mix(in_oklab,var(--muted)_40%,var(--background))]',

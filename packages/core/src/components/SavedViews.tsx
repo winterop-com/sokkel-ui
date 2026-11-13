@@ -167,10 +167,7 @@ export function SavedViews({
                     if (open) asking.current = false
                 }}
             >
-                <DropdownMenuTrigger
-                    ref={trigger}
-                    render={<Button variant="outline" className="h-(--density-control) max-w-full min-w-0 justify-start" />}
-                >
+                <DropdownMenuTrigger ref={trigger} render={<Button variant="outline" className="max-w-full min-w-0 justify-start" />}>
                     <Bookmark aria-hidden className="text-muted-foreground" />
                     <span className="min-w-0 truncate">{chosen?.name ?? words.none}</span>
                     {changed && <span className="shrink-0 font-normal text-muted-foreground">{words.changed}</span>}
@@ -230,11 +227,11 @@ export function SavedViews({
             </DropdownMenu>
             {changed && (
                 <>
-                    <Button variant="ghost" className="h-(--density-control) text-muted-foreground" onClick={() => onValueChange(chosen)}>
+                    <Button variant="ghost" className="text-muted-foreground" onClick={() => onValueChange(chosen)}>
                         {words.reset}
                     </Button>
                     {(canSave || (chosen.locked === true && onSaveNew !== undefined)) && (
-                        <Button variant="secondary" className="h-(--density-control)" onClick={() => (canSave ? save() : ask('new'))}>
+                        <Button variant="secondary" onClick={() => (canSave ? save() : ask('new'))}>
                             {canSave ? words.save : words.saveNew}
                         </Button>
                     )}

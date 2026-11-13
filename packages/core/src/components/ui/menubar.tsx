@@ -31,7 +31,7 @@ function Menubar({ className, ...props }: MenubarProps) {
         <menuPartsAtOnce.Provider value={MenuPrimitive}>
             <MenubarPrimitive
                 data-slot="menubar"
-                className={cn('flex h-8 items-center gap-0.5 rounded-control border p-[3px]', className)}
+                className={cn('flex h-(--density-control) items-center gap-0.5 rounded-control border p-[3px]', className)}
                 {...props}
             />
         </menuPartsAtOnce.Provider>

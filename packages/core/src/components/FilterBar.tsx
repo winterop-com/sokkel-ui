@@ -292,7 +292,7 @@ export function FilterBar<T = unknown>({
                     </PopoverContent>
                 </Popover>
                 {held.length > 0 && (
-                    <Button variant="ghost" className="h-(--density-control) text-muted-foreground" onClick={() => change([])}>
+                    <Button variant="ghost" className="text-muted-foreground" onClick={() => change([])}>
                         {words.clear}
                     </Button>
                 )}
