@@ -81,12 +81,17 @@ export type CodeLanguage = CodeLanguageName | LanguageSupport | CodeLanguageSpec
  * A place in the code to mark: an error a check found, a warning, the line a run stopped on. With
  * only `line` the whole line is washed in its tone. With `from` (and `to`) a range is underlined:
  * columns on `line` counted from 1, `to` the column after the last; without `line`, offsets into the
- * document counted from 0. A `message` puts a dot in the gutter and says itself on hover.
+ * document counted from 0. In a JSON or YAML document `path` underlines the value it names instead,
+ * with its key, such as `['name', 0, 'family']` for a server's finding about that value; it follows
+ * the value as the document is edited, and marks nothing while the document has no such value. A
+ * `message` puts a dot in the gutter and says itself on hover.
  */
 export interface CodeMark {
     line?: number
     from?: number
     to?: number
+    /** The value the mark is about in a JSON or YAML document, in place of `line`, `from` and `to`. */
+    path?: readonly (string | number)[]
     tone: 'error' | 'warning' | 'info'
     message?: string
 }
@@ -441,10 +446,35 @@ export const codeReadOnly = (readOnly: boolean) => [
 
 const NO_MARKS: readonly CodeMark[] = []
 
-const setMarks = StateEffect.define<readonly CodeMark[]>()
+/** Keeps a one-line editor to one line: a line break typed or pasted becomes a space. */
+const keepOneLine = EditorState.transactionFilter.of((transaction) => {
+    if (!transaction.docChanged || transaction.newDoc.lines === 1) return transaction
+    const changes: { from: number; to: number; insert: string }[] = []
+    transaction.changes.iterChanges((from, to, _fromB, _toB, inserted) => {
+        changes.push({ from, to, insert: inserted.toString().replace(/\r?\n/g, ' ') })
+    })
+    const last = changes[changes.length - 1]
+    return {
+        changes,
+        ...(changes.length === 1 && last !== undefined ? { selection: { anchor: last.from + last.insert.length } } : {}),
+        scrollIntoView: true,
+    }
+})
+
+/** The marks, with the language a mark's `path` is read in. */
+interface MarkSet {
+    marks: readonly CodeMark[]
+    language: PathLanguage
+}
+
+const setMarks = StateEffect.define<MarkSet>()
+
+/** The languages whose documents a mark's `path` reads. */
+type PathLanguage = SchemaLanguage | undefined
 
 /** A mark's range in the document, or null for a whole-line mark or one outside the document. */
-function range(state: EditorState, mark: CodeRange): { from: number; to: number } | null {
+function range(state: EditorState, mark: CodeRange, language?: PathLanguage): { from: number; to: number } | null {
+    if (mark.path !== undefined) return language === undefined ? null : pathRange(state, language, mark.path)
     if (mark.from === undefined) return null
     const clamp = (pos: number) => Math.max(0, Math.min(pos, state.doc.length))
     if (mark.line === undefined) {
@@ -458,16 +488,16 @@ function range(state: EditorState, mark: CodeRange): { from: number; to: number 
     return { from, to: Math.max(from, column(mark.to ?? line.length + 1)) }
 }
 
-function decorate(state: EditorState, marks: readonly CodeMark[]): DecorationSet {
+function decorate(state: EditorState, marks: readonly CodeMark[], language: PathLanguage): DecorationSet {
     const builder = new RangeSetBuilder<Decoration>()
     const placed: { from: number; to: number; decoration: Decoration }[] = []
     for (const mark of marks) {
-        if (mark.from === undefined) {
+        if (mark.from === undefined && mark.path === undefined) {
             if (mark.line === undefined || mark.line < 1 || mark.line > state.doc.lines) continue
             const line = state.doc.line(mark.line)
             placed.push({ from: line.from, to: line.from, decoration: Decoration.line({ class: `cm-mark-${mark.tone}` }) })
         } else if (mark.message === undefined) {
-            const at = range(state, mark)
+            const at = range(state, mark, language)
             if (at !== null && at.to > at.from)
                 placed.push({ ...at, decoration: Decoration.mark({ class: `cm-lintRange cm-lintRange-${mark.tone}` }) })
         }
@@ -477,27 +507,35 @@ function decorate(state: EditorState, marks: readonly CodeMark[]): DecorationSet
     return builder.finish()
 }
 
-const marksField = StateField.define<{ marks: readonly CodeMark[]; set: DecorationSet }>({
-    create: () => ({ marks: [], set: Decoration.none }),
+const marksField = StateField.define<MarkSet & { set: DecorationSet }>({
+    create: () => ({ marks: [], language: undefined, set: Decoration.none }),
     update(value, transaction) {
-        let marks = value.marks
-        for (const effect of transaction.effects) if (effect.is(setMarks)) marks = effect.value
-        if (marks === value.marks && !transaction.docChanged) return value
-        return { marks, set: decorate(transaction.state, marks) }
+        let given: MarkSet = value
+        for (const effect of transaction.effects) if (effect.is(setMarks)) given = effect.value
+        if (given === value && !transaction.docChanged) return value
+        return { marks: given.marks, language: given.language, set: decorate(transaction.state, given.marks, given.language) }
     },
     provide: (field) => EditorView.decorations.from(field, (value) => value.set),
 })
 
 /** The marks that carry a message, as diagnostics: a whole line's mark covers the line's text. */
-function markDiagnostics(state: EditorState, marks: readonly CodeMark[]): Diagnostic[] {
+function markDiagnostics(state: EditorState, marks: readonly CodeMark[], language: PathLanguage): PathDiagnostic[] {
     return marks.flatMap((mark) => {
         if (mark.message === undefined) return []
-        let at = range(state, mark)
-        if (at === null && mark.from === undefined && mark.line !== undefined && mark.line >= 1 && mark.line <= state.doc.lines) {
+        let at = range(state, mark, language)
+        if (
+            at === null &&
+            mark.from === undefined &&
+            mark.path === undefined &&
+            mark.line !== undefined &&
+            mark.line >= 1 &&
+            mark.line <= state.doc.lines
+        ) {
             const line = state.doc.line(mark.line)
             at = { from: line.from, to: line.to }
         }
-        return at === null ? [] : [{ ...at, severity: mark.tone, message: mark.message }]
+        if (at === null) return []
+        return [{ ...at, severity: mark.tone, message: mark.message, ...(mark.path === undefined ? {} : { path: mark.path }) }]
     })
 }
 
@@ -585,8 +623,12 @@ export interface CodeEditorProps {
     indentGuides?: boolean
     /** `md` at body size, `sm` at the size of help text, for a dense pane, `lg` a step over the body, for long writing. */
     size?: 'sm' | 'md' | 'lg'
-    /** `field` is boxed like an input; `pane` fills the pane it is in, edge to edge, under the pane's own header. */
-    variant?: 'field' | 'pane'
+    /**
+     * `field` is boxed like an input; `pane` fills the pane it is in, edge to edge, under the pane's
+     * own header; `line` is one line at an input's height, as a query bar: Enter runs `onRun` rather
+     * than breaking the line, a pasted line break becomes a space, and there are no line numbers.
+     */
+    variant?: 'field' | 'pane' | 'line'
     /** A JSON Schema (2020-12) a JSON or YAML document is checked against and completed from. */
     schema?: JsonSchema
     /** Leaves a value unchecked by the schema, and anything inside it, such as one holding a reference filled in later. */
@@ -629,14 +671,16 @@ export interface CodeEditorProps {
  * gives by its name (`lib/plugins`), or any language given as a CodeMirror `LanguageSupport` or a
  * stream parser (`defineLanguage` builds one). Highlighted in the
  * theme's colors, with line numbers, bracket matching, undo, and Tab indenting (Escape then Tab
- * leaves the editor). `marks` wash whole lines or underline ranges, a message on hover. `completions`
+ * leaves the editor). `marks` wash whole lines or underline ranges (in JSON or YAML, the value at a
+ * `path`), a message on hover. `completions`
  * offers words while typing, `hover` says what a word is, `onRun` runs on Mod-Enter and `keys` binds
  * any other key. `search` opens a find and replace bar on Mod-f, `folding` adds a fold gutter,
  * `bracketColors` and `indentGuides` help read deep structure (the three off past a megabyte), and
  * `schema` checks JSON or YAML against a JSON Schema (2020-12) and completes its property names and
  * values. `onProblems` hears what the checks find, for a problems list beside the editor whose rows
  * go to each through `reveal`, which takes a JSON or YAML value's `path` as well as a line, and
- * `onDocument` the document read into a value, for a view drawn from it. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
+ * `onDocument` the document read into a value, for a view drawn from it. `wrap` folds long lines at the editor's edge, for prose such as a prompt.
+ * `variant="line"` is a one-line editor at an input's height, such as a query bar, which Enter runs. The value is
  * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
  *
  * `doc` edits a document shared with other editors in place of `value`, as a pane and the window
@@ -654,8 +698,8 @@ export function CodeEditor({
     doc,
     language = 'text',
     readOnly = false,
-    lineNumbers: numbered = true,
-    activeLine = true,
+    lineNumbers: numberedGiven = true,
+    activeLine: activeGiven = true,
     wrap = false,
     marks = NO_MARKS,
     completions,
@@ -769,11 +813,17 @@ export function CodeEditor({
         schema: new Compartment(),
     })
 
+    const oneLine = variant === 'line'
+    const numbered = numberedGiven && !oneLine
+    const activeLine = activeGiven && !oneLine
+    const pathLanguage: PathLanguage = language === 'json' || language === 'yaml' ? language : undefined
     const schemaLanguage: SchemaLanguage | undefined =
         schema !== undefined && (language === 'json' || language === 'yaml') ? language : undefined
     const large = (doc?.length ?? value.length) > LARGE_DOCUMENT
     const diagnosing = schemaLanguage !== undefined || marks.some((mark) => mark.message !== undefined)
-    const keyNames = [...(onRun === undefined ? [] : ['Mod-Enter']), ...Object.keys(keys ?? {})].join(' ')
+    const keyNames = [...(onRun === undefined ? [] : ['Mod-Enter']), ...(oneLine ? ['Enter'] : []), ...Object.keys(keys ?? {})]
+        .filter((key, index, all) => all.indexOf(key) === index)
+        .join(' ')
 
     /**
      * Every diagnostic the editor shows: the marks with a message and what the schema finds, once
@@ -781,7 +831,7 @@ export function CodeEditor({
      */
     const diagnose = (state: EditorState): Diagnostic[] => {
         const { marks: given, schema: against, words, language: lang, deferred: unchecked } = props.current
-        const found: PathDiagnostic[] = markDiagnostics(state, given)
+        const found: PathDiagnostic[] = markDiagnostics(state, given, lang === 'json' || lang === 'yaml' ? lang : undefined)
         const check = loadedValidate()
         if (against === undefined || (lang !== 'json' && lang !== 'yaml') || check === undefined) return found
         return [...found, ...schemaDiagnostics(state, lang, against, check, { ...SCHEMA_WORDS, ...words }, unchecked)]
@@ -799,8 +849,9 @@ export function CodeEditor({
                             preventDefault: true,
                             run: (editor: EditorView) => {
                                 const { onRun: run, keys: bound } = props.current
-                                const handler = bound?.[key] ?? (key === 'Mod-Enter' ? run : undefined)
-                                if (handler === undefined) return false
+                                const handler = bound?.[key] ?? (key === 'Mod-Enter' || (key === 'Enter' && oneLine) ? run : undefined)
+                                // A line's Enter never breaks it, run or not.
+                                if (handler === undefined) return key === 'Enter' && oneLine
                                 handler(editor.state.doc.toString())
                                 return true
                             },
@@ -873,6 +924,7 @@ export function CodeEditor({
                     parts.look.of(extensions.look()),
                     parts.wrap.of(wrap ? EditorView.lineWrapping : []),
                     parts.keys.of(extensions.keys()),
+                    oneLine ? keepOneLine : [],
                     link === undefined ? history() : [],
                     drawSelection(),
                     indentOnInput(),
@@ -914,7 +966,7 @@ export function CodeEditor({
         })
         view.current = editor
         const detach = link?.attach(editor)
-        editor.dispatch({ effects: setMarks.of(marks) })
+        editor.dispatch({ effects: setMarks.of({ marks, language: pathLanguage }) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
         reportProblems(editor.state)
         readSoon(editor, 0)
@@ -1141,7 +1193,7 @@ export function CodeEditor({
     useEffect(() => {
         const editor = view.current
         if (editor === null) return
-        editor.dispatch({ effects: setMarks.of(marks) })
+        editor.dispatch({ effects: setMarks.of({ marks, language: pathLanguage }) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
         else if (diagnosticCount(editor.state) > 0) editor.dispatch(setDiagnostics(editor.state, []))
     }, [marks, schema, words, language])
@@ -1153,11 +1205,13 @@ export function CodeEditor({
             aria-invalid={invalid || undefined}
             className={cn(
                 'overflow-hidden [&_.cm-editor]:h-full',
-                variant === 'field'
-                    ? 'min-h-24 rounded-control border border-input bg-field [--editor-paper:var(--field)] focus-within:border-ring/80 aria-invalid:border-destructive'
-                    : 'h-full min-h-0 bg-background [--editor-paper:var(--background)]',
+                variant === 'pane'
+                    ? 'h-full min-h-0 bg-background [--editor-paper:var(--background)]'
+                    : 'rounded-control border border-input bg-field [--editor-paper:var(--field)] focus-within:border-ring/80 aria-invalid:border-destructive',
+                variant === 'field' && 'min-h-24',
+                oneLine && 'h-8 max-md:min-h-finger [&_.cm-content]:py-0 [&_.cm-scroller]:items-center [&_.cm-scroller]:overflow-y-hidden',
                 readOnly &&
-                    variant === 'field' &&
+                    variant !== 'pane' &&
                     'bg-(--editor-paper) [--editor-paper:color-mix(in_oklab,var(--muted)_40%,var(--background))]',
                 className,
             )}

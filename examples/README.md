@@ -42,6 +42,10 @@ examples/
   podcast/       podcasts that really play: episodes spoken in the page with a transcript that
                  follows, chapters, speed, a sleep timer, the queue, New as an inbox, downloads,
                  Discover, stats and settings
+  fhir/          a FHIR workbench over the fhir add-on: a server's resources edited as JSON, checked
+                 as typed and again by the server, its findings marked on their values, saved as
+                 versions and compared; FHIRPath evaluated live by the FHIRPath engine; CQL libraries
+                 kept in versions and published; FHIR search by the server's parameters
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -78,7 +82,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
