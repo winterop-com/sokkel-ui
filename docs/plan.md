@@ -557,11 +557,17 @@ A `Dot` alone is decoration; `label` names it as an image, `tip` explains it in 
 keyboard reaches with `focusable`, `say` writes the word beside it where the state is news, and
 `outline` draws it hollow in the tone's ink for a state not known. Its sizes are 6px, 8px (`md`, the
 status dot, which `StatusChip`'s `dot` draws too) and 10px (`lg`, the default). `Chip` says any
-other short value: neutral, good, critical, warning or info in its own ink, or `absent`, dashed;
-`hue` gives it a category's color instead, one of the chart palette's five (1 to 5) or a kind color
-by name (`blue`, `violet`, `green`, `pink`, `teal`, `jade`), each a wash with its ink, and a block
-badge passes its `hue` on; `mono` and `icon` set its face, `onSelect` makes it a button and `onRemove` ends it in a named
-remove button.
+other short value: neutral, good, critical, warning or info in its own ink, `outline`, a hairline
+edge with no wash, or `absent`, dashed; `hue` gives it a category's color instead, one of the chart
+palette's five (1 to 5) or a kind color by name (`blue`, `violet`, `green`, `pink`, `teal`, `jade`),
+each a wash with its ink edged faintly in the color as a kind badge is, and a block badge passes its
+`hue` on. One look for a category, edged, rather than an `edged` option: a chip that tells kinds
+apart reads the same as a kind badge wherever it is. `mono` and `icon` set its face, `onSelect` makes
+it a button, `href` a link through the `LinkProvider` (`external` opens a new tab with a mark, as
+`TextLink` does), `menu` a menu's trigger whose menu lines up at `menuAlign`, and `onRemove` ends it
+in a named remove button. A chosen toggle (`selected`) is edged in its ink over a stronger wash.
+`size="control"` makes a chip that stands alone as a control as tall as one, a finger tall on a
+phone.
 `StatusProvider` and `useStatus` are a module of their own, so a part that draws a state's color
 carries no chip; `lib/status` holds the map's types, the run states and each color as a CSS color.
 
@@ -579,8 +585,14 @@ idle through n of m (or a share, for bytes) on a `ProgressRing`, with a cancel a
 hold one, a pause and a resume, to kept, its state held by the app.
 `RelativeTime` says a time as "3 minutes ago" through `Intl.RelativeTimeFormat`, the instant on
 hover, ticking on its own clock unless the app passes `now`. `ApiLink` names the request behind a
-screen as a copyable chip. `TagChips` shows as many tags as fit the room its row has left and a +N
-for the rest, and `DescriptionList`'s `row` layout sets its facts in one wrapping line.
+screen as a copyable chip. `TagChips` shows as many tags, as mono chips, as fit the room its row
+has left and a +N for the rest, named by the tags it stands for; in a `DataTable` cell it fits its
+column's room (`useTableCell`, a small module of its own so the tags carry no table), and on a
+stacked card it wraps and shows them all. `DescriptionList`'s `row` layout sets its facts in one
+wrapping line, and a `DescriptionListGroup` holds lists split around a form or a heading on one
+term column, each one-column side list a subgrid of its tracks. `ListRow` takes a `tooltip` and
+`wrap`, and `ListRows flush` sets its rows square at a panel's own inset with hairlines between.
+`LoadingBar tone="current"` is a thin line, known or not, in the ink around it.
 
 `SignIn` is every app's door: a brand pane, dark in every scheme on `--brand-ground`, with art over
 its upper part and the mark, the name and a few facts at its foot, beside a centered form of a

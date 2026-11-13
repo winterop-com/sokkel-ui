@@ -68,6 +68,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/settings-parts':
             'the search, the sections, the rows and the reset `SettingsDialog` draws with; their types are exported by it',
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
+        'components/table-cell':
+            'what a cell knows of the table it is drawn in, apart from `DataTable` so `TagChips` reads it without the table; `useTableCell` and `TableCell` are exported by `DataTable`',
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
         'components/ui/checkbox-look':

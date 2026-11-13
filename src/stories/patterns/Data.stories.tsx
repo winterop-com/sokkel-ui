@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { Code } from '@winterop-com/sokkel-ui/Code'
-import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { DescriptionList, DescriptionListGroup } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Group } from '@winterop-com/sokkel-ui/Group'
 import { Inspector } from '@winterop-com/sokkel-ui/Inspector'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
@@ -13,6 +13,7 @@ import { Sparkline, Stat } from '@winterop-com/sokkel-ui/Stat'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Spinner } from '@winterop-com/sokkel-ui/primitives/spinner'
+import { SwitchField } from '@winterop-com/sokkel-ui/SwitchField'
 
 /** The ways a record's facts are shown: terms and values, numbers, events, logs and JSON. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -101,6 +102,31 @@ function Aligned() {
                         { term: 'Note', value: 'Rebuilt after the schema for orders gained the site field.', wide: true },
                     ]}
                 />
+            </Section>
+        </Ground>
+    )
+}
+
+function SplitFacts() {
+    return (
+        <Ground>
+            <Section title="Schedule">
+                <DescriptionListGroup termWidth="auto">
+                    <DescriptionList
+                        items={[
+                            { term: 'Job', value: 'send-digest', code: true },
+                            { term: 'Every', value: 'day at 07:00' },
+                        ]}
+                    />
+                    <SwitchField id="shared-terms-paused" label="Paused" explain="A paused job keeps its schedule but starts no runs." />
+                    <DescriptionList
+                        items={[
+                            { term: 'Skip when the last run failed', value: 'on' },
+                            { term: 'Owner', value: 'margaret' },
+                            { term: 'Service', value: 'scheduler', code: true },
+                        ]}
+                    />
+                </DescriptionListGroup>
             </Section>
         </Ground>
     )
@@ -396,6 +422,8 @@ export default meta
 export const Description: StoryObj = { name: 'Description list', render: () => <Facts /> }
 /** Terms in a column as wide as the longest of them, in one column and in two, a wide note under its term. */
 export const AutoTerms: StoryObj = { name: 'Auto terms', render: () => <Aligned /> }
+/** Two lists split around a switch in one `DescriptionListGroup`, sharing one term column as wide as the longest term of both. */
+export const SharedTerms: StoryObj = { name: 'Shared terms', render: () => <SplitFacts /> }
 /** Wide values in the side layout, a JSON body and a rule each set under its term at the list's full width. */
 export const Wide: StoryObj = { name: 'Wide values', render: () => <WideValues /> }
 /** The small size in a narrow inspector: values at the size of help text, tighter gaps, groups with counts. */
