@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.22.3** is the latest release (2026-11-13): `Code` `actions` beside copy and a `header` row
+- **0.22.4** is the latest release (2026-11-13): two new examples, FHIR Workbench and DHIS2
+  Workbench; `themeSettings`, appearance choices as settings rows of their own; `CodeMark.path`;
+  `CodeEditor variant="line"`; completions with the text before the word; a plugin installed again
+  reaches open editors.
+- **0.22.3** (2026-11-13): `Code` `actions` beside copy and a `header` row
   without a title; `PlainMarkdown` for untrusted text (`images={false}`, `linkSchemes`, `inline`,
   `headingOffset`, an all-empty header row dropped) with raw-HTML support loaded only when allowed.
 - **0.22.2** (2026-11-13): `LogView` follow state (`onFollowChange`,
