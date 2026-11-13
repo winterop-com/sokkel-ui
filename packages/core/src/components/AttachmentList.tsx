@@ -2,6 +2,8 @@ import { AudioLines, FileText, Film, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import type { DragData } from './DragDrop'
+import { DragSource, DragSourceGrip } from './DragSource'
 import { AudioPlayer } from './media/AudioPlayer'
 import { VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
@@ -44,6 +46,8 @@ export interface AttachmentListWords {
     player: Partial<VideoPlayerWords>
     /** Said for a file still uploading. */
     uploading: string
+    /** A file's grip, with `drag`: what the keyboard picks the file up by. */
+    drag: (name: string) => string
 }
 
 export const ATTACHMENT_LIST_WORDS: AttachmentListWords = {
@@ -51,7 +55,11 @@ export const ATTACHMENT_LIST_WORDS: AttachmentListWords = {
     cancel: (name) => `Cancel upload ${name}`,
     player: {},
     uploading: 'Uploading',
+    drag: (name) => `Drag ${name}`,
 }
+
+/** A file's drag with a small card at the pointer, unless its data says otherwise. */
+const withCompact = (drag: DragData | undefined): DragData | undefined => (drag === undefined ? undefined : { compact: true, ...drag })
 
 /** What an uploading file says under its name: its share done, or Uploading. */
 function uploadNote(file: AttachmentFile, words: AttachmentListWords): string {
@@ -66,6 +74,11 @@ export interface AttachmentListProps {
     /** Stops a file's upload and drops it; a file still uploading has no button without it. */
     onCancel?: (id: string) => void
     size?: 'default' | 'sm' | 'xs'
+    /**
+     * What a file carries when it is dragged to a target elsewhere on the page, such as onto another
+     * conversation; a file with none, one still uploading and a video in its player do not drag.
+     */
+    drag?: (file: AttachmentFile) => DragData | undefined
     words?: Partial<AttachmentListWords>
     className?: string
 }
@@ -83,8 +96,11 @@ export interface AttachmentListProps {
  * A file with `uploading` shows a spinner in its tile, or a ring when its `progress` is known, and
  * says how far it has got under its name. It takes a cancel button only with `onCancel`, never
  * the remove button.
+ *
+ * With `drag` a file drags as a whole to a target elsewhere on the page, and from the keyboard by
+ * the grip at its end, shown on hover or focus; a recording's player keeps its own press.
  */
-export function AttachmentList({ files, onRemove, onCancel, size = 'sm', words: given, className }: AttachmentListProps) {
+export function AttachmentList({ files, onRemove, onCancel, size = 'sm', drag, words: given, className }: AttachmentListProps) {
     const words = { ...ATTACHMENT_LIST_WORDS, ...given }
     return (
         <ul data-slot="attachment-list" className={cn('flex min-w-0 flex-wrap items-stretch gap-2', className)}>
@@ -106,46 +122,68 @@ export function AttachmentList({ files, onRemove, onCancel, size = 'sm', words: 
                         {video && file.src !== undefined ? (
                             <VideoPlayer src={file.src} title={file.name} preload="metadata" words={words.player} />
                         ) : (
-                            <Attachment size={size} className={cn('min-w-0', audio && 'w-80 max-w-full')}>
-                                <AttachmentMedia variant={file.image === undefined || uploading ? 'icon' : 'image'}>
-                                    {uploading ? (
-                                        file.progress === undefined ? (
-                                            <Spinner aria-label={words.uploading} />
-                                        ) : (
-                                            <ProgressRing value={file.progress} label={words.uploading} />
-                                        )
-                                    ) : file.image === undefined ? (
-                                        (file.icon ?? glyph)
-                                    ) : (
-                                        <img src={file.image} alt="" />
-                                    )}
-                                </AttachmentMedia>
-                                <AttachmentContent>
-                                    <AttachmentTitle className={cn(uploading && 'text-muted-foreground')}>{file.name}</AttachmentTitle>
-                                    {uploading ? (
-                                        <AttachmentDescription className="tabular-nums">{uploadNote(file, words)}</AttachmentDescription>
-                                    ) : audio && file.src !== undefined ? (
-                                        <AudioPlayer
-                                            src={file.src}
-                                            waveform={file.waveform}
-                                            duration={file.duration}
-                                            label={file.name}
-                                            words={words.player}
-                                            className="mt-1 -ml-1"
-                                        />
-                                    ) : (
-                                        file.detail !== undefined && <AttachmentDescription>{file.detail}</AttachmentDescription>
-                                    )}
-                                </AttachmentContent>
-                                {drop !== undefined && (
-                                    <AttachmentAction
-                                        aria-label={uploading ? words.cancel(file.name) : words.remove(file.name)}
-                                        onClick={() => drop(file.id)}
+                            <DragSource drag={uploading ? undefined : withCompact(drag?.(file))}>
+                                {(source) => (
+                                    <Attachment
+                                        ref={source.ref}
+                                        {...source.press}
+                                        size={size}
+                                        data-dragging={source.dragging || undefined}
+                                        className={cn('min-w-0', audio && 'w-80 max-w-full', source.dragging && 'opacity-40')}
                                     >
-                                        <X aria-hidden />
-                                    </AttachmentAction>
+                                        <AttachmentMedia variant={file.image === undefined || uploading ? 'icon' : 'image'}>
+                                            {uploading ? (
+                                                file.progress === undefined ? (
+                                                    <Spinner aria-label={words.uploading} />
+                                                ) : (
+                                                    <ProgressRing value={file.progress} label={words.uploading} />
+                                                )
+                                            ) : file.image === undefined ? (
+                                                (file.icon ?? glyph)
+                                            ) : (
+                                                <img src={file.image} alt="" />
+                                            )}
+                                        </AttachmentMedia>
+                                        <AttachmentContent>
+                                            <AttachmentTitle className={cn(uploading && 'text-muted-foreground')}>
+                                                {file.name}
+                                            </AttachmentTitle>
+                                            {uploading ? (
+                                                <AttachmentDescription className="tabular-nums">
+                                                    {uploadNote(file, words)}
+                                                </AttachmentDescription>
+                                            ) : audio && file.src !== undefined ? (
+                                                <div data-no-drag>
+                                                    <AudioPlayer
+                                                        src={file.src}
+                                                        waveform={file.waveform}
+                                                        duration={file.duration}
+                                                        label={file.name}
+                                                        words={words.player}
+                                                        className="mt-1 -ml-1"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                file.detail !== undefined && <AttachmentDescription>{file.detail}</AttachmentDescription>
+                                            )}
+                                        </AttachmentContent>
+                                        <DragSourceGrip
+                                            source={source}
+                                            size="icon-xs"
+                                            label={words.drag(file.name)}
+                                            className="self-center pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-hover/attachment:opacity-100 pointer-fine:focus-visible:opacity-100"
+                                        />
+                                        {drop !== undefined && (
+                                            <AttachmentAction
+                                                aria-label={uploading ? words.cancel(file.name) : words.remove(file.name)}
+                                                onClick={() => drop(file.id)}
+                                            >
+                                                <X aria-hidden />
+                                            </AttachmentAction>
+                                        )}
+                                    </Attachment>
                                 )}
-                            </Attachment>
+                            </DragSource>
                         )}
                     </li>
                 )

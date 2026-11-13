@@ -242,6 +242,10 @@
             "types": "./dist/components/DragDrop.d.ts",
             "import": "./dist/components/DragDrop.js"
         },
+        "./DragSource": {
+            "types": "./dist/components/DragSource.d.ts",
+            "import": "./dist/components/DragSource.js"
+        },
         "./DueText": {
             "types": "./dist/components/DueText.d.ts",
             "import": "./dist/components/DueText.js"

@@ -1,7 +1,11 @@
 import { ChevronDown, Hash, Lock, Plus } from 'lucide-react'
-import { useRef, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { stepTo } from '../lib/reorder'
+import type { ChannelOrderPress } from './channel-order'
+import { DragPartsContext } from './drag-parts'
+import type { RailDrop } from './Rail'
 import type { KindColor } from '../lib/kind'
 import { Count } from './Count'
 import { Link } from './Link'
@@ -31,6 +35,12 @@ export interface ChannelEntry {
     /** Muted: never bold, and drawn faint. */
     muted?: boolean
     href?: string
+    /**
+     * The entry as a place things dragged from the page land on, such as a file onto a
+     * conversation: which things it takes, and what to do with one let go on it. It takes drops
+     * inside a `RailDrops`, as a rail entry does, its row ringed while a thing it takes is over it.
+     */
+    drop?: RailDrop
 }
 
 /** A place above the sections, such as threads or saved messages, with a count of what is new there. */
@@ -49,6 +59,12 @@ export interface ChannelSection {
     entries: readonly ChannelEntry[]
     /** Offers an add button at the end of the section, as for a new channel or message. */
     onAdd?: () => void
+    /**
+     * Puts the section's entries in the reader's order, such as the pinned or the starred: an entry
+     * drags as a whole to a new place, and Alt (Option) with the up and down arrows moves the
+     * focused one. Hears where the entry at `from` goes, both places among `entries`.
+     */
+    onMove?: (from: number, to: number) => void
 }
 
 export interface ChannelListWords {
@@ -62,6 +78,8 @@ export interface ChannelListWords {
     /** Said when nothing matches what is typed in the find field. */
     nothing: string
     resize: string
+    /** Said once an entry is moved from the keyboard, its new place counted from 1. */
+    moved: (entry: string, place: number, count: number) => string
 }
 
 const WORDS: ChannelListWords = {
@@ -73,6 +91,7 @@ const WORDS: ChannelListWords = {
     clear: 'Clear the search',
     nothing: 'No conversation matches.',
     resize: 'Resize the conversation list',
+    moved: (entry, place, count) => `${entry} moved to ${String(place)} of ${String(count)}`,
 }
 
 const ROW =
@@ -127,6 +146,13 @@ export interface ChannelListProps {
  * typed, folded sections included. A folded section still shows its open entry and those that name
  * you.
  *
+ * Inside a `RailDrops`, an entry with a `drop` is a place things dragged from the page land on,
+ * such as a file onto a conversation.
+ *
+ * A section with `onMove` is in the reader's order: an entry drags as a whole to a new place, a
+ * finger holding it a moment first, and Alt (Option) with the up and down arrows moves the focused
+ * entry, the focus following it. The drag engine loads only for a list that orders a section.
+ *
  * Its right edge drags to resize it, as `SidePanel`'s left edge does, and a double click on the
  * edge puts it back. Left to itself it holds its own width, starting at `defaultSize` when given and
  * otherwise at the width the caller's class sets; `size` with `onSizeChange` holds it from outside,
@@ -172,6 +198,25 @@ export function ChannelList({
         const next = folds.includes(id) ? folds.filter((other) => other !== id) : [...folds, id]
         if (heldFolded === undefined) setOwnFolded(next)
         onFoldedChange?.(next)
+    }
+    const orderLayer = useChannelOrder(sections.some((section) => section.onMove !== undefined))
+    const [said, setSaid] = useState('')
+    const refocus = useRef<string | null>(null)
+    useLayoutEffect(() => {
+        if (refocus.current === null) return
+        list.current?.querySelector<HTMLElement>(`[data-entry="${CSS.escape(refocus.current)}"]`)?.focus()
+        refocus.current = null
+    })
+    /** Moves the focused entry a place with Alt and an arrow, the focus following it. */
+    const stepKeys = (section: ChannelSection, entry: ChannelEntry) => (event: KeyboardEvent<HTMLElement>) => {
+        if (section.onMove === undefined || !event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return
+        event.preventDefault()
+        const from = section.entries.findIndex((each) => each.id === entry.id)
+        const to = stepTo(from, event.key === 'ArrowUp' ? -1 : 1, section.entries.length)
+        if (from === -1 || to === undefined) return
+        refocus.current = entry.id
+        section.onMove(from, to)
+        setSaid(words.moved(entry.label, to + 1, section.entries.length))
     }
     const shownSections = sections
         .map((section) => {
@@ -280,15 +325,53 @@ export function ChannelList({
                                     </button>
                                 )}
                             </div>
-                            <ul className="flex flex-col gap-px">
-                                {entries.map((entry) => (
-                                    <li key={entry.id}>
-                                        <Entry entry={entry} active={entry.id === active} onSelect={onSelect} words={words} />
-                                    </li>
-                                ))}
-                            </ul>
+                            {section.onMove !== undefined && orderLayer !== undefined && needle === '' && open ? (
+                                <orderLayer.ChannelOrder
+                                    ids={entries.map((entry) => entry.id)}
+                                    label={(id) => entries.find((entry) => entry.id === id)?.label ?? id}
+                                    onMove={section.onMove}
+                                >
+                                    <ul className="flex flex-col gap-px">
+                                        {entries.map((entry) => (
+                                            <orderLayer.ChannelOrderItem key={entry.id} id={entry.id}>
+                                                {(drag) => (
+                                                    <Entry
+                                                        entry={entry}
+                                                        active={entry.id === active}
+                                                        onSelect={onSelect}
+                                                        onKeyDown={stepKeys(section, entry)}
+                                                        drag={drag}
+                                                        words={words}
+                                                    />
+                                                )}
+                                            </orderLayer.ChannelOrderItem>
+                                        ))}
+                                    </ul>
+                                </orderLayer.ChannelOrder>
+                            ) : (
+                                <ul className="flex flex-col gap-px">
+                                    {entries.map((entry) => (
+                                        <li key={entry.id}>
+                                            <Entry
+                                                entry={entry}
+                                                active={entry.id === active}
+                                                onSelect={onSelect}
+                                                onKeyDown={
+                                                    section.onMove === undefined || needle !== '' || !open
+                                                        ? undefined
+                                                        : stepKeys(section, entry)
+                                                }
+                                                words={words}
+                                            />
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </section>
                     ))}
+                    <span aria-live="polite" className="sr-only">
+                        {said}
+                    </span>
                 </div>
             </nav>
             {resizable && held.changeable && (
@@ -337,11 +420,16 @@ function Entry({
     entry,
     active,
     onSelect,
+    onKeyDown,
+    drag,
     words,
 }: {
     entry: ChannelEntry
     active: boolean
     onSelect?: (id: string) => void
+    onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void
+    /** The row's drag, in a section in the reader's order. */
+    drag?: ChannelOrderPress
     words: ChannelListWords
 }) {
     const muted = entry.muted === true
@@ -359,16 +447,74 @@ function Entry({
         ROW,
         active ? OPEN : HOVER,
         !active && (muted ? 'text-faint/70' : loud ? 'font-semibold text-foreground' : 'text-muted-foreground'),
+        drag !== undefined && 'touch-manipulation select-none',
     )
+    const own = { 'data-entry': entry.id, onKeyDown, ...drag?.press }
+    const DropRow = useContext(DragPartsContext).railRow
+    if (entry.drop !== undefined && DropRow !== undefined)
+        return (
+            <DropRow label={entry.label} drop={entry.drop}>
+                <Entry
+                    entry={{ ...entry, drop: undefined }}
+                    active={active}
+                    onSelect={onSelect}
+                    onKeyDown={onKeyDown}
+                    drag={drag}
+                    words={words}
+                />
+            </DropRow>
+        )
     if (entry.href !== undefined)
         return (
-            <Link href={entry.href} aria-current={active ? 'page' : undefined} className={className} onClick={() => onSelect?.(entry.id)}>
+            <Link
+                {...own}
+                href={entry.href}
+                aria-current={active ? 'page' : undefined}
+                className={className}
+                onClick={() => onSelect?.(entry.id)}
+            >
                 {body}
             </Link>
         )
     return (
-        <button type="button" aria-current={active ? 'page' : undefined} className={className} onClick={() => onSelect?.(entry.id)}>
+        <button
+            {...own}
+            type="button"
+            aria-current={active ? 'page' : undefined}
+            className={className}
+            onClick={() => onSelect?.(entry.id)}
+        >
             {body}
         </button>
     )
+}
+
+type ChannelOrderLayer = typeof import('./channel-order')
+let channelOrder: ChannelOrderLayer | undefined
+let channelOrderLoad: Promise<ChannelOrderLayer> | undefined
+
+/** The sections' drag layer, fetched the first time a list that orders a section is drawn. */
+function useChannelOrder(wanted: boolean): ChannelOrderLayer | undefined {
+    const [loaded, setLoaded] = useState(channelOrder)
+    useEffect(() => {
+        if (!wanted || loaded !== undefined) return
+        let live = true
+        channelOrderLoad ??= import('./channel-order').then(
+            (module) => (channelOrder = module),
+            (error: unknown) => {
+                channelOrderLoad = undefined
+                throw error
+            },
+        )
+        channelOrderLoad.then(
+            (module) => {
+                if (live) setLoaded(module)
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
+    }, [wanted, loaded])
+    return wanted ? (loaded ?? channelOrder) : undefined
 }

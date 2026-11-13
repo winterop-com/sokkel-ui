@@ -3,6 +3,8 @@ import type { KeyboardEvent, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { DataTable, type DataColumn, type DataSort } from './DataTable'
+import type { DragData } from './DragDrop'
+import { DragSource, DragSourceGrip, type DragSourceState } from './DragSource'
 import { Checkbox } from './ui/checkbox'
 
 /** What a file is, which picks its icon and how it previews. */
@@ -39,6 +41,8 @@ export interface FileListWords {
     selectAll: string
     select: string
     empty: string
+    /** A tile's grip, with `dragKind`: what the keyboard picks the file up by. */
+    drag: (name: string) => string
 }
 
 const WORDS: FileListWords = {
@@ -49,6 +53,7 @@ const WORDS: FileListWords = {
     selectAll: 'Select all',
     select: 'Select',
     empty: 'This folder is empty.',
+    drag: (name) => `Drag ${name}`,
 }
 
 const ICONS: Record<FileKind, { icon: LucideIcon; tone: string }> = {
@@ -141,6 +146,21 @@ export interface FileListProps {
     onOpen?: (entry: FileEntry) => void
     /** What an empty folder shows in place of the rows. */
     empty?: ReactNode
+    /**
+     * Puts the rows in the reader's order: each row dragged by the grip at its start, a line
+     * showing where it lands, and Alt (Option) with the up and down arrows moving the active row.
+     * Hears where the entry at `from` goes, both places among `entries`; the rows reorder only
+     * while they are not sorted.
+     */
+    onReorder?: (from: number, to: number) => void
+    /** What a row is called by its grip and to a screen reader as it moves; its name without it. */
+    rowLabel?: (entry: FileEntry) => string
+    /**
+     * What a target elsewhere on the page, such as a tree's folders, takes the rows as, each
+     * carrying its entry as `row`; given, the rows drag out by their grips whether or not they
+     * reorder here.
+     */
+    dragKind?: string
     className?: string
     words?: Partial<FileListWords>
 }
@@ -154,6 +174,10 @@ export interface FileListProps {
  *
  * On a narrow box each row is its name over a quiet line of its size and time, so a listing beside
  * an open panel or on a phone still reads.
+ *
+ * With `onReorder` the folder is in the reader's order, its rows dragged by their grips, and with
+ * `dragKind` its rows drag out to targets elsewhere on the page, such as a tree's folders, as
+ * `DataTable`'s do.
  */
 export function FileList({
     entries,
@@ -164,6 +188,9 @@ export function FileList({
     active,
     onOpen,
     empty,
+    onReorder,
+    rowLabel = (entry) => entry.name,
+    dragKind,
     className,
     words: given,
 }: FileListProps) {
@@ -232,6 +259,9 @@ export function FileList({
             onSelectionChange={(next) => onSelectedChange?.([...next])}
             onOpen={onOpen}
             opened={active === undefined ? undefined : (entry) => entry.id === active}
+            onReorder={onReorder}
+            rowLabel={rowLabel}
+            dragKind={dragKind}
             empty={empty ?? words.empty}
             words={{ selectAll: words.selectAll, selectRow: words.select, empty: words.empty }}
             className={className}
@@ -248,13 +278,17 @@ export interface FileTileProps {
     selecting?: boolean
     active?: boolean
     onOpen?: (entry: FileEntry) => void
-    words?: Partial<Pick<FileListWords, 'select'>>
+    /** What the tile carries when it is dragged to a target elsewhere on the page; it does not drag without it. */
+    drag?: DragData
+    words?: Partial<Pick<FileListWords, 'select' | 'drag'>>
 }
 
 /**
  * One file as a tile: its picture when it has one, its kind's icon on a wash when not, then the
  * name and the size. The checkbox in its corner shows on hover, on focus, and whenever anything
- * is selected, so a selection grows by pressing boxes rather than hunting for them.
+ * is selected, so a selection grows by pressing boxes rather than hunting for them. With `drag`
+ * the tile drags as a whole to a target elsewhere on the page, and from the keyboard by the grip
+ * in its corner, shown on hover or focus.
  */
 export function FileTile({
     entry,
@@ -263,20 +297,54 @@ export function FileTile({
     selecting = false,
     active = false,
     onOpen,
+    drag,
     words: given,
 }: FileTileProps) {
     const words = { ...WORDS, ...given }
     return (
+        <DragSource drag={drag === undefined ? undefined : { compact: true, ...drag }}>
+            {(source) => (
+                <TileFace
+                    entry={entry}
+                    selected={selected}
+                    onSelectedChange={onSelectedChange}
+                    selecting={selecting}
+                    active={active}
+                    onOpen={onOpen}
+                    source={source}
+                    words={words}
+                />
+            )}
+        </DragSource>
+    )
+}
+
+function TileFace({
+    entry,
+    selected,
+    onSelectedChange,
+    selecting,
+    active,
+    onOpen,
+    source,
+    words,
+}: Required<Pick<FileTileProps, 'entry' | 'selected' | 'selecting' | 'active'>> &
+    Pick<FileTileProps, 'onSelectedChange' | 'onOpen'> & { source: DragSourceState; words: FileListWords }) {
+    return (
         <div
+            ref={source.ref}
+            {...source.press}
             role="gridcell"
             aria-selected={onSelectedChange === undefined ? undefined : selected}
             aria-current={active || undefined}
+            data-dragging={source.dragging || undefined}
             {...pressable(onOpen === undefined ? undefined : () => onOpen(entry))}
             className={cn(
                 'group/tile relative flex min-w-0 flex-col overflow-hidden rounded-surface border border-border bg-card text-sm outline-none',
                 onOpen !== undefined && 'cursor-pointer hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring',
                 selected && 'border-primary ring-1 ring-primary',
                 active && !selected && 'border-border-strong ring-1 ring-border-strong',
+                source.dragging && 'opacity-40',
             )}
         >
             <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
@@ -310,6 +378,14 @@ export function FileTile({
                     />
                 </span>
             )}
+            {source.enabled && (
+                <span
+                    className="absolute top-2 right-2 flex rounded-md bg-card/90 shadow-sm pointer-coarse:hidden pointer-fine:opacity-0 pointer-fine:group-focus-within/tile:opacity-100 pointer-fine:group-hover/tile:opacity-100"
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <DragSourceGrip source={source} size="icon-xs" label={words.drag(entry.name)} />
+                </span>
+            )}
         </div>
     )
 }
@@ -323,13 +399,22 @@ export interface FileGridProps {
     empty?: ReactNode
     /** The narrowest a tile gets before the row holds one fewer. */
     minTile?: string
+    /**
+     * What a target elsewhere on the page, such as a tree's folders, takes the tiles as, each
+     * carrying its entry as `row`, as `FileList`'s rows do; given, a tile drags out as a whole, and
+     * from the keyboard by the grip in its corner.
+     */
+    dragKind?: string
+    /** What a tile is called to a screen reader as it moves; its name without it. */
+    rowLabel?: (entry: FileEntry) => string
     className?: string
     words?: Partial<FileListWords>
 }
 
 /**
  * A folder's contents as tiles, as many to a row as the box holds: pictures for images, icons for
- * everything else. Selection and opening work as in `FileList`.
+ * everything else. Selection and opening work as in `FileList`, and with `dragKind` a tile drags to
+ * a target elsewhere on the page.
  */
 export function FileGrid({
     entries,
@@ -339,6 +424,8 @@ export function FileGrid({
     onOpen,
     empty,
     minTile = '9.5rem',
+    dragKind,
+    rowLabel = (entry) => entry.name,
     className,
     words: given,
 }: FileGridProps) {
@@ -360,6 +447,7 @@ export function FileGrid({
                     onSelectedChange={onSelectedChange === undefined ? undefined : () => onSelectedChange(flip(selected, entry.id))}
                     active={entry.id === active}
                     onOpen={onOpen}
+                    drag={dragKind === undefined ? undefined : { kind: dragKind, label: rowLabel(entry), value: { row: entry } }}
                     words={words}
                 />
             ))}

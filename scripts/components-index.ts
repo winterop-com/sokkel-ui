@@ -74,6 +74,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             'what a cell knows of the table it is drawn in, apart from `DataTable` so `TagChips` reads it without the table; `useTableCell` and `TableCell` are exported by `DataTable`',
         'components/table-reorder':
             "what `DataTable` drags its rows with, loaded the first time a table with `onReorder` or a `dragKind` is drawn; its words are `DataTable`'s",
+        'components/channel-order': "what `ChannelList` puts a section in order with, loaded the first time a list with a section that has `onMove` is drawn",
+        'components/drag-source-layer': "what `DragSource` drags with, loaded the first time one is drawn with a `drag`",
         'components/tree-drag': "the tree's drag layer, loaded the first time a `Tree` with `onMove` or `onDrop` is drawn",
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
