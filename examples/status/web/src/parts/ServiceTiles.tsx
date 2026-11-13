@@ -2,7 +2,7 @@ import { Columns } from '@winterop-com/sokkel-ui/Layout'
 import { Sparkline, Stat } from '@winterop-com/sokkel-ui/Stat'
 import { formatUptime, overallUptime } from '@winterop-com/sokkel-ui/UptimeBar'
 
-import { SERVICES } from '../data'
+import type { Service } from '../data'
 import type { LiveState } from '../live'
 import { type Health, HEALTH_WORDS, healthCss } from '../status'
 import type { UptimeByService } from './uptime'
@@ -14,11 +14,11 @@ const TONE: Record<Health, 'good' | 'warning' | 'critical' | 'muted'> = {
     maintenance: 'muted',
 }
 
-/** Every service as a tile: its state, its latency now with its last minutes as a line, and its uptime. */
-export function ServiceTiles({ state, uptime }: { state: LiveState; uptime: UptimeByService }) {
+/** Each service as a tile, in the order given: its state, its latency now with its last minutes as a line, and its uptime. */
+export function ServiceTiles({ services, state, uptime }: { services: readonly Service[]; state: LiveState; uptime: UptimeByService }) {
     return (
         <Columns count={4} min="sm" gap="md">
-            {SERVICES.map((service) => {
+            {services.map((service) => {
                 const health = state.health[service.id]
                 const readings = state.readings[service.id]
                 const last = readings[readings.length - 1]
