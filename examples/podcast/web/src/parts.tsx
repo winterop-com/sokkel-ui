@@ -1,6 +1,7 @@
 /** What several pages draw: an episode's row and its actions, a list of episodes, and a grid of shows. */
 
 import { DownloadButton } from '@winterop-com/sokkel-ui/DownloadButton'
+import { useMedia } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
@@ -32,7 +33,7 @@ import {
     StarOff,
     Trash2,
 } from 'lucide-react'
-import { useSyncExternalStore, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import { go } from 'tidevann-shared/router'
 import { DAY, sizeOf } from './backend'
@@ -62,20 +63,9 @@ export function spoken(seconds: number): string {
 
 /** Where a row has room for its star and its download beside the menu. */
 const WIDE = '(min-width: 40rem)'
-const followWidth = (change: () => void) => {
-    const query = window.matchMedia(WIDE)
-    query.addEventListener('change', change)
-    return () => query.removeEventListener('change', change)
-}
 
 /** Whether the window is wider than a phone, followed as it changes. */
-export function useWide(): boolean {
-    return useSyncExternalStore(
-        followWidth,
-        () => window.matchMedia(WIDE).matches,
-        () => true,
-    )
-}
+export const useWide = (): boolean => useMedia(WIDE, true)
 
 /** What the star buttons say: the app's word for keeping an episode is starring it. */
 export const STAR = { star: 'Star', unstar: 'Unstar' }

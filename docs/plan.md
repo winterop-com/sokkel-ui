@@ -189,7 +189,15 @@ asks, a narrowed rail's mark still widens it for the reader with the account fol
 hidden rail opens as the drawer from the top bar at every width. A screen that knows its own head,
 such as a run page whose trail ends at the run, draws the top bar with `ShellTop` while it is
 mounted, in place of `Shell`'s `top`, the latest screen's winning; the shell's own is back once none
-draws one.
+draws one. A screen that knows only its trail states it with `useShellTrail(trail, { ends })`, and
+the `TopBar` in `Shell`'s `top` draws it in place of its own, keeping its search, palette button and
+actions. A screen's head that stays in view while its content scrolls, its `PageHeader` and tabs,
+goes in `ShellHead`, held above the shell's scroller in the page's inset over a rule (`inset={false}`
+for a head that draws its own edges), the content still the one scroller `useScrollMemory` follows.
+That scroller's track is thin and keeps its room whether or not the content scrolls
+(`scroller-thin`), and the head keeps the same room, so both end at one right edge.
+`useMedia(query, initial)` and `useIsMobile()` (`MOBILE_QUERY`) answer as a part first draws in a
+browser, so a phone never draws the wide layout first; `initial` is the server's answer.
 
 Every link the library draws is a `Link`: the rail's places, the top bar's and a page header's
 trail, a nav bar's places, a stat, a stat panel, a card, a profile, a channel, a link in text, a

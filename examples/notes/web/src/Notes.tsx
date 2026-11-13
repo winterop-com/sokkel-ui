@@ -1,6 +1,7 @@
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { CommandPalette, type PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import type { DataAction } from '@winterop-com/sokkel-ui/DataTable'
+import { useMedia } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
@@ -32,7 +33,7 @@ import {
     Settings,
     Trash2,
 } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
@@ -57,12 +58,6 @@ const PAGES = ['notes', 'folder', 'note', 'daily', 'tags', 'graph', 'search'] as
 
 /** Where the shell sets its panel as a column rather than a sheet over the content. */
 const WIDE = '(min-width: 64rem)'
-const followWidth = (change: () => void) => {
-    const query = window.matchMedia(WIDE)
-    query.addEventListener('change', change)
-    return () => query.removeEventListener('change', change)
-}
-const isWide = () => window.matchMedia(WIDE).matches
 
 /** What the note or the folder a tree row stands for offers in its menu. */
 function useRowActions(): (node: TreeNode) => DataAction[] {
@@ -111,7 +106,7 @@ export function Notes({ frame }: { frame: Frame }) {
     const [topQuery, setTopQuery] = useState('')
     const rowActions = useRowActions()
     // Wide, the panel is a column the reader keeps shown or hidden; narrow, it is a sheet opened for a moment.
-    const wide = useSyncExternalStore(followWidth, isWide, () => true)
+    const wide = useMedia(WIDE, true)
     const [sheet, setSheet] = useState(false)
     const where = settings.route.join('/')
     useEffect(() => setSheet(false), [where])
