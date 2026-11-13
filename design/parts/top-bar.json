@@ -103,9 +103,9 @@
             "width": "density.control",
             "icon": 16,
             "radius": "radius-md",
-            "phoneMinHeight": null,
-            "phoneMinWidth": null,
-            "note": "It keeps the control's size below 768 (open-questions.md)."
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "A finger square below 768 (Shell.tsx: max-md:size-finger)."
         },
         "mark": {"height": 28, "width": 28, "radius": "radius-md"},
         "search": {"width": 224, "note": "224, 256 from 1024, at most 320; it may shrink."},
