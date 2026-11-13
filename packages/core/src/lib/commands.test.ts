@@ -3,7 +3,17 @@ import { describe, expect, it, vi } from 'vitest'
 import type { PaletteCommand } from '../components/CommandPalette'
 import type { RailGroup } from '../components/Rail'
 import { DEFAULT_APPEARANCE, THEMES } from './appearance'
-import { activeRow, appearanceCommands, filterCommands, mergeCommands, placeCommands, termScore } from './commands'
+import {
+    activeRow,
+    appearanceCommands,
+    filterCommands,
+    mergeCommands,
+    placeCommands,
+    refusalOf,
+    runCommand,
+    termScore,
+    type CommandRun,
+} from './commands'
 
 const GROUPS: RailGroup[] = [
     { id: 'work', entries: [{ id: 'runs', label: 'Runs', href: '/runs' }] },
@@ -223,5 +233,67 @@ describe('activeRow', () => {
         const empty = activeRow('Runs runs', [])
         expect(empty).toBe('')
         expect(activeRow(empty, ['search run run-4812'])).toBe('search run run-4812')
+    })
+})
+
+describe('runCommand', () => {
+    /** A run that writes down what it tells the palette, still waited on until `left` is set. */
+    function palette() {
+        const said: string[] = []
+        const state = { left: false }
+        const run: CommandRun = {
+            done: () => said.push('closed'),
+            busy: (pending) => said.push(pending ? 'busy' : 'idle'),
+            refused: (reason) => said.push(`refused: ${reason ?? '-'}`),
+            current: () => !state.left,
+        }
+        return { said, state, run }
+    }
+
+    const settled = () => new Promise((settle) => setTimeout(settle, 0))
+
+    it('closes at once for a command that answers nothing', () => {
+        const { said, run } = palette()
+        runCommand(() => undefined, run)
+        expect(said).toEqual(['closed'])
+    })
+
+    it('keeps the palette open and the row busy until a promise is fulfilled, then closes', async () => {
+        const { said, run } = palette()
+        let fulfil: () => void = () => undefined
+        runCommand(() => new Promise<void>((resolve) => (fulfil = resolve)), run)
+        expect(said).toEqual(['busy'])
+        fulfil()
+        await settled()
+        expect(said).toEqual(['busy', 'idle', 'closed'])
+    })
+
+    it('stays open and says why when the promise is rejected or the command throws', async () => {
+        const { said, run } = palette()
+        runCommand(() => Promise.reject(new Error('Only an owner can rerun `nightly-export`.')), run)
+        await settled()
+        expect(said).toEqual(['busy', 'idle', 'refused: Only an owner can rerun `nightly-export`.'])
+        const thrown = palette()
+        runCommand(() => {
+            throw new Error('')
+        }, thrown.run)
+        expect(thrown.said).toEqual(['refused: -'])
+    })
+
+    it('lets a run settle unheard once the palette has closed or opened again', async () => {
+        const { said, state, run } = palette()
+        let refuse: (reason: unknown) => void = () => undefined
+        runCommand(() => new Promise((_, reject) => (refuse = reject)), run)
+        state.left = true
+        refuse(new Error('too late'))
+        await settled()
+        expect(said).toEqual(['busy'])
+    })
+
+    it("reads a refusal's words from an error or a string, and none from anything else", () => {
+        expect(refusalOf(new Error('The scheduler is restarting.'))).toBe('The scheduler is restarting.')
+        expect(refusalOf('Refused')).toBe('Refused')
+        expect(refusalOf('  ')).toBeUndefined()
+        expect(refusalOf({ status: 403 })).toBeUndefined()
     })
 })

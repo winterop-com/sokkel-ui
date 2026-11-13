@@ -28,6 +28,7 @@ export type PackageDir = (typeof PACKAGES)[number]
 const folders = (pkg: PackageDir): string[] => (pkg === 'core' ? ['components', 'hooks', 'lib'] : [''])
 
 const KIND_BUILDER = "a chart kind's builder, reached through the registry `kinds` exports"
+const KIND_LEGEND = "the legends of some kinds and the shaping they share with those kinds' builders, loaded through `kinds/legends`"
 
 /**
  * The modules a package builds but does not export, each with the reason, by their path under the
@@ -82,6 +83,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             'what `ChannelList` puts a section in order with, loaded the first time a list with a section that has `onMove` is drawn',
         'components/drag-source-layer': 'what `DragSource` drags with, loaded the first time one is drawn with a `drag`',
         'components/tree-drag': "the tree's drag layer, loaded the first time a `Tree` with `onMove` or `onDrop` is drawn",
+        'components/table-memory':
+            "what `DataTable` keeps its rows' place with under its `scrollKey`, loaded the first time a table with one is drawn",
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
         'components/ui/checkbox-look':
@@ -130,7 +133,16 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'kinds/gauge': KIND_BUILDER,
         'kinds/hierarchy': KIND_BUILDER,
         'kinds/histogram': KIND_BUILDER,
-        'kinds/legends': "every kind's legend and the shaping it shares with the kind's builder, which `chart-legend` reads",
+        'kinds/legend-bullet': KIND_LEGEND,
+        'kinds/legend-fan': KIND_LEGEND,
+        'kinds/legend-flows': KIND_LEGEND,
+        'kinds/legend-histogram': KIND_LEGEND,
+        'kinds/legend-range': KIND_LEGEND,
+        'kinds/legend-rings': KIND_LEGEND,
+        'kinds/legend-series': KIND_LEGEND,
+        'kinds/legend-tree': KIND_LEGEND,
+        'kinds/legend-waterfall': KIND_LEGEND,
+        'kinds/legends': "each kind's legend, fetched the first time a frame lists one of its kind",
         'kinds/linked': KIND_BUILDER,
         'kinds/load': "each kind's builder, fetched the first time a chart of that kind is drawn",
         'kinds/parallel': KIND_BUILDER,
@@ -142,6 +154,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'kinds/steps': KIND_BUILDER,
         'kinds/stream': KIND_BUILDER,
         'kinds/waterfall': KIND_BUILDER,
+        'legend-table': "a legend's table mode, which `ChartLegend` loads the first time it draws one",
         look: "the theme's colors and sizes a builder reads; `ChartLook` is exported by `EChart`",
         scales: 'the scales the kinds share',
         shapes: 'rows shaped for the kinds',

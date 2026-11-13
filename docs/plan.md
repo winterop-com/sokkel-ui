@@ -58,11 +58,13 @@ or a right click on it opening the menu as soon as the menu is there. A menu bar
 once (`primitives/menubar` imports it), as its keys need. `DataTable` loads Base UI's checkbox, the
 watch that measures its content cells again and its menus' lists once it is drawn, and only when it
 selects, has a content column or draws a column or sort menu, its selection boxes drawn the same
-until then and taking a press the same, so a plain table carries none of it. `CheckboxField` and
+until then and taking a press the same, so a plain table carries none of it; its scroll memory loads
+the first time a table with a `scrollKey` is drawn. `CheckboxField` and
 `SchemaForm`'s sets of choices draw a plain box in the same look (`PlainCheckbox`, a button that
 ticks), so a forms page carries none of Base UI's checkbox either. A module that only asks whether a node is a part tells it by a mark, so it
-need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
-reads every kind.
+need not import the part (`isSoundVisualizer`), and `chartLegend` names a kind's legend without
+importing it: a frame loads that kind's legend the first time it lists one, and a legend's table
+mode loads `DataTable` the first time it is drawn.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
 blocks such a dependency's install scripts). The tag workflow publishes the eight packages to GitHub
@@ -268,7 +270,11 @@ mounted and takes it away when it unmounts; the shell holds the registry and lis
 its own by each group's `rank`, a screen's first at equal rank, groups of one title as one. An app
 that draws its own palette holds a registry with `useCommandRegistry`. A palette row with a `detail`
 or `artwork` (an image's address or a node, round for a person) is two lines tall, drawn as a search
-result is, and the palette's search results take `artwork` too. The palette matches by letters in
+result is, and the palette's search results take `artwork` too; a one-line row's `meta` is a quiet
+summary in the code face at its end, folding under the label on a phone. A command whose `onSelect`
+answers a promise keeps the palette open, its row busy, until it settles: fulfilled, the palette
+closes; rejected, it stays and says why in a `ProblemLine` under the rows, so a refusal is said
+where the choice was made. The palette matches by letters in
 order unless its `filter` (`paletteFilter` on `Shell`) is `terms`, the library's own: every word
 typed must be found in a command's label, `keywords`, hint, code, second line or group, and a label
 starting with the query comes first. `keywords` on a command, and on a rail entry through
@@ -340,7 +346,10 @@ the pointer.
 inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
 and its panel over a narrow window use it. `useScrollMemory(key, ref)` keeps a scroller's place per
 key for the session (in session storage, in memory where that is refused) and puts it back on
-return, the shell's content when no ref is given. `useReducedMotion()` says whether motion is
+return, the shell's content when no ref is given. A `DataTable` that scrolls itself keeps its place
+with `scrollKey` the same way, drawing the rows in view at it and, while it lies past the rows loaded
+(`hasMore`), asking for more until they reach it, by the button's way too; `scrollerRef` hands the
+app its scroller. `useReducedMotion()` says whether motion is
 reduced, from the look's own `motion` and else the system's, following both, for motion a script
 draws.
 
@@ -680,7 +689,7 @@ phone's, or wherever its columns stop fitting, so a list in a narrow panel on a 
 rows it says `empty`, a sentence or a node such as an `Empty` with an action, alone without the column
 heads unless a search or tools in the bar may have emptied it. While its rows are on their way
 (`loading`) it draws placeholder rows under its heads, filling the view or three after the last row
-loaded: its one loading look, chosen over `PageState`'s spinner line because it keeps the table's
+loaded, as bars in the shape of its stacked cards or listed rows once the rows stack: its one loading look, chosen over `PageState`'s spinner line because it keeps the table's
 shape, so the bar, a search being typed in, the heads and the frame stand where the rows will and
 nothing moves or unmounts as they come. A read that failed is said in the rows' place under the
 heads (`error`, with `status`, `problems` and `onRetry`), drawn as an unframed `PageState` with its

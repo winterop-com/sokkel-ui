@@ -13,6 +13,56 @@ export function activeRow(chosen: string, rows: readonly string[]): string {
     return rows.includes(chosen) ? chosen : (rows[0] ?? '')
 }
 
+/** What running a palette command tells the palette. */
+export interface CommandRun {
+    /** The command is done: the palette closes. */
+    done: () => void
+    /** The command's promise is pending (true) or has settled (false). */
+    busy: (pending: boolean) => void
+    /** The command was refused, in its own words or none. */
+    refused: (reason: string | undefined) => void
+    /** Whether the palette still waits on this run: false once it has closed or opened again. */
+    current: () => boolean
+}
+
+/**
+ * Runs a palette command as the palette does: done at once when it answers nothing, or once the
+ * promise it answers is fulfilled; refused when it throws or its promise is rejected, the palette
+ * staying open to say why. A run the palette no longer waits on settles unheard.
+ */
+export function runCommand(onSelect: () => unknown, run: CommandRun): void {
+    let answer: unknown
+    try {
+        answer = onSelect()
+    } catch (reason) {
+        run.refused(refusalOf(reason))
+        return
+    }
+    if (typeof (answer as PromiseLike<unknown> | null)?.then !== 'function') {
+        run.done()
+        return
+    }
+    run.busy(true)
+    ;(answer as PromiseLike<unknown>).then(
+        () => {
+            if (!run.current()) return
+            run.busy(false)
+            run.done()
+        },
+        (reason: unknown) => {
+            if (!run.current()) return
+            run.busy(false)
+            run.refused(refusalOf(reason))
+        },
+    )
+}
+
+/** Why a command was refused, in the words it was refused with: an error's message or a string; undefined for none. */
+export function refusalOf(reason: unknown): string | undefined {
+    const said = reason instanceof Error ? reason.message : typeof reason === 'string' ? reason : undefined
+    return said === undefined || said.trim() === '' ? undefined : said
+}
+
 /**
  * The palette's groups in the order it lists them. Groups of one title are drawn as one, at the
  * first one's place and with the lowest rank among them; within it, the first command of an id

@@ -1,8 +1,8 @@
 import { distinct, labelOf } from '../data'
 import { tooltipMarkup } from '../look'
 import { flows } from '../shapes'
-import { stagesOf, weightOf } from './legends'
-import { written, colorOf, measureName, type ChartBuilder } from './spec'
+import { stagesOf } from './legend-flows'
+import { written, colorOf, measureName, weightOf, type ChartBuilder } from './spec'
 
 /**
  * Flows through stages: one column of nodes per field of `path`, first to last, and a band from a

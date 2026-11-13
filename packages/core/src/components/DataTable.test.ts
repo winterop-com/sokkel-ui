@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { holdScroll } from '../lib/scroll-memory'
 import {
+    asksForMore,
     branchKeys,
     columnLeast,
     contentTrack,
@@ -370,5 +372,94 @@ describe('column rooms', () => {
         expect(roomsWith(before, [])).toBe(before)
         expect(roomsWith(before, [{ column: 'tags', width: 312 }])).toEqual({ tags: 312, job: 180 })
         expect(roomsWith({}, [{ column: 'job', width: 0 }])).toEqual({ job: 0 })
+    })
+})
+
+describe('a table back at the place it was left', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    /** A table's scroller 600px tall over rows 40px tall, fifty to a page, and the changes below it, which the test calls. */
+    function table(rows: number) {
+        const watching: (() => void)[] = []
+        vi.stubGlobal(
+            'MutationObserver',
+            class {
+                constructor(callback: () => void) {
+                    watching.push(callback)
+                }
+                observe() {}
+                disconnect() {}
+            },
+        )
+        const box = {
+            rows,
+            top: 0,
+            clientHeight: 600,
+            children: [] as unknown[],
+            get scrollHeight() {
+                return box.rows * 40
+            },
+            get scrollTop() {
+                return box.top
+            },
+            set scrollTop(value: number) {
+                box.top = Math.max(0, Math.min(value, box.scrollHeight - box.clientHeight))
+            },
+            scrollLeft: 0,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+        }
+        /** Loads the next page, as the app does when the table asks. */
+        const load = () => {
+            box.rows += 50
+            for (const change of watching) change()
+        }
+        return { box, load, area: box as unknown as HTMLElement }
+    }
+
+    /** Asks for pages as the table does while it seeks its place, and counts them. */
+    function seek(rows: number, place: number, total: number, byButton: boolean) {
+        const { box, load, area } = table(rows)
+        holdScroll(area, { top: place, left: 0 })
+        let pages = 0
+        while (
+            asksForMore({
+                hasMore: box.rows < total,
+                busy: false,
+                byButton,
+                nearEnd: false,
+                seeking: box.top >= place - 1 ? undefined : place,
+                reach: box.scrollHeight - box.clientHeight,
+            })
+        ) {
+            load()
+            pages += 1
+        }
+        return { top: box.top, pages }
+    }
+
+    it('loads the pages that reach a place past the first, then stands there', () => {
+        // 6000px down takes 6600px of rows, 165 of them: three pages after the first.
+        expect(seek(50, 6000, 1000, false)).toEqual({ top: 6000, pages: 3 })
+    })
+
+    it('loads them by the button’s way too, where the reader asks for more', () => {
+        expect(seek(50, 6000, 1000, true)).toEqual({ top: 6000, pages: 3 })
+    })
+
+    it('stops at the last page when the place lies past every row', () => {
+        expect(seek(50, 6000, 100, true)).toEqual({ top: 100 * 40 - 600, pages: 1 })
+    })
+
+    it('asks for nothing while rows are on their way, and only near the end by itself', () => {
+        const asked = { hasMore: true, busy: false, byButton: false, nearEnd: false, reach: 1400 }
+        expect(asksForMore(asked)).toBe(false)
+        expect(asksForMore({ ...asked, nearEnd: true })).toBe(true)
+        expect(asksForMore({ ...asked, nearEnd: true, byButton: true })).toBe(false)
+        expect(asksForMore({ ...asked, seeking: 3000 })).toBe(true)
+        expect(asksForMore({ ...asked, seeking: 3000, busy: true })).toBe(false)
+        expect(asksForMore({ ...asked, seeking: 1400 })).toBe(false)
     })
 })

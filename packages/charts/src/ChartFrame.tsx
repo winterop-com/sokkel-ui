@@ -6,7 +6,8 @@ import { LoadingOverlay } from '@winterop-com/sokkel-ui/Loaders'
 import { WINDOWED_PANE_WORDS, WindowedPane, useWindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
-import { ChartLegend, type LegendItem, type LegendStat, type LegendWords } from './ChartLegend'
+import { useLegendEntries, type LegendEntries } from './chart-legend'
+import { ChartLegend, type LegendStat, type LegendWords } from './ChartLegend'
 import type { ChartHandle } from './EChart'
 import { FrameDataContext, type FrameData } from './frame-data'
 import { PANEL_STATE_WORDS, PanelFailure, StaleMark } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
@@ -88,11 +89,17 @@ export interface ChartFrameProps {
     actions?: ReactNode
     /** Dropdown menu items, behind a button after the export and expand tools, as `DashboardPanel`'s `menu`. */
     menu?: ReactNode
-    legend?: readonly LegendItem[]
+    /**
+     * The legend's entries, or the legend `chartLegend` names for a kind and spec, which the frame
+     * loads the first time it lists one of that kind.
+     */
+    legend?: LegendEntries
     /** A wrapped row of series under the chart, or a table of their figures. */
     legendMode?: 'list' | 'table'
     legendStats?: readonly LegendStat[]
     legendFormat?: (value: number) => string
+    /** Writes each entry's figure beside its label in list mode, as `ChartLegend`'s `figures`: a slice's, a stage's. */
+    legendFigures?: boolean
     /** The export's file name, without an extension. */
     file?: string
     exportable?: boolean
@@ -149,10 +156,11 @@ export function ChartFrame({
     info,
     actions,
     menu,
-    legend,
+    legend: entries,
     legendMode = 'list',
     legendStats,
     legendFormat,
+    legendFigures = false,
     file = 'chart',
     exportable = true,
     expandable = true,
@@ -177,6 +185,7 @@ export function ChartFrame({
     children,
 }: ChartFrameProps) {
     const words = { ...WORDS, ...given }
+    const legend = useLegendEntries(entries)
     const handle = useRef<ChartHandle | null>(null)
     const [root, setRoot] = useState<HTMLElement | null>(null)
     const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set())
@@ -247,6 +256,7 @@ export function ChartFrame({
                         mode={legendMode}
                         stats={legendStats}
                         format={legendFormat}
+                        figures={legendFigures}
                         words={words.legend}
                         className={cn(
                             'mt-1 shrink-0',

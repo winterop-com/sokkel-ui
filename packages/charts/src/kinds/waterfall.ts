@@ -1,6 +1,6 @@
 import { tooltipMarkup } from '../look'
 import { valueTicks } from './axes'
-import { stretches, tones } from './legends'
+import { stretches, tones } from './legend-waterfall'
 import { written, categoryText, wordsOf, type ChartBuilder } from './spec'
 
 interface Api {

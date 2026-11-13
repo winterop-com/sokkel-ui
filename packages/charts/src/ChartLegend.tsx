@@ -1,5 +1,11 @@
-import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
+import { Suspense, lazy } from 'react'
+
+import type { DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useLegendEntries, type LegendEntries } from './chart-legend'
+
+// The table mode's table loads the first time a legend is drawn as one, so a list carries none of it.
+const LegendTable = lazy(() => import('./legend-table').then((module) => ({ default: module.LegendTable })))
 
 /** One series in a legend. `key` is the series' name in the chart. */
 export interface LegendItem {
@@ -54,7 +60,8 @@ const ITEM =
     'outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-solid focus-visible:outline-ring'
 
 export interface ChartLegendProps {
-    items: readonly LegendItem[]
+    /** The entries, or the legend of a kind and spec that `chartLegend` names, listed once that kind's legend has loaded. */
+    items: LegendEntries
     hidden?: ReadonlySet<string>
     onToggle?: (key: string) => void
     onHover?: (key: string | null) => void
@@ -62,6 +69,11 @@ export interface ChartLegendProps {
     /** The figures table mode shows, in order. */
     stats?: readonly LegendStat[]
     format?: (value: number) => string
+    /**
+     * Writes each entry's figure beside its label in list mode, with `format`, where the entry has no
+     * `value` of its own: a slice's, a stage's or a ring's figure, its last where it has several.
+     */
+    figures?: boolean
     words?: Partial<LegendWords>
     className?: string
 }
@@ -69,21 +81,24 @@ export interface ChartLegendProps {
 /**
  * The legend for a chart drawn beside it rather than inside it: a swatch and label per series that
  * a click or Enter hides or shows, and hover or focus emphasizes. In table mode each series is a
- * `DataTable` row with its min, max, mean and current value, worked out from `values`. Below `md`
- * each toggle in list mode is a finger tall.
+ * `DataTable` row with its min, max, mean and current value, worked out from `values`; the table
+ * loads the first time a legend is drawn in table mode. `figures` writes each entry's figure beside
+ * its label in list mode. Below `md` each toggle in list mode is a finger tall.
  */
 export function ChartLegend({
-    items,
+    items: entries,
     hidden = EMPTY,
     onToggle,
     onHover,
     mode = 'list',
     stats = ['min', 'max', 'avg', 'current'],
     format = defaultFormat,
+    figures = false,
     words: given,
     className,
 }: ChartLegendProps) {
     const words = { ...WORDS, ...given }
+    const items = useLegendEntries(entries) ?? NONE
     const handlers = (key: string, off: boolean) => ({
         onClick: () => onToggle?.(key),
         onMouseEnter: () => onHover?.(off ? null : key),
@@ -132,15 +147,17 @@ export function ChartLegend({
         ]
         return (
             <div className={cn('flex min-h-0 min-w-0 flex-col', className)} onMouseLeave={() => onHover?.(null)}>
-                <DataTable
-                    columns={columns}
-                    rows={items}
-                    rowKey={(item) => item.key}
-                    variant="list"
-                    framed={false}
-                    stackBelow={false}
-                    resizable={false}
-                />
+                <Suspense fallback={null}>
+                    <LegendTable
+                        columns={columns}
+                        rows={items}
+                        rowKey={(item) => item.key}
+                        variant="list"
+                        framed={false}
+                        stackBelow={false}
+                        resizable={false}
+                    />
+                </Suspense>
             </div>
         )
     }
@@ -148,6 +165,7 @@ export function ChartLegend({
         <ul className={cn('flex flex-wrap items-center gap-x-1 gap-y-0.5', className)} onMouseLeave={() => onHover?.(null)}>
             {items.map((item) => {
                 const off = hidden.has(item.key)
+                const value = item.value ?? (figures ? figureOf(item, format) : undefined)
                 return (
                     <li key={item.key}>
                         <button
@@ -162,7 +180,7 @@ export function ChartLegend({
                         >
                             <Swatch color={item.color} off={off} />
                             <span className={cn(off && 'line-through')}>{item.label}</span>
-                            {item.value !== undefined && <span className="font-mono text-foreground tabular-nums">{item.value}</span>}
+                            {value !== undefined && <span className="font-mono text-foreground tabular-nums">{value}</span>}
                         </button>
                     </li>
                 )
@@ -172,3 +190,11 @@ export function ChartLegend({
 }
 
 const EMPTY: ReadonlySet<string> = new Set()
+
+const NONE: readonly LegendItem[] = []
+
+/** An entry's figure as `format` writes it: its last, or undefined where it has none. */
+function figureOf(item: LegendItem, format: (value: number) => string): string | undefined {
+    const value = legendStats(item.values ?? []).current
+    return value === null ? undefined : format(value)
+}
