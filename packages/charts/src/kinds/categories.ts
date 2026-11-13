@@ -1,6 +1,6 @@
 import { tokenColor, tooltipMarkup, type ChartLook } from '../look'
 import { categoryAxis, edgeAxis, endsStack, fading, farCorners, markRoom, stepLines, tickWriter, valueLabels } from './axes'
-import { shaped } from './legends'
+import { shaped } from './legend-series'
 import {
     categoryText,
     colorOf,

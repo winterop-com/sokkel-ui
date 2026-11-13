@@ -385,3 +385,40 @@ describe('a selection box before the checkbox has loaded', () => {
         expect(boxes(table)).toEqual(boxes(checkboxes))
     })
 })
+
+describe('rows on their way while the rows stack', () => {
+    type Run = { id: string; job: string; state: string; took: string }
+    const columns = [
+        { id: 'job', header: 'Job', width: '1fr', cell: (run: Run) => run.job },
+        { id: 'state', header: 'State', width: '8rem', cell: (run: Run) => run.state },
+        { id: 'took', header: 'Took', width: '6rem', cell: (run: Run) => run.took },
+    ]
+    const placeholders = (html: string) => html.match(/data-slot="skeleton"/g)?.length ?? 0
+
+    it('draws a listed row of bars for each, its title and its lines, under the rows already there', () => {
+        const html = renderToStaticMarkup(
+            <DataTable
+                variant="list"
+                stackBelow={2000}
+                columns={columns}
+                rows={[{ id: 'a', job: 'nightly-export', state: 'failed', took: '4m' }]}
+                rowKey={(run) => run.id}
+                loading
+            />,
+        )
+        expect(html).toContain('nightly-export')
+        const items = html.match(/<li aria-hidden="true"[^>]*>/g) ?? []
+        expect(items).toHaveLength(3)
+        // A title and two labeled lines, each line a label and a value.
+        expect(placeholders(html)).toBe(3 * 5)
+    })
+
+    it('draws stacked cards of bars, in the cards’ shape, while the first rows load', () => {
+        const html = renderToStaticMarkup(
+            <DataTable minWidth="auto" stackBelow={2000} columns={columns} rows={[] as Run[]} rowKey={(run) => run.id} loading />,
+        )
+        const cards = html.match(/<div aria-hidden="true" class="[^"]*rounded-surface border border-border bg-card[^"]*"/g) ?? []
+        expect(cards.length).toBeGreaterThanOrEqual(3)
+        expect(html).not.toMatch(/data-slot="skeleton" class="[^"]*rounded-surface/)
+    })
+})

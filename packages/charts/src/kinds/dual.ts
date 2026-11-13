@@ -1,6 +1,6 @@
 import { tooltipMarkup } from '../look'
 import { compactWritten, endsStack, farCorners, tickWriter } from './axes'
-import { shaped } from './legends'
+import { shaped } from './legend-series'
 import {
     written,
     categoryLabels,

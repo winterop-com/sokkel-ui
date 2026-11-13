@@ -1,6 +1,6 @@
 import { tooltipMarkup } from '../look'
 import { valueTicks } from './axes'
-import { bandColors, bandName, bulletFigures } from './legends'
+import { bandColors, bandName, bulletFigures } from './legend-bullet'
 import { written, categoryLabels, categoryText, wordsOf, type ChartBuilder } from './spec'
 
 interface Api {

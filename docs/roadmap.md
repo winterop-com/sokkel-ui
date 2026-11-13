@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.25.0** is the latest release (2026-11-13): drag in every Apps story and example; Board
+- **0.26.0** is the latest release (2026-11-13): sokkel-ui checked against the sokkel-design specs
+  (`design/`, `parts.test.ts`); one invalid look for every control; a pressable dense ListRow, the
+  drawer button and a small Segmented at finger height on a phone; DataTable `scrollKey` and
+  stacked placeholders; palette `meta` and awaited commands; chart legends loaded per kind.
+- **0.25.0** (2026-11-13): drag in every Apps story and example; Board
   columns move and lock, calendar events move and resize, messages, files, video cards and channels
   drag; rail reorder, rows lent by their grips, RepeatedGroup and Tree order; control heights from
   density tokens; issue words, `useOverlayRoute` and a table's own loading and failed states; a
@@ -385,8 +389,6 @@ to `plan.md` when it ships.
 
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. Left:
-    - On a dashboard, `chartLegend` still brings every chart kind with the page. Split each kind's
-      shaping of rows, which the legend needs, from its option builder, which can load with ECharts.
     - A plain `DataTable` still brings `SelectionBar`, the pager's `NativeSelect` and the
       row menus' `primitives/context-menu` (about 1.2 kB), each drawn at once when used.
     - The palette's lazy chunk carries cmdk's `Command.Dialog` and the Radix dialog stack behind it

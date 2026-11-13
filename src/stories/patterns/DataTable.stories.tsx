@@ -1293,6 +1293,15 @@ export const Loading: StoryObj = {
     ),
 }
 
+/**
+ * A list's first rows on their way: placeholder rows under its heads, and once the list stacks, as
+ * on a phone, listed rows of bars in the shape its rows take, its title and each labeled line.
+ */
+export const LoadingList: StoryObj = {
+    name: 'Loading list',
+    render: () => <DataTable variant="list" columns={COLUMNS.slice(0, 5)} rows={[]} rowKey={(run) => run.id} selectable loading />,
+}
+
 /** Runs whose read the server refused, read again by Try again, which fails the same way. */
 function FailedRuns() {
     const [loading, setLoading] = useState(false)

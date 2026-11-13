@@ -26,12 +26,12 @@ const OPTION: Record<SegmentedVariant, string> = {
     solid: '',
 }
 
-/** A small option's least height, so a line of options with its frame is a finger tall, and a small control's height from `md`. */
+/** A small option's least height: a finger tall below `md`, where each option is pressed, and a line of options with its frame a small control's height from `md`. */
 const LINE: Record<SegmentedVariant, string> = {
-    track: 'min-h-[calc(var(--spacing-finger)-4px)] md:min-h-[calc(var(--density-control-sm)-4px)]',
+    track: 'min-h-finger md:min-h-[calc(var(--density-control-sm)-4px)]',
     tint: 'min-h-finger md:min-h-(--density-control-sm)',
-    outline: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(var(--density-control-sm)-2px)]',
-    solid: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(var(--density-control-sm)-2px)]',
+    outline: 'min-h-finger md:min-h-[calc(var(--density-control-sm)-2px)]',
+    solid: 'min-h-finger md:min-h-[calc(var(--density-control-sm)-2px)]',
 }
 
 const CHOSEN: Record<SegmentedVariant, string> = {
@@ -85,7 +85,8 @@ export interface SegmentedProps<T extends string> {
  * narrower than the options, they wrap onto more lines, each line shared out evenly, so the
  * control never overflows its container.
  *
- * `sm` is a settings row's control. `md` stands beside a form field at its height; below the `md`
+ * `sm` is a settings row's control, each option a finger tall below the `md` breakpoint and a small
+ * control's height from it. `md` stands beside a form field at its height; below the `md`
  * breakpoint it becomes a grid two cells wide, an odd last option spanning both, each cell a finger
  * tall.
  *

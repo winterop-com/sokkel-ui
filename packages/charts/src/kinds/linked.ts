@@ -1,7 +1,7 @@
 import { textWidth, tooltipMarkup, withAlpha, type ChartLook } from '../look'
 import { niceExtent } from '../scales'
 import { farCorners, fading, tickWriter } from './axes'
-import { shaped } from './legends'
+import { shaped } from './legend-series'
 import { written, categoryLabels, categoryText, colorOf, isFigure, unitAt, type ChartBuilder, type LinkedPanel } from './spec'
 
 /** The height the fixed parts of a linked chart are laid out against, in pixels; a taller chart widens its gaps in proportion. */

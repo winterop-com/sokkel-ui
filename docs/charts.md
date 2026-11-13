@@ -30,8 +30,10 @@ the bar series and the grid, and never a line, a gauge or a sankey. The SVG rend
 an export to SVG, and the title component only for an export with a title. A kind's builder loads
 with the first chart of that kind, beside the engine, so a page carries none of the charts' code at
 start but `Chart`'s own, and a page that draws lines never loads a gauge's or a sankey's builder.
-`chartLegend` reads each kind's legend and the shaping it shares with the builder
-(`kinds/legends.ts`), never a builder, so a page that imports it carries the legends alone.
+`chartLegend` names a kind's legend and imports none: a frame loads that kind's legend, and the
+shaping it shares with the builder, the first time it lists one, so a page carries no legend at
+start and a page of lines never a fan's or a sankey's legend. A legend's table mode loads
+`DataTable` the first time a legend is drawn as a table, so a list legend carries none of it.
 
 ## Drawing a chart
 
@@ -51,7 +53,9 @@ box a size.
 button and a legend around a chart. Expanding opens the chart and its legend near full screen
 through core's `WindowedPane`, as every expandable pane opens. `chartLegend`
 (`@winterop-com/sokkel-ui-charts/chart-legend`) gives the frame the legend for the same kind and
-spec, and the frame's state goes to the chart, so the legend hides and highlights what it lists:
+spec, which the frame lists once that kind's legend has loaded, and the frame's state goes to the
+chart, so the legend hides and highlights what it lists. `legendFigures` writes each entry's figure
+beside it, a slice's or a stage's; `chartLegendItems` gives the entries themselves, for a test:
 
 ```tsx
 const SPEC: ChartSpec = { rows: RUNS, x: 'day', y: 'runs', series: 'project' }
@@ -310,8 +314,9 @@ series in the legend drops its panel.
 2. **The registry.** Add the builder to `KINDS` in `kinds/index.ts`, its file to `FILES` in
    `kinds/load.ts`, so it loads the first time a chart of the kind is drawn, and its legend to
    `LEGENDS` in `kinds/legends.ts`: `seriesLegend` for one entry per series, a legend of its own
-   for slices, bands or branches, or `none`. A legend's shaping lives beside it in `legends.ts`,
-   where the builder imports it from, so a legend never loads a builder. A field the spec lacks
+   for slices, bands or branches, or `none`. A legend and the shaping it shares with the builder
+   live in a `kinds/legend-*.ts` file of their own (`legend-series.ts` for the light ones), where
+   the builder imports the shaping from, so a legend never loads a builder or another kind's legend. A field the spec lacks
    joins `ChartSpec` in `kinds/spec.ts`, documented, and this file's table. The builder's file is
    private, reached through the registry: name it in `PRIVATE` in `scripts/components-index.ts`
    beside the other kinds.

@@ -47,6 +47,10 @@ describe('Shell', () => {
         expect(SOURCE).toContain('<ShellScroller value={main}>')
     })
 
+    it('makes the button that opens the drawer a finger square below md, a control square from md', () => {
+        expect(SOURCE).toMatch(/aria-label=\{words\.menu\}[\s\S]*?'flex size-\(--density-control\) [^']*max-md:size-finger'/)
+    })
+
     it('draws the rail in its drawer under the drawer context, so it draws expanded there', () => {
         expect(SOURCE).toContain('<ShellDrawer value={drawerContext}>{rail}</ShellDrawer>')
     })

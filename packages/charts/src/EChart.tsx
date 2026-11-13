@@ -84,15 +84,20 @@ function fitRadar(radar: unknown, room: Room): unknown {
     })
 }
 
-/** A category axis whose labels are set to every nth shows fewer, in steps of n, when that many would run together. */
-function fitTicks(axis: unknown, room: Room): unknown {
+/**
+ * A category axis whose labels are set to every nth shows fewer, in steps of n, when that many would
+ * run together, measured as the labels are written: through the axis' formatter where it has one.
+ */
+export function fitTicks(axis: unknown, room: { width: number }): unknown {
     return each(axis, (one) => {
-        const label = one.axisLabel as { interval?: unknown; fontSize?: number } | undefined
+        const label = one.axisLabel as { interval?: unknown; fontSize?: number; formatter?: unknown } | undefined
         if (one.type !== 'category' || !Array.isArray(one.data) || typeof label?.interval !== 'number') return one
         const size = label.fontSize ?? 12
-        const names = (one.data as unknown[]).map((item) =>
-            String(typeof item === 'object' && item !== null && 'value' in item ? (item as { value: unknown }).value : item),
-        )
+        const write = typeof label.formatter === 'function' ? (label.formatter as (value: string, index: number) => unknown) : undefined
+        const names = (one.data as unknown[]).map((item, index) => {
+            const name = String(typeof item === 'object' && item !== null && 'value' in item ? (item as { value: unknown }).value : item)
+            return write === undefined ? name : String(write(name, index))
+        })
         const widest = Math.max(0, ...names.map((name) => textWidth(name, size))) + 8
         const fits = Math.max(1, Math.floor((room.width - 64) / widest))
         const step = label.interval + 1

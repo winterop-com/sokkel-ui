@@ -1,5 +1,5 @@
 import { tooltipMarkup } from '../look'
-import { funnelStages, stageColor } from './legends'
+import { funnelStages, stageColor } from './legend-series'
 import { written, wordsOf, type ChartBuilder } from './spec'
 
 /**
