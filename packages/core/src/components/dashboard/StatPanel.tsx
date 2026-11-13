@@ -7,6 +7,7 @@ import { Link } from '../Link'
 import { LoadingOverlay } from '../Loaders'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
+import { PanelTools } from './panel-tools'
 import { PANEL_STATE_WORDS, SPAN, StaleMark, type PanelSpan, type PanelStateProps, type PanelStateWords } from './DashboardGrid'
 import { formatValue, thresholdColor, tokenVar, type Threshold } from './thresholds'
 
@@ -228,7 +229,11 @@ export function StatPanel({
                 </Cover>
             )}
             <header
-                className={cn('flex min-h-7 shrink-0 items-center gap-1 px-2.5 pt-1', interactive && 'pointer-events-none relative z-10')}
+                className={cn(
+                    // A head holding an arranged grid's tools lets them take a line of their own when the tile is narrow.
+                    'flex min-h-7 shrink-0 items-center gap-1 px-2.5 pt-1 has-data-panel-tools:flex-wrap',
+                    interactive && 'pointer-events-none relative z-10',
+                )}
             >
                 <h3
                     ref={titleRef}
@@ -277,6 +282,7 @@ export function StatPanel({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 )}
+                <PanelTools />
             </header>
             {/* A tile that is a link lets a press on its body through to the cover under it. */}
             <LoadingOverlay

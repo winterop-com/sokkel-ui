@@ -8,6 +8,7 @@ import { Stat } from '../Stat'
 import { WindowedPane } from '../WindowedPane'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { PanelTools } from './panel-tools'
 
 /**
  * How much of the grid's width a panel takes in a wide grid. Every panel is full width in a
@@ -220,6 +221,7 @@ export function DashboardPanel({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 )}
+                <PanelTools />
             </header>
             <LoadingOverlay loading={loading} className="flex min-h-0 flex-1 flex-col">
                 {expandable ? (

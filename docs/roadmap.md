@@ -429,7 +429,6 @@ to `plan.md` when it ships.
         - blank space under stacked cards
         - windowing in `TrackList`, and a `TrackList` row that links to a page
     - **Dashboards:**
-        - panels moved by drag
         - custom ranges with a time of day
         - a phone layout for an editor beside its live preview
     - **Charts and maps:**
@@ -442,7 +441,7 @@ to `plan.md` when it ships.
     - **Editors:**
         - `CodeEditor` following a `[[link]]` on Mod-click
         - backlink lines drawn as Markdown
-        - `Tree` reordering within a folder, dragging from the keyboard, and opening a parent when it is chosen
+        - `Tree` opening a parent when it is chosen
         - `CodeEditor` gaps from a pipeline app that edits in Monaco (2026-11-09): an option to wash the caret's line while the editor is not focused, as a user preference;
           and completing a key's whole object from the schema's `required` keys, as a snippet
     - **Media:** artwork for the media session from drawn covers.
@@ -505,6 +504,7 @@ Should:
 
 - Accessibility audits, axe gates in CI and contrast scoring.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
-  React Flow every interactive graph, xterm.js every terminal, hls.js every HTTP live stream, Mermaid every diagram written as text, KaTeX every formula.
+  React Flow every interactive graph, xterm.js every terminal, hls.js every HTTP live stream, Mermaid every diagram written as text, KaTeX every formula,
+  dnd-kit every drag and drop.
   Sparklines are plain SVG.
 - Copy-in distribution. Apps install the package; nothing is vendored.
