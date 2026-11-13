@@ -34,6 +34,7 @@ const ENGINES: Record<string, RegExp> = {
     codemirror: /\/node_modules\/(@codemirror|@lezer)\//,
     mermaid: /\/node_modules\/mermaid\//,
     katex: /\/node_modules\/(katex|rehype-katex|remark-math)\//,
+    'dnd-kit': /\/node_modules\/@dnd-kit\//,
 }
 
 type Measure = 'start' | 'lazy' | 'css'

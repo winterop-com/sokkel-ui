@@ -1,5 +1,5 @@
 import { Play, Volume2 } from 'lucide-react'
-import { Fragment, useRef, type ReactNode } from 'react'
+import { Fragment, useRef, type ComponentProps, type ComponentType, type ReactNode } from 'react'
 
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
@@ -57,8 +57,17 @@ export interface TrackListProps {
     actions?: (track: Track) => ReactNode
     variant?: 'boxed' | 'plain'
     artwork?: 'square' | 'wide'
+    /** Draws each row's element in place of a plain `li`, given its props, as a list that drags does to make its rows draggable. */
+    row?: ComponentType<TrackRowProps>
     className?: string
     words?: Partial<TrackListWords>
+}
+
+/** What a list's `row` is given: the `li`'s own props, and the track it holds with its place. */
+export type TrackRowProps = ComponentProps<'li'> & { track: Track; index: number }
+
+function PlainRow({ track: _track, index: _index, ...props }: TrackRowProps) {
+    return <li {...props} />
 }
 
 /**
@@ -95,12 +104,13 @@ export function TrackList({
     actions,
     variant = 'boxed',
     artwork = 'square',
+    row: Row = PlainRow,
     className,
     words,
 }: TrackListProps) {
     const said = { ...WORDS, ...words }
-    const row = useRef<HTMLLIElement | null>(null)
-    useFollow(row, current, { enabled: follow && current !== undefined })
+    const followed = useRef<HTMLLIElement | null>(null)
+    useFollow(followed, current, { enabled: follow && current !== undefined })
     const discs = manyDiscs(tracks)
     return (
         <ol
@@ -132,8 +142,10 @@ export function TrackList({
                                 <GroupLabel as="span">{said.disc(disc)}</GroupLabel>
                             </li>
                         )}
-                        <li
-                            ref={now ? row : undefined}
+                        <Row
+                            track={track}
+                            index={index}
+                            ref={now ? followed : undefined}
                             className={cn(
                                 'flex min-w-0 items-center gap-1 pr-2',
                                 bar && 'relative overflow-hidden',
@@ -182,7 +194,7 @@ export function TrackList({
                                     style={{ transform: `scaleX(${String(Math.min(1, Math.max(0, played / track.duration)))})` }}
                                 />
                             )}
-                        </li>
+                        </Row>
                     </Fragment>
                 )
             })}

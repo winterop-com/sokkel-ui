@@ -44,7 +44,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 254 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 258 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -381,12 +381,21 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **ProseText** | `@winterop-com/sokkel-ui/ProseText` | A sentence whose machine parts are marked with backticks, drawn with those parts in the code face: "Set `base_url` in the service" shows `base_url` in mono. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
 | **ShowMore** | `@winterop-com/sokkel-ui/ShowMore` | A block of text held to a few lines, with Show more under it to read the rest and Show less to fold it again: a description, a prompt, a long note. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-show-more--short) |
 
+### Drag and drop
+
+| Component | Import | What it is | Story |
+| --- | --- | --- | --- |
+| **DragDrop**, DragGrip | `@winterop-com/sokkel-ui/DragDrop` | Where things are dragged and dropped. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
+| **SortableGroup**, SortableItem, SortableGrip, SortableList, SortableGrid | `@winterop-com/sokkel-ui/Sortable` | The order of a set of `SortableItem`s, the library's layer over the drag engine for anything put in order by hand. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
+
 ### Dashboard frame
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
+| **DashboardArrange** | `@winterop-com/sokkel-ui/dashboard/DashboardArrange` | A dashboard whose panels the reader arranges. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
 | **DashboardGrid**, PanelFailure, StaleMark, DashboardPanel, KpiRow | `@winterop-com/sokkel-ui/dashboard/DashboardGrid` | The grid a dashboard's panels sit in: twelve columns, a panel's span following the grid's own width, not the window's, so a dashboard beside a rail or a panel lays out for the room it has. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-gauges--arc) |
 | **DashboardRow** | `@winterop-com/sokkel-ui/dashboard/DashboardRow` | A collapsible group of a dashboard's panels under a heading, such as Overview or Latency. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dashboard-panels--key-figures) |
+| **PanelTools**, PanelToolsProvider | `@winterop-com/sokkel-ui/dashboard/panel-tools` | The tools the grid around a panel gives its head; nothing outside an arranged grid. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) (in DashboardArrange) |
 | **ScoreTable** | `@winterop-com/sokkel-ui/dashboard/ScoreTable` | A scorecard: rows of places, teams or jobs against columns of periods or measures, each value colored by the band it falls in on a threshold scale, drawn by `DataTable`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-scorecard--periods) |
 | **StatPanel** | `@winterop-com/sokkel-ui/dashboard/StatPanel` | One reading as a dashboard tile: a small title, the value written large, and optionally a trend drawn faintly behind it and a change against an earlier period. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-tiles--targets) |
 | **ThresholdLegend** | `@winterop-com/sokkel-ui/dashboard/ThresholdLegend` | The key to a threshold scale, the same one that colors a stat tile, a gauge or a scorecard's cells. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-scorecard--periods) |
@@ -397,7 +406,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **Board**, BoardDrop, DropLine, BoardLane | `@winterop-com/sokkel-ui/board/Board` | A board of cards in drop zones, the ground a board's columns or lanes stand on. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
+| **Board**, BoardDrop, DropLine, BoardItem, BoardGrip, BoardLane | `@winterop-com/sokkel-ui/board/Board` | A board of cards in drop zones, the ground a board's columns or lanes stand on. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
 | **BoardCard**, BoardLabel | `@winterop-com/sokkel-ui/board/BoardCard` | One work item on a board: its code in the code face, its title, its labels, and a foot with the due date, the counts of comments and checklist items, and the assignee. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
 | **BoardColumn**, BoardColumnHead | `@winterop-com/sokkel-ui/board/BoardColumn` | One column of a board: its head, then its cards in a list that scrolls on its own, then an optional foot such as an "Add item" button. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
 
@@ -454,7 +463,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **GaugePanel** | `@winterop-com/sokkel-ui-charts/dashboard/GaugePanel` | A dashboard panel of one reading on an arc from `min` to `max`, filled in the color its thresholds give it, with the thresholds themselves as a thin band outside the arc. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dashboard-panels--key-figures) |
 | **HeatmapPanel** | `@winterop-com/sokkel-ui-charts/dashboard/HeatmapPanel` | A dashboard panel of a heatmap: a value for each pair of x and y categories, such as runs per hour and duration, shaded from the card to `scale` with the scale beside it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dashboard-panels--key-figures) |
 | **RadarPanel** | `@winterop-com/sokkel-ui-charts/dashboard/RadarPanel` | A dashboard panel comparing a few items on several measures at once: one spoke per measure, each scaled to its own rim, and one polygon per item, faintly filled. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-radar--projects) |
-| **TimeSeriesPanel** | `@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel` | A dashboard panel of values over time: lines, over a fading or solid area, alone or stacked, with dashed threshold lines, and a legend under it as a row or a table of each series' min, max, mean and current value. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dashboard-panels--key-figures) |
+| **TimeSeriesPanel** | `@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel` | A dashboard panel of values over time: lines, over a fading or solid area, alone or stacked, with dashed threshold lines, and a legend under it as a row or a table of each series' min, max, mean and current value. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
 
 ## @winterop-com/sokkel-ui-maps
 

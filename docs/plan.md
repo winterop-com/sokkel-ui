@@ -36,7 +36,8 @@ never imports an add-on and no add-on imports another, which `src/rules.test.ts`
 needs no engine and belongs to no domain goes in the core, save the music and video app parts in
 the media package. The
 core's own dependencies are what every app's frame draws with (Base UI, lucide, cmdk for the
-palette, the class helpers, the Plex fonts); every library only some parts need is an optional peer
+palette, the class helpers, the Plex fonts) and dnd-kit, small and loaded only by the parts that
+drag; every library only some parts need is an optional peer
 dependency: the engines left in the core (Mermaid, KaTeX, CodeMirror), Shiki, react-markdown and its
 plugins, ajv, react-day-picker, date-fns, embla, sonner, input-otp, react-resizable-panels,
 `@shadcn/react` and the Geist fonts. The README lists which part needs which. Mermaid draws every
@@ -849,8 +850,10 @@ choice by its path, from `trails` when the choice's level has not loaded yet. Pa
 visible rows a tree draws only those in view of its nearest scrolling box, so fifty thousand open
 rows scroll as smoothly as fifty. As a file tree a node wears an `icon` (an open branch its
 `openIcon`), `actions` gives each row the menu a table's rows have, from a button at its end or a
-right-click, and `onMove` lets a row be dragged into a branch or beside a top-level row to the top
-level, a closed branch opening as a row is held over it; nothing goes into itself (`canMoveInto`).
+right-click, and `onMove(id, into, index)` lets a row be dragged into a branch or beside any row,
+reordering its level, a closed branch opening as a row is held over it, and moved from the keyboard
+with Alt and the arrows; nothing goes into itself (`canMoveTo`), and `moveTreeNode` applies a move to
+a tree held whole.
 
 PersonAvatar draws a person as their picture, or as their initials on their color. A picture takes
 the initials' place only once it has loaded (Base UI's avatar tracks it), so until then, and for good
@@ -924,6 +927,45 @@ folded foldable is not a goal, so neither editor is chosen for it.) And it is sm
 search and folding, where Monaco's editor alone is about 1 MB before its workers. What Monaco
 brings over it is VS Code's language services; when the editor needs one, it comes through
 `@codemirror/lsp-client` and a language server in a worker, never a second editor.
+
+## Drag and drop
+
+dnd-kit is the one engine for dragging things between places in a page: putting a list, a grid, a
+table's rows or a dashboard's panels in order, moving cards between a board's columns, moving a
+tree's rows, and dropping a row of one part onto a target of another. Its stable line is used
+(`@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`), about 17 kB gzipped, and only the
+modules that drag import it, so a page that drags nothing never carries it: `Tree` and `DataTable`
+load their drag layers (`tree-drag`, `table-reorder`) the first time they are drawn with `onMove`,
+`onDrop` or `onReorder`, and the forms page's budget holds the rest to that. A file dragged in from
+the desktop stays on the browser's own drag events (`use-file-drop`), React Flow keeps its own node
+dragging, and the resize handles, a split's seam and a lightbox's panning are pointer drags of their
+own, not drops.
+
+`DragDrop` is the library's layer over the engine, set once for every part: a mouse or pen drags
+once it moves a few pixels, a finger once it holds still a moment so a swipe still scrolls, and the
+keyboard picks a thing up from its grip with Space or Enter, carries it with the arrows to the
+nearest place that way and drops it with Space or Enter. Escape puts it back, the page and any box
+under the pointer scroll at their edges, a copy of the thing follows the pointer in a lifted card
+(its label on a card when it draws none), and the release that ends a drag is never also a press on
+what lies under it. Every step is said to a screen reader in `words`, a place in a list as "3 of 7".
+A thing and a target carry `DragData`: a `kind`, a `label` and the app's own `value`; a target takes
+its own kind unless its `accepts` says otherwise, the smallest target under the pointer winning, so a
+row is found before the list around it. Each part that drags draws a `DragDrop` around itself, and
+one an app draws around several parts makes them one, each part hearing every drag through
+`useDragDrop` and acting on its own: a list's rows given a `kind` a tree's `accepts` takes are dropped
+into its folders through the tree's `onDrop`.
+
+`SortableList` and `SortableGrid` are the sortable parts built on it, with `SortableGroup`,
+`SortableItem` and `SortableGrip` for a part that draws its own items, as `ReorderableTrackList`
+does: an item is dragged by its grip or as a whole, the rest moving aside to show where it lands, the
+arrow keys on a focused grip move it a place with the focus following, and `onMove(from, to)` says
+where it went; `moveItem` and `insertItem` in `lib/reorder` apply it without loading the engine. A
+board's cards drag between its columns with a line where they land and a grip for the keyboard;
+`DataTable`'s `onReorder` draws a grip at each row's start and moves the active row with Alt and the
+arrows, while the rows are drawn as given; and `DashboardArrange` draws a dashboard whose panels are
+arranged while `arranging`: a grip, a width and a remove in each panel's head (`PanelTools`, which
+the library's panels draw), a line where a dragged panel lands, a palette of widgets dragged onto the
+grid to add one, and the layout handed back as an order of `{ id, span }` to keep.
 
 ## Maps at scale
 
