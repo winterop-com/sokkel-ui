@@ -5,7 +5,7 @@ import { cn } from '../lib/cn'
 import { ProseText } from './ProseText'
 import { Unfoldable } from './Unfoldable'
 
-export { ProblemLine, type ProblemLineProps } from './problem-line'
+export { ProblemLine, type ProblemLineProps } from './ProseText'
 
 /** The words a problem says. */
 export interface ProblemWords {

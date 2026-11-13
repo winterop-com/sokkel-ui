@@ -58,7 +58,8 @@ or a right click on it opening the menu as soon as the menu is there. A menu bar
 once (`primitives/menubar` imports it), as its keys need. `DataTable` loads Base UI's checkbox, the
 watch that measures its content cells again and its menus' lists once it is drawn, and only when it
 selects, has a content column or draws a column or sort menu, its selection boxes drawn the same
-until then and taking a press the same, so a plain table carries none of it. `CheckboxField` and
+until then and taking a press the same, so a plain table carries none of it; its scroll memory loads
+the first time a table with a `scrollKey` is drawn. `CheckboxField` and
 `SchemaForm`'s sets of choices draw a plain box in the same look (`PlainCheckbox`, a button that
 ticks), so a forms page carries none of Base UI's checkbox either. A module that only asks whether a node is a part tells it by a mark, so it
 need not import the part (`isSoundVisualizer`), and `chartLegend` names a kind's legend without

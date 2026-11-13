@@ -58,8 +58,6 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             "the captions button and menu `VideoPlayer` draws; its words are `VideoPlayer`'s and its options are in `media/captions`",
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
-        'components/problem-line':
-            "`ProblemLine` apart from `Problem`'s fold, for the palette to draw a refusal with; exported by `Problem`",
         'components/pickers': 'the popup the date and time fields pick in, and the list of times',
         'components/reasoning':
             "a model's thinking folded behind a line, which `AssistantReply` and `AnswerColumn` draw; `wordCount` is exported by `AssistantReply`",
@@ -85,6 +83,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             'what `ChannelList` puts a section in order with, loaded the first time a list with a section that has `onMove` is drawn',
         'components/drag-source-layer': 'what `DragSource` drags with, loaded the first time one is drawn with a `drag`',
         'components/tree-drag': "the tree's drag layer, loaded the first time a `Tree` with `onMove` or `onDrop` is drawn",
+        'components/table-memory':
+            "what `DataTable` keeps its rows' place with under its `scrollKey`, loaded the first time a table with one is drawn",
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
         'components/ui/checkbox-look':

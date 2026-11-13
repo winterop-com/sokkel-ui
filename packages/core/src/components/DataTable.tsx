@@ -21,7 +21,6 @@ import {
     type ReactElement,
     type ReactNode,
     type Ref,
-    type RefObject,
     createContext,
     useCallback,
     useContext,
@@ -33,10 +32,8 @@ import {
     useState,
 } from 'react'
 
-import { useScrollMemory } from '../hooks/use-scroll-memory'
 import { cn } from '../lib/cn'
 import { stepTo } from '../lib/reorder'
-import { recallScroll, SCROLL_WAIT } from '../lib/scroll-memory'
 import type { DragHandleProps } from './DragDrop'
 import type { IssueWords } from './IssueMark'
 import { PageState, type PageStateWords, type ReadOutcome } from './PageState'
@@ -827,35 +824,6 @@ export function asksForMore({ hasMore, busy, byButton, nearEnd, seeking, reach }
     return (!byButton && nearEnd) || (seeking !== undefined && reach < seeking - 1)
 }
 
-/**
- * Where a table kept under `key` was left, while it is still on its way there: the place's distance
- * from the top, until `reached` says it is there, the reader scrolls, or the wait for the rows runs
- * out. Undefined for a table with no key, or one left at the top.
- */
-function useSeeking(key: string | undefined, scroller: RefObject<HTMLElement | null>): [number | undefined, () => void] {
-    const placeOf = (of: string | undefined) => {
-        const top = of === undefined ? undefined : recallScroll(of)?.top
-        return top === undefined || top <= 0 ? undefined : top
-    }
-    const [seek, setSeek] = useState(() => ({ key, top: placeOf(key) }))
-    if (seek.key !== key) setSeek({ key, top: placeOf(key) })
-    const seeking = seek.key === key ? seek.top : undefined
-    const stop = useCallback(() => setSeek((now) => (now.top === undefined ? now : { ...now, top: undefined })), [])
-    const going = seeking !== undefined
-    useEffect(() => {
-        const area = scroller.current
-        if (!going) return undefined
-        const intents = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
-        for (const intent of intents) area?.addEventListener(intent, stop, { passive: true })
-        const timer = setTimeout(stop, SCROLL_WAIT)
-        return () => {
-            for (const intent of intents) area?.removeEventListener(intent, stop)
-            clearTimeout(timer)
-        }
-    }, [going, scroller, stop])
-    return [seeking, stop]
-}
-
 /** A value its owner may hold, or the table holds itself when the owner passes none. */
 function useHeld<V>(value: V | undefined, initial: V, onChange?: (value: V) => void): [V, (value: V) => void] {
     const [own, setOwn] = useState(initial)
@@ -1588,8 +1556,8 @@ export function DataTable<T>({
     useLayoutEffect(() => {
         if (scroller.current !== null) scroller.current.scrollTop = 0
     }, [current, pageSize, shownView])
-    // A table with a key keeps its place, once its first rows are there.
-    useScrollMemory(scrollKey ?? '', scroller, { ready: scrollKey !== undefined && !(loading && flat.length === 0) })
+    // A table with a key keeps its place, its memory loaded the first time one is drawn.
+    const memory = useTableMemory(scrollKey !== undefined)
 
     // Nearing the end of what has loaded asks for more, and so does a first load too short to fill the view.
     // Details are drawn under their rows at their own heights, so a table with them draws every row.
@@ -1605,11 +1573,11 @@ export function DataTable<T>({
     const whole = every || detailed
 
     // A place kept under `scrollKey` past the rows loaded asks for more until they reach it.
-    const [seeking, stopSeeking] = useSeeking(scrollKey, scroller)
+    const [seeking, setSeeking] = useState<number | undefined>(undefined)
     const arrived = seeking !== undefined && (!hasMore || view.top >= seeking - 1)
     useEffect(() => {
-        if (arrived) stopSeeking()
-    }, [arrived, stopSeeking])
+        if (arrived) setSeeking(undefined)
+    }, [arrived])
     const reach = Math.max(0, (whole ? view.full : lines * lineHeight) - view.height)
     const asks = asksForMore({
         hasMore,
@@ -3468,6 +3436,16 @@ export function DataTable<T>({
                             </div>
                         )}
                     </div>
+                    {/* After the scroller, so the scroller is there when the memory first reads it. */}
+                    {memory !== undefined && scrollKey !== undefined && (
+                        <memory.TableMemory
+                            key={scrollKey}
+                            scrollKey={scrollKey}
+                            scroller={scroller}
+                            ready={!(loading && flat.length === 0)}
+                            onSeeking={setSeeking}
+                        />
+                    )}
                 </div>
                 {foot !== undefined && (
                     <div className="shrink-0 border-t border-border-strong px-(--density-panel-pad) py-1.5 font-mono text-xs text-muted-foreground">
@@ -3534,6 +3512,36 @@ function RowLine({ part, inside = false }: { part: 'before' | 'after'; inside?: 
             )}
         />
     )
+}
+
+type TableMemoryLayer = typeof import('./table-memory')
+let tableMemory: TableMemoryLayer | undefined
+let tableMemoryLoad: Promise<TableMemoryLayer> | undefined
+
+/** A table's scroll memory, fetched the first time a table with `scrollKey` is drawn, so a table without one never carries it. */
+function useTableMemory(wanted: boolean): TableMemoryLayer | undefined {
+    const [loaded, setLoaded] = useState(tableMemory)
+    useEffect(() => {
+        if (!wanted || loaded !== undefined) return
+        let live = true
+        tableMemoryLoad ??= import('./table-memory').then(
+            (module) => (tableMemory = module),
+            (error: unknown) => {
+                tableMemoryLoad = undefined
+                throw error
+            },
+        )
+        tableMemoryLoad.then(
+            (module) => {
+                if (live) setLoaded(module)
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
+    }, [wanted, loaded])
+    return wanted ? (loaded ?? tableMemory) : undefined
 }
 
 type TableReorder = typeof import('./table-reorder')

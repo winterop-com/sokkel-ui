@@ -6,7 +6,7 @@ import { activeRow, filterCommands, mergeCommands, runCommand, termScore } from 
 import { keyLabels } from '../lib/keys'
 import { cn } from '../lib/utils'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
-import { ProblemLine } from './problem-line'
+import { ProblemLine } from './ProseText'
 import { SearchResultBody, type SearchDetailTone } from './Search'
 import { Button } from './ui/button'
 import { Kbd, KbdGroup } from './ui/kbd'

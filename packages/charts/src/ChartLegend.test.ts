@@ -49,7 +49,8 @@ describe('ChartLegend', () => {
 
 describe('chartLegend', () => {
     it("names a kind's legend and imports none, every kind's legend loading from its own file", async () => {
-        expect(imported('chart-legend.ts')).toEqual(['react', './kinds/legends'])
+        expect(imported('chart-legend.ts')).toEqual(['react'])
+        expect(source('chart-legend.ts')).toContain("import('./kinds/legends')")
         expect(imported('kinds/legends.ts')).toEqual([])
         const spec = {
             rows: [

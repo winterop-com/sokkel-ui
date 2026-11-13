@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import type { LegendItem } from './ChartLegend'
 import type { ChartKind, ChartSpec } from './kinds'
-import { loadedLegend, loadLegend } from './kinds/legends'
+import type { KindLegend } from './kinds/legends'
 
 /**
  * The legend of a chart of one kind and spec, as `chartLegend` names it: a `ChartFrame`'s `legend`
@@ -27,9 +27,21 @@ export function chartLegend(kind: ChartKind, spec: ChartSpec): ChartLegendSource
     return { kind, spec }
 }
 
+// Each kind's legend once loaded, so a frame that lists one already here lists it at once.
+const loaded = new Map<ChartKind, KindLegend>()
+
+/** Fetches a kind's legend, and the registry that knows its file, the first time one of its kind is listed. */
+async function load(kind: ChartKind): Promise<KindLegend> {
+    const known = loaded.get(kind)
+    if (known !== undefined) return known
+    const legend = await (await import('./kinds/legends')).loadLegend(kind)
+    loaded.set(kind, legend)
+    return legend
+}
+
 /** The entries of a chart's legend, once the kind's legend has loaded: for a test, or an app that lists them itself. */
 export async function chartLegendItems(kind: ChartKind, spec: ChartSpec): Promise<LegendItem[]> {
-    return (await loadLegend(kind))(spec)
+    return (await load(kind))(spec)
 }
 
 const isSource = (entries: LegendEntries | undefined): entries is ChartLegendSource => entries !== undefined && !Array.isArray(entries)
@@ -42,11 +54,11 @@ export function useLegendEntries(entries: LegendEntries | undefined): readonly L
     const source = isSource(entries) ? entries : undefined
     const kind = source?.kind
     const [, setArrived] = useState(0)
-    const legend = kind === undefined ? undefined : loadedLegend(kind)
+    const legend = kind === undefined ? undefined : loaded.get(kind)
     useEffect(() => {
-        if (kind === undefined || loadedLegend(kind) !== undefined) return undefined
+        if (kind === undefined || loaded.has(kind)) return undefined
         let live = true
-        void loadLegend(kind).then(() => {
+        void load(kind).then(() => {
             if (live) setArrived((count) => count + 1)
         })
         return () => {
