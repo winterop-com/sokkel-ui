@@ -25,7 +25,7 @@ export const GRAPH_VIEW_WORDS: GraphViewWords = {
 }
 
 const BUTTON =
-    'flex size-7 shrink-0 items-center justify-center text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
+    'flex size-7 shrink-0 items-center justify-center text-muted-foreground max-md:size-finger outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
 
 export interface GraphControlButtonProps extends Omit<ComponentProps<'button'>, 'children' | 'title'> {
     /** What the button does: its accessible name, and its tooltip without `tooltip`. */

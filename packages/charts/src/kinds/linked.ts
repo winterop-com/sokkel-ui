@@ -1,7 +1,8 @@
 import { textWidth, tooltipMarkup, withAlpha, type ChartLook } from '../look'
 import { niceExtent } from '../scales'
-import { farCorners, fading, shaped, tickWriter, written } from './categories'
-import { colorOf, unitAt, type ChartBuilder, type LinkedPanel } from './spec'
+import { farCorners, fading, tickWriter, written } from './categories'
+import { shaped } from './legends'
+import { categoryLabels, categoryText, colorOf, isFigure, unitAt, type ChartBuilder, type LinkedPanel } from './spec'
 
 /** The height the fixed parts of a linked chart are laid out against, in pixels; a taller chart widens its gaps in proportion. */
 const NOMINAL = 320
@@ -59,7 +60,7 @@ function widestTick(values: readonly (number | null)[], write: (value: number) =
  * how each is drawn: as bars, a line or an area, standing or hanging from its top, and its share of
  * the height. `zoom` sets the part in view at first. The legend's hidden series drop their panels.
  * Reads `x`, `y`, `series`, `aggregate`, `order`, `seriesOrder`, `colors`, `format`, `unit`,
- * `fieldNames`, `smooth`, `fill`, `labelEvery`, `scales`, `panels` and `zoom`.
+ * `fieldNames`, `smooth`, `fill`, `labelEvery`, `formatCategory`, `scales`, `panels` and `zoom`.
  */
 export const linked: ChartBuilder = (spec, look, hidden) => {
     const { categories, series } = shaped({ ...spec, stack: undefined })
@@ -89,6 +90,7 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
         alignMinLabel: 'left',
         alignMaxLabel: 'right',
         ...(spec.labelEvery === undefined ? {} : { interval: spec.labelEvery - 1 }),
+        ...categoryLabels(spec),
     }
     const lastHangs = panels[last].style.hang === true
     const xAxis = [
@@ -135,9 +137,9 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
             axisPointer: { type: 'line' },
             formatter: (points: { axisValueLabel: string; seriesName: string; value: number | null; color: string }[]) =>
                 tooltipMarkup(
-                    points[0]?.axisValueLabel ?? '',
+                    categoryText(spec, points[0]?.axisValueLabel ?? ''),
                     points
-                        .filter((point) => point.seriesName !== SHARED_SCALE)
+                        .filter((point) => point.seriesName !== SHARED_SCALE && isFigure(point.value))
                         .map((point) => ({
                             label: spec.fieldNames?.[point.seriesName] ?? point.seriesName,
                             value: written(spec, point.value, unitOf.get(point.seriesName) ?? 0),

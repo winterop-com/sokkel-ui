@@ -21,6 +21,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
     CommandPalette,
     usePaletteShortcut,
+    type CommandPaletteProps,
     type PaletteFilter,
     type PaletteFoot,
     type PaletteSearch,
@@ -149,6 +150,7 @@ function Palette({
     filter,
     foot,
     search,
+    ...chooser
 }: {
     initial: boolean
     groups?: PaletteGroup[]
@@ -156,7 +158,7 @@ function Palette({
     filter?: PaletteFilter
     foot?: PaletteFoot
     search?: PaletteSearch
-}) {
+} & Pick<CommandPaletteProps, 'width' | 'description' | 'wrap'>) {
     const [open, setOpen] = useState(initial)
     const show = useCallback(() => setOpen(true), [])
     usePaletteShortcut(show)
@@ -173,6 +175,7 @@ function Palette({
                 filter={filter}
                 foot={foot}
                 search={search}
+                {...chooser}
             />
         </Stack>
     )
@@ -370,6 +373,48 @@ const RUNS: PaletteGroup[] = [
  * takes the tone too.
  */
 export const Chooser: StoryObj = { render: () => <Palette initial groups={RUNS} /> }
+
+const STARTS: PaletteGroup[] = [
+    {
+        title: 'Start from',
+        verb: 'Start',
+        commands: [
+            {
+                id: 'schedule',
+                label: 'A schedule',
+                hint: 'Runs the job at set times, such as every night at 02:00 in the worker',
+                code: 'cron',
+                icon: CalendarClock,
+                onSelect: () => undefined,
+            },
+            {
+                id: 'webhook',
+                label: 'A call from another service',
+                hint: 'Runs when the api is called at its own address on example.org',
+                code: 'webhook',
+                icon: Workflow,
+                onSelect: () => undefined,
+            },
+        ],
+    },
+    {
+        title: 'Copy a job',
+        verb: 'Copy',
+        commands: [
+            { id: 'nightly-export', label: 'nightly-export', mono: true, hint: 'harbor', icon: Workflow, onSelect: () => undefined },
+            { id: 'import-orders', label: 'import-orders', mono: true, hint: 'larkspur', icon: Workflow, onSelect: () => undefined },
+        ],
+    },
+]
+
+/**
+ * A chooser wider than the palette (`width="md"`), a line over the search saying what is chosen
+ * (`description`), rows whose words wrap whole (`wrap`), and jobs named by their codes (`mono`).
+ */
+export const WideChooser: StoryObj = {
+    name: 'Wide chooser',
+    render: () => <Palette initial groups={STARTS} width="md" description="Choose how the new job starts." wrap />,
+}
 
 const LOOKS = [
     { value: 'paper', label: 'Paper' },

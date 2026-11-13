@@ -118,7 +118,9 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'kinds/gauge': KIND_BUILDER,
         'kinds/hierarchy': KIND_BUILDER,
         'kinds/histogram': KIND_BUILDER,
+        'kinds/legends': "every kind's legend and the shaping it shares with the kind's builder, which `chart-legend` reads",
         'kinds/linked': KIND_BUILDER,
+        'kinds/load': "each kind's builder, fetched the first time a chart of that kind is drawn",
         'kinds/parallel': KIND_BUILDER,
         'kinds/points': KIND_BUILDER,
         'kinds/radar': KIND_BUILDER,
@@ -133,7 +135,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         shapes: 'rows shaped for the kinds',
         stats: 'the arithmetic the kinds share',
         theme: 'the ECharts theme drawn from the tokens',
-        'use-kinds': "the kinds' builders, loaded with the first chart",
+        'use-builder': "a kind's builder, loaded with the first chart of that kind",
         zoom: "the window a chart's zoom keeps",
     },
     maps: {

@@ -1,14 +1,14 @@
-import { SERIES_ORDER, tooltipMarkup } from '../look'
-import { shaped, written } from './categories'
-import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
-import type { LegendItem } from '../ChartLegend'
+import { tooltipMarkup } from '../look'
+import { written } from './categories'
+import { shaped } from './legends'
+import { categoryLabels, categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
 
 /**
  * Categories around a circle, each a wedge as long as its combined `y` (or its rows counted), as
  * a Nightingale rose: a clock of the hours, a compass of the regions. Groups of `series` stack
  * outward in each wedge; without `series`, a wedge takes the color `colors` names for its category,
  * or the first series color. Reads `x`, `y`, `series`, `aggregate`, `order`, `seriesOrder`,
- * `colors`, `format` and `unit`.
+ * `colors`, `format`, `unit` and `formatCategory`.
  */
 export const rose: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped({ ...spec, stack: undefined })
@@ -21,12 +21,14 @@ export const rose: ChartBuilder = (spec, look) => {
                 points: { axisValueLabel: string; seriesName: string; seriesIndex: number; value: number | null; color: string }[],
             ) =>
                 tooltipMarkup(
-                    points[0]?.axisValueLabel ?? '',
-                    points.map((point) => ({
-                        label: point.seriesName,
-                        value: written(spec, point.value, spec.series === undefined ? point.seriesIndex : 0),
-                        color: point.color,
-                    })),
+                    categoryText(spec, points[0]?.axisValueLabel ?? ''),
+                    points
+                        .filter((point) => isFigure(point.value))
+                        .map((point) => ({
+                            label: point.seriesName,
+                            value: written(spec, point.value, spec.series === undefined ? point.seriesIndex : 0),
+                            color: point.color,
+                        })),
                 ),
         },
         polar: { radius: ['6%', '80%'], center: ['50%', '52%'] },
@@ -36,7 +38,7 @@ export const rose: ChartBuilder = (spec, look) => {
             startAngle: 90 + 180 / Math.max(1, categories.length),
             axisLine: { show: true, lineStyle: { color: look.border } },
             axisTick: { show: false },
-            axisLabel: { color: look.muted, fontFamily: look.font, fontSize: look.size.label, hideOverlap: true },
+            axisLabel: { color: look.muted, fontFamily: look.font, fontSize: look.size.label, hideOverlap: true, ...categoryLabels(spec) },
             splitLine: { show: true, lineStyle: { color: look.grid } },
         },
         radiusAxis: {
@@ -64,16 +66,4 @@ export const rose: ChartBuilder = (spec, look) => {
             }
         }),
     }
-}
-
-/** A rose's legend: one entry per group of `series`, and none for a single group, as the labels around it name the wedges. */
-export function roseLegend(spec: ChartSpec): LegendItem[] {
-    const { series } = shaped({ ...spec, stack: undefined })
-    if (series.length <= 1) return []
-    return series.map((entry, index) => ({
-        key: entry.name,
-        label: entry.name,
-        color: legendColor(spec, entry.name, index, SERIES_ORDER),
-        values: entry.values,
-    }))
 }

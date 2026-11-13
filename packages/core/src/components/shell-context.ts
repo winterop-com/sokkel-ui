@@ -1,4 +1,4 @@
-import { createContext } from 'react'
+import { createContext, useContext, useEffect, useId, useLayoutEffect } from 'react'
 
 import type { DesktopWindow } from '../lib/desktop'
 import type { PanelStrip } from './panel-strip'
@@ -75,6 +75,34 @@ export interface StatedTrail {
 
 /** States a screen's trail for the top bar, answering with what takes it back; undefined outside a shell. */
 export const ShellTrailAsk = createContext<((id: string, trail: StatedTrail) => () => void) | undefined>(undefined)
+
+/** A layout effect in the browser, so a stated trail is drawn before the page paints; a plain one on a server. */
+const useBeforePaint = typeof document === 'undefined' ? useEffect : useLayoutEffect
+
+/** Options for a trail a screen states. */
+export interface ShellTrailOptions {
+    /** What the last crumb is, as `TopBar`'s `trailEnds`: the current screen (the default) or the one above it. */
+    ends?: TrailEnd
+}
+
+/**
+ * States the calling screen's trail for the shell's top bar while the screen is mounted: the
+ * `TopBar` in `Shell`'s `top` draws it in place of its own, keeping its search, its palette button
+ * and its actions, rather than the screen drawing the whole bar with `ShellTop`. The latest screen
+ * to state one goes before an earlier one; the bar's own trail is back once none does. Undefined
+ * states nothing. Outside a `Shell` it does nothing.
+ */
+export function useShellTrail(trail: readonly Crumb[] | undefined, { ends }: ShellTrailOptions = {}): void {
+    const state = useContext(ShellTrailAsk)
+    const id = useId()
+    // The trail is compared by what it says, so a screen can build it afresh on every render.
+    const said = trail === undefined ? undefined : JSON.stringify([trail, ends ?? null])
+    useBeforePaint(() => {
+        if (state === undefined || said === undefined) return
+        const [crumbs, end] = JSON.parse(said) as [Crumb[], TrailEnd | null]
+        return state(id, { trail: crumbs, ends: end ?? undefined })
+    }, [state, id, said])
+}
 
 /**
  * The trail the latest mounted screen states, for the `TopBar` in `Shell`'s `top`, given only around

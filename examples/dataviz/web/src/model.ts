@@ -129,6 +129,8 @@ export interface Preferences {
     aggregate: Aggregate
     /** Whether the builder suggests views for the columns picked. */
     suggestions: boolean
+    /** The boards in the order the person dragged them into, by id; none for the order they were made in. */
+    boardOrder?: string[]
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -155,6 +157,12 @@ export const THEME_TOKENS = ['chart-2', 'chart-3', 'chart-4', 'kind-teal', 'kind
 export function paletteOf(id: string, prefs: Preferences): readonly string[] | undefined {
     const chosen = id === 'default' ? prefs.palette : id
     return PALETTES.find((palette) => palette.id === chosen)?.tokens
+}
+
+/** The boards in the person's order: any made since they last ordered them first, the newest first, then the rest as they placed them. */
+export function orderBoards(boards: readonly Board[], order: readonly string[] | undefined): Board[] {
+    const placed = (order ?? []).flatMap((id) => boards.filter((board) => board.id === id))
+    return [...boards.filter((board) => !placed.includes(board)), ...placed]
 }
 
 let made = 0

@@ -168,6 +168,28 @@ describe('heard', () => {
         expect(heard(bind({ key: 'k', mod: true, inFields: true }), {}, field)).toBe(true)
     })
 
+    it("reaches inputs but not an editable region with inFields 'inputs'", () => {
+        const rail = bind({ key: 'b', mod: true, inFields: 'inputs' })
+        expect(heard(rail, {}, pressPlace(element('INPUT', { type: 'text' }), 'b'))).toBe(true)
+        expect(heard(rail, {}, pressPlace(element('TEXTAREA'), 'b'))).toBe(true)
+        expect(heard(rail, {}, pressPlace(element('SELECT'), 'b'))).toBe(true)
+        expect(heard(rail, {}, pressPlace(element('DIV', { contenteditable: 'true' }), 'b'))).toBe(false)
+        expect(heard(rail, {}, pressPlace(element('DIV', { role: 'textbox' }), 'b'))).toBe(false)
+        expect(heard(rail, {}, pressPlace(element('BODY'), 'b'))).toBe(true)
+    })
+
+    it('reaches the fields a function picks', () => {
+        const save = bind({
+            key: 's',
+            mod: true,
+            inFields: (field) => field.getAttribute('data-editor') === null,
+        })
+        expect(heard(save, {}, pressPlace(element('INPUT', { type: 'text' }), 's'))).toBe(true)
+        expect(heard(save, {}, pressPlace(element('DIV', { contenteditable: 'true', 'data-editor': '' }), 's'))).toBe(false)
+        // A sequence is never heard in a field, whatever the function says.
+        expect(heard({ ...save, next: 'd' }, {}, pressPlace(element('INPUT', { type: 'text' }), 's'))).toBe(false)
+    })
+
     it('is quiet under a dialog, unless the binding asks or its scope holds the focus', () => {
         const dialog = { ...open, dialog: true }
         expect(heard(bind({ key: 'k' }), {}, dialog)).toBe(false)

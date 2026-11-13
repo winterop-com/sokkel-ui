@@ -9,14 +9,15 @@ reaches into a package's `src/`. Each is a Tidevann product, in a folder of its 
 examples/
   shared/        the fake backend, the window frame, the hash route and the Tidevann mark
   tasks/         lists, a quick add and tasks edited in place
-  runs/          a jobs console: an overview, runs, a run's page, jobs, schedules and settings
+  runs/          a jobs console: an overview arranged by drag, runs, a run's page, jobs, schedules and settings
   records/       a records app: forms filled in sections, responses and receipts, households and
                  their visits, places on a map, an API playground and metadata health (GAPS.md
                  maps the records app it rehearses onto the library)
   metrics/       live dashboards over a simulated source, arranged by drag from a palette of panels
                  and listed in the order dragged, a panel editor with a live preview, and alerts
-  status/        a live operations board: services, regions and incidents changing as the page
-                 watches, on-call, and the public status page with its subscribe form
+  status/        a live operations board arranged by drag: services in the order dragged, regions
+                 and incidents changing as the page watches, on-call, and the public status page
+                 with its subscribe form
   analytics/     a live sales dashboard arranged by drag from a palette of figures and panels:
                  revenue, customers, funnels and reports whose steps and panels drag into order, and goals
   notes/         a vault of linked notes: folders in the rail, markdown beside its preview in
@@ -24,7 +25,8 @@ examples/
                  switcher, search, a graph of the links and a daily journal
   dataviz/       a data visualizer: datasets imported, edited and filtered, a chart builder with a
                  live preview and suggested views, charts saved, downloaded and shared as links
-                 that carry their data, and boards filtered together and presented
+                 that carry their data, and boards built by dragging charts on, filtered together
+                 and presented
   models/        a local library of language models: the models on a disk and what they take, pulls from
                  simulated sources, a chat and a side-by-side comparison streamed by a simulated model,
                  and the runner that holds them in memory

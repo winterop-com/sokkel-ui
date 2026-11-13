@@ -1,6 +1,5 @@
 import type { EChartsCoreOption } from 'echarts/core'
 
-import type { LegendItem } from '../ChartLegend'
 import type { Aggregate, Row } from '../data'
 import { tokenColor, type ChartLook } from '../look'
 
@@ -59,6 +58,12 @@ export interface ChartSpec {
     smooth?: boolean
     /** Labels every nth category on the category axis, such as every hour of fifteen-minute steps; ECharts picks when omitted. */
     labelEvery?: number
+    /**
+     * How a category is written on the category axis and as the tooltip's title, such as an hour
+     * `15:00` written `15:00-16:00`; the category as it is by default. The rows, `order` and `marks`
+     * keep naming the category itself.
+     */
+    formatCategory?: (category: string) => string
     /**
      * A quiet axis, for bars and lines: no value axis and no lines across, the categories written in
      * the mono typeface, so the marks alone carry the figures, as in a strip of recent runs.
@@ -211,13 +216,9 @@ export interface LinkedPanel {
  */
 export type ChartBuilder = (spec: ChartSpec, look: ChartLook, hidden?: ReadonlySet<string>) => EChartsCoreOption
 
-/**
- * A kind of chart: `build` draws it, and `legend` lists what a frame's legend shows for it where
- * that is not one entry per series, such as a ring's slices or a tree's top branches.
- */
+/** A kind of chart: `build` draws it. What a frame's legend lists for it is in `LEGENDS`, apart, so a legend loads no builder. */
 export interface ChartKindDef {
     build: ChartBuilder
-    legend?: (spec: ChartSpec) => LegendItem[]
 }
 
 /** The `index`th token of the spec's palette, or undefined where it gives none. */
@@ -306,3 +307,16 @@ export const stackOf = (spec: ChartSpec, name: string): string | undefined =>
 
 /** Whether a series is drawn dashed, as a reference. */
 export const isDashed = (spec: ChartSpec, name: string): boolean => spec.dashed?.includes(name) === true
+
+/** A category as the chart writes it: through `formatCategory` where the spec has one. */
+export const categoryText = (spec: ChartSpec, category: string): string =>
+    spec.formatCategory === undefined ? category : spec.formatCategory(category)
+
+/** A category axis' label formatter where the spec has `formatCategory`, to spread into its `axisLabel`. */
+export function categoryLabels(spec: ChartSpec): { formatter?: (category: string) => string } {
+    const format = spec.formatCategory
+    return format === undefined ? {} : { formatter: (category: string) => format(category) }
+}
+
+/** Whether a tooltip's value is a figure the chart draws: a missing one (null, or ECharts' `-`) is left out of the tooltip. */
+export const isFigure = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
