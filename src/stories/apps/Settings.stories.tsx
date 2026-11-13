@@ -7,7 +7,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Keyboard, Palette, Search as SearchIcon, Server, Settings2, User } from 'lucide-react'
 import { useState } from 'react'
 
+import { ListRow } from '@winterop-com/sokkel-ui/ListRow'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { NavBar } from '@winterop-com/sokkel-ui/NavBar'
+import { SortableList } from '@winterop-com/sokkel-ui/Sortable'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
@@ -410,6 +413,13 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
     return { groups, reset }
 }
 
+/** The navbar's links before Settings, which stays last. */
+const LINKS = [
+    { id: 'overview', label: 'Overview', detail: 'The runs of the day and what failed' },
+    { id: 'projects', label: 'Projects', detail: 'harbor, juniper and larkspur' },
+    { id: 'people', label: 'People', detail: 'Who works in Tidevann' },
+]
+
 /** Where the preferences dialog opens, when the story opens it. */
 interface Opening {
     active: string
@@ -421,7 +431,8 @@ interface Opening {
 
 /**
  * An app with few places, framed by the navbar along the top instead of a rail: a settings page of
- * boxed sections, each with its fields and the one verb that saves it. The gear in the navbar opens
+ * boxed sections, each with its fields and the one verb that saves it, and the navbar's links put
+ * in order by drag, the navbar following. The gear in the navbar opens
  * the preferences dialog, whose footer says changes are kept as they are made, resets the shown
  * section and closes with Done.
  */
@@ -434,6 +445,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
     const [scheme, setScheme] = useState<'system' | 'light' | 'dark'>('system')
     const [clock, setClock] = useState<'utc' | 'local'>('utc')
     const [density, setDensity] = useState<'regular' | 'compact'>('regular')
+    const [links, setLinks] = useState(LINKS)
     return (
         <TooltipProvider>
             <Stack gap="none" className="h-svh bg-background text-foreground">
@@ -441,9 +453,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                     mark={<TidevannMark />}
                     name="Tidevann"
                     links={[
-                        { id: 'overview', label: 'Overview', href: '#' },
-                        { id: 'projects', label: 'Projects', href: '#' },
-                        { id: 'people', label: 'People', href: '#' },
+                        ...links.map((link) => ({ id: link.id, label: link.label, href: '#' })),
                         { id: 'settings', label: 'Settings', href: '#', active: true },
                     ]}
                     end={
@@ -492,6 +502,16 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                     />
                                 </Field>
                             </Stack>
+                        </Section>
+                        <Section title="Navigation" description="The order of the links along the top. Drag one to move it.">
+                            <SortableList
+                                label="Links"
+                                items={links}
+                                itemKey={(link) => link.id}
+                                itemLabel={(link) => link.label}
+                                onMove={(from, to) => setLinks(moveItem(links, from, to))}
+                                renderItem={(link) => <ListRow title={link.label} detail={link.detail} />}
+                            />
                         </Section>
                         <Section title="Workspace" actions={<Button size="sm">Save</Button>}>
                             <Columns gap="lg">

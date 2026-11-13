@@ -22,7 +22,7 @@ import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
 import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/TableOfContents'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
-import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
+import { moveTreeNode, Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
@@ -37,6 +37,8 @@ import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
  * An internal wiki in the library's frame: the page tree with its search beside the page, the
  * page as rendered markdown with an on-this-page list that follows the reader, an edit mode with
  * the source beside a live preview, and the page's history with the change between two versions.
+ * The page tree is the readers' order: a page dragged by its edge goes beside another, and by its
+ * middle into a section, Alt (Option) with the arrows moving the focused page from the keyboard.
  */
 const GROUPS: RailGroup[] = [
     {
@@ -65,7 +67,6 @@ const PAGES: TreeNode[] = [
     {
         id: 'runbooks',
         label: 'Runbooks',
-        meta: '4',
         children: [
             { id: 'nightly-export', label: 'Nightly export' },
             { id: 'sync-inventory', label: 'Sync inventory' },
@@ -92,6 +93,10 @@ const PAGES: TreeNode[] = [
         ],
     },
 ]
+
+/** The tree with each section counting the pages directly in it. */
+const counted = (nodes: readonly TreeNode[]): TreeNode[] =>
+    nodes.map((node) => (node.children === undefined ? node : { ...node, meta: String(node.children.length) }))
 
 const FENCE = '```'
 
@@ -396,6 +401,7 @@ function DocsApp({ mode: initialMode = 'read', guide = false }: { mode?: 'read' 
     const [collapsed, setCollapsed] = useState(false)
     const [query, setQuery] = useState('')
     const [pageId, setPageId] = useState(guide ? 'querying-runs' : 'nightly-export')
+    const [pages, setPages] = useState(PAGES)
     const title = guide ? 'Querying runs' : 'Nightly export'
     const [mode, setMode] = useState(initialMode)
     const [draft, setDraft] = useState(
@@ -458,11 +464,12 @@ function DocsApp({ mode: initialMode = 'read', guide = false }: { mode?: 'read' 
                     >
                         <Tree
                             label="Pages"
-                            nodes={PAGES}
+                            nodes={counted(pages)}
                             query={query}
                             selected={[pageId]}
                             onSelect={(ids) => setPageId(ids[0])}
                             defaultExpanded={guide ? ['start'] : ['runbooks', 'projects']}
+                            onMove={(id, into, index) => setPages(moveTreeNode(pages, id, { into, index }))}
                         />
                     </SubNav>
                     <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
