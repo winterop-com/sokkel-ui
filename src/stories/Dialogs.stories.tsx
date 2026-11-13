@@ -23,6 +23,9 @@ export const Rename: StoryObj = { name: 'Rename', render: () => <small.Rename />
 /** A filled-in field first and the one still to write after it: `initialFocus` opens on the message. */
 export const InitialFocus: StoryObj = { name: 'Initial focus', render: () => <small.PublishOutput /> }
 
+/** Nothing to fill: `initialFocus="confirm"` focuses Run, so Enter runs it. */
+export const ConfirmFocused: StoryObj = { name: 'Confirm focused', render: () => <small.RunNow /> }
+
 /** Delete stays shut until the pipeline's code is typed exactly; the input checks when it matches. */
 export const TypeToConfirm: StoryObj = { name: 'Type to confirm', render: () => <danger.TypeToDelete /> }
 
@@ -112,6 +115,9 @@ export const ImportResult: StoryObj = { name: 'Import result', render: () => <fl
 export const Wizard: StoryObj = { render: () => <flows.NewJobWizard /> }
 
 /** Release notes longer than the window: the body scrolls under a footer that stays. */
+/** `width="full"`: a tester filling the window but a margin, an editor beside what it gives; `finalFocus={false}` leaves focus where it lands on close. */
+export const Workbench: StoryObj = { render: () => <small.Workbench /> }
+
 export const LongContent: StoryObj = { name: 'Long content', render: () => <small.ReleaseNotes /> }
 
 /** A side sheet for editing details in place, with the save bar at its foot. */

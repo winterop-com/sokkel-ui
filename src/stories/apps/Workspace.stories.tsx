@@ -252,6 +252,7 @@ function Workspace({
     const defaults = fromGlobals(globals)
     const { settings, setSettings } = useAppearance(defaults)
     const [dockOpen, setDockOpen] = useStored('runs.dock', true, KEPT)
+    const [logLevel, setLogLevel] = useState('all')
     const [group, setGroup] = useStored<'none' | 'job'>(grouped ? 'runs.group-job' : 'runs.group', grouped ? 'job' : 'none', {
         ...KEPT,
         check: (value) => value === 'none' || value === 'job',
@@ -395,8 +396,36 @@ function Workspace({
                         )}
                     </div>
                     {dock && (
-                        <Dock title="Log, nightly-export" open={dockOpen} onOpenChange={setDockOpen} defaultSize={200}>
-                            <LogView lines={LOG} framed={false} />
+                        <Dock
+                            title="Log, nightly-export"
+                            open={dockOpen}
+                            onOpenChange={setDockOpen}
+                            defaultSize={200}
+                            bar={
+                                <Segmented
+                                    label="Level"
+                                    size="sm"
+                                    value={logLevel}
+                                    options={[
+                                        { value: 'all', label: 'All' },
+                                        { value: 'warning', label: 'Warnings' },
+                                        { value: 'error', label: 'Errors' },
+                                    ]}
+                                    onValueChange={setLogLevel}
+                                />
+                            }
+                        >
+                            <LogView
+                                lines={
+                                    logLevel === 'all'
+                                        ? LOG
+                                        : LOG.filter(
+                                              (line) => line.level === logLevel || (logLevel === 'warning' && line.level === 'error'),
+                                          )
+                                }
+                                framed={false}
+                                follow
+                            />
                         </Dock>
                     )}
                 </Stack>

@@ -21,6 +21,8 @@ const WORDS: DockWords = {
 export interface DockProps extends Omit<ComponentProps<'section'>, 'title' | 'children' | 'ref' | 'style'> {
     title: ReactNode
     tools?: ReactNode
+    /** A row under the head bar, held while the content scrolls: filters that need more room than the head has. */
+    bar?: ReactNode
     open?: boolean
     onOpenChange?: (open: boolean) => void
     /** A CSS height the dock starts at and returns to, when `defaultSize` is not given. */
@@ -47,12 +49,13 @@ export interface DockProps extends Omit<ComponentProps<'section'>, 'title' | 'ch
  * While open, its top edge drags to resize it, and a double click on the edge puts it back. Left
  * to itself it holds its own height, starting at `defaultSize`, or at `height` when that is given
  * alone; `size` with `onSizeChange` holds it from outside, and `resizable={false}` keeps it fixed.
- * Its head wraps when its tools need more room than one line, and the section takes the rest of a
- * section's props, an `aria-label` among them.
+ * Its head wraps when its tools need more room than one line, `bar` adds a row of its own under the
+ * head for filters, and the section takes the rest of a section's props, an `aria-label` among them.
  */
 export function Dock({
     title,
     tools,
+    bar,
     open = true,
     onOpenChange,
     height,
@@ -116,6 +119,11 @@ export function Dock({
                         </button>
                     )}
                 </div>
+                {open && bar !== undefined && (
+                    <div data-slot="dock-bar" className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-3 py-1.5">
+                        {bar}
+                    </div>
+                )}
                 {open && <div className="min-h-0 flex-1 overflow-auto">{children}</div>}
             </section>
         </>

@@ -5,6 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '../../lib/cn'
 
 import { Button } from './button'
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 import { CheckIcon, CopyIcon } from 'lucide-react'
 import { useCopy } from '../../hooks/use-copy'
 
@@ -108,21 +109,28 @@ function CodeBlockCopyButton({
 
     return (
         <>
-            <Button
-                data-slot="code-block-copy-button"
-                data-copied={copied || undefined}
-                variant={variant}
-                size={size}
-                aria-label={copied ? words.copied : words.copy}
-                className={cn(className)}
-                onClick={(event) => {
-                    onClick?.(event)
-                    copy(value)
-                }}
-                {...props}
-            >
-                {copied ? <CheckIcon /> : <CopyIcon />}
-            </Button>
+            <Tooltip>
+                <TooltipTrigger
+                    render={
+                        <Button
+                            data-slot="code-block-copy-button"
+                            data-copied={copied || undefined}
+                            variant={variant}
+                            size={size}
+                            aria-label={copied ? words.copied : words.copy}
+                            className={cn('text-muted-foreground max-md:min-h-finger max-md:min-w-finger', className)}
+                            onClick={(event) => {
+                                onClick?.(event)
+                                copy(value)
+                            }}
+                            {...props}
+                        />
+                    }
+                >
+                    {copied ? <CheckIcon /> : <CopyIcon />}
+                </TooltipTrigger>
+                <TooltipContent>{copied ? words.copied : words.copy}</TooltipContent>
+            </Tooltip>
             <span aria-live="polite" className="sr-only">
                 {copied ? words.copied : ''}
             </span>
