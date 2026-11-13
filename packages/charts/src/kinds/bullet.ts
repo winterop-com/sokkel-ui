@@ -1,42 +1,7 @@
-import { pivot } from '../data'
-import { SERIES_ORDER, tokenColor, tooltipMarkup } from '../look'
-import { niceCeil } from '../stats'
+import { tooltipMarkup } from '../look'
 import { valueTicks, written } from './categories'
-import { fieldsOf, wordsOf, type ChartBuilder, type ChartSpec, type ChartStep } from './spec'
-import type { LegendItem } from '../ChartLegend'
-
-/** Each category's figure and target, and where the scale starts and ends. */
-function figures(spec: ChartSpec) {
-    const field = fieldsOf(spec)[0]
-    if (spec.x === undefined || field === undefined) throw new Error('A bullet chart needs x and y fields.')
-    const data = pivot({
-        rows: spec.rows,
-        x: spec.x,
-        y: spec.value === undefined ? [field] : [field, spec.value],
-        aggregate: spec.aggregate,
-        order: spec.order,
-    })
-    const values = data.series[0]?.values ?? []
-    const targets = spec.value === undefined ? [] : (data.series[1]?.values ?? [])
-    const steps: readonly ChartStep[] = spec.steps ?? [{}]
-    const largest = Math.max(
-        0,
-        ...values.map((value) => value ?? 0),
-        ...targets.map((value) => value ?? 0),
-        ...steps.map((step) => step.value ?? 0),
-    )
-    return { field, categories: data.categories, values, targets, steps, min: spec.min ?? 0, max: spec.max ?? niceCeil(largest) }
-}
-
-/** The CSS color of each band: its own token, faintly, or a gray that lightens from the first band to the last. */
-function bandColors(steps: readonly ChartStep[]): string[] {
-    return steps.map((step, index) => {
-        const strength = steps.length <= 1 ? 22 : Math.round(30 - (20 * index) / (steps.length - 1))
-        return `color-mix(in oklab, ${tokenColor(step.color ?? 'muted-foreground')} ${String(step.color === undefined ? strength : 26)}%, var(--card))`
-    })
-}
-
-const bandName = (step: ChartStep, index: number) => step.label ?? `band-${String(index + 1)}`
+import { bandColors, bandName, bulletFigures } from './legends'
+import { categoryLabels, categoryText, wordsOf, type ChartBuilder } from './spec'
 
 interface Api {
     value: (dimension: number) => number
@@ -52,18 +17,18 @@ interface Api {
  * first, or faint tints of a step's own color. The scale runs from `min` (0) to `max` or a round
  * number above every figure, target and step; `horizontal: false` stands the bars up. Reads `x`,
  * `y`, `value`, `aggregate` (one, or one for `y` and one for `value`), `steps`, `min`, `max`,
- * `order`, `horizontal`, `colors`, `format`, `unit` and `words`.
+ * `order`, `horizontal`, `colors`, `format`, `unit`, `words` and `formatCategory`.
  */
 export const bullet: ChartBuilder = (spec, look) => {
     const words = wordsOf(spec)
-    const { field, categories, values, targets, steps, min, max } = figures(spec)
+    const { field, categories, values, targets, steps, min, max } = bulletFigures(spec)
     const sideways = spec.horizontal !== false
     const bands = bandColors(steps)
     const token = spec.colors?.[field]
     const tone = token === undefined ? look.series[0] : look.token(token)
     const valueAxis = { type: 'value', min, max, splitLine: { show: false }, ...valueTicks(spec) }
     const categoryAxes = [
-        { type: 'category', data: categories, inverse: sideways },
+        { type: 'category', data: categories, inverse: sideways, axisLabel: categoryLabels(spec) },
         { type: 'category', data: categories, inverse: sideways, show: false },
     ]
     const axis = (index: number) => (sideways ? { yAxisIndex: index } : { xAxisIndex: index })
@@ -86,7 +51,7 @@ export const bullet: ChartBuilder = (spec, look) => {
             axisPointer: { type: 'none' },
             formatter: (points: { dataIndex: number }[]) => {
                 const index = points[0]?.dataIndex ?? 0
-                return tooltipMarkup(categories[index] ?? '', [
+                return tooltipMarkup(categoryText(spec, categories[index] ?? ''), [
                     { label: field, value: written(spec, values[index]), color: tone },
                     ...(spec.value === undefined
                         ? []
@@ -139,18 +104,4 @@ export const bullet: ChartBuilder = (spec, look) => {
                   ]),
         ],
     }
-}
-
-/** A bullet chart's legend: the figure, the target, and the bands that carry a label. */
-export function bulletLegend(spec: ChartSpec): LegendItem[] {
-    const words = wordsOf(spec)
-    const { field, values, targets, steps } = figures(spec)
-    const bands = bandColors(steps)
-    return [
-        { key: field, label: field, color: tokenColor(spec.colors?.[field] ?? SERIES_ORDER[0]), values },
-        ...(spec.value === undefined ? [] : [{ key: words.target, label: words.target, color: 'var(--foreground)', values: targets }]),
-        ...steps.flatMap((step, index) =>
-            step.label === undefined ? [] : [{ key: bandName(step, index), label: step.label, color: bands[index] }],
-        ),
-    ]
 }

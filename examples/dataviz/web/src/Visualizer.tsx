@@ -17,7 +17,7 @@ import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { boards as boardStore, charts as chartStore, datasets as datasetStore, preferences } from './backend'
 import { BoardDialog } from './dialogs'
 import { ImportDialog } from './ImportDialog'
-import { DEFAULT_PREFERENCES } from './model'
+import { DEFAULT_PREFERENCES, orderBoards } from './model'
 import { BoardPage } from './pages/Board'
 import { BoardsPage } from './pages/Boards'
 import { BuilderPage } from './pages/Builder'
@@ -47,7 +47,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
 
     const allDatasets = datasets.rows ?? []
     const allCharts = charts.rows ?? []
-    const allBoards = boards.rows ?? []
+    const allBoards = orderBoards(boards.rows ?? [], prefs.boardOrder)
     const loading = datasets.rows === undefined || charts.rows === undefined || boards.rows === undefined
 
     const groups: RailGroup[] = [
@@ -203,7 +203,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
         if (section === 'charts' && chart !== undefined)
             return <BuilderPage key={chart.id} datasets={allDatasets} boards={allBoards} prefs={prefs} chart={chart} />
         if (section === 'boards' && id === undefined)
-            return <BoardsPage boards={allBoards} loading={false} onCreate={() => setNewBoard(true)} />
+            return <BoardsPage boards={allBoards} prefs={prefs} loading={false} onCreate={() => setNewBoard(true)} />
         if (section === 'boards')
             return (
                 <BoardPage key={id} board={board} charts={allCharts} datasets={allDatasets} prefs={prefs} presenting={mode === 'present'} />

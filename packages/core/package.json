@@ -234,6 +234,10 @@
             "types": "./dist/components/DownloadButton.d.ts",
             "import": "./dist/components/DownloadButton.js"
         },
+        "./DragDrop": {
+            "types": "./dist/components/DragDrop.d.ts",
+            "import": "./dist/components/DragDrop.js"
+        },
         "./DueText": {
             "types": "./dist/components/DueText.d.ts",
             "import": "./dist/components/DueText.js"
@@ -566,6 +570,10 @@
             "types": "./dist/components/SplitPane.d.ts",
             "import": "./dist/components/SplitPane.js"
         },
+        "./Sortable": {
+            "types": "./dist/components/Sortable.d.ts",
+            "import": "./dist/components/Sortable.js"
+        },
         "./StarButton": {
             "types": "./dist/components/StarButton.d.ts",
             "import": "./dist/components/StarButton.js"
@@ -746,9 +754,17 @@
             "types": "./dist/components/dashboard/DashboardGrid.d.ts",
             "import": "./dist/components/dashboard/DashboardGrid.js"
         },
+        "./dashboard/DashboardArrange": {
+            "types": "./dist/components/dashboard/DashboardArrange.d.ts",
+            "import": "./dist/components/dashboard/DashboardArrange.js"
+        },
         "./dashboard/DashboardRow": {
             "types": "./dist/components/dashboard/DashboardRow.d.ts",
             "import": "./dist/components/dashboard/DashboardRow.js"
+        },
+        "./dashboard/panel-tools": {
+            "types": "./dist/components/dashboard/panel-tools.d.ts",
+            "import": "./dist/components/dashboard/panel-tools.js"
         },
         "./dashboard/ScoreTable": {
             "types": "./dist/components/dashboard/ScoreTable.d.ts",
@@ -1282,6 +1298,10 @@
             "types": "./dist/lib/plugins.d.ts",
             "import": "./dist/lib/plugins.js"
         },
+        "./lib/reorder": {
+            "types": "./dist/lib/reorder.d.ts",
+            "import": "./dist/lib/reorder.js"
+        },
         "./lib/search": {
             "types": "./dist/lib/search.d.ts",
             "import": "./dist/lib/search.js"
@@ -1312,6 +1332,9 @@
     },
     "dependencies": {
         "@base-ui/react": "^1.9.0",
+        "@dnd-kit/core": "^6.3.1",
+        "@dnd-kit/sortable": "^10.0.0",
+        "@dnd-kit/utilities": "^3.2.2",
         "@fontsource-variable/ibm-plex-sans": "^5.3.0",
         "@fontsource/ibm-plex-mono": "^5.3.0",
         "class-variance-authority": "^0.7.1",

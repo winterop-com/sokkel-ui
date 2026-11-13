@@ -1,21 +1,9 @@
-import { distinct, labelOf } from '../data'
-import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
+import { labelOf } from '../data'
+import { tooltipMarkup, type ChartLook } from '../look'
 import { nest, type TreeNode } from '../shapes'
 import { written } from './categories'
-import { colorOf, legendColor, measureName, type ChartBuilder, type ChartSpec } from './spec'
-import type { LegendItem } from '../ChartLegend'
-
-/** The fields a nesting kind reads, outermost first. */
-function pathOf(spec: ChartSpec): readonly string[] {
-    if (spec.path === undefined || spec.path.length === 0) throw new Error('This chart needs a path of fields.')
-    return spec.path
-}
-
-/** The field whose sum sizes a node, or none where rows are counted. */
-const sizeOf = (spec: ChartSpec) => (typeof spec.y === 'string' ? spec.y : spec.y?.[0])
-
-/** The top branches in the legend's order: `order` first, then as the rows give them. */
-const topOf = (spec: ChartSpec) => distinct(spec.rows, pathOf(spec)[0], spec.order).filter((name) => name !== '')
+import { pathOf, topOf, weightOf } from './legends'
+import { colorOf, measureName, type ChartBuilder, type ChartSpec } from './spec'
 
 /** A node as ECharts takes it, its style holding its fill. */
 interface Drawn {
@@ -38,7 +26,7 @@ function painted(
     const path = pathOf(spec)
     const top = topOf(spec)
     const rows = hidden === undefined || hidden.size === 0 ? spec.rows : spec.rows.filter((row) => !hidden.has(labelOf(row[path[0]])))
-    const tree = nest({ rows, path, y: sizeOf(spec) })
+    const tree = nest({ rows, path, y: weightOf(spec) })
     const paint = (node: TreeNode, depth: number, hue: string, index: number, count: number): Drawn => {
         const named = spec.colors?.[node.name]
         const own = named === undefined ? hue : look.token(named)
@@ -66,7 +54,7 @@ function treeTooltip(spec: ChartSpec, total: number) {
                     .join(' / ') || point.name,
                 [
                     {
-                        label: measureName(spec, sizeOf(spec)),
+                        label: measureName(spec, weightOf(spec)),
                         value: `${written(spec, point.value)} (${total === 0 ? '0' : ((point.value / total) * 100).toFixed(1)}%)`,
                         color: point.color,
                     },
@@ -158,16 +146,4 @@ export const sunburst: ChartBuilder = (spec, look, hidden) => {
             },
         ],
     }
-}
-
-/** A nesting kind's legend: its top branches, each with its figure. */
-export function treeLegend(spec: ChartSpec): LegendItem[] {
-    const tree = nest({ rows: spec.rows, path: pathOf(spec).slice(0, 1), y: sizeOf(spec) })
-    const value = new Map(tree.map((node) => [node.name, node.value]))
-    return topOf(spec).map((name, index) => ({
-        key: name,
-        label: name,
-        color: legendColor(spec, name, index, SERIES_ORDER),
-        values: [value.get(name) ?? null],
-    }))
 }

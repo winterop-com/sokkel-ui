@@ -2,14 +2,14 @@ import { distinct, formatNumber, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
 import { spreadOf } from '../stats'
 import { valueTicks, written } from './categories'
-import { fieldsOf, wordsOf, type ChartBuilder } from './spec'
+import { categoryLabels, categoryText, fieldsOf, wordsOf, type ChartBuilder } from './spec'
 
 /**
  * The spread of `y` in each category of `x`: a box from the lower to the upper quartile with the
  * median across it, whiskers out to the furthest values within one and a half box heights, and
  * the values beyond as points. Boxes stand up, or run sideways with `horizontal`. The boxes take
  * the color `colors` names for `y`, or the first series color. Reads `x`, `y`, `order`,
- * `horizontal`, `colors`, `format`, `unit` and `words`.
+ * `horizontal`, `colors`, `format`, `unit`, `words` and `formatCategory`.
  */
 export const boxplot: ChartBuilder = (spec, look) => {
     const x = spec.x
@@ -27,7 +27,7 @@ export const boxplot: ChartBuilder = (spec, look) => {
     const spreads = buckets.map(spreadOf)
     const token = spec.colors?.[y]
     const color = token === undefined ? look.series[0] : look.token(token)
-    const categoryAxis = { type: 'category', data: categories }
+    const categoryAxis = { type: 'category', data: categories, axisLabel: categoryLabels(spec) }
     const valueAxis = { type: 'value', scale: true, ...valueTicks(spec) }
     return {
         tooltip: {
@@ -35,11 +35,13 @@ export const boxplot: ChartBuilder = (spec, look) => {
             formatter: (point: { seriesType: string; dataIndex: number; value: number[] }) => {
                 if (point.seriesType !== 'boxplot') {
                     const [where, value] = spec.horizontal === true ? [point.value[1], point.value[0]] : point.value
-                    return tooltipMarkup(categories[where] ?? '', [{ label: words.outlier, value: written(spec, value) }])
+                    return tooltipMarkup(categoryText(spec, categories[where] ?? ''), [
+                        { label: words.outlier, value: written(spec, value) },
+                    ])
                 }
                 const spread = spreads[point.dataIndex]
                 if (spread === null) return ''
-                return tooltipMarkup(categories[point.dataIndex], [
+                return tooltipMarkup(categoryText(spec, categories[point.dataIndex]), [
                     { label: words.high, value: written(spec, spread.high) },
                     { label: words.upper, value: written(spec, spread.upper) },
                     { label: words.median, value: written(spec, spread.median) },

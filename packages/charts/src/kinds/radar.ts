@@ -1,7 +1,8 @@
 import type { ChartLook } from '../look'
 import { tooltipMarkup } from '../look'
 import { niceCeil } from '../stats'
-import { shaped, written } from './categories'
+import { written } from './categories'
+import { shaped } from './legends'
 import { colorOf, isDashed, type ChartBuilder } from './spec'
 
 /** The spokes and rings of a radar chart. */

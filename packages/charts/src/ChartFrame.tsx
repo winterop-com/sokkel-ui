@@ -10,6 +10,7 @@ import { ChartLegend, type LegendItem, type LegendStat, type LegendWords } from 
 import type { ChartHandle } from './EChart'
 import { FrameDataContext, type FrameData } from './frame-data'
 import { PANEL_STATE_WORDS, PanelFailure, StaleMark } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { PanelTools, usePanelTools } from '@winterop-com/sokkel-ui/dashboard/panel-tools'
 
 /** What the frame hands its chart: the legend's state, the handle the chart fills for export, and where it is drawn. */
 export interface ChartState {
@@ -223,7 +224,9 @@ export function ChartFrame({
     const failed = error !== undefined && error !== false
     const rows = data && drawn !== null && drawn.kind !== 'gauge' && !empty && !failed ? drawn : null
     const tabled = rows !== null && view === 'data'
-    const head = title !== undefined || actions !== undefined || menu !== undefined || exportable || expandable || rows !== null
+    const tools = usePanelTools()
+    const head =
+        title !== undefined || actions !== undefined || menu !== undefined || exportable || expandable || rows !== null || tools !== null
     const showLegend = legend !== undefined && legend.length > 0 && !empty && !failed
     const content = (
         <FrameBody
@@ -330,6 +333,7 @@ export function ChartFrame({
                                 </DropdownMenu>
                             )}
                         </div>
+                        <PanelTools />
                     </div>
                 </header>
             )}

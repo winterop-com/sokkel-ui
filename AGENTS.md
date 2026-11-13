@@ -71,7 +71,10 @@ and ask before acting.
   resize by default, as panels do; `resizable={false}` turns that off.
 - One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
   graph, xterm.js every terminal, hls.js every HTTP live stream, Mermaid every diagram written as
-  text, KaTeX every formula, and sparklines are plain SVG. Never add a second.
+  text, KaTeX every formula, dnd-kit every drag and drop between places in a page (reorder, move,
+  drop onto), and sparklines are plain SVG. A file dragged in from the desktop stays on the
+  browser's own events (`use-file-drop`), and React Flow keeps its own node dragging. Never add a
+  second.
 - Charts are drawn with `Chart` and a kind (or `ChartGrid`, `ChartPanel` and the dashboard panels),
   never with an ECharts option built in a story. A chart the kinds cannot draw becomes a new kind or
   an option on one. `docs/charts.md` lists the kinds, the fields they read and how to add one.

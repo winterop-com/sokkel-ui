@@ -335,7 +335,14 @@ export function Notes({ frame }: { frame: Frame }) {
                                     if (id.startsWith('folder:')) void moveFolder(id.slice('folder:'.length), target)
                                     else void moveNote(id, target)
                                 }}
-                                canMove={(_, into) => into === null || into.startsWith('folder:')}
+                                canMove={(id, into) => {
+                                    if (into !== null && !into.startsWith('folder:')) return false
+                                    // The vault sorts each folder by name, so only a move to another folder changes anything.
+                                    const from = id.startsWith('folder:')
+                                        ? vault.folderById.get(id.slice('folder:'.length))?.parent
+                                        : vault.byId.get(id)?.folder
+                                    return from !== (into === null ? null : into.slice('folder:'.length))
+                                }}
                             />
                         ),
                     }}
