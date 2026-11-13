@@ -1,5 +1,5 @@
 import { asShares, formatNumber, formatTick, pivot, type Series } from '../data'
-import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
+import { SERIES_ORDER, tokenColor, tooltipMarkup, type ChartLook } from '../look'
 import { colorOf, isDashed, legendColor, measureName, paletteToken, stackOf, unitAt, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
@@ -67,6 +67,19 @@ export function valueLabels(spec: ChartSpec) {
 /** A value axis' ticks, written as the tooltips write its figures, short: by the spec's `format`, then the unit of `left` or the spec's. */
 export function valueTicks(spec: ChartSpec) {
     return { axisLabel: { formatter: tickWriter(spec.format, spec.axes?.left?.unit ?? unitAt(spec)) } }
+}
+
+/** A value axis with nothing drawn: no line, labels or lines across, for a quiet chart. */
+const HIDDEN_AXIS = { show: false, splitLine: { show: false } }
+
+/** The value axis, hidden where the spec asks for a quiet chart. */
+function quietValue<T extends object>(spec: ChartSpec, axis: T): T {
+    return spec.quiet === true ? { ...axis, ...HIDDEN_AXIS } : axis
+}
+
+/** The category axis, its labels in the mono typeface where the spec asks for a quiet chart. */
+function quietCategory<T extends { axisLabel?: object }>(spec: ChartSpec, look: ChartLook, axis: T): T {
+    return spec.quiet === true ? { ...axis, axisLabel: { ...axis.axisLabel, fontFamily: look.mono } } : axis
 }
 
 /** The value axis' range: from `min` to `max`, or 0 to 100% in quarters where the figures stack to 100%. */
@@ -173,12 +186,15 @@ export function farCorners(corner: number, horizontal: boolean, value: number) {
 /**
  * Bars per category, one bar per series side by side, stacked, or as shares of 100%; `stacks` puts
  * series in stacks of their own, and `gap` sets how close they stand. Each bar, or each stack, is
- * rounded at its far end, and stacked bars are parted by a line in the card's color.
+ * rounded at its far end, and stacked bars are parted by a line in the card's color. `quiet` hides
+ * the value axis and its lines and writes the categories in mono; `baseline` draws a bar of zero as
+ * a line one pixel high.
  */
 export const bar: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped(spec)
-    const along = categoryAxis(spec, categories)
-    const valueAxis = { type: 'value', ...valueRange(spec), ...valueLabels(spec) }
+    const along = quietCategory(spec, look, categoryAxis(spec, categories))
+    const valueAxis = quietValue(spec, { type: 'value', ...valueRange(spec), ...valueLabels(spec) })
+    const baseline = spec.baseline === true
     const groups = series.map((entry) => stackOf(spec, entry.name))
     const stacked = groups.some((group) => group !== undefined)
     const horizontal = spec.horizontal === true
@@ -192,11 +208,14 @@ export const bar: ChartBuilder = (spec, look) => {
             type: 'bar',
             name: entry.name,
             data: entry.values.map((value, category) =>
-                value === null || value === 0 || !isEnd(index, category, value)
-                    ? value
-                    : { value, itemStyle: { borderRadius: farCorners(look.corner, horizontal, value) } },
+                value === 0 && baseline
+                    ? { value, itemStyle: { borderWidth: 0 } }
+                    : value === null || value === 0 || !isEnd(index, category, value)
+                      ? value
+                      : { value, itemStyle: { borderRadius: farCorners(look.corner, horizontal, value) } },
             ),
             stack: groups[index],
+            ...(baseline ? { barMinHeight: 1 } : {}),
             ...(spec.gap === 'tight' ? { barCategoryGap: '6%', barMaxWidth: 400 } : stacked ? { barCategoryGap: '24%' } : {}),
             itemStyle: {
                 color: colorOf(spec, look, entry.name, index),
@@ -240,7 +259,8 @@ export function edgeAxis(spec: ChartSpec, categories: string[]) {
  * A line per series across the categories, or areas filled under them, evenly or fading by `fill`;
  * `stacks` puts series in stacks of their own, a `dashed` series is drawn as a reference with no
  * area, the steps after the first are dashed lines across at their values, the `marks` dashed
- * lines down at their categories, and `min` and `max` fix the value axis.
+ * lines down at their categories, and `min` and `max` fix the value axis. `quiet` hides the value
+ * axis and its lines and writes the categories in mono.
  */
 function lines(filled: boolean): ChartBuilder {
     return (spec, look) => {
@@ -249,8 +269,8 @@ function lines(filled: boolean): ChartBuilder {
         return {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
             grid: { left: 4, right: 10, top: markRoom(spec, look), bottom: 4 },
-            xAxis: edgeAxis(spec, categories),
-            yAxis: { type: 'value', ...valueRange(spec), ...valueLabels(spec) },
+            xAxis: quietCategory(spec, look, edgeAxis(spec, categories)),
+            yAxis: quietValue(spec, { type: 'value', ...valueRange(spec), ...valueLabels(spec) }),
             series: series.map((entry, index) => {
                 const color = colorOf(spec, look, entry.name, index)
                 const stack = stackOf(spec, entry.name)
@@ -338,7 +358,7 @@ export const pie = slices(false)
 function scaleColors(look: ChartLook, scale: string | readonly string[]): string[] {
     if (typeof scale === 'string') return look.ramp(scale, 7)
     const [first, ...rest] = scale
-    return [look.mix(`var(--${first})`, 10), look.mix(`var(--${first})`, 45), look.token(first), ...rest.map(look.token)]
+    return [look.mix(tokenColor(first), 10), look.mix(tokenColor(first), 45), look.token(first), ...rest.map(look.token)]
 }
 
 /**

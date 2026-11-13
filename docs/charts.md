@@ -23,9 +23,11 @@ private: an app draws with `Chart` and a kind, and a chart no kind draws becomes
 `VariablesBar` and the thresholds) are in the core, under `@winterop-com/sokkel-ui/dashboard/`, so a
 dashboard of tiles needs no ECharts.
 
-The base set (lines, bars, heatmaps, gauges, pies, radars and scatters, with the grid, tooltip,
-legend, zoom, color scale and marks) loads with the first chart. Every other chart type and component loads the first
-time an option draws with it, so an app that draws only bars never downloads a sankey. The kinds'
+ECharts' core loads with the first chart, with the canvas renderer, the legend and the tooltip.
+Every chart type, and every other component and mark (the grid, zoom, color scale, the lines a
+series marks), loads the first time an option draws with it, so an app that draws only bars loads
+the bar series and the grid, and never a line, a gauge or a sankey. The SVG renderer loads only for
+an export to SVG, and the title component only for an export with a title. The kinds'
 builders load with the first chart too, beside the engine, so a page carries none of the charts'
 code at start but `Chart`'s own; `chartLegend` reads every kind at once, so a page that imports it
 carries the kinds with the page.
@@ -144,7 +146,7 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `horizontal`  | Bars running sideways, categories down the side.                                                                                                                         |
 | `order`       | Categories in this order first.                                                                                                                                          |
 | `seriesOrder` | Series in this order first.                                                                                                                                              |
-| `colors`      | A color token for a series or a category by its name, such as `status-failed`.                                                                                           |
+| `colors`      | A color token for a series or a category by its name, such as `status-failed`; `muted-foreground/45` draws it at 45% opacity.                                            |
 | `palette`     | The color tokens series and categories take in turn where `colors` names none, in place of the theme's order.                                                            |
 | `format`      | How a figure is written in tooltips, labels and the value axis' ticks; a tick's figure is written short, so `1,500 GB` reads `1.5K GB`.                                  |
 | `unit`        | A unit written after each figure, such as `s` or `%`, or one per `y` field.                                                                                              |
@@ -153,6 +155,8 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `smooth`      | A line drawn smooth rather than straight between points.                                                                                                                 |
 | `labelEvery`  | Labels every nth category on the category axis.                                                                                                                          |
 | `gap`         | How far apart bars stand: `tight` draws a histogram's tall bars, nearly touching.                                                                                        |
+| `quiet`       | Bars and lines on a quiet axis: no value axis or lines across, the categories in mono.                                                                                   |
+| `baseline`    | A bar of zero drawn as a line one pixel high, so an empty category still shows.                                                                                          |
 | `fill`        | How an area is filled: `solid`, `gradient`, fading from its line toward the axis, or `none`.                                                                             |
 | `showScale`   | A heatmap's color scale shown beside the grid.                                                                                                                           |
 | `total`       | A ring's total written in its middle with this word under it; under a gauge's figure, the word alone.                                                                    |
@@ -201,8 +205,8 @@ appear in Storybook.
 
 | Kind       | For                                                                                                       | Reads                                                                                                                                                                                  | Story                        |
 | ---------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `bar`      | Bars per category, one per series side by side, stacked, or as shares                                     | `x`, `y`, `series`, `aggregate`, `stack`, `stacks`, `horizontal`, `gap`, `order`, `seriesOrder`, `min`, `max`, `colors`, `format`, `unit`, `labelEvery`                                | Charts/Bars, Charts/Chart    |
-| `line`     | A line per series across the categories, with threshold lines                                             | `x`, `y`, `series`, `aggregate`, `stack`, `stacks`, `dashed`, `steps`, `marks`, `min`, `max`, `smooth`, `order`, `seriesOrder`, `colors`, `format`, `unit`, `labelEvery`               | Charts/Line                  |
+| `bar`      | Bars per category, one per series side by side, stacked, or as shares                                     | `x`, `y`, `series`, `aggregate`, `stack`, `stacks`, `horizontal`, `gap`, `order`, `seriesOrder`, `min`, `max`, `colors`, `format`, `unit`, `labelEvery`, `quiet`, `baseline`           | Charts/Bars, Charts/Chart    |
+| `line`     | A line per series across the categories, with threshold lines                                             | `x`, `y`, `series`, `aggregate`, `stack`, `stacks`, `dashed`, `steps`, `marks`, `min`, `max`, `smooth`, `order`, `seriesOrder`, `colors`, `format`, `unit`, `labelEvery`, `quiet`      | Charts/Line                  |
 | `area`     | Lines with the area under them filled, alone or stacked                                                   | what `line` reads, and `fill`                                                                                                                                                          | Charts/Area                  |
 | `step`     | A line that holds each figure until the next category: a pool's size, a limit                             | what `line` reads, and `fill` for an area under it                                                                                                                                     | Charts/Trends                |
 | `range`    | A band with a line through it: percentiles around the median, or low, middle and high                     | `x`, `y` (one or three), `series`, `aggregate`, `colors`, `format`, `unit`                                                                                                             | Charts/Trends                |

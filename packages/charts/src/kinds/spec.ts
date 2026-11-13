@@ -2,7 +2,7 @@ import type { EChartsCoreOption } from 'echarts/core'
 
 import type { LegendItem } from '../ChartLegend'
 import type { Aggregate, Row } from '../data'
-import type { ChartLook } from '../look'
+import { tokenColor, type ChartLook } from '../look'
 
 /**
  * What a chart draws, read from rows. Which fields each kind reads is said by the kind: most put
@@ -30,7 +30,10 @@ export interface ChartSpec {
     order?: readonly string[]
     /** Series in this order first. */
     seriesOrder?: readonly string[]
-    /** A color token for a series or a category by its name, such as `status-failed`. */
+    /**
+     * A color token for a series or a category by its name, such as `status-failed`; a token with
+     * `/` and a percent after it is drawn that opaque, such as `muted-foreground/45` for a quiet series.
+     */
     colors?: Readonly<Record<string, string>>
     /**
      * The color tokens series and categories take in turn where `colors` names none of their own,
@@ -56,6 +59,13 @@ export interface ChartSpec {
     smooth?: boolean
     /** Labels every nth category on the category axis, such as every hour of fifteen-minute steps; ECharts picks when omitted. */
     labelEvery?: number
+    /**
+     * A quiet axis, for bars and lines: no value axis and no lines across, the categories written in
+     * the mono typeface, so the marks alone carry the figures, as in a strip of recent runs.
+     */
+    quiet?: boolean
+    /** A bar of zero drawn as a line one pixel high, so an empty category still shows a mark. */
+    baseline?: boolean
     /** How far apart bars stand: `tight` draws a histogram's tall bars, nearly touching. */
     gap?: 'tight' | 'normal'
     /** How an area is filled: evenly, fading from its line toward the axis, or not at all, leaving a step line or a radar's outlines. */
@@ -218,7 +228,7 @@ export function paletteToken(spec: ChartSpec, index: number): string | undefined
 
 /** A legend entry's color: the token the spec names for it, or the next in the spec's palette or the theme's order. */
 export function legendColor(spec: ChartSpec, name: string, index: number, order: readonly string[]): string {
-    return `var(--${spec.colors?.[name] ?? paletteToken(spec, index) ?? order[index % order.length]})`
+    return tokenColor(spec.colors?.[name] ?? paletteToken(spec, index) ?? order[index % order.length])
 }
 
 /** A series' color: the token the spec names for it, or the next in the spec's palette or the theme's order. */

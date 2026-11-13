@@ -1,4 +1,4 @@
-import { SERIES_ORDER, tooltipMarkup } from '../look'
+import { SERIES_ORDER, tokenColor, tooltipMarkup } from '../look'
 import { shaped, written } from './categories'
 import { wordsOf, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
@@ -14,7 +14,7 @@ function stages(spec: ChartSpec) {
 /** A stage's color as CSS: the token `colors` names for it, or the first series color fading with each stage. */
 function stageColor(spec: ChartSpec, name: string, index: number, count: number): string {
     const token = spec.colors?.[name]
-    if (token !== undefined) return `var(--${token})`
+    if (token !== undefined) return tokenColor(token)
     const strength = count <= 1 ? 80 : Math.round(80 - (45 * index) / (count - 1))
     return `color-mix(in oklab, var(--${SERIES_ORDER[0]}) ${String(strength)}%, var(--card))`
 }
