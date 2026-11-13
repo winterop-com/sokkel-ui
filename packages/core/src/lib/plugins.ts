@@ -38,12 +38,25 @@ export interface SokkelPlugin {
 
 const languages = new Map<string, PluginLanguage>()
 
+const listeners = new Set<() => void>()
+
 /**
  * Installs plugins, once as the app starts and before anything that uses them draws. A plugin
- * installed again, or a language named again, replaces the one before.
+ * installed again, or a language named again, replaces the one before, and every part showing it
+ * takes the new one: an app installs a plugin again when what it was built from changes, such as
+ * the names a server of another version knows.
  */
 export function registerPlugins(plugins: readonly SokkelPlugin[]): void {
     for (const plugin of plugins) for (const language of plugin.languages ?? []) languages.set(language.name, language)
+    for (const listener of listeners) listener()
+}
+
+/** Hears every `registerPlugins` call, for a part that draws an installed contribution; returns the call that stops it. */
+export function onPluginsChange(listener: () => void): () => void {
+    listeners.add(listener)
+    return () => {
+        listeners.delete(listener)
+    }
 }
 
 /** The installed language of that name, for `CodeEditor`. */

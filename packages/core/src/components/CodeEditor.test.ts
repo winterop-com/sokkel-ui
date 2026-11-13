@@ -69,6 +69,21 @@ describe('languages by name', () => {
         expect(languageForMediaType('application/json')).toBe('json')
     })
 
+    it('tells the parts drawing a plugin when it is installed again, until they stop listening', async () => {
+        const { registerPlugins, onPluginsChange, pluginLanguage } = await import('../lib/plugins')
+        const older = { name: 'steps', token: (stream: { skipToEnd: () => void }) => (stream.skipToEnd(), null) }
+        const newer = { name: 'steps', token: (stream: { skipToEnd: () => void }) => (stream.skipToEnd(), 'keyword') }
+        let heard = 0
+        const stop = onPluginsChange(() => (heard += 1))
+        registerPlugins([{ name: 'pipelines', languages: [{ name: 'steps', language: older }] }])
+        registerPlugins([{ name: 'pipelines', languages: [{ name: 'steps', language: newer }] }])
+        expect(heard).toBe(2)
+        expect(pluginLanguage('steps')?.language).toBe(newer)
+        stop()
+        registerPlugins([{ name: 'pipelines', languages: [{ name: 'steps', language: older }] }])
+        expect(heard).toBe(2)
+    })
+
     it('loads SQL, shell and Jinja on first use', async () => {
         const { loadCodeLanguage } = await import('./CodeEditor')
         await Promise.all([loadCodeLanguage('sql'), loadCodeLanguage('shell'), loadCodeLanguage('jinja'), loadCodeLanguage('json')])
