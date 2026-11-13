@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.22.4** is the latest release (2026-11-13): two new examples, FHIR Workbench and DHIS2
+- **0.22.5** is the latest release (2026-11-13): `DialogShell` `initialFocus="confirm"`, `width="full"`,
+  `finalFocus` and `status`; Code's copy button with a tooltip and finger size on a phone; LogView
+  drops the jump once its lines fit; `Dock` `bar`.
+- **0.22.4** (2026-11-13): two new examples, FHIR Workbench and DHIS2
   Workbench; `themeSettings`, appearance choices as settings rows of their own; `CodeMark.path`;
   `CodeEditor variant="line"`; completions with the text before the word; a plugin installed again
   reaches open editors.
