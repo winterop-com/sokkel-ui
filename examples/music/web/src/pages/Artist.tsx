@@ -5,13 +5,13 @@ import { Section } from '@winterop-com/sokkel-ui/Section'
 import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
-import { TrackList } from '@winterop-com/sokkel-ui-media/TrackList'
+import { DraggableTrackList } from '@winterop-com/sokkel-ui-media/DraggableTrackList'
 import { MicVocal, Play, Radio, Shuffle } from 'lucide-react'
 
 import { go } from 'tidevann-shared/router'
 import { ARTIST_BY_ID, albumsOfArtist, lengthOfSongs, minutes, songsOfArtist, STYLE_NAMES } from '../catalog'
 import { history, setFavorite, useRows, useStarred } from '../data'
-import { SongActions, startRadio, useStarredSongs } from '../parts/actions'
+import { SONG_DRAG, SongActions, startRadio, useStarredSongs } from '../parts/actions'
 import { AlbumCard, asTrack, Nothing, playArtist, useNowPlaying } from '../parts/songs'
 import { playSongs, setPlaying } from '../player'
 
@@ -76,7 +76,8 @@ export function Artist({ id }: { id: string }) {
                 }
             />
             <Section variant="flat" title="Most played">
-                <TrackList
+                <DraggableTrackList
+                    kind={SONG_DRAG.song}
                     tracks={top.map((song) => asTrack(song, { artwork: true, album: true }))}
                     current={now.song?.id}
                     playing={now.playing}

@@ -4,7 +4,7 @@ import type { TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { mentionsOf, tagsIn, wikiLinksIn, type WikiLink } from '@winterop-com/sokkel-ui/lib/wiki-links'
 import { CalendarDays, FileText, Folder as FolderIcon, FolderOpen } from 'lucide-react'
 
-import type { Folder, Note } from './model'
+import type { Folder, Note, Order } from './model'
 
 /** A link from one note to another, with the line it stands in. */
 export interface Backlink {
@@ -97,49 +97,70 @@ export function unlinkedMentions(vault: Vault, note: Note): Mention[] {
     })
 }
 
-/** Folders first, then notes, each by name; daily notes newest first. */
-function byName(a: { name: string }, b: { name: string }): number {
-    return a.name.localeCompare(b.name, 'en', { numeric: true })
+/** Two names in reading order, numbers by their value. */
+function byName(a: string, b: string): number {
+    return a.localeCompare(b, 'en', { numeric: true })
+}
+
+/** Two places in the reader's own order; one without a place goes after those with one. */
+function byRank(a: { rank?: number }, b: { rank?: number }): number {
+    return (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER)
+}
+
+/** The folders directly in a folder (null for the top of the vault), in the vault's order. */
+export function foldersIn(vault: Vault, parent: string | null, order: Order): Folder[] {
+    return vault.folders
+        .filter((folder) => folder.parent === parent)
+        .sort((a, b) => (order === 'manual' ? byRank(a, b) : 0) || byName(a.name, b.name))
+}
+
+/** The notes directly in a folder, in the vault's order: by name with daily notes newest first, or the reader's own. */
+export function notesIn(vault: Vault, folder: string | null, order: Order, daily: string | null): Note[] {
+    const named = (a: Note, b: Note) => (folder !== null && folder === daily ? byName(b.title, a.title) : byName(a.title, b.title))
+    return vault.notes.filter((note) => note.folder === folder).sort((a, b) => (order === 'manual' ? byRank(a, b) : 0) || named(a, b))
+}
+
+/**
+ * Every note in a folder and the folders under it (the whole vault for null), in the tree's order:
+ * a folder's notes after its folders, and at the top the notes outside every folder last.
+ */
+export function notesInOrder(vault: Vault, top: string | null, order: Order, daily: string | null): Note[] {
+    const walk = (folder: string | null): Note[] => [
+        ...foldersIn(vault, folder, order).flatMap((one) => walk(one.id)),
+        ...notesIn(vault, folder, order, daily),
+    ]
+    return walk(top)
 }
 
 /** The vault as a tree: its folders with their folders and notes, then the notes at the top. */
-export function vaultTree(vault: Vault, daily: string | null): TreeNode[] {
-    const level = (parent: string | null): TreeNode[] => {
-        const folders = vault.folders
-            .filter((folder) => folder.parent === parent)
-            .map((folder) => ({ folder, name: folder.name }))
-            .sort(byName)
-            .map(({ folder }) => ({
-                id: `folder:${folder.id}`,
-                label: folder.name,
-                icon: FolderIcon,
-                openIcon: FolderOpen,
-                children: level(folder.id),
-            }))
-        const notes = vault.notes
-            .filter((note) => note.folder === parent)
-            .map((note) => ({ note, name: note.title }))
-            .sort((a, b) => (parent !== null && parent === daily ? byName(b, a) : byName(a, b)))
-            .map(({ note }) => ({ id: note.id, label: note.title, icon: note.day === undefined ? FileText : CalendarDays }))
-        return [...folders, ...notes]
-    }
+export function vaultTree(vault: Vault, daily: string | null, order: Order): TreeNode[] {
+    const level = (parent: string | null): TreeNode[] => [
+        ...foldersIn(vault, parent, order).map((folder) => ({
+            id: `folder:${folder.id}`,
+            label: folder.name,
+            icon: FolderIcon,
+            openIcon: FolderOpen,
+            children: level(folder.id),
+        })),
+        ...notesIn(vault, parent, order, daily).map((note) => ({
+            id: note.id,
+            label: note.title,
+            icon: note.day === undefined ? FileText : CalendarDays,
+        })),
+    ]
     return level(null)
 }
 
 /** The folders alone as a tree, under the top of the vault, for picking where a note or a folder goes. */
-export function folderTree(vault: Vault, top: string): TreeNode[] {
+export function folderTree(vault: Vault, top: string, order: Order): TreeNode[] {
     const level = (parent: string | null): TreeNode[] =>
-        vault.folders
-            .filter((folder) => folder.parent === parent)
-            .map((folder) => ({ folder, name: folder.name }))
-            .sort(byName)
-            .map(({ folder }) => ({
-                id: folder.id,
-                label: folder.name,
-                icon: FolderIcon,
-                openIcon: FolderOpen,
-                children: level(folder.id),
-            }))
+        foldersIn(vault, parent, order).map((folder) => ({
+            id: folder.id,
+            label: folder.name,
+            icon: FolderIcon,
+            openIcon: FolderOpen,
+            children: level(folder.id),
+        }))
     return [{ id: ROOT, label: top, icon: FolderIcon, openIcon: FolderOpen, children: level(null) }]
 }
 

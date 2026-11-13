@@ -537,6 +537,19 @@ export function stackColumns<C extends { stack?: DataColumn<unknown>['stack'] }>
     }
 }
 
+/** The room a row's grip takes at the start of its first cell, with `onReorder`. */
+const GRIP = '1.375rem'
+
+/**
+ * A track widened by `by` at its floor: a length grows by it, a `minmax` floor grows by it, and a
+ * fraction or `auto` is left, having room to give.
+ */
+export function widenTrack(width: string, by: string): string {
+    const range = /^minmax\(\s*([^,]+?)\s*,(.*)\)$/.exec(width)
+    if (range !== null) return `minmax(calc(${range[1]} + ${by}),${range[2]})`
+    return /^\d*\.?\d+(px|rem|em|ch)$/.test(width) ? `calc(${width} + ${by})` : width
+}
+
 /** The least width of a grid track: its own length, a `minmax` floor, or nothing for a fraction or `auto`. */
 function trackMin(width: string): string {
     const floor = /^minmax\(\s*([^,]+?)\s*,/.exec(width)?.[1] ?? width
@@ -1609,7 +1622,10 @@ export function DataTable<T>({
         const need = contentWidths[column.id]
         return measuring || need === undefined ? 'max-content' : contentTrack(need, column)
     }
-    const template = [selectable ? CHECK : undefined, ...shown.map(track), endWidth].filter(Boolean).join(' ')
+    // The first column makes room for the row's grip, so its own content keeps the width it was given.
+    const trackAt = (column: DataColumn<T>, index: number) =>
+        index === 0 && ordering && widths[column.id] === undefined ? widenTrack(track(column), GRIP) : track(column)
+    const template = [selectable ? CHECK : undefined, ...shown.map(trackAt), endWidth].filter(Boolean).join(' ')
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
     const least = [
         selectable ? CHECK : undefined,
@@ -1617,6 +1633,7 @@ export function DataTable<T>({
         endWidth,
     ].filter(Boolean)
     if (list) least.push('2 * var(--density-panel-pad)', `${String(0.75 * (least.length - 1))}rem`)
+    if (ordering) least.push(GRIP)
     const rowMin = minWidth === 'auto' ? `calc(${least.join(' + ')})` : `max(${minWidth}, calc(${least.join(' + ')}))`
     const grid = { gridTemplateColumns: template, minWidth: rowMin }
     const canResize = resizable && !gridView

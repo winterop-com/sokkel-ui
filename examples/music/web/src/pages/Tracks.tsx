@@ -3,12 +3,12 @@ import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
-import { TrackList } from '@winterop-com/sokkel-ui-media/TrackList'
+import { DraggableTrackList } from '@winterop-com/sokkel-ui-media/DraggableTrackList'
 import { Music2, Shuffle } from 'lucide-react'
 import { useState } from 'react'
 
 import { ALBUM_BY_ID, artistName, lengthOfSongs, minutes, SONGS } from '../catalog'
-import { SongActions, useStarredSongs } from '../parts/actions'
+import { SONG_DRAG, SongActions, useStarredSongs } from '../parts/actions'
 import { asTrack, Nothing, useNowPlaying } from '../parts/songs'
 import { playSongs } from '../player'
 
@@ -73,7 +73,8 @@ export function Tracks() {
                     No song, artist or album in the library is called “{query}”.
                 </Nothing>
             ) : (
-                <TrackList
+                <DraggableTrackList
+                    kind={SONG_DRAG.song}
                     tracks={shown.map((song) => asTrack(song, { artwork: true, album: true }))}
                     current={now.song?.id}
                     playing={now.playing}

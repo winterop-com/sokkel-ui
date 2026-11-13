@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
-import { DEFAULT_PREFS, TEMPLATE, type FontSize, type View } from '../model'
+import { DEFAULT_PREFS, TEMPLATE, type FontSize, type Order, type View } from '../model'
 import { useVault } from '../state'
 
 /** A switch named for the setting it turns. */
@@ -54,7 +54,7 @@ function TemplateEditor() {
 
 /** The reader's settings, kept by the backend as each is changed; the look is kept in this browser. */
 export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
-    const { prefs, setPrefs, vault } = useVault()
+    const { prefs, setPrefs, vault, order } = useVault()
     const { settings: look, setSettings: setLook } = frame.appearance
     const [active, setActive] = useState('editor')
     const [search, setSearch] = useState('')
@@ -190,10 +190,27 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                 },
                 {
                     id: 'vault',
-                    reset: false,
                     label: 'Vault',
                     icon: Database,
                     settings: [
+                        {
+                            id: 'order',
+                            title: 'Order',
+                            description: 'How each folder lists its notes and folders: by name, or in the order you drag them into.',
+                            keywords: ['sort', 'drag', 'manual'],
+                            control: (
+                                <Segmented<Order>
+                                    size="sm"
+                                    label="Order"
+                                    value={order}
+                                    onValueChange={(next) => void setPrefs({ order: next })}
+                                    options={[
+                                        { value: 'name', label: 'Name' },
+                                        { value: 'manual', label: 'Manual' },
+                                    ]}
+                                />
+                            ),
+                        },
                         {
                             id: 'tabs',
                             title: 'Close every tab',
@@ -262,6 +279,7 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                             lineNumbers: DEFAULT_PREFS.lineNumbers,
                             defaultView: DEFAULT_PREFS.defaultView,
                         })
+                    if (section === 'vault') void setPrefs({ order: DEFAULT_PREFS.order })
                     if (section === 'daily')
                         void setPrefs({
                             dailyFolder: DEFAULT_PREFS.dailyFolder,

@@ -8,7 +8,8 @@ reaches into a package's `src/`. Each is a Tidevann product, in a folder of its 
 ```
 examples/
   shared/        the fake backend, the window frame, the hash route and the Tidevann mark
-  tasks/         lists, a quick add and tasks edited in place
+  tasks/         lists, a quick add and tasks edited in place, put in your own order by drag, and a
+                 board whose cards move between To do, Doing and Done
   runs/          a jobs console: an overview arranged by drag, runs, a run's page, jobs, schedules and settings
   records/       a records app: forms filled in sections, responses and receipts, households and
                  their visits, places on a map, an API playground and metadata health (GAPS.md
@@ -22,7 +23,8 @@ examples/
                  revenue, customers, funnels and reports whose steps and panels drag into order, and goals
   notes/         a vault of linked notes: folders in the rail, markdown beside its preview in
                  tabs, [[links]] completed as typed, backlinks and mentions, tags, a quick
-                 switcher, search, a graph of the links and a daily journal
+                 switcher, search, a graph of the links and a daily journal; notes and folders
+                 dragged into folders and into an order of the reader's own
   dataviz/       a data visualizer: datasets imported, edited and filtered, a chart builder with a
                  live preview and suggested views, charts saved, downloaded and shared as links
                  that carry their data, and boards built by dragging charts on, filtered together
@@ -32,20 +34,22 @@ examples/
                  and the runner that holds them in memory
   music/         a music player that really plays: songs made in the page by a small synthesizer,
                  albums, artists and the library's tree in the rail, favorites, playlists ordered by
-                 drag, simulated downloads, endless radio, the queue, the full screen with its
-                 visualizer and timed words, crossfade and the media keys
+                 drag, a song dragged onto a playlist in the rail, simulated downloads, endless
+                 radio, the queue, the full screen with its visualizer and timed words, crossfade
+                 and the media keys
   video/         a video site that really plays: clips drawn and encoded in the page (WebCodecs into
                  WebM, kept in IndexedDB), a watch page with the channel, likes, saving, sharing,
                  downloads, comments and up next, theater mode and stats, channels, subscriptions,
                  a library with history and playlists, search, and player settings that stick
   studio/        an editor for pipelines, schemas and queries: a workspace of files in the rail's
-                 tree, opened in tabs; pipelines checked and completed against their schema as typed,
+                 tree, put in order by drag and opened in tabs; pipelines checked and completed against their schema as typed,
                  their problems listed, their steps edited as text, on a graph or both with one undo,
                  and run with the log marked where they failed; JSON Schemas edited against the 2020-12 meta-schema beside a value tried
                  against them; SQL over the runs; any editor popped out into a window
   podcast/       podcasts that really play: episodes spoken in the page with a transcript that
-                 follows, chapters, speed, a sleep timer, the queue, New as an inbox, downloads,
-                 Discover, stats and settings
+                 follows, chapters, speed, a sleep timer, the queue (an episode dragged onto it,
+                 Starred or Downloads in the rail), New as an inbox, downloads, Discover, stats
+                 and settings
   fhir/          a FHIR workbench over the fhir add-on: a server's resources edited as JSON, checked
                  as typed and again by the server, its findings marked on their values, saved as
                  versions and compared; FHIRPath evaluated live by the FHIRPath engine; CQL libraries

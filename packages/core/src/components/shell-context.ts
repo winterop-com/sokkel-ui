@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useId, useLayoutEffect } from 'react'
+import { createContext, useContext, useEffect, useId, useLayoutEffect, type ComponentType, type ReactNode } from 'react'
 
 import type { DesktopWindow } from '../lib/desktop'
+import type { RailDrop } from './Rail'
 import type { PanelStrip } from './panel-strip'
 import type { Crumb, TrailEnd } from './TopBar'
 
@@ -109,3 +110,6 @@ export function useShellTrail(trail: readonly Crumb[] | undefined, { ends }: She
  * the shell's own top bar so a bar drawn elsewhere keeps its own; undefined while none is stated.
  */
 export const ShellTrail = createContext<StatedTrail | undefined>(undefined)
+
+/** What a rail entry's row is drawn in to take drops, which `RailDrops` hands the rail; undefined outside one. */
+export const RailDropRows = createContext<ComponentType<{ label: string; drop: RailDrop; children: ReactNode }> | undefined>(undefined)

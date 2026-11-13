@@ -14,7 +14,7 @@ import { DEFAULT_PREFS, PEOPLE, PROJECTS, type Person, type Prefs, type Project 
 
 /** The preferences each section holds, so Reset to defaults puts back those and leaves the rest. */
 const HELD: Record<string, (keyof Omit<Prefs, 'id'>)[]> = {
-    lists: ['startList', 'showDone'],
+    lists: ['startList', 'view', 'order', 'showDone'],
     adding: ['assignee', 'project'],
 }
 
@@ -95,9 +95,44 @@ export function Settings({
                             ),
                         },
                         {
+                            id: 'view',
+                            title: 'Show lists as',
+                            description: 'Rows, or a board with a column for each state whose cards are dragged between them.',
+                            keywords: ['board', 'columns', 'kanban', 'layout'],
+                            control: (
+                                <Choose<Prefs['view']>
+                                    label="Show lists as"
+                                    value={prefs.view}
+                                    items={[
+                                        { value: 'list', label: 'List' },
+                                        { value: 'board', label: 'Board' },
+                                    ]}
+                                    onChange={(view) => setPrefs({ view })}
+                                />
+                            ),
+                        },
+                        {
+                            id: 'order',
+                            title: 'Order',
+                            description: 'Your order is set by dragging a row by its grip; due date puts the soonest first.',
+                            keywords: ['sort', 'drag', 'rank', 'priority'],
+                            control: (
+                                <Choose<Prefs['order']>
+                                    label="Order"
+                                    value={prefs.order}
+                                    items={[
+                                        { value: 'mine', label: 'Your order' },
+                                        { value: 'due', label: 'Due date' },
+                                    ]}
+                                    onChange={(order) => setPrefs({ order })}
+                                />
+                            ),
+                        },
+                        {
                             id: 'show-done',
                             title: 'Show done tasks',
-                            description: 'Lists keep the tasks already done, struck through, after the open ones.',
+                            description:
+                                'Lists keep the tasks already done, struck through; ordered by due date, they come after the open ones.',
                             keywords: ['completed', 'finished', 'hide'],
                             control: (
                                 <Switch

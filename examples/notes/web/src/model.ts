@@ -7,6 +7,8 @@ export interface Folder {
     name: string
     /** The folder it sits in, or null at the top of the vault. */
     parent: string | null
+    /** Its place among the folders beside it, in the reader's own order. */
+    rank?: number
 }
 
 export interface Note {
@@ -21,9 +23,13 @@ export interface Note {
     updated: number
     /** The day a daily note is for, `YYYY-MM-DD`. */
     day?: string
+    /** Its place among the notes beside it, in the reader's own order. */
+    rank?: number
 }
 
 export type FontSize = 'sm' | 'md' | 'lg'
+/** How the vault orders each folder: by name, or in the order the reader drags things into. */
+export type Order = 'name' | 'manual'
 export type View = EditPreviewView
 
 export interface Prefs {
@@ -49,6 +55,8 @@ export interface Prefs {
     template: string
     /** Whether the graph shows the notes with no link. */
     orphans: boolean
+    /** How the vault orders each folder; a vault kept before there was a choice has none, and reads as `manual`. */
+    order?: Order
 }
 
 export const TEMPLATE = `# {{date}}
@@ -78,6 +86,7 @@ export const DEFAULT_PREFS: Prefs = {
     dailyFolder: 'daily',
     template: TEMPLATE,
     orphans: true,
+    order: 'manual',
 }
 
 /** How many notes the recent list keeps. */

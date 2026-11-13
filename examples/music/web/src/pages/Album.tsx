@@ -9,14 +9,14 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
 import { MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
-import { TrackList } from '@winterop-com/sokkel-ui-media/TrackList'
+import { DraggableTrackList } from '@winterop-com/sokkel-ui-media/DraggableTrackList'
 import { Disc3, ListPlus, MoreHorizontal, Pause, Play, Shuffle } from 'lucide-react'
 
 import { go } from 'tidevann-shared/router'
 import { ALBUM_BY_ID, ARTIST_BY_ID, albumsOfArtist, formatBytes, lengthOfSongs, minutes, songsOfAlbum } from '../catalog'
 import { downloads, setFavorite, useRows, useStarred } from '../data'
 import { download, removeDownload } from '../downloads'
-import { PlaylistItems, SongActions, useStarredSongs } from '../parts/actions'
+import { PlaylistItems, SONG_DRAG, SongActions, useStarredSongs } from '../parts/actions'
 import { AlbumCard, AlbumMenuItems, asTrack, Nothing, playAlbum, useNowPlaying } from '../parts/songs'
 import { playSongs, setPlaying } from '../player'
 
@@ -120,7 +120,8 @@ export function Album({ id }: { id: string }) {
                     </Row>
                 </Row>
                 <Stack gap="2xl" className="min-w-0 flex-1">
-                    <TrackList
+                    <DraggableTrackList
+                        kind={SONG_DRAG.song}
                         tracks={songs.map((song) => asTrack(song))}
                         current={here ? now.song?.id : undefined}
                         playing={now.playing}

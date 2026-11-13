@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { ShowMore } from '@winterop-com/sokkel-ui/ShowMore'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
+import { SortableGrip, SortableGroup, SortableItem } from '@winterop-com/sokkel-ui/Sortable'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Columns3, Pencil, Plus, RotateCcw, Square, Trash2, X } from 'lucide-react'
 
 import { go } from 'tidevann-shared/router'
@@ -92,6 +94,16 @@ export function ComparePage({ id }: { id: string | undefined }) {
     }
     const change = (patch: Partial<Draft>) => setDraft((now) => ({ ...now, ...patch }))
     const free = models.find((model) => !draft.models.includes(model.id))
+    // Each chosen model's key: its id, with how many times it was chosen before when it is chosen twice.
+    const keys = draft.models.map((model, index) => {
+        const before = draft.models.slice(0, index).filter((one) => one === model).length
+        return before === 0 ? model : `${model}:${String(before)}`
+    })
+    const nameOf = (key: string) => {
+        const model = draft.models[keys.indexOf(key)]
+        const found = models.find((one) => one.id === model)
+        return found === undefined ? (model ?? '') : `${found.name} ${found.quant}`
+    }
 
     return (
         <Stack gap="page">
@@ -133,33 +145,48 @@ export function ComparePage({ id }: { id: string | undefined }) {
                     </>
                 }
             />
-            <Section title="Prompt" description="Sent to every model chosen, each answering on its own at the same settings.">
+            <Section
+                title="Prompt"
+                description="Sent to every model chosen, each answering on its own at the same settings, in columns in the order the models stand here."
+            >
                 <Stack gap="lg">
-                    <Row gap="sm" wrap>
-                        {draft.models.map((model, index) => (
-                            <Row key={`${model}-${String(index)}`} gap="2xs">
-                                <ModelSelect
-                                    label={`Model ${String(index + 1)}`}
-                                    value={model}
-                                    onChange={(next) => change({ models: draft.models.map((one, at) => (at === index ? next : one)) })}
-                                />
-                                {draft.models.length > 2 && (
-                                    <IconButton
-                                        label={`Take model ${String(index + 1)} away`}
-                                        onClick={() => change({ models: draft.models.filter((_, at) => at !== index) })}
-                                    >
-                                        <X aria-hidden />
-                                    </IconButton>
-                                )}
-                            </Row>
-                        ))}
-                        {draft.models.length < 4 && free !== undefined && (
-                            <Button size="sm" variant="outline" onClick={() => change({ models: [...draft.models, free.id] })}>
-                                <Plus aria-hidden />
-                                Add a model
-                            </Button>
-                        )}
-                    </Row>
+                    <SortableGroup
+                        ids={keys}
+                        layout="grid"
+                        label={nameOf}
+                        onMove={(from, to) => change({ models: moveItem(draft.models, from, to) })}
+                    >
+                        <Row gap="sm" wrap>
+                            {draft.models.map((model, index) => (
+                                <SortableItem key={keys[index]} id={keys[index] ?? model}>
+                                    <Row gap="2xs">
+                                        <SortableGrip />
+                                        <ModelSelect
+                                            label={`Model ${String(index + 1)}`}
+                                            value={model}
+                                            onChange={(next) =>
+                                                change({ models: draft.models.map((one, at) => (at === index ? next : one)) })
+                                            }
+                                        />
+                                        {draft.models.length > 2 && (
+                                            <IconButton
+                                                label={`Take model ${String(index + 1)} away`}
+                                                onClick={() => change({ models: draft.models.filter((_, at) => at !== index) })}
+                                            >
+                                                <X aria-hidden />
+                                            </IconButton>
+                                        )}
+                                    </Row>
+                                </SortableItem>
+                            ))}
+                            {draft.models.length < 4 && free !== undefined && (
+                                <Button size="sm" variant="outline" onClick={() => change({ models: [...draft.models, free.id] })}>
+                                    <Plus aria-hidden />
+                                    Add a model
+                                </Button>
+                            )}
+                        </Row>
+                    </SortableGroup>
                     <Columns count={2} min="md" gap="xl">
                         <SliderField
                             id="compare-temperature"

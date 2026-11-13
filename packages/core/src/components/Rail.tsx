@@ -18,13 +18,24 @@ import { createPortal } from 'react-dom'
 import { cn } from '../lib/cn'
 import { useTrafficLights } from '../lib/desktop'
 import { usePanelSize } from '../hooks/use-panel-size'
-import { RailCollapsed, ShellDesktop, ShellDrawer, ShellFootCell, ShellRailMode } from './shell-context'
+import { RailCollapsed, RailDropRows, ShellDesktop, ShellDrawer, ShellFootCell, ShellRailMode } from './shell-context'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
 import { GroupLabel } from './GroupLabel'
 import { Link, type LinkProps } from './Link'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import type { DragData } from './DragDrop'
+
+/**
+ * An entry as a place things dragged from the page are dropped on, such as a track onto a playlist:
+ * which things it takes, and what to do with one let go on it. It takes drops inside a `RailDrops`
+ * the app draws around the shell, which is the drag scope the page's parts share with the rail.
+ */
+export interface RailDrop {
+    accepts: (drag: DragData) => boolean
+    onDrop: (drag: DragData) => void
+}
 
 /** One place the rail leads to. */
 export interface RailEntry {
@@ -54,6 +65,8 @@ export interface RailEntry {
      * chevron at its end; collapsed or in a strip, the entry opens them in a small flyout.
      */
     entries?: RailEntry[]
+    /** Makes the entry's row a place things dragged from the page land on, inside a `RailDrops`. */
+    drop?: RailDrop
 }
 
 /** A titled group of entries; a group with no title stands at the top. */
@@ -501,10 +514,23 @@ export function Rail({
 
 /** An entry's link, holding `children`. */
 const renderLink = (entry: RailEntry, children: ReactNode, className: string) => (
-    <Link href={entry.href} className={className} aria-current={entry.active ? 'page' : undefined}>
-        {children}
-    </Link>
+    <Droppable entry={entry}>
+        <Link href={entry.href} className={className} aria-current={entry.active ? 'page' : undefined}>
+            {children}
+        </Link>
+    </Droppable>
 )
+
+/** An entry's row, as a drop target when it has a `drop` and stands inside a `RailDrops`. */
+function Droppable({ entry, children }: { entry: RailEntry; children: ReactElement }) {
+    const Row = useContext(RailDropRows)
+    if (entry.drop === undefined || Row === undefined) return children
+    return (
+        <Row label={entry.label} drop={entry.drop}>
+            {children}
+        </Row>
+    )
+}
 
 /** The control at the end of the expanded rail's head: collapse, or close in the shell's drawer. */
 const HEAD_BUTTON =
@@ -910,16 +936,18 @@ function RailLink({ entry, collapsed, unread }: { entry: RailEntry; collapsed: b
                 {/* The link names itself, its icon being all it draws; the tooltip shows the name to the eye. */}
                 <Tooltip.Trigger
                     render={(props) => (
-                        <Link
-                            {...(props as LinkProps)}
-                            href={entry.href}
-                            aria-label={entry.label}
-                            aria-current={entry.active ? 'page' : undefined}
-                            className={iconClass(entry.active === true)}
-                        >
-                            <EntryMark entry={entry} initial />
-                            <Corner entry={entry} unread={unread} />
-                        </Link>
+                        <Droppable entry={entry}>
+                            <Link
+                                {...(props as LinkProps)}
+                                href={entry.href}
+                                aria-label={entry.label}
+                                aria-current={entry.active ? 'page' : undefined}
+                                className={iconClass(entry.active === true)}
+                            >
+                                <EntryMark entry={entry} initial />
+                                <Corner entry={entry} unread={unread} />
+                            </Link>
+                        </Droppable>
                     )}
                 />
                 <Tip entry={entry} />

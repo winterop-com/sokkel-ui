@@ -1,4 +1,6 @@
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import { dragData, type DragData } from '@winterop-com/sokkel-ui/DragDrop'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { Rail, type RailBody, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Search } from '@winterop-com/sokkel-ui/Search'
@@ -36,9 +38,9 @@ import { useState } from 'react'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go, useOverlayRoute } from 'tidevann-shared/router'
-import { ALBUM_BY_ID, ALBUMS, ARTIST_BY_ID, ARTISTS, albumsOfArtist, SONGS, songsOfAlbum } from './catalog'
+import { ALBUM_BY_ID, ALBUMS, ARTIST_BY_ID, ARTISTS, albumsOfArtist, SONGS, songOf, songsOfAlbum } from './catalog'
 import { downloads, favorites, playlists, setFavorite, setSettings, useRows, useSettings } from './data'
-import { startRadio } from './parts/actions'
+import { addSongsTo, isSongDrag, songOfDrag, startRadio } from './parts/actions'
 import { askNewPlaylist } from './parts/dialogs'
 import { Player } from './parts/Player'
 import { QueuePanel } from './parts/QueuePanel'
@@ -149,6 +151,8 @@ export function Music({ frame }: { frame: Frame }) {
     const kept = useRows(downloads)
     const [collapsed, setCollapsed] = useState(false)
     const [fullscreen, setFullscreen] = useState(false)
+    // While a song is dragged the rail shows its places, so its playlists are there to drop on.
+    const [carrying, setCarrying] = useState(false)
     const [treeQuery, setTreeQuery] = useState('')
     const [query, setQuery] = useState('')
     const { settings: look, setSettings: setLook } = frame.appearance
@@ -162,6 +166,12 @@ export function Music({ frame }: { frame: Frame }) {
     const artist = place === 'artists' && second !== undefined ? ARTIST_BY_ID.get(second) : undefined
     const playlist = place === 'playlists' && second !== undefined ? lists.find((row) => row.id === second) : undefined
     const running = kept.filter((row) => row.state === 'running').length
+
+    const dropSong = (row: { id: string; name: string }, drag: DragData) => {
+        const id = songOfDrag(drag)
+        const dropped = id === undefined ? undefined : songOf(id)
+        if (dropped !== undefined) addSongsTo(row, [dropped.id], dropped.title)
+    }
 
     const groups: RailGroup[] = [
         {
@@ -213,6 +223,8 @@ export function Music({ frame }: { frame: Frame }) {
                         icon: ListMusic,
                         href: `#/playlists/${row.id}`,
                         keywords: ['playlist'],
+                        // A song's row dragged from a list onto the playlist goes at its end.
+                        drop: { accepts: isSongDrag, onDrop: (drag: DragData) => dropSong(row, drag) },
                     })),
             ],
         },
@@ -402,99 +414,107 @@ export function Music({ frame }: { frame: Frame }) {
     }
 
     return (
-        <Shell
-            palette={palette}
-            paletteFilter="terms"
-            paletteSearch={{
-                search: (text) => searchGroups(text),
-                onOpen: (result, group) => openSearch(group.kind, result.id),
-                minQuery: 2,
-            }}
-            shortcuts={[]}
-            desktop={frame.desktop}
-            route={settings.route.join('/')}
-            panel={options.queueOpen ? <QueuePanel /> : undefined}
-            panelOpen={options.queueOpen}
-            onPanelOpenChange={(queueOpen) => setSettings({ queueOpen })}
-            rail={
-                <Rail
-                    mark={<TidevannMark />}
-                    markHref="#/albums"
-                    name="Music"
-                    groups={groups}
-                    collapsed={collapsed}
-                    onCollapsedChange={setCollapsed}
-                    body={body}
-                    foot={
-                        <AccountMenu
-                            name="ada"
-                            where="tidevann.example.org"
-                            collapsed={collapsed}
-                            scheme={look.scheme}
-                            onSchemeChange={(scheme) => setLook({ ...look, scheme })}
-                            onSettings={() => go('/settings')}
-                            local
-                        />
-                    }
-                />
-            }
-            top={
-                <TopBar
-                    trail={trail}
-                    search={
-                        <Search
-                            search={(text) => searchGroups(text)}
-                            minQuery={2}
-                            query={query}
-                            onQueryChange={setQuery}
-                            onOpen={(result, group) => {
-                                setQuery('')
-                                openSearch(group.kind, result.id)
-                            }}
-                            onSeeAll={(text) => {
-                                setQuery('')
-                                go(`/search/${encodeURIComponent(text)}`)
-                            }}
-                        />
-                    }
-                />
-            }
-            foot={
-                <StatusLine
-                    live={state.playing}
-                    tone={state.error === undefined ? (state.playing ? 'live' : 'quiet') : 'error'}
-                    note={
-                        state.error ??
-                        (song === undefined
-                            ? 'Nothing playing'
-                            : `${state.playing ? 'Playing' : 'Paused'} on this computer, from ${state.source?.label ?? 'the queue'}`)
-                    }
-                >
-                    {options.crossfade > 0 && <StatusItem label="crossfade">{`${String(options.crossfade)} s`}</StatusItem>}
-                    {options.rate !== 1 && <StatusItem label="speed">{`${String(options.rate)}x`}</StatusItem>}
-                    <StatusItem label="library">{`${String(ALBUMS.length)} albums`}</StatusItem>
-                    <StatusItem label="kept">{kept.filter((row) => row.state === 'kept').length}</StatusItem>
-                </StatusLine>
-            }
-            bottom={
-                <Player
-                    queueOpen={options.queueOpen}
-                    onQueueOpenChange={(queueOpen) => setSettings({ queueOpen })}
-                    fullscreen={fullscreen}
-                    onFullscreenChange={setFullscreen}
-                />
-            }
+        // One drag scope over the shell, so a song's row on the page or in the queue drops onto a playlist in the rail.
+        <RailDrops
+            onDragStart={(event) => setCarrying(isSongDrag(dragData(event.active)))}
+            onDragEnd={() => setCarrying(false)}
+            onDragCancel={() => setCarrying(false)}
         >
-            <PlayerKeys
-                onFullscreen={() => setFullscreen((open) => !open)}
-                onLyrics={() => {
-                    setSettings({ lyrics: !(fullscreen && options.lyrics) })
-                    setFullscreen(true)
+            <Shell
+                palette={palette}
+                paletteFilter="terms"
+                paletteSearch={{
+                    search: (text) => searchGroups(text),
+                    onOpen: (result, group) => openSearch(group.kind, result.id),
+                    minQuery: 2,
                 }}
-                onQueue={toggleQueue}
-            />
-            <Page className="@container">{page}</Page>
-            {settings.open && <Settings appearance={frame.appearance} open onClose={settings.close} />}
-        </Shell>
+                shortcuts={[]}
+                desktop={frame.desktop}
+                route={settings.route.join('/')}
+                panel={options.queueOpen ? <QueuePanel /> : undefined}
+                panelOpen={options.queueOpen}
+                onPanelOpenChange={(queueOpen) => setSettings({ queueOpen })}
+                rail={
+                    <Rail
+                        mark={<TidevannMark />}
+                        markHref="#/albums"
+                        name="Music"
+                        groups={groups}
+                        collapsed={collapsed}
+                        onCollapsedChange={setCollapsed}
+                        body={body}
+                        view={carrying ? 'places' : undefined}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                scheme={look.scheme}
+                                onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                                onSettings={() => go('/settings')}
+                                local
+                            />
+                        }
+                    />
+                }
+                top={
+                    <TopBar
+                        trail={trail}
+                        search={
+                            <Search
+                                search={(text) => searchGroups(text)}
+                                minQuery={2}
+                                query={query}
+                                onQueryChange={setQuery}
+                                onOpen={(result, group) => {
+                                    setQuery('')
+                                    openSearch(group.kind, result.id)
+                                }}
+                                onSeeAll={(text) => {
+                                    setQuery('')
+                                    go(`/search/${encodeURIComponent(text)}`)
+                                }}
+                            />
+                        }
+                    />
+                }
+                foot={
+                    <StatusLine
+                        live={state.playing}
+                        tone={state.error === undefined ? (state.playing ? 'live' : 'quiet') : 'error'}
+                        note={
+                            state.error ??
+                            (song === undefined
+                                ? 'Nothing playing'
+                                : `${state.playing ? 'Playing' : 'Paused'} on this computer, from ${state.source?.label ?? 'the queue'}`)
+                        }
+                    >
+                        {options.crossfade > 0 && <StatusItem label="crossfade">{`${String(options.crossfade)} s`}</StatusItem>}
+                        {options.rate !== 1 && <StatusItem label="speed">{`${String(options.rate)}x`}</StatusItem>}
+                        <StatusItem label="library">{`${String(ALBUMS.length)} albums`}</StatusItem>
+                        <StatusItem label="kept">{kept.filter((row) => row.state === 'kept').length}</StatusItem>
+                    </StatusLine>
+                }
+                bottom={
+                    <Player
+                        queueOpen={options.queueOpen}
+                        onQueueOpenChange={(queueOpen) => setSettings({ queueOpen })}
+                        fullscreen={fullscreen}
+                        onFullscreenChange={setFullscreen}
+                    />
+                }
+            >
+                <PlayerKeys
+                    onFullscreen={() => setFullscreen((open) => !open)}
+                    onLyrics={() => {
+                        setSettings({ lyrics: !(fullscreen && options.lyrics) })
+                        setFullscreen(true)
+                    }}
+                    onQueue={toggleQueue}
+                />
+                <Page className="@container">{page}</Page>
+                {settings.open && <Settings appearance={frame.appearance} open onClose={settings.close} />}
+            </Shell>
+        </RailDrops>
     )
 }

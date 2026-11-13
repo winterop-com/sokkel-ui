@@ -1,6 +1,7 @@
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { CommandPalette, type PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import type { DataAction } from '@winterop-com/sokkel-ui/DataTable'
+import { DragDrop } from '@winterop-com/sokkel-ui/DragDrop'
 import { useMedia } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
@@ -39,14 +40,14 @@ import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { Dialogs } from './Dialogs'
-import { clock, day, wordCount } from './model'
+import { clock, day, wordCount, type Note } from './model'
 import { NotePanel } from './NotePanel'
-import { AllNotes } from './pages/AllNotes'
+import { AllNotes, NOTE_KIND } from './pages/AllNotes'
 import { Daily } from './pages/Daily'
 import { SearchPage, searchVault } from './pages/SearchPage'
 import { Tags } from './pages/Tags'
 import { useVault } from './state'
-import { vaultTree } from './vault'
+import { foldersIn, notesIn, vaultTree } from './vault'
 
 // The graph loads React Flow and elk the first time it is opened, and a note and settings the
 // editor (CodeMirror), so the list a reader lands on carries none of them.
@@ -95,7 +96,7 @@ function useRowActions(): (node: TreeNode) => DataAction[] {
 /** The notes app: the rail of places over the vault's tree, the page the route names, a note's links beside it, and the palettes. */
 export function Notes({ frame }: { frame: Frame }) {
     const state = useVault()
-    const { vault, prefs, setPrefs, open, openDay, newNote, ask, moveNote, moveFolder, save, drafts } = state
+    const { vault, prefs, setPrefs, open, openDay, newNote, ask, order, place, save, drafts } = state
     const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
     const settings = useOverlayRoute(frame.route, 'settings', ['notes'])
@@ -139,7 +140,33 @@ export function Notes({ frame }: { frame: Frame }) {
         { id: 'system', title: 'System', entries: [entry('settings', 'Settings', Settings, '#/settings')] },
     ]
 
-    const tree = useMemo(() => vaultTree(vault, prefs.dailyFolder), [vault, prefs.dailyFolder])
+    const tree = useMemo(() => vaultTree(vault, prefs.dailyFolder, order), [vault, prefs.dailyFolder, order])
+
+    /** The folder a tree row's id names, or null for the top of the vault. */
+    const folderOf = (into: string | null) => (into === null ? null : into.slice('folder:'.length))
+    /**
+     * Puts a note or a folder where the tree says, its place among the level's rows (folders first,
+     * then notes) turned into a place among the notes or the folders alone.
+     */
+    const placeAt = (id: string, into: string | null, index: number) => {
+        const target = folderOf(into)
+        if (id.startsWith('folder:')) {
+            const own = id.slice('folder:'.length)
+            const folders = foldersIn(vault, target, order).filter((one) => one.id !== own).length
+            void place('folder', own, target, Math.min(index, folders))
+            return
+        }
+        const folders = foldersIn(vault, target, order).length
+        void place('note', id, target, Math.max(0, index - folders))
+    }
+    /** Puts a note dragged from a list into the tree, where the tree's count of the level still holds the note when it is in it. */
+    const dropAt = (note: Note, into: string | null, index: number) => {
+        const target = folderOf(into)
+        const folders = foldersIn(vault, target, order).length
+        const was = note.folder === target ? notesIn(vault, target, order, prefs.dailyFolder).findIndex((one) => one.id === note.id) : -1
+        const at = Math.max(0, index - folders)
+        void place('note', note.id, target, was !== -1 && was < at ? at - 1 : at)
+    }
     const chosen = noteId ?? (folderId === undefined ? undefined : `folder:${folderId}`)
 
     const switcher = (title: string, ids: readonly string[]) => ({
@@ -291,149 +318,155 @@ export function Notes({ frame }: { frame: Frame }) {
     // A note fills the content edge to edge, and the graph lays out its own page.
     const bare = page === 'note' || page === 'graph'
 
+    // One drag layer around the shell, so a note dragged from a list on the page drops into a folder of the rail's tree.
     return (
-        <Shell
-            palette={palette}
-            paletteFilter="terms"
-            desktop={frame.desktop}
-            route={settings.route.join('/')}
-            shortcuts={[]}
-            rail={
-                <Rail
-                    mark={<TidevannMark />}
-                    markHref="#/notes"
-                    name="Notes"
-                    groups={groups}
-                    body={{
-                        title: 'Vault',
-                        search: (
-                            <Row gap="2xs">
-                                <SearchField value={filter} onChange={setFilter} placeholder="Filter" className="min-w-0 flex-1" />
+        <DragDrop>
+            <Shell
+                palette={palette}
+                paletteFilter="terms"
+                desktop={frame.desktop}
+                route={settings.route.join('/')}
+                shortcuts={[]}
+                rail={
+                    <Rail
+                        mark={<TidevannMark />}
+                        markHref="#/notes"
+                        name="Notes"
+                        groups={groups}
+                        body={{
+                            title: 'Vault',
+                            search: (
+                                <Row gap="2xs">
+                                    <SearchField value={filter} onChange={setFilter} placeholder="Filter" className="min-w-0 flex-1" />
+                                    <IconButton label="New note" onClick={() => newNote(note?.folder ?? null)}>
+                                        <FilePlus />
+                                    </IconButton>
+                                    <IconButton label="New folder" onClick={() => ask({ kind: 'new-folder', parent: null })}>
+                                        <FolderPlus />
+                                    </IconButton>
+                                </Row>
+                            ),
+                            content: (
+                                <Tree
+                                    label="Vault"
+                                    nodes={tree}
+                                    query={filter}
+                                    selected={chosen === undefined ? [] : [chosen]}
+                                    onSelect={([id]) => {
+                                        if (id === undefined) return
+                                        if (id.startsWith('folder:')) go(`/folder/${id.slice('folder:'.length)}`)
+                                        else open(id)
+                                    }}
+                                    defaultExpanded={['folder:runbooks', 'folder:jobs']}
+                                    actions={rowActions}
+                                    onMove={placeAt}
+                                    canMove={(id, into) => {
+                                        if (into !== null && !into.startsWith('folder:')) return false
+                                        // In the reader's own order a row also moves within its folder; by name only a move to another folder changes anything.
+                                        if (order === 'manual') return true
+                                        const from = id.startsWith('folder:')
+                                            ? vault.folderById.get(id.slice('folder:'.length))?.parent
+                                            : vault.byId.get(id)?.folder
+                                        return from !== folderOf(into)
+                                    }}
+                                    accepts={(drag) => drag.kind === NOTE_KIND}
+                                    onDrop={(drag, into, index) => {
+                                        if (into !== null && !into.startsWith('folder:')) return
+                                        const note = (drag.value as { row?: Note } | undefined)?.row
+                                        if (note !== undefined) dropAt(note, into, index)
+                                    }}
+                                />
+                            ),
+                        }}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                where="tidevann.example.org"
+                                onSettings={() => go('/settings')}
+                                scheme={look.scheme}
+                                onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                                onSignOut={() => go('/notes')}
+                            />
+                        }
+                    />
+                }
+                top={
+                    <TopBar
+                        trail={trail}
+                        search={
+                            <Search
+                                query={topQuery}
+                                onQueryChange={setTopQuery}
+                                search={(query) =>
+                                    searchVault(vault, query, {}).groups.map((group) => ({ ...group, results: group.results.slice(0, 6) }))
+                                }
+                                onOpen={(result) => {
+                                    setTopQuery('')
+                                    open(result.id)
+                                }}
+                                onSeeAll={(query) => {
+                                    setTopQuery('')
+                                    go(`/search/${encodeURIComponent(query)}`)
+                                }}
+                                renderPreview={(result: SearchResult) => {
+                                    const found = vault.byId.get(result.id)
+                                    return found === undefined ? null : <Markdown content={found.body} scale="document" />
+                                }}
+                                words={{ placeholder: 'Search notes' }}
+                            />
+                        }
+                        actions={
+                            <>
                                 <IconButton label="New note" onClick={() => newNote(note?.folder ?? null)}>
                                     <FilePlus />
                                 </IconButton>
-                                <IconButton label="New folder" onClick={() => ask({ kind: 'new-folder', parent: null })}>
-                                    <FolderPlus />
-                                </IconButton>
-                            </Row>
-                        ),
-                        content: (
-                            <Tree
-                                label="Vault"
-                                nodes={tree}
-                                query={filter}
-                                selected={chosen === undefined ? [] : [chosen]}
-                                onSelect={([id]) => {
-                                    if (id === undefined) return
-                                    if (id.startsWith('folder:')) go(`/folder/${id.slice('folder:'.length)}`)
-                                    else open(id)
-                                }}
-                                defaultExpanded={['folder:runbooks', 'folder:jobs']}
-                                actions={rowActions}
-                                onMove={(id, into) => {
-                                    const target = into === null ? null : into.slice('folder:'.length)
-                                    if (id.startsWith('folder:')) void moveFolder(id.slice('folder:'.length), target)
-                                    else void moveNote(id, target)
-                                }}
-                                canMove={(id, into) => {
-                                    if (into !== null && !into.startsWith('folder:')) return false
-                                    // The vault sorts each folder by name, so only a move to another folder changes anything.
-                                    const from = id.startsWith('folder:')
-                                        ? vault.folderById.get(id.slice('folder:'.length))?.parent
-                                        : vault.byId.get(id)?.folder
-                                    return from !== (into === null ? null : into.slice('folder:'.length))
-                                }}
-                            />
-                        ),
+                            </>
+                        }
+                    />
+                }
+                foot={
+                    <StatusLine note={saying} tone={save.state === 'failed' ? 'warn' : undefined} live={save.state === 'saving'}>
+                        {words !== undefined && <StatusItem label="words">{words}</StatusItem>}
+                        {note !== undefined && <StatusItem label="links in">{vault.backlinks.get(note.id)?.length ?? 0}</StatusItem>}
+                        <StatusItem label="notes">{vault.notes.length}</StatusItem>
+                    </StatusLine>
+                }
+                panel={note === undefined ? undefined : <NotePanel note={note} />}
+                panelOpen={panelShown}
+                onPanelOpenChange={(panel) => (wide ? void setPrefs({ panel }) : setSheet(panel))}
+            >
+                <Suspense fallback={null}>{bare ? content : <Page>{content}</Page>}</Suspense>
+                {settings.open && (
+                    <Suspense fallback={null}>
+                        <SettingsPage frame={frame} open onClose={settings.close} />
+                    </Suspense>
+                )}
+                <Dialogs />
+                <CommandPalette
+                    open={switching}
+                    onOpenChange={setSwitching}
+                    filter="terms"
+                    groups={[{ ...switcher('Recent', prefs.recent) }, { ...switcher('Notes', byTitle) }]}
+                    search={{
+                        search: (query) => {
+                            const typed = query.trim()
+                            if (typed === '' || vault.resolve(typed) !== undefined) return []
+                            return [
+                                {
+                                    kind: 'create',
+                                    title: 'Make',
+                                    results: [{ id: typed, title: `Make ${typed}`, icon: FilePlus, detail: 'A new note by that name' }],
+                                },
+                            ]
+                        },
+                        onOpen: (result) =>
+                            void state.createNote({ title: result.id, folder: note?.folder ?? null }).then((made) => open(made.id)),
                     }}
-                    foot={
-                        <AccountMenu
-                            name="ada"
-                            where="tidevann.example.org"
-                            onSettings={() => go('/settings')}
-                            scheme={look.scheme}
-                            onSchemeChange={(scheme) => setLook({ ...look, scheme })}
-                            onSignOut={() => go('/notes')}
-                        />
-                    }
+                    words={{ placeholder: 'Open a note by name', empty: 'No note is named that.', title: 'Open a note' }}
+                    foot={{ mark: <TidevannMark />, name: 'Notes', keys: keyLabels({ key: 'o', mod: true }) }}
                 />
-            }
-            top={
-                <TopBar
-                    trail={trail}
-                    search={
-                        <Search
-                            query={topQuery}
-                            onQueryChange={setTopQuery}
-                            search={(query) =>
-                                searchVault(vault, query, {}).groups.map((group) => ({ ...group, results: group.results.slice(0, 6) }))
-                            }
-                            onOpen={(result) => {
-                                setTopQuery('')
-                                open(result.id)
-                            }}
-                            onSeeAll={(query) => {
-                                setTopQuery('')
-                                go(`/search/${encodeURIComponent(query)}`)
-                            }}
-                            renderPreview={(result: SearchResult) => {
-                                const found = vault.byId.get(result.id)
-                                return found === undefined ? null : <Markdown content={found.body} scale="document" />
-                            }}
-                            words={{ placeholder: 'Search notes' }}
-                        />
-                    }
-                    actions={
-                        <>
-                            <IconButton label="New note" onClick={() => newNote(note?.folder ?? null)}>
-                                <FilePlus />
-                            </IconButton>
-                        </>
-                    }
-                />
-            }
-            foot={
-                <StatusLine note={saying} tone={save.state === 'failed' ? 'warn' : undefined} live={save.state === 'saving'}>
-                    {words !== undefined && <StatusItem label="words">{words}</StatusItem>}
-                    {note !== undefined && <StatusItem label="links in">{vault.backlinks.get(note.id)?.length ?? 0}</StatusItem>}
-                    <StatusItem label="notes">{vault.notes.length}</StatusItem>
-                </StatusLine>
-            }
-            panel={note === undefined ? undefined : <NotePanel note={note} />}
-            panelOpen={panelShown}
-            onPanelOpenChange={(panel) => (wide ? void setPrefs({ panel }) : setSheet(panel))}
-        >
-            <Suspense fallback={null}>{bare ? content : <Page>{content}</Page>}</Suspense>
-            {settings.open && (
-                <Suspense fallback={null}>
-                    <SettingsPage frame={frame} open onClose={settings.close} />
-                </Suspense>
-            )}
-            <Dialogs />
-            <CommandPalette
-                open={switching}
-                onOpenChange={setSwitching}
-                filter="terms"
-                groups={[{ ...switcher('Recent', prefs.recent) }, { ...switcher('Notes', byTitle) }]}
-                search={{
-                    search: (query) => {
-                        const typed = query.trim()
-                        if (typed === '' || vault.resolve(typed) !== undefined) return []
-                        return [
-                            {
-                                kind: 'create',
-                                title: 'Make',
-                                results: [{ id: typed, title: `Make ${typed}`, icon: FilePlus, detail: 'A new note by that name' }],
-                            },
-                        ]
-                    },
-                    onOpen: (result) =>
-                        void state.createNote({ title: result.id, folder: note?.folder ?? null }).then((made) => open(made.id)),
-                }}
-                words={{ placeholder: 'Open a note by name', empty: 'No note is named that.', title: 'Open a note' }}
-                foot={{ mark: <TidevannMark />, name: 'Notes', keys: keyLabels({ key: 'o', mod: true }) }}
-            />
-        </Shell>
+            </Shell>
+        </DragDrop>
     )
 }
 

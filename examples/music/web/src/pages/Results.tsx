@@ -2,11 +2,11 @@ import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
-import { TrackList } from '@winterop-com/sokkel-ui-media/TrackList'
+import { DraggableTrackList } from '@winterop-com/sokkel-ui-media/DraggableTrackList'
 import { Search } from 'lucide-react'
 
 import { ALBUMS } from '../catalog'
-import { SongActions, useStarredSongs } from '../parts/actions'
+import { SONG_DRAG, SongActions, useStarredSongs } from '../parts/actions'
 import { AlbumCard, ArtistCard, asTrack, Nothing, useNowPlaying } from '../parts/songs'
 import { find } from '../search'
 import { playSongs, setPlaying } from '../player'
@@ -50,7 +50,8 @@ export function Results({ query }: { query: string }) {
             )}
             {found.songs.length > 0 && (
                 <Section variant="flat" title="Songs" meta={found.songs.length}>
-                    <TrackList
+                    <DraggableTrackList
+                        kind={SONG_DRAG.song}
                         tracks={found.songs.map((song) => asTrack(song, { artwork: true, album: true }))}
                         current={now.song?.id}
                         playing={now.playing}

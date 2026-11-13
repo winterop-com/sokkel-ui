@@ -326,6 +326,7 @@ const CORE_AREAS: Record<string, string> = {
     // Drag and drop: things put in order or moved between places in a page.
     DragDrop: 'Drag and drop',
     Sortable: 'Drag and drop',
+    RailDrops: 'Drag and drop',
     UptimeBar: 'Data display',
     // Actions, dialogs and feedback.
     Banner: 'Actions, dialogs and feedback',
