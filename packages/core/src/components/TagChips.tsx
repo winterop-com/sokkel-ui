@@ -1,13 +1,27 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 
 import { cn } from '../lib/cn'
 import { Badge } from './ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 export interface TagChipsWords {
     /** The chip that stands for the tags left out, given how many. */
     more: (count: number) => string
+    /** A tag's name and tooltip where a press does more than its words say ("Filter by harbor"). */
+    select?: (tag: string) => string
 }
+
+/** Keeps a press of a tag, or of an item in the menu of the rest, from also pressing a row around the tags. */
+function holdPress(event: MouseEvent<HTMLElement>) {
+    event.stopPropagation()
+}
+
+function holdKeys(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === 'Enter' || event.key === ' ') event.stopPropagation()
+}
+
+const PRESS = 'cursor-pointer hover:underline hover:underline-offset-2'
 
 const WORDS: TagChipsWords = { more: (count) => `+${String(count)}` }
 
@@ -35,6 +49,12 @@ export interface TagChipsProps {
     tags: readonly string[]
     max?: number
     variant?: 'secondary' | 'outline'
+    /**
+     * Makes each tag a button, pressed to open or filter by it, and the +N chip a menu of the tags
+     * left out, each pressed the same way. The presses stop there, so a row around the tags is not
+     * pressed too.
+     */
+    onSelect?: (tag: string, index: number) => void
     className?: string
     words?: Partial<TagChipsWords>
 }
@@ -43,9 +63,10 @@ export interface TagChipsProps {
  * A row of tags as chips that shows as many as fit the room it is given and a +N chip for the
  * rest, which names them on hover and focus. It takes the width left in the row it sits in, so it
  * goes beside a title or a name, and measures its chips again whenever that width changes. `max`
- * caps how many show even when more would fit.
+ * caps how many show even when more would fit. With `onSelect` each tag is a button and the +N
+ * chip opens a menu of the rest, each one pressable as the shown tags are.
  */
-export function TagChips({ tags, max, variant = 'secondary', className, words: given }: TagChipsProps) {
+export function TagChips({ tags, max, variant = 'secondary', onSelect, className, words: given }: TagChipsProps) {
     const words = { ...WORDS, ...given }
     const box = useRef<HTMLDivElement>(null)
     const ruler = useRef<HTMLDivElement>(null)
@@ -84,19 +105,57 @@ export function TagChips({ tags, max, variant = 'secondary', className, words: g
                 ))}
                 <Badge variant="outline">{words.more(tags.length)}</Badge>
             </div>
-            {tags.slice(0, shown).map((tag, index) => (
-                <Badge key={index} variant={variant} className="max-w-full min-w-0 shrink">
-                    <span className="truncate">{tag}</span>
-                </Badge>
-            ))}
-            {rest.length > 0 && (
-                <Tooltip>
-                    <TooltipTrigger render={<Badge variant="outline" tabIndex={0} className="text-muted-foreground" />}>
-                        {words.more(rest.length)}
-                    </TooltipTrigger>
-                    <TooltipContent>{rest.join(', ')}</TooltipContent>
-                </Tooltip>
+            {tags.slice(0, shown).map((tag, index) =>
+                onSelect === undefined ? (
+                    <Badge key={index} variant={variant} className="max-w-full min-w-0 shrink">
+                        <span className="truncate">{tag}</span>
+                    </Badge>
+                ) : (
+                    <Badge
+                        key={index}
+                        variant={variant}
+                        render={<button type="button" />}
+                        aria-label={words.select?.(tag)}
+                        title={words.select?.(tag)}
+                        onClick={(event: MouseEvent<HTMLElement>) => {
+                            event.stopPropagation()
+                            onSelect(tag, index)
+                        }}
+                        onKeyDown={holdKeys}
+                        className={cn('max-w-full min-w-0 shrink', PRESS)}
+                    >
+                        <span className="truncate">{tag}</span>
+                    </Badge>
+                ),
             )}
+            {rest.length > 0 &&
+                (onSelect === undefined ? (
+                    <Tooltip>
+                        <TooltipTrigger render={<Badge variant="outline" tabIndex={0} className="text-muted-foreground" />}>
+                            {words.more(rest.length)}
+                        </TooltipTrigger>
+                        <TooltipContent>{rest.join(', ')}</TooltipContent>
+                    </Tooltip>
+                ) : (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            render={
+                                <Badge variant="outline" render={<button type="button" />} className={cn('text-muted-foreground', PRESS)} />
+                            }
+                            onClick={holdPress}
+                            onKeyDown={holdKeys}
+                        >
+                            {words.more(rest.length)}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-auto" onClick={holdPress} onKeyDown={holdKeys}>
+                            {rest.map((tag, index) => (
+                                <DropdownMenuItem key={index} onClick={() => onSelect(tag, shown + index)}>
+                                    {tag}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ))}
         </div>
     )
 }

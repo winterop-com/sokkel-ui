@@ -350,6 +350,10 @@
             "types": "./dist/components/Link.d.ts",
             "import": "./dist/components/Link.js"
         },
+        "./ListRow": {
+            "types": "./dist/components/ListRow.d.ts",
+            "import": "./dist/components/ListRow.js"
+        },
         "./ListingBar": {
             "types": "./dist/components/ListingBar.d.ts",
             "import": "./dist/components/ListingBar.js"

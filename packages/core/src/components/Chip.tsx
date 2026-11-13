@@ -1,8 +1,9 @@
-import { X } from 'lucide-react'
+import { ChevronDown, X } from 'lucide-react'
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { KIND_WASH, type KindColor } from '../lib/kind'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 
 /**
  * A chip's tone: neutral, a semantic color drawn as a faint wash with its own ink, or `absent`, a
@@ -53,8 +54,22 @@ function textOf(children: ReactNode): string {
 }
 
 /** Keeps a press of a chip's button from also pressing a row or a card around the chip. */
-function holdKeys(event: KeyboardEvent<HTMLButtonElement>) {
+function holdKeys(event: KeyboardEvent<HTMLElement>) {
     if (event.key === 'Enter' || event.key === ' ') event.stopPropagation()
+}
+
+/** Keeps a press inside a chip's menu, which React bubbles through the portal, from pressing a row around the chip. */
+function holdPress(event: MouseEvent<HTMLElement>) {
+    event.stopPropagation()
+}
+
+/** One thing a chip's menu does: filter by the chip, copy it, open what it names. */
+export interface ChipMenuItem {
+    label: ReactNode
+    icon?: ReactNode
+    onSelect: () => void
+    disabled?: boolean
+    destructive?: boolean
 }
 
 export interface ChipProps {
@@ -76,6 +91,20 @@ export interface ChipProps {
     onSelect?: (event: MouseEvent<HTMLButtonElement>) => void
     /** The select button's name and tooltip, saying what a press does ("Filter by harbor"); the chip's words by default. */
     selectLabel?: string
+    /**
+     * A toggle chip's state: the select button says it is pressed, and the chip wears a ring in its
+     * own ink. Given with `onSelect`, for one of many chips each turned on and off by itself.
+     */
+    selected?: boolean
+    /**
+     * Makes the chip a menu's trigger: a press opens these items under it, and a chevron after the
+     * words says so. It takes the place of `onSelect`. The press and the items' presses stop there.
+     */
+    menu?: readonly ChipMenuItem[]
+    /** The menu open, held by the app; leave it out and the chip holds it. */
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
     /** Gives the chip a remove button at its end, named by `words.remove`. The press stops there, as `onSelect`'s does. */
     onRemove?: (event: MouseEvent<HTMLButtonElement>) => void
     words?: Partial<ChipWords>
@@ -89,7 +118,9 @@ export interface ChipProps {
  * the words in the code face and `icon` goes before them. With `onSelect` the chip is a button,
  * named by `selectLabel` where a press does more than its words say; with `onRemove` it ends in a
  * remove button, its own stop in the tab order with its own focus ring. Neither press reaches a
- * row or card around the chip. A long value ends in an ellipsis inside the room it is given.
+ * row or card around the chip. `selected` makes a select chip a toggle, pressed and ringed while
+ * on. With `menu` the chip is a menu's trigger, opening its items under it. A long value ends in
+ * an ellipsis inside the room it is given.
  */
 export function Chip({
     children,
@@ -100,12 +131,22 @@ export function Chip({
     title,
     onSelect,
     selectLabel,
+    selected,
+    menu,
+    open,
+    defaultOpen,
+    onOpenChange,
     onRemove,
     words: given,
     className,
 }: ChipProps) {
     const words = { ...WORDS, ...given }
     const remove = typeof words.remove === 'function' ? words.remove(textOf(children)) : words.remove
+    const press = cn(
+        'flex h-full min-w-0 cursor-pointer items-center gap-1 rounded-chip pl-1.5 hover:underline hover:underline-offset-2',
+        onRemove === undefined && 'pr-1.5',
+        RING,
+    )
     const face = (
         <>
             {icon}
@@ -115,32 +156,58 @@ export function Chip({
     return (
         <span
             data-slot="chip"
+            data-selected={selected === true ? '' : undefined}
             title={title}
             className={cn(
                 'inline-flex h-5 max-w-full min-w-0 shrink-0 items-center rounded-chip border border-transparent text-badge whitespace-nowrap [&_svg]:size-3 [&_svg]:shrink-0',
                 mono && 'font-mono',
                 hue === undefined ? TONE[tone] : HUE[hue],
+                selected === true && 'ring-1 ring-current ring-inset',
                 className,
             )}
         >
-            {onSelect === undefined ? (
+            {menu !== undefined ? (
+                <DropdownMenu open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+                    <DropdownMenuTrigger
+                        data-slot="chip-select"
+                        aria-label={selectLabel}
+                        title={selectLabel}
+                        onClick={holdPress}
+                        onKeyDown={holdKeys}
+                        className={press}
+                    >
+                        {face}
+                        <ChevronDown aria-hidden className="opacity-70" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-auto" onClick={holdPress} onKeyDown={holdKeys}>
+                        {menu.map((item, index) => (
+                            <DropdownMenuItem
+                                key={index}
+                                disabled={item.disabled}
+                                variant={item.destructive === true ? 'destructive' : 'default'}
+                                onClick={item.onSelect}
+                            >
+                                {item.icon}
+                                {item.label}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ) : onSelect === undefined ? (
                 <span className={cn('flex min-w-0 items-center gap-1 pl-1.5', onRemove === undefined && 'pr-1.5')}>{face}</span>
             ) : (
                 <button
                     type="button"
                     data-slot="chip-select"
                     aria-label={selectLabel}
+                    aria-pressed={selected}
                     title={selectLabel}
                     onClick={(event) => {
                         event.stopPropagation()
                         onSelect(event)
                     }}
                     onKeyDown={holdKeys}
-                    className={cn(
-                        'flex h-full min-w-0 cursor-pointer items-center gap-1 rounded-chip pl-1.5 hover:underline hover:underline-offset-2',
-                        onRemove === undefined && 'pr-1.5',
-                        RING,
-                    )}
+                    className={press}
                 >
                     {face}
                 </button>

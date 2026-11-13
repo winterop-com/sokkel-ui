@@ -44,7 +44,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 251 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 252 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -292,6 +292,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **ItemHeading** | `@winterop-com/sokkel-ui/ItemHeading` | The heading of one thing, as `ItemCard` draws it: its name, or its code when it has none, with the code drawn once in the code face, under the name (`stacked`) or beside it on one line (`inline`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-item-heading--stacked) |
 | **JsonTree** | `@winterop-com/sokkel-ui/JsonTree` | A JSON value as a tree that folds: objects and lists open to `open` levels deep, and a folded one shows how many entries it holds. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-side-panel--tabs) |
 | **ListingBar** | `@winterop-com/sokkel-ui/ListingBar` | The bar over a listing, as `DataTable` draws its own: the search and the count on the first line, the tools on a line of their own under them, wrapping from the left edge. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-listing-bar--short) |
+| **ListRow**, ListRows | `@winterop-com/sokkel-ui/ListRow` | One row of a list that is not a table: a title over a muted second line, an optional `icon` before them and an `aside` at the end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-list-row--plain) |
 | **MetaLine** | `@winterop-com/sokkel-ui/MetaLine` | Small facts about a thing on one line, joined by a separator: an artist and a year, a count of views and an age. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-meta-line--facts) |
 | **PersonAvatar**, PresenceDot | `@winterop-com/sokkel-ui/PersonAvatar` | A person as a badge of their picture, or of their initials on a wash of their color: an assignee, an attendee, an author. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-avatar--sizes) |
 | **PersonRow** | `@winterop-com/sokkel-ui/PersonRow` | A person as a row names them: their picture, their username in the code face over a second line (an email, a team), and an optional `aside` at the row's end, such as their role or a control that changes it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-row--people) |
