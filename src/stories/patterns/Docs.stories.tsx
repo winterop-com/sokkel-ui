@@ -3,11 +3,14 @@ import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { Field } from '@winterop-com/sokkel-ui/Field'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
 import { PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
 import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/TableOfContents'
-import { Row } from '@winterop-com/sokkel-ui/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
+import { Section } from '@winterop-com/sokkel-ui/Section'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 
 /** The parts of a long page: callouts in markdown, and the list of its headings that follows the reader. */
@@ -98,6 +101,63 @@ function Plain() {
     return (
         <div className="max-w-2xl p-6">
             <PlainMarkdown content={PLAIN} />
+        </div>
+    )
+}
+
+/** A job's description as its owner wrote it, read from the server: headings, an image, links of every kind and a key/value table. */
+const DESCRIPTION = [
+    '# sync-inventory',
+    '',
+    'Copies the stock counts from the warehouse service into harbor every hour.',
+    '',
+    '![Last week of runs](https://example.org/sync-inventory/runs.png)',
+    '',
+    '## Owners',
+    '',
+    '| | |',
+    '|---|---|',
+    '| Owner | [margaret](mailto:margaret@example.org) |',
+    '| Runbook | [Retrying a run](https://example.org/runbooks/retry) |',
+    '| Dashboard | [Inventory](/projects/harbor/inventory) |',
+    '| Status | [check now](javascript:alert(document.cookie)) |',
+    '',
+    '## When it fails',
+    '',
+    'Retry the `upload` step first, then ask in [the channel](irc://example.org/harbor).',
+].join('\n')
+
+/**
+ * Text other people wrote, set under a section's title: no image is fetched, only https and mailto
+ * links are live, and its headings start under the section's.
+ */
+function Untrusted() {
+    return (
+        <div className="max-w-2xl p-6">
+            <Stack gap="page">
+                <Section title="Description" description="As the job's owner wrote it.">
+                    <PlainMarkdown content={DESCRIPTION} images={false} linkSchemes={['https', 'mailto']} headingOffset={2} />
+                </Section>
+                <Field
+                    id="schedule"
+                    label="Schedule"
+                    help={
+                        <PlainMarkdown
+                            inline
+                            linkSchemes={['https']}
+                            content={
+                                'When the job runs, in **UTC**. See [schedules](https://example.org/docs/schedules) for the `cron` form.'
+                            }
+                        />
+                    }
+                >
+                    <NativeSelect id="schedule" defaultValue="hourly" className="w-full">
+                        <NativeSelectOption value="hourly">Every hour</NativeSelectOption>
+                        <NativeSelectOption value="nightly">Nightly</NativeSelectOption>
+                        <NativeSelectOption value="weekly">Weekly</NativeSelectOption>
+                    </NativeSelect>
+                </Field>
+            </Stack>
         </div>
     )
 }
@@ -248,6 +308,15 @@ export const Callout: StoryObj = { name: 'Callouts', render: () => <Callouts /> 
  * Mermaid in its build.
  */
 export const PlainText: StoryObj = { name: 'Plain markdown', render: () => <Plain /> }
+
+/**
+ * Text other people wrote: a job's description with `images={false}`, so its image is drawn as its
+ * alt text and address and nothing is fetched, `linkSchemes={['https', 'mailto']}`, so the app's
+ * route, the irc link and the javascript: link are drawn as their words, and `headingOffset={2}`, so
+ * its `#` is an h3 under the section. Its key/value table, written with an empty header row, has no
+ * header. The field's help under it is `inline`: one line, its link and code kept.
+ */
+export const Untrusted_: StoryObj = { name: 'Untrusted text', render: () => <Untrusted /> }
 
 /**
  * Code and the app's own parts in one text: a jq fence, ANSI output, and a status and a run's
