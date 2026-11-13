@@ -299,6 +299,8 @@ const CORE_AREAS: Record<string, string> = {
     MetaLine: 'Data display',
     PersonAvatar: 'Data display',
     PersonRow: 'Data display',
+    ListRow: 'Data display',
+    ListRows: 'Data display',
     ProfileRow: 'Data display',
     RelativeTime: 'Data display',
     ApiLink: 'Data display',

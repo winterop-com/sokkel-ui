@@ -42,6 +42,40 @@ describe('TextLink', () => {
         expect(html).toMatch(/^<button type="button" aria-expanded="false"/)
         expect(html).not.toContain('href')
     })
+
+    it('holds the external mark to the last word, so a narrow line never leaves it alone', () => {
+        const html = renderToStaticMarkup(
+            <TextLink href="https://docs.example.org" external>
+                Read the scheduler guide
+            </TextLink>,
+        )
+        expect(html).toContain('Read the scheduler <span class="whitespace-nowrap">guide<svg')
+        const one = renderToStaticMarkup(
+            <TextLink href="https://status.example.org" external>
+                status.example.org
+            </TextLink>,
+        )
+        expect(one).toContain('<span class="whitespace-nowrap">status.example.org<svg')
+    })
+
+    it('joins the mark to words that are not plain text with a word joiner', () => {
+        const html = renderToStaticMarkup(
+            <TextLink href="https://status.example.org" external>
+                <b>status</b>
+            </TextLink>,
+        )
+        expect(html).toContain('<span class="whitespace-nowrap">\u2060<svg')
+    })
+
+    it('leaves a quiet link in the ink around it, underlined only on hover', () => {
+        const html = renderToStaticMarkup(
+            <TextLink variant="quiet" onPress={() => undefined}>
+                sync-inventory failed at upload
+            </TextLink>,
+        )
+        expect(html).toContain('hover:underline')
+        expect(html).not.toMatch(/text-(foreground|primary-ink|muted-foreground)/)
+    })
 })
 
 describe('InlineCode', () => {

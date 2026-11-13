@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { literalRanges } from '../lib/search'
 import { Highlight } from './Highlight'
+import { TextLink } from './TextLink'
 
 export type LogLevel = 'debug' | 'info' | 'warning' | 'error'
 
@@ -189,13 +190,9 @@ export function LogView({
                                         {line.source === undefined ? null : onSource === undefined || line.sourceLink === false ? (
                                             line.source
                                         ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => onSource(line.source as string, line)}
-                                                className="cursor-pointer rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                                            >
+                                            <TextLink variant="quiet" onPress={() => onSource(line.source as string, line)}>
                                                 {line.source}
-                                            </button>
+                                            </TextLink>
                                         )}
                                     </td>
                                 )}

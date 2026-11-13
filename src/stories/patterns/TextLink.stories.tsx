@@ -12,7 +12,8 @@ import { TextLink } from '@winterop-com/sokkel-ui/TextLink'
  * A link inside text or among a record's facts: a job, a run, a host, a way onward in a sentence.
  * Plain values stay plain beside it. `inline` is underlined in the body ink for running text,
  * `data` dotted for a value in a table or a list, `aside` muted, and the default in the primary
- * ink, underlined on hover. With `onPress` it is a button that opens something in place.
+ * ink, underlined on hover; `quiet` keeps the ink around it, for a row's title or a heading. With
+ * `onPress` it is a button that opens something in place.
  */
 const meta: Meta = { title: 'Patterns/Text link', parameters: { frame: 'padded' } }
 export default meta
@@ -35,7 +36,7 @@ export const InText: StoryObj = {
     ),
 }
 
-/** The four variants side by side: default, inline, data and aside. */
+/** The five variants side by side: default, inline, data, aside and quiet. */
 export const Variants: StoryObj = {
     render: () => (
         <Stack gap="sm" className="text-sm">
@@ -58,6 +59,12 @@ export const Variants: StoryObj = {
                 Aside:{' '}
                 <TextLink href="#" variant="aside">
                     All jobs
+                </TextLink>
+            </span>
+            <span>
+                Quiet:{' '}
+                <TextLink href="#" variant="quiet">
+                    sync-inventory
                 </TextLink>
             </span>
         </Stack>
@@ -172,5 +179,20 @@ export const External: StoryObj = {
             </TextLink>
             .
         </p>
+    ),
+}
+
+/** In a narrow panel the external mark stays with the last word, wrapping onto the next line with it rather than alone. */
+export const ExternalNarrow: StoryObj = {
+    name: 'External, narrow',
+    render: () => (
+        <Stack gap="sm" className="max-w-40 text-sm">
+            <TextLink href="https://docs.example.org/scheduler" external>
+                Read the scheduler guide
+            </TextLink>
+            <TextLink href="https://status.example.org" variant="aside" external>
+                status.example.org
+            </TextLink>
+        </Stack>
     ),
 }
