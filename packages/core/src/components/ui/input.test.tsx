@@ -15,7 +15,7 @@ describe('Input', () => {
     it('marks an issue with its edge at rest and draws the ring only on focus', () => {
         for (const html of [renderToStaticMarkup(<Input aria-invalid />), renderToStaticMarkup(<Textarea aria-invalid />)]) {
             const own = classes(html)
-            expect(own).toContain('aria-invalid:border-destructive')
+            expect(own).toContain('aria-invalid:border-critical/80')
             expect(own).toContain('aria-invalid:focus-visible:ring-3')
             expect(own.filter((name) => name.includes('invalid') && /:ring-[1-9]/.test(name) && !name.includes('focus'))).toEqual([])
         }

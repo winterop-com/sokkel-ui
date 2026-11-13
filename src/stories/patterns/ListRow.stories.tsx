@@ -151,35 +151,41 @@ const SERVICES = [
 
 /**
  * Dense one-line rows in a card (`dense`), each a status dot and a mark before the service's name
- * in the code face (`mono`), its note beside it. `inset="card"` lines the flush rows up with the
- * card's own padding, as its title is.
+ * in the code face (`mono`), its note beside it, and each opening its service, the open one marked.
+ * A dense row that presses stands a finger tall on a phone. `inset="card"` lines the flush rows up
+ * with the card's own padding, as its title is.
  */
 export const Dense: StoryObj = {
-    render: () => (
-        <Card className="max-w-md">
-            <CardHeader>
-                <CardTitle>Health</CardTitle>
-            </CardHeader>
-            <ListRows label="Services" flush inset="card">
-                {SERVICES.map((service) => (
-                    <ListRow
-                        key={service.name}
-                        dense
-                        mono
-                        icon={
-                            <>
-                                <Dot status={service.status} size="md" />
-                                <Server />
-                            </>
-                        }
-                        title={service.name}
-                        detail={service.note}
-                        aside={service.host}
-                    />
-                ))}
-            </ListRows>
-        </Card>
-    ),
+    render: function Render() {
+        const [open, setOpen] = useState('scheduler')
+        return (
+            <Card className="max-w-md">
+                <CardHeader>
+                    <CardTitle>Health</CardTitle>
+                </CardHeader>
+                <ListRows label="Services" flush inset="card">
+                    {SERVICES.map((service) => (
+                        <ListRow
+                            key={service.name}
+                            dense
+                            mono
+                            icon={
+                                <>
+                                    <Dot status={service.status} size="md" />
+                                    <Server />
+                                </>
+                            }
+                            title={service.name}
+                            detail={service.note}
+                            aside={service.host}
+                            current={service.name === open}
+                            onPress={() => setOpen(service.name)}
+                        />
+                    ))}
+                </ListRows>
+            </Card>
+        )
+    },
 }
 
 /** Rows that are links, each to its run's page, with the project as a chip at the end. */

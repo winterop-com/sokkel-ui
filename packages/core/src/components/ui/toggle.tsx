@@ -1,9 +1,10 @@
 import { Toggle as TogglePrimitive } from '@base-ui/react/toggle'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '../../lib/cn'
+import { INVALID_EDGE } from '../../lib/issue-edge'
 
 const toggleVariants = cva(
-    "group/toggle inline-flex items-center justify-center gap-1 rounded-control text-sm font-medium whitespace-nowrap transition-all outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    `group/toggle inline-flex items-center justify-center gap-1 rounded-control text-sm font-medium whitespace-nowrap transition-all outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50 aria-pressed:bg-muted data-[state=on]:bg-muted [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 ${INVALID_EDGE}`,
     {
         variants: {
             variant: {

@@ -22,7 +22,10 @@ export interface ListRowProps {
     tooltip?: string
     /** Lets the title and the detail wrap onto more lines rather than end in an ellipsis. */
     wrap?: boolean
-    /** One line and shorter: the detail beside the title rather than under it, for a dense list such as a health panel's. */
+    /**
+     * One line and shorter: the detail beside the title rather than under it, for a dense list such as a
+     * health panel's. A dense row that presses still stands a finger tall on a phone.
+     */
     dense?: boolean
     /** Sets the title in the code face, for a code value: a job, a host, a key. */
     mono?: boolean
@@ -48,9 +51,9 @@ const PRESS =
  * link, each the full width of the list, for a list whose rows each open their own detail, such as
  * the failed runs of a job. `current` marks the row whose detail is open. Both lines end in an
  * ellipsis inside the room they are given, or wrap with `wrap`; `tooltip` says something on hover
- * over the row. `dense` makes it one shorter line, the detail beside the title, and `mono` sets a
- * title that is a code in the code face; `icon` may hold a dot and a mark side by side. Rows go in
- * `ListRows`, which sets them flush in a panel with `flush`.
+ * over the row. `dense` makes it one shorter line, the detail beside the title, a finger tall below
+ * `md` when it presses, and `mono` sets a title that is a code in the code face; `icon` may hold a
+ * dot and a mark side by side. Rows go in `ListRows`, which sets them flush in a panel with `flush`.
  */
 export function ListRow({
     title,
@@ -67,7 +70,8 @@ export function ListRow({
     className,
 }: ListRowProps) {
     const flush = useContext(FlushContext)
-    const row = cn(ROW, dense ? 'min-h-8 py-1' : 'py-2', flush === false ? BOXED : FLUSH[flush])
+    const pressable = onPress !== undefined || href !== undefined
+    const row = cn(ROW, dense ? ['min-h-8 py-1', pressable && 'max-md:min-h-finger'] : 'py-2', flush === false ? BOXED : FLUSH[flush])
     const line = wrap ? 'break-words' : 'truncate'
     const body = (
         <>

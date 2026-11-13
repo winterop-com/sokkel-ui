@@ -42,6 +42,7 @@ import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 
 import { cn } from '../lib/cn'
+import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { onPluginsChange, pluginLanguage, pluginLanguageForMediaType, type PluginLanguageNames } from '../lib/plugins'
 import { bracketColors as colorBrackets, indentGuides as drawGuides } from './code/guides'
 import { jq } from './code/jq'
@@ -1231,7 +1232,10 @@ export function CodeEditor({
                 'overflow-hidden [&_.cm-editor]:h-full',
                 variant === 'pane'
                     ? 'h-full min-h-0 bg-background [--editor-paper:var(--background)]'
-                    : 'rounded-control border border-input bg-field [--editor-paper:var(--field)] focus-within:border-ring/80 aria-invalid:border-destructive',
+                    : [
+                          'rounded-control border border-input bg-field [--editor-paper:var(--field)] focus-within:border-ring/80',
+                          invalid && ISSUE_WITHIN_EDGE.critical,
+                      ],
                 variant === 'field' && 'min-h-24',
                 oneLine &&
                     'h-(--density-control) max-md:min-h-finger [&_.cm-content]:py-0 [&_.cm-scroller]:items-center [&_.cm-scroller]:overflow-y-hidden',

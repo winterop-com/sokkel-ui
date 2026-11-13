@@ -3,6 +3,7 @@ import { Check, ChevronsUpDown, Plus, RotateCw, Search, X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type UIEvent } from 'react'
 
 import { cn } from '../lib/cn'
+import { INVALID_EDGE, ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { Spinner } from './ui/spinner'
 
 export interface AsyncSelectWords {
@@ -485,7 +486,8 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     ref={anchorRef}
                     aria-invalid={invalid || undefined}
                     className={cn(
-                        'flex min-h-(--density-control) w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring aria-invalid:border-destructive',
+                        'flex min-h-(--density-control) w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
+                        invalid && ISSUE_WITHIN_EDGE.critical,
                         disabled && 'cursor-not-allowed bg-input/50 opacity-50',
                         className,
                     )}
@@ -563,7 +565,8 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 id={id}
                 aria-invalid={invalid || undefined}
                 className={cn(
-                    'flex h-(--density-control) w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring aria-invalid:border-destructive',
+                    'flex h-(--density-control) w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring',
+                    INVALID_EDGE,
                     disabled && 'cursor-not-allowed bg-input/50 opacity-50',
                     className,
                 )}
