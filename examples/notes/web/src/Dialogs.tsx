@@ -72,7 +72,7 @@ function NameDialog({
 
 /** Where a note or a folder goes: a folder picked from the vault's, or its top. */
 function MoveDialog({ asking, onClose }: { asking: Extract<Asking, { kind: 'move-note' | 'move-folder' }>; onClose: () => void }) {
-    const { vault, moveNote, moveFolder } = useVault()
+    const { vault, moveNote, moveFolder, order } = useVault()
     const note = asking.kind === 'move-note' ? vault.byId.get(asking.id) : undefined
     const folder = asking.kind === 'move-folder' ? vault.folderById.get(asking.id) : undefined
     const now = note?.folder ?? folder?.parent ?? null
@@ -108,7 +108,7 @@ function MoveDialog({ asking, onClose }: { asking: Extract<Asking, { kind: 'move
             <Field id="move-into" label="Into">
                 <TreeSelect
                     id="move-into"
-                    nodes={folderTree(vault, 'Vault')}
+                    nodes={folderTree(vault, 'Vault', order)}
                     value={[into]}
                     onValueChange={(ids) => setInto(ids[0] ?? ROOT)}
                     defaultExpanded={[ROOT]}

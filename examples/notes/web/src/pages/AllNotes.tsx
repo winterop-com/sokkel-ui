@@ -8,11 +8,15 @@ import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { CalendarDays, FileText, FolderInput, FolderPlus, Pencil, Trash2 } from 'lucide-react'
 
 import type { Note } from '../model'
 import { useVault, type VaultState } from '../state'
-import { folderAndBelow, type Vault } from '../vault'
+import { folderAndBelow, notesInOrder, type Vault } from '../vault'
+
+/** What a note dragged from a listing is to the vault's tree, which takes it into a folder. */
+export const NOTE_KIND = 'note'
 
 /** What a listing shows of a note: its name, where it is, its tags, the links into it and when it changed. */
 export function noteColumns(vault: Vault): DataColumn<Note>[] {
@@ -85,12 +89,32 @@ export function noteActions(state: Pick<VaultState, 'open' | 'ask'>): (note: Not
     ]
 }
 
-/** Every note in the vault, or in one folder and the folders under it, newest change first, with a field that makes a note. */
+/**
+ * Every note in the vault, or in one folder and the folders under it, with a field that makes a
+ * note. By name they are listed newest change first; in the reader's own order they are listed as
+ * the tree holds them, each row dragged by its grip to another place, among the notes of the folder
+ * it lands in, or onto a folder of the rail's tree.
+ */
 export function AllNotes({ folder }: { folder?: string }) {
     const state = useVault()
-    const { vault, loading, error, open, ask, createNote } = state
+    const { vault, loading, error, open, ask, createNote, order, place, prefs } = state
+    const manual = order === 'manual'
     const within = folder === undefined ? null : folderAndBelow(vault, folder)
-    const inside = within === null ? vault.notes : vault.notes.filter((note) => note.folder !== null && within.has(note.folder))
+    const inside = manual
+        ? notesInOrder(vault, folder ?? null, order, prefs.dailyFolder)
+        : within === null
+          ? vault.notes
+          : vault.notes.filter((note) => note.folder !== null && within.has(note.folder))
+
+    /** Moves the row at `from` to `to`: into the folder of the row it lands after (or before, at the top), at that place among its notes. */
+    const reorder = (from: number, to: number) => {
+        const moved = inside[from]
+        if (moved === undefined) return
+        const next = moveItem(inside, from, to)
+        const into = (next[to - 1] ?? next[to + 1] ?? moved).folder
+        const index = next.filter((note) => note.folder === into || note.id === moved.id).findIndex((note) => note.id === moved.id)
+        void place('note', moved.id, into, index)
+    }
     const name = folder === undefined ? 'All notes' : (vault.folderById.get(folder)?.name ?? 'Folder')
 
     return (
@@ -131,13 +155,17 @@ export function AllNotes({ folder }: { folder?: string }) {
             />
             <PageState loading={loading} error={error}>
                 <DataTable
+                    key={order}
                     variant="list"
                     minWidth="auto"
                     stackLayout="compact"
                     columns={noteColumns(vault)}
                     rows={inside}
                     rowKey={(note) => note.id}
-                    defaultSort={{ column: 'updated', direction: 'desc' }}
+                    defaultSort={manual ? null : { column: 'updated', direction: 'desc' }}
+                    onReorder={manual ? reorder : undefined}
+                    rowLabel={(note) => note.title}
+                    dragKind={NOTE_KIND}
                     onOpen={(note) => open(note.id)}
                     rowActions={noteActions(state)}
                     empty={

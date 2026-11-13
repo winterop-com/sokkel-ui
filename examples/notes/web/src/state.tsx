@@ -1,13 +1,14 @@
 /** What every part of the app reads and does: the vault, the reader's settings, the drafts being saved and the open tabs. */
 
+import { insertItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 import { folders as folderRows, notes as noteRows, prefs as prefRows } from './backend'
-import { DEFAULT_PREFS, RECENT, badTitle, freeName, fromTemplate, type Folder, type Note, type Prefs, type View } from './model'
-import { folderAndBelow, indexVault, renameLinks, type Vault } from './vault'
+import { DEFAULT_PREFS, RECENT, badTitle, freeName, fromTemplate, type Folder, type Note, type Order, type Prefs, type View } from './model'
+import { folderAndBelow, foldersIn, indexVault, notesIn, renameLinks, type Vault } from './vault'
 
 /** A question the app is asking in a dialog, about a note or a folder. */
 export type Asking =
@@ -43,6 +44,13 @@ export interface VaultState {
     createFolder: (name: string, parent: string | null) => Promise<Folder>
     renameFolder: (id: string, name: string) => Promise<void>
     moveFolder: (id: string, parent: string | null) => Promise<void>
+    /** How the vault orders each folder. */
+    order: Order
+    /**
+     * Puts a note or a folder into a folder (null for the top of the vault) at a place among the
+     * notes or the folders there, counted without it; by name, only the folder it goes into counts.
+     */
+    place: (what: 'note' | 'folder', id: string, into: string | null, index: number) => Promise<void>
     deleteFolder: (id: string) => Promise<void>
     /** Rewrites one note's text, as linking a mention does. */
     rewrite: (id: string, change: (text: string) => string) => Promise<void>
@@ -69,6 +77,12 @@ const Context = createContext<VaultState | undefined>(undefined)
 
 /** How long typing stops before a draft is saved, in milliseconds. */
 const SAVE_AFTER = 700
+
+/** The rank after every one of a level's notes or folders. */
+const rankAfter = (level: readonly { rank?: number }[]) => level.reduce((most, one) => Math.max(most, one.rank ?? -1), -1) + 1
+
+/** The rank before every one of a level's notes or folders. */
+const rankBefore = (level: readonly { rank?: number }[]) => level.reduce((least, one) => Math.min(least, one.rank ?? 0), 0) - 1
 
 const failed = (what: string) => (error: unknown) => {
     toast.add({ type: 'error', title: what, description: error instanceof Error ? error.message : String(error) })
@@ -208,10 +222,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         const taken = vaultRef.current.notes.map((note) => note.title)
         const title = freeName(fields.title?.trim() || 'Untitled', taken)
         const now = Date.now()
+        const folder = fields.folder ?? null
+        const level = vaultRef.current.notes.filter((note) => note.folder === folder)
         return noteRows
             .create({
                 title,
-                folder: fields.folder ?? null,
+                folder,
+                // In the reader's own order a new note goes last, and a daily note first, as the newest day.
+                rank: fields.day === undefined ? rankAfter(level) : rankBefore(level),
                 body: fields.body ?? `# ${title}\n\n`,
                 created: now,
                 updated: now,
@@ -242,7 +260,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }, [])
 
     const moveNote = useCallback(async (id: string, folder: string | null) => {
-        await noteRows.update(id, { folder }).then(() => undefined, failed('The note was not moved'))
+        const level = vaultRef.current.notes.filter((note) => note.folder === folder && note.id !== id)
+        await noteRows.update(id, { folder, rank: rankAfter(level) }).then(() => undefined, failed('The note was not moved'))
         const where = folder === null ? 'the top of the vault' : vaultRef.current.path(folder)
         toast.add({ type: 'success', title: `Moved to ${where}`, description: vaultRef.current.byId.get(id)?.title })
     }, [])
@@ -265,8 +284,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     )
 
     const createFolder = useCallback(async (name: string, parent: string | null) => {
-        const siblings = vaultRef.current.folders.filter((folder) => folder.parent === parent).map((folder) => folder.name)
-        return folderRows.create({ name: freeName(name.trim() || 'New folder', siblings), parent }).catch(failed('The folder was not made'))
+        const level = vaultRef.current.folders.filter((folder) => folder.parent === parent)
+        const siblings = level.map((folder) => folder.name)
+        return folderRows
+            .create({ name: freeName(name.trim() || 'New folder', siblings), parent, rank: rankAfter(level) })
+            .catch(failed('The folder was not made'))
     }, [])
 
     const renameFolder = useCallback(async (id: string, name: string) => {
@@ -282,7 +304,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
     const moveFolder = useCallback(async (id: string, parent: string | null) => {
         if (parent !== null && folderAndBelow(vaultRef.current, id).has(parent)) throw new Error('A folder cannot go inside itself.')
-        await folderRows.update(id, { parent }).then(() => undefined, failed('The folder was not moved'))
+        const level = vaultRef.current.folders.filter((folder) => folder.parent === parent && folder.id !== id)
+        await folderRows.update(id, { parent, rank: rankAfter(level) }).then(() => undefined, failed('The folder was not moved'))
         const where = parent === null ? 'the top of the vault' : vaultRef.current.path(parent)
         toast.add({ type: 'success', title: `Moved to ${where}`, description: vaultRef.current.folderById.get(id)?.name })
     }, [])
@@ -299,6 +322,60 @@ export function VaultProvider({ children }: { children: ReactNode }) {
             toast.add({ title: 'Folder deleted', description: `${name ?? 'The folder'} and ${String(inside.length)} notes in it` })
         },
         [deleteNote, setPrefs],
+    )
+
+    const order: Order = prefs.order ?? 'manual'
+
+    const place = useCallback(
+        async (what: 'note' | 'folder', id: string, into: string | null, index: number) => {
+            const current = vaultRef.current
+            const mine = prefsRef.current
+            const manual = (mine.order ?? 'manual') === 'manual'
+            if (what === 'folder') {
+                const folder = current.folderById.get(id)
+                if (folder === undefined) return
+                if (!manual) return folder.parent === into ? undefined : moveFolder(id, into)
+                if (into !== null && folderAndBelow(current, id).has(into)) throw new Error('A folder cannot go inside itself.')
+                const level = insertItem(
+                    foldersIn(current, into, 'manual').filter((one) => one.id !== id),
+                    folder,
+                    index,
+                )
+                // Every folder of the level is ranked by its new place; only those that changed are saved.
+                await Promise.all(
+                    level.flatMap((one, rank) =>
+                        one.rank === rank && one.parent === into ? [] : [folderRows.update(one.id, { rank, parent: into })],
+                    ),
+                ).catch(failed('The folder was not moved'))
+                if (folder.parent !== into)
+                    toast.add({
+                        type: 'success',
+                        title: `Moved to ${into === null ? 'the top of the vault' : current.path(into)}`,
+                        description: folder.name,
+                    })
+                return
+            }
+            const note = current.byId.get(id)
+            if (note === undefined) return
+            if (!manual) return note.folder === into ? undefined : moveNote(id, into)
+            const level = insertItem(
+                notesIn(current, into, 'manual', mine.dailyFolder).filter((one) => one.id !== id),
+                note,
+                index,
+            )
+            await Promise.all(
+                level.flatMap((one, rank) =>
+                    one.rank === rank && one.folder === into ? [] : [noteRows.update(one.id, { rank, folder: into })],
+                ),
+            ).catch(failed('The note was not moved'))
+            if (note.folder !== into)
+                toast.add({
+                    type: 'success',
+                    title: `Moved to ${into === null ? 'the top of the vault' : current.path(into)}`,
+                    description: note.title,
+                })
+        },
+        [moveFolder, moveNote],
     )
 
     const openDay = useCallback(
@@ -355,6 +432,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
             createFolder,
             renameFolder,
             moveFolder,
+            order,
+            place,
             deleteFolder,
             rewrite,
             open,
@@ -389,6 +468,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
             createFolder,
             renameFolder,
             moveFolder,
+            order,
+            place,
             deleteFolder,
             rewrite,
             open,
