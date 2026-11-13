@@ -1,0 +1,4 @@
+{
+    "name": "DHIS2 Workbench",
+    "summary": "Indicators, validation rules and program rules in DHIS2's expression languages, checked and run against a simulated server."
+}
