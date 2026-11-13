@@ -1,7 +1,7 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
@@ -53,7 +53,10 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                                     label="Default speed"
                                     value={String(prefs.speed)}
                                     onValueChange={(value) => setPrefs({ speed: Number(value) })}
-                                    options={RATES.map((rate) => ({ value: String(rate), label: `${String(rate)}x` }))}
+                                    options={RATES.map((rate) => ({
+                                        value: String(rate),
+                                        label: `${String(rate)}x`,
+                                    }))}
                                 />
                             ),
                         },
@@ -68,7 +71,10 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                                     label="Skip back and forward"
                                     value={String(prefs.skip)}
                                     onValueChange={(value) => setPrefs({ skip: Number(value) })}
-                                    options={SKIPS.map((seconds) => ({ value: String(seconds), label: `${String(seconds)} s` }))}
+                                    options={SKIPS.map((seconds) => ({
+                                        value: String(seconds),
+                                        label: `${String(seconds)} s`,
+                                    }))}
                                 />
                             ),
                         },
@@ -138,14 +144,12 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Theme',
-                            description: 'The theme, the scheme and the density.',
-                            layout: 'below',
-                            keywords: ['dark', 'light', 'scheme', 'density'],
-                            control: <ThemePicker value={look} onChange={setLook} themes={THEMES} system />,
-                        },
+                        ...themeSettings({
+                            value: look,
+                            onChange: setLook,
+                            themes: THEMES,
+                            system: true,
+                        }),
                     ],
                 },
                 {
@@ -202,7 +206,11 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                 onReset={(section) => {
                     if (section === 'appearance') setLook({ ...DEFAULT_APPEARANCE })
                     if (section === 'playback')
-                        setPrefs({ speed: DEFAULT_PREFS.speed, skip: DEFAULT_PREFS.skip, continueQueue: DEFAULT_PREFS.continueQueue })
+                        setPrefs({
+                            speed: DEFAULT_PREFS.speed,
+                            skip: DEFAULT_PREFS.skip,
+                            continueQueue: DEFAULT_PREFS.continueQueue,
+                        })
                     if (section === 'episodes')
                         setPrefs({
                             inbox: DEFAULT_PREFS.inbox,

@@ -1,6 +1,6 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
@@ -86,7 +86,10 @@ export function Settings({
                                 <Choose
                                     label="Open on"
                                     value={prefs.startList}
-                                    items={lists.map((list) => ({ value: list.id, label: list.label }))}
+                                    items={lists.map((list) => ({
+                                        value: list.id,
+                                        label: list.label,
+                                    }))}
                                     onChange={(startList) => setPrefs({ startList })}
                                 />
                             ),
@@ -120,7 +123,10 @@ export function Settings({
                                 <Choose<Person>
                                     label="Assign to"
                                     value={prefs.assignee}
-                                    items={PEOPLE.map((person) => ({ value: person, label: person }))}
+                                    items={PEOPLE.map((person) => ({
+                                        value: person,
+                                        label: person,
+                                    }))}
                                     onChange={(assignee) => setPrefs({ assignee })}
                                 />
                             ),
@@ -133,7 +139,10 @@ export function Settings({
                                 <Choose<Project>
                                     label="Project"
                                     value={prefs.project}
-                                    items={PROJECTS.map((project) => ({ value: project, label: project }))}
+                                    items={PROJECTS.map((project) => ({
+                                        value: project,
+                                        label: project,
+                                    }))}
                                     onChange={(project) => setPrefs({ project })}
                                 />
                             ),
@@ -145,14 +154,12 @@ export function Settings({
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Theme',
-                            description: 'The theme, the scheme and the density.',
-                            layout: 'below',
-                            keywords: ['dark', 'light', 'scheme', 'density', 'compact'],
-                            control: <ThemePicker value={look} onChange={setLook} themes={THEMES} system />,
-                        },
+                        ...themeSettings({
+                            value: look,
+                            onChange: setLook,
+                            themes: THEMES,
+                            system: true,
+                        }),
                     ],
                 },
             ],

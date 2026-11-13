@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { ThemePicker, type ThemePickerWords, type ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
+import { ThemePicker, themeSettings, type ThemePickerWords, type ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { CORNERS, THEMES, TYPEFACES } from '@winterop-com/sokkel-ui/lib/appearance'
 
 /**
@@ -61,6 +63,32 @@ export const ThemeList: StoryObj = { name: 'Theme list', render: () => <Picker f
 
 /** The themes as cards (`themeCards`), each a small page in its own theme's background, card, lines, text and brand. */
 export const ThemeCards: StoryObj = { name: 'Theme cards', render: () => <Picker full={false} cards /> }
+
+/**
+ * The choices as settings rows (`themeSettings`), as a settings dialog's appearance section lists
+ * them: each with its title and a line on what it changes, its control beside it while the row has
+ * room and under it on a phone.
+ */
+export const SettingsRows: StoryObj = {
+    name: 'Settings rows',
+    render: function Render() {
+        const [settings, setSettings] = useState<ThemeSettings>({ ...START, motion: 'system' })
+        return (
+            <Stack gap="none" className="max-w-2xl divide-y divide-border">
+                {themeSettings({
+                    value: settings,
+                    onChange: setSettings,
+                    themes: THEMES,
+                    corners: CORNERS,
+                    typefaces: TYPEFACES,
+                    system: true,
+                }).map((setting) => (
+                    <SettingRow key={setting.id} {...setting} />
+                ))}
+            </Stack>
+        )
+    },
+}
 
 /** The words in Norwegian, as an app that translates them passes them. */
 export const Translated: StoryObj = {

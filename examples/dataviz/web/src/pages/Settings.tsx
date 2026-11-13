@@ -4,7 +4,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ChartColumn, Database, Hash, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { resetAll } from 'tidevann-shared/backend'
@@ -146,23 +146,14 @@ export function SettingsPage({
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Look',
-                            description: 'The theme, light or dark, the density, the corners and the typeface.',
-                            control: (
-                                <ThemePicker
-                                    value={settings}
-                                    onChange={setSettings}
-                                    themes={THEMES}
-                                    corners={CORNERS}
-                                    typefaces={TYPEFACES}
-                                    system
-                                />
-                            ),
-                            layout: 'below',
-                            keywords: ['theme', 'dark', 'light', 'density'],
-                        },
+                        ...themeSettings({
+                            value: settings,
+                            onChange: setSettings,
+                            themes: THEMES,
+                            corners: CORNERS,
+                            typefaces: TYPEFACES,
+                            system: true,
+                        }),
                     ],
                 },
             ],
@@ -213,7 +204,11 @@ export function SettingsPage({
                             aggregate: DEFAULT_PREFERENCES.aggregate,
                             suggestions: DEFAULT_PREFERENCES.suggestions,
                         })
-                    if (section === 'numbers') set({ numbers: DEFAULT_PREFERENCES.numbers, decimals: DEFAULT_PREFERENCES.decimals })
+                    if (section === 'numbers')
+                        set({
+                            numbers: DEFAULT_PREFERENCES.numbers,
+                            decimals: DEFAULT_PREFERENCES.decimals,
+                        })
                     if (section === 'appearance') setSettings({ ...DEFAULT_APPEARANCE })
                 }}
             />

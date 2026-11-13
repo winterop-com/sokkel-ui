@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { ThemeOption, ThemeSettings } from '../lib/appearance'
 import { cn } from '../lib/cn'
 import { ChoiceList } from './ChoiceList'
+import type { Setting } from './settings-parts'
 import { SchemeChoice } from './SchemeChoice'
 import { Segmented } from './Segmented'
 import { ThemeCards } from './ThemeCards'
@@ -25,6 +26,14 @@ export interface ThemePickerWords {
     motionSystem: string
     motionOn: string
     motionOff: string
+    /** The lines under each choice's title when `themeSettings` makes them settings rows. */
+    themeHint: string
+    schemeHint: string
+    schemeSystemHint: string
+    densityHint: string
+    cornersHint: string
+    typefaceHint: string
+    motionHint: string
 }
 
 const WORDS: ThemePickerWords = {
@@ -42,6 +51,13 @@ const WORDS: ThemePickerWords = {
     motionSystem: 'System',
     motionOn: 'On',
     motionOff: 'Off',
+    themeHint: 'The colors of surfaces, lines, text and the accent.',
+    schemeHint: 'Dark or light.',
+    schemeSystemHint: 'Dark, light, or as the device is set.',
+    densityHint: 'How much fits on a screen.',
+    cornersHint: 'How round the corners are.',
+    typefaceHint: 'The type the text is set in.',
+    motionHint: 'Whether parts move as they open and change.',
 }
 
 export interface ThemePickerProps {
@@ -79,102 +95,192 @@ export interface ThemePickerProps {
  * and `themeCards` draws them as cards. An app that puts the theme and the scheme in two settings
  * rows uses `ThemeCards` and `SchemeChoice` on their own, as this picker does.
  */
-export function ThemePicker({
-    value,
-    onChange,
-    themes,
-    densities,
-    corners,
-    typefaces,
-    system = false,
-    themeList = false,
-    themeCards = false,
-    className,
-    words: given,
-}: ThemePickerProps) {
+export function ThemePicker({ className, ...props }: ThemePickerProps) {
+    return (
+        <div data-slot="theme-picker" className={cn('flex flex-col gap-4', className)}>
+            {choices(props, false).map((choice) => (
+                <Row key={choice.id} label={choice.title}>
+                    {choice.control}
+                </Row>
+            ))}
+        </div>
+    )
+}
+
+/**
+ * The same choices as settings rows, one each, for a `SettingsDialog` section: each with its title
+ * and a line on what it changes, found by its own words in the settings' search, and its control
+ * beside it while the row has room, under it on a phone. The themes as a list or as cards sit
+ * under their row's line.
+ */
+export function themeSettings(props: Omit<ThemePickerProps, 'className'>): Setting[] {
+    return choices(props, true).map(({ id, title, description, keywords, control, wide }) => ({
+        id,
+        title,
+        description,
+        keywords,
+        control,
+        layout: wide ? 'below' : 'auto',
+    }))
+}
+
+interface Part {
+    id: string
+    title: string
+    description: string
+    keywords: string[]
+    control: ReactNode
+    wide: boolean
+}
+
+/** Each choice the picker offers; `beside` sizes the controls for a settings row's trailing column. */
+function choices(
+    {
+        value,
+        onChange,
+        themes,
+        densities,
+        corners,
+        typefaces,
+        system = false,
+        themeList = false,
+        themeCards = false,
+        words: given,
+    }: Omit<ThemePickerProps, 'className'>,
+    beside: boolean,
+): Part[] {
     const words = { ...WORDS, ...given }
     const levels = densities ?? [
         { value: 'regular', label: words.regular },
         { value: 'compact', label: words.compact },
     ]
     const set = <K extends keyof ThemeSettings>(key: K, next: ThemeSettings[K]) => onChange({ ...value, [key]: next })
-    return (
-        <div data-slot="theme-picker" className={cn('flex flex-col gap-4', className)}>
-            <Row label={words.theme}>
-                {themeCards ? (
-                    <ThemeCards
-                        value={value.theme}
-                        themes={themes}
-                        onValueChange={(next) => set('theme', next)}
-                        words={{ theme: words.theme }}
-                    />
-                ) : themeList ? (
-                    <ChoiceList
-                        label={words.theme}
-                        value={value.theme}
-                        options={themes.map((option) => ({
-                            value: option.value,
-                            label: <OptionLabel option={option} swatches={themes.some((one) => one.swatch === true)} />,
-                            description: option.description,
-                        }))}
-                        onValueChange={(next) => set('theme', next)}
-                    />
-                ) : (
-                    <Choice label={words.theme} value={value.theme} options={themes} onValueChange={(next) => set('theme', next)} />
-                )}
-            </Row>
-            <Row label={words.scheme}>
+    const fill = !beside
+    const out: Part[] = [
+        {
+            id: 'theme',
+            title: words.theme,
+            description: words.themeHint,
+            keywords: themes.map((theme) => theme.label),
+            wide: themeCards || themeList,
+            control: themeCards ? (
+                <ThemeCards
+                    value={value.theme}
+                    themes={themes}
+                    onValueChange={(next) => set('theme', next)}
+                    words={{ theme: words.theme }}
+                />
+            ) : themeList ? (
+                <ChoiceList
+                    label={words.theme}
+                    value={value.theme}
+                    options={themes.map((option) => ({
+                        value: option.value,
+                        label: <OptionLabel option={option} swatches={themes.some((one) => one.swatch === true)} />,
+                        description: option.description,
+                    }))}
+                    onValueChange={(next) => set('theme', next)}
+                />
+            ) : (
+                <Choice
+                    label={words.theme}
+                    value={value.theme}
+                    options={themes}
+                    beside={beside}
+                    onValueChange={(next) => set('theme', next)}
+                />
+            ),
+        },
+        {
+            id: 'scheme',
+            title: words.scheme,
+            description: system ? words.schemeSystemHint : words.schemeHint,
+            keywords: [words.dark, words.light, ...(system ? [words.system] : [])],
+            wide: false,
+            control: (
                 <SchemeChoice
                     value={value.scheme}
                     schemes={system ? ['dark', 'light', 'system'] : ['dark', 'light']}
-                    fill
+                    fill={fill}
                     onValueChange={(next) => set('scheme', next)}
                     words={words}
                 />
-            </Row>
-            {levels.length > 0 && (
-                <Row label={words.density}>
-                    <Segmented
-                        label={words.density}
-                        value={value.density}
-                        options={levels}
-                        fill
-                        onValueChange={(next) => set('density', next)}
-                    />
-                </Row>
-            )}
-            {corners !== undefined && corners.length > 0 && (
-                <Row label={words.corners}>
-                    <Choice label={words.corners} value={value.corners} options={corners} onValueChange={(next) => set('corners', next)} />
-                </Row>
-            )}
-            {typefaces !== undefined && typefaces.length > 0 && (
-                <Row label={words.typeface}>
-                    <Choice
-                        label={words.typeface}
-                        value={value.typeface}
-                        options={typefaces}
-                        onValueChange={(next) => set('typeface', next)}
-                    />
-                </Row>
-            )}
-            {value.motion !== undefined && (
-                <Row label={words.motion}>
-                    <Segmented
-                        label={words.motion}
-                        value={value.motion}
-                        options={[
-                            { value: 'system', label: words.motionSystem },
-                            { value: 'on', label: words.motionOn },
-                            { value: 'off', label: words.motionOff },
-                        ]}
-                        fill
-                        onValueChange={(next) => set('motion', next)}
-                    />
-                </Row>
-            )}
-        </div>
-    )
+            ),
+        },
+    ]
+    if (levels.length > 0)
+        out.push({
+            id: 'density',
+            title: words.density,
+            description: words.densityHint,
+            keywords: levels.map((level) => level.label),
+            wide: false,
+            control: (
+                <Segmented
+                    label={words.density}
+                    value={value.density}
+                    options={levels}
+                    fill={fill}
+                    onValueChange={(next) => set('density', next)}
+                />
+            ),
+        })
+    if (corners !== undefined && corners.length > 0)
+        out.push({
+            id: 'corners',
+            title: words.corners,
+            description: words.cornersHint,
+            keywords: ['radius', 'round'],
+            wide: false,
+            control: (
+                <Choice
+                    label={words.corners}
+                    value={value.corners}
+                    options={corners}
+                    beside={beside}
+                    onValueChange={(next) => set('corners', next)}
+                />
+            ),
+        })
+    if (typefaces !== undefined && typefaces.length > 0)
+        out.push({
+            id: 'typeface',
+            title: words.typeface,
+            description: words.typefaceHint,
+            keywords: ['font'],
+            wide: false,
+            control: (
+                <Choice
+                    label={words.typeface}
+                    value={value.typeface}
+                    options={typefaces}
+                    beside={beside}
+                    onValueChange={(next) => set('typeface', next)}
+                />
+            ),
+        })
+    if (value.motion !== undefined)
+        out.push({
+            id: 'motion',
+            title: words.motion,
+            description: words.motionHint,
+            keywords: ['animation'],
+            wide: false,
+            control: (
+                <Segmented
+                    label={words.motion}
+                    value={value.motion}
+                    options={[
+                        { value: 'system', label: words.motionSystem },
+                        { value: 'on', label: words.motionOn },
+                        { value: 'off', label: words.motionOff },
+                    ]}
+                    fill={fill}
+                    onValueChange={(next) => set('motion', next)}
+                />
+            ),
+        })
+    return out
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -192,21 +298,26 @@ function Choice({
     label,
     value,
     options,
+    beside,
     onValueChange,
 }: {
     label: string
     value: string
     options: readonly ThemeOption[]
+    beside: boolean
     onValueChange: (value: string) => void
 }) {
     const swatches = options.some((option) => option.swatch === true)
     return (
         <Select
-            items={options.map((option) => ({ value: option.value, label: option.label }))}
+            items={options.map((option) => ({
+                value: option.value,
+                label: option.label,
+            }))}
             value={value}
             onValueChange={(next) => next !== null && onValueChange(next)}
         >
-            <SelectTrigger className="w-full" aria-label={label}>
+            <SelectTrigger className={beside ? 'w-full @lg:w-56' : 'w-full'} aria-label={label}>
                 <SelectValue>
                     {(chosen: string) => {
                         const option = options.find((entry) => entry.value === chosen)
@@ -214,7 +325,10 @@ function Choice({
                     }}
                 </SelectValue>
             </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false} className="max-h-80">
+            <SelectContent
+                alignItemWithTrigger={false}
+                className="max-h-80 w-max max-w-[min(24rem,var(--available-width))] min-w-(--anchor-width)"
+            >
                 {options.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                         {option.description === undefined ? (
@@ -222,7 +336,7 @@ function Choice({
                         ) : (
                             <span className="flex min-w-0 flex-col">
                                 <OptionLabel option={option} swatches={swatches} />
-                                <span className="text-xs text-muted-foreground">{option.description}</span>
+                                <span className="text-xs whitespace-normal text-muted-foreground">{option.description}</span>
                             </span>
                         )}
                     </SelectItem>

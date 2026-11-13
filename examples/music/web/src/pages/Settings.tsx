@@ -2,7 +2,7 @@ import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import type { AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
 import { CORNERS, DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
@@ -92,7 +92,10 @@ export function Settings({ appearance, open, onClose }: { appearance: Appearance
                                     label="Speed"
                                     value={String(options.rate)}
                                     onValueChange={(value) => setSettings({ rate: Number(value) })}
-                                    options={MEDIA_RATES.map((rate) => ({ value: String(rate), label: rateLabel(rate) }))}
+                                    options={MEDIA_RATES.map((rate) => ({
+                                        value: String(rate),
+                                        label: rateLabel(rate),
+                                    }))}
                                 />
                             ),
                             layout: 'below',
@@ -201,7 +204,10 @@ export function Settings({ appearance, open, onClose }: { appearance: Appearance
                                     label="Look"
                                     value={options.look}
                                     onValueChange={(look) => setSettings({ look })}
-                                    options={LOOKS.map((look) => ({ value: look.id, label: look.label }))}
+                                    options={LOOKS.map((look) => ({
+                                        value: look.id,
+                                        label: look.label,
+                                    }))}
                                 />
                             ),
                             layout: 'below',
@@ -346,22 +352,16 @@ export function Settings({ appearance, open, onClose }: { appearance: Appearance
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Theme',
-                            description: 'The theme, the scheme, the density and the corners. The full screen stays dark in every one.',
-                            keywords: ['theme', 'dark', 'light', 'density'],
-                            control: (
-                                <ThemePicker
-                                    value={appearance.settings}
-                                    onChange={appearance.setSettings}
-                                    themes={APP_THEMES}
-                                    corners={CORNERS}
-                                    system
-                                />
-                            ),
-                            layout: 'below',
-                        },
+                        ...themeSettings({
+                            value: appearance.settings,
+                            onChange: appearance.setSettings,
+                            themes: APP_THEMES,
+                            corners: CORNERS,
+                            system: true,
+                            words: {
+                                themeHint: 'The colors of surfaces, lines, text and the accent. The full screen stays dark in every one.',
+                            },
+                        }),
                     ],
                 },
             ],
@@ -391,7 +391,11 @@ export function Settings({ appearance, open, onClose }: { appearance: Appearance
                 onOpenChange={setResetting}
                 question="Reset the demo data?"
                 detail="Every favorite, playlist, download, station, play, the queue and the settings go back to how the demo started."
-                confirm={{ label: 'Reset', destructive: true, onConfirm: () => void resetAll().then(() => window.location.reload()) }}
+                confirm={{
+                    label: 'Reset',
+                    destructive: true,
+                    onConfirm: () => void resetAll().then(() => window.location.reload()),
+                }}
             />
         </>
     )
