@@ -55,6 +55,12 @@ const RULES: Rule[] = [
     { name: 'a font size set by hand', pattern: /fontSize:\s*[0-9]/, in: ALL },
     { name: 'raw black or white instead of a color token', pattern: /\b(text|bg|border|fill|stroke|ring)-(white|black)\b/, in: ALL },
     {
+        name: 'an invalid ring drawn at rest instead of on focus',
+        // A field with an issue is marked at rest by its edge alone; the ring comes with focus, as `ISSUE_EDGE` draws it.
+        pattern: /(?:^|[\s"'`])(?=[^\s"'`]*invalid)(?![^\s"'`]*focus)[^\s"'`]*:ring-[1-9]/,
+        in: ALL,
+    },
+    {
         name: 'a hex color outside a picture',
         pattern: /#[0-9a-fA-F]{6}\b/,
         in: ALL,

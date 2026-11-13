@@ -26,14 +26,14 @@ describe('a repeated group', () => {
             </RepeatedGroup>,
         )
         expect(plain).not.toContain('data-issue')
-        expect(plain).not.toContain('size-7')
+        expect(plain).not.toContain('relative flex size-(--density-control-sm) shrink-0')
         const refused = renderToStaticMarkup(
             <RepeatedGroup id="services" label="Services" rows={ROWS} error="Add at least 3 services">
                 {(key) => <span>{key}</span>}
             </RepeatedGroup>,
         )
         expect(refused).toContain('id="services"')
-        expect(refused).toContain('size-7')
+        expect(refused).toContain('relative flex size-(--density-control-sm) shrink-0')
     })
 })
 

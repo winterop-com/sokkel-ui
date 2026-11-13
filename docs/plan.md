@@ -132,6 +132,20 @@ never shows through a scope of another. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
 
+Density is a level an app wears on `<html data-density>`, regular (the default) or compact, and on
+`[data-density-scope]` for one element, as a story shows both levels side by side. Each level is a
+set of `--density-*` tokens in `tokens.json`: the page's insets and gaps, a panel's head and
+padding, a row, the inspector's and the chat's spacing, and a control's height at each size,
+`--density-control-xs`, `--density-control-sm`, `--density-control` and `--density-control-lg`
+(1.5, 1.75, 2 and 2.25rem regular; compact takes each one step smaller, 1.25 to 2rem). Every
+control reads its size's height: `Button` (its icon squares too), `Input`, the select triggers,
+`Toggle`, `Segmented`, the tabs list, the menubar, the input group and the frames the fields build on
+it (the typed fields, `SearchField`, `SecretField`, `AsyncSelect`, `TreeSelect`, `InlineEdit`, a
+one-line `CodeEditor`), the issue mark and count, `FilterChip` and a control-sized `Chip`, and
+the lines that hold them (`Toolbar`, `TopBar`'s palette button, a field group's head), so a button
+beside a field beside a select stands level at either density. Below `md` a control keeps its
+finger minimum; an `xs` button keeps its drawn size there and takes a finger's hit area instead.
+
 Beyond its colors a theme can give the frame's parts a look of their own, through tokens the parts
 read (`$parts` in `tokens.json` lists them): the heading face, a section head's ground, rule and
 ink and a page title's ink; a table's head (ground, rule, ink, case) and its zebra; a wash over the
@@ -1380,7 +1394,9 @@ changes, as one passing levels it holds. Both are off while motion is reduced (`
 ## Validation
 
 Option F, picked from the validation research. A field with a problem gets a colored
-edge and a mark at the end of its input; pressing the mark opens what is wrong, what to do, and a
+edge and a mark at the end of its input, the edge alone at rest and a ring in the same tone only
+while the field has focus, in every control that takes `aria-invalid` (`src/rules.test.ts` fails a
+ring drawn at rest); pressing the mark opens what is wrong, what to do, and a
 fix when one is plain. The dialog footer counts what stops the submit, beside the verb, and pressing
 the count opens the first. Nothing is inserted between fields, so a form never changes height.
 Issues show once a field is left with a value, or once the form is submitted, and go the moment the

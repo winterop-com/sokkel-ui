@@ -438,7 +438,10 @@ export const tableEditing: TableEditing = {
                 )}
                 {isOpen(table, entry, column) ? (
                     // The open editor takes the field's place at the field's size, so the card does not move.
-                    <span className="relative flex h-8 min-w-0 flex-1 text-sm" onClick={(event) => event.stopPropagation()}>
+                    <span
+                        className="relative flex h-(--density-control) min-w-0 flex-1 text-sm"
+                        onClick={(event) => event.stopPropagation()}
+                    >
                         {contentOf(table, entry, column, 'field')}
                     </span>
                 ) : (
@@ -453,7 +456,7 @@ export const tableEditing: TableEditing = {
                             openEdit(table, entry, column)
                         }}
                         className={cn(
-                            'flex h-8 min-w-0 flex-1 items-center rounded-control border px-2.5 text-sm',
+                            'flex h-(--density-control) min-w-0 flex-1 items-center rounded-control border px-2.5 text-sm',
                             opens ? 'cursor-text border-input bg-field' : 'border-transparent',
                             column.align === 'end' && 'justify-end tabular-nums',
                             edit?.error != null && 'border-critical/80 bg-critical/8',

@@ -3,12 +3,13 @@ import { cva, type VariantProps } from 'class-variance-authority'
 
 import { Children, isValidElement, type ReactNode } from 'react'
 
+import { FINGER_HIT, takesFinger } from '../../lib/finger'
 import { cn } from '../../lib/utils'
 import { Spinner } from './spinner'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 
 const buttonVariants = cva(
-    "group/button inline-flex shrink-0 items-center justify-center rounded-control border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:active:translate-y-0 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "group/button inline-flex shrink-0 items-center justify-center rounded-control border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:active:translate-y-0 aria-invalid:border-destructive aria-invalid:focus-visible:ring-3 aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:focus-visible:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     {
         variants: {
             variant: {
@@ -23,16 +24,17 @@ const buttonVariants = cva(
                 link: 'text-primary underline-offset-4 not-aria-disabled:hover:underline',
             },
             size: {
-                default: 'h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 max-md:min-h-finger',
-                xs: "h-6 gap-1 rounded-[min(var(--control-radius),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-control has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-                sm: "h-7 gap-1 rounded-[min(var(--control-radius),12px)] px-2.5 text-xs in-data-[slot=button-group]:rounded-control has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 max-md:min-h-finger [&_svg:not([class*='size-'])]:size-3.5",
-                lg: 'h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 max-md:min-h-finger',
-                icon: 'size-8 max-md:min-h-finger max-md:min-w-finger',
+                default:
+                    'h-(--density-control) gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 max-md:min-h-finger',
+                xs: "h-(--density-control-xs) gap-1 rounded-[min(var(--control-radius),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-control has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+                sm: "h-(--density-control-sm) gap-1 rounded-[min(var(--control-radius),12px)] px-2.5 text-xs in-data-[slot=button-group]:rounded-control has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 max-md:min-h-finger [&_svg:not([class*='size-'])]:size-3.5",
+                lg: 'h-(--density-control-lg) gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 max-md:min-h-finger',
+                icon: 'size-(--density-control) max-md:min-h-finger max-md:min-w-finger',
                 'icon-xs':
-                    "size-6 rounded-[min(var(--control-radius),10px)] in-data-[slot=button-group]:rounded-control [&_svg:not([class*='size-'])]:size-3",
+                    "size-(--density-control-xs) rounded-[min(var(--control-radius),10px)] in-data-[slot=button-group]:rounded-control [&_svg:not([class*='size-'])]:size-3",
                 'icon-sm':
-                    'size-7 rounded-[min(var(--control-radius),12px)] in-data-[slot=button-group]:rounded-control max-md:min-h-finger max-md:min-w-finger',
-                'icon-lg': 'size-9 max-md:min-h-finger max-md:min-w-finger',
+                    'size-(--density-control-sm) rounded-[min(var(--control-radius),12px)] in-data-[slot=button-group]:rounded-control max-md:min-h-finger max-md:min-w-finger',
+                'icon-lg': 'size-(--density-control-lg) max-md:min-h-finger max-md:min-w-finger',
             },
             /** The critical tint under the pointer, on any variant, for a button that destroys. */
             destructiveHover: {
@@ -50,6 +52,9 @@ const buttonVariants = cva(
 
 /** A busy button keeps its look while it ignores presses. */
 const BUSY = 'cursor-progress opacity-100!'
+
+/** The sizes drawn smaller than a finger on a phone, which take a finger's hit area there instead of its height. */
+const SMALL = new Set(['xs', 'icon-xs'])
 
 /** The spinner at the size of the icons a button of each size draws. */
 const SPINNER: Record<string, string | undefined> = { xs: 'size-3', 'icon-xs': 'size-3', sm: 'size-3.5' }
@@ -89,11 +94,12 @@ function Button({
     const parts = busy ? Children.toArray(children) : []
     // The spinner stands in for a leading icon: an element before the label, or an icon-only button's icon.
     const lead = isValidElement(parts[0]) && (parts.length > 1 || size?.startsWith('icon') === true)
+    const finger = SMALL.has(size ?? 'default') && takesFinger(props.render, className)
     const button = (
         <ButtonPrimitive
             data-slot="button"
             data-button-size={size ?? 'default'}
-            className={cn(buttonVariants({ variant, size, destructiveHover, className }), busy && BUSY)}
+            className={cn(buttonVariants({ variant, size, destructiveHover }), finger && FINGER_HIT, className, busy && BUSY)}
             disabled={held || busy || disabled}
             focusableWhenDisabled={held || busy || focusableWhenDisabled}
             aria-busy={busy || undefined}

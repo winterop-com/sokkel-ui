@@ -34,7 +34,10 @@ export function InlineField({ id, label, size = 'default', children, className }
         >
             <span className={cn('shrink-0 whitespace-nowrap text-muted-foreground', size === 'default' && 'pr-1.5 pl-1')}>{label}</span>
             <span
-                className={cn('flex min-w-0 flex-1 items-center', size === 'default' && '*:data-[slot=input]:h-6 *:data-[slot=input]:px-1')}
+                className={cn(
+                    'flex min-w-0 flex-1 items-center',
+                    size === 'default' && '*:data-[slot=input]:h-(--density-control-xs) *:data-[slot=input]:px-1',
+                )}
             >
                 {children}
             </span>

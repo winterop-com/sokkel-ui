@@ -61,7 +61,7 @@ const keep = (event: SyntheticEvent) => event.stopPropagation()
 const SHAPE: Record<EditorLook, string> = {
     // A cell keeps its place too: its field's ground and a line under it, as the active cell is marked.
     cell: 'h-full rounded-none border-0 border-b-2 border-ring bg-field px-3 focus-visible:border-ring focus-visible:ring-0',
-    field: 'h-8 px-2.5',
+    field: 'h-(--density-control) px-2.5',
     // A title keeps its place: no box, only a rule under it, so its text stays where the title's was.
     // It is as wide as its text, as the title is, so a heading that sizes to its content gives it room.
     title: 'h-auto min-w-16 rounded-none border-0 border-b-2 border-ring bg-transparent px-0 py-0.5 font-heading text-page-title text-page-title-ink field-sizing-content focus-visible:border-ring focus-visible:ring-0 md:text-page-title dark:bg-transparent',
