@@ -25,7 +25,8 @@ export interface SettingsDialogWords extends SettingsWords {
     back: string
 }
 
-const WORDS: SettingsDialogWords = { ...SETTINGS_WORDS, close: 'Close', back: 'Back' }
+/** A settings dialog's own words in English; a dialog with words of its own starts from these. */
+export const SETTINGS_DIALOG_WORDS: SettingsDialogWords = { ...SETTINGS_WORDS, close: 'Close', back: 'Back' }
 
 export interface SettingsDialogProps {
     open: boolean
@@ -80,9 +81,9 @@ export function SettingsDialog({
     footer,
     onReset,
     resetScope = 'section',
-    words = WORDS,
+    words = SETTINGS_DIALOG_WORDS,
 }: SettingsDialogProps) {
-    const say = { ...WORDS, ...words }
+    const say = { ...SETTINGS_DIALOG_WORDS, ...words }
     const [phoneView, setPhoneView] = useState(phoneStart)
     const nav = useRef<HTMLElement | null>(null)
     const pane = useRef<HTMLDivElement | null>(null)

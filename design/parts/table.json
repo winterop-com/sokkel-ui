@@ -1,0 +1,414 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "table",
+    "kind": "part",
+    "status": "draft",
+    "summary": "The one table: every listing and table, five rows or fifty thousand, flat, grouped or a tree. Rows at the density's row height, drawing only those in view; heads that sort and resize; selection with a bar; one row picked for a detail beside it; rows stacked as cards when its own box is narrow.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/DataTable.tsx",
+            "packages/core/src/lib/table.ts",
+            "packages/core/src/components/PageState.tsx",
+            "packages/core/src/components/ui/skeleton.tsx"
+        ],
+        "sokkel-ui-egui": []
+    },
+    "anatomy": {
+        "frame": "The table's own box: edge and corners; off when the table sits in a panel that frames it.",
+        "bar": "Over the head: search, the toolbar's tools, the count, the sort menu (grid view), the view switch and the columns menu. Replaced by the selection bar while rows are selected.",
+        "selectionBar": "How many are selected, Clear, the app's bulk actions, and the offer to select every row on every page.",
+        "head": "The column names in one row that stays put while rows scroll; each sortable head a button, each resizable head with a handle at its end edge.",
+        "row": "One line at the row height: an optional select box, the cells, an optional menu button at the end; the first cell stays put while rows scroll sideways.",
+        "groupHead": "A row over each group: fold control, select box, label, count, each column's aggregate.",
+        "detail": "A row's own detail, under it across the table's width.",
+        "card": "A row stacked as a card on a narrow box: leads, the title, a labeled line per column, the secondary facts on its last line, its box and its menu.",
+        "cardDetail": "A stacked card's detail, under its card.",
+        "dropLine": "The line where a dragged row lands, 2 tall.",
+        "placeholder": "A skeleton row while rows load.",
+        "empty": "The line said when there are no rows.",
+        "failure": "The failed read, in the table's place.",
+        "foot": "A line at the foot: how many are loaded, the pager, Load more."
+    },
+    "options": {
+        "columns": {
+            "type": "columns",
+            "does": "Each column: id, header, width (a track such as 8rem or minmax(12rem,1fr), or content: as wide as its widest cell up to maxWidth), cell, align (start, center, end), sortValue, hideable, resizable, stack (lead, line, primary, secondary, none), band, aggregate, fill, edit."
+        },
+        "rows": {"type": "rows", "does": "The rows, with rowKey giving each a stable key."},
+        "variant": {
+            "values": ["table", "list"],
+            "default": "table",
+            "does": "list: a short listing's look: no bar unless it has a search or tools, columns set apart by a gap, the head row at density.panel-head, stacking whenever the columns no longer fit (minWidth auto)."
+        },
+        "selectable": {
+            "type": "boolean",
+            "default": false,
+            "does": "A box per row and one in the head; Shift picks a range, Ctrl or Cmd one row; the bar says how many and holds the bulk actions."
+        },
+        "onOpen": {
+            "type": "callback",
+            "does": "A press or Enter on a row picks it, such as for a detail beside the list; opened(row) draws the picked row as chosen."
+        },
+        "chevron": {
+            "type": "boolean",
+            "default": false,
+            "does": "A chevron at each row's end: a press leaves the list for the row's own page."
+        },
+        "sort": {"type": "text", "does": "{ column, direction }. A sortable head goes up, down, then back to as given."},
+        "groupBy": {"type": "text", "does": "Gathers rows under group heads by a field or a key made from the row."},
+        "childRows": {
+            "type": "callback",
+            "does": "A tree: rows with children open and close; children sort among themselves."
+        },
+        "detail": {"type": "callback", "does": "A row's own detail under it."},
+        "rowActions": {
+            "type": "callback",
+            "does": "The row's menu: from the button at its end and on a right click. actionButton: always, hover or none."
+        },
+        "rowTone": {"type": "callback", "does": "muted dims a row; critical and warning tint its ground."},
+        "search": {"type": "node", "does": "The search field, first in the bar."},
+        "toolbar": {"type": "node", "does": "Tools in the bar, such as filters."},
+        "paging": {
+            "values": ["none", "client", "server"],
+            "default": "none",
+            "does": "Rows a page at a time with a pager at the foot."
+        },
+        "loading": {
+            "type": "boolean",
+            "default": false,
+            "does": "Rows are on their way: placeholder rows under the heads, filling the view, or three after the last row. The table's one loading look: the bar, its search, the heads and the frame keep their places."
+        },
+        "loadMore": {
+            "values": ["end", "button"],
+            "default": "end",
+            "does": "With hasMore: ask as the end nears, or from a Load more button."
+        },
+        "card": {"type": "callback", "does": "A row as a card for the grid view; the bar offers Table and Grid."},
+        "stackBelow": {
+            "type": "length",
+            "default": 576,
+            "does": "Below this width of the table's own box (and once the columns no longer fit) rows stack as cards. Never the window's width. false keeps the table, which then scrolls sideways."
+        },
+        "minWidth": {
+            "type": "length",
+            "default": "768 (table), auto (list)",
+            "does": "The narrowest the columns go before the table scrolls sideways; auto never scrolls sideways."
+        },
+        "stackLayout": {
+            "values": ["labeled", "compact"],
+            "default": "labeled",
+            "does": "compact: the title over one quiet line of the other columns, for short things on a phone."
+        },
+        "rowHeight": {
+            "values": ["fixed", "auto"],
+            "default": "fixed",
+            "does": "auto lets rows grow to their tallest cell; every row is then drawn."
+        },
+        "resizable": {"type": "boolean", "default": true, "does": "Heads' end edges resize their columns."},
+        "reorderable": {
+            "type": "boolean",
+            "default": true,
+            "does": "The columns menu moves columns; the first stays first."
+        },
+        "onReorder": {"type": "callback", "does": "The reader puts rows in order: a grip per row, Alt with the arrows."},
+        "framed": {"type": "boolean", "default": true, "does": "Draws the frame; off inside a panel that frames it."},
+        "bar": {"type": "boolean", "does": "Whether the bar shows while nothing is selected."},
+        "columnHeads": {"type": "boolean", "default": true, "does": "Draws the head row."},
+        "hover": {"type": "boolean", "default": true, "does": "Tints the row under the pointer."},
+        "empty": {
+            "type": "node",
+            "does": "What it says with no rows: a sentence, or a node with an action. Given, it stands alone without the heads, unless a search or tools may have emptied the table."
+        },
+        "error": {
+            "type": "node",
+            "does": "Why the rows could not be read: the server's words, or a sentence in their place. Given, and while not loading, the failure stands in place of the rows under the heads."
+        },
+        "status": {
+            "type": "number",
+            "does": "What the server answered the failed read, which picks the heading: an HTTP status (404 is missing, another refused), or unreachable for no answer."
+        },
+        "problems": {"type": "rows", "does": "Each failure the refusal named, listed under its diagnostic."},
+        "onRetry": {"type": "callback", "does": "Reads the rows again, from Try again under a failure."},
+        "inSection": {
+            "type": "boolean",
+            "default": false,
+            "does": "A titled listing with a count: a boxed section with the count in its head around an unframed table, the section's head as tall as the table's head.",
+            "context": "Section around DataTable framed={false}"
+        }
+    },
+    "sizes": {
+        "table": {
+            "height": "density.row",
+            "padX": 12,
+            "text": "text.body",
+            "radius": "radius-surface",
+            "note": "height is every row's, and the head row's."
+        },
+        "list": {
+            "height": "density.row",
+            "padX": "density.panel-pad",
+            "gap": 12,
+            "text": "text.body",
+            "radius": "radius-surface",
+            "note": "The head row is density.panel-head."
+        }
+    },
+    "layout": {
+        "headRowList": "density.panel-head",
+        "selectColumn": 40,
+        "contentColumnMax": 320,
+        "overscanRows": 8,
+        "stackBelow": {"value": 576, "note": "px of the table's own box."},
+        "minWidthTable": {"value": 768, "note": "48rem."},
+        "sortArrow": 14,
+        "resizeMin": 64,
+        "cardPadX": 12,
+        "cardPadY": 8,
+        "cardTitleLine": 24,
+        "cardLine": 20,
+        "cardPrimaryLine": 22,
+        "cardFactsLine": 24,
+        "stackLabelMax": {
+            "value": 192,
+            "note": "A stacked line's name is as wide as the widest, at most 12rem; one cut short says it all on hover."
+        },
+        "rowGrip": 22,
+        "rowButtons": {
+            "value": "density.control-xs",
+            "note": "A row's menu button and its inline actions, and the bar's view switch: icon-xs buttons, square at control-xs (24 / 20)."
+        },
+        "barControls": {
+            "value": "density.control-sm",
+            "note": "The sort menu (sm), the columns menu (icon-sm), Load more (sm), and the pager's buttons (icon-sm) and rows-per-page select (sm): control-sm (28 / 24)."
+        },
+        "stackedEditField": {
+            "value": "density.control",
+            "note": "A stacked card's edit field, and its open editor at the same size so the card does not move: control (32 / 28)."
+        },
+        "groupHeadPadY": 6,
+        "emptyPadY": 12,
+        "placeholderBar": {"value": 12, "note": "A skeleton bar 12 tall at 60 percent of its cell, one per cell."},
+        "placeholderRowsAtEnd": 3
+    },
+    "states": {
+        "rest": {"means": "Rows drawn, nothing chosen."},
+        "hover": {"means": "The pointer is over a row.", "reached": "pointer over"},
+        "focus": {
+            "means": "The table has keyboard focus: the active row is marked.",
+            "reached": "Tab onto the table",
+            "on": "keyboard"
+        },
+        "sorted": {
+            "means": "A column sorts the rows: its head in the full ink with an arrow up or down.",
+            "reached": "a press on a sortable head, or sort"
+        },
+        "selected": {
+            "means": "A row's box is ticked; the bar says how many.",
+            "reached": "the box, Space, Shift or Ctrl/Cmd and a press"
+        },
+        "opened": {"means": "The row shown in a detail beside the list.", "reached": "onOpen and opened"},
+        "active": {
+            "means": "The row the arrows move from, marked while the table has keyboard focus.",
+            "reached": "arrows, a press"
+        },
+        "stacked": {
+            "means": "Rows drawn as cards, the table's own box being narrower than stackBelow and its columns.",
+            "reached": "the box's width"
+        },
+        "empty": {"means": "No rows and none on the way.", "reached": "rows empty, loading false"},
+        "loading": {
+            "means": "Rows on their way: placeholder rows fill the view under the heads, or three follow the last row. The bar counts nothing while the first rows load.",
+            "reached": "loading, also over a failure while it reads again"
+        },
+        "failed": {
+            "means": "The read failed: said in place of the rows under the heads, headed by what the server answered, its diagnostic and problems under the heading, with Try again. The bar and the frame stay; the bar counts nothing.",
+            "reached": "error, while not loading",
+            "sokkel-ui": "DataTable error, status, problems, onRetry: an unframed PageState in place of the rows (Patterns/Data table/Failed, Patterns/States/In a table)"
+        },
+        "toneCritical": {"means": "A row about something that failed.", "reached": "rowTone critical"},
+        "toneWarning": {"means": "A row about something to look at.", "reached": "rowTone warning"},
+        "muted": {"means": "A row about something switched off or revoked.", "reached": "rowTone muted"}
+    },
+    "pieces": {
+        "frame": {"rest": {"ground": "card", "edge": "border-strong", "radius": "radius-surface"}},
+        "head": {
+            "rest": {
+                "ground": "table-head-ground",
+                "rule": "table-head-line",
+                "ink": "table-head-ink",
+                "text": "text.head",
+                "note": "text.head reads table-head-size, table-head-weight and table-head-tracking; the case is table-head-transform."
+            },
+            "hover": {"ink": "foreground", "note": "A sortable head under the pointer."},
+            "sorted": {"ink": "foreground"}
+        },
+        "row": {
+            "rest": {
+                "ground": "card",
+                "rule": "border",
+                "ink": "foreground",
+                "text": "text.body",
+                "note": "Every other line, counted from the first, on table-zebra (card unless a theme sets a stripe)."
+            },
+            "hover": {"ground": "hover"},
+            "selected": {"ground": "secondary"},
+            "opened": {"ground": "secondary"},
+            "selected+hover": {"ground": "secondary"},
+            "active+focus": {"ring": {"color": "ring", "width": 2, "inset": "start"}},
+            "toneCritical": {"ground": "mix-oklab(critical 8%, card)"},
+            "toneWarning": {"ground": "mix-oklab(warning 10%, card)"},
+            "muted": {"opacity": 0.6, "note": "The cells' content, not the ground."}
+        },
+        "groupHead": {"rest": {"ground": "panel-ground", "rule": "border", "text": "text.section-title"}},
+        "card": {
+            "rest": {"ground": "card", "edge": "border", "radius": "radius-surface"},
+            "hover": {"ground": "hover"},
+            "selected": {"ring": {"color": "primary", "width": 2}},
+            "opened": {"ring": {"color": "ring/60", "width": 2}},
+            "active+focus": {"ring": {"color": "ring", "width": 2}},
+            "toneCritical": {"ground": "mix-oklab(critical 8%, card)"},
+            "toneWarning": {"ground": "mix-oklab(warning 10%, card)"}
+        },
+        "cardDetail": {"rest": {"ground": "panel-ground", "edge": "border", "radius": "radius-surface"}},
+        "placeholder": {
+            "rest": {
+                "ground": "muted",
+                "radius": "radius-md",
+                "note": "The skeleton bar's ground (bg-muted, rounded-md); it pulses unless motion is reduced. A grid-view card placeholder takes radius-surface."
+            }
+        },
+        "empty": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
+        "failure": {
+            "rest": {"note": "Not drawn."},
+            "failed": {
+                "ink": "foreground",
+                "mark": "destructive",
+                "note": "Unframed, under the heads inside the table's own frame, padded density.panel-pad across and 12 down. The heading at 500; the diagnostic and each problem in text.help, muted-foreground; Try again as an outline sm button."
+            }
+        },
+        "dropLine": {"rest": {"ground": "primary", "note": "2 tall, where a dragged row lands."}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Moves focus onto the table, one stop; the active row is marked. Head buttons and row boxes are not separate stops."
+        },
+        {"keys": ["ArrowDown", "ArrowUp"], "does": "Moves the active row one row (one line of cards in the grid)."},
+        {"keys": ["PageDown", "PageUp"], "does": "Moves the active row by a view's worth."},
+        {"keys": ["Home", "End"], "does": "To the first or last row."},
+        {
+            "keys": ["Space"],
+            "does": "Selects the active row (Shift: a range); without selection it picks it.",
+            "when": "selectable, or onOpen"
+        },
+        {"keys": ["Enter"], "does": "Picks the active row: onOpen, or opens and closes its detail."},
+        {"keys": ["ArrowRight"], "does": "Opens the active branch or detail; in the grid, the next card."},
+        {
+            "keys": ["ArrowLeft"],
+            "does": "Closes the active branch, or moves to its parent; in the grid, the previous card."
+        },
+        {
+            "keys": ["Alt+ArrowUp", "Alt+ArrowDown"],
+            "does": "Moves the active row a place.",
+            "when": "onReorder, rows drawn as given"
+        },
+        {"keys": ["Shift+Click"], "does": "Selects a range.", "when": "selectable"},
+        {"keys": ["Mod+Click"], "does": "Selects or clears one row from anywhere on it.", "when": "selectable"},
+        {
+            "keys": ["ArrowLeft", "ArrowRight", "Enter"],
+            "does": "On a resize handle: moves the edge; Enter (or a double click) puts the width back.",
+            "when": "a handle has focus"
+        },
+        {
+            "keys": ["Enter", "F2", "a character"],
+            "does": "Opens the active cell's editor (a character opens it on that character); Enter saves and moves down, Tab saves and moves on, Escape drops.",
+            "when": "editing"
+        }
+    ],
+    "words": {
+        "columns": "Columns",
+        "actions": "Actions",
+        "tableView": "Table",
+        "gridView": "Grid",
+        "sort": "Sort",
+        "unsorted": "As given",
+        "ascending": "Ascending",
+        "descending": "Descending",
+        "rows": {"one": "{count} row", "other": "{count} rows"},
+        "loaded": "{count} loaded",
+        "range": "{from}–{to} of {total}",
+        "page": "Page {page} of {pages}",
+        "perPage": "Rows per page",
+        "firstPage": "First page",
+        "previousPage": "Previous page",
+        "nextPage": "Next page",
+        "lastPage": "Last page",
+        "selected": "{count} selected",
+        "clear": "Clear",
+        "selection": "Selection",
+        "selectAll": "Select all rows",
+        "selectEvery": "Select all {count}",
+        "allSelected": "All {count} selected",
+        "selectRow": "Select row",
+        "expand": "Expand",
+        "collapse": "Collapse",
+        "loadMore": "Load more",
+        "loadMoreCount": "Load {count} more",
+        "loadingChildren": "Loading",
+        "resize": "Resize {column}",
+        "moveUp": "Move {column} up",
+        "moveDown": "Move {column} down",
+        "empty": "Nothing here.",
+        "selectGroup": "Select group",
+        "showGroup": "Show group",
+        "hideGroup": "Hide group",
+        "groupCount": "{count}",
+        "saving": "Saving",
+        "saveFailed": "Could not save",
+        "notNumber": "Enter a number",
+        "moveRow": "Move {row}",
+        "rowMoved": "{row} moved to {place} of {count}",
+        "issueCritical": "Error: ",
+        "issueWarning": "Warning: ",
+        "refused": "The server refused this read",
+        "missing": "Nothing is there",
+        "unreachable": "The server is not answering",
+        "retry": "Try again"
+    },
+    "appText": {
+        "header": "Every column's name, used in its head, the columns menu, a stacked line and its resize handle.",
+        "empty": "What this listing says with no rows, when more than the default.",
+        "expandLabel": "A row's disclosure name: 'Show the tokens of ada'.",
+        "error": "The server's diagnostic for a failed read.",
+        "cells": "A missing value is drawn as a quiet dash, never a blank."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "A CSS grid per row; the head and the first column are sticky.",
+            "Content columns are measured in the DOM and again once fonts load.",
+            "Base UI's checkbox and the menus load after first paint; the boxes are drawn the same until then.",
+            "Numbers in words are formatted for en-US until a locale arrives (roadmap)."
+        ],
+        "sokkel-ui-egui": [
+            "Reads paints (table.base.<state>.<piece>) for every color; the row tones are resolved mixes, never mixed by the widget.",
+            "Only the rows in view: ScrollArea::show_rows at density.row.",
+            "Content columns measured from laid-out galleys; nothing to wait for.",
+            "The table's own box is the width egui gives it (available width), which is what stackBelow asks for: no container query needed.",
+            "One focus stop: the table keeps the active row in its own state and paints the inset mark itself."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "the parts not built yet",
+            "spec": "This spec.",
+            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-ui-egui 38693ff). Has: rows at density.row, drawing only those in view; heads in table-head-* that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); words as fields. Not yet: grouping, trees, detail rows, the stacked cards below 576, row actions and menus, paging, cell editing, row reorder, its own loading and failed states (it is wrapped in PageState), keyboard row navigation."
+        },
+        {
+            "renderer": "sokkel-ui",
+            "what": "words formatted for one locale",
+            "spec": "Counts in words are formatted by the app's locale.",
+            "today": "toLocaleString('en-US') in WORDS."
+        }
+    ]
+}

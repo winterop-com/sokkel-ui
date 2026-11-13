@@ -1,0 +1,334 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "button",
+    "kind": "part",
+    "status": "draft",
+    "summary": "A button: words, an icon and words, or an icon alone named by its label. A button that cannot act says why; a busy one keeps its place and its focus.",
+    "sources": {
+        "sokkel-ui": ["packages/core/src/components/ui/button.tsx", "packages/core/src/components/IconButton.tsx"],
+        "sokkel-ui-egui": ["crates/core/src/widgets/button.rs", "crates/core/src/widgets/mod.rs"]
+    },
+    "anatomy": {
+        "container": "The pressable box: ground, edge (1px, transparent unless the variant draws one) and corners.",
+        "label": "The words, on one line, never wrapped. Absent in an icon button.",
+        "icon": "A glyph before the label (start) or after it (end); the whole content of an icon button.",
+        "spinner": "While busy: in the leading icon's place, or before the label when there is no icon. The label stays.",
+        "tooltip": "An icon button's label, or the reason a button cannot be pressed now, with a shortcut key when given."
+    },
+    "options": {
+        "variant": {
+            "values": ["default", "outline", "secondary", "ghost", "destructive", "link"],
+            "default": "default",
+            "does": "The look. One default (filled) button per group, the main action, placed last."
+        },
+        "size": {
+            "values": ["xs", "sm", "default", "lg", "icon-xs", "icon-sm", "icon", "icon-lg"],
+            "default": "default",
+            "does": "Height, padding, text and icon size. The icon sizes are square."
+        },
+        "iconPlace": {
+            "values": ["none", "start", "end"],
+            "default": "none",
+            "does": "Where the icon stands; the padding on that side is smaller.",
+            "context": "has-data-[icon=inline-start] / has-data-[icon=inline-end] on the icon element"
+        },
+        "busy": {
+            "type": "boolean",
+            "default": false,
+            "does": "Work a press started is under way: the spinner shows, presses are ignored, focus and look are kept."
+        },
+        "reason": {
+            "type": "text",
+            "does": "Why it cannot be pressed now. Disables it, keeps it in the tab order, and says the reason in a tooltip on hover and focus."
+        },
+        "disabled": {
+            "type": "boolean",
+            "default": false,
+            "does": "Cannot be pressed and leaves the tab order. Prefer `reason`."
+        },
+        "destructiveHover": {
+            "type": "boolean",
+            "default": false,
+            "does": "Any variant takes the critical tint under the pointer, for a button that destroys but should not shout at rest.",
+            "sokkel-ui": "Button destructiveHover; IconButton destructive"
+        },
+        "opensMenu": {
+            "type": "boolean",
+            "default": false,
+            "does": "The button opens a menu: it does not sink when pressed, and draws the open state while its menu is open.",
+            "context": "aria-haspopup, aria-expanded"
+        },
+        "inGroup": {
+            "type": "boolean",
+            "default": false,
+            "does": "Inside a button group: the small sizes take the full control radius and the group squares the inner corners.",
+            "context": "in-data-[slot=button-group]"
+        },
+        "label": {
+            "type": "text",
+            "does": "Icon button only: its name and its tooltip, one string so the two never drift."
+        },
+        "tooltip": {
+            "type": "text",
+            "does": "Icon button only: a longer sentence the tooltip says in place of the label."
+        },
+        "shortcut": {
+            "type": "text",
+            "does": "Icon button only: the key that does the same, drawn as a key in the tooltip."
+        },
+        "pressed": {
+            "type": "boolean",
+            "does": "Icon button only: on or off, for a button that toggles; left out for one that acts."
+        }
+    },
+    "sizes": {
+        "xs": {
+            "height": "density.control-xs",
+            "padX": 8,
+            "padXWithIcon": 6,
+            "gap": 4,
+            "icon": 12,
+            "text": "text.badge",
+            "radius": "radius-control",
+            "radiusMax": 10,
+            "phoneMinHeight": null,
+            "phoneHitArea": "spacing-finger",
+            "note": "Keeps its drawn size below md, unlike every other size, and takes a finger-square hit area centered on it instead (FINGER_HIT in lib/finger), unless it is placed by its own position (takesFinger)."
+        },
+        "sm": {
+            "height": "density.control-sm",
+            "padX": 10,
+            "padXWithIcon": 6,
+            "gap": 4,
+            "icon": 14,
+            "text": "text.badge",
+            "radius": "radius-control",
+            "radiusMax": 12,
+            "phoneMinHeight": "spacing-finger"
+        },
+        "default": {
+            "height": "density.control",
+            "padX": 10,
+            "padXWithIcon": 8,
+            "gap": 6,
+            "icon": 16,
+            "text": "text.action",
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger"
+        },
+        "lg": {
+            "height": "density.control-lg",
+            "padX": 10,
+            "padXWithIcon": 8,
+            "gap": 6,
+            "icon": 16,
+            "text": "text.action",
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger"
+        },
+        "icon-xs": {
+            "height": "density.control-xs",
+            "width": "density.control-xs",
+            "icon": 12,
+            "radius": "radius-control",
+            "radiusMax": 10,
+            "phoneMinHeight": null,
+            "phoneMinWidth": null,
+            "phoneHitArea": "spacing-finger",
+            "note": "Keeps its drawn size below md and takes a finger-square hit area, as xs does."
+        },
+        "icon-sm": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "icon": 16,
+            "radius": "radius-control",
+            "radiusMax": 12,
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "IconButton's default size. Square at density.control-sm."
+        },
+        "icon": {
+            "height": "density.control",
+            "width": "density.control",
+            "icon": 16,
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger"
+        },
+        "icon-lg": {
+            "height": "density.control-lg",
+            "width": "density.control-lg",
+            "icon": 16,
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger"
+        }
+    },
+    "layout": {
+        "phoneBelow": {"value": 768, "note": "The md breakpoint: below it phoneMinHeight and phoneMinWidth apply."},
+        "spinner": {"value": 16, "note": "At the icon size of the button's size: 12 for xs and icon-xs, 14 for sm."},
+        "linkUnderlineOffset": 4,
+        "controlHeights": {
+            "value": "density.control",
+            "note": "density control-xs, control-sm, control, control-lg: 24/28/32/36 regular, 20/24/28/32 compact. Button (its icon squares too), Input, the select triggers, the input group and the other controls read them, so controls side by side stand level at either density."
+        }
+    },
+    "states": {
+        "rest": {"means": "Nothing is happening to it."},
+        "hover": {"means": "The pointer is over an enabled, idle button.", "reached": "pointer over"},
+        "focus": {
+            "means": "Keyboard focus.",
+            "reached": "Tab",
+            "on": "keyboard",
+            "effect": {"ring": {"color": "ring", "width": 2, "offset": 2}},
+            "sokkel-ui": "focus-visible:outline-2 outline-offset-2 outline-ring"
+        },
+        "pressed": {
+            "means": "The pointer is down on it.",
+            "reached": "pointer down",
+            "effect": {"offsetY": 1},
+            "sokkel-ui": "active:not-aria-[haspopup]:translate-y-px; not for opensMenu"
+        },
+        "open": {"means": "Its menu is open (opensMenu).", "reached": "the menu opens", "sokkel-ui": "aria-expanded"},
+        "disabled": {
+            "means": "Cannot be pressed now.",
+            "reached": "reason or disabled",
+            "effect": {"opacity": 0.5, "presses": false, "cursor": "not-allowed"},
+            "sokkel-ui": "With reason: focusable, tooltip on hover and focus. With disabled alone: out of the tab order."
+        },
+        "invalid": {
+            "means": "Marked invalid by a form, as a control in a refused group.",
+            "reached": "aria-invalid",
+            "sokkel-ui": "aria-invalid:border-destructive, the edge alone at rest; no prop sets it"
+        },
+        "invalid+focus": {
+            "means": "An invalid button with keyboard focus: the focus outline and a 3px ring. The ring shows only with focus, never at rest.",
+            "reached": "Tab onto an invalid button",
+            "on": "keyboard",
+            "sokkel-ui": "aria-invalid:focus-visible:ring-3 ring-destructive/20, dark ring-destructive/40"
+        },
+        "busy": {
+            "means": "A press started work that is under way.",
+            "reached": "busy",
+            "effect": {"opacity": 1, "presses": false, "focusable": true, "cursor": "progress"},
+            "sokkel-ui": "aria-busy and aria-disabled; the look of rest kept (opacity-100), no hover"
+        }
+    },
+    "variants": {
+        "default": {
+            "rest": {"ground": "primary", "edge": "none", "ink": "primary-foreground"},
+            "hover": {
+                "ground": "primary/80",
+                "note": "The ground is replaced, so what is beneath shows through 20 percent."
+            }
+        },
+        "outline": {
+            "rest": {
+                "ground": "background",
+                "edge": "border",
+                "ink": "inherit",
+                "dark": {"ground": "input/30", "edge": "input"}
+            },
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "open": {"ground": "hover", "ink": "foreground"}
+        },
+        "secondary": {
+            "rest": {"ground": "secondary", "edge": "none", "ink": "secondary-foreground"},
+            "hover": {"ground": "mix(secondary, foreground 5%)"},
+            "open": {"ground": "secondary", "ink": "secondary-foreground"}
+        },
+        "ghost": {
+            "rest": {"ground": "none", "edge": "none", "ink": "inherit"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "open": {"ground": "hover", "ink": "foreground"}
+        },
+        "destructive": {
+            "rest": {
+                "ground": "destructive/10",
+                "edge": "none",
+                "ink": "destructive",
+                "dark": {"ground": "destructive/20"}
+            },
+            "hover": {"ground": "destructive/20", "dark": {"ground": "destructive/30"}},
+            "focus": {"edge": "destructive/40"}
+        },
+        "link": {"rest": {"ground": "none", "edge": "none", "ink": "primary"}, "hover": {"underline": true}},
+        "icon-button": {
+            "rest": {
+                "ground": "none",
+                "edge": "none",
+                "ink": "muted-foreground",
+                "note": "IconButton: ghost by default, its icon in the quiet ink until hovered."
+            },
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "pressed": {
+                "ground": "muted",
+                "ink": "foreground",
+                "note": "The toggle's on state (pressed: true), not the pointer's press."
+            }
+        },
+        "destructive-hover": {
+            "rest": {
+                "note": "An overlay the destructiveHover option lays over any variant: rest is the variant's own, only hover changes."
+            },
+            "hover": {"ground": "critical/10", "ink": "critical-ink"}
+        }
+    },
+    "pieces": {
+        "container": {
+            "rest": {"radius": "radius-control", "note": "Over every variant: what is the same whatever the variant."},
+            "invalid": {"edge": "destructive", "dark": {"edge": "destructive/50"}},
+            "invalid+focus": {"ring": {"color": "destructive/20", "width": 3, "dark": {"color": "destructive/40"}}}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the button, also while busy and while disabled with a reason; not while disabled without one."
+        },
+        {"keys": ["Enter"], "does": "Presses it.", "when": "enabled and not busy"},
+        {"keys": ["Space"], "does": "Presses it.", "when": "enabled and not busy"},
+        {"keys": ["Focus"], "does": "Shows the tooltip: an icon button's label, a reason, a shortcut."}
+    ],
+    "words": {},
+    "appText": {
+        "label": "Required for an icon button: its name and its tooltip. A text button's words are its content.",
+        "reason": "Why it cannot be pressed now, in the app's words.",
+        "tooltip": "A longer sentence than the label, for an icon button.",
+        "shortcut": "The key, as the device writes it (shortcutLabel in sokkel-ui)."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Base UI's Button; focusableWhenDisabled keeps a reasoned or busy button in the tab order.",
+            "The tooltip is Base UI's Tooltip around the button; a reason wraps the button in one.",
+            "The busy spinner is aria-hidden; the button says aria-busy.",
+            "The hover expressions stay in its classes (hover:bg-primary/80); its parts test maps each paint expression to the class it expects."
+        ],
+        "sokkel-ui-egui": [
+            "Reads paints (button.<variant>.<state>.container) and never mixes colors.",
+            "A busy spinner is painted and asks for a repaint each frame; with motion reduced it should stand still (no motion token yet).",
+            "A busy or reasoned button keeps its focus with Sense::focusable_noninteractive; a disabled tooltip is on_disabled_hover_text."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "secondary hover",
+            "spec": "The resolved paint button.secondary.hover.container (mix(secondary, foreground 5%) in oklch, resolved at build time).",
+            "today": "lerp_to_gamma, a blend in gamma space."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "focus ring trigger",
+            "spec": "on: keyboard.",
+            "today": "Drawn on any focus (has_focus); keyboard-only needs the last input kind tracked."
+        },
+        {"renderer": "sokkel-ui-egui", "what": "sm with an icon", "spec": "padXWithIcon 6.", "today": "8 (pad - 2)."},
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "missing options and states",
+            "spec": "Icon sizes, IconButton (label, pressed, shortcut), destructiveHover, opensMenu and open, inGroup, iconPlace end, invalid, phone heights below md and the xs hit area.",
+            "today": "Not built."
+        }
+    ]
+}

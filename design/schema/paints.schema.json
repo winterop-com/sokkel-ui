@@ -1,0 +1,59 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "sokkel-design/paints.schema.json",
+    "title": "The resolved paints",
+    "description": "The `paints` section of tokens.resolved.json: every paint the part and pattern specs name, resolved by the resolver for every theme and scheme into plain colors, so no renderer mixes colors. Keyed by theme, then scheme, then `<part>.<variant>.<state>.<piece>`: variant is `base` for a part without variants, piece is `container` for a variant's own paint, and state is a stateKey (`hover`, `invalid+focus`). Each paint is complete: rest, the part-wide piece, the variant, each joined state in order, the joined key, the dark layers in dark, and the state's effect ring, already laid over each other. Only rest and the states a spec paints are present; a renderer asked for another state takes rest. Colors do not vary by density, so density is not a key; lengths per density stay where they are in the resolved file.",
+    "type": "object",
+    "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$", "$comment": "A theme."},
+    "additionalProperties": {
+        "type": "object",
+        "propertyNames": {"enum": ["light", "dark"]},
+        "additionalProperties": {
+            "type": "object",
+            "propertyNames": {
+                "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9-]*\\.[a-zA-Z]+(\\+[a-zA-Z]+)*\\.[a-zA-Z][a-zA-Z0-9-]*$"
+            },
+            "additionalProperties": {"$ref": "#/$defs/paint"}
+        }
+    },
+    "$defs": {
+        "color": {
+            "$comment": "sRGB hex, unpremultiplied, alpha only when not opaque, as the resolved colors are. #00000000 for none; `inherit` for the ink around the part.",
+            "type": "string",
+            "pattern": "^(#[0-9a-f]{6}([0-9a-f]{2})?|inherit)$"
+        },
+        "paint": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ground": {"$ref": "#/$defs/color"},
+                "edge": {"$ref": "#/$defs/color"},
+                "ink": {"$ref": "#/$defs/color"},
+                "rule": {"$ref": "#/$defs/color"},
+                "mark": {"$ref": "#/$defs/color"},
+                "placeholder": {"$ref": "#/$defs/color"},
+                "ring": {
+                    "type": "object",
+                    "required": ["color", "width"],
+                    "additionalProperties": false,
+                    "properties": {
+                        "color": {"$ref": "#/$defs/color"},
+                        "width": {"type": "number"},
+                        "offset": {"type": "number"},
+                        "inset": {"enum": ["start", "all"]}
+                    }
+                },
+                "opacity": {"type": "number"},
+                "overlay": {
+                    "type": "boolean",
+                    "description": "An option's overlay (destructive-hover): only its own fields, laid by field over the variant's paint."
+                },
+                "source": {
+                    "type": "object",
+                    "additionalProperties": {"type": "string"},
+                    "description": "Each color's authoring expression (`primary/80`, `mix(secondary, foreground 5%)`), kept so verify-colors can draw the same expression in Chromium and compare."
+                }
+            }
+        }
+    }
+}

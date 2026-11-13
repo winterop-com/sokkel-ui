@@ -267,7 +267,8 @@ export interface DataTableWords
     rowMoved: (row: string, place: number, count: number) => string
 }
 
-const WORDS: DataTableWords = {
+/** A data table's own words in English; a table with words of its own starts from these. */
+export const DATA_TABLE_WORDS: DataTableWords = {
     columns: 'Columns',
     actions: 'Actions',
     tableView: 'Table',
@@ -1277,7 +1278,7 @@ export function DataTable<T>({
     words: ownWords,
     className,
 }: DataTableProps<T>) {
-    const words = { ...WORDS, ...ownWords }
+    const words = { ...DATA_TABLE_WORDS, ...ownWords }
     // A failed read stands in place of the rows, unless they are being read again.
     const failed = error !== undefined && error !== null && error !== false && !loading
     const [sort, setSort] = useHeld(sortValue, defaultSort, onSortChange)
@@ -2509,7 +2510,7 @@ export function DataTable<T>({
         <TableCellContext value={cell}>
             <div
                 className={cn(
-                    'flex min-h-0 min-w-60 flex-col overflow-hidden bg-card [contain:inline-size]',
+                    'flex min-h-0 min-w-60 flex-col overflow-hidden bg-card text-foreground [contain:inline-size]',
                     framed && 'rounded-surface border border-border-strong',
                     className,
                 )}

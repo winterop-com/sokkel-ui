@@ -136,7 +136,8 @@ export interface RailWords {
     places: string
 }
 
-const WORDS: RailWords = {
+/** The rail's own words in English; a rail with words of its own starts from these. */
+export const RAIL_WORDS: RailWords = {
     collapse: 'Collapse the navigation',
     expand: 'Expand the navigation',
     resize: 'Resize the navigation',
@@ -321,7 +322,7 @@ export function Rail({
     })
     const lights = useTrafficLights(desktop)
     const drag = desktop === undefined ? undefined : ''
-    const words = { ...WORDS, ...given }
+    const words = { ...RAIL_WORDS, ...given }
     const SortGroup = useContext(DragPartsContext).railGroup
     const unread = words.unread
     const [ownOpen, setOwnOpen] = useState<string[]>(() => [

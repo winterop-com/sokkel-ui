@@ -1,0 +1,294 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "text-field",
+    "kind": "part",
+    "status": "draft",
+    "summary": "A labeled text input: the field frame every field shares (label, hint, description, control, help, fallback, the issue mark) around a one-line input or a growing text area. A problem is said by a mark at the control's end, so a form never changes height.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/TextField.tsx",
+            "packages/core/src/components/Field.tsx",
+            "packages/core/src/components/IssueMark.tsx",
+            "packages/core/src/components/ui/input.tsx",
+            "packages/core/src/components/ui/textarea.tsx",
+            "packages/core/src/components/ui/label.tsx"
+        ],
+        "sokkel-ui-egui": ["crates/core/src/widgets/text_field.rs"]
+    },
+    "anatomy": {
+        "label": "Names the control; a press on it focuses the control.",
+        "requiredStar": "A star after the label, said as the word to a screen reader (requiredMark star).",
+        "requiredWord": "The word after the label and outside it (requiredMark word).",
+        "hint": "A short note beside the label: a unit, a format, a default; in the code face when it is a key.",
+        "note": "A part beside the label after the hint: a badge, a link to the docs.",
+        "description": "A sentence between the label and the control: what the question asks.",
+        "control": "The input or text area: ground, edge, corners, value, placeholder.",
+        "issueMark": "A button inside the control's end, shown only with an issue, in the worst issue's ink.",
+        "issuePopover": "Opens from the mark: each issue's text, its detail, and the actions that put it right.",
+        "help": "A sentence under the control: what a right answer looks like.",
+        "fallback": "A line under the help: what applies when the field is left empty."
+    },
+    "options": {
+        "label": {"type": "text", "does": "Required. Names the control."},
+        "hint": {"type": "text", "does": "Beside the label."},
+        "keyHint": {
+            "type": "boolean",
+            "default": false,
+            "does": "The hint is a setting's key: drawn in the code face, never translated."
+        },
+        "description": {"type": "text", "does": "Between label and control."},
+        "help": {"type": "text", "does": "Under the control."},
+        "fallback": {"type": "text", "does": "Under the help: what applies when empty."},
+        "required": {"type": "boolean", "default": false, "does": "Marks the field required."},
+        "requiredMark": {"values": ["star", "word"], "default": "star", "does": "How required is marked."},
+        "error": {"type": "text", "does": "One critical issue: the value is refused."},
+        "issues": {
+            "type": "rows",
+            "does": "Several issues, each { tone: critical | warning, text, detail?, actions? }. A warning is allowed; a critical one stops the submit."
+        },
+        "issueOpen": {
+            "type": "boolean",
+            "does": "Whether the mark's popover is open, held from outside so a form's issue count can open it."
+        },
+        "mono": {
+            "type": "boolean",
+            "default": false,
+            "does": "The value in the code face, for keys and addresses; spell checking off."
+        },
+        "monoLabel": {"type": "boolean", "default": false, "does": "The label in the code face too."},
+        "numeric": {"type": "boolean", "default": false, "does": "Figures that line up (tabular)."},
+        "multiline": {
+            "type": "boolean",
+            "default": false,
+            "does": "A text area that grows with its text up to maxRows lines, then scrolls."
+        },
+        "rows": {"type": "number", "does": "A text area's height in lines."},
+        "maxRows": {"type": "number", "does": "The most lines a text area grows to."},
+        "placeholder": {"type": "text", "does": "An example in the empty control; never instead of a label."},
+        "readOnly": {"type": "boolean", "default": false, "does": "Shows the value; cannot be changed."},
+        "disabled": {"type": "boolean", "default": false, "does": "Cannot be used now."},
+        "inRow": {
+            "type": "boolean",
+            "default": false,
+            "does": "In a row of fields: shares four rows (label, description, control, help) with the fields beside it so their controls stand level.",
+            "context": "Field inside Columns with fields (FieldRows context, CSS subgrid)"
+        }
+    },
+    "sizes": {
+        "default": {
+            "height": "density.control",
+            "padX": 10,
+            "padY": 4,
+            "text": "text.body",
+            "textBelowMd": 16,
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "note": "density.control: 32 regular, 28 compact. Below 768 the text is 16px so a phone does not zoom the page on focus."
+        },
+        "multiline": {
+            "height": 112,
+            "padX": 10,
+            "padY": 8,
+            "text": "text.body",
+            "textBelowMd": 16,
+            "radius": "radius-control",
+            "note": "At least 112 tall (min-h-28), growing with its text; with maxRows, between rows and maxRows lines plus 18 (padding and edge)."
+        }
+    },
+    "layout": {
+        "labelToControl": {
+            "value": 6,
+            "note": "The gap between the label row, the description, the control and the help."
+        },
+        "labelRowGapX": 8,
+        "labelRowGapY": 2,
+        "helpLineGap": 2,
+        "issueRoom": {
+            "value": 36,
+            "note": "The control's end padding while an issue shows, so the value never runs under the mark."
+        },
+        "issueMark": {
+            "value": "density.control-sm",
+            "note": "Square at control-sm (28 regular, 24 compact), 4 from the control's end, centered on its height; icon 16."
+        },
+        "issuePopoverWidth": {
+            "value": 320,
+            "note": "min(320, window width - 32); opens below the mark, aligned to its end, 6 away; padding 12, 12 between issues."
+        },
+        "phoneBelow": 768
+    },
+    "states": {
+        "rest": {"means": "Empty with its placeholder, or holding a value."},
+        "hover": {"means": "The pointer is over it. No look of its own today.", "reached": "pointer over"},
+        "focus": {
+            "means": "The control has focus. A browser shows a text input's focus however it came, so this is any focus.",
+            "reached": "Tab or a press",
+            "on": "any",
+            "sokkel-ui": "focus-visible:border-ring ring-1 ring-ring",
+            "effect": {"piece": "control", "ring": {"color": "ring", "width": 1}}
+        },
+        "pressed": {"means": "A press focuses it; no look of its own."},
+        "disabled": {
+            "means": "Cannot be used now.",
+            "reached": "disabled",
+            "effect": {"opacity": 0.5, "focusable": false, "cursor": "not-allowed"}
+        },
+        "readOnly": {
+            "means": "Shows a value that cannot be changed here. No look of its own today; focusable and selectable.",
+            "reached": "readOnly"
+        },
+        "invalid": {
+            "means": "The worst issue is critical: the value is refused and the submit stops. The edge alone at rest, no ring.",
+            "reached": "error or a critical issue",
+            "sokkel-ui": "aria-invalid; Field's critical tone; IssueMark"
+        },
+        "invalid+focus": {
+            "means": "An invalid control with focus: the critical edge and a 3px ring. The ring shows only with focus, never at rest.",
+            "reached": "focus on an invalid control",
+            "on": "any",
+            "status": "today",
+            "effect": {
+                "piece": "control",
+                "ring": {"color": "critical/20", "width": 3, "dark": {"color": "critical/40"}}
+            },
+            "sokkel-ui": "The primitive draws aria-invalid:focus-visible:ring-3, the ring only on focus, as ISSUE_EDGE states; src/rules.test.ts fails a ring drawn at rest."
+        },
+        "warning": {
+            "means": "The worst issue is a warning: allowed, but worth a look.",
+            "reached": "a warning issue",
+            "sokkel-ui": "Field's warning tone; IssueMark in warning-ink; not aria-invalid"
+        },
+        "warning+focus": {
+            "means": "A control with a warning, focused: the warning edge and a 1px ring.",
+            "reached": "focus on a control with a warning",
+            "on": "any",
+            "effect": {"piece": "control", "ring": {"color": "warning/25", "width": 1}}
+        },
+        "issueOpen": {
+            "means": "The mark's popover is open.",
+            "reached": "a press on the mark, Enter or Space on it, or issueOpen"
+        },
+        "busy": {
+            "means": "The app is working on the value (an add, a save): the text is held read only with a spinner at the control's end, focus kept.",
+            "status": "proposed",
+            "sokkel-ui": "Not in TextField. QuickAdd and the inline edit cycle (lib/edit) draw it today."
+        }
+    },
+    "pieces": {
+        "label": {"rest": {"ink": "inherit", "text": "text.label"}},
+        "requiredStar": {"rest": {"ink": "critical-ink"}},
+        "requiredWord": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "hint": {"rest": {"ink": "faint", "text": "text.help", "note": "keyHint: the code face in muted-foreground."}},
+        "description": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
+        "control": {
+            "rest": {
+                "ground": "field",
+                "edge": "input",
+                "ink": "foreground",
+                "placeholder": "muted-foreground",
+                "radius": "radius-control"
+            },
+            "focus": {"edge": "ring"},
+            "disabled": {"ground": "input/50", "opacity": 0.5, "dark": {"ground": "input/80"}},
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {"edge": "critical"},
+            "warning": {"edge": "warning/80"},
+            "warning+focus": {"edge": "warning"}
+        },
+        "issueMark": {
+            "rest": {
+                "ink": "critical-ink",
+                "radius": "radius-md",
+                "note": "Drawn only with an issue; in warning-ink when the worst is a warning."
+            },
+            "warning": {"ink": "warning-ink"},
+            "hover": {"ground": "hover"},
+            "issueOpen": {"ground": "hover"},
+            "focus": {"ring": {"color": "ring/50", "width": 2}}
+        },
+        "issuePopover": {
+            "rest": {
+                "ground": "popover",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "note": "Each issue: its icon in the tone's ink, its text 15/20 at 500, its detail in text.help, its actions as underlined text.help links."
+            }
+        },
+        "help": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "fallback": {"rest": {"ink": "muted-foreground", "text": "text.help"}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Focuses the control; the next Tab reaches the issue mark when there is one."},
+        {"keys": ["Enter"], "does": "Calls onEnter, such as to submit or add.", "when": "a one-line input with onEnter"},
+        {
+            "keys": ["Escape"],
+            "does": "Calls onEscape, such as to drop an edit.",
+            "when": "a one-line input with onEscape"
+        },
+        {"keys": ["Enter", "Space"], "does": "Opens the issue popover.", "when": "the mark has focus"},
+        {
+            "keys": ["Escape"],
+            "does": "Closes the issue popover; focus stays where it was.",
+            "when": "the popover is open"
+        },
+        {
+            "keys": ["Click label"],
+            "does": "Focuses the control, also one a label does not focus by itself (an editor drawn as text)."
+        }
+    ],
+    "words": {
+        "required": "required",
+        "issueCritical": "Error: ",
+        "issueWarning": "Warning: ",
+        "errors": {"one": "{count} error", "other": "{count} errors"},
+        "warnings": {"one": "{count} warning", "other": "{count} warnings"}
+    },
+    "appText": {
+        "label": "Required.",
+        "hint": "Optional.",
+        "description": "Optional.",
+        "help": "Optional.",
+        "fallback": "Optional: 'Default is 30 minutes'.",
+        "placeholder": "Optional: an example, never the label.",
+        "error": "The refusal, in the app's or the server's words.",
+        "issues": "Each issue's text, detail and action labels."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The issue popover is Base UI's Popover; the mark's accessible name is every issue said as one sentence.",
+            "describedBy() points the control at its description, help and fallback; an issue speaks from its mark.",
+            "A row of fields lines up through CSS subgrid (Columns with fields)."
+        ],
+        "sokkel-ui-egui": [
+            "TextEdit has no frame of its own here: the widget draws the frame and sets the inner margin so the text is centered in the control height.",
+            "The phone text size (16px below 768) is a browser zoom guard; a native renderer may keep text.body.",
+            "Lining fields up in a row needs the row to measure every field's label and description first (two passes, or a Grid)."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "where an error is said",
+            "spec": "An issue mark at the control's end with a popover; nothing is inserted under the field.",
+            "today": "The error is a line under the field in critical-ink, in place of the help, so the form changes height."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "width",
+            "spec": "Fills the room it is given.",
+            "today": "280 unless set."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "missing",
+            "spec": "hint, keyHint, description, fallback, required marks, warning tone, issue actions, multiline, mono, numeric, readOnly, phone sizes.",
+            "today": "Not built."
+        },
+        {
+            "renderer": "sokkel-ui",
+            "what": "invalid tints",
+            "spec": "invalid+focus rings critical/20 (dark critical/40); invalid edges critical/80 in both schemes.",
+            "today": "In light, Field's critical tone rings the control at critical/25, as its class follows the primitive's destructive/20 at equal weight. In dark, the primitive's dark:aria-invalid classes outweigh Field's: the edge at rest is destructive/50 and the ring destructive/40. See open questions."
+        }
+    ]
+}

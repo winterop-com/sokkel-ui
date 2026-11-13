@@ -24,7 +24,8 @@ export interface PageStateWords {
     retry: string
 }
 
-const WORDS: PageStateWords = {
+/** A page state's own words in English; a state with words of its own starts from these. */
+export const PAGE_STATE_WORDS: PageStateWords = {
     loading: 'Loading',
     refused: 'The server refused this read',
     missing: 'Nothing is there',
@@ -39,7 +40,7 @@ const WORDS: PageStateWords = {
  */
 export function pageStateHeading(
     outcome: ReadOutcome | null | undefined,
-    words: PageStateWords = WORDS,
+    words: PageStateWords = PAGE_STATE_WORDS,
     tone: PageStateTone = 'critical',
 ): string {
     if (outcome === 'unreachable') return words.unreachable
@@ -131,7 +132,7 @@ export function PageState({
     words: given,
     children,
 }: PageStateProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...PAGE_STATE_WORDS, ...given }
     if (loading) {
         return (
             <Frame framed={frame} className="items-center text-muted-foreground">

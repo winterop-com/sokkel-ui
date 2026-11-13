@@ -20,7 +20,8 @@ export interface PageHeaderWords {
     moreWays: string
 }
 
-const WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are', more: 'More', moreWays: 'More ways' }
+/** A page header's own words in English; a header with words of its own starts from these. */
+export const PAGE_HEADER_WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are', more: 'More', moreWays: 'More ways' }
 
 export interface PageHeaderProps {
     /** The page's title: its text, or a part drawn in its place, such as an `InlineEdit` with `variant="title"`. */
@@ -122,7 +123,7 @@ export function PageHeader({
     const inShell = useContext(ShellTrailAsk) !== undefined
     const toTop = trailInTop && inShell
     useShellTrail(toTop ? trail : undefined, { ends: 'ancestor' })
-    const said = { ...WORDS, ...words }
+    const said = { ...PAGE_HEADER_WORDS, ...words }
     const identity = identityOf(title, code)
     const showCode = identity.code !== undefined
     // A code standing as the title is cut short rather than wrapped, unless the app says otherwise.

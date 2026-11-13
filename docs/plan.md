@@ -119,6 +119,33 @@ raises its budget in the same PR. The forms page imports only the core package, 
 page the maps package and the music page the media package. `forms-lean` is the forms page on
 `styles-base.css` and its modules' lists of sources, so the lean path is measured too.
 
+## The design contract
+
+sokkel-design (`winterop-com/sokkel-design`) is the contract sokkel-ui and the native renderer both
+implement: a spec per part and pattern (its options, sizes per density, states and the paint of
+each, keys and English words), written once. `design/` holds a copy of its `index.json` and the JSON
+under `schema/`, `parts/` and `patterns/`, at the commit `design/pin.json` names, and is never edited
+here. `bun run design --check` (CI and the release, skipped where GitHub cannot be reached) fails
+when the copy is not that commit's.
+
+`src/parts.test.ts` checks every spec in `design/` against the components, offline and without a
+browser, from what React draws on the server and from the sources: each word the spec lists is the
+component's English default and each default is in the spec; each option's values are the variant
+keys or the prop's values; each size's lengths are the tokens its classes use (a height by its
+density token, `h-(--density-control-sm)` for `density.control-sm`); each state's paint is the class
+its selector picks, as the cascade would, in light and in dark (`primary/80` on hover is
+`hover:bg-primary/80`); and each key binding is handled where the source shows it. What only a
+browser shows (a tooltip on focus, Base UI's Escape) is listed beside the part with the reason. A
+spec's `drift` entries for sokkel-ui are differences on purpose: the test names the checks each one
+covers, passes on them, and fails once one no longer differs, so fixed drift leaves the spec.
+
+When `parts.test` fails, either the component is wrong, and is fixed here, or the spec is: then the
+spec changes in a sokkel-design PR first, the difference waits in the test's `PENDING` with the note
+"spec change pending" until it lands, and the pin moves past it. To move the pin, run
+`bun run design --ref main` (or a tag or commit), or `bun run design --from ../sokkel-design` for a
+local checkout whose changes are committed and pushed; both write the copy and `pin.json`, and the
+move is committed with whatever the new specs ask of the components.
+
 ## Themes
 
 Every theme is defined in `packages/core/tokens/tokens.json`, and `scripts/build-tokens.ts` writes it out.
