@@ -6,7 +6,17 @@ import { cn } from '../../lib/cn'
 import { Banner } from '../Banner'
 import { Field, type RequiredMark } from '../Field'
 import { IssueMarks } from '../IssueMarks'
-import { ISSUE_EDGE, IssueCount, IssueMark, worst, type Issue, type IssueAction, type IssueEntry } from '../IssueMark'
+import {
+    ISSUE_EDGE,
+    ISSUE_WORDS,
+    IssueCount,
+    IssueMark,
+    worst,
+    type Issue,
+    type IssueAction,
+    type IssueEntry,
+    type IssueWords,
+} from '../IssueMark'
 import { NumberField } from '../NumberField'
 import { RepeatedGroup } from '../RepeatedGroup'
 import { SecretField, type SecretFieldWords } from '../SecretField'
@@ -52,7 +62,8 @@ export interface SealedSecret {
     setAt?: Date | string
 }
 
-export interface SchemaFormWords {
+/** The words a schema form says; `issueCritical` and `issueWarning` reach every issue mark it draws. */
+export interface SchemaFormWords extends IssueWords {
     /** An issue in words: the message, and what to do when the message alone does not say it. */
     say: (issue: SchemaIssue, schema: JsonSchema) => { text: string; detail?: string }
     /** The action that puts in the value a fix offers. */
@@ -125,6 +136,7 @@ const WORDS: SchemaFormWords = {
     repeatedKey: 'Each key only once',
     more: (count) => `${String(count)} more ${count === 1 ? 'field' : 'fields'}`,
     fewer: 'Fewer fields',
+    ...ISSUE_WORDS,
 }
 
 /**
@@ -621,6 +633,7 @@ function Marked({ form, path, children, top = false }: { form: SchemaFormState; 
                 issues={form.shown(path)}
                 open={form.open === at}
                 onOpenChange={(open) => form.setOpen(open ? at : null)}
+                words={form.words}
                 className={top ? 'top-1 bottom-auto my-0' : undefined}
             />
         </div>
@@ -902,7 +915,7 @@ function Control({
                             readOnly={at.readOnly === true}
                             onBlur={() => form.touch(path)}
                             className={edge(form, path)}
-                            words={form.words.secret}
+                            words={{ issueCritical: form.words.issueCritical, issueWarning: form.words.issueWarning, ...form.words.secret }}
                         />
                     </Marked>
                 )
@@ -943,6 +956,7 @@ function ListHead({ form, path, title, onAdd }: { form: SchemaFormState; path: P
                     issues={form.shown(path)}
                     open={form.open === at}
                     onOpenChange={(open) => form.setOpen(open ? at : null)}
+                    words={form.words}
                     className="inset-0 right-0"
                 />
             </span>
@@ -1034,7 +1048,7 @@ function Property({
                 help={at.description}
                 fallback={fallback}
                 className={span}
-                words={{ required: form.words.required }}
+                words={form.words}
             >
                 <Marked form={form} path={path}>
                     {control}
@@ -1075,6 +1089,7 @@ function Property({
                             issues={form.shown(path)}
                             open={form.open === pointer(path)}
                             onOpenChange={(open) => form.setOpen(open ? pointer(path) : null)}
+                            words={form.words}
                             className="inset-0 right-0"
                         />
                     </span>
@@ -1132,14 +1147,7 @@ function Property({
                 onRemove={(key) => form.removeItem(path, indexOf(key))}
                 onMove={(from, to) => form.moveItem(path, from, to)}
                 readOnly={locked}
-                words={{
-                    add: form.words.add,
-                    remove: form.words.remove,
-                    moveUp: form.words.moveUp,
-                    moveDown: form.words.moveDown,
-                    item: form.words.item,
-                    required: form.words.required,
-                }}
+                words={form.words}
                 className="@lg:col-span-2"
             >
                 {(_, index) => <Fields form={form} path={[...path, index]} schema={itemSchema} />}
@@ -1245,7 +1253,7 @@ function Property({
             // Said once: the control shows the default while the field is unset, the line once a value is set.
             fallback={showsDefault(at, kind, value) ? undefined : fallback}
             className={span}
-            words={{ required: form.words.required }}
+            words={form.words}
         >
             <Control form={form} path={path} at={at} name={label} ask={false} required={required} />
         </Field>

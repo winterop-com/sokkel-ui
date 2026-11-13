@@ -63,7 +63,8 @@ import {
 } from './data'
 import { Settings } from './Settings'
 import type { Frame } from 'tidevann-shared/frame'
-import { go, useOverlayRoute } from 'tidevann-shared/router'
+import { go } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { TidevannMark } from 'tidevann-shared/mark'
 
 interface List {
@@ -265,7 +266,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
     const today = day(0)
     const now = useMemo(() => dateOf(today), [today])
     // Settings open as a dialog over the list they were opened from.
-    const settings = useOverlayRoute(frame.route, 'settings', [])
+    const settings = useOverlayRoute(frame.route, 'settings')
     const { rows: prefList } = useCollection(prefRows)
     // Preferences kept before a setting existed take its default.
     const mine: Prefs = { ...DEFAULT_PREFS, ...prefList?.[0] }

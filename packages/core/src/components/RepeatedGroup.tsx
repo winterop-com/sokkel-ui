@@ -4,12 +4,12 @@ import { useContext, useId, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import type { RequiredMark } from './Field'
 import { IconButton } from './IconButton'
-import { IssueMark, worst, type Issue } from './IssueMark'
+import { ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
 import { DragPartsContext } from './drag-parts'
 import { Button } from './ui/button'
 
 /** The words a repeated group says. */
-export interface RepeatedGroupWords {
+export interface RepeatedGroupWords extends IssueWords {
     add: string
     remove: string
     moveUp: string
@@ -27,6 +27,7 @@ export const REPEATED_GROUP_WORDS: RepeatedGroupWords = {
     moveDown: 'Move down',
     item: (index) => `Item ${String(index + 1)}`,
     required: 'required',
+    ...ISSUE_WORDS,
 }
 
 export interface RepeatedGroupProps {
@@ -176,7 +177,13 @@ export function RepeatedGroup({
                 {required && requiredMark === 'word' && <span className="shrink-0 text-xs text-muted-foreground">{words.required}</span>}
                 {worst(issues) !== null && (
                     <span className="relative flex size-(--density-control-sm) shrink-0 items-center">
-                        <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} className="inset-0 right-0" />
+                        <IssueMark
+                            issues={issues}
+                            open={issueOpen}
+                            onOpenChange={onIssueOpenChange}
+                            words={words}
+                            className="inset-0 right-0"
+                        />
                     </span>
                 )}
                 {adding && (

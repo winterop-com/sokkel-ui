@@ -4,6 +4,8 @@
  * and the keys are tested without a page.
  */
 
+import type { IssueWords } from '../components/IssueMark'
+
 /** Which control edits a value: a line of text, several lines, a number, a date, a time of day, or one of a list. */
 export type EditorKind = 'text' | 'multiline' | 'number' | 'date' | 'time' | 'select'
 
@@ -23,8 +25,11 @@ export type EditValue = string | number | null
  */
 export type EditedValue<K extends EditorKind> = K extends 'number' ? number | null : K extends 'date' | 'time' ? string | null : string
 
-/** The words an editor says, in English unless an app passes its own. */
-export interface EditWords {
+/**
+ * The words an editor says, in English unless an app passes its own; what a refusal's mark says
+ * before its message is the mark's own English unless given.
+ */
+export interface EditWords extends Partial<IssueWords> {
     /** The spinner's name while a save runs. */
     saving: string
     /** What a refused save says when the app's error carries no message. */

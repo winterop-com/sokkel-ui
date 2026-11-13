@@ -125,7 +125,11 @@ export const Fallback: StoryObj = {
     ),
 }
 
-/** A refused value marked at the input's end, and a warning beside a value that is allowed. */
+/**
+ * A refused value marked at the input's end, and a warning beside a value that is allowed. The mark
+ * says "Error: " or "Warning: " before each message to a screen reader, words the field translates:
+ * the last says them in Norwegian (`words.issueCritical`, `words.issueWarning`).
+ */
 export const WithError: StoryObj = {
     name: 'Error',
     render: () => (
@@ -139,6 +143,14 @@ export const WithError: StoryObj = {
                 inputMode="numeric"
                 defaultValue="8"
                 numeric
+            />
+            <TextField
+                id="error-host"
+                label="Vert"
+                error="Bruk et vertsnavn, som api.example.org."
+                defaultValue="api example"
+                mono
+                words={{ issueCritical: 'Feil: ', issueWarning: 'Advarsel: ' }}
             />
         </Stack>
     ),

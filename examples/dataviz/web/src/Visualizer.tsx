@@ -12,7 +12,8 @@ import { useEffect, useState } from 'react'
 import { useCollection } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go, useOverlayRoute } from 'tidevann-shared/router'
+import { go } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 
 import { boards as boardStore, charts as chartStore, datasets as datasetStore, preferences } from './backend'
 import { BoardDialog } from './dialogs'
@@ -39,7 +40,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
     const [newBoard, setNewBoard] = useState(false)
 
     // Settings open as a dialog over the page they were opened from.
-    const settings = useOverlayRoute(frame.route, 'settings', ['datasets'])
+    const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['datasets'] })
     const [section, id, mode] = settings.route
     useEffect(() => {
         if (section === undefined) window.location.replace('#/datasets')

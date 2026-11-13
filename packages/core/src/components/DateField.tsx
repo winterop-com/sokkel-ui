@@ -2,7 +2,7 @@ import { CalendarDays } from 'lucide-react'
 
 import { formatDate, isBefore, isoDate, ISO_DATE, readDate, type DateFormat } from '../lib/dates'
 import { TypedField, type EntryFieldProps } from './entry'
-import type { FieldWords } from './Field'
+import { FIELD_WORDS, type FieldWords } from './Field'
 import { DayPick, prefetchCalendar } from './day-pick'
 import { Picker, useOpen } from './pickers'
 
@@ -27,7 +27,7 @@ export interface DateFieldWords extends FieldWords {
 }
 
 const WORDS: DateFieldWords = {
-    required: 'required',
+    ...FIELD_WORDS,
     unreadable: 'Enter a date',
     example: (sample) => `As in ${sample}.`,
     under: (min) => `Enter ${min} or later`,
@@ -90,7 +90,7 @@ export function DateField({
                 detail: words.example(formatDate(field.min ?? today ?? isoDate(new Date()), format)),
             })}
             bounds={words}
-            fieldWords={{ required: words.required }}
+            fieldWords={words}
             clear={words.clear}
             onReach={prefetchCalendar}
             onKeyDown={(event) => {

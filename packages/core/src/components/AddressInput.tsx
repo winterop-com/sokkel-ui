@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { ISSUE_EDGE, IssueMark, worst, type Issue } from './IssueMark'
+import { ISSUE_EDGE, ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
 import { Input } from './ui/input'
 
 /** One recipient: the address, and the name to show in its place when there is one. */
@@ -11,7 +11,7 @@ export interface Address {
     name?: string
 }
 
-export interface AddressInputWords {
+export interface AddressInputWords extends IssueWords {
     placeholder: string
     remove: (who: string) => string
     invalid: string
@@ -26,6 +26,7 @@ const WORDS: AddressInputWords = {
     invalid: 'Not an email address',
     issue: (count) => (count === 1 ? '1 address is not an email address' : `${String(count)} addresses are not email addresses`),
     removeInvalid: 'Remove them',
+    ...ISSUE_WORDS,
 }
 
 /** Whether the text is shaped like an email address. */
@@ -200,7 +201,7 @@ export function AddressInput({
                     onBlur={() => commit(draft)}
                 />
             </div>
-            <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} className="top-1 bottom-auto my-0" />
+            <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} words={words} className="top-1 bottom-auto my-0" />
         </div>
     )
 }

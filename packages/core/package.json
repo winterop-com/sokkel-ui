@@ -1194,6 +1194,10 @@
             "types": "./dist/hooks/use-overlay.d.ts",
             "import": "./dist/hooks/use-overlay.js"
         },
+        "./hooks/use-overlay-route": {
+            "types": "./dist/hooks/use-overlay-route.d.ts",
+            "import": "./dist/hooks/use-overlay-route.js"
+        },
         "./hooks/use-palette-shortcut": {
             "types": "./dist/hooks/use-palette-shortcut.d.ts",
             "import": "./dist/hooks/use-palette-shortcut.js"

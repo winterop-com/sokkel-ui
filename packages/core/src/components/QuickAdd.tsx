@@ -3,12 +3,12 @@ import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 
 import { cn } from '../lib/cn'
 import { failureOf } from '../lib/edit'
-import { IssueMark } from './IssueMark'
+import { ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
 import { Input } from './ui/input'
 import { Spinner } from './ui/spinner'
 
 /** The words a quick add says, in English unless an app passes its own. */
-export interface QuickAddWords {
+export interface QuickAddWords extends IssueWords {
     /** The button at the field's end that adds what is typed, for a screen without Enter at hand. */
     add: string
     /** The spinner's name while an add runs. */
@@ -17,7 +17,7 @@ export interface QuickAddWords {
     failed: string
 }
 
-const WORDS: QuickAddWords = { add: 'Add', adding: 'Adding', failed: 'Could not add' }
+const WORDS: QuickAddWords = { add: 'Add', adding: 'Adding', failed: 'Could not add', ...ISSUE_WORDS }
 
 export interface QuickAddProps {
     /**
@@ -156,7 +156,7 @@ export function QuickAdd({
             {adding ? (
                 <Spinner className="size-3.5 shrink-0 text-muted-foreground" aria-label={words.adding} />
             ) : error !== null ? (
-                <IssueMark issues={[{ tone: 'critical', text: error }]} open={markOpen} onOpenChange={setMarkOpen} />
+                <IssueMark issues={[{ tone: 'critical', text: error }]} open={markOpen} onOpenChange={setMarkOpen} words={words} />
             ) : (
                 text.trim() !== '' && (
                     <button

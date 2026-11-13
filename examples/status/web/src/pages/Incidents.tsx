@@ -1,6 +1,5 @@
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
@@ -54,29 +53,29 @@ export function Incidents({ me, onReport }: { me: Person; onReport: () => void }
                     ]}
                 />
             </Toolbar>
-            <PageState loading={rows.incidents === undefined && rows.error === undefined} error={rows.error}>
-                <IncidentTable
-                    rows={listed}
-                    className="min-h-0 flex-1"
-                    search={<SearchField value={search} onChange={setSearch} placeholder="Search" />}
-                    actions={(incident) => incidentActions(incident, me, rows.onCall?.person)}
-                    empty={
-                        <Empty>
-                            <EmptyHeader>
-                                <EmptyMedia variant="icon">
-                                    <SearchX aria-hidden />
-                                </EmptyMedia>
-                                <EmptyTitle>
-                                    {words.length > 0 ? 'Nothing matches' : shown === 'open' ? 'Nothing open' : 'No incidents'}
-                                </EmptyTitle>
-                                <EmptyDescription>
-                                    {words.length > 0 ? 'Try fewer words, or look among all incidents.' : 'Every incident is resolved.'}
-                                </EmptyDescription>
-                            </EmptyHeader>
-                        </Empty>
-                    }
-                />
-            </PageState>
+            <IncidentTable
+                loading={rows.incidents === undefined && rows.error === undefined}
+                error={rows.error}
+                rows={listed}
+                className="min-h-0 flex-1"
+                search={<SearchField value={search} onChange={setSearch} placeholder="Search" />}
+                actions={(incident) => incidentActions(incident, me, rows.onCall?.person)}
+                empty={
+                    <Empty>
+                        <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                                <SearchX aria-hidden />
+                            </EmptyMedia>
+                            <EmptyTitle>
+                                {words.length > 0 ? 'Nothing matches' : shown === 'open' ? 'Nothing open' : 'No incidents'}
+                            </EmptyTitle>
+                            <EmptyDescription>
+                                {words.length > 0 ? 'Try fewer words, or look among all incidents.' : 'Every incident is resolved.'}
+                            </EmptyDescription>
+                        </EmptyHeader>
+                    </Empty>
+                }
+            />
         </Stack>
     )
 }

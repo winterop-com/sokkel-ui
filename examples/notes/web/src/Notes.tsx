@@ -38,7 +38,8 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go, useOverlayRoute } from 'tidevann-shared/router'
+import { go } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { Dialogs } from './Dialogs'
 import { clock, day, wordCount, type Note } from './model'
 import { NotePanel } from './NotePanel'
@@ -99,7 +100,7 @@ export function Notes({ frame }: { frame: Frame }) {
     const { vault, prefs, setPrefs, open, openDay, newNote, ask, order, place, save, drafts } = state
     const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
-    const settings = useOverlayRoute(frame.route, 'settings', ['notes'])
+    const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['notes'] })
     const [first = 'notes', second] = settings.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
     const [filter, setFilter] = useState('')

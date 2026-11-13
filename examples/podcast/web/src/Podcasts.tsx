@@ -39,7 +39,8 @@ import { useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go, useOverlayRoute } from 'tidevann-shared/router'
+import { go } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { categoryLabel, EPISODES, episodeById, SHOWS, showById } from './catalog'
 import { find } from './pages/Discover'
 import { Discover } from './pages/Discover'
@@ -75,7 +76,7 @@ export function Podcasts({ frame }: { frame: Frame }) {
     const state = usePodcasts()
     const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
-    const settings = useOverlayRoute(frame.route, 'settings', ['home'])
+    const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['home'] })
     const [first = 'home', second, third] = settings.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
     const [fullscreen, setFullscreen] = useState(false)

@@ -10,14 +10,14 @@ import {
     type PeriodIssueWords,
     type PeriodType,
 } from '../lib/periods'
-import { ISSUE_EDGE, IssueMark } from './IssueMark'
+import { ISSUE_EDGE, ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from './ui/select'
 
 export type { Period, PeriodType } from '../lib/periods'
 
 /** The words a period picker says. */
-export interface PeriodPickerWords extends PeriodIssueWords {
+export interface PeriodPickerWords extends PeriodIssueWords, IssueWords {
     /** The last row of the list, which opens the field an id is typed in. */
     other: string
     /** The typed field's name. */
@@ -28,6 +28,7 @@ export interface PeriodPickerWords extends PeriodIssueWords {
 
 const WORDS: PeriodPickerWords = {
     ...PERIOD_ISSUE_WORDS,
+    ...ISSUE_WORDS,
     other: 'Other period',
     typed: 'Period id',
     placeholder: 'Choose a period',
@@ -163,7 +164,7 @@ export function PeriodPicker({
                             onValueChange(read === null ? null : read.id)
                         }}
                     />
-                    {shown !== null && <IssueMark issues={[{ tone: 'critical', text: shown }]} />}
+                    {shown !== null && <IssueMark issues={[{ tone: 'critical', text: shown }]} words={words} />}
                 </div>
             )}
         </div>

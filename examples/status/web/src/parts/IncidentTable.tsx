@@ -133,6 +133,8 @@ export function IncidentTable({
     empty,
     search,
     toolbar,
+    loading,
+    error,
     className,
 }: {
     rows: readonly Incident[]
@@ -141,6 +143,9 @@ export function IncidentTable({
     empty?: ReactNode
     search?: ReactNode
     toolbar?: ReactNode
+    /** The incidents are on their way, or why they could not be read. */
+    loading?: boolean
+    error?: string
     className?: string
 }) {
     return (
@@ -157,6 +162,8 @@ export function IncidentTable({
             empty={empty}
             search={search}
             toolbar={toolbar}
+            loading={loading}
+            error={error}
         />
     )
 }

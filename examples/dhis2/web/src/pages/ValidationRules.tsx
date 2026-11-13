@@ -1,7 +1,6 @@
 import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
@@ -136,20 +135,20 @@ export function ValidationRules() {
                     </>
                 }
             />
-            <PageState loading={rows === undefined && error === undefined} error={error}>
-                <DataTable
-                    className="min-h-0 flex-1"
-                    search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
-                    columns={columns}
-                    rows={shown}
-                    rowKey={(one) => one.id}
-                    onOpen={(one) => go(`/validation-rules/${one.id}`)}
-                    chevron
-                    minWidth="52rem"
-                    rowHeight="auto"
-                    words={asked === '' ? undefined : { empty: 'No rule matches the search.' }}
-                />
-            </PageState>
+            <DataTable
+                loading={rows === undefined && error === undefined}
+                error={error}
+                className="min-h-0 flex-1"
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                columns={columns}
+                rows={shown}
+                rowKey={(one) => one.id}
+                onOpen={(one) => go(`/validation-rules/${one.id}`)}
+                chevron
+                minWidth="52rem"
+                rowHeight="auto"
+                words={asked === '' ? undefined : { empty: 'No rule matches the search.' }}
+            />
         </Page>
     )
 }

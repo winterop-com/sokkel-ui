@@ -17,7 +17,9 @@ Ctrl+K through `Shell`'s `palette` (`placeCommands` and `appearanceCommands` in
 app has sign-in, and a `StatusLine` as the shell's `foot`. A screen adds its own palette groups
 while it is mounted with `useCommands` (`hooks/use-commands`), and binds its keys with
 `useShortcuts` (`hooks/use-shortcuts`), which `ShortcutsDialog` lists; `useOverlay`,
-`useScrollMemory` and `useReducedMotion` are in `hooks/` too. In a desktop window with its title
+`useScrollMemory` and `useReducedMotion` are in `hooks/` too. Settings are a `SettingsDialog`
+over the page it was opened from, on a route of its own (`#/settings`) through `useOverlayRoute`
+(`hooks/use-overlay-route`). In a desktop window with its title
 bar hidden, `Shell`'s `desktop` makes the top strip the window's drag region and leaves room for
 the window's buttons (`lib/desktop`); its `setFullscreen` stands in for the browser's full screen
 in every part that goes full screen, which all go through `lib/fullscreen`. A work page with panes

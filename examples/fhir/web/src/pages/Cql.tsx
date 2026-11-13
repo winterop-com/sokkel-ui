@@ -118,18 +118,18 @@ export function CqlLibraries() {
                     </>
                 }
             />
-            <PageState loading={rows === undefined && error === undefined} error={error}>
-                <DataTable
-                    className="min-h-0 flex-1"
-                    columns={COLUMNS}
-                    rows={libraries}
-                    rowKey={(row) => row.id}
-                    onOpen={(row) => go(`/cql/${row.resource.id}`)}
-                    chevron
-                    minWidth="44rem"
-                    empty="The server holds no libraries. New makes one."
-                />
-            </PageState>
+            <DataTable
+                loading={rows === undefined && error === undefined}
+                error={error}
+                className="min-h-0 flex-1"
+                columns={COLUMNS}
+                rows={libraries}
+                rowKey={(row) => row.id}
+                onOpen={(row) => go(`/cql/${row.resource.id}`)}
+                chevron
+                minWidth="44rem"
+                empty="The server holds no libraries. New makes one."
+            />
         </Page>
     )
 }

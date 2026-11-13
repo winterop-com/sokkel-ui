@@ -92,7 +92,7 @@ function FailedPage() {
     )
 }
 
-/** A table whose read was refused, the state drawn in the table's own panel without a box of its own. */
+/** A table whose read was refused, the state drawn in the table's own panel under its heads. */
 function InTable() {
     return (
         <Ground>
@@ -100,18 +100,10 @@ function InTable() {
                 rows={[] as { job: string }[]}
                 columns={[{ id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (row) => row.job }]}
                 rowKey={(row) => row.job}
-                empty={
-                    <PageState
-                        loading={false}
-                        status={422}
-                        frame={false}
-                        error="The filter names fields the server does not know."
-                        problems={['`owner` is not a field of a run', '`since` must be a date, such as `2026-03-01`']}
-                        onRetry={() => undefined}
-                    >
-                        {null}
-                    </PageState>
-                }
+                status={422}
+                error="The filter names fields the server does not know."
+                problems={['`owner` is not a field of a run', '`since` must be a date, such as `2026-03-01`']}
+                onRetry={() => undefined}
             />
         </Ground>
     )
@@ -265,8 +257,9 @@ export const Failed: StoryObj = { name: 'Failed page', render: () => <FailedPage
  */
 export const Secondary: StoryObj = { name: 'Secondary read', render: () => <SecondaryRead /> }
 /**
- * A refused read inside a table: `frame={false}` drops the state's box, so the table's panel is
- * its only edge, and `problems` lists each failure the refusal named.
+ * A refused read inside a table: the table's own `error`, `status` and `onRetry` draw the state
+ * as `PageState` does, without a box of its own under the heads, so the table's panel is its only
+ * edge, and `problems` lists each failure the refusal named.
  */
 export const InATable: StoryObj = { name: 'In a table', render: () => <InTable /> }
 export const Unfold: StoryObj = { name: 'Unfoldable', render: () => <Unfolding /> }

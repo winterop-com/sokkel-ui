@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState, type HTMLInputAutoCompleteAttribute
 
 import { cn } from '../lib/cn'
 import { FRAME_BUTTON } from './entry'
-import { describedBy, Field, type FieldWords, type RequiredMark } from './Field'
+import { describedBy, Field, FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { RelativeTime } from './RelativeTime'
 import { Button } from './ui/button'
@@ -24,7 +24,7 @@ export interface SecretFieldWords extends FieldWords {
 }
 
 export const SECRET_FIELD_WORDS: SecretFieldWords = {
-    required: 'required',
+    ...FIELD_WORDS,
     set: 'Set',
     setWhen: (when) => <>Set {when}</>,
     replace: 'Replace',
@@ -253,7 +253,7 @@ export function SecretField({
             help={help}
             required={required}
             requiredMark={requiredMark}
-            words={{ required: words.required }}
+            words={words}
             issues={issues}
             issueOpen={issueOpen}
             onIssueOpenChange={onIssueOpenChange}

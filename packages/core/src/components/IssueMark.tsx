@@ -36,12 +36,24 @@ export function worst(issues: readonly Issue[]): Issue['tone'] | null {
     return issues.length > 0 ? 'warning' : null
 }
 
-/** The words a screen reader hears before a message, so it is not taken for a hint. */
-const PREFIX = { critical: 'Error: ', warning: 'Warning: ' } as const
+/** The words a screen reader hears before an issue's message, so it is not taken for a hint. */
+export interface IssueWords {
+    /** Before a critical issue, as "Error: ". */
+    issueCritical: string
+    /** Before a warning, as "Warning: ". */
+    issueWarning: string
+}
+
+export const ISSUE_WORDS: IssueWords = { issueCritical: 'Error: ', issueWarning: 'Warning: ' }
 
 /** Every issue said as one sentence, for a control's `aria-label` or description. */
-export function spoken(issues: readonly Issue[]): string {
-    return issues.map((issue) => `${PREFIX[issue.tone]}${issue.text}${issue.detail === undefined ? '' : `. ${issue.detail}`}`).join(' ')
+export function spoken(issues: readonly Issue[], words: IssueWords = ISSUE_WORDS): string {
+    return issues
+        .map(
+            (issue) =>
+                `${issue.tone === 'critical' ? words.issueCritical : words.issueWarning}${issue.text}${issue.detail === undefined ? '' : `. ${issue.detail}`}`,
+        )
+        .join(' ')
 }
 
 export interface IssueMarkProps {
@@ -49,14 +61,17 @@ export interface IssueMarkProps {
     open?: boolean
     onOpenChange?: (open: boolean) => void
     className?: string
+    /** What a screen reader hears before each message, in English unless an app passes its own. */
+    words?: Partial<IssueWords>
 }
 
 /**
  * The mark at the end of an input whose value has issues: pressing it opens what is wrong, what
  * to do, and the actions that put it right. It sits inside the input's box, which takes `pr-9`,
- * so a form keeps its height whatever it has to say. Nothing renders without an issue.
+ * so a form keeps its height whatever it has to say. Nothing renders without an issue. Its name
+ * says every issue, each after `words.issueCritical` ("Error: ") or `words.issueWarning`.
  */
-export function IssueMark({ issues, open, onOpenChange, className }: IssueMarkProps) {
+export function IssueMark({ issues, open, onOpenChange, className, words }: IssueMarkProps) {
     const tone = worst(issues)
     if (tone === null) return null
     const Icon = ICON[tone]
@@ -66,7 +81,7 @@ export function IssueMark({ issues, open, onOpenChange, className }: IssueMarkPr
                 render={
                     <button
                         type="button"
-                        aria-label={spoken(issues)}
+                        aria-label={spoken(issues, { ...ISSUE_WORDS, ...words })}
                         className={cn(
                             'absolute inset-y-0 right-1 my-auto flex size-(--density-control-sm) items-center justify-center rounded-md outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-hover',
                             INK[tone],

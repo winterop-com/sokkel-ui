@@ -67,7 +67,7 @@ export interface TableEditingContext<T> {
     grid: boolean
     /** How many rows a move down or up steps over: a line of cards in a grid. */
     step: number
-    words: Pick<DataTableWords, 'saving' | 'saveFailed' | 'notNumber'>
+    words: Pick<DataTableWords, 'saving' | 'saveFailed' | 'notNumber' | 'issueCritical' | 'issueWarning'>
     /** How the active cell is marked while the table has the focus. */
     cellFocus: CellFocus
     /** The columns whose name is cut short in a stacked line, so it says the whole of it on hover. */
@@ -127,6 +127,8 @@ const wordsOf = <T,>(table: TableEditingContext<T>): EditWords => ({
     saving: table.words.saving,
     failed: table.words.saveFailed,
     notNumber: table.words.notNumber,
+    issueCritical: table.words.issueCritical,
+    issueWarning: table.words.issueWarning,
 })
 
 const canEdit = <T,>(column: DataColumn<T> | undefined, row: T) =>

@@ -2,7 +2,6 @@ import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
@@ -134,50 +133,50 @@ export function Indicators() {
                     </>
                 }
             />
-            <PageState loading={rows === undefined && error === undefined} error={error}>
-                <DataTable
-                    className="min-h-0 flex-1"
-                    search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
-                    toolbar={
-                        <>
-                            <FilterChip
-                                facet="Type"
-                                multiple
-                                options={(Object.keys(INDICATOR_TYPES) as IndicatorType[]).map((type) => ({
-                                    value: type,
-                                    label: INDICATOR_TYPES[type].label,
-                                }))}
-                                selected={types}
-                                onSelectedChange={setTypes}
-                            />
-                            <FilterChip
-                                facet="Check"
-                                multiple
-                                options={[
-                                    { value: 'valid', label: 'valid' },
-                                    { value: 'warnings', label: 'warnings' },
-                                    { value: 'invalid', label: 'invalid' },
-                                ]}
-                                selected={states}
-                                onSelectedChange={setStates}
-                            />
-                        </>
-                    }
-                    columns={columns}
-                    rows={shown}
-                    rowKey={(one) => one.id}
-                    onOpen={(one) => go(`/indicators/${one.id}`)}
-                    chevron
-                    minWidth="56rem"
-                    rowHeight="auto"
-                    foot={invalid > 0 ? `${count(invalid, 'indicator')} cannot run on ${version}.` : undefined}
-                    words={
-                        asked !== '' || types.length > 0 || states.length > 0
-                            ? { empty: 'No indicator matches the search and the filters.' }
-                            : undefined
-                    }
-                />
-            </PageState>
+            <DataTable
+                loading={rows === undefined && error === undefined}
+                error={error}
+                className="min-h-0 flex-1"
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                toolbar={
+                    <>
+                        <FilterChip
+                            facet="Type"
+                            multiple
+                            options={(Object.keys(INDICATOR_TYPES) as IndicatorType[]).map((type) => ({
+                                value: type,
+                                label: INDICATOR_TYPES[type].label,
+                            }))}
+                            selected={types}
+                            onSelectedChange={setTypes}
+                        />
+                        <FilterChip
+                            facet="Check"
+                            multiple
+                            options={[
+                                { value: 'valid', label: 'valid' },
+                                { value: 'warnings', label: 'warnings' },
+                                { value: 'invalid', label: 'invalid' },
+                            ]}
+                            selected={states}
+                            onSelectedChange={setStates}
+                        />
+                    </>
+                }
+                columns={columns}
+                rows={shown}
+                rowKey={(one) => one.id}
+                onOpen={(one) => go(`/indicators/${one.id}`)}
+                chevron
+                minWidth="56rem"
+                rowHeight="auto"
+                foot={invalid > 0 ? `${count(invalid, 'indicator')} cannot run on ${version}.` : undefined}
+                words={
+                    asked !== '' || types.length > 0 || states.length > 0
+                        ? { empty: 'No indicator matches the search and the filters.' }
+                        : undefined
+                }
+            />
         </Page>
     )
 }

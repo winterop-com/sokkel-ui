@@ -1271,15 +1271,62 @@ function LoadByButton() {
 /** Loading more by a button after the last row (`loadMore="button"`), for a list whose reader decides when to see more. */
 export const LoadMoreButton: StoryObj = { name: 'Load more button', render: () => <LoadByButton /> }
 
-/** The first rows still on their way: placeholder rows fill the table. */
+/**
+ * The first rows still on their way: placeholder rows fill the table under its heads, the table's one
+ * loading look, so the bar, its search and the heads stand where the rows will and nothing moves
+ * as they come.
+ */
 export const Loading: StoryObj = {
     parameters: { frame: 'none' },
     render: () => (
         <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
-            <DataTable className="flex-1" columns={COLUMNS} rows={[]} rowKey={(run) => run.id} selectable loading />
+            <DataTable
+                className="flex-1"
+                columns={COLUMNS}
+                rows={[]}
+                rowKey={(run) => run.id}
+                search={<SearchField value="" onChange={() => undefined} placeholder="Search" />}
+                selectable
+                loading
+            />
         </Stack>
     ),
 }
+
+/** Runs whose read the server refused, read again by Try again, which fails the same way. */
+function FailedRuns() {
+    const [loading, setLoading] = useState(false)
+    const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+    const retry = () => {
+        setLoading(true)
+        clearTimeout(timer.current)
+        timer.current = setTimeout(() => setLoading(false), 1200)
+    }
+    return (
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={COLUMNS}
+                rows={[]}
+                rowKey={(run) => run.id}
+                search={<SearchField value="" onChange={() => undefined} placeholder="Search" />}
+                selectable
+                loading={loading}
+                status={503}
+                error="The scheduler for `harbor` is restarting, so its runs cannot be listed."
+                onRetry={retry}
+            />
+        </Stack>
+    )
+}
+
+/**
+ * The rows could not be read: the failure stands in their place under the heads, headed by what the
+ * server answered (`status`), the server's words under it and Try again (`onRetry`), as `PageState`
+ * draws a failed read, while the bar, its search and the frame keep their places. Try again shows
+ * the placeholder rows while it reads.
+ */
+export const Failed: StoryObj = { parameters: { frame: 'none' }, render: () => <FailedRuns /> }
 
 /** Runs sorted by duration, longest first: the arrow in the head says which way. */
 export const Sorted: StoryObj = {

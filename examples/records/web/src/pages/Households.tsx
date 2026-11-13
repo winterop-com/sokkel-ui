@@ -2,7 +2,6 @@ import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
@@ -107,54 +106,52 @@ export function Households() {
                     </>
                 }
             />
-            <PageState
+            <DataTable
                 loading={rows === undefined && error === undefined}
                 error={error}
-                empty={homes.length === 0}
-                emptyMessage="No household is registered yet. Register one with the household registration form."
-            >
-                <DataTable
-                    className="min-h-0 flex-1"
-                    search={<SearchField value={query} onChange={setQuery} placeholder="Identifier" />}
-                    toolbar={
-                        <>
-                            <FilterChip
-                                facet="Region"
-                                multiple
-                                options={[...new Set(homes.map((home) => home.region))]
-                                    .sort()
-                                    .map((region) => ({ value: region, label: regionNameOf(region) }))}
-                                selected={regions}
-                                onSelectedChange={setRegions}
-                            />
-                            <FilterChip
-                                facet="Water source"
-                                multiple
-                                options={(SOURCE?.options ?? []).map((option) => ({ value: option.value, label: option.label }))}
-                                selected={sources}
-                                onSelectedChange={setSources}
-                            />
-                            <FilterChip
-                                facet="State"
-                                multiple
-                                options={[
-                                    { value: 'active', label: 'active' },
-                                    { value: 'completed', label: 'completed' },
-                                ]}
-                                selected={states}
-                                onSelectedChange={setStates}
-                            />
-                        </>
-                    }
-                    columns={columns}
-                    rows={shown}
-                    rowKey={(home) => home.id}
-                    onOpen={(home) => go(`/people/${home.id}`)}
-                    chevron
-                    minWidth="56rem"
-                    words={filtered ? { empty: 'No household matches the search and the filters.' } : undefined}
-                />
-            </PageState>
+                empty={
+                    homes.length === 0 ? 'No household is registered yet. Register one with the household registration form.' : undefined
+                }
+                className="min-h-0 flex-1"
+                search={<SearchField value={query} onChange={setQuery} placeholder="Identifier" />}
+                toolbar={
+                    <>
+                        <FilterChip
+                            facet="Region"
+                            multiple
+                            options={[...new Set(homes.map((home) => home.region))]
+                                .sort()
+                                .map((region) => ({ value: region, label: regionNameOf(region) }))}
+                            selected={regions}
+                            onSelectedChange={setRegions}
+                        />
+                        <FilterChip
+                            facet="Water source"
+                            multiple
+                            options={(SOURCE?.options ?? []).map((option) => ({ value: option.value, label: option.label }))}
+                            selected={sources}
+                            onSelectedChange={setSources}
+                        />
+                        <FilterChip
+                            facet="State"
+                            multiple
+                            options={[
+                                { value: 'active', label: 'active' },
+                                { value: 'completed', label: 'completed' },
+                            ]}
+                            selected={states}
+                            onSelectedChange={setStates}
+                        />
+                    </>
+                }
+                columns={columns}
+                rows={shown}
+                rowKey={(home) => home.id}
+                onOpen={(home) => go(`/people/${home.id}`)}
+                chevron
+                minWidth="56rem"
+                words={filtered ? { empty: 'No household matches the search and the filters.' } : undefined}
+            />
         </Page>
     )
 }
