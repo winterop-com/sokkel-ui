@@ -33,7 +33,8 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go, useOverlayRoute } from 'tidevann-shared/router'
+import { go } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { log } from './data/backend'
 import { bytes, counted, uptime } from './data/format'
 import { chatWith } from './actions'
@@ -102,7 +103,7 @@ export function ModelsApp({ frame }: { frame: Frame }) {
     const { models, conversations, downloads, runner, loaded, prefs } = app
     const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
-    const settings = useOverlayRoute(frame.route, 'settings', ['library'])
+    const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['library'] })
     const [first = 'library', ...rest] = settings.route
     const page: PageId | 'missing' = (PAGES as readonly string[]).includes(first) ? (first as PageId) : 'missing'
     const second = rest.length === 0 ? undefined : rest.join('/')

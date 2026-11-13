@@ -34,6 +34,8 @@ import {
 import { cn } from '../lib/cn'
 import { stepTo } from '../lib/reorder'
 import type { DragHandleProps } from './DragDrop'
+import type { IssueWords } from './IssueMark'
+import { PageState, type PageStateWords, type ReadOutcome } from './PageState'
 import { ResizeHandle } from './ResizeHandle'
 import { NO_CELL, TableCellContext } from './table-cell'
 import { ListingBar } from './ListingBar'
@@ -200,8 +202,13 @@ export interface DataSort {
 /** The controls a cell may hold whose press is their own, never the row's open. */
 const CELL_CONTROL = 'button, a[href], input, select, textarea, label, [role="switch"], [role="checkbox"], [role="combobox"]'
 
-/** The words a data table says, in English unless an app passes its own. */
-export interface DataTableWords {
+/**
+ * The words a data table says, in English unless an app passes its own. What a refused cell's mark
+ * says before its message, and the heading and Try again of a failed read, are the mark's and
+ * `PageState`'s own English unless given.
+ */
+export interface DataTableWords
+    extends Partial<IssueWords>, Partial<Pick<PageStateWords, 'refused' | 'missing' | 'unreachable' | 'retry'>> {
     columns: string
     actions: string
     tableView: string
@@ -957,8 +964,26 @@ export interface DataTableProps<T> {
     loadMore?: 'end' | 'button'
     /** How many rows the next load brings, said on the Load more button. */
     loadMoreCount?: number
-    /** Rows are on their way: placeholder rows show at the end, or fill the table when it has none yet. */
+    /**
+     * Rows are on their way: placeholder rows show at the end, or fill the table under its heads when
+     * it has none yet. The table's one loading look: the heads, the bar and the frame keep their
+     * places, so nothing moves as the rows come; a listing is never wrapped in `PageState` to load.
+     */
     loading?: boolean
+    /**
+     * Why the rows could not be read: what the server said, or a sentence in its place. Given, and
+     * while not `loading`, the failure stands in place of the rows under the heads, headed by what
+     * the server answered (`status`) as `PageState` heads it, with Try again for `onRetry`; the bar
+     * and the frame keep their places. Its heading's words are `words.refused`, `missing`,
+     * `unreachable` and `retry`.
+     */
+    error?: ReactNode
+    /** What the server answered the failed read: an HTTP status, or `unreachable` for no answer. */
+    status?: ReadOutcome | null
+    /** Each failure the refusal named, listed under its diagnostic, such as a problem document's errors. */
+    problems?: readonly ReactNode[]
+    /** Reads the rows again, from Try again under a failure. */
+    onRetry?: () => void
     onLoadMore?: () => void
     /**
      * With server pages, the app selects every row on every page itself, as the table holds only the
@@ -1152,7 +1177,9 @@ export interface DataTableProps<T> {
  * rows keep their selection box and their menu.
  *
  * With no rows the table says `empty`: a sentence, or a node such as an `Empty` with an icon and
- * an action.
+ * an action. While `loading` it draws placeholder rows under its heads, its one loading look, and a
+ * read that failed (`error`, with `status` and `onRetry`) is said in place of its rows, as
+ * `PageState` says it, the heads and the bar kept.
  *
  * The table draws its own box, a border with rounded corners; `framed={false}` drops both, for a
  * table set into a panel or a card that already frames it.
@@ -1208,6 +1235,10 @@ export function DataTable<T>({
     loadMore = 'end',
     loadMoreCount,
     loading = false,
+    error,
+    status,
+    problems,
+    onRetry,
     onLoadMore,
     onSelectAllPages,
     card,
@@ -1247,6 +1278,8 @@ export function DataTable<T>({
     className,
 }: DataTableProps<T>) {
     const words = { ...WORDS, ...ownWords }
+    // A failed read stands in place of the rows, unless they are being read again.
+    const failed = error !== undefined && error !== null && error !== false && !loading
     const [sort, setSort] = useHeld(sortValue, defaultSort, onSortChange)
     const [selection, setSelection] = useHeld(selectionValue, defaultSelection, onSelectionChange)
     const [expanded, setExpanded] = useHeld(expandedValue, defaultExpanded, onExpandedChange)
@@ -1467,8 +1500,8 @@ export function DataTable<T>({
     const nearEnd = view.top + view.height >= ((auto && !gridView) || detailed ? view.full : lines * lineHeight) - lineHeight * over
     const moreByButton = loadMore === 'button'
     useEffect(() => {
-        if (hasMore && !moreByButton && !loading && nearEnd) onLoadMore?.()
-    }, [hasMore, moreByButton, loading, nearEnd, onLoadMore])
+        if (hasMore && !moreByButton && !loading && !failed && nearEnd) onLoadMore?.()
+    }, [hasMore, moreByButton, loading, failed, nearEnd, onLoadMore])
 
     // Rows that grow are all drawn, as their heights are not known before they are.
     // A narrow list is a plain list of rows as tall as their lines.
@@ -2038,7 +2071,7 @@ export function DataTable<T>({
     }
 
     // An empty table given its own words says them alone, unless the bar's search or tools may have emptied it.
-    const bare = drawn.length === 0 && !loading && empty !== undefined && search === undefined && toolbar === undefined
+    const bare = !failed && drawn.length === 0 && !loading && empty !== undefined && search === undefined && toolbar === undefined
     const showHeads = !gridView && columnHeads && !bare
     // The head stays where the rows are sideways once the columns change, and a wheel over it scrolls the rows.
     useLayoutEffect(() => {
@@ -2056,7 +2089,7 @@ export function DataTable<T>({
         return () => head.removeEventListener('wheel', wheel)
     }, [showHeads])
     // With the Load more button, the button's spinner stands for the rows on their way once some are drawn.
-    const moreButton = moreByButton && hasMore && flat.length > 0
+    const moreButton = moreByButton && hasMore && flat.length > 0 && !failed
     const placeholders = loading && !(moreByButton && flat.length > 0)
 
     /** A press on a part of a stacked row that is its own control, kept from opening the row. */
@@ -2515,9 +2548,10 @@ export function DataTable<T>({
                                 </SelectionBar>
                             ) : undefined
                         }
-                        // An empty table says so in its own words, so the bar adds no count of nothing.
+                        // An empty or failed table says so in its own words, and one loading its first rows has
+                        // nothing to count yet, so the bar adds no count of nothing.
                         count={
-                            selection.size > 0 || (drawn.length === 0 && !loading)
+                            selection.size > 0 || failed || drawn.length === 0
                                 ? undefined
                                 : hasMore && total === undefined
                                   ? words.loaded(allCount(rows, treeKids))
@@ -2609,7 +2643,7 @@ export function DataTable<T>({
                 <div
                     ref={gridBox}
                     role="grid"
-                    aria-rowcount={drawn.length + 1}
+                    aria-rowcount={failed ? 1 : drawn.length + 1}
                     aria-multiselectable={selectable || undefined}
                     tabIndex={0}
                     onKeyDown={onKeyDown}
@@ -2622,7 +2656,7 @@ export function DataTable<T>({
                         }
                     }}
                     onFocus={() => {
-                        if (active === undefined && flat.length > 0)
+                        if (active === undefined && flat.length > 0 && !failed)
                             setActive(flat[Math.min(first + OVERSCAN, flat.length - 1)]?.key ?? flat[0].key)
                         if (edits !== undefined) editing?.focus(edits)
                     }}
@@ -2830,7 +2864,19 @@ export function DataTable<T>({
                                 }}
                             />
                         </div>
-                        {drawn.length === 0 && !loading ? (
+                        {failed ? (
+                            <PageState
+                                loading={false}
+                                error={error}
+                                status={status}
+                                problems={problems}
+                                onRetry={onRetry}
+                                frame={false}
+                                words={words}
+                            >
+                                {null}
+                            </PageState>
+                        ) : drawn.length === 0 && !loading ? (
                             empty === undefined || typeof empty === 'string' ? (
                                 <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{empty ?? words.empty}</p>
                             ) : (

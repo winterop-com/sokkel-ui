@@ -449,7 +449,8 @@ them all.
 `Banner` is the strip at a screen's edge for a state that holds; `Callout` is a boxed note in the
 content beside what it is about, in five tones (neutral among them) with a hairline edge all the
 way round and no colored rule; `Problem` says what went wrong for a person, the raw message folded
-away; `PageState` draws the states a read lands in (loading, failed, empty, the content), a failure
+away; `PageState` draws the states a read lands in (loading, failed, empty, the content), save a table's,
+which `DataTable` draws itself (`loading`, `error`, `empty`), a failure
 headed by what the server answered, with `onRetry` for a way to read again, and `tone="warning"`
 for a failed read of secondary data the page stands without, drawn in the warning tone and
 announced as a status rather than as the page's failure, its heading said of a part of the page
@@ -636,7 +637,15 @@ stack width is the table's own box's, never the window's, in pixels or a CSS len
 for an app whose listings go to cards under its own width): 576 pixels for a table, and for a list 480, a
 phone's, or wherever its columns stop fitting, so a list in a narrow panel on a wide screen keeps its rows. With no
 rows it says `empty`, a sentence or a node such as an `Empty` with an action, alone without the column
-heads unless a search or tools in the bar may have emptied it. A row opens into a `detail` of its own,
+heads unless a search or tools in the bar may have emptied it. While its rows are on their way
+(`loading`) it draws placeholder rows under its heads, filling the view or three after the last row
+loaded: its one loading look, chosen over `PageState`'s spinner line because it keeps the table's
+shape, so the bar, a search being typed in, the heads and the frame stand where the rows will and
+nothing moves or unmounts as they come. A read that failed is said in the rows' place under the
+heads (`error`, with `status`, `problems` and `onRetry`), drawn as an unframed `PageState` with its
+words through the table's (`refused`, `missing`, `unreachable`, `retry`), the bar and the frame kept
+and the count dropped; placeholder rows stand in its place while `loading` reads again. A listing is
+never wrapped in `PageState` for either. A row opens into a `detail` of its own,
 such as its own nested `DataTable`; `hasDetail` says which rows have one, so `detail` is built only for
 the rows opened, and `expandLabel` names a row's disclosure, in its tooltip too ("Show the tokens of
 ada"). `reveal` (`{ key, open }`, a new object each time, as `CodeEditor`'s `reveal`) brings a
@@ -739,7 +748,13 @@ nothing to put back (an account, sample data) says `reset: false` and shows none
 dialog is a full-screen sheet with the footer at its foot, clear of the home indicator.
 
 Settings are only ever this dialog, opened over the page the person is on; the library has no
-settings page to embed.
+settings page to embed. `useOverlayRoute(route, 'settings')` gives it a route of its own
+(`#/settings`) while the page stays the one it was opened from: handed the app's route as its parts,
+it says whether the dialog is open and which page to draw under it (the last one before it, or
+`fallback` for a link that opened the app on the dialog), and `close` goes back to that page, back in
+the history when the dialog was opened from it, so Back afterwards does not open it again, and in
+its place otherwise. It goes back through the history and the hash unless the app hands it its
+router's `back` and `replace`, so it needs no router of its own.
 `WizardView` lays `WizardDialog`'s steps out on a page the same way, the two sharing their moves
 (`wizardMoves`): the steps down the side, each with its description (`StepIndicator`'s `vertical`),
 or along the top with `layout="top"` and always below `lg`; the step's body under the page's title;
@@ -1393,7 +1408,11 @@ strip beside its scroll bar with a mark at each issue's place, which goes there 
 bar's verbs wrap rather than run past its edge.
 
 `IssueMark`, `IssueCount` and `IssueMarks` carry it for any form (`DialogShell` takes `marks`);
-SchemaForm is built on them, and checks values with ajv against JSON Schema 2020-12.
+SchemaForm is built on them, and checks values with ajv against JSON Schema 2020-12. The mark's
+name says every issue to a screen reader, each after "Error: " or "Warning: ", words an app
+translates (`issueCritical`, `issueWarning`): every field takes them in its `words` and hands them
+to its mark, as do `SchemaForm`, `RepeatedGroup`, `QuickAdd`, `InlineEdit` and a table's editable
+cells.
 
 For what happens outside a form, the activity list was picked from the notification research: what
 happened while a person was away, newest first, unread drawn stronger, each item with its own way to

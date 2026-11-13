@@ -3,7 +3,6 @@ import { DataTable, type DataAction, type DataColumn } from '@winterop-com/sokke
 import { DetailSheet } from '@winterop-com/sokkel-ui/DetailSheet'
 import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
@@ -216,36 +215,36 @@ export function Responses({ state }: { state?: string }) {
                     ]}
                 />
             </Toolbar>
-            <PageState
+            <DataTable
                 loading={rows === undefined && error === undefined}
                 error={error}
                 status={error === undefined ? undefined : 'unreachable'}
-                empty={all.length === 0}
-                emptyMessage="The server has stored no response yet. One arrives here the moment a form is filed: open a form and submit it."
-            >
-                <DataTable
-                    className="min-h-0 flex-1"
-                    search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
-                    toolbar={
-                        <FilterChip
-                            facet="Form"
-                            multiple
-                            options={FORMS.map((form) => ({ value: form.id, label: form.title }))}
-                            selected={forms}
-                            onSelectedChange={setForms}
-                        />
-                    }
-                    columns={COLUMNS}
-                    rows={shown}
-                    rowKey={(receipt) => receipt.receipt}
-                    onOpen={(receipt) => setOpened(receipt.receipt)}
-                    opened={(receipt) => receipt.receipt === opened}
-                    rowActions={actions}
-                    total={all.length}
-                    minWidth="52rem"
-                    defaultSort={{ column: 'received', direction: 'desc' }}
-                />
-            </PageState>
+                empty={
+                    all.length === 0
+                        ? 'The server has stored no response yet. One arrives here the moment a form is filed: open a form and submit it.'
+                        : undefined
+                }
+                className="min-h-0 flex-1"
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                toolbar={
+                    <FilterChip
+                        facet="Form"
+                        multiple
+                        options={FORMS.map((form) => ({ value: form.id, label: form.title }))}
+                        selected={forms}
+                        onSelectedChange={setForms}
+                    />
+                }
+                columns={COLUMNS}
+                rows={shown}
+                rowKey={(receipt) => receipt.receipt}
+                onOpen={(receipt) => setOpened(receipt.receipt)}
+                opened={(receipt) => receipt.receipt === opened}
+                rowActions={actions}
+                total={all.length}
+                minWidth="52rem"
+                defaultSort={{ column: 'received', direction: 'desc' }}
+            />
             {open !== undefined && (
                 <DetailSheet
                     open

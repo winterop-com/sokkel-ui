@@ -313,6 +313,7 @@ export function InlineEditor({
                             issues={[{ tone: 'critical', text: error }]}
                             open={markOpen}
                             onOpenChange={setMarkOpen}
+                            words={words}
                             className={cn(markLeft && 'left-1', look === 'cell' && kind === 'multiline' && 'z-10')}
                         />
                     )

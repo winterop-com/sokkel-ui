@@ -37,7 +37,8 @@ import { useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go, useOverlayRoute } from 'tidevann-shared/router'
+import { go } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { ALBUM_BY_ID, ALBUMS, ARTIST_BY_ID, ARTISTS, albumsOfArtist, SONGS, songOf, songsOfAlbum } from './catalog'
 import { downloads, favorites, playlists, setFavorite, setSettings, useRows, useSettings } from './data'
 import { addSongsTo, isSongDrag, songOfDrag, startRadio } from './parts/actions'
@@ -159,7 +160,7 @@ export function Music({ frame }: { frame: Frame }) {
     const song = currentSong(state)
 
     // Settings open as a dialog over the page they were opened from.
-    const settings = useOverlayRoute(frame.route, 'settings', ['albums'])
+    const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['albums'] })
     const [first, second] = settings.route
     const place: Place = PLACES.includes(first as Place) ? (first as Place) : 'albums'
     const album = place === 'albums' && second !== undefined ? ALBUM_BY_ID.get(second) : undefined

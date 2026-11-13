@@ -167,7 +167,7 @@ export interface TypedFieldProps<V extends string | number> extends EntryFieldPr
     /** What is said of typed text that does not read. */
     unreadable: (text: string) => Issue
     bounds: BoundWords
-    /** The field's own words, such as the one said of a required field. */
+    /** The field's own words: the one said of a required field and those its issue mark says. */
     fieldWords?: Partial<FieldWords>
     /** The clear button's label, for a field that can be emptied while it is not required. */
     clear?: string

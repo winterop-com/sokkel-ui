@@ -2,11 +2,11 @@ import { useContext, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { FieldRows } from './field-rows'
-import { IssueMark, worst, type Issue } from './IssueMark'
+import { ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
 import { Label } from './ui/label'
 
-/** The words a field says. */
-export interface FieldWords {
+/** The words a field says: the required word, and what its issue mark says before each message. */
+export interface FieldWords extends IssueWords {
     /** Said by a star's screen reader text, or drawn after the label as the `word` mark. */
     required: string
 }
@@ -18,8 +18,10 @@ export interface FieldWords {
  */
 export type RequiredMark = 'star' | 'word'
 
-const WORDS: FieldWords = {
+/** A field's own words in English; a field with words of its own starts from these. */
+export const FIELD_WORDS: FieldWords = {
     required: 'required',
+    ...ISSUE_WORDS,
 }
 
 export interface FieldProps {
@@ -106,7 +108,7 @@ export function Field({
     className,
     words: given,
 }: FieldProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...FIELD_WORDS, ...given }
     const issues: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issuesGiven]
     const tone = worst(issues)
     const rows = useContext(FieldRows)
@@ -125,7 +127,7 @@ export function Field({
             )}
         >
             {children}
-            {tone !== null && <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />}
+            {tone !== null && <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} words={words} />}
         </div>
     )
     return (

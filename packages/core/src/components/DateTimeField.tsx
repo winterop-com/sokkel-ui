@@ -12,7 +12,7 @@ import {
     type TimeFormat,
 } from '../lib/dates'
 import { TypedField, type EntryFieldProps } from './entry'
-import type { FieldWords } from './Field'
+import { FIELD_WORDS, type FieldWords } from './Field'
 import { DayPick, prefetchCalendar } from './day-pick'
 import { Picker, TimeList, useOpen } from './pickers'
 
@@ -41,7 +41,7 @@ export interface DateTimeFieldWords extends FieldWords {
 }
 
 const WORDS: DateTimeFieldWords = {
-    required: 'required',
+    ...FIELD_WORDS,
     unreadable: 'Enter a date and time',
     example: (sample) => `As in ${sample}.`,
     under: (min) => `Enter ${min} or later`,
@@ -126,7 +126,7 @@ export function DateTimeField({
                 detail: words.example(write(`${(min ?? today ?? isoDate(new Date())).slice(0, 10)}T${seconds ? '14:30:00' : '14:30'}`)),
             })}
             bounds={words}
-            fieldWords={{ required: words.required }}
+            fieldWords={words}
             clear={words.clear}
             onReach={prefetchCalendar}
             onKeyDown={(event) => {

@@ -2,7 +2,7 @@ import { useId, useState, type HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
 import { describeCron, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
-import type { FieldWords, RequiredMark } from './Field'
+import { FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
 import { ISSUE_EDGE, IssueMark } from './IssueMark'
 import { Input } from './ui/input'
 
@@ -33,7 +33,7 @@ const WORDS: CronFieldWords = {
     checking: 'Checking',
     paused: 'Paused, so no runs are coming',
     missing: 'Enter a schedule',
-    required: 'required',
+    ...FIELD_WORDS,
 }
 
 const defaultDescribe = (expression: string) => describeCron(expression)
@@ -218,7 +218,7 @@ export function CronField({
                             aria-required={required || undefined}
                             className={cn('font-mono', bad && cn('pr-9', ISSUE_EDGE.critical))}
                         />
-                        <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
+                        <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} words={words} />
                     </div>
                 )}
                 {!readOnly && presets !== undefined && presets.length > 0 && (

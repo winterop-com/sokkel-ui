@@ -2,7 +2,7 @@ import { Clock } from 'lucide-react'
 
 import { fitSeconds, formatTime, isBefore, readTime, timesOfDay, type TimeFormat } from '../lib/dates'
 import { TypedField, type EntryFieldProps } from './entry'
-import type { FieldWords } from './Field'
+import { FIELD_WORDS, type FieldWords } from './Field'
 import { Picker, TimeList, useOpen } from './pickers'
 
 export type { EntryFieldProps } from './entry'
@@ -28,7 +28,7 @@ export interface TimeFieldWords extends FieldWords {
 }
 
 const WORDS: TimeFieldWords = {
-    required: 'required',
+    ...FIELD_WORDS,
     unreadable: 'Enter a time',
     example: (sample) => `As in ${sample}.`,
     under: (min) => `Enter ${min} or later`,
@@ -99,7 +99,7 @@ export function TimeField({
                 detail: words.example(formatTime(seconds ? '14:30:00' : '14:30', format)),
             })}
             bounds={words}
-            fieldWords={{ required: words.required }}
+            fieldWords={words}
             clear={words.clear}
             onKeyDown={(event) => {
                 if (!event.altKey || event.key !== 'ArrowDown') return

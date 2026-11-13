@@ -2,7 +2,6 @@ import { type DataAction, type DataColumn, DataTable } from '@winterop-com/sokke
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { QuickAdd } from '@winterop-com/sokkel-ui/QuickAdd'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
@@ -153,31 +152,31 @@ export function AllNotes({ folder }: { folder?: string }) {
                 onAdd={(title) => createNote({ title, folder: folder ?? null }).then((note) => open(note.id))}
                 validate={(title) => (vault.resolve(title) === undefined ? null : `${title.trim()} is already in the vault.`)}
             />
-            <PageState loading={loading} error={error}>
-                <DataTable
-                    key={order}
-                    variant="list"
-                    minWidth="auto"
-                    stackLayout="compact"
-                    columns={noteColumns(vault)}
-                    rows={inside}
-                    rowKey={(note) => note.id}
-                    defaultSort={manual ? null : { column: 'updated', direction: 'desc' }}
-                    onReorder={manual ? reorder : undefined}
-                    rowLabel={(note) => note.title}
-                    dragKind={NOTE_KIND}
-                    onOpen={(note) => open(note.id)}
-                    rowActions={noteActions(state)}
-                    empty={
-                        <Empty>
-                            <EmptyHeader>
-                                <EmptyTitle>No notes here</EmptyTitle>
-                                <EmptyDescription>Name one in the field above and it opens.</EmptyDescription>
-                            </EmptyHeader>
-                        </Empty>
-                    }
-                />
-            </PageState>
+            <DataTable
+                loading={loading}
+                error={error}
+                key={order}
+                variant="list"
+                minWidth="auto"
+                stackLayout="compact"
+                columns={noteColumns(vault)}
+                rows={inside}
+                rowKey={(note) => note.id}
+                defaultSort={manual ? null : { column: 'updated', direction: 'desc' }}
+                onReorder={manual ? reorder : undefined}
+                rowLabel={(note) => note.title}
+                dragKind={NOTE_KIND}
+                onOpen={(note) => open(note.id)}
+                rowActions={noteActions(state)}
+                empty={
+                    <Empty>
+                        <EmptyHeader>
+                            <EmptyTitle>No notes here</EmptyTitle>
+                            <EmptyDescription>Name one in the field above and it opens.</EmptyDescription>
+                        </EmptyHeader>
+                    </Empty>
+                }
+            />
         </>
     )
 }

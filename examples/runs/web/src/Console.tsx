@@ -12,7 +12,8 @@ import { lazy, Suspense, useEffect } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go, useOverlayRoute } from 'tidevann-shared/router'
+import { go } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { useActions } from './actions'
 import { clock, dayOf } from './model'
 import { Jobs } from './pages/Jobs'
@@ -37,7 +38,7 @@ export function Console({ frame }: { frame: Frame }) {
     const actions = useActions()
     const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
-    const settings = useOverlayRoute(frame.route, 'settings', [])
+    const settings = useOverlayRoute(frame.route, 'settings')
     const [first = 'overview', second] = settings.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
 

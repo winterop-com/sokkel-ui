@@ -1,7 +1,6 @@
 import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
@@ -145,33 +144,33 @@ export function Resources({ type }: { type: string }) {
                     </>
                 }
             />
-            <PageState loading={rows === undefined && error === undefined} error={error}>
-                <DataTable
-                    className="min-h-0 flex-1"
-                    search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
-                    toolbar={
-                        <Segmented
-                            label="Resource type"
-                            size="sm"
-                            value={type}
-                            options={TYPE_NAMES.map((name) => ({
-                                value: name,
-                                label: name,
-                                count: all.filter((row) => row.type === name).length,
-                            }))}
-                            onValueChange={(next) => go(`/resources/${next}`)}
-                        />
-                    }
-                    columns={columns}
-                    rows={shown}
-                    rowKey={(row) => row.id}
-                    onOpen={(row) => go(`/resources/${row.id}`)}
-                    chevron
-                    minWidth="48rem"
-                    defaultSort={{ column: 'updated', direction: 'desc' }}
-                    empty={asked === '' ? `The server holds no ${type} resources. ${def?.about ?? ''}` : `No ${type} matches the search.`}
-                />
-            </PageState>
+            <DataTable
+                loading={rows === undefined && error === undefined}
+                error={error}
+                className="min-h-0 flex-1"
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                toolbar={
+                    <Segmented
+                        label="Resource type"
+                        size="sm"
+                        value={type}
+                        options={TYPE_NAMES.map((name) => ({
+                            value: name,
+                            label: name,
+                            count: all.filter((row) => row.type === name).length,
+                        }))}
+                        onValueChange={(next) => go(`/resources/${next}`)}
+                    />
+                }
+                columns={columns}
+                rows={shown}
+                rowKey={(row) => row.id}
+                onOpen={(row) => go(`/resources/${row.id}`)}
+                chevron
+                minWidth="48rem"
+                defaultSort={{ column: 'updated', direction: 'desc' }}
+                empty={asked === '' ? `The server holds no ${type} resources. ${def?.about ?? ''}` : `No ${type} matches the search.`}
+            />
         </Page>
     )
 }

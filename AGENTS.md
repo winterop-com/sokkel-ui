@@ -140,7 +140,8 @@ and ask before acting.
 - A library fix for a gap an example found updates that example in the same change, so it uses the
   fix, and takes the gap off the roadmap.
 - Every example has Settings, and only as a `SettingsDialog` over the page it was opened from, on
-  `#/settings` through `useOverlayRoute`: never a routed page, never settings embedded in the layout.
+  `#/settings` through the library's `useOverlayRoute` (`hooks/use-overlay-route`): never a routed
+  page, never settings embedded in the layout.
 - A settings dialog keeps the dialog's own footer words, and its Reset to defaults resets the shown
   section; a section with nothing to put back says `reset: false`.
 - The trail lives in the top bar only, on every page; the page header shows the title and its

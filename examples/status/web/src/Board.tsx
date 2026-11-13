@@ -28,7 +28,8 @@ import { lazy, Suspense, useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go, useOverlayRoute } from 'tidevann-shared/router'
+import { go } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { type Person, SERVICE_IDS, type ServiceId, SERVICES, SITE_BY_ID, SITES } from './data'
 import { useLive, worstOf } from './live'
 import { Incident } from './pages/Incident'
@@ -78,7 +79,7 @@ export function Board({ frame }: { frame: Frame }) {
     const { settings: look, setSettings: setLook } = frame.appearance
 
     // Settings open as a dialog over the page they were opened from.
-    const overlay = useOverlayRoute(frame.route, 'settings', [])
+    const overlay = useOverlayRoute(frame.route, 'settings')
     const [first, second, third] = overlay.route
     const place: Place = PLACES.includes(first as Place) ? (first as Place) : 'overview'
     const service = place === 'services' && SERVICE_IDS.includes(second as ServiceId) ? (second as ServiceId) : undefined

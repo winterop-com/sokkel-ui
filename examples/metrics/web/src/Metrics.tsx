@@ -18,7 +18,7 @@ import { useMemo, useState } from 'react'
 import { useCollection } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { useOverlayRoute } from 'tidevann-shared/router'
+import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { readings, type RuleReading, useAlerting } from './alerting'
 import { AlertsPage } from './Alerts'
 import { DashboardPage } from './Dashboard'
@@ -67,7 +67,7 @@ export function MetricsApp({ frame }: { frame: Frame }) {
     useScrapeClock()
     const here = usePlace()
     // Settings open as a dialog over the page they were opened from, which keeps drawing and updating under it.
-    const settings = useOverlayRoute(frame.route, 'settings', ['dashboards'])
+    const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['dashboards'] })
     const under = settings.route.join('/')
     const place = useMemo(() => (settings.open ? placeOf(under) : here), [settings.open, under, here])
     const boards = useCollection(dashboards)

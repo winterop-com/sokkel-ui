@@ -1,7 +1,7 @@
 import { Eraser } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Field, type FieldWords } from './Field'
+import { Field, FIELD_WORDS, type FieldWords } from './Field'
 import type { Issue } from './IssueMark'
 import { Segmented } from './Segmented'
 import { Button } from './ui/button'
@@ -16,7 +16,7 @@ export interface YesNoFieldWords extends FieldWords {
     unanswered: string
 }
 
-const WORDS: YesNoFieldWords = { yes: 'Yes', no: 'No', clear: 'Clear', unanswered: 'Not answered', required: 'required' }
+const WORDS: YesNoFieldWords = { yes: 'Yes', no: 'No', clear: 'Clear', unanswered: 'Not answered', ...FIELD_WORDS }
 
 export interface YesNoFieldProps {
     id: string
@@ -67,7 +67,7 @@ export function YesNoField({
             id={id}
             label={label}
             required={required}
-            words={{ required: words.required }}
+            words={words}
             description={description}
             help={help}
             error={error}

@@ -1,7 +1,6 @@
 import { type DataAction, type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
@@ -106,28 +105,27 @@ export function Downloads() {
                 title="Downloads"
                 count={`${plural(kept.length, 'video')}, ${bytesOf(kept.reduce((sum, one) => sum + one.download.bytes, 0))}`}
             />
-            <PageState loading={!ready}>
-                <DataTable
-                    className="min-h-0 flex-1"
-                    columns={COLUMNS}
-                    rows={kept}
-                    rowKey={(one) => one.video.id}
-                    rowActions={actions}
-                    onOpen={(one) => go(watchHref(one.video).slice(1))}
-                    defaultSort={{ column: 'at', direction: 'desc' }}
-                    stackLayout="compact"
-                    empty={
-                        <Empty>
-                            <EmptyHeader>
-                                <EmptyTitle>No downloads</EmptyTitle>
-                                <EmptyDescription>
-                                    Download a video from its page, and it is kept on this device to watch without the site.
-                                </EmptyDescription>
-                            </EmptyHeader>
-                        </Empty>
-                    }
-                />
-            </PageState>
+            <DataTable
+                loading={!ready}
+                className="min-h-0 flex-1"
+                columns={COLUMNS}
+                rows={kept}
+                rowKey={(one) => one.video.id}
+                rowActions={actions}
+                onOpen={(one) => go(watchHref(one.video).slice(1))}
+                defaultSort={{ column: 'at', direction: 'desc' }}
+                stackLayout="compact"
+                empty={
+                    <Empty>
+                        <EmptyHeader>
+                            <EmptyTitle>No downloads</EmptyTitle>
+                            <EmptyDescription>
+                                Download a video from its page, and it is kept on this device to watch without the site.
+                            </EmptyDescription>
+                        </EmptyHeader>
+                    </Empty>
+                }
+            />
         </Stack>
     )
 }

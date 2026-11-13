@@ -235,6 +235,68 @@ describe('an empty table', () => {
     })
 })
 
+describe('a table loading its rows', () => {
+    const html = renderToStaticMarkup(
+        <DataTable columns={ACCOUNT_COLUMNS} rows={[]} rowKey={(row) => row.id} search={<input />} empty="No accounts yet." loading />,
+    )
+
+    it('draws placeholder rows under its heads and its bar, with no spinner line and no empty words', () => {
+        expect(html).toContain('role="columnheader"')
+        expect(html).toContain('<input/>')
+        expect(html).toContain('data-slot="skeleton"')
+        expect(html).not.toContain('animate-spin')
+        expect(html).not.toContain('No accounts yet.')
+        expect(html).not.toContain('0 rows')
+    })
+})
+
+describe('a table whose read failed', () => {
+    const table = (props: { loading?: boolean; words?: { refused?: string; retry?: string } } = {}) =>
+        renderToStaticMarkup(
+            <DataTable
+                columns={ACCOUNT_COLUMNS}
+                rows={ACCOUNTS}
+                rowKey={(row) => row.id}
+                search={<input />}
+                empty="No accounts yet."
+                status={403}
+                error="The token may read `runs` but not `accounts`."
+                problems={['`owner` is not a field of an account']}
+                onRetry={() => undefined}
+                {...props}
+            />,
+        )
+
+    it('says the failure in place of its rows, under its heads and its bar, as PageState says it', () => {
+        const html = table()
+        expect(html).toContain('role="columnheader"')
+        expect(html).toContain('<input/>')
+        expect(html).toContain('role="alert"')
+        expect(html).toContain('The server refused this read')
+        expect(html).toContain('<code')
+        expect(html).toContain('data-slot="page-state-problems"')
+        expect(html).toContain('Try again')
+        expect(html).not.toContain(`data-row="${ACCOUNTS[0].id}"`)
+        expect(html).not.toContain('No accounts yet.')
+    })
+
+    it('draws the failure without a box of its own, the table’s frame its only edge', () => {
+        expect(table()).not.toMatch(/data-slot="page-state" class="[^"]*rounded-surface/)
+    })
+
+    it('heads the failure in the words it is given', () => {
+        const html = table({ words: { refused: 'Tjeneren nektet', retry: 'Prøv igjen' } })
+        expect(html).toContain('Tjeneren nektet')
+        expect(html).toContain('Prøv igjen')
+    })
+
+    it('reads again with placeholder rows in the failure’s place while loading', () => {
+        const html = table({ loading: true })
+        expect(html).not.toContain('role="alert"')
+        expect(html).toContain('data-slot="skeleton"')
+    })
+})
+
 describe('a table’s head', () => {
     const html = renderToStaticMarkup(
         <DataTable
