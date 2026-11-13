@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+import { moveItem } from '../lib/reorder'
+
 /** One row of a repeated group: a key that stays with it as rows are added, removed and moved, and its value. */
 export interface RepeatedRow<T> {
     key: string
@@ -14,20 +16,9 @@ export interface Repeated<T> {
     /** Adds a row at the end, `make`'s value unless given one. */
     add: (value?: T) => void
     remove: (key: string) => void
-    /** Moves a row by `by` places, up for a negative number. */
-    move: (key: string, by: number) => void
+    /** Moves the row at `from` to `to`, as `RepeatedGroup`'s `onMove` says. */
+    move: (from: number, to: number) => void
     set: (key: string, value: T) => void
-}
-
-/** The rows of a repeated group, each with its key, kept in order and moved to place. */
-export function rowsMoved<T>(rows: readonly RepeatedRow<T>[], key: string, by: number): RepeatedRow<T>[] {
-    const from = rows.findIndex((row) => row.key === key)
-    const to = from + by
-    if (from < 0 || to < 0 || to >= rows.length) return [...rows]
-    const next = [...rows]
-    const [moved] = next.splice(from, 1)
-    next.splice(to, 0, moved)
-    return next
 }
 
 /**
@@ -50,7 +41,7 @@ export function useRepeated<T>(initial: readonly T[], make: () => T): Repeated<T
                 rows: [...current.rows, { key: `row-${String(current.count + 1)}`, value: value ?? make() }],
             })),
         remove: (key) => setState((current) => ({ ...current, rows: current.rows.filter((row) => row.key !== key) })),
-        move: (key, by) => setState((current) => ({ ...current, rows: rowsMoved(current.rows, key, by) })),
+        move: (from, to) => setState((current) => ({ ...current, rows: moveItem(current.rows, from, to) })),
         set: (key, value) =>
             setState((current) => ({ ...current, rows: current.rows.map((row) => (row.key === key ? { ...row, value } : row)) })),
     }

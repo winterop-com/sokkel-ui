@@ -1,10 +1,11 @@
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
-import { useId, type ReactNode } from 'react'
+import { useContext, useId, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import type { RequiredMark } from './Field'
 import { IconButton } from './IconButton'
 import { IssueMark, worst, type Issue } from './IssueMark'
+import { DragPartsContext } from './drag-parts'
 import { Button } from './ui/button'
 
 /** The words a repeated group says. */
@@ -53,8 +54,12 @@ export interface RepeatedGroupProps {
     onAdd?: () => void
     /** Takes a row out; no Remove buttons without it. */
     onRemove?: (key: string) => void
-    /** Moves a row by `by` places; no Move buttons without it. */
-    onMove?: (key: string, by: number) => void
+    /**
+     * Moves the row at `from` to `to`, both places among `rows`: Move up and Move down on each row,
+     * and inside a `RepeatedDrag` a grip that drags it and moves it with the arrow keys. No Move
+     * buttons without it.
+     */
+    onMove?: (from: number, to: number) => void
     /** The fewest rows the group keeps: Remove goes once it has this many. */
     min?: number
     /** The most rows it takes: Add goes once it has this many. */
@@ -74,6 +79,11 @@ export interface RepeatedGroupProps {
  * Like a `Field`, a `required` group has a star after its name, and what is wrong with the group as
  * a whole (`error`, `issues`) is the issue mark beside its name, opening the message, while each
  * row's own fields say their own.
+ *
+ * Inside a `RepeatedDrag`, each row of a group with `onMove` has a grip before its box: dragged,
+ * the row lifts and the others move aside to show where it lands (a finger holds it a moment
+ * first); focused, the up and down arrows move it a place, the focus following it, and Space or
+ * Enter picks it up. A group outside one never loads the drag engine.
  */
 export function RepeatedGroup({
     label,
@@ -103,6 +113,52 @@ export function RepeatedGroup({
     const adding = !readOnly && onAdd !== undefined && (max === undefined || rows.length < max)
     const removing = !readOnly && onRemove !== undefined && rows.length > min
     const moving = !readOnly && onMove !== undefined && rows.length > 1
+    const Sorted = useContext(DragPartsContext).repeatedRows
+    const list = rows.map((row, index) => (
+        <section key={row.key} className="flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3">
+            <div className="-my-1 flex items-center gap-1">
+                <span className="text-xs font-medium text-muted-foreground">{words.item(index)}</span>
+                <span className="ml-auto flex items-center">
+                    {moving && (
+                        <>
+                            <IconButton
+                                label={`${words.moveUp}: ${words.item(index)}`}
+                                type="button"
+                                size="icon"
+                                disabled={index === 0}
+                                onClick={() => onMove(index, index - 1)}
+                            >
+                                <ArrowUp aria-hidden />
+                            </IconButton>
+                            <IconButton
+                                label={`${words.moveDown}: ${words.item(index)}`}
+                                type="button"
+                                size="icon"
+                                disabled={index === rows.length - 1}
+                                onClick={() => onMove(index, index + 1)}
+                            >
+                                <ArrowDown aria-hidden />
+                            </IconButton>
+                        </>
+                    )}
+                    {removing && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground"
+                            aria-label={`${words.remove} ${words.item(index)}`}
+                            onClick={() => onRemove(row.key)}
+                        >
+                            <X aria-hidden />
+                            {words.remove}
+                        </Button>
+                    )}
+                </span>
+            </div>
+            {children(row.key, index)}
+        </section>
+    ))
     return (
         <fieldset aria-labelledby={titleId} className={cn('flex min-w-0 flex-col gap-2', className)}>
             <div className="flex min-h-7 items-center gap-2">
@@ -131,51 +187,13 @@ export function RepeatedGroup({
                 )}
             </div>
             {description !== undefined && <p className="-mt-1 text-xs text-muted-foreground">{description}</p>}
-            {rows.map((row, index) => (
-                <section key={row.key} className="flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3">
-                    <div className="-my-1 flex items-center gap-1">
-                        <span className="text-xs font-medium text-muted-foreground">{words.item(index)}</span>
-                        <span className="ml-auto flex items-center">
-                            {moving && (
-                                <>
-                                    <IconButton
-                                        label={`${words.moveUp}: ${words.item(index)}`}
-                                        type="button"
-                                        size="icon"
-                                        disabled={index === 0}
-                                        onClick={() => onMove(row.key, -1)}
-                                    >
-                                        <ArrowUp aria-hidden />
-                                    </IconButton>
-                                    <IconButton
-                                        label={`${words.moveDown}: ${words.item(index)}`}
-                                        type="button"
-                                        size="icon"
-                                        disabled={index === rows.length - 1}
-                                        onClick={() => onMove(row.key, 1)}
-                                    >
-                                        <ArrowDown aria-hidden />
-                                    </IconButton>
-                                </>
-                            )}
-                            {removing && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-muted-foreground"
-                                    aria-label={`${words.remove} ${words.item(index)}`}
-                                    onClick={() => onRemove(row.key)}
-                                >
-                                    <X aria-hidden />
-                                    {words.remove}
-                                </Button>
-                            )}
-                        </span>
-                    </div>
-                    {children(row.key, index)}
-                </section>
-            ))}
+            {moving ? (
+                <Sorted rows={rows} item={words.item} onMove={onMove}>
+                    {list}
+                </Sorted>
+            ) : (
+                list
+            )}
         </fieldset>
     )
 }

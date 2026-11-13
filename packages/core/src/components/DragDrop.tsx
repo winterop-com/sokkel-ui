@@ -21,6 +21,7 @@ import {
     type DragMoveEvent,
     type DragOverEvent,
     type DragStartEvent,
+    type KeyboardCoordinateGetter,
     type Over,
     type PointerSensorOptions,
     type TouchSensorOptions,
@@ -155,6 +156,55 @@ function area(collision: Collision): number {
     return rect == null ? Number.POSITIVE_INFINITY : rect.width * rect.height
 }
 
+/** How an arrow key moves a carried thing: along the page's height, or its width. */
+const ARROWS: Record<string, { axis: 'x' | 'y'; by: -1 | 1 }> = {
+    ArrowDown: { axis: 'y', by: 1 },
+    ArrowUp: { axis: 'y', by: -1 },
+    ArrowRight: { axis: 'x', by: 1 },
+    ArrowLeft: { axis: 'x', by: -1 },
+}
+
+/**
+ * Where a carried thing goes on an arrow key, given where it stands and the places that take it: the
+ * nearest place that way, its corner held a pixel past the place's start in the way it went, so a
+ * row carried down stands just past the middle of the row it reaches (after it) and a row carried up
+ * just before it. Undefined for a key that is no arrow, or with nothing that way.
+ */
+export function carriedTo(
+    code: string,
+    from: { left: number; top: number },
+    places: readonly { left: number; top: number }[],
+): { x: number; y: number } | undefined {
+    const arrow = ARROWS[code]
+    if (arrow === undefined) return undefined
+    const start = (rect: { left: number; top: number }) => (arrow.axis === 'y' ? rect.top : rect.left)
+    const ahead = places.filter((rect) => (start(rect) - start(from)) * arrow.by > 0)
+    const distance = (rect: { left: number; top: number }) => Math.hypot(rect.left - from.left, rect.top - from.top)
+    const nearest = ahead.reduce<{ left: number; top: number } | undefined>(
+        (best, rect) => (best === undefined || distance(rect) < distance(best) ? rect : best),
+        undefined,
+    )
+    if (nearest === undefined) return undefined
+    return arrow.axis === 'y' ? { x: nearest.left, y: nearest.top + arrow.by } : { x: nearest.left + arrow.by, y: nearest.top }
+}
+
+/**
+ * Where an arrow key carries a thing: a sortable item among its group as dnd-kit carries it, and a
+ * thing that is not a place of its own, such as a table's row or a track lent to the rail, to the
+ * nearest place that way that takes it (`carriedTo`).
+ */
+const keyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
+    const sorted = sortableKeyboardCoordinates(event, args)
+    const { active, collisionRect, droppableRects, droppableContainers } = args.context
+    if (sorted !== undefined || active === null || collisionRect === null || droppableContainers.get(active.id) !== undefined) return sorted
+    const drag = dragData(active)
+    const places = droppableContainers.getEnabled().flatMap((entry) => {
+        const rect = droppableRects.get(entry.id)
+        return rect !== undefined && takes(dragData(entry), drag) ? [rect] : []
+    })
+    return carriedTo(event.code, collisionRect, places)
+}
+
 /**
  * Where a drag is: the smallest target under the pointer that takes the thing (a row before the
  * list around it), else the targets the thing itself overlaps; from the keyboard, the nearest.
@@ -276,7 +326,7 @@ function DragDropRoot({
     const sensors = useSensors(
         useSensor(PressSensor, { activationConstraint: { distance: DISTANCE } }),
         useSensor(HoldSensor, { activationConstraint: { delay: HOLD, tolerance: HOLD_TOLERANCE } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+        useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }),
     )
     const announcements = useMemo<Announcements>(() => {
         const name = (entry: Active | Over | null) => dragData(entry)?.label ?? String(entry?.id ?? '')

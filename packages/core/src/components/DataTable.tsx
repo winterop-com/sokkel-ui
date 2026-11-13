@@ -1009,7 +1009,12 @@ export interface DataTableProps<T> {
     onReorder?: (from: number, to: number) => void
     /** What a row is called by its grip and to a screen reader as it moves; its key without it. */
     rowLabel?: (row: T) => string
-    /** What a target outside the table, such as a tree's folders, takes its rows as; only the table takes them without it. */
+    /**
+     * What a target outside the table, such as a tree's folders, takes its rows as; only the table
+     * takes them without it. Given, the rows drag out to such targets by their grips whether or not
+     * they reorder here: sorted, filtered or with no `onReorder` at all, a line showing where they
+     * land only while they reorder. A grouped table or a tree lends none.
+     */
     dragKind?: string
     /** Widths in pixels by column id; a column without one keeps its own `width`. */
     columnWidths?: Readonly<Record<string, number>>
@@ -1287,9 +1292,11 @@ export function DataTable<T>({
         [grouped, groupOf, rows, groupOrder],
     )
 
-    // Rows the reader puts in order, while they are drawn as given; the drag layer loads only then.
+    // Rows the reader puts in order, while they are drawn as given, and rows lent to targets elsewhere
+    // in any order; the drag layer loads only then.
     const ordering = onReorder !== undefined && sort === null && !tree && groupOf === undefined
-    const reorderLayer = useTableReorder(ordering)
+    const gripped = ordering || (dragKind !== undefined && !tree && groupOf === undefined)
+    const reorderLayer = useTableReorder(gripped)
     const rowKeys = useMemo(() => (ordering ? rows.map(rowKey) : []), [ordering, rows, rowKey])
     const [rowAt, setRowAt] = useState<RowDropAt | undefined>(undefined)
     const showRowAt = useCallback(
@@ -1624,7 +1631,7 @@ export function DataTable<T>({
     }
     // The first column makes room for the row's grip, so its own content keeps the width it was given.
     const trackAt = (column: DataColumn<T>, index: number) =>
-        index === 0 && ordering && widths[column.id] === undefined ? widenTrack(track(column), GRIP) : track(column)
+        index === 0 && gripped && widths[column.id] === undefined ? widenTrack(track(column), GRIP) : track(column)
     const template = [selectable ? CHECK : undefined, ...shown.map(trackAt), endWidth].filter(Boolean).join(' ')
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
     const least = [
@@ -1633,7 +1640,7 @@ export function DataTable<T>({
         endWidth,
     ].filter(Boolean)
     if (list) least.push('2 * var(--density-panel-pad)', `${String(0.75 * (least.length - 1))}rem`)
-    if (ordering) least.push(GRIP)
+    if (gripped) least.push(GRIP)
     const rowMin = minWidth === 'auto' ? `calc(${least.join(' + ')})` : `max(${minWidth}, calc(${least.join(' + ')}))`
     const grid = { gridTemplateColumns: template, minWidth: rowMin }
     const canResize = resizable && !gridView
@@ -1758,6 +1765,8 @@ export function DataTable<T>({
     const pressable = onOpen !== undefined || detail !== undefined
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        // A row's grip keeps its keys: Space or Enter picks the row up, the arrows carry it, Space drops it.
+        if (!event.altKey && event.target instanceof Element && event.target.closest('[data-row-grip]') !== null) return
         const page = Math.max(1, Math.floor(view.height / lineHeight) - 1) * perLine
         const entry = flat[activeIndex]
         if (ordering && event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
@@ -2230,6 +2239,7 @@ export function DataTable<T>({
                 ref={ref}
                 type="button"
                 tabIndex={-1}
+                data-row-grip=""
                 aria-label={words.moveRow(labelOf(row))}
                 onClick={(event) => event.stopPropagation()}
                 className="mr-1 -ml-1.5 flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground active:cursor-grabbing"
@@ -2240,7 +2250,7 @@ export function DataTable<T>({
     }
     /** A stacked row's selection box with its grip before it, while the rows reorder. */
     const leadWithGrip = (entry: FlatRow<T>, grip: DragHandleProps | undefined, box: ReactNode): ReactNode =>
-        ordering ? (
+        gripped ? (
             <>
                 {rowGrip(entry.row, grip)}
                 {box}
@@ -2250,7 +2260,7 @@ export function DataTable<T>({
         )
     /** A row on the drag layer once it is here, else the row as it is. */
     const reorderRow = (entry: FlatRow<T>, draw: (drag?: TableRowDrag & Record<string, unknown>) => ReactElement) =>
-        reorderLayer !== undefined && ordering ? (
+        reorderLayer !== undefined && gripped ? (
             <reorderLayer.TableReorderRow key={entry.key} rowKey={entry.key} label={labelOf(entry.row)} row={entry.row}>
                 {draw}
             </reorderLayer.TableReorderRow>
@@ -2259,8 +2269,8 @@ export function DataTable<T>({
         )
     /** The rows, on the drag layer once it is here. */
     const wrapRows = (body: ReactElement) =>
-        reorderLayer !== undefined && ordering && onReorder !== undefined ? (
-            <reorderLayer.TableReorderArea keys={rowKeys} kind={dragKind} onReorder={onReorder} show={showRowAt}>
+        reorderLayer !== undefined && gripped ? (
+            <reorderLayer.TableReorderArea keys={rowKeys} kind={dragKind} onReorder={ordering ? onReorder : undefined} show={showRowAt}>
                 {body}
             </reorderLayer.TableReorderArea>
         ) : (
@@ -2369,7 +2379,7 @@ export function DataTable<T>({
                         <div
                             className={cn('flex min-w-0 gap-2', title?.stackTitle === 'free' ? 'min-h-6 items-start' : 'h-6 items-center')}
                         >
-                            {ordering && rowGrip(entry.row, grip)}
+                            {gripped && rowGrip(entry.row, grip)}
                             {box !== null && (
                                 <span className="flex" onClick={keep}>
                                     {box}
@@ -2708,7 +2718,7 @@ export function DataTable<T>({
                                             )}
                                             style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
                                         >
-                                            {index === 0 && ordering && <span aria-hidden className="mr-1 w-6 shrink-0" />}
+                                            {index === 0 && gripped && <span aria-hidden className="mr-1 w-6 shrink-0" />}
                                             {column.sortValue === undefined ? (
                                                 column.head === undefined ? (
                                                     <span className="truncate" title={column.header}>
@@ -2874,7 +2884,7 @@ export function DataTable<T>({
                                                     pressable && 'cursor-pointer',
                                                     (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
                                                     'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
-                                                    ordering && 'relative',
+                                                    gripped && 'relative',
                                                     dragged === true && 'opacity-40',
                                                     typeof passedClass === 'string' && passedClass,
                                                 )}
@@ -2885,7 +2895,7 @@ export function DataTable<T>({
                                                 ) : (
                                                     <>
                                                         <div className="flex min-w-0 items-center gap-2">
-                                                            {ordering && rowGrip(entry.row, grip)}
+                                                            {gripped && rowGrip(entry.row, grip)}
                                                             {box !== null && (
                                                                 <span className="flex" onClick={keep}>
                                                                     {box}
@@ -3015,7 +3025,7 @@ export function DataTable<T>({
                                                     (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
                                                     'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
                                                     cellFocus === 'row' && 'group-focus-within/table:has-data-cell-active:bg-hover',
-                                                    ordering && 'relative',
+                                                    gripped && 'relative',
                                                     draggedRow === true && 'opacity-40',
                                                     typeof passedClass === 'string' && passedClass,
                                                 )}
@@ -3078,7 +3088,7 @@ export function DataTable<T>({
                                                                     : undefined
                                                             }
                                                         >
-                                                            {index === 0 && ordering && rowGrip(entry.row, grip)}
+                                                            {index === 0 && gripped && rowGrip(entry.row, grip)}
                                                             {index === 0 && opens && treeControl(entry)}
                                                             {/* Fills its track, so a part that takes the column's width fills more than its measure. */}
                                                             <span

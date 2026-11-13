@@ -9,6 +9,7 @@ import { NumberField } from '@winterop-com/sokkel-ui/NumberField'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { RepeatedDrag } from '@winterop-com/sokkel-ui/RepeatedDrag'
 import { RepeatedGroup } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { SaveBar } from '@winterop-com/sokkel-ui/SaveBar'
 import { Section } from '@winterop-com/sokkel-ui/Section'
@@ -243,33 +244,29 @@ function Editor({
                         checked={condition}
                         context={CONTEXT}
                     />
-                    <RepeatedGroup
-                        id="program-rule-actions"
-                        label="Actions"
-                        description="What happens on the form while the condition holds."
-                        rows={draft.actions}
-                        min={1}
-                        onAdd={() => set('actions', [...draft.actions, newAction()])}
-                        onRemove={(key) =>
-                            set(
-                                'actions',
-                                draft.actions.filter((one) => one.key !== key),
-                            )
-                        }
-                        onMove={(key, by) => {
-                            const at = draft.actions.findIndex((one) => one.key === key)
-                            const next = [...draft.actions]
-                            const [moved] = next.splice(at, 1)
-                            next.splice(at + by, 0, moved)
-                            set('actions', next)
-                        }}
-                    >
-                        {(key) => {
-                            const one = draft.actions.find((action) => action.key === key)
-                            if (one === undefined) return null
-                            return <ActionFields action={one} onChange={(patch) => setAction(key, patch)} />
-                        }}
-                    </RepeatedGroup>
+                    <RepeatedDrag>
+                        <RepeatedGroup
+                            id="program-rule-actions"
+                            label="Actions"
+                            description="What happens on the form while the condition holds."
+                            rows={draft.actions}
+                            min={1}
+                            onAdd={() => set('actions', [...draft.actions, newAction()])}
+                            onRemove={(key) =>
+                                set(
+                                    'actions',
+                                    draft.actions.filter((one) => one.key !== key),
+                                )
+                            }
+                            onMove={(from, to) => set('actions', moveItem(draft.actions, from, to))}
+                        >
+                            {(key) => {
+                                const one = draft.actions.find((action) => action.key === key)
+                                if (one === undefined) return null
+                                return <ActionFields action={one} onChange={(patch) => setAction(key, patch)} />
+                            }}
+                        </RepeatedGroup>
+                    </RepeatedDrag>
                 </Stack>
             </Section>
             {changed > 0 && <SaveBar count={changed} busy={busy} onSave={save} onDiscard={onDiscard} />}

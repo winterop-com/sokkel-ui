@@ -27,3 +27,24 @@ test("the search's results stay closed when the palette gives focus back to the 
     await search.click()
     await expect(results).toBeVisible()
 })
+
+test('a table row is picked up from its grip with Space, carried by the arrows and dropped with Space, or put back with Escape', async ({
+    page,
+}) => {
+    await open(page, 'patterns-drag-and-drop--table-rows')
+    const grips = page.locator('[data-row-grip]')
+    const order = () => grips.evaluateAll((all) => all.map((grip) => grip.getAttribute('aria-label')))
+    await expect(grips).toHaveCount(5)
+    const first = (await order())[0] ?? ''
+    await page.getByRole('button', { name: first }).focus()
+    await page.keyboard.press('Space')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Space')
+    await expect.poll(async () => (await order()).indexOf(first)).toBe(2)
+    await page.getByRole('button', { name: first }).focus()
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('ArrowUp')
+    await page.keyboard.press('Escape')
+    await expect.poll(async () => (await order()).indexOf(first)).toBe(2)
+})

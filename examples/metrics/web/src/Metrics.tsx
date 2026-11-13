@@ -3,9 +3,11 @@ import type { PaletteCommand, PaletteGroup } from '@winterop-com/sokkel-ui/Comma
 import type { TimeRangeValue } from '@winterop-com/sokkel-ui/dashboard/TimeRange'
 import { useStore, useStoreValue } from '@winterop-com/sokkel-ui/hooks/use-store'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
@@ -108,7 +110,13 @@ export function MetricsApp({ frame }: { frame: Frame }) {
         setPaused,
     }
 
-    const all = useMemo(() => inOrder(boards.rows ?? [], prefs.order ?? []), [boards.rows, prefs.order])
+    // The order as last dragged in the rail or on Dashboards, drawn until the backend has kept it.
+    const [held, setHeld] = useState<string[] | null>(null)
+    const all = useMemo(() => inOrder(boards.rows ?? [], held ?? prefs.order ?? []), [boards.rows, held, prefs.order])
+    const keepOrder = (order: string[]) => {
+        setHeld(order)
+        return preferences.update(prefs.id, { order }).finally(() => setHeld(null))
+    }
     const [section, id, mode, panelId] = place.path
     const board = section === 'd' ? all.find((one) => one.id === id) : undefined
     const kept = viewParams(place.params)
@@ -140,6 +148,14 @@ export function MetricsApp({ frame }: { frame: Frame }) {
         {
             id: 'boards',
             title: 'Dashboards',
+            onReorder: (from, to) =>
+                void keepOrder(
+                    moveItem(
+                        all.map((one) => one.id),
+                        from,
+                        to,
+                    ),
+                ),
             entries: all.map((one) => ({
                 id: one.id,
                 label: one.title,
@@ -226,61 +242,65 @@ export function MetricsApp({ frame }: { frame: Frame }) {
 
     return (
         <StatusProvider statuses={ALERT_STATUSES}>
-            <Shell
-                palette={palette}
-                desktop={frame.desktop}
-                route={place.path.join('/')}
-                rail={
-                    <Rail
-                        mark={<TidevannMark />}
-                        markHref="#/dashboards"
-                        name="Metrics"
-                        groups={groups}
-                        foot={
-                            <AccountMenu
-                                name="ada"
-                                where="tidevann.example.org"
-                                onSettings={() => go('/settings')}
-                                scheme={frame.appearance.settings.scheme}
-                                onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
-                            />
-                        }
-                    />
-                }
-                top={
-                    <TopBar
-                        trail={
-                            page === 'editor' && board !== undefined
-                                ? [home, { label: board.title, href: `#/d/${board.id}` }, { label: 'Edit panel' }]
-                                : trail(title)
-                        }
-                    />
-                }
-                foot={<Foot zone={prefs.zone} firing={firing} paused={paused} refresh={refresh} />}
-            >
-                {page === 'loading' || page === 'error' ? (
-                    <PageState loading={page === 'loading'} error={boards.error}>
-                        {null}
-                    </PageState>
-                ) : page === 'dashboards' ? (
-                    <DashboardsPage
-                        dashboards={all}
-                        kept={kept}
-                        onCreate={() => setCreating(true)}
-                        onReorder={(order) => preferences.update(prefs.id, { order })}
-                    />
-                ) : page === 'dashboard' && board !== undefined ? (
-                    <DashboardPage dashboard={board} view={view} params={place.params} all={all} onShare={() => setSharing(true)} />
-                ) : page === 'editor' && board !== undefined ? (
-                    <EditorPage key={`${board.id}/${panelId ?? 'new'}`} dashboard={board} panelId={panelId} view={view} kept={kept} />
-                ) : page === 'alerts' ? (
-                    <AlertsPage rules={ruleList.rows} fired={fired.rows} zone={prefs.zone} onNew={() => setNewRule(true)} />
-                ) : (
-                    <PageState loading={false} empty emptyMessage="Nothing is here. Pick a dashboard in the rail.">
-                        {null}
-                    </PageState>
-                )}
-            </Shell>
+            <RailDrops>
+                <Shell
+                    palette={palette}
+                    desktop={frame.desktop}
+                    route={place.path.join('/')}
+                    rail={
+                        <Rail
+                            mark={<TidevannMark />}
+                            markHref="#/dashboards"
+                            name="Metrics"
+                            groups={groups}
+                            foot={
+                                <AccountMenu
+                                    name="ada"
+                                    where="tidevann.example.org"
+                                    onSettings={() => go('/settings')}
+                                    scheme={frame.appearance.settings.scheme}
+                                    onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
+                                />
+                            }
+                        />
+                    }
+                    top={
+                        <TopBar
+                            trail={
+                                page === 'editor' && board !== undefined
+                                    ? [home, { label: board.title, href: `#/d/${board.id}` }, { label: 'Edit panel' }]
+                                    : trail(title)
+                            }
+                        />
+                    }
+                    foot={<Foot zone={prefs.zone} firing={firing} paused={paused} refresh={refresh} />}
+                >
+                    {page === 'loading' || page === 'error' ? (
+                        <PageState loading={page === 'loading'} error={boards.error}>
+                            {null}
+                        </PageState>
+                    ) : page === 'dashboards' ? (
+                        <DashboardsPage dashboards={all} kept={kept} onCreate={() => setCreating(true)} onReorder={keepOrder} />
+                    ) : page === 'dashboard' && board !== undefined ? (
+                        <DashboardPage
+                            key={board.id}
+                            dashboard={board}
+                            view={view}
+                            params={place.params}
+                            all={all}
+                            onShare={() => setSharing(true)}
+                        />
+                    ) : page === 'editor' && board !== undefined ? (
+                        <EditorPage key={`${board.id}/${panelId ?? 'new'}`} dashboard={board} panelId={panelId} view={view} kept={kept} />
+                    ) : page === 'alerts' ? (
+                        <AlertsPage rules={ruleList.rows} fired={fired.rows} zone={prefs.zone} onNew={() => setNewRule(true)} />
+                    ) : (
+                        <PageState loading={false} empty emptyMessage="Nothing is here. Pick a dashboard in the rail.">
+                            {null}
+                        </PageState>
+                    )}
+                </Shell>
+            </RailDrops>
             {settings.open && <SettingsPage prefs={prefs} frame={frame} open onClose={settings.close} />}
             {board !== undefined && <ShareDialog open={sharing} onOpenChange={setSharing} dashboard={board} view={view} />}
             <DashboardDialog open={creating} onOpenChange={setCreating} dashboards={all} kept={kept} />

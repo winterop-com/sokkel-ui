@@ -138,6 +138,60 @@ describe('moving a node', () => {
         expect(treeKeyTarget(NODES, 'larkspur', 'out')).toBeUndefined()
     })
 
+    describe('in an order the app keeps', () => {
+        // Folders before files in every level, as a file tree keeps them.
+        const VAULT: TreeNode[] = [
+            {
+                id: 'harbor',
+                label: 'Harbor',
+                children: [
+                    { id: 'drafts', label: 'Drafts', children: [{ id: 'old', label: 'Old file' }] },
+                    { id: 'plan', label: 'Plan file' },
+                    { id: 'notes', label: 'Notes file' },
+                ],
+            },
+            { id: 'juniper', label: 'Juniper', children: [] },
+            { id: 'readme', label: 'Readme file' },
+        ]
+        const banded = { band: (node: TreeNode) => (node.children === undefined ? 'file' : 'folder') }
+        const sorted = { ...banded, sorted: true }
+        const row = (id: string, parent: string | null) => ({ node: { id, label: id }, parent })
+
+        test('counts a place among the rows of its band', () => {
+            expect(treeTarget(VAULT, 'readme', row('notes', 'harbor'), 'after', undefined, banded)).toEqual({ into: 'harbor', index: 2 })
+            expect(treeTarget(VAULT, 'readme', row('plan', 'harbor'), 'before', undefined, banded)).toEqual({ into: 'harbor', index: 0 })
+            expect(treeTarget(VAULT, 'readme', row('harbor', null), 'inside', undefined, banded)).toEqual({ into: 'harbor', index: 2 })
+            expect(treeTarget(VAULT, 'notes', row('plan', 'harbor'), 'before', undefined, banded)).toEqual({ into: 'harbor', index: 0 })
+        })
+
+        test('never offers a place beside a row of another band', () => {
+            expect(treeTarget(VAULT, 'readme', row('drafts', 'harbor'), 'after', undefined, banded)).toBeUndefined()
+            expect(treeTarget(VAULT, 'juniper', row('readme', null), 'before', undefined, banded)).toBeUndefined()
+        })
+
+        test('in a sorted tree, goes only into a branch, never beside a row or back where it is', () => {
+            expect(treeTarget(VAULT, 'readme', row('plan', 'harbor'), 'before', undefined, sorted)).toBeUndefined()
+            expect(treeTarget(VAULT, 'readme', row('harbor', null), 'inside', undefined, sorted)).toEqual({ into: 'harbor', index: 2 })
+            expect(canMoveTo(VAULT, 'plan', { into: 'harbor', index: 2 }, undefined, sorted)).toBe(false)
+            expect(canMoveTo(VAULT, 'plan', { into: null, index: 1 }, undefined, sorted)).toBe(true)
+        })
+
+        test('knows where a node already is among its band', () => {
+            expect(canMoveTo(VAULT, 'plan', { into: 'harbor', index: 0 }, undefined, banded)).toBe(false)
+            expect(canMoveTo(VAULT, 'plan', { into: 'harbor', index: 1 }, undefined, banded)).toBe(true)
+        })
+
+        test('moves by a key among its band', () => {
+            expect(treeKeyTarget(VAULT, 'plan', 'up', undefined, banded)).toBeUndefined()
+            expect(treeKeyTarget(VAULT, 'plan', 'down', undefined, banded)).toEqual({ into: 'harbor', index: 1 })
+            expect(treeKeyTarget(VAULT, 'plan', 'in', undefined, banded)).toEqual({ into: 'drafts', index: 1 })
+            expect(treeKeyTarget(VAULT, 'plan', 'out', undefined, banded)).toEqual({ into: null, index: 0 })
+            expect(treeKeyTarget(VAULT, 'drafts', 'out', undefined, banded)).toEqual({ into: null, index: 1 })
+            expect(treeKeyTarget(VAULT, 'plan', 'down', undefined, sorted)).toBeUndefined()
+            expect(treeKeyTarget(VAULT, 'plan', 'out', undefined, sorted)).toEqual({ into: null, index: 1 })
+        })
+    })
+
     test('applies a move to a tree held whole, without touching the tree given', () => {
         const ids = (nodes: readonly TreeNode[]): unknown[] =>
             nodes.map((node) => (node.children === undefined ? node.id : [node.id, ids(node.children)]))

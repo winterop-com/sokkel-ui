@@ -18,7 +18,8 @@ import { createPortal } from 'react-dom'
 import { cn } from '../lib/cn'
 import { useTrafficLights } from '../lib/desktop'
 import { usePanelSize } from '../hooks/use-panel-size'
-import { RailCollapsed, RailDropRows, ShellDesktop, ShellDrawer, ShellFootCell, ShellRailMode } from './shell-context'
+import { DragPartsContext } from './drag-parts'
+import { RailCollapsed, ShellDesktop, ShellDrawer, ShellFootCell, ShellRailMode } from './shell-context'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
@@ -74,6 +75,13 @@ export interface RailGroup {
     id: string
     title?: string
     entries: RailEntry[]
+    /**
+     * Lets the reader put the group's entries in order inside a `RailDrops`, such as dashboards or
+     * playlists: an entry's row drags to another place (a finger holds it a moment first), and Alt
+     * (Option) with the up and down arrows moves the focused entry a place. Hears where the entry at
+     * `from` goes, both places among `entries`; the rail draws the order it is given.
+     */
+    onReorder?: (from: number, to: number) => void
 }
 
 /**
@@ -240,6 +248,11 @@ export interface RailProps {
  * it was left, a tree's open levels and its scroll with it. The shell's drawer draws the body, as
  * it draws the rail expanded. Left to itself the rail holds which it shows; `view` with
  * `onViewChange` holds it from outside. A strip draws no body.
+ *
+ * Inside a `RailDrops`, a group with `onReorder` is put in order by the reader: an entry's row drags
+ * to another place in its group, the others moving aside, while a press that does not move still
+ * follows the link, and Alt (Option) with the up and down arrows moves the focused entry a place,
+ * the focus staying on it. A rail outside a `RailDrops` never loads the drag engine.
  */
 export function Rail({
     mark,
@@ -309,6 +322,7 @@ export function Rail({
     const lights = useTrafficLights(desktop)
     const drag = desktop === undefined ? undefined : ''
     const words = { ...WORDS, ...given }
+    const SortGroup = useContext(DragPartsContext).railGroup
     const unread = words.unread
     const [ownOpen, setOwnOpen] = useState<string[]>(() => [
         ...new Set([
@@ -462,23 +476,30 @@ export function Rail({
                                 ) : (
                                     <GroupLabel className="px-2 pt-4 pb-1.5">{group.title}</GroupLabel>
                                 ))}
-                            {group.entries.map((entry) =>
-                                entry.entries !== undefined && entry.entries.length > 0 ? (
-                                    collapsed ? (
-                                        <RailFlyout key={entry.id} entry={entry} unread={unread} defaultOpen={defaultFlyout === entry.id} />
+                            <SortGroup group={group}>
+                                {group.entries.map((entry) =>
+                                    entry.entries !== undefined && entry.entries.length > 0 ? (
+                                        collapsed ? (
+                                            <RailFlyout
+                                                key={entry.id}
+                                                entry={entry}
+                                                unread={unread}
+                                                defaultOpen={defaultFlyout === entry.id}
+                                            />
+                                        ) : (
+                                            <RailParent
+                                                key={entry.id}
+                                                entry={entry}
+                                                open={unfolded.includes(entry.id)}
+                                                onOpen={(next) => fold(entry.id, next)}
+                                                unread={unread}
+                                            />
+                                        )
                                     ) : (
-                                        <RailParent
-                                            key={entry.id}
-                                            entry={entry}
-                                            open={unfolded.includes(entry.id)}
-                                            onOpen={(next) => fold(entry.id, next)}
-                                            unread={unread}
-                                        />
-                                    )
-                                ) : (
-                                    <RailLink key={entry.id} entry={entry} collapsed={collapsed} unread={unread} />
-                                ),
-                            )}
+                                        <RailLink key={entry.id} entry={entry} collapsed={collapsed} unread={unread} />
+                                    ),
+                                )}
+                            </SortGroup>
                         </nav>
                     ))}
                 </div>
@@ -523,7 +544,7 @@ const renderLink = (entry: RailEntry, children: ReactNode, className: string) =>
 
 /** An entry's row, as a drop target when it has a `drop` and stands inside a `RailDrops`. */
 function Droppable({ entry, children }: { entry: RailEntry; children: ReactElement }) {
-    const Row = useContext(RailDropRows)
+    const Row = useContext(DragPartsContext).railRow
     if (entry.drop === undefined || Row === undefined) return children
     return (
         <Row label={entry.label} drop={entry.drop}>

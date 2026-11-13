@@ -23,6 +23,8 @@ import { useState, type ReactNode } from 'react'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailEntry, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
@@ -386,6 +388,41 @@ export const NestedCollapsed: StoryObj = {
             />
         </Frame>
     ),
+}
+
+const BOARDS: RailEntry[] = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '#/d/overview', active: true },
+    { id: 'harbor', label: 'harbor exports', icon: LayoutDashboard, href: '#/d/harbor' },
+    { id: 'juniper', label: 'juniper sync', icon: LayoutDashboard, href: '#/d/juniper' },
+    { id: 'larkspur', label: 'larkspur index', icon: LayoutDashboard, href: '#/d/larkspur' },
+]
+
+/**
+ * Dashboards the reader puts in order in the rail: inside a `RailDrops`, a dashboard's row drags to
+ * another place in its group, the others moving aside, and Alt (Option) with the up and down arrows
+ * moves the focused one a place. A press that does not move still opens the dashboard.
+ */
+export const Reordered: StoryObj = {
+    render: function Render() {
+        const [boards, setBoards] = useState(BOARDS)
+        const groups: RailGroup[] = [
+            { id: 'home', entries: [{ id: 'home', label: 'Home', icon: House, href: '#/' }] },
+            { id: 'boards', title: 'Dashboards', entries: boards, onReorder: (from, to) => setBoards(moveItem(boards, from, to)) },
+        ]
+        return (
+            <RailDrops>
+                <Frame>
+                    <Rail
+                        mark={<TidevannMark />}
+                        name="Tidevann"
+                        markHref="#"
+                        groups={groups}
+                        foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => undefined} />}
+                    />
+                </Frame>
+            </RailDrops>
+        )
+    },
 }
 
 /**

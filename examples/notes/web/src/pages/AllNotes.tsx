@@ -93,7 +93,7 @@ export function noteActions(state: Pick<VaultState, 'open' | 'ask'>): (note: Not
  * Every note in the vault, or in one folder and the folders under it, with a field that makes a
  * note. By name they are listed newest change first; in the reader's own order they are listed as
  * the tree holds them, each row dragged by its grip to another place, among the notes of the folder
- * it lands in, or onto a folder of the rail's tree.
+ * it lands in. In either order a row's grip drags it onto a folder of the rail's tree.
  */
 export function AllNotes({ folder }: { folder?: string }) {
     const state = useVault()

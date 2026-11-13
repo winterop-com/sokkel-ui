@@ -1130,7 +1130,7 @@ function Property({
                 rows={keys.map((key) => ({ key }))}
                 onAdd={() => form.set(path, [...items, initialValue(at.items ?? {}, form.schema)])}
                 onRemove={(key) => form.removeItem(path, indexOf(key))}
-                onMove={(key, by) => form.moveItem(path, indexOf(key), indexOf(key) + by)}
+                onMove={(from, to) => form.moveItem(path, from, to)}
                 readOnly={locked}
                 words={{
                     add: form.words.add,
