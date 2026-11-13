@@ -12,7 +12,7 @@ type Engine = typeof import('./engine')
 
 let engine: Promise<Engine> | null = null
 
-/** Loads the chart engine once, on first use, with only the chart types and components the library draws. */
+/** Loads the chart engine once, on first use; each chart type and component it draws with loads when first drawn. */
 export function loadEngine(): Promise<Engine> {
     engine ??= import('./engine')
     return engine
@@ -255,10 +255,11 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
     useEffect(() => {
         if (!ready || resolved === null) return
         let live = true
-        // A chart type outside the base set loads the first time an option draws it.
+        // Each chart type and component loads the first time an option draws with it.
         setSettled(false)
+        const composed = compose(resolved, hidden, animate, short, room)
         void loadEngine().then(async ({ ensure, init, partsLoaded }) => {
-            await ensure(resolved as Record<string, unknown>)
+            await ensure(composed as Record<string, unknown>)
             const el = element.current
             if (!live || el === null) return
             // A chart made before a part it draws loaded lacks that part's layout, so it is made again.
@@ -271,7 +272,7 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
             const instance = chart.current
             if (instance === null) return
             const zooms = (instance.getOption() as { dataZoom?: { start?: number; end?: number }[] } | undefined)?.dataZoom ?? []
-            instance.setOption(keepZoom(drawnOption.current, compose(resolved, hidden, animate, short, room), zooms), { notMerge: true })
+            instance.setOption(keepZoom(drawnOption.current, composed, zooms), { notMerge: true })
             drawnOption.current = resolved
             setSettled(true)
         })
@@ -292,13 +293,14 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
 
     useImperativeHandle(handle, () => {
         const render = async (renderer: 'svg' | 'canvas', decor: ExportDecor) => {
-            const { init, ensure } = await loadEngine()
+            const { init, ensure, ensureSvg } = await loadEngine()
             if (look === null || resolved === null) throw new Error('The chart has not drawn yet.')
-            await ensure(resolved as Record<string, unknown>)
             const box = element.current?.getBoundingClientRect()
             const width = Math.max(320, Math.round(box?.width ?? 640))
             const base = Math.max(200, Math.round(box?.height ?? 320))
             const { option: decorated, extra } = decorate(compose(resolved, hidden, false), decor, look, base)
+            // The title drawn into the image, and the SVG renderer, load only for an export.
+            await Promise.all([ensure(decorated as Record<string, unknown>), renderer === 'svg' ? ensureSvg() : undefined])
             const height = base + extra
             if (renderer === 'svg') {
                 const ssr = init(null as unknown as HTMLElement, chartTheme(look), { renderer: 'svg', ssr: true, width, height })

@@ -1,20 +1,20 @@
 {
     "forms": {
         "engines": [],
-        "start": 193,
-        "lazy": 78.4,
+        "start": 193.2,
+        "lazy": 78.7,
         "css": 51
     },
     "forms-lean": {
         "engines": [],
-        "start": 193,
-        "lazy": 78.4,
+        "start": 193.2,
+        "lazy": 78.7,
         "css": 22
     },
     "dashboard": {
         "engines": ["echarts"],
-        "start": 202.2,
-        "lazy": 412,
+        "start": 202.4,
+        "lazy": 437,
         "css": 52
     },
     "map": {

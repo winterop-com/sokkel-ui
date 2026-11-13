@@ -1,5 +1,5 @@
 import { pivot } from '../data'
-import { SERIES_ORDER, tooltipMarkup } from '../look'
+import { SERIES_ORDER, tokenColor, tooltipMarkup } from '../look'
 import { niceCeil } from '../stats'
 import { valueTicks, written } from './categories'
 import { fieldsOf, wordsOf, type ChartBuilder, type ChartSpec, type ChartStep } from './spec'
@@ -32,7 +32,7 @@ function figures(spec: ChartSpec) {
 function bandColors(steps: readonly ChartStep[]): string[] {
     return steps.map((step, index) => {
         const strength = steps.length <= 1 ? 22 : Math.round(30 - (20 * index) / (steps.length - 1))
-        return `color-mix(in oklab, var(--${step.color ?? 'muted-foreground'}) ${String(step.color === undefined ? strength : 26)}%, var(--card))`
+        return `color-mix(in oklab, ${tokenColor(step.color ?? 'muted-foreground')} ${String(step.color === undefined ? strength : 26)}%, var(--card))`
     })
 }
 
@@ -147,7 +147,7 @@ export function bulletLegend(spec: ChartSpec): LegendItem[] {
     const { field, values, targets, steps } = figures(spec)
     const bands = bandColors(steps)
     return [
-        { key: field, label: field, color: `var(--${spec.colors?.[field] ?? SERIES_ORDER[0]})`, values },
+        { key: field, label: field, color: tokenColor(spec.colors?.[field] ?? SERIES_ORDER[0]), values },
         ...(spec.value === undefined ? [] : [{ key: words.target, label: words.target, color: 'var(--foreground)', values: targets }]),
         ...steps.flatMap((step, index) =>
             step.label === undefined ? [] : [{ key: bandName(step, index), label: step.label, color: bands[index] }],

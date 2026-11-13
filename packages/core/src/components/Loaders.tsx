@@ -20,16 +20,26 @@ export function useLongWait(waiting: boolean, delay: number): boolean {
     return long
 }
 
+/**
+ * A loading bar's color: `primary` in the primary color, `muted` in the muted ink, `current` in the
+ * ink of the words around it, for a line inside a row or a chip of its own tone.
+ */
+export type LoadingBarTone = 'primary' | 'muted' | 'current'
+
+const TRACK: Record<LoadingBarTone, string> = { primary: 'bg-primary/15', muted: 'bg-muted', current: 'bg-current/15' }
+const FILL: Record<LoadingBarTone, string> = { primary: 'bg-primary', muted: 'bg-muted-foreground', current: 'bg-current' }
+
 export interface LoadingBarProps {
     value?: number | null
     label?: string
-    tone?: 'primary' | 'muted'
+    tone?: LoadingBarTone
     className?: string
 }
 
 /**
  * A thin bar for a wait: filled to `value` (0 to 100) when the progress is known, a sliding segment
- * when it is not.
+ * when it is not. It takes the width it is given; `tone="current"` draws it in the ink around it, so
+ * a line under a row's words or in a critical notice wears their color.
  */
 export function LoadingBar({ value = null, label = 'Loading', tone = 'primary', className }: LoadingBarProps) {
     const known = value !== null
@@ -40,12 +50,12 @@ export function LoadingBar({ value = null, label = 'Loading', tone = 'primary', 
             aria-valuemin={known ? 0 : undefined}
             aria-valuemax={known ? 100 : undefined}
             aria-valuenow={known ? Math.round(value) : undefined}
-            className={cn('relative h-0.5 w-full overflow-hidden', tone === 'primary' ? 'bg-primary/15' : 'bg-muted', className)}
+            className={cn('relative h-0.5 w-full overflow-hidden', TRACK[tone], className)}
         >
             <span
                 className={cn(
                     'absolute inset-y-0 left-0 rounded-full',
-                    tone === 'primary' ? 'bg-primary' : 'bg-muted-foreground',
+                    FILL[tone],
                     known ? 'transition-[width] duration-300 ease-out' : 'w-2/5 animate-[loading-slide_1.4s_ease-in-out_infinite]',
                 )}
                 style={known ? { width: `${Math.max(0, Math.min(100, value))}%` } : undefined}

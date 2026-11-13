@@ -104,6 +104,8 @@ function useMathEngine(needed: boolean): MathEngine | undefined {
  * down, so `#` in a text set under the page's own headings is no second h1, and `inline` draws only
  * the content of paragraphs, for one line of help, laying out any block as its text. A table whose
  * header cells are all empty, as a key/value table written `| | |` has, is drawn without the header.
+ *
+ * `measure` holds the prose to a reading measure in a wide pane, tables and code keeping the full width.
  */
 export const Markdown = memo(function Markdown(props: MarkdownProps) {
     return <MarkdownView {...props} useMath={useMathEngine} Diagram={MermaidDiagram} />

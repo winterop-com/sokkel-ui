@@ -111,6 +111,48 @@ export const Icons: StoryObj = {
     ),
 }
 
+const ROLES = [
+    { value: 'viewer', label: 'Viewer', detail: 'Reads runs and their logs.' },
+    { value: 'operator', label: 'Operator', detail: 'Starts, retries and cancels runs.' },
+    { value: 'editor', label: 'Editor', detail: 'Changes jobs, their steps and schedules.' },
+    { value: 'owner', label: 'Owner', detail: 'Everything, and who else may do it.' },
+]
+
+/**
+ * Each option's detail on a second line under its label (`detailPlacement="below"`), for choices
+ * that need a sentence each, and the chosen option's detail in the closed select (`chosenDetail`).
+ */
+export const TwoLines: StoryObj = {
+    name: 'Two-line options',
+    render: function Render() {
+        const [role, setRole] = useState('operator')
+        return (
+            <Stack gap="lg" className="max-w-md">
+                <SelectField
+                    id="lines-role"
+                    label="Role in harbor"
+                    options={ROLES}
+                    value={role}
+                    onChange={setRole}
+                    detailPlacement="below"
+                    chosenDetail
+                />
+                <SelectField
+                    id="lines-concurrency"
+                    label="Concurrency"
+                    options={[
+                        { value: '1', label: 'One at a time' },
+                        { value: '4', label: 'Four', detail: "harbor's default" },
+                        { value: '8', label: 'Eight' },
+                    ]}
+                    defaultValue="4"
+                    chosenDetail
+                />
+            </Stack>
+        )
+    },
+}
+
 /** Options that cannot be chosen, a refused value marked at the select's end, and a whole field turned off. */
 export const States: StoryObj = {
     render: () => (

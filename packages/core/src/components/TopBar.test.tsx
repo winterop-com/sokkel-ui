@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { ShellPalette } from './shell-context'
+import { ShellPalette, ShellTrail } from './shell-context'
 import { TopBar } from './TopBar'
 
 const links = (html: string) => html.match(/<a /g)?.length ?? 0
@@ -67,5 +67,36 @@ describe('TopBar palette button', () => {
             </ShellPalette.Provider>,
         )
         expect(shown).toContain('<button')
+    })
+})
+
+describe('TopBar stated trail', () => {
+    it('draws the trail a screen states in place of its own, keeping its actions', () => {
+        const html = renderToStaticMarkup(
+            <ShellTrail
+                value={{
+                    trail: [
+                        { label: 'harbor', href: '/harbor' },
+                        { label: 'nightly-export', code: true },
+                    ],
+                }}
+            >
+                <TopBar trail={[{ label: 'Jobs' }]} actions={<button type="button">New</button>} />
+            </ShellTrail>,
+        )
+        expect(html).not.toContain('>Jobs<')
+        expect(html).toMatch(/<span aria-current="page"[^>]*font-mono[^>]*>nightly-export<\/span>/)
+        expect(links(html)).toBe(1)
+        expect(html).toContain('>New</button>')
+    })
+
+    it('takes the end the screen states, not its own', () => {
+        const html = renderToStaticMarkup(
+            <ShellTrail value={{ trail: [{ label: 'harbor', href: '/harbor' }], ends: 'ancestor' }}>
+                <TopBar trail={[{ label: 'Jobs' }]} />
+            </ShellTrail>,
+        )
+        expect(html).not.toContain('aria-current')
+        expect(html).toContain('lucide-chevron-left')
     })
 })

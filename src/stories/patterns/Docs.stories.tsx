@@ -188,6 +188,37 @@ function Runbook() {
     )
 }
 
+const MEASURED = `## How nightly-export runs
+
+The scheduler starts nightly-export at 02:00 on the worker service. Each step hands its rows to the next, and a step that fails stops the run, so the steps after it are skipped and the run is marked failed until someone retries it.
+
+- fetch reads the orders from api.example.org since the last run that succeeded.
+- transform and validate turn them into the export's rows and set aside the ones that do not read.
+- upload writes the file, and notify tells the owners of harbor that it is there.
+
+| Step | Service | Median | Slowest | Rows in | Rows out | Rejected | Last failure |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| fetch | worker | 1.2s | 4.8s | 0 | 18 204 | 0 | never |
+| transform | worker | 0.8s | 2.1s | 18 204 | 18 204 | 0 | never |
+| validate | worker | 0.4s | 1.0s | 18 204 | 18 131 | 73 | run 4790 |
+| upload | worker | 3.6s | 41.0s | 18 131 | 18 131 | 0 | run 4812 |
+
+\`\`\`sh
+tidevann runs retry 4812 --from upload --project harbor --notify ada,grace --wait
+\`\`\`
+
+> A rerun appends to the same file, so move the rejected rows aside before you start it again.
+`
+
+/** A wide pane holding a document: its prose to the reading measure, its table and code across the pane. */
+function Measured() {
+    return (
+        <div className="p-6">
+            <Markdown content={MEASURED} scale="document" measure />
+        </div>
+    )
+}
+
 const NOTE = `## Nightly export
 
 The [[Nightly export]] job runs at 02:00 on the worker. When it fails, follow [[Runbooks/Retry a run|the retry runbook]] and
@@ -323,6 +354,12 @@ export const Untrusted_: StoryObj = { name: 'Untrusted text', render: () => <Unt
  * details set in where the text has `<!-- part:state -->` and `<!-- part:run -->`.
  */
 export const Parts: StoryObj = { name: 'Embedded parts', render: () => <Runbook /> }
+
+/**
+ * `measure`: in a pane as wide as the canvas, paragraphs, lists, quotes and headings stop at the
+ * reading measure (`--reading-measure`), while the table and the code block run the pane's width.
+ */
+export const Measure: StoryObj = { name: 'Reading measure', render: () => <Measured /> }
 
 /**
  * Links between notes and tags: `[[Note]]`, `[[Note|words]]` and `[[Note#Heading]]` are links the

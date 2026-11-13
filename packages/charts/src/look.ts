@@ -5,7 +5,7 @@ export const SERIES_ORDER = ['chart-2', 'chart-3', 'chart-4', 'kind-teal', 'kind
 
 /**
  * The current theme's colors and typeface, resolved to hex for a renderer that takes no CSS.
- * `token` resolves any color token by name, `mix` blends two CSS colors, and `ramp` steps from the
+ * `token` resolves any color token by name, with an alpha where it is written `name/45`, `mix` blends two CSS colors, and `ramp` steps from the
  * card to a token, for a sequential scale.
  */
 export interface ChartLook {
@@ -33,6 +33,20 @@ export interface ChartLook {
     token: (name: string) => string
     mix: (css: string, percent: number, base?: string) => string
     ramp: (name: string, steps?: number) => string[]
+}
+
+/** A color token and the percent it is drawn opaque at, read from `name` or `name/45`. */
+export function tokenAlpha(token: string): { name: string; alpha: number } {
+    const at = token.lastIndexOf('/')
+    if (at === -1) return { name: token, alpha: 1 }
+    const percent = Number(token.slice(at + 1))
+    return { name: token.slice(0, at), alpha: Number.isFinite(percent) ? Math.min(100, Math.max(0, percent)) / 100 : 1 }
+}
+
+/** A color token as CSS, such as a legend's swatch takes: `name/45` is the token at 45% opacity. */
+export function tokenColor(token: string): string {
+    const { name, alpha } = tokenAlpha(token)
+    return alpha === 1 ? `var(--${name})` : `color-mix(in oklab, var(--${name}) ${String(Math.round(alpha * 100))}%, transparent)`
 }
 
 function readKey(): string {
@@ -97,7 +111,11 @@ export function readLook(key = readKey()): ChartLook {
     if (latest?.key === key) return latest
     const hex = makeHex()
     const style = getComputedStyle(document.documentElement)
-    const token = (name: string) => hex(`var(--${name})`)
+    const token = (name: string) => {
+        const { name: base, alpha } = tokenAlpha(name)
+        const solid = hex(`var(--${base})`)
+        return alpha === 1 ? solid : withAlpha(solid, alpha)
+    }
     const mix = (css: string, percent: number, base = 'var(--card)') => hex(`color-mix(in oklab, ${css} ${percent}%, ${base})`)
     const rem = Number.parseFloat(style.fontSize) || 16
     const pixels = (name: string, fallback: number) => {
@@ -130,7 +148,7 @@ export function readLook(key = readKey()): ChartLook {
         token,
         mix,
         ramp: (name, steps = 6) =>
-            Array.from({ length: steps }, (_, index) => mix(`var(--${name})`, Math.round(12 + (88 * index) / Math.max(1, steps - 1)))),
+            Array.from({ length: steps }, (_, index) => mix(tokenColor(name), Math.round(12 + (88 * index) / Math.max(1, steps - 1)))),
     }
     return latest
 }

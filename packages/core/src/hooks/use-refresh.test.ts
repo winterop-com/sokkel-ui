@@ -73,4 +73,67 @@ describe('refresher', () => {
         await vi.runAllTimersAsync()
         expect(states).toEqual([{ refreshing: true }, { refreshing: false }])
     })
+
+    describe('while the page is hidden', () => {
+        /** A document that can be hidden and shown, telling its listeners as a browser does. */
+        class Page extends EventTarget {
+            hidden = false
+            show(shown: boolean) {
+                this.hidden = !shown
+                this.dispatchEvent(new Event('visibilitychange'))
+            }
+        }
+        let page: Page
+        beforeEach(() => {
+            page = new Page()
+            vi.stubGlobal('document', page)
+        })
+        afterEach(() => {
+            vi.unstubAllGlobals()
+        })
+
+        it('skips its ticks, and refreshes at once when shown again, the clock starting over', async () => {
+            const { driver, runs } = counted()
+            driver.every(30, false)
+            page.show(false)
+            await vi.advanceTimersByTimeAsync(90_000)
+            expect(runs()).toBe(0)
+            page.show(true)
+            await vi.advanceTimersByTimeAsync(0)
+            expect(runs()).toBe(1)
+            await vi.advanceTimersByTimeAsync(29_000)
+            expect(runs()).toBe(1)
+            await vi.advanceTimersByTimeAsync(1_000)
+            expect(runs()).toBe(2)
+            driver.stop()
+        })
+
+        it('waits for its tick when shown before one fell due', async () => {
+            const { driver, runs } = counted()
+            driver.every(30, false)
+            page.show(false)
+            await vi.advanceTimersByTimeAsync(10_000)
+            page.show(true)
+            await vi.advanceTimersByTimeAsync(0)
+            expect(runs()).toBe(0)
+            await vi.advanceTimersByTimeAsync(20_000)
+            expect(runs()).toBe(1)
+            driver.stop()
+        })
+
+        it('refreshes nothing when shown while paused or stopped', async () => {
+            const { driver, runs } = counted()
+            driver.every(30, true)
+            page.show(false)
+            await vi.advanceTimersByTimeAsync(90_000)
+            page.show(true)
+            driver.every(30, false)
+            driver.stop()
+            page.show(false)
+            await vi.advanceTimersByTimeAsync(90_000)
+            page.show(true)
+            await vi.advanceTimersByTimeAsync(0)
+            expect(runs()).toBe(0)
+        })
+    })
 })

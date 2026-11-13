@@ -90,6 +90,58 @@ export const Failures: StoryObj = {
     },
 }
 
+/**
+ * Rows whose lines wrap rather than end in an ellipsis, for a reason a reader needs whole, each
+ * saying on hover what a press opens.
+ */
+export const Wrapped: StoryObj = {
+    render: () => (
+        <Section title="Failures" variant="boxed" flush className="max-w-sm">
+            <ListRows>
+                {FAILURES.map((failure) => (
+                    <ListRow
+                        key={failure.run}
+                        icon={<Dot status="failed" size="md" />}
+                        title={`${failure.job} failed at ${failure.step}`}
+                        detail={failure.reason}
+                        aside={failure.when}
+                        tooltip={`Open ${failure.run}`}
+                        wrap
+                        onPress={() => undefined}
+                    />
+                ))}
+            </ListRows>
+        </Section>
+    ),
+}
+
+/**
+ * Rows set flush in a panel: square, lined up with the panel's own padding and parted by
+ * hairlines, the open one marked edge to edge.
+ */
+export const Flush: StoryObj = {
+    render: function Render() {
+        const [open, setOpen] = useState('run-4799')
+        return (
+            <Section title="Failures" variant="boxed" flush className="max-w-xl">
+                <ListRows label="Failures" flush>
+                    {FAILURES.map((failure) => (
+                        <ListRow
+                            key={failure.run}
+                            icon={<Dot status="failed" size="md" />}
+                            title={failure.job}
+                            detail={`${failure.step}: ${failure.reason}`}
+                            aside={<Chip mono>{failure.project}</Chip>}
+                            current={failure.run === open}
+                            onPress={() => setOpen(failure.run)}
+                        />
+                    ))}
+                </ListRows>
+            </Section>
+        )
+    },
+}
+
 /** Rows that are links, each to its run's page, with the project as a chip at the end. */
 export const Links: StoryObj = {
     render: () => (

@@ -2,6 +2,7 @@ import { createContext } from 'react'
 
 import type { DesktopWindow } from '../lib/desktop'
 import type { PanelStrip } from './panel-strip'
+import type { Crumb, TrailEnd } from './TopBar'
 
 /**
  * The cell at the shell's bottom-left corner that a rail's foot is drawn in while the shell has a
@@ -51,9 +52,32 @@ export const RailCollapsed = createContext<boolean | undefined>(undefined)
 export const ShellPanelStrip = createContext<PanelStrip | undefined>(undefined)
 
 /**
- * The shell's top bar as a screen fills it: the element a `ShellTop` draws into, which of them is
- * drawn (the latest mounted), and how one claims the bar while it is mounted; undefined outside a shell.
+ * A box of the shell's that one screen at a time fills: the element its part draws into, which of
+ * them is drawn (the latest mounted), and how one claims the box while it is mounted.
  */
-export const ShellTopSlot = createContext<
-    { target: HTMLElement | null; shown: string | undefined; claim: (id: string) => () => void } | undefined
->(undefined)
+export interface ShellSlot {
+    target: HTMLElement | null
+    shown: string | undefined
+    claim: (id: string) => () => void
+}
+
+/** The shell's top bar as a screen fills it with `ShellTop`; undefined outside a shell. */
+export const ShellTopSlot = createContext<ShellSlot | undefined>(undefined)
+
+/** The box above the shell's scroller a screen fills with `ShellHead`; undefined outside a shell. */
+export const ShellHeadSlot = createContext<ShellSlot | undefined>(undefined)
+
+/** A trail a screen states for the shell's top bar, and what its last crumb is. */
+export interface StatedTrail {
+    trail: readonly Crumb[]
+    ends?: TrailEnd
+}
+
+/** States a screen's trail for the top bar, answering with what takes it back; undefined outside a shell. */
+export const ShellTrailAsk = createContext<((id: string, trail: StatedTrail) => () => void) | undefined>(undefined)
+
+/**
+ * The trail the latest mounted screen states, for the `TopBar` in `Shell`'s `top`, given only around
+ * the shell's own top bar so a bar drawn elsewhere keeps its own; undefined while none is stated.
+ */
+export const ShellTrail = createContext<StatedTrail | undefined>(undefined)

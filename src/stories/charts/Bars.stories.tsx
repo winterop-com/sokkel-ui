@@ -121,3 +121,49 @@ export const Formatted: StoryObj = {
         </Ground>
     ),
 }
+
+const RECENT_STATES = [
+    'succeeded',
+    'succeeded',
+    'failed',
+    'succeeded',
+    'cancelled',
+    'succeeded',
+    'succeeded',
+    'succeeded',
+    'failed',
+    'skipped',
+]
+const RECENT_SECONDS = [312, 298, 41, 305, 0, 287, 330, 341, 96, 0]
+const RECENT: ChartSpec = {
+    rows: RECENT_STATES.map((state, index) => ({ run: `#${String(1031 + index)}`, state, seconds: RECENT_SECONDS[index] })),
+    x: 'run',
+    y: 'seconds',
+    series: 'state',
+    seriesOrder: ['succeeded', 'failed', 'cancelled', 'skipped'],
+    stack: 'stacked',
+    colors: {
+        succeeded: 'muted-foreground/45',
+        failed: 'status-failed',
+        cancelled: 'status-cancelled',
+        skipped: 'status-skipped',
+    },
+    unit: ' s',
+    quiet: true,
+    baseline: true,
+}
+
+/**
+ * The last ten runs of nightly-export, each a bar of the seconds it took: succeeded runs drawn
+ * quiet at 45% of the muted foreground, so the failures stand out, on a quiet axis with the run
+ * numbers in mono, and the cancelled and skipped runs, which took no time, as a baseline.
+ */
+export const Quiet: StoryObj = {
+    render: () => (
+        <Ground title="nightly-export" columns={1}>
+            <ChartFrame title="Recent runs" subtitle="seconds per run" legend={chartLegend('bar', RECENT)} file="recent-runs">
+                {(state) => <Chart kind="bar" label="Seconds per run of nightly-export, by state" {...RECENT} {...state} />}
+            </ChartFrame>
+        </Ground>
+    ),
+}

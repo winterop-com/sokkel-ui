@@ -21,7 +21,7 @@ export const Plain: StoryObj = {
     },
 }
 
-/** A hint beside the label, a key in the code face, and a help line under the input. */
+/** A hint beside the label, a key in the code face, a label that is itself a key (`monoLabel`), and a help line under the input. */
 export const Help: StoryObj = {
     name: 'With help',
     render: () => (
@@ -45,6 +45,14 @@ export const Help: StoryObj = {
                 defaultValue="https://api.example.org"
             />
             <TextField id="help-schedule" label="Schedule" hint="cron" required mono defaultValue="0 2 * * *" />
+            <TextField
+                id="help-key"
+                label="EXPORT_BUCKET"
+                monoLabel
+                mono
+                help="Read by the upload step at start."
+                defaultValue="harbor-exports"
+            />
         </Stack>
     ),
 }
@@ -149,4 +157,35 @@ export const Multiline: StoryObj = {
             defaultValue="Fetches the day's orders, validates each row, and uploads the rows that pass. Grace is told when a run fails."
         />
     ),
+}
+
+/** A text area that grows with its text from two lines to six (`maxRows`), then scrolls. */
+export const Growing: StoryObj = {
+    render: function Render() {
+        const [notes, setNotes] = useState(
+            [
+                'fetch: reads the orders from api.example.org since the last run that succeeded.',
+                'transform: turns each order into the export row.',
+                'validate: sets aside the rows that do not read.',
+                'upload: writes the file to the bucket.',
+                'notify: tells the owners of harbor.',
+                'A failed step stops the run; the steps after it are skipped.',
+                'Retries start again from the step that failed.',
+                'Grace is told when a run fails twice in a row.',
+            ].join('\n'),
+        )
+        return (
+            <TextField
+                id="growing-notes"
+                label="Run notes"
+                help="Grows to six lines, then scrolls."
+                multiline
+                rows={2}
+                maxRows={6}
+                value={notes}
+                onChange={setNotes}
+                className="max-w-lg"
+            />
+        )
+    },
 }

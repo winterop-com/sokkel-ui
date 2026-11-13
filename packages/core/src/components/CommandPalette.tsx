@@ -6,7 +6,7 @@ import { activeRow, filterCommands, mergeCommands, termScore } from '../lib/comm
 import { keyLabels } from '../lib/keys'
 import { cn } from '../lib/utils'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
-import { SearchResultBody } from './Search'
+import { SearchResultBody, type SearchDetailTone } from './Search'
 import { Button } from './ui/button'
 import { Kbd, KbdGroup } from './ui/kbd'
 import { Spinner } from './ui/spinner'
@@ -42,8 +42,16 @@ export interface PaletteCommand {
     next?: readonly string[]
     /** More words it is found by, beyond its label; never drawn. */
     keywords?: readonly string[]
-    /** A second line under the label, such as who made it or where it lives; it is found by these words too. */
-    detail?: string
+    /**
+     * A second line under the label, such as who made it, where it lives or the state it is in. Text
+     * is found by its words too; a node, such as a line with a status dot, is found by `keywords` alone.
+     */
+    detail?: ReactNode
+    /**
+     * Sets the second line, or the hint of a one-line row, in a status ink: a failed run's line
+     * critical, so the palette can stand as a chooser whose rows say their state.
+     */
+    tone?: PaletteTone
     /**
      * A picture at the row's start in the icon's place: an image's address, or a node that fills
      * the box, such as a drawn cover. With it or a `detail` the row is two lines tall.
@@ -64,6 +72,16 @@ export interface PaletteCommand {
      */
     kind?: string
     onSelect: () => void
+}
+
+/** The status inks a command's second line or hint can take. */
+export type PaletteTone = SearchDetailTone
+
+const TONE_INK: Record<PaletteTone, string> = {
+    critical: 'text-critical-ink',
+    warning: 'text-warning-ink',
+    good: 'text-good-ink',
+    info: 'text-info-ink',
 }
 
 /** Commands under a heading: Go to, Create, Recent. */
@@ -185,7 +203,9 @@ export interface CommandPaletteProps {
  * icon, a hint in words or a code, and the keys that run it directly, a sequence's two presses with
  * the word `sequence` between them as the shortcuts dialog draws them. Choosing a row closes the
  * palette and runs it. A row with a `detail` or `artwork` is two lines tall, a picture or its icon
- * on a tile at its start and its hint or code at its end, as a record found by a search is. The
+ * on a tile at its start and its hint or code at its end, as a record found by a search is; the
+ * second line may be a node, and a row's `tone` sets it, or a one-line row's hint, in a status ink,
+ * so the palette serves as a standalone chooser whose rows say their state. The
  * groups are listed by their `rank`, one group to a title. With `search` the app's own results for
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
  * marked; an earlier query's results stay dimmed and passed over until the query's own come, a
@@ -283,13 +303,27 @@ export function CommandPalette({
                                             }}
                                         >
                                             {twoLines(command) ? (
-                                                <SearchResultBody result={asResult(command)} query="" />
+                                                <SearchResultBody
+                                                    result={asResult(command)}
+                                                    query=""
+                                                    second={typeof command.detail === 'string' ? undefined : command.detail}
+                                                    detailTone={command.tone}
+                                                />
                                             ) : (
                                                 <>
                                                     {Icon !== undefined && <Icon className="text-muted-foreground" aria-hidden />}
                                                     <span className="truncate">{command.label}</span>
                                                     {hint !== undefined && (
-                                                        <span className="truncate text-xs text-muted-foreground">{hint}</span>
+                                                        <span
+                                                            className={cn(
+                                                                'truncate text-xs',
+                                                                command.tone === undefined
+                                                                    ? 'text-muted-foreground'
+                                                                    : TONE_INK[command.tone],
+                                                            )}
+                                                        >
+                                                            {hint}
+                                                        </span>
                                                     )}
                                                     {command.code !== undefined && (
                                                         <span className="truncate font-mono text-xs text-muted-foreground">
@@ -431,12 +465,12 @@ function rowValue(command: PaletteCommand): string {
 
 /** Whether a command is drawn as a two-line row. */
 function twoLines(command: PaletteCommand): boolean {
-    return command.detail !== undefined || (command.artwork !== undefined && command.artwork !== null)
+    return (command.detail !== undefined && command.detail !== null) || (command.artwork !== undefined && command.artwork !== null)
 }
 
 /** The words a command is found by beyond its label: its keywords and its second line. */
 function findBy(command: PaletteCommand): string[] | undefined {
-    const words = [...(command.keywords ?? []), ...(command.detail === undefined ? [] : [command.detail])]
+    const words = [...(command.keywords ?? []), ...(typeof command.detail === 'string' ? [command.detail] : [])]
     return words.length === 0 ? undefined : words
 }
 
@@ -451,7 +485,7 @@ function asResult(command: PaletteCommand): SearchResult {
     return {
         id: command.id,
         title: command.label,
-        detail: command.detail,
+        detail: typeof command.detail === 'string' ? command.detail : undefined,
         meta: hintOf(command) ?? command.code,
         icon: command.icon,
         round: command.round,
