@@ -413,8 +413,8 @@ export async function layoutGraph(
 /**
  * A graph running down whose ranks are too wide, its wide ranks cut into rows: each rank holds at
  * most as many nodes as fit across the limit, the rest moved to ranks of their own under it, where
- * a long chain running right is cut into rows. The bound is stepped down while the drawing, its
- * edges included, is still too wide. Given a room, the cut is kept only when it fits the room at
+ * a long chain running right is cut into rows, each row centered under the one above. The bound
+ * is stepped down while the drawing, its edges included, is still too wide. Given a room, the cut is kept only when it fits the room at
  * a larger zoom than the graph whole, so a cut that only adds height is not.
  */
 async function narrowed(shape: GraphShape, style: GraphLayoutStyle, using: ElkEngine, flat: PlacedGraph): Promise<PlacedGraph> {
@@ -431,6 +431,8 @@ async function narrowed(shape: GraphShape, style: GraphLayoutStyle, using: ElkEn
                     ...graph.layoutOptions,
                     'elk.layered.layering.strategy': 'COFFMAN_GRAHAM',
                     'elk.layered.layering.coffmanGraham.layerBound': String(bound),
+                    // Each row stands centered under the one above, rather than shifted aside to keep edges straight.
+                    'elk.layered.nodePlacement.strategy': 'SIMPLE',
                 },
             }),
         )

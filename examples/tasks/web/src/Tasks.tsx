@@ -190,7 +190,7 @@ function columns(now: Date, save: (task: Task, patch: Patch) => Promise<void>, w
         {
             id: 'due',
             header: 'Due',
-            width: '8rem',
+            width: '9.5rem',
             cell: (task) => <DueText date={task.due === null ? undefined : dateOf(task.due)} now={now} done={isDone(task)} />,
             sortValue: (task) => task.due ?? '9999',
             edit: {
