@@ -42,7 +42,8 @@ describe('ChartLegend', () => {
 
     it('loads the table only for table mode, so a list carries none of it', () => {
         expect(imported('ChartLegend.tsx')).not.toContain('@winterop-com/sokkel-ui/DataTable')
-        expect(source('ChartLegend.tsx')).toContain("import('@winterop-com/sokkel-ui/DataTable')")
+        expect(source('ChartLegend.tsx')).toContain("import('./legend-table')")
+        expect(imported('legend-table.tsx')).toContain('@winterop-com/sokkel-ui/DataTable')
     })
 })
 

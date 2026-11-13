@@ -154,6 +154,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'kinds/steps': KIND_BUILDER,
         'kinds/stream': KIND_BUILDER,
         'kinds/waterfall': KIND_BUILDER,
+        'legend-table': "a legend's table mode, which `ChartLegend` loads the first time it draws one",
         look: "the theme's colors and sizes a builder reads; `ChartLook` is exported by `EChart`",
         scales: 'the scales the kinds share',
         shapes: 'rows shaped for the kinds',

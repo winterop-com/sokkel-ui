@@ -1,15 +1,11 @@
-import { Suspense, lazy, type ReactNode } from 'react'
+import { Suspense, lazy } from 'react'
 
-import type { DataColumn, DataTableProps } from '@winterop-com/sokkel-ui/DataTable'
+import type { DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { useLegendEntries, type LegendEntries } from './chart-legend'
 
 // The table mode's table loads the first time a legend is drawn as one, so a list carries none of it.
-const LegendTable = lazy(() =>
-    import('@winterop-com/sokkel-ui/DataTable').then((module) => ({
-        default: module.DataTable as (props: DataTableProps<LegendItem>) => ReactNode,
-    })),
-)
+const LegendTable = lazy(() => import('./legend-table').then((module) => ({ default: module.LegendTable })))
 
 /** One series in a legend. `key` is the series' name in the chart. */
 export interface LegendItem {
