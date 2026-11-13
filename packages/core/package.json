@@ -742,6 +742,10 @@
             "types": "./dist/components/calendar/EventPopover.d.ts",
             "import": "./dist/components/calendar/EventPopover.js"
         },
+        "./calendar/event-change": {
+            "types": "./dist/components/calendar/event-change.d.ts",
+            "import": "./dist/components/calendar/event-change.js"
+        },
         "./calendar/events": {
             "types": "./dist/components/calendar/events.d.ts",
             "import": "./dist/components/calendar/events.js"

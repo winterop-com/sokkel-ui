@@ -1,5 +1,5 @@
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover'
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useState, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { cssPixels } from '../../lib/css-pixels'
@@ -30,6 +30,8 @@ export interface EventPopoverProps<E extends CalendarEvent> {
     style?: CSSProperties
     children: ReactNode
     side?: 'right' | 'bottom' | 'left' | 'top'
+    /** What the event's control spreads besides, such as its drag and its keys. */
+    trigger?: HTMLAttributes<HTMLElement> & { ref?: (element: HTMLElement | null) => void; 'data-event-id'?: string }
 }
 
 /**
@@ -47,6 +49,7 @@ export function EventPopover<E extends CalendarEvent>({
     style,
     children,
     side = 'right',
+    trigger,
 }: EventPopoverProps<E>) {
     const face = cn(
         'outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid',
@@ -54,14 +57,20 @@ export function EventPopover<E extends CalendarEvent>({
     )
     if (detail === undefined) {
         return (
-            <button type="button" className={face} style={style} onClick={() => onSelect?.(event)}>
+            <button {...trigger} type="button" className={face} style={style} onClick={() => onSelect?.(event)}>
                 {children}
             </button>
         )
     }
     return (
         <PopoverPrimitive.Root open={open} onOpenChange={onOpenChange}>
-            <PopoverPrimitive.Trigger data-open={open || undefined} className={face} style={style} onClick={() => onSelect?.(event)}>
+            <PopoverPrimitive.Trigger
+                {...trigger}
+                data-open={open || undefined}
+                className={face}
+                style={style}
+                onClick={() => onSelect?.(event)}
+            >
                 {children}
             </PopoverPrimitive.Trigger>
             <PopoverContent
