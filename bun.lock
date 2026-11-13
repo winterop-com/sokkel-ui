@@ -76,7 +76,7 @@
     },
     "packages/charts": {
       "name": "@winterop-com/sokkel-ui-charts",
-      "version": "0.22.5",
+      "version": "0.22.6",
       "dependencies": {
         "echarts": "^6.1.0",
         "lucide-react": "^1.68.0",
@@ -89,7 +89,7 @@
     },
     "packages/core": {
       "name": "@winterop-com/sokkel-ui",
-      "version": "0.22.5",
+      "version": "0.22.6",
       "dependencies": {
         "@base-ui/react": "^1.9.0",
         "@fontsource-variable/ibm-plex-sans": "^5.3.0",
@@ -174,7 +174,7 @@
     },
     "packages/dhis2": {
       "name": "@winterop-com/sokkel-ui-dhis2",
-      "version": "0.22.5",
+      "version": "0.22.6",
       "peerDependencies": {
         "@codemirror/language": "^6.13.1",
         "@winterop-com/sokkel-ui": "workspace:*",
@@ -182,7 +182,7 @@
     },
     "packages/fhir": {
       "name": "@winterop-com/sokkel-ui-fhir",
-      "version": "0.22.5",
+      "version": "0.22.6",
       "peerDependencies": {
         "@codemirror/language": "^6.13.1",
         "@winterop-com/sokkel-ui": "workspace:*",
@@ -190,7 +190,7 @@
     },
     "packages/graph": {
       "name": "@winterop-com/sokkel-ui-graph",
-      "version": "0.22.5",
+      "version": "0.22.6",
       "dependencies": {
         "@xyflow/react": "^12.12.1",
         "elkjs": "^0.12.1",
@@ -204,7 +204,7 @@
     },
     "packages/maps": {
       "name": "@winterop-com/sokkel-ui-maps",
-      "version": "0.22.5",
+      "version": "0.22.6",
       "dependencies": {
         "@types/geojson": "^7946.0.16",
         "lucide-react": "^1.68.0",
@@ -222,7 +222,7 @@
     },
     "packages/media": {
       "name": "@winterop-com/sokkel-ui-media",
-      "version": "0.22.5",
+      "version": "0.22.6",
       "dependencies": {
         "lucide-react": "^1.68.0",
       },
@@ -238,7 +238,7 @@
     },
     "packages/terminal": {
       "name": "@winterop-com/sokkel-ui-terminal",
-      "version": "0.22.5",
+      "version": "0.22.6",
       "dependencies": {
         "@xterm/addon-fit": "0.11.0",
         "@xterm/addon-web-links": "0.12.0",
