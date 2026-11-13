@@ -1,0 +1,39 @@
+{
+    "$description": "The sokkel-design contract: its version, the foundations every part refers to, and every part and pattern. Draft for judging the format.",
+    "contract": "0.1.0",
+    "tokens": {
+        "source": "tokens/tokens.json",
+        "resolved": "tokens/tokens.resolved.json",
+        "today": {
+            "source": "sokkel-ui: packages/core/tokens/tokens.json",
+            "resolved": "sokkel-ui-egui: crates/core/tokens/tokens.resolved.json"
+        },
+        "cssOnly": ["scrollbar", "density.page-inset"]
+    },
+    "units": "Lengths in px: 1rem = 16px = 1 egui point at scale 1.",
+    "breakpoints": {
+        "md": {
+            "px": 768,
+            "means": "Below it a window is a phone or a foldable: finger-sized targets, the rail as a drawer, dialogs as full-screen sheets."
+        },
+        "lg": {"px": 1024, "means": "From it the shell's side panel is a column; below it the panel is a sheet."}
+    },
+    "finger": "spacing-finger",
+    "checkWidths": {
+        "foldable folded": 344,
+        "phone": [360, 390, 430],
+        "foldable open": 690,
+        "tablet": [768, 1024],
+        "desktop": [1280, 1440, 1920]
+    },
+    "themes": {"base": "tidevann", "specimens": ["tidevann", "paper", "contrast"]},
+    "densities": ["regular", "compact"],
+    "parts": [
+        {"id": "button", "file": "parts/button.json", "status": "draft"},
+        {"id": "text-field", "file": "parts/text-field.json", "status": "draft"},
+        {"id": "table", "file": "parts/table.json", "status": "draft"}
+    ],
+    "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "draft"}],
+    "principles": "principles.md",
+    "specimens": "specimens.json"
+}

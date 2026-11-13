@@ -155,7 +155,8 @@ export interface CommandPaletteWords {
     sequence?: string
 }
 
-const WORDS: CommandPaletteWords = {
+/** The palette's own words in English; a palette with words of its own starts from these. */
+export const COMMAND_PALETTE_WORDS: CommandPaletteWords = {
     placeholder: 'Search or run a command',
     empty: 'No command matches.',
     title: 'Command palette',
@@ -255,7 +256,7 @@ export function CommandPalette({
     className,
     words: given,
 }: CommandPaletteProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...COMMAND_PALETTE_WORDS, ...given }
     const merged = useMemo(() => mergeCommands(groups), [groups])
     const [query, setQuery] = useState(defaultQuery)
     // Each opening starts from `defaultQuery`, not from what was typed the last time it was open.

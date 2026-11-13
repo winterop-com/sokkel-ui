@@ -53,6 +53,9 @@ and ask before acting.
       music and video app parts; what a core part plays through (`AudioPlayer`, `VideoPlayer`, the
       controls and `SoundVisualizer`) stays in the core. `src/rules.test.ts` holds those lines, and a new
       domain package is one more name in `DOMAIN_ADDONS` in `scripts/components-index.ts`.
+- A part with a spec in `design/` (the pinned copy of sokkel-design) matches it: `src/parts.test.ts`
+  checks its words, options, sizes, paints and keys. Changing what a spec covers is a sokkel-design
+  PR first, then `bun run design --ref <ref>` to move the pin; `design/` is never edited by hand.
 - `packages/core/tokens/tokens.json` is the only place a token is defined. Run `bun run tokens`
   after editing it; `tokens.css`, `themes.css` and the theme files in `themes/`, all under
   `packages/core/src/styles/`, are generated and never edited by hand.

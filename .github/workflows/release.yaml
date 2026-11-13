@@ -34,6 +34,8 @@ jobs:
             - run: bun run test
             - run: bun scripts/build-tokens.ts --check
             - run: bun run components -- --check
+            # The pinned copy of the sokkel-design contract that src/parts.test.ts reads; skipped when GitHub cannot be reached.
+            - run: bun run design --check
             - run: bun run build
             # The size budgets, as CI checks them: a release never ships over budget while main is red on it.
             - run: bun run size

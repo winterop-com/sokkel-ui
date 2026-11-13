@@ -69,7 +69,8 @@ export interface TopBarWords {
     trail: string
 }
 
-const WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palette', trail: 'Where you are' }
+/** The top bar's own words in English; a bar with words of its own starts from these. */
+export const TOP_BAR_WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palette', trail: 'Where you are' }
 
 /**
  * What the shell's top bar holds: a search field and the trail to the current screen at the left,
@@ -93,7 +94,7 @@ export function TopBar({
     actions,
     words: given,
 }: TopBarProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...TOP_BAR_WORDS, ...given }
     const stated = useContext(ShellTrail)
     const trail = stated?.trail ?? ownTrail
     const trailEnds = stated === undefined ? ownEnds : (stated.ends ?? 'current')

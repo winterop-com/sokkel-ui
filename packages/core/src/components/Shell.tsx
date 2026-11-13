@@ -306,7 +306,7 @@ export function Shell({
     children,
     words: given,
 }: ShellProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...SHELL_WORDS, ...given }
     // What screens ask of the rail while they are mounted, the latest last.
     const [railAsks, setRailAsks] = useState<readonly { id: string; mode: RailMode }[]>([])
     const askRail = useCallback((id: string, mode: RailMode) => {
@@ -729,7 +729,8 @@ export interface ShellWords {
     openShortcuts: string
 }
 
-const WORDS: ShellWords = {
+/** The shell's own words in English; a shell with words of its own starts from these. */
+export const SHELL_WORDS: ShellWords = {
     menu: 'Open the navigation',
     close: 'Close the navigation',
     showPanel: 'Show the panel',

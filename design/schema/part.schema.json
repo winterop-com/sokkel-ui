@@ -1,0 +1,275 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "sokkel-design/part.schema.json",
+    "title": "A sokkel-design part or pattern",
+    "description": "One part (button, text-field, table) or pattern (shell), in its authoring form. Token names are resolved names, and each key takes one kind of name: color keys take color names, length keys take length or density names, text keys take text roles, radius keys take radius names. `check` verifies that each name is in its group in tokens.resolved.json (or, while a sokkel-ui change adds it, in index.json's optional tokens.landing) and that every state painted is a state listed. The resolver turns every color expression here into plain colors in the resolved output's `paints`, which is what renderers read (see paints.schema.json).",
+    "type": "object",
+    "required": ["id", "kind", "status", "summary", "sources", "anatomy", "states", "keyboard", "words"],
+    "additionalProperties": false,
+    "properties": {
+        "$schema": {"type": "string"},
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "kind": {"enum": ["part", "pattern"]},
+        "status": {"enum": ["draft", "stable"]},
+        "summary": {"type": "string"},
+        "sources": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {"sokkel-ui": {"$ref": "#/$defs/paths"}, "sokkel-ui-egui": {"$ref": "#/$defs/paths"}}
+        },
+        "anatomy": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string"}},
+        "options": {"type": "object", "additionalProperties": {"$ref": "#/$defs/option"}},
+        "sizes": {"type": "object", "additionalProperties": {"$ref": "#/$defs/size"}},
+        "layout": {
+            "type": "object",
+            "additionalProperties": {
+                "oneOf": [
+                    {"$ref": "#/$defs/length"},
+                    {
+                        "type": "object",
+                        "required": ["value"],
+                        "additionalProperties": false,
+                        "properties": {"value": {"$ref": "#/$defs/length"}, "note": {"type": "string"}}
+                    }
+                ]
+            }
+        },
+        "states": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {"$ref": "#/$defs/stateKey"},
+            "additionalProperties": {"$ref": "#/$defs/state"}
+        },
+        "variants": {"type": "object", "additionalProperties": {"$ref": "#/$defs/paintMap"}},
+        "pieces": {"type": "object", "additionalProperties": {"$ref": "#/$defs/paintMap"}},
+        "breakpoints": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "required": ["width", "does"],
+                "additionalProperties": false,
+                "properties": {
+                    "width": {"type": "string", "pattern": "^(below|from) [0-9]+$"},
+                    "formFactors": {"type": "array", "items": {"type": "string"}},
+                    "does": {"type": "array", "items": {"type": "string"}}
+                }
+            }
+        },
+        "routes": {"type": "object", "additionalProperties": {"type": "string"}},
+        "keyboard": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["keys", "does"],
+                "additionalProperties": false,
+                "properties": {
+                    "keys": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "does": {"type": "string"},
+                    "when": {"type": "string"}
+                }
+            }
+        },
+        "words": {"type": "object", "additionalProperties": {"$ref": "#/$defs/words"}},
+        "appText": {"type": "object", "additionalProperties": {"type": "string"}},
+        "rendererSpecific": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "sokkel-ui": {"type": "array", "items": {"type": "string"}},
+                "sokkel-ui-egui": {"type": "array", "items": {"type": "string"}}
+            }
+        },
+        "drift": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["renderer", "what", "spec", "today"],
+                "additionalProperties": false,
+                "properties": {
+                    "renderer": {"enum": ["sokkel-ui", "sokkel-ui-egui"]},
+                    "what": {"type": "string"},
+                    "spec": {"type": "string"},
+                    "today": {"type": "string"}
+                }
+            }
+        }
+    },
+    "$defs": {
+        "paths": {"type": "array", "items": {"type": "string"}},
+        "colorName": {
+            "$comment": "A color token's resolved name (primary, critical-ink, table-zebra). Never a text role or a density name: no dot.",
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "colorRef": {
+            "$comment": "The authoring form of a color, for color keys only: `name`, `name/NN` (at NN percent alpha), `a|b` (parts token a, else b where a theme leaves a currentcolor), `mix(a, b NN%)` in oklch, `mix-oklab(a NN%, b)` in oklab, `none`, `inherit`. Every name is a colorName. Renderers never evaluate it: they read the resolved paints.",
+            "type": "string",
+            "pattern": "^(none|inherit|[a-z][a-z0-9-]*(/[0-9]{1,3})?(\\|[a-z][a-z0-9-]*)?|mix\\([a-z][a-z0-9-]*, [a-z][a-z0-9-]* [0-9]{1,3}%\\)|mix-oklab\\([a-z][a-z0-9-]* [0-9]{1,3}%, [a-z][a-z0-9-]*\\))$"
+        },
+        "lengthName": {
+            "$comment": "For length keys only: a length token's resolved name (spacing-finger, table-head-size) or a density level's length (density.row, density.control). Never a text role.",
+            "type": "string",
+            "pattern": "^(density\\.[a-z][a-z0-9-]*|[a-z][a-z0-9-]*)$"
+        },
+        "radiusName": {
+            "$comment": "For radius keys only: a corner role (radius-control, radius-surface, radius-md).",
+            "type": "string",
+            "pattern": "^radius(-[a-z0-9]+)*$"
+        },
+        "textRole": {
+            "$comment": "For text keys only: a text role (text.body, text.action), which carries size, line height, weight and tracking.",
+            "type": "string",
+            "pattern": "^text\\.[a-z][a-z-]*$"
+        },
+        "length": {
+            "oneOf": [
+                {"type": "number"},
+                {"$ref": "#/$defs/lengthName"},
+                {
+                    "type": "object",
+                    "required": ["regular", "compact"],
+                    "additionalProperties": false,
+                    "properties": {"regular": {"type": "number"}, "compact": {"type": "number"}}
+                }
+            ]
+        },
+        "stateKey": {
+            "$comment": "A state, or states joined by + for their combination (invalid+focus); each joined state is a state of its own.",
+            "type": "string",
+            "pattern": "^[a-zA-Z]+(\\+[a-zA-Z]+)*$"
+        },
+        "option": {
+            "type": "object",
+            "required": ["does"],
+            "additionalProperties": false,
+            "properties": {
+                "type": {"enum": ["boolean", "text", "number", "node", "length", "callback", "rows", "columns"]},
+                "values": {"type": "array", "items": {"type": "string"}},
+                "default": {},
+                "does": {"type": "string"},
+                "context": {
+                    "type": "string",
+                    "description": "The CSS context this option stands for in sokkel-ui, where the web takes it from context."
+                },
+                "sokkel-ui": {"type": "string", "description": "The prop or mechanism in sokkel-ui."}
+            }
+        },
+        "size": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "height": {"$ref": "#/$defs/length"},
+                "width": {"$ref": "#/$defs/length"},
+                "padX": {"$ref": "#/$defs/length"},
+                "padXWithIcon": {"$ref": "#/$defs/length"},
+                "padY": {"$ref": "#/$defs/length"},
+                "gap": {"$ref": "#/$defs/length"},
+                "icon": {"$ref": "#/$defs/length"},
+                "text": {"$ref": "#/$defs/textRole"},
+                "textBelowMd": {"type": "number"},
+                "radius": {"$ref": "#/$defs/radiusName"},
+                "radiusMax": {"type": "number"},
+                "phoneMinHeight": {"oneOf": [{"$ref": "#/$defs/lengthName"}, {"type": "null"}]},
+                "phoneMinWidth": {"oneOf": [{"$ref": "#/$defs/lengthName"}, {"type": "null"}]},
+                "phoneHitArea": {
+                    "oneOf": [{"$ref": "#/$defs/lengthName"}, {"type": "null"}],
+                    "description": "Below md: a hit area this square, centered on the part, which keeps its drawn size."
+                },
+                "note": {"type": "string"}
+            }
+        },
+        "ring": {
+            "type": "object",
+            "required": ["color", "width"],
+            "additionalProperties": false,
+            "properties": {
+                "color": {"$ref": "#/$defs/colorRef"},
+                "width": {"type": "number"},
+                "offset": {"type": "number"},
+                "inset": {
+                    "enum": ["start", "all"],
+                    "description": "Drawn inside the box, along the start edge or all round, rather than outside it."
+                },
+                "dark": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["color"],
+                    "properties": {"color": {"$ref": "#/$defs/colorRef"}}
+                }
+            }
+        },
+        "effect": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "piece": {
+                    "type": "string",
+                    "description": "The anatomy piece the effect is drawn on; the whole part when left out."
+                },
+                "opacity": {"type": "number"},
+                "offsetY": {"type": "number"},
+                "ring": {"$ref": "#/$defs/ring"},
+                "focusable": {"type": "boolean"},
+                "presses": {"type": "boolean"},
+                "cursor": {"type": "string"}
+            }
+        },
+        "state": {
+            "type": "object",
+            "required": ["means"],
+            "additionalProperties": false,
+            "properties": {
+                "means": {"type": "string"},
+                "reached": {"type": "string"},
+                "on": {
+                    "enum": ["keyboard", "any"],
+                    "description": "For a focus state: keyboard focus only (a renderer tracks the last input kind) or any focus."
+                },
+                "effect": {"$ref": "#/$defs/effect"},
+                "status": {
+                    "enum": ["today", "proposed"],
+                    "description": "today: what sokkel-ui does now; proposed: in the spec, not in sokkel-ui yet."
+                },
+                "sokkel-ui": {"type": "string"}
+            }
+        },
+        "paint": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ground": {"$ref": "#/$defs/colorRef"},
+                "edge": {"$ref": "#/$defs/colorRef"},
+                "ink": {"$ref": "#/$defs/colorRef"},
+                "rule": {"$ref": "#/$defs/colorRef"},
+                "mark": {"$ref": "#/$defs/colorRef"},
+                "placeholder": {"$ref": "#/$defs/colorRef"},
+                "ring": {"$ref": "#/$defs/ring"},
+                "text": {"$ref": "#/$defs/textRole"},
+                "weight": {"type": "number"},
+                "radius": {"$ref": "#/$defs/radiusName"},
+                "opacity": {"type": "number"},
+                "underline": {"type": "boolean"},
+                "note": {"type": "string"},
+                "dark": {"$ref": "#/$defs/paint"}
+            }
+        },
+        "paintMap": {
+            "description": "stateKey -> paint, for one variant or one piece. A state left out paints as rest.",
+            "type": "object",
+            "required": ["rest"],
+            "propertyNames": {"$ref": "#/$defs/stateKey"},
+            "additionalProperties": {"$ref": "#/$defs/paint"}
+        },
+        "words": {
+            "oneOf": [
+                {"type": "string"},
+                {
+                    "type": "object",
+                    "required": ["one", "other"],
+                    "additionalProperties": false,
+                    "properties": {"one": {"type": "string"}, "other": {"type": "string"}}
+                }
+            ]
+        }
+    }
+}

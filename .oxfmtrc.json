@@ -15,6 +15,7 @@
         "storybook-static",
         "components.json",
         "docs/components.md",
+        "design",
         "packages/core/src/styles/tokens.css",
         "e2e/__screenshots__",
         "e2e/tiles",
