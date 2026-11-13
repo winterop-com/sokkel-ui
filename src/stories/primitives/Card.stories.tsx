@@ -57,9 +57,9 @@ export const Variants: StoryObj = {
                     </Card>
                 </Stack>
                 <Stack gap="sm">
-                    <Caption>header with a bottom border</Caption>
+                    <Caption>header as a bar</Caption>
                     <Card>
-                        <CardHeader className="border-b">
+                        <CardHeader bar>
                             <CardTitle>Schedule</CardTitle>
                             <CardDescription>When the job runs.</CardDescription>
                         </CardHeader>

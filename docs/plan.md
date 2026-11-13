@@ -565,7 +565,12 @@ switch. A button whose press is under way takes `busy`: a `Spinner` in place of 
 (an icon-only button's icon), or before a label with none, the label kept, and the button shut
 (`aria-busy`, `aria-disabled`) while it keeps its focus and its look. `IconButton`'s `tooltip` says a longer sentence than its name, `shortcut` draws the key
 that does the same as a `Kbd` in the tooltip, and `destructive` tints it in the critical tone under
-the pointer. `SplitButton` joins the main action to a menu of other ways, its main half named apart
+the pointer, as `destructiveHover` does any `Button`. `PointMenu` opens a menu at a point rather than
+from a trigger, such as where a right click landed, its rows given as data with an optional head in
+the code face. A menu is as wide as its longest row, never under its trigger's width nor wider than
+the screen, and a menu holding checks keeps their marks in a gutter at the start that its plain rows
+step past. On a phone menu, command and combobox rows and tabs are a finger tall, and a menu's or
+tooltip's trigger drawn bare takes a finger-sized hit area without growing. `SplitButton` joins the main action to a menu of other ways, its main half named apart
 from a short face by `label` and `title`; `DownloadButton` goes from
 idle through n of m (or a share, for bytes) on a `ProgressRing`, with a cancel and, when the app can
 hold one, a pause and a resume, to kept, its state held by the app.
@@ -930,7 +935,8 @@ to connect, Delete to remove, boxes to drag, a menu on right-click and a connect
 empty ground, each reported to the app, which owns the graph. Views select only by default.
 An editor also refuses a connection with the reason said on the canvas, adds a step from the add
 button at a node's output or an edge's middle, takes blocks dragged in from a palette, and chooses
-several nodes with Shift. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
+several nodes with Shift. Any canvas, editable or not, takes `nodeMenu` and `paneMenu`, the rows of
+the menu a right click on a box or the ground opens, drawn as a `PointMenu`. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
 useGraphHistory are its parts; the Pipeline editor stories show each way of building a pipeline.
 NetworkGraph draws things linked with no direction to read, such as notes: a dot each in its group's
 color, larger the more links it has, its name under it, straight lines between them, laid out by

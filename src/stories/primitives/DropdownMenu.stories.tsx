@@ -202,7 +202,45 @@ function Submenus() {
     )
 }
 
+/**
+ * A view menu mixing plain rows, a label, checks and a radio group: the indicators stand in a gutter
+ * at the start, and every row's words start at one edge past it.
+ */
+function ViewMenu() {
+    const [shown, setShown] = useState<string[]>(['duration', 'owner'])
+    const [order, setOrder] = useState('newest')
+    const toggle = (column: string) =>
+        setShown((current) => (current.includes(column) ? current.filter((each) => each !== column) : [...current, column]))
+    return (
+        <DropdownMenu defaultOpen>
+            <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>View</DropdownMenuTrigger>
+            <DropdownMenuContent>
+                <DropdownMenuGroup>
+                    <DropdownMenuLabel>Columns</DropdownMenuLabel>
+                    {['duration', 'owner', 'started'].map((column) => (
+                        <DropdownMenuCheckboxItem key={column} checked={shown.includes(column)} onCheckedChange={() => toggle(column)}>
+                            {column}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <DropdownMenuLabel>Order</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup value={order} onValueChange={setOrder}>
+                        <DropdownMenuRadioItem value="newest">Newest first</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="oldest">Oldest first</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Reset the view to the columns every listing starts with</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
 export const Trigger: StoryObj = { render: () => <Closed /> }
 export const Nested: StoryObj = { name: 'Submenus', render: () => <Submenus /> }
 export const Items: StoryObj = { render: () => <Variants /> }
+/** Checks and plain rows in one menu, as wide as its longest row and never wider than the screen. */
+export const Checks: StoryObj = { render: () => <ViewMenu /> }
 export const RowActions: StoryObj = { render: () => <JobActions /> }

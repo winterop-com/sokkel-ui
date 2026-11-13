@@ -154,6 +154,23 @@ export const Reason: StoryObj = {
     ),
 }
 
+/** `destructiveHover` on each quiet variant: the button stays quiet until pointed at, then takes the critical tint. */
+export const DestructiveHover: StoryObj = {
+    name: 'Destructive hover',
+    render: () => (
+        <Row gap="md" align="stretch" wrap>
+            {(['outline', 'secondary', 'ghost'] as const).map((variant) => (
+                <Specimen key={variant} label={variant}>
+                    <Button variant={variant} destructiveHover>
+                        <Trash2 data-icon="inline-start" />
+                        Delete
+                    </Button>
+                </Specimen>
+            ))}
+        </Row>
+    ),
+}
+
 export const RunActions: StoryObj = {
     render: () => (
         <Stack gap="lg" className="rounded-lg border border-border p-4">

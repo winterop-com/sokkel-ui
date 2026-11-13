@@ -17,6 +17,9 @@ export default meta
 /** A question with one answer, and no body. */
 export const Confirm: StoryObj = { render: () => <danger.ConfirmDelete /> }
 
+/** The question names the job in the code face: `question` takes any node, here an `InlineCode`. */
+export const ConfirmNamed: StoryObj = { name: 'Confirm named', render: () => <danger.ConfirmNamed /> }
+
 /** The answer refused by the server, said in one line above the answers (`status`, a `ProblemLine`). */
 export const ConfirmRefused: StoryObj = { name: 'Confirm refused', render: () => <danger.ConfirmRefused /> }
 

@@ -1,5 +1,6 @@
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
 
+import { FINGER_HIT } from '../../lib/finger'
 import { cn } from '../../lib/utils'
 
 export type TooltipProviderProps = TooltipPrimitive.Provider.Props
@@ -16,8 +17,10 @@ function Tooltip({ ...props }: TooltipProps) {
 
 export type TooltipTriggerProps = TooltipPrimitive.Trigger.Props
 
-function TooltipTrigger({ ...props }: TooltipTriggerProps) {
-    return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+/** A trigger the tooltip draws itself, given no `render`, takes a finger-sized hit area on a phone. */
+function TooltipTrigger({ className, ...props }: TooltipTriggerProps) {
+    const own = props.render === undefined && typeof className !== 'function'
+    return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" className={own ? cn(FINGER_HIT, className) : className} {...props} />
 }
 
 export type TooltipContentProps = TooltipPrimitive.Popup.Props &

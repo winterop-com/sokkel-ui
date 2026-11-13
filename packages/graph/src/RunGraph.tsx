@@ -121,6 +121,8 @@ export function RunGraph({
     narrowFit,
     tallFit,
     onControls,
+    nodeMenu,
+    paneMenu,
     fillFloor,
     wrapToCanvas,
     controls,
@@ -194,6 +196,8 @@ export function RunGraph({
             narrowFit={narrowFit}
             tallFit={tallFit}
             onControls={onControls}
+            nodeMenu={nodeMenu}
+            paneMenu={paneMenu}
             fillFloor={fillFloor}
             controls={controls}
             fitMinZoom={fitMinZoom}

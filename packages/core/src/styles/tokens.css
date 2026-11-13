@@ -86,6 +86,7 @@
     --radius-mini: calc(var(--radius) - 2px);
     --radius-chip: calc(var(--radius) - 2px);
     --radius-control: var(--control-radius);
+    --radius-thumb: max(0px, calc(var(--control-radius) - 1px));
     --radius-node: var(--radius);
     --radius-surface: var(--surface-radius);
     --radius-sm: calc(var(--radius) - 1px);

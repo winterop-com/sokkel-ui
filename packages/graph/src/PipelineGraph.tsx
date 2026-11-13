@@ -78,6 +78,8 @@ export function PipelineGraph({
     narrowFit,
     tallFit,
     onControls,
+    nodeMenu,
+    paneMenu,
     fillFloor,
     wrapToCanvas,
     wrapWidth,
@@ -128,6 +130,8 @@ export function PipelineGraph({
             narrowFit={narrowFit}
             tallFit={tallFit}
             onControls={onControls}
+            nodeMenu={nodeMenu}
+            paneMenu={paneMenu}
             fillFloor={fillFloor}
             fitMinZoom={fitMinZoom}
             layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}|${String(wrapToCanvas)}`}

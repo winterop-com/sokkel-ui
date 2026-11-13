@@ -145,6 +145,8 @@ export function NetworkGraph({
     narrowFit,
     tallFit,
     onControls,
+    nodeMenu,
+    paneMenu,
     fillFloor,
     controls,
     words,
@@ -252,6 +254,8 @@ export function NetworkGraph({
                 narrowFit={narrowFit}
                 tallFit={tallFit}
                 onControls={onControls}
+                nodeMenu={nodeMenu}
+                paneMenu={paneMenu}
                 fillFloor={fillFloor}
                 controls={controls}
                 onSelect={onSelect}

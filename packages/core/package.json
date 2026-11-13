@@ -434,6 +434,10 @@
             "types": "./dist/components/PersonRow.d.ts",
             "import": "./dist/components/PersonRow.js"
         },
+        "./PointMenu": {
+            "types": "./dist/components/PointMenu.d.ts",
+            "import": "./dist/components/PointMenu.js"
+        },
         "./Problem": {
             "types": "./dist/components/Problem.d.ts",
             "import": "./dist/components/Problem.js"

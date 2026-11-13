@@ -79,6 +79,8 @@ export function StateMachine({
     narrowFit,
     tallFit,
     onControls,
+    nodeMenu,
+    paneMenu,
     fillFloor,
     wrapToCanvas,
     controls,
@@ -135,6 +137,8 @@ export function StateMachine({
             narrowFit={narrowFit}
             tallFit={tallFit}
             onControls={onControls}
+            nodeMenu={nodeMenu}
+            paneMenu={paneMenu}
             fillFloor={fillFloor}
             onSize={wrapToCanvas === true ? setSize : undefined}
             controls={controls}

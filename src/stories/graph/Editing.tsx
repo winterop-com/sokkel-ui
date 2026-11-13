@@ -1,23 +1,13 @@
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useState } from 'react'
 
-import type { GraphControls, GraphPointer } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
+import { Plus, Trash2 } from 'lucide-react'
+
+import type { GraphControls } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
 import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Stage } from './Frame'
 import { NIGHTLY_EXPORT } from './data'
-
-/** A step's menu, open at the point the box was right-clicked. */
-interface Menu {
-    step: string
-    at: GraphPointer
-}
-
-/** A point on the screen as the box a menu opens beside. */
-function pointAt(at: GraphPointer) {
-    return { getBoundingClientRect: () => DOMRect.fromRect({ x: at.clientX, y: at.clientY, width: 0, height: 0 }) }
-}
 
 /**
  * The pipeline as an editor with local state: the graph reports each gesture, and this applies it
@@ -27,9 +17,9 @@ export function Editor() {
     const [steps, setSteps] = useState<PipelineStep[]>(NIGHTLY_EXPORT)
     const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({})
     const [selected, setSelected] = useState<string | null>('validate')
-    const [menu, setMenu] = useState<Menu | null>(null)
-    const [menuOpen, setMenuOpen] = useState(false)
-    const [said, setSaid] = useState('Drag from a port to connect, select and press Delete to remove, right-click a box for its menu.')
+    const [said, setSaid] = useState(
+        'Drag from a port to connect, select and press Delete to remove, right-click a box or the ground for its menu.',
+    )
     const [added, setAdded] = useState(0)
     const [controls, setControls] = useState<GraphControls | null>(null)
     const chosen = steps.find((step) => step.code === selected)
@@ -57,10 +47,7 @@ export function Editor() {
                     steps={steps}
                     positions={positions}
                     selected={selected}
-                    onSelect={(code) => {
-                        setSelected(code)
-                        setMenuOpen(false)
-                    }}
+                    onSelect={setSelected}
                     words={{ label: 'nightly-export' }}
                     onControls={setControls}
                     editing={{
@@ -87,42 +74,46 @@ export function Editor() {
                             setPositions((held) => ({ ...held, [code]: position }))
                             setSaid(`Moved ${code}.`)
                         },
-                        onNodeMenu: (step, at) => {
-                            setSelected(step)
-                            setMenu({ step, at })
-                            setMenuOpen(true)
-                        },
                         onDrop: (source, at) => add(source, { x: at.x, y: at.y - 22 }),
                     }}
-                />
-                <DropdownMenu
-                    open={menuOpen}
-                    onOpenChange={(open) => {
-                        if (!open) setMenuOpen(false)
+                    nodeMenu={(step) => {
+                        setSelected(step)
+                        return {
+                            head: step,
+                            items: [
+                                {
+                                    id: 'after',
+                                    label: 'Add a step after',
+                                    icon: <Plus />,
+                                    onSelect: () => {
+                                        // The new step stands to the right of the box it follows, read from the canvas.
+                                        const box = controls?.nodeBox(step) ?? null
+                                        add(step, box === null ? undefined : { x: box.x + box.width + 64, y: box.y })
+                                    },
+                                },
+                                { id: 'line', separator: true },
+                                {
+                                    id: 'remove',
+                                    label: 'Remove step',
+                                    icon: <Trash2 />,
+                                    shortcut: 'Del',
+                                    destructive: true,
+                                    onSelect: () => remove(step),
+                                },
+                            ],
+                        }
                     }}
-                >
-                    <DropdownMenuContent anchor={menu === null ? undefined : pointAt(menu.at)} side="bottom" align="start" className="w-44">
-                        <DropdownMenuItem
-                            onClick={() => {
-                                // The new step stands to the right of the box it follows, read from the canvas.
-                                const box = menu === null ? null : (controls?.nodeBox(menu.step) ?? null)
-                                if (menu !== null) add(menu.step, box === null ? undefined : { x: box.x + box.width + 64, y: box.y })
-                                setMenuOpen(false)
-                            }}
-                        >
-                            Add a step after
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => {
-                                if (menu !== null) remove(menu.step)
-                                setMenuOpen(false)
-                            }}
-                        >
-                            Remove step
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                    paneMenu={(at) => ({
+                        items: [
+                            {
+                                id: 'here',
+                                label: 'Add a step here',
+                                icon: <Plus />,
+                                onSelect: () => add(steps.at(-1)?.code ?? 'fetch', { x: at.x, y: at.y }),
+                            },
+                        ],
+                    })}
+                />
             </Fill>
             <Stack as="aside" gap="lg" className="shrink-0 rounded-surface border border-border bg-card p-4 md:w-72">
                 <p className="text-sm text-muted-foreground" aria-live="polite">

@@ -44,7 +44,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 253 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 254 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -96,7 +96,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **AspectRatio** | `@winterop-com/sokkel-ui/primitives/aspect-ratio` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-aspectratio--variants) |
 | **Avatar**, AvatarImage, AvatarFallback, AvatarBadge, AvatarGroup, AvatarGroupCount | `@winterop-com/sokkel-ui/primitives/avatar` | A face or initials; `square` takes the control radius in place of the circle, for an app or an agent rather than a person. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-avatar--variants) |
 | **Badge** | `@winterop-com/sokkel-ui/primitives/badge` | A short value as a chip. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-badge--playground) |
-| **Card**, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter | `@winterop-com/sokkel-ui/primitives/card` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-card--variants) |
+| **Card**, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter | `@winterop-com/sokkel-ui/primitives/card` | A card: a bordered surface on the card's ground, with a header, content and a footer as its slots. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-card--variants) |
 | **Empty**, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent | `@winterop-com/sokkel-ui/primitives/empty` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-empty--variants) |
 | **Item**, ItemGroup, ItemSeparator, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemHeader, ItemFooter | `@winterop-com/sokkel-ui/primitives/item` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-item--variants) |
 | **Progress**, ProgressTrack, ProgressIndicator, ProgressLabel, ProgressValue | `@winterop-com/sokkel-ui/primitives/progress` | A bar of how far something has come. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-progress--variants) |
@@ -324,6 +324,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **ListSkeleton**, Pending | `@winterop-com/sokkel-ui/Loading` | The shape of a list before its rows arrive: rows of uneven length with a short value at the end, or a grid of cards. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **LoadingBar**, PageProgress, LoadingOverlay | `@winterop-com/sokkel-ui/Loaders` | A thin bar for a wait: filled to `value` (0 to 100) when the progress is known, a sliding segment when it is not. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-loading--bars) |
 | **PageState** | `@winterop-com/sokkel-ui/PageState` | The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and the content. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
+| **PointMenu** | `@winterop-com/sokkel-ui/PointMenu` | A menu opened at a point rather than from a trigger: where a right click landed on a canvas, a row or a drawing. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-point-menu--open) |
 | **Problem**, ProblemLine | `@winterop-com/sokkel-ui/Problem` | Something that went wrong, said for a person: what happened in one sentence, then where and what a right value looks like, with machine words marked by backticks drawn in the code face. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **SettingsDialog** | `@winterop-com/sokkel-ui/SettingsDialog` | A large dialog of settings: the navigation on the left, a search over every setting at its top and the sections under their group titles, and the chosen section's rows on the right, which scroll on their own. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-settings--with-nav-bar) |
 | **ShortcutsDialog** | `@winterop-com/sokkel-ui/ShortcutsDialog` | Every keyboard shortcut, grouped, each with its keys drawn as keys: the keys bound with `useShortcuts` (in the nearest `Shell`, or the page's) that have a label, written as this device writes them, then the `groups` given for keys the app answers itself. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-controls--theme) |

@@ -4,6 +4,8 @@ import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
+import { FINGER_HIT } from '../../lib/finger'
+import { cn } from '../../lib/utils'
 import { ContextMenu, ContextMenuTrigger } from './context-menu'
 import { DropdownMenu, DropdownMenuTrigger } from './dropdown-menu'
 
@@ -32,7 +34,7 @@ describe('a menu before Base UI’s menu has loaded', () => {
         ).toBe(
             shape(
                 <BaseMenu.Root>
-                    <BaseMenu.Trigger data-slot="dropdown-menu-trigger" className="tool" aria-label="Job actions">
+                    <BaseMenu.Trigger data-slot="dropdown-menu-trigger" className={cn(FINGER_HIT, 'tool')} aria-label="Job actions">
                         Actions
                     </BaseMenu.Trigger>
                 </BaseMenu.Root>,
@@ -50,7 +52,7 @@ describe('a menu before Base UI’s menu has loaded', () => {
         ).toBe(
             shape(
                 <BaseMenu.Root>
-                    <BaseMenu.Trigger data-slot="dropdown-menu-trigger" disabled>
+                    <BaseMenu.Trigger data-slot="dropdown-menu-trigger" className={FINGER_HIT} disabled>
                         Actions
                     </BaseMenu.Trigger>
                 </BaseMenu.Root>,
