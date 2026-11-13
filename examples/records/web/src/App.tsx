@@ -43,6 +43,7 @@ import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { forwardAll, households, ME, onServerDownChange, probe, receipts, SERVER, serverDown, setServerDown } from './data/backend'
 import { FORMS, KIND } from './data/forms'
 import { FormFill } from './pages/FormFill'
+import { FormLayout } from './pages/FormLayout'
 import { Forms } from './pages/Forms'
 import { Health } from './pages/Health'
 import { Household } from './pages/Household'
@@ -342,7 +343,8 @@ export function App() {
 
     let page: ReactNode
     const [first, second, third, fourth] = route
-    if (first === 'forms' && second !== undefined)
+    if (first === 'forms' && second !== undefined && third === 'layout') page = <FormLayout formId={second} />
+    else if (first === 'forms' && second !== undefined)
         page = (
             <FormFill
                 key={`${second}-${fourth ?? ''}`}

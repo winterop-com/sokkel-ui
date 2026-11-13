@@ -1,8 +1,7 @@
 import { pivot } from '../data'
 import { tooltipMarkup } from '../look'
 import { dayOf } from '../shapes'
-import { written } from './categories'
-import { colorOf, type ChartBuilder } from './spec'
+import { written, colorOf, type ChartBuilder } from './spec'
 
 /**
  * A stream: each series a band flowing along `x`, stacked around a middle line so the whole swells

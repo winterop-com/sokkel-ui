@@ -9,7 +9,9 @@ import { BarGauge } from '@winterop-com/sokkel-ui-charts/dashboard/BarGauge'
 import { BarPanel } from '@winterop-com/sokkel-ui-charts/dashboard/BarPanel'
 import { ChartPanel } from '@winterop-com/sokkel-ui-charts/dashboard/ChartPanel'
 import { ComboPanel, type ComboSeries } from '@winterop-com/sokkel-ui-charts/dashboard/ComboPanel'
-import { DashboardGrid, DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { DashboardArrange, type DashboardLayoutItem, type DashboardWidget } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
+import { DashboardEditActions, useDashboardEdit, type DashboardEdit } from '@winterop-com/sokkel-ui/dashboard/DashboardEdit'
+import { DashboardPanel, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { DashboardRow } from '@winterop-com/sokkel-ui/dashboard/DashboardRow'
 import { GaugePanel } from '@winterop-com/sokkel-ui-charts/dashboard/GaugePanel'
 import { HeatmapPanel } from '@winterop-com/sokkel-ui-charts/dashboard/HeatmapPanel'
@@ -26,6 +28,7 @@ import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
 import { PointLayer } from '@winterop-com/sokkel-ui-maps/PointLayer'
 import { classCounts, colorOf, sequentialScale } from '@winterop-com/sokkel-ui-maps/scale'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
+import { insertItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
@@ -84,7 +87,9 @@ import { TidevannMark } from '../fixtures/TidevannMark'
  * Tidevann's monitoring dashboards in the library's frame, each a screen of panels over seeded
  * metrics that run on from a fixed moment. The range picker narrows what every panel shows, the
  * variables filter them by project, worker or continent, a refresh moves the data on by five
- * minutes, legends hide and emphasize series, and rows fold. The last stories show a board while
+ * minutes, legends hide and emphasize series, and rows fold. Edit arranges a board by drag: each
+ * row's panels move, resize and come off, a row's removed panels wait in its palette to drag back
+ * in, and Done keeps it, Cancel throws it away and Reset puts the board as it comes. The last stories show a board while
  * its panels load and with no data for the range.
  */
 const meta: Meta = { title: 'Apps/Dashboards' }
@@ -207,6 +212,101 @@ function useTimeControls() {
         </>
     )
     return { span, empty: span.end <= span.start, refreshing, controls }
+}
+
+/** One panel a dashboard can show: its key, its name by the grip and in the palette, and its width as it comes. */
+interface PanelSpec {
+    id: string
+    label: string
+    span: PanelSpan
+}
+
+/** A row of a dashboard's panels as it comes, under a heading; one without a title draws its panels with no row around them. */
+interface RowSpec {
+    id: string
+    title?: string
+    panels: readonly PanelSpec[]
+}
+
+/** A panel in its place on an edited dashboard, with the row it stays in. */
+interface Placed extends DashboardLayoutItem {
+    label: string
+    row: string
+}
+
+const panel = (id: string, label: string, span: PanelSpan): PanelSpec => ({ id, label, span })
+const placedOf = (rows: readonly RowSpec[]): Placed[] => rows.flatMap((row) => row.panels.map((one) => ({ ...one, row: row.id })))
+
+/** A dashboard's edit mode over its rows as they come: Done keeps the layout in the story, Cancel throws the edits away, Reset puts the rows back. */
+function useBoardEdit(rows: readonly RowSpec[]) {
+    const [initial] = useState(() => placedOf(rows))
+    const [kept, setKept] = useState(initial)
+    return useDashboardEdit<Placed>({
+        layout: kept,
+        defaultLayout: initial,
+        onSave: setKept,
+        same: (left, right) => left.id === right.id && left.span === right.span && left.row === right.row,
+    })
+}
+
+/**
+ * A dashboard's rows, each arranged on its own while editing: its panels moved, resized and
+ * removed, and the panels it has lost offered in its palette to drag back in. `only` draws just the
+ * rows named, the others keeping their panels, and with `firstOpen` only the first titled row
+ * drawn starts open.
+ */
+function ArrangedRows({
+    rows,
+    edit,
+    panels,
+    only,
+    firstOpen = false,
+    dense,
+}: {
+    rows: readonly RowSpec[]
+    edit: DashboardEdit<Placed>
+    panels: Record<string, ReactNode>
+    only?: readonly string[]
+    firstOpen?: boolean
+    dense?: boolean
+}) {
+    const order = rows.map((row) => row.id)
+    const drawn = only === undefined ? rows : rows.filter((row) => only.includes(row.id))
+    return drawn.map((row) => {
+        const items = edit.layout.filter((item) => item.row === row.id)
+        const here = new Set(items.map((item) => item.id))
+        const palette: DashboardWidget[] = row.panels.filter((one) => !here.has(one.id))
+        const change = (next: Placed[]) => {
+            const others = edit.layout.filter((item) => item.row !== row.id)
+            const at = others.filter((item) => order.indexOf(item.row) < order.indexOf(row.id)).length
+            edit.change([...others.slice(0, at), ...next, ...others.slice(at)])
+        }
+        const arranged = (
+            <DashboardArrange
+                key={`${only?.join() ?? ''}:${row.id}`}
+                layout={items}
+                onLayoutChange={change}
+                renderPanel={(item) => panels[item.id]}
+                label={(item) => item.label}
+                arranging={edit.editing}
+                palette={palette}
+                onAdd={(widget, at) => change(insertItem(items, { ...widget, span: widget.span ?? 'third', row: row.id }, at))}
+                dense={dense ?? row.title !== undefined}
+                className={row.title === undefined ? undefined : 'col-span-full'}
+            />
+        )
+        if (row.title === undefined) return arranged
+        return (
+            <DashboardRow
+                key={`${only?.join() ?? ''}:${row.id}`}
+                title={row.title}
+                count={items.length}
+                defaultOpen={!firstOpen || row === drawn.find((one) => one.title !== undefined)}
+            >
+                {arranged}
+            </DashboardRow>
+        )
+    })
 }
 
 const ALL = 'all'
@@ -399,6 +499,48 @@ const RUN_MENU = (
     </>
 )
 
+const JOB_RUNS_ROWS: RowSpec[] = [
+    {
+        id: 'overview',
+        title: 'Overview',
+        panels: [
+            panel('success', 'Success rate', 'sixth'),
+            panel('runs', 'Runs', 'sixth'),
+            panel('queue', 'Queue depth', 'sixth'),
+            panel('failing', 'Failing now', 'sixth'),
+            panel('p95', 'p95 duration', 'sixth'),
+            panel('workers', 'Workers up', 'sixth'),
+            panel('runs-failures', 'Runs and failures', 'two-thirds'),
+            panel('states', 'Runs by state', 'third'),
+        ],
+    },
+    {
+        id: 'latency',
+        title: 'Latency',
+        panels: [
+            panel('duration', 'Run duration', 'half'),
+            panel('heatmap', 'Duration heatmap', 'half'),
+            panel('histogram', 'Duration distribution', 'third'),
+            panel('by-job', 'Runs by job', 'two-thirds'),
+        ],
+    },
+    {
+        id: 'workers',
+        title: 'Workers',
+        panels: [
+            panel('queue-depth', 'Queue depth by worker', 'third'),
+            panel('load', 'Worker load', 'third'),
+            panel('slots', 'Slots used', 'sixth'),
+            panel('cache', 'Cache hits', 'sixth'),
+        ],
+    },
+    {
+        id: 'runs',
+        title: 'Runs',
+        panels: [panel('health', 'Health', 'third'), panel('latest', 'Latest runs', 'third'), panel('activity', 'Activity', 'third')],
+    },
+]
+
 /**
  * Tidevann's job runs: stat tiles colored by thresholds, runs and failures, runs by state, duration
  * percentiles against the budget, a duration heatmap and histogram, runs by job, the workers' queue
@@ -420,223 +562,258 @@ function JobRuns({ loading = false, empty: none = false }: { loading?: boolean; 
         { kind: 'select', id: 'job', label: 'job', value: job, options: choices(JOBS), onChange: setJob },
         { kind: 'select', id: 'worker', label: 'worker', value: worker, options: choices(WORKERS), onChange: setWorker },
     ]
+    const edit = useBoardEdit(JOB_RUNS_ROWS)
+    const panels: Record<string, ReactNode> = {
+        success: (
+            <StatPanel
+                title="Success rate"
+                value={reading(data.success.now)}
+                unit="%"
+                decimals={1}
+                thresholds={SUCCESS}
+                sparkline={data.success.spark}
+                info="Runs that succeeded, of every run that finished in the range."
+                loading={busy}
+            />
+        ),
+        runs: (
+            <StatPanel
+                title="Runs"
+                value={reading(data.runs.now)}
+                color="chart-2"
+                sparkline={data.runs.spark}
+                delta={data.runs.change}
+                good={data.runs.change?.startsWith('+')}
+                loading={busy}
+            />
+        ),
+        queue: (
+            <StatPanel
+                title="Queue depth"
+                value={reading(data.queue.now)}
+                thresholds={QUEUE_STEPS}
+                sparkline={data.queue.spark}
+                info="Runs waiting for a worker slot, now."
+                loading={busy}
+            />
+        ),
+        failing: (
+            <StatPanel
+                title="Failing now"
+                value={reading(data.failing)}
+                thresholds={NONE_IS_GOOD}
+                colorMode="background"
+                info="Jobs that failed more than one run in twenty in the last hour."
+                loading={busy}
+            />
+        ),
+        p95: (
+            <StatPanel
+                title="p95 duration"
+                value={reading(data.p95.now)}
+                unit="s"
+                decimals={1}
+                thresholds={RUN_SLOW}
+                colorMode="background"
+                sparkline={data.p95.spark}
+                loading={busy}
+            />
+        ),
+        workers: (
+            <StatPanel
+                title="Workers up"
+                value={reading(WORKERS.length)}
+                unit={`/ ${WORKERS.length}`}
+                color="chart-4"
+                colorMode="background"
+                loading={busy}
+            />
+        ),
+        'runs-failures': (
+            <TimeSeriesPanel
+                title="Runs and failures"
+                subtitle="in the range"
+                info="Runs started and runs failed in each step of the range."
+                span="two-thirds"
+                x={data.counts}
+                series={data.runsAndFailures}
+                bodyClassName="h-52"
+                loading={busy}
+                empty={empty}
+                file="runs-and-failures"
+            />
+        ),
+        states: (
+            <BarPanel
+                title="Runs by state"
+                subtitle="stacked"
+                span="third"
+                x={data.bars}
+                series={data.byState}
+                stacked
+                bodyClassName="h-52"
+                loading={busy}
+                empty={empty}
+                file="runs-by-state"
+            />
+        ),
+        duration: (
+            <TimeSeriesPanel
+                title="Run duration"
+                subtitle="percentiles"
+                info="Run duration at the 50th, 90th and 99th percentile. The dashed line is the 30s budget."
+                span="half"
+                x={data.line}
+                series={data.durations}
+                unit="s"
+                format={SECONDS}
+                fill="none"
+                thresholds={RUN_BUDGET}
+                legend="table"
+                loading={busy}
+                empty={empty}
+                file="run-duration"
+            />
+        ),
+        heatmap: (
+            <HeatmapPanel
+                title="Run duration"
+                subtitle="runs per duration bucket"
+                info="Runs started in each step, by how long they took."
+                span="half"
+                x={data.heat}
+                y={DURATION_BUCKETS}
+                cells={data.cells}
+                scale={HEAT_SCALE}
+                bodyClassName="h-72"
+                loading={busy}
+                empty={empty}
+                file="duration-heatmap"
+            />
+        ),
+        histogram: (
+            <BarPanel
+                title="Duration distribution"
+                subtitle="in the range"
+                span="third"
+                x={DURATION_BUCKETS}
+                series={data.histogram}
+                gap="tight"
+                bodyClassName="h-64"
+                loading={busy}
+                empty={empty}
+                file="duration-histogram"
+            />
+        ),
+        'by-job': (
+            <TimeSeriesPanel
+                title="Runs by job"
+                subtitle="stacked"
+                span="two-thirds"
+                x={data.counts}
+                series={data.perJob}
+                stacked
+                legend="table"
+                legendStats={JOB_STATS}
+                bodyClassName="h-44"
+                loading={busy}
+                empty={empty}
+                file="runs-by-job"
+            />
+        ),
+        'queue-depth': (
+            <TimeSeriesPanel
+                title="Queue depth"
+                subtitle="by worker"
+                span="third"
+                x={data.line}
+                series={data.perWorker}
+                step
+                thresholds={QUEUE_LINE}
+                bodyClassName="h-36"
+                loading={busy}
+                empty={empty}
+                file="queue-depth"
+            />
+        ),
+        load: (
+            <BarGauge
+                title="Worker load"
+                subtitle="now"
+                span="third"
+                unit="%"
+                thresholds={LOAD}
+                loading={busy}
+                empty={empty}
+                bars={data.load}
+            />
+        ),
+        slots: (
+            <GaugePanel
+                title="Slots used"
+                value={reading(data.slots)}
+                unit="%"
+                thresholds={LOAD}
+                label="mean"
+                bodyClassName="h-40"
+                loading={busy}
+            />
+        ),
+        cache: (
+            <GaugePanel
+                title="Cache hits"
+                value={reading(data.cache)}
+                min={80}
+                unit="%"
+                decimals={1}
+                thresholds={CACHE}
+                label="fetch"
+                bodyClassName="h-40"
+                loading={busy}
+            />
+        ),
+        health: (
+            <DashboardPanel title="Health" span="third" flush loading={busy}>
+                <CheckList checks={data.health} />
+            </DashboardPanel>
+        ),
+        latest: (
+            <DashboardPanel title="Latest runs" span="third" flush menu={RUN_MENU} loading={busy} empty={empty || data.latest.length === 0}>
+                <DataTable
+                    columns={RUN_COLUMNS}
+                    rows={data.latest}
+                    rowKey={(run) => run.job + run.at}
+                    minWidth="24rem"
+                    framed={false}
+                    className="flex-1"
+                />
+            </DashboardPanel>
+        ),
+        activity: (
+            <DashboardPanel title="Activity" span="third" loading={busy} empty={empty}>
+                <Timeline
+                    events={[
+                        { id: '1', title: 'nightly-export failed at validate', at: '11:45', tone: 'failed' },
+                        { id: '2', title: 'worker-3 queue passed 20', at: '10:10', tone: 'waiting' },
+                        { id: '3', title: 'ada paused send-digest', at: '09:40' },
+                        { id: '4', title: 'grace added the job sync-inventory', at: '08:12' },
+                    ]}
+                />
+            </DashboardPanel>
+        ),
+    }
     return (
         <>
-            <VariablesBar variables={variables} end={controls} />
-            <DashboardRow title="Overview" count={8}>
-                <StatPanel
-                    title="Success rate"
-                    value={reading(data.success.now)}
-                    unit="%"
-                    decimals={1}
-                    thresholds={SUCCESS}
-                    sparkline={data.success.spark}
-                    info="Runs that succeeded, of every run that finished in the range."
-                    loading={busy}
-                />
-                <StatPanel
-                    title="Runs"
-                    value={reading(data.runs.now)}
-                    color="chart-2"
-                    sparkline={data.runs.spark}
-                    delta={data.runs.change}
-                    good={data.runs.change?.startsWith('+')}
-                    loading={busy}
-                />
-                <StatPanel
-                    title="Queue depth"
-                    value={reading(data.queue.now)}
-                    thresholds={QUEUE_STEPS}
-                    sparkline={data.queue.spark}
-                    info="Runs waiting for a worker slot, now."
-                    loading={busy}
-                />
-                <StatPanel
-                    title="Failing now"
-                    value={reading(data.failing)}
-                    thresholds={NONE_IS_GOOD}
-                    colorMode="background"
-                    info="Jobs that failed more than one run in twenty in the last hour."
-                    loading={busy}
-                />
-                <StatPanel
-                    title="p95 duration"
-                    value={reading(data.p95.now)}
-                    unit="s"
-                    decimals={1}
-                    thresholds={RUN_SLOW}
-                    colorMode="background"
-                    sparkline={data.p95.spark}
-                    loading={busy}
-                />
-                <StatPanel
-                    title="Workers up"
-                    value={reading(WORKERS.length)}
-                    unit={`/ ${WORKERS.length}`}
-                    color="chart-4"
-                    colorMode="background"
-                    loading={busy}
-                />
-                <TimeSeriesPanel
-                    title="Runs and failures"
-                    subtitle="in the range"
-                    info="Runs started and runs failed in each step of the range."
-                    span="two-thirds"
-                    x={data.counts}
-                    series={data.runsAndFailures}
-                    bodyClassName="h-52"
-                    loading={busy}
-                    empty={empty}
-                    file="runs-and-failures"
-                />
-                <BarPanel
-                    title="Runs by state"
-                    subtitle="stacked"
-                    span="third"
-                    x={data.bars}
-                    series={data.byState}
-                    stacked
-                    bodyClassName="h-52"
-                    loading={busy}
-                    empty={empty}
-                    file="runs-by-state"
-                />
-            </DashboardRow>
-            <DashboardRow title="Latency" count={4}>
-                <TimeSeriesPanel
-                    title="Run duration"
-                    subtitle="percentiles"
-                    info="Run duration at the 50th, 90th and 99th percentile. The dashed line is the 30s budget."
-                    span="half"
-                    x={data.line}
-                    series={data.durations}
-                    unit="s"
-                    format={SECONDS}
-                    fill="none"
-                    thresholds={RUN_BUDGET}
-                    legend="table"
-                    loading={busy}
-                    empty={empty}
-                    file="run-duration"
-                />
-                <HeatmapPanel
-                    title="Run duration"
-                    subtitle="runs per duration bucket"
-                    info="Runs started in each step, by how long they took."
-                    span="half"
-                    x={data.heat}
-                    y={DURATION_BUCKETS}
-                    cells={data.cells}
-                    scale={HEAT_SCALE}
-                    bodyClassName="h-72"
-                    loading={busy}
-                    empty={empty}
-                    file="duration-heatmap"
-                />
-                <BarPanel
-                    title="Duration distribution"
-                    subtitle="in the range"
-                    span="third"
-                    x={DURATION_BUCKETS}
-                    series={data.histogram}
-                    gap="tight"
-                    bodyClassName="h-64"
-                    loading={busy}
-                    empty={empty}
-                    file="duration-histogram"
-                />
-                <TimeSeriesPanel
-                    title="Runs by job"
-                    subtitle="stacked"
-                    span="two-thirds"
-                    x={data.counts}
-                    series={data.perJob}
-                    stacked
-                    legend="table"
-                    legendStats={JOB_STATS}
-                    bodyClassName="h-44"
-                    loading={busy}
-                    empty={empty}
-                    file="runs-by-job"
-                />
-            </DashboardRow>
-            <DashboardRow title="Workers" count={4}>
-                <TimeSeriesPanel
-                    title="Queue depth"
-                    subtitle="by worker"
-                    span="third"
-                    x={data.line}
-                    series={data.perWorker}
-                    step
-                    thresholds={QUEUE_LINE}
-                    bodyClassName="h-36"
-                    loading={busy}
-                    empty={empty}
-                    file="queue-depth"
-                />
-                <BarGauge
-                    title="Worker load"
-                    subtitle="now"
-                    span="third"
-                    unit="%"
-                    thresholds={LOAD}
-                    loading={busy}
-                    empty={empty}
-                    bars={data.load}
-                />
-                <GaugePanel
-                    title="Slots used"
-                    value={reading(data.slots)}
-                    unit="%"
-                    thresholds={LOAD}
-                    label="mean"
-                    bodyClassName="h-40"
-                    loading={busy}
-                />
-                <GaugePanel
-                    title="Cache hits"
-                    value={reading(data.cache)}
-                    min={80}
-                    unit="%"
-                    decimals={1}
-                    thresholds={CACHE}
-                    label="fetch"
-                    bodyClassName="h-40"
-                    loading={busy}
-                />
-            </DashboardRow>
-            <DashboardRow title="Runs" count={3}>
-                <DashboardPanel title="Health" span="third" flush loading={busy}>
-                    <CheckList checks={data.health} />
-                </DashboardPanel>
-                <DashboardPanel
-                    title="Latest runs"
-                    span="third"
-                    flush
-                    menu={RUN_MENU}
-                    loading={busy}
-                    empty={empty || data.latest.length === 0}
-                >
-                    <DataTable
-                        columns={RUN_COLUMNS}
-                        rows={data.latest}
-                        rowKey={(run) => run.job + run.at}
-                        minWidth="24rem"
-                        framed={false}
-                        className="flex-1"
-                    />
-                </DashboardPanel>
-                <DashboardPanel title="Activity" span="third" loading={busy} empty={empty}>
-                    <Timeline
-                        events={[
-                            { id: '1', title: 'nightly-export failed at validate', at: '11:45', tone: 'failed' },
-                            { id: '2', title: 'worker-3 queue passed 20', at: '10:10', tone: 'waiting' },
-                            { id: '3', title: 'ada paused send-digest', at: '09:40' },
-                            { id: '4', title: 'grace added the job sync-inventory', at: '08:12' },
-                        ]}
-                    />
-                </DashboardPanel>
-            </DashboardRow>
+            <VariablesBar
+                variables={variables}
+                end={
+                    <>
+                        {controls}
+                        <DashboardEditActions edit={edit} />
+                    </>
+                }
+            />
+            <ArrangedRows rows={JOB_RUNS_ROWS} edit={edit} panels={panels} />
         </>
     )
 }
@@ -707,6 +884,35 @@ function operations(span: Span, project: string, worker: string) {
     }
 }
 
+const OPERATIONS_ROWS: RowSpec[] = [
+    {
+        id: 'overview',
+        title: 'Overview',
+        panels: [
+            panel('requests', 'Requests', 'sixth'),
+            panel('errors', 'Error rate', 'sixth'),
+            panel('p95', 'p95 duration', 'sixth'),
+            panel('success', 'Run success', 'sixth'),
+            panel('runs', 'Runs', 'sixth'),
+            panel('waiting', 'Waiting', 'sixth'),
+            panel('cpu', 'CPU', 'quarter'),
+            panel('memory', 'Memory', 'quarter'),
+            panel('cache', 'Cache hits', 'quarter'),
+            panel('availability', 'Availability', 'quarter'),
+        ],
+    },
+    {
+        id: 'traffic',
+        title: 'Traffic',
+        panels: [panel('per-worker', 'Requests per worker', 'half'), panel('heatmap', 'Run duration', 'half')],
+    },
+    {
+        id: 'clients',
+        title: 'Clients',
+        panels: [panel('client', 'Client duration', 'two-thirds'), panel('failures', 'Failures by job', 'third')],
+    },
+]
+
 function Operations() {
     const { span, empty, refreshing, controls } = useTimeControls()
     const [project, setProject] = useState(ALL)
@@ -717,176 +923,210 @@ function Operations() {
         { kind: 'select', id: 'project', label: 'project', value: project, options: choices(PROJECTS), onChange: setProject },
         { kind: 'select', id: 'worker', label: 'worker', value: worker, options: choices(WORKERS), onChange: setWorker },
     ]
+    const edit = useBoardEdit(OPERATIONS_ROWS)
+    const panels: Record<string, ReactNode> = {
+        requests: (
+            <StatPanel
+                title="Requests"
+                value={reading(data.requests.now)}
+                unit="/s"
+                decimals={1}
+                color="chart-2"
+                sparkline={data.requests.spark}
+                delta={data.requests.change}
+                info="Requests served a second, now, against the same range yesterday."
+                loading={refreshing}
+            />
+        ),
+        errors: (
+            <StatPanel
+                title="Error rate"
+                value={reading(data.errors.now)}
+                unit="%"
+                decimals={2}
+                thresholds={ERRORS}
+                sparkline={data.errors.spark}
+                loading={refreshing}
+            />
+        ),
+        p95: (
+            <StatPanel
+                title="p95 duration"
+                value={reading(data.p95.now)}
+                unit="ms"
+                decimals={0}
+                thresholds={SLOW}
+                colorMode="background"
+                sparkline={data.p95.spark}
+                loading={refreshing}
+            />
+        ),
+        success: (
+            <StatPanel
+                title="Run success"
+                value={reading(data.success.now)}
+                unit="%"
+                decimals={2}
+                thresholds={SUCCESS}
+                sparkline={data.success.spark}
+                info="Runs that succeeded, of every run started in the range."
+                loading={refreshing}
+            />
+        ),
+        runs: (
+            <StatPanel
+                title="Runs"
+                value={reading(data.runs.now)}
+                color="chart-3"
+                sparkline={data.runs.spark}
+                delta={data.runs.change}
+                good={data.runs.change?.startsWith('+')}
+                loading={refreshing}
+            />
+        ),
+        waiting: (
+            <StatPanel
+                title="Waiting"
+                value={reading(data.waiting.now)}
+                thresholds={WAITING}
+                colorMode="background"
+                sparkline={data.waiting.spark}
+                info="Runs waiting for a worker slot, now."
+                loading={refreshing}
+            />
+        ),
+        cpu: (
+            <GaugePanel
+                title="CPU"
+                span="quarter"
+                value={reading(data.cpu)}
+                unit="%"
+                thresholds={LOAD}
+                label="mean"
+                bodyClassName="h-36"
+                loading={refreshing}
+            />
+        ),
+        memory: (
+            <GaugePanel
+                title="Memory"
+                span="quarter"
+                value={reading(data.memory)}
+                unit="%"
+                thresholds={LOAD}
+                label="mean"
+                bodyClassName="h-36"
+                loading={refreshing}
+            />
+        ),
+        cache: (
+            <GaugePanel
+                title="Cache hits"
+                span="quarter"
+                value={reading(data.cache)}
+                min={80}
+                unit="%"
+                decimals={1}
+                thresholds={CACHE}
+                label="fetch"
+                bodyClassName="h-36"
+                loading={refreshing}
+            />
+        ),
+        availability: (
+            <GaugePanel
+                title="Availability"
+                span="quarter"
+                value={reading(data.availability)}
+                min={95}
+                unit="%"
+                decimals={2}
+                thresholds={AVAILABILITY}
+                label="in range"
+                bodyClassName="h-36"
+                loading={refreshing}
+            />
+        ),
+        'per-worker': (
+            <TimeSeriesPanel
+                title="Requests"
+                subtitle="per worker, stacked"
+                span="half"
+                x={data.line}
+                series={data.perWorker}
+                unit="/s"
+                decimals={1}
+                stacked
+                bodyClassName="h-56"
+                loading={refreshing}
+                empty={empty}
+                file="requests-per-worker"
+            />
+        ),
+        heatmap: (
+            <HeatmapPanel
+                title="Run duration"
+                subtitle="runs per duration bucket"
+                info="Runs started in each step, by how long they took."
+                span="half"
+                x={data.heat}
+                y={DURATION_BUCKETS}
+                cells={data.cells}
+                scale={HEAT_SCALE}
+                bodyClassName="h-64"
+                loading={refreshing}
+                empty={empty}
+                file="run-duration"
+            />
+        ),
+        client: (
+            <BarPanel
+                title="Client duration"
+                subtitle="p50, p90 and p99, stacked"
+                info="How long clients wait for an answer, at three percentiles."
+                span="two-thirds"
+                x={data.bars}
+                series={data.client}
+                unit=" ms"
+                decimals={0}
+                stacked
+                legend="table"
+                legendStats={AVERAGES}
+                bodyClassName="h-52"
+                loading={refreshing}
+                empty={empty}
+                file="client-duration"
+            />
+        ),
+        failures: (
+            <ChartPanel
+                kind="donut"
+                title="Failures by job"
+                subtitle="in range"
+                label="Failed runs by job"
+                span="third"
+                rows={data.failures}
+                x="job"
+                y="failures"
+                bodyClassName="h-60"
+                loading={refreshing}
+                empty={empty}
+                file="failures-by-job"
+            />
+        ),
+    }
     return (
         <>
-            <VariablesBar variables={variables} end={controls} />
-            <DashboardRow title="Overview" count={10}>
-                <StatPanel
-                    title="Requests"
-                    value={reading(data.requests.now)}
-                    unit="/s"
-                    decimals={1}
-                    color="chart-2"
-                    sparkline={data.requests.spark}
-                    delta={data.requests.change}
-                    info="Requests served a second, now, against the same range yesterday."
-                    loading={refreshing}
-                />
-                <StatPanel
-                    title="Error rate"
-                    value={reading(data.errors.now)}
-                    unit="%"
-                    decimals={2}
-                    thresholds={ERRORS}
-                    sparkline={data.errors.spark}
-                    loading={refreshing}
-                />
-                <StatPanel
-                    title="p95 duration"
-                    value={reading(data.p95.now)}
-                    unit="ms"
-                    decimals={0}
-                    thresholds={SLOW}
-                    colorMode="background"
-                    sparkline={data.p95.spark}
-                    loading={refreshing}
-                />
-                <StatPanel
-                    title="Run success"
-                    value={reading(data.success.now)}
-                    unit="%"
-                    decimals={2}
-                    thresholds={SUCCESS}
-                    sparkline={data.success.spark}
-                    info="Runs that succeeded, of every run started in the range."
-                    loading={refreshing}
-                />
-                <StatPanel
-                    title="Runs"
-                    value={reading(data.runs.now)}
-                    color="chart-3"
-                    sparkline={data.runs.spark}
-                    delta={data.runs.change}
-                    good={data.runs.change?.startsWith('+')}
-                    loading={refreshing}
-                />
-                <StatPanel
-                    title="Waiting"
-                    value={reading(data.waiting.now)}
-                    thresholds={WAITING}
-                    colorMode="background"
-                    sparkline={data.waiting.spark}
-                    info="Runs waiting for a worker slot, now."
-                    loading={refreshing}
-                />
-                <GaugePanel
-                    title="CPU"
-                    span="quarter"
-                    value={reading(data.cpu)}
-                    unit="%"
-                    thresholds={LOAD}
-                    label="mean"
-                    bodyClassName="h-36"
-                    loading={refreshing}
-                />
-                <GaugePanel
-                    title="Memory"
-                    span="quarter"
-                    value={reading(data.memory)}
-                    unit="%"
-                    thresholds={LOAD}
-                    label="mean"
-                    bodyClassName="h-36"
-                    loading={refreshing}
-                />
-                <GaugePanel
-                    title="Cache hits"
-                    span="quarter"
-                    value={reading(data.cache)}
-                    min={80}
-                    unit="%"
-                    decimals={1}
-                    thresholds={CACHE}
-                    label="fetch"
-                    bodyClassName="h-36"
-                    loading={refreshing}
-                />
-                <GaugePanel
-                    title="Availability"
-                    span="quarter"
-                    value={reading(data.availability)}
-                    min={95}
-                    unit="%"
-                    decimals={2}
-                    thresholds={AVAILABILITY}
-                    label="in range"
-                    bodyClassName="h-36"
-                    loading={refreshing}
-                />
-            </DashboardRow>
-            <DashboardRow title="Traffic" count={2}>
-                <TimeSeriesPanel
-                    title="Requests"
-                    subtitle="per worker, stacked"
-                    span="half"
-                    x={data.line}
-                    series={data.perWorker}
-                    unit="/s"
-                    decimals={1}
-                    stacked
-                    bodyClassName="h-56"
-                    loading={refreshing}
-                    empty={empty}
-                    file="requests-per-worker"
-                />
-                <HeatmapPanel
-                    title="Run duration"
-                    subtitle="runs per duration bucket"
-                    info="Runs started in each step, by how long they took."
-                    span="half"
-                    x={data.heat}
-                    y={DURATION_BUCKETS}
-                    cells={data.cells}
-                    scale={HEAT_SCALE}
-                    bodyClassName="h-64"
-                    loading={refreshing}
-                    empty={empty}
-                    file="run-duration"
-                />
-            </DashboardRow>
-            <DashboardRow title="Clients" count={2}>
-                <BarPanel
-                    title="Client duration"
-                    subtitle="p50, p90 and p99, stacked"
-                    info="How long clients wait for an answer, at three percentiles."
-                    span="two-thirds"
-                    x={data.bars}
-                    series={data.client}
-                    unit=" ms"
-                    decimals={0}
-                    stacked
-                    legend="table"
-                    legendStats={AVERAGES}
-                    bodyClassName="h-52"
-                    loading={refreshing}
-                    empty={empty}
-                    file="client-duration"
-                />
-                <ChartPanel
-                    kind="donut"
-                    title="Failures by job"
-                    subtitle="in range"
-                    label="Failed runs by job"
-                    span="third"
-                    rows={data.failures}
-                    x="job"
-                    y="failures"
-                    bodyClassName="h-60"
-                    loading={refreshing}
-                    empty={empty}
-                    file="failures-by-job"
-                />
-            </DashboardRow>
+            <VariablesBar
+                variables={variables}
+                end={
+                    <>
+                        {controls}
+                        <DashboardEditActions edit={edit} />
+                    </>
+                }
+            />
+            <ArrangedRows rows={OPERATIONS_ROWS} edit={edit} panels={panels} />
         </>
     )
 }
@@ -934,6 +1174,31 @@ const WORKER_COLUMNS: ScoreColumn[] = [
     { key: 'wait', label: 'Wait p90', unit: 's', decimals: 0, thresholds: WAIT, higherIsBetter: false },
 ]
 
+const CAPACITY_ROWS: RowSpec[] = [
+    {
+        id: 'cluster',
+        title: 'Cluster',
+        panels: [
+            panel('cpu', 'CPU', 'quarter'),
+            panel('memory', 'Memory', 'quarter'),
+            panel('disk', 'Disk', 'quarter'),
+            panel('wait', 'Queue wait', 'quarter'),
+        ],
+    },
+    {
+        id: 'workers',
+        title: 'Workers',
+        panels: [
+            panel('cpu-bars', 'CPU by worker', 'third'),
+            panel('memory-bars', 'Memory by worker', 'third'),
+            panel('disk-bars', 'Disk by worker', 'third'),
+            panel('cpu-lines', 'CPU over time', 'half'),
+            panel('memory-lines', 'Memory over time', 'half'),
+        ],
+    },
+    { id: 'queue', title: 'Queue', panels: [panel('queue', 'Queue depth', 'half'), panel('workers', 'Workers', 'half')] },
+]
+
 function Capacity() {
     const { span, empty, refreshing, controls } = useTimeControls()
     const [worker, setWorker] = useState(ALL)
@@ -945,122 +1210,142 @@ function Capacity() {
         { kind: 'select', id: 'worker', label: 'worker', value: worker, options: choices(WORKERS), onChange: setWorker },
         { kind: 'toggle', id: 'peak', label: 'peak', checked: peak, onChange: setPeak },
     ]
+    const edit = useBoardEdit(CAPACITY_ROWS)
+    const panels: Record<string, ReactNode> = {
+        cpu: (
+            <GaugePanel
+                title="CPU"
+                span="quarter"
+                value={reading(data.cpu)}
+                unit="%"
+                thresholds={LOAD}
+                label={peak ? 'peak' : 'mean'}
+                bodyClassName="h-36"
+                loading={refreshing}
+            />
+        ),
+        memory: (
+            <GaugePanel
+                title="Memory"
+                span="quarter"
+                value={reading(data.memory)}
+                unit="%"
+                thresholds={LOAD}
+                label={peak ? 'peak' : 'mean'}
+                bodyClassName="h-36"
+                loading={refreshing}
+            />
+        ),
+        disk: (
+            <GaugePanel
+                title="Disk"
+                span="quarter"
+                value={reading(data.disk)}
+                unit="%"
+                thresholds={DISK}
+                label="fullest"
+                bodyClassName="h-36"
+                loading={refreshing}
+            />
+        ),
+        wait: (
+            <GaugePanel
+                title="Queue wait"
+                span="quarter"
+                value={reading(data.wait)}
+                max={120}
+                unit="s"
+                thresholds={WAIT}
+                label="p90, longest"
+                bodyClassName="h-36"
+                loading={refreshing}
+            />
+        ),
+        'cpu-bars': (
+            <BarGauge title="CPU" subtitle={when} bars={data.cpuBars} unit="%" thresholds={LOAD} loading={refreshing} empty={empty} />
+        ),
+        'memory-bars': (
+            <BarGauge title="Memory" subtitle={when} bars={data.memoryBars} unit="%" thresholds={LOAD} loading={refreshing} empty={empty} />
+        ),
+        'disk-bars': (
+            <BarGauge
+                title="Disk"
+                subtitle={when}
+                bars={data.diskBars}
+                unit="%"
+                thresholds={DISK}
+                mode="basic"
+                loading={refreshing}
+                empty={empty}
+            />
+        ),
+        'cpu-lines': (
+            <TimeSeriesPanel
+                title="CPU"
+                subtitle="by worker"
+                x={data.x}
+                series={data.cpuLines}
+                unit="%"
+                fill="none"
+                min={0}
+                max={100}
+                thresholds={LOAD_LINE}
+                loading={refreshing}
+                empty={empty}
+                file="cpu-by-worker"
+            />
+        ),
+        'memory-lines': (
+            <TimeSeriesPanel
+                title="Memory"
+                subtitle="by worker"
+                x={data.x}
+                series={data.memoryLines}
+                unit="%"
+                min={0}
+                max={100}
+                thresholds={LOAD_LINE}
+                loading={refreshing}
+                empty={empty}
+                file="memory-by-worker"
+            />
+        ),
+        queue: (
+            <TimeSeriesPanel
+                title="Queue depth"
+                subtitle="runs waiting, by worker"
+                info="Runs waiting for a slot on each worker. The dashed lines are the warning and critical depths."
+                x={data.x}
+                series={data.queueLines}
+                step
+                fill="none"
+                thresholds={QUEUE_STEPS}
+                legend="table"
+                legendStats={TABLE_STATS}
+                bodyClassName="h-52"
+                loading={refreshing}
+                empty={empty}
+                file="queue-depth"
+            />
+        ),
+        workers: (
+            <DashboardPanel title="Workers" subtitle={when} span="half" flush loading={refreshing} empty={empty}>
+                <ScoreTable columns={WORKER_COLUMNS} rows={data.rows} nameHeader="Worker" framed={false} />
+            </DashboardPanel>
+        ),
+    }
     return (
         <>
-            <VariablesBar variables={variables} end={controls} />
-            <DashboardRow title="Cluster" count={4}>
-                <GaugePanel
-                    title="CPU"
-                    span="quarter"
-                    value={reading(data.cpu)}
-                    unit="%"
-                    thresholds={LOAD}
-                    label={peak ? 'peak' : 'mean'}
-                    bodyClassName="h-36"
-                    loading={refreshing}
-                />
-                <GaugePanel
-                    title="Memory"
-                    span="quarter"
-                    value={reading(data.memory)}
-                    unit="%"
-                    thresholds={LOAD}
-                    label={peak ? 'peak' : 'mean'}
-                    bodyClassName="h-36"
-                    loading={refreshing}
-                />
-                <GaugePanel
-                    title="Disk"
-                    span="quarter"
-                    value={reading(data.disk)}
-                    unit="%"
-                    thresholds={DISK}
-                    label="fullest"
-                    bodyClassName="h-36"
-                    loading={refreshing}
-                />
-                <GaugePanel
-                    title="Queue wait"
-                    span="quarter"
-                    value={reading(data.wait)}
-                    max={120}
-                    unit="s"
-                    thresholds={WAIT}
-                    label="p90, longest"
-                    bodyClassName="h-36"
-                    loading={refreshing}
-                />
-            </DashboardRow>
-            <DashboardRow title="Workers" count={5}>
-                <BarGauge title="CPU" subtitle={when} bars={data.cpuBars} unit="%" thresholds={LOAD} loading={refreshing} empty={empty} />
-                <BarGauge
-                    title="Memory"
-                    subtitle={when}
-                    bars={data.memoryBars}
-                    unit="%"
-                    thresholds={LOAD}
-                    loading={refreshing}
-                    empty={empty}
-                />
-                <BarGauge
-                    title="Disk"
-                    subtitle={when}
-                    bars={data.diskBars}
-                    unit="%"
-                    thresholds={DISK}
-                    mode="basic"
-                    loading={refreshing}
-                    empty={empty}
-                />
-                <TimeSeriesPanel
-                    title="CPU"
-                    subtitle="by worker"
-                    x={data.x}
-                    series={data.cpuLines}
-                    unit="%"
-                    fill="none"
-                    min={0}
-                    max={100}
-                    thresholds={LOAD_LINE}
-                    loading={refreshing}
-                    empty={empty}
-                    file="cpu-by-worker"
-                />
-                <TimeSeriesPanel
-                    title="Memory"
-                    subtitle="by worker"
-                    x={data.x}
-                    series={data.memoryLines}
-                    unit="%"
-                    min={0}
-                    max={100}
-                    thresholds={LOAD_LINE}
-                    loading={refreshing}
-                    empty={empty}
-                    file="memory-by-worker"
-                />
-            </DashboardRow>
-            <DashboardRow title="Queue" count={2}>
-                <TimeSeriesPanel
-                    title="Queue depth"
-                    subtitle="runs waiting, by worker"
-                    info="Runs waiting for a slot on each worker. The dashed lines are the warning and critical depths."
-                    x={data.x}
-                    series={data.queueLines}
-                    step
-                    fill="none"
-                    thresholds={QUEUE_STEPS}
-                    legend="table"
-                    legendStats={TABLE_STATS}
-                    bodyClassName="h-52"
-                    loading={refreshing}
-                    empty={empty}
-                    file="queue-depth"
-                />
-                <DashboardPanel title="Workers" subtitle={when} span="half" flush loading={refreshing} empty={empty}>
-                    <ScoreTable columns={WORKER_COLUMNS} rows={data.rows} nameHeader="Worker" framed={false} />
-                </DashboardPanel>
-            </DashboardRow>
+            <VariablesBar
+                variables={variables}
+                end={
+                    <>
+                        {controls}
+                        <DashboardEditActions edit={edit} />
+                    </>
+                }
+            />
+            <ArrangedRows rows={CAPACITY_ROWS} edit={edit} panels={panels} />
         </>
     )
 }
@@ -1128,6 +1413,18 @@ function regions(span: Span, project: string, continent: string, percentile: 50 
     }
 }
 
+const REGIONS_ROWS: RowSpec[] = [
+    { id: 'sites', panels: [panel('map', 'Sites', 'half'), panel('latency', 'Run latency', 'half')] },
+    ...CONTINENTS.map((name) => ({
+        id: name,
+        title: name,
+        panels: [
+            ...SITES.filter((site) => site.continent === name).map((site) => panel(site.id, site.name, 'sixth')),
+            panel(`${name}-latency`, `Run latency in ${name}`, 'half'),
+        ],
+    })),
+]
+
 function Regions() {
     const { span, empty, refreshing, controls } = useTimeControls()
     const [project, setProject] = useState(ALL)
@@ -1144,99 +1441,114 @@ function Regions() {
         { kind: 'select', id: 'continent', label: 'continent', value: continent, options: choices(CONTINENTS), onChange: setContinent },
         { kind: 'select', id: 'percentile', label: 'latency', value: percentile, options: PERCENTILES, onChange: setPercentile },
     ]
+    const edit = useBoardEdit(REGIONS_ROWS)
+    const panels: Record<string, ReactNode> = {
+        map: (
+            <DashboardPanel title="Sites" subtitle={`${named} latency, now`} span="half" flush loading={refreshing} empty={empty}>
+                <MapView
+                    label={`Sites by ${named} latency`}
+                    framed={false}
+                    selected={selected}
+                    onSelectedChange={(id) => setSelected(id)}
+                    className="min-h-80 flex-1"
+                >
+                    <PointLayer id="sites" data={data.points} scale={LATENCY_SCALE} value="latency" radius={6} />
+                    <MapOverlay corner="bottom-left">
+                        <MapLegend
+                            title={`${named} latency`}
+                            description={`${data.sites.length} sites`}
+                            scale={LATENCY_SCALE}
+                            layout="list"
+                            shape="point"
+                            counts={data.counts}
+                        />
+                    </MapOverlay>
+                    {site !== undefined && feature !== undefined && (
+                        <MapPopup
+                            feature={feature as Feature}
+                            title={site.name}
+                            description={`${site.country}, ${site.continent}`}
+                            rows={[
+                                {
+                                    label: `${named} latency`,
+                                    value: ms(data.now.get(site.id) ?? 0),
+                                    color: colorOf(LATENCY_SCALE, data.now.get(site.id)) ?? undefined,
+                                },
+                                { label: 'Runs', value: `${(data.served.get(site.id) ?? 0).toFixed(1)}/s` },
+                            ]}
+                            onClose={() => setSelected(null)}
+                        />
+                    )}
+                </MapView>
+            </DashboardPanel>
+        ),
+        latency: (
+            <TimeSeriesPanel
+                title="Run latency"
+                subtitle={`${named}, by site`}
+                info="Each site's run latency. The dashed lines are the warning and critical latencies."
+                x={data.x}
+                series={data.all}
+                unit=" ms"
+                decimals={0}
+                fill="none"
+                thresholds={LATENCY}
+                legend="table"
+                legendStats={TABLE_STATS}
+                bodyClassName="h-64"
+                loading={refreshing}
+                empty={empty}
+                file="run-latency-by-site"
+            />
+        ),
+    }
+    for (const group of data.continents) {
+        for (const one of group.sites)
+            panels[one.id] = (
+                <StatPanel
+                    title={one.name}
+                    value={empty ? null : (data.now.get(one.id) ?? null)}
+                    unit="ms"
+                    decimals={0}
+                    thresholds={LATENCY}
+                    sparkline={data.spark.get(one.id)}
+                    note={one.country}
+                    loading={refreshing}
+                />
+            )
+        panels[`${group.name}-latency`] = (
+            <TimeSeriesPanel
+                title="Run latency"
+                subtitle={named}
+                x={data.x}
+                series={group.series}
+                unit=" ms"
+                decimals={0}
+                thresholds={LATENCY}
+                loading={refreshing}
+                empty={empty}
+                file={`run-latency-${group.name.toLowerCase().replaceAll(' ', '-')}`}
+            />
+        )
+    }
     return (
         <>
-            <VariablesBar variables={variables} end={controls} />
-            <DashboardGrid>
-                <DashboardPanel title="Sites" subtitle={`${named} latency, now`} span="half" flush loading={refreshing} empty={empty}>
-                    <MapView
-                        label={`Sites by ${named} latency`}
-                        framed={false}
-                        selected={selected}
-                        onSelectedChange={(id) => setSelected(id)}
-                        className="min-h-80 flex-1"
-                    >
-                        <PointLayer id="sites" data={data.points} scale={LATENCY_SCALE} value="latency" radius={6} />
-                        <MapOverlay corner="bottom-left">
-                            <MapLegend
-                                title={`${named} latency`}
-                                description={`${data.sites.length} sites`}
-                                scale={LATENCY_SCALE}
-                                layout="list"
-                                shape="point"
-                                counts={data.counts}
-                            />
-                        </MapOverlay>
-                        {site !== undefined && feature !== undefined && (
-                            <MapPopup
-                                feature={feature as Feature}
-                                title={site.name}
-                                description={`${site.country}, ${site.continent}`}
-                                rows={[
-                                    {
-                                        label: `${named} latency`,
-                                        value: ms(data.now.get(site.id) ?? 0),
-                                        color: colorOf(LATENCY_SCALE, data.now.get(site.id)) ?? undefined,
-                                    },
-                                    { label: 'Runs', value: `${(data.served.get(site.id) ?? 0).toFixed(1)}/s` },
-                                ]}
-                                onClose={() => setSelected(null)}
-                            />
-                        )}
-                    </MapView>
-                </DashboardPanel>
-                <TimeSeriesPanel
-                    title="Run latency"
-                    subtitle={`${named}, by site`}
-                    info="Each site's run latency. The dashed lines are the warning and critical latencies."
-                    x={data.x}
-                    series={data.all}
-                    unit=" ms"
-                    decimals={0}
-                    fill="none"
-                    thresholds={LATENCY}
-                    legend="table"
-                    legendStats={TABLE_STATS}
-                    bodyClassName="h-64"
-                    loading={refreshing}
-                    empty={empty}
-                    file="run-latency-by-site"
-                />
-            </DashboardGrid>
-            {data.continents.map((group, index) => (
-                <DashboardRow
-                    key={`${continent}:${group.name}`}
-                    title={group.name}
-                    count={group.sites.length + 1}
-                    defaultOpen={index === 0}
-                >
-                    {group.sites.map((one) => (
-                        <StatPanel
-                            key={one.id}
-                            title={one.name}
-                            value={empty ? null : (data.now.get(one.id) ?? null)}
-                            unit="ms"
-                            decimals={0}
-                            thresholds={LATENCY}
-                            sparkline={data.spark.get(one.id)}
-                            note={one.country}
-                            loading={refreshing}
-                        />
-                    ))}
-                    <TimeSeriesPanel
-                        title="Run latency"
-                        subtitle={named}
-                        x={data.x}
-                        series={group.series}
-                        unit=" ms"
-                        decimals={0}
-                        thresholds={LATENCY}
-                        loading={refreshing}
-                        empty={empty}
-                        file={`run-latency-${group.name.toLowerCase().replaceAll(' ', '-')}`}
-                    />
-                </DashboardRow>
-            ))}
+            <VariablesBar
+                variables={variables}
+                end={
+                    <>
+                        {controls}
+                        <DashboardEditActions edit={edit} />
+                    </>
+                }
+            />
+            <ArrangedRows
+                rows={REGIONS_ROWS}
+                edit={edit}
+                panels={panels}
+                only={['sites', ...data.continents.map((group) => group.name)]}
+                firstOpen
+            />
         </>
     )
 }
@@ -1295,6 +1607,23 @@ function forecast(project: string, horizon: number, run: number) {
 const SLOT_AXIS = { name: 'slot use', unit: '%', min: 0, max: 100 }
 const RUN_AXIS = { name: 'runs' }
 
+const FORECAST_ROWS: RowSpec[] = [
+    {
+        id: 'forecast',
+        panels: [
+            panel('expected', 'Expected runs', 'sixth'),
+            panel('busiest', 'Busiest day', 'sixth'),
+            panel('quietest', 'Quietest day', 'sixth'),
+            panel('peak', 'Peak slot use', 'sixth'),
+            panel('failing', 'Expected failures', 'sixth'),
+            panel('mean', 'Mean per day', 'sixth'),
+            panel('per-day', 'Runs per day', 'two-thirds'),
+            panel('by-hour', 'Runs by hour', 'third'),
+            panel('slots', 'Slot use by worker', 'full'),
+        ],
+    },
+]
+
 function Forecast() {
     const [project, setProject] = useState(ALL)
     const [horizon, setHorizon] = useState('7')
@@ -1306,88 +1635,110 @@ function Forecast() {
         { kind: 'select', id: 'project', label: 'project', value: project, options: choices(PROJECTS), onChange: setProject },
         { kind: 'select', id: 'horizon', label: 'horizon', value: horizon, options: HORIZONS, onChange: setHorizon },
     ]
+    const edit = useBoardEdit(FORECAST_ROWS)
+    const refreshControl = (
+        <RefreshControl
+            onRefresh={refresh}
+            refreshing={refreshing}
+            interval={interval}
+            onIntervalChange={setInterval}
+            updated={`forecast ${clock(NOW + run)}`}
+        />
+    )
+    const panels: Record<string, ReactNode> = {
+        expected: (
+            <StatPanel
+                title="Expected runs"
+                value={data.expected}
+                color="chart-2"
+                sparkline={data.trend}
+                delta={data.change}
+                info="Runs expected over the days ahead, against the same days a week before."
+                loading={refreshing}
+            />
+        ),
+        busiest: <StatPanel title="Busiest day" value={data.busiest.runs} note={data.busiest.day} color="chart-3" loading={refreshing} />,
+        quietest: (
+            <StatPanel title="Quietest day" value={data.quietest.runs} note={data.quietest.day} color="chart-4" loading={refreshing} />
+        ),
+        peak: (
+            <StatPanel
+                title="Peak slot use"
+                value={data.peak}
+                unit="%"
+                thresholds={LOAD}
+                colorMode="background"
+                info="The most of any worker's slots the busiest hour of a day is expected to take."
+                loading={refreshing}
+            />
+        ),
+        failing: (
+            <StatPanel
+                title="Expected failures"
+                value={data.failing}
+                thresholds={[{ color: 'good' }, { value: 250, color: 'warning' }, { value: 500, color: 'critical' }]}
+                loading={refreshing}
+            />
+        ),
+        mean: <StatPanel title="Mean per day" value={data.mean} color="chart-5" note={`from ${data.labels[0]}`} loading={refreshing} />,
+        'per-day': (
+            <ComboPanel
+                title="Runs per day"
+                subtitle="expected, with last week and slot use"
+                span="two-thirds"
+                x={data.labels}
+                series={data.series}
+                left={RUN_AXIS}
+                right={SLOT_AXIS}
+                bodyClassName="h-64"
+                loading={refreshing}
+                file="runs-per-day"
+            />
+        ),
+        'by-hour': (
+            <ChartPanel
+                kind="heatmap"
+                title="Runs by hour"
+                subtitle="expected"
+                label="Expected runs by hour and day"
+                span="third"
+                rows={data.hourly}
+                x="hour"
+                series="day"
+                y="runs"
+                legend="none"
+                bodyClassName="h-[17.5rem]"
+                loading={refreshing}
+                file="runs-by-hour"
+            />
+        ),
+        slots: (
+            <DashboardPanel title="Slot use by worker" subtitle="peak hour, expected" span="full" flush loading={refreshing}>
+                <ScoreTable
+                    columns={columns}
+                    rows={data.rows}
+                    thresholds={LOAD}
+                    unit="%"
+                    decimals={0}
+                    fill="solid"
+                    nameHeader="Worker"
+                    framed={false}
+                />
+            </DashboardPanel>
+        ),
+    }
     return (
         <>
             <VariablesBar
                 variables={variables}
                 end={
-                    <RefreshControl
-                        onRefresh={refresh}
-                        refreshing={refreshing}
-                        interval={interval}
-                        onIntervalChange={setInterval}
-                        updated={`forecast ${clock(NOW + run)}`}
-                    />
+                    <>
+                        {refreshControl}
+                        <DashboardEditActions edit={edit} />
+                    </>
                 }
             />
-            <DashboardGrid dense>
-                <StatPanel
-                    title="Expected runs"
-                    value={data.expected}
-                    color="chart-2"
-                    sparkline={data.trend}
-                    delta={data.change}
-                    info="Runs expected over the days ahead, against the same days a week before."
-                    loading={refreshing}
-                />
-                <StatPanel title="Busiest day" value={data.busiest.runs} note={data.busiest.day} color="chart-3" loading={refreshing} />
-                <StatPanel title="Quietest day" value={data.quietest.runs} note={data.quietest.day} color="chart-4" loading={refreshing} />
-                <StatPanel
-                    title="Peak slot use"
-                    value={data.peak}
-                    unit="%"
-                    thresholds={LOAD}
-                    colorMode="background"
-                    info="The most of any worker's slots the busiest hour of a day is expected to take."
-                    loading={refreshing}
-                />
-                <StatPanel
-                    title="Expected failures"
-                    value={data.failing}
-                    thresholds={[{ color: 'good' }, { value: 250, color: 'warning' }, { value: 500, color: 'critical' }]}
-                    loading={refreshing}
-                />
-                <StatPanel title="Mean per day" value={data.mean} color="chart-5" note={`from ${data.labels[0]}`} loading={refreshing} />
-                <ComboPanel
-                    title="Runs per day"
-                    subtitle="expected, with last week and slot use"
-                    span="two-thirds"
-                    x={data.labels}
-                    series={data.series}
-                    left={RUN_AXIS}
-                    right={SLOT_AXIS}
-                    bodyClassName="h-64"
-                    loading={refreshing}
-                    file="runs-per-day"
-                />
-                <ChartPanel
-                    kind="heatmap"
-                    title="Runs by hour"
-                    subtitle="expected"
-                    label="Expected runs by hour and day"
-                    span="third"
-                    rows={data.hourly}
-                    x="hour"
-                    series="day"
-                    y="runs"
-                    legend="none"
-                    bodyClassName="h-[17.5rem]"
-                    loading={refreshing}
-                    file="runs-by-hour"
-                />
-                <DashboardPanel title="Slot use by worker" subtitle="peak hour, expected" span="full" flush loading={refreshing}>
-                    <ScoreTable
-                        columns={columns}
-                        rows={data.rows}
-                        thresholds={LOAD}
-                        unit="%"
-                        decimals={0}
-                        fill="solid"
-                        nameHeader="Worker"
-                        framed={false}
-                    />
-                </DashboardPanel>
-            </DashboardGrid>
+            <ArrangedRows rows={FORECAST_ROWS} edit={edit} panels={panels} dense />
         </>
     )
 }

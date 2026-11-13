@@ -3,16 +3,19 @@ import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
+import { SortableGrid } from '@winterop-com/sokkel-ui/Sortable'
 import { Stat } from '@winterop-com/sokkel-ui/Stat'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { ArrowRight, Send } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { useCollection } from 'tidevann-shared/backend'
 
-import { forwardAll, receipts, SERVER, STATE_WORDS, STATES } from '../data/backend'
-import { FORMS, questionCount } from '../data/forms'
+import { forwardAll, inOrder, ME, preferences, receipts, SERVER, STATE_WORDS, STATES } from '../data/backend'
+import { FORMS, questionCount, type Form } from '../data/forms'
 import { count, KindBadge, STATE_DOT, useFoot } from '../ui'
 
 /** What the simulated server answers: the states this app knows, a subset of what ServerMenu takes. */
@@ -26,6 +29,17 @@ export function Overview({ serverState }: { serverState: ServerHealth }) {
     const { rows } = useCollection(receipts)
     const all = rows ?? []
     const waiting = all.filter((receipt) => receipt.state === 'received').length
+    const { rows: prefs } = useCollection(preferences)
+    // The order just dragged, held while it is kept, so a quick second move never reads a stale first.
+    const [held, setHeld] = useState<readonly Form[] | null>(null)
+    const forms = held ?? inOrder(prefs?.find((one) => one.id === ME)?.formOrder)
+    const reorder = (from: number, to: number) => {
+        const next = moveItem(forms, from, to)
+        setHeld(next)
+        const formOrder = next.map((form) => form.id)
+        const kept = prefs?.some((one) => one.id === ME) === true
+        void (kept ? preferences.update(ME, { formOrder }) : preferences.create({ formOrder }, ME)).finally(() => setHeld(null))
+    }
     useFoot(`${count(all.length, 'response')} · ${count(FORMS.length, 'form')} served`, undefined, [all.length])
 
     const sendOn = () =>
@@ -75,7 +89,7 @@ export function Overview({ serverState }: { serverState: ServerHealth }) {
                 variant="flat"
                 title="Start a record"
                 meta={String(FORMS.length)}
-                description="Every form the server serves is one you can fill in and file. A registration registers a household for the follow-ups under it."
+                description="Every form the server serves is one you can fill in and file. A registration registers a household for the follow-ups under it. Drag a form to put the ones you file most first."
                 actions={
                     <Button size="sm" variant="outline" render={<a href="#/forms" />}>
                         All forms
@@ -83,10 +97,15 @@ export function Overview({ serverState }: { serverState: ServerHealth }) {
                     </Button>
                 }
             >
-                <Columns count={4} min="md" gap="md">
-                    {FORMS.map((form) => (
+                <SortableGrid
+                    label="Forms to start a record from"
+                    items={forms}
+                    itemKey={(form) => form.id}
+                    itemLabel={(form) => form.title}
+                    minItemWidth="14rem"
+                    onMove={reorder}
+                    renderItem={(form) => (
                         <ItemCard
-                            key={form.id}
                             title={form.title}
                             code={form.id}
                             href={`#/forms/${form.id}`}
@@ -97,8 +116,8 @@ export function Overview({ serverState }: { serverState: ServerHealth }) {
                                 </>
                             }
                         />
-                    ))}
-                </Columns>
+                    )}
+                />
             </Section>
             <Section
                 title="This server"

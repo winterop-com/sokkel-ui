@@ -7,7 +7,10 @@ import {
     BookText,
     Columns3,
     Database,
+    FileText,
     FlaskConical,
+    Folder,
+    FolderOpen,
     Gauge,
     History as HistoryIcon,
     KeyRound,
@@ -44,22 +47,36 @@ import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
 import { Textarea } from '@winterop-com/sokkel-ui/primitives/textarea'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { SortableGrid, SortableGrip } from '@winterop-com/sokkel-ui/Sortable'
+import { moveTreeNode, Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { PEOPLE_OPTIONS, PROJECT_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A model playground in the library's frame: a prompt in the editor with its variables and the
  * answer under it, the parameters in the side panel, the same prompt answered by three models side
- * by side with one still streaming, and the history of runs with the chosen one in an inspector.
+ * by side with one still streaming, the history of runs with the chosen one in an inspector, and
+ * the saved prompts in their collections. The compared models and the saved prompts are put in
+ * order by drag.
  */
-type View = 'prompt' | 'compare' | 'history'
+type View = 'prompt' | 'compare' | 'history' | 'prompts'
 
 const MODELS = [
-    { id: 'tide-large', note: 'The most capable, and the slowest. 128k tokens of context.' },
-    { id: 'tide-medium', note: 'Balanced for most prompts. 64k tokens of context.' },
-    { id: 'tide-small', note: 'The fastest and cheapest. 32k tokens of context.' },
+    {
+        id: 'tide-large',
+        note: 'The most capable, and the slowest. 128k tokens of context.',
+    },
+    {
+        id: 'tide-medium',
+        note: 'Balanced for most prompts. 64k tokens of context.',
+    },
+    {
+        id: 'tide-small',
+        note: 'The fastest and cheapest. 32k tokens of context.',
+    },
 ]
 
 const PROMPT = `Write a short note to the team about why nightly-export failed last night.
@@ -92,7 +109,16 @@ const ANSWERS: {
     first: number
     rate: number
 }[] = [
-    { model: 'tide-large', detail: '128k context', state: 'done', text: ANSWER, tokens: 112, latency: 2_310, first: 240, rate: 48.4 },
+    {
+        model: 'tide-large',
+        detail: '128k context',
+        state: 'done',
+        text: ANSWER,
+        tokens: 112,
+        latency: 2_310,
+        first: 240,
+        rate: 48.4,
+    },
     {
         model: 'tide-medium',
         detail: '64k context',
@@ -249,7 +275,13 @@ const COLUMNS: DataColumn<Run>[] = [
         cell: (run) => <span className="font-mono text-muted-foreground">{run.model}</span>,
         sortValue: (run) => run.model,
     },
-    { id: 'state', header: 'State', width: '6.5rem', cell: (run) => <StatusChip status={run.state} />, sortValue: (run) => run.state },
+    {
+        id: 'state',
+        header: 'State',
+        width: '6.5rem',
+        cell: (run) => <StatusChip status={run.state} />,
+        sortValue: (run) => run.state,
+    },
     {
         id: 'tokens',
         header: 'Tokens',
@@ -280,9 +312,27 @@ function groups(view: View): RailGroup[] {
         {
             id: 'try',
             entries: [
-                { id: 'prompt', label: 'Playground', icon: FlaskConical, href: '#', active: view === 'prompt' },
-                { id: 'compare', label: 'Compare', icon: Columns3, href: '#', active: view === 'compare' },
-                { id: 'history', label: 'History', icon: HistoryIcon, href: '#', active: view === 'history' },
+                {
+                    id: 'prompt',
+                    label: 'Playground',
+                    icon: FlaskConical,
+                    href: '#',
+                    active: view === 'prompt',
+                },
+                {
+                    id: 'compare',
+                    label: 'Compare',
+                    icon: Columns3,
+                    href: '#',
+                    active: view === 'compare',
+                },
+                {
+                    id: 'history',
+                    label: 'History',
+                    icon: HistoryIcon,
+                    href: '#',
+                    active: view === 'history',
+                },
             ],
         },
         {
@@ -294,6 +344,7 @@ function groups(view: View): RailGroup[] {
                     label: 'Prompts',
                     icon: BookText,
                     href: '#',
+                    active: view === 'prompts',
                     entries: [
                         { id: 'failure-note', label: 'failure-note', href: '#' },
                         { id: 'digest-summary', label: 'digest-summary', href: '#' },
@@ -332,6 +383,7 @@ const TRAILS: Record<View, Crumb[]> = {
     ],
     compare: [{ label: 'Prompts', href: '#' }, { label: 'failure-note', href: '#', code: true }, { label: 'Compare' }],
     history: [{ label: 'History' }],
+    prompts: [{ label: 'Prompts' }],
 }
 
 /** A sampling setting, held here as the playground would hold it. */
@@ -476,6 +528,7 @@ function PromptPage() {
 }
 
 function ComparePage() {
+    const [answers, setAnswers] = useState(ANSWERS)
     return (
         <Page>
             <PageHeader
@@ -509,20 +562,33 @@ function ComparePage() {
                     blame, and end with the one thing we are still watching.
                 </ShowMore>
             </Surface>
-            <Columns count={3} gap="inspector">
-                {ANSWERS.map((answer) => (
+            <SortableGrid
+                label="Models"
+                items={answers}
+                itemKey={(answer) => answer.model}
+                itemLabel={(answer) => answer.model}
+                handle="grip"
+                minItemWidth="18rem"
+                onMove={(from, to) => setAnswers(moveItem(answers, from, to))}
+                renderItem={(answer) => (
                     <AnswerColumn
-                        key={answer.model}
                         model={answer.model}
                         detail={answer.detail}
                         state={answer.state}
                         content={answer.text}
-                        usage={{ input: 184, output: answer.tokens, firstToken: answer.first, rate: answer.rate, latency: answer.latency }}
+                        usage={{
+                            input: 184,
+                            output: answer.tokens,
+                            firstToken: answer.first,
+                            rate: answer.rate,
+                            latency: answer.latency,
+                        }}
                         onStop={() => undefined}
                         onRetry={() => undefined}
+                        actions={<SortableGrip />}
                     />
-                ))}
-            </Columns>
+                )}
+            />
         </Page>
     )
 }
@@ -612,7 +678,10 @@ function HistoryPage() {
                                 termWidth="7rem"
                                 items={[
                                     { term: 'Tokens in', value: '184' },
-                                    { term: 'Tokens out', value: chosen.tokens.toLocaleString('en-US') },
+                                    {
+                                        term: 'Tokens out',
+                                        value: chosen.tokens.toLocaleString('en-US'),
+                                    },
                                     { term: 'Latency', value: chosen.latency },
                                     { term: 'First token', value: '240 ms' },
                                 ]}
@@ -624,6 +693,64 @@ function HistoryPage() {
                     </Inspector>
                 </Row>
             </Row>
+        </Page>
+    )
+}
+
+const collection = (id: string, label: string, children: TreeNode[]): TreeNode => ({
+    id,
+    label,
+    icon: Folder,
+    openIcon: FolderOpen,
+    meta: children.length,
+    children,
+})
+const saved = (id: string): TreeNode => ({ id, label: id, icon: FileText })
+
+const COLLECTIONS: TreeNode[] = [
+    collection('exports', 'Exports', [saved('failure-note'), saved('export-check'), saved('index-report')]),
+    collection('digests', 'Digests', [saved('digest-summary'), saved('digest-subject')]),
+    collection('orders', 'Orders', [saved('order-tags')]),
+    saved('scratch'),
+]
+
+/** Counts what each collection holds after a move. */
+const counted = (nodes: TreeNode[]): TreeNode[] =>
+    nodes.map((node) => (node.children === undefined ? node : { ...node, meta: node.children.length }))
+
+/**
+ * The saved prompts in their collections: a prompt dragged by its upper or lower edge goes beside
+ * another, by its middle into a collection, and Alt (Option) with the arrows moves the focused one.
+ */
+function PromptsPage() {
+    const [nodes, setNodes] = useState(COLLECTIONS)
+    return (
+        <Page>
+            <PageHeader
+                title="Prompts"
+                count="7 prompts"
+                actions={
+                    <>
+                        <Button size="sm" variant="outline">
+                            New collection
+                        </Button>
+                        <Button size="sm">
+                            <Plus aria-hidden />
+                            New prompt
+                        </Button>
+                    </>
+                }
+            />
+            <Section title="Collections" flush>
+                <Tree
+                    label="Prompts"
+                    nodes={nodes}
+                    selection="none"
+                    defaultExpanded={['exports', 'digests', 'orders']}
+                    onMove={(id, into, index) => setNodes(counted(moveTreeNode(nodes, id, { into, index })))}
+                    className="p-1"
+                />
+            </Section>
         </Page>
     )
 }
@@ -655,7 +782,15 @@ function PlaygroundApp({ view, children }: { view: View; children: ReactNode }) 
                 top={<TopBar trail={TRAILS[view]} onSearch={() => undefined} />}
                 panel={
                     view === 'prompt' ? (
-                        <SidePanel tabs={[{ id: 'parameters', label: 'Parameters', content: <Parameters /> }]} />
+                        <SidePanel
+                            tabs={[
+                                {
+                                    id: 'parameters',
+                                    label: 'Parameters',
+                                    content: <Parameters />,
+                                },
+                            ]}
+                        />
                     ) : undefined
                 }
             >
@@ -677,7 +812,11 @@ export const Prompt: StoryObj = {
     ),
 }
 
-/** The same prompt answered by three models side by side, the last still streaming, each with its tokens and timing. */
+/**
+ * The same prompt answered by three models side by side, the last still streaming, each with its
+ * tokens and timing. A column's grip puts the models in another order; with it focused, the arrows
+ * move its column a place.
+ */
 export const Compare: StoryObj = {
     render: () => (
         <PlaygroundApp view="compare">
@@ -691,6 +830,18 @@ export const History: StoryObj = {
     render: () => (
         <PlaygroundApp view="history">
             <HistoryPage />
+        </PlaygroundApp>
+    ),
+}
+
+/**
+ * The saved prompts in their collections, put in order and moved between collections by drag: a
+ * line shows where a prompt lands beside another, a ring the collection it goes into.
+ */
+export const Prompts: StoryObj = {
+    render: () => (
+        <PlaygroundApp view="prompts">
+            <PromptsPage />
         </PlaygroundApp>
     ),
 }

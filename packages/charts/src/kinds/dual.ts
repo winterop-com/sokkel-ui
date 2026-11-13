@@ -1,7 +1,8 @@
 import { tooltipMarkup } from '../look'
-import { compactWritten, endsStack, farCorners, tickWriter, written } from './categories'
+import { compactWritten, endsStack, farCorners, tickWriter } from './axes'
 import { shaped } from './legends'
 import {
+    written,
     categoryLabels,
     categoryText,
     colorOf,

@@ -1,9 +1,8 @@
 import type { ChartLook } from '../look'
 import { tooltipMarkup } from '../look'
 import { niceCeil } from '../stats'
-import { written } from './categories'
 import { shaped } from './legends'
-import { colorOf, isDashed, type ChartBuilder } from './spec'
+import { written, colorOf, isDashed, type ChartBuilder } from './spec'
 
 /** The spokes and rings of a radar chart. */
 function radarGrid(

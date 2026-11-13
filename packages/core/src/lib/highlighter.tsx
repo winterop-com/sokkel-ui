@@ -213,6 +213,9 @@ function highlightAnsi(code: string, state?: HighlightState) {
 
 const FONT_STYLE = { italic: 1, bold: 2, underline: 4 } as const
 
+/** The longest line the highlighter colors; a longer one is drawn plain. */
+const MAX_LINE_LENGTH = 20_000
+
 // Loads a language and returns a highlighter for it, or null for a language
 // that is not listed.
 export async function loadHighlighter(language: string) {
@@ -245,6 +248,11 @@ export async function loadHighlighter(language: string) {
                 lang,
                 theme: THEME_NAME,
                 grammarState: isCode(state) ? state.grammar : undefined,
+                // No time limit per line: the first line in a language compiles its grammar's patterns,
+                // which on a busy machine outlasts any limit and would leave the rest of that line plain.
+                // A line too long to color, such as minified code, is drawn plain instead.
+                tokenizeTimeLimit: 0,
+                tokenizeMaxLineLength: MAX_LINE_LENGTH,
             }).tokens
             let depth = isCode(state) ? state.depth : 0
             const bracket = (char: string, key: string) => {
