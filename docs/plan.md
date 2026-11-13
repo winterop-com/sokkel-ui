@@ -664,7 +664,11 @@ the search typed after them and the list open while values are picked. A loader 
 at a time (`{ items, next }`) gets the next page as the list nears its end, and `onCreate` offers
 typed text no option is called as a new one at the list's end. `itemMark` sets a mark before an
 option's label, such as its kind's icon, and with `itemDetail` (its code in the code face) it is
-drawn in the list, the chosen value and a chip alike.
+drawn in the list, the chosen value and a chip alike. Given `items` in place of `load` it is the
+searchable select over a list the app already holds, narrowed at once as it is typed, with no pause,
+no load and no searching line; `SelectField` stays the select with no search, whose options can
+carry their `detail` on a second line (`detailPlacement="below"`) and show it when chosen
+(`chosenDetail`).
 
 A value is edited in place on one cycle, shared by `InlineEdit` and `DataTable`'s cells (`lib/edit`,
 pure and tested): it opens on a press, Enter or F2, Escape drops what was typed, and the app's save

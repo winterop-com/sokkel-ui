@@ -1,4 +1,4 @@
-import { useId, type HTMLAttributes } from 'react'
+import { useId, useState, type HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
 import { describeCron, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
@@ -19,6 +19,8 @@ export interface CronFieldWords extends FieldWords {
     checking: string
     /** Said in place of the runs while the schedule is paused; empty says nothing. */
     paused: string
+    /** Said of a required field left empty, once it has been left. */
+    missing: string
 }
 
 const WORDS: CronFieldWords = {
@@ -30,6 +32,7 @@ const WORDS: CronFieldWords = {
     never: 'Never runs',
     checking: 'Checking',
     paused: 'Paused, so no runs are coming',
+    missing: 'Enter a schedule',
     required: 'required',
 }
 
@@ -83,7 +86,10 @@ export interface CronFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'id
      * refused expression is not read back in words.
      */
     invalid?: string
-    /** Marked by a star after the label, as a required `Field` is; the input says so with `aria-required`. */
+    /**
+     * Marked by a star after the label, as a required `Field` is; the input says so with
+     * `aria-required`, and once it is left empty it says `words.missing` with its issue mark.
+     */
     required?: boolean
     /** How `required` is marked: a star in the label, or the word after it and outside it. */
     requiredMark?: RequiredMark
@@ -118,7 +124,7 @@ export interface CronFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'id
  * says when it is still asking; from then on the server's verdict is the field's, and the field's
  * own reading only puts the expression in words. An empty field says nothing yet. `readOnly` draws
  * a saved schedule with no input, `paused` one that will not run, and `count={0}` lists no runs.
- * `required` marks the label as a required `Field` does.
+ * `required` marks the label as a required `Field` does, and a required field left empty says so once it is left.
  * Other attributes go on the root.
  */
 export function CronField({
@@ -149,18 +155,23 @@ export function CronField({
     const own = useId()
     const id = given ?? own
     const empty = value.trim() === ''
+    // Whether the input has been left once, so an empty required field is said only after it.
+    const [left, setLeft] = useState(false)
+    const missing = required && empty && left && !readOnly
     const reading = empty ? null : describe(value, timeZone)
     // Runs, a refusal or a pending answer from the app: the app decides, and the field's own parse only reads the expression in words.
     const appVerdict = told != null || invalid !== undefined || runsPending
     const refused = !empty && invalid !== undefined && !runsPending
     const unread = !empty && !appVerdict && parseCron(value) === null
-    const bad = refused || unread
-    const runs = empty || bad ? [] : told != null && !runsPending ? told : nextRuns(value, from, count, timeZone)
+    const bad = refused || unread || missing
+    const runs = empty || refused || unread ? [] : told != null && !runsPending ? told : nextRuns(value, from, count, timeZone)
     const issues = unread
         ? [{ tone: 'critical' as const, text: words.invalid, detail: words.invalidDetail }]
         : refused
           ? [{ tone: 'critical' as const, text: invalid }]
-          : []
+          : missing
+            ? [{ tone: 'critical' as const, text: words.missing }]
+            : []
     const line = empty || refused ? '' : !paused && !bad && !runsPending && runs.length === 0 ? words.never : (reading ?? '')
     const star = required && requiredMark === 'star' && (
         <>
@@ -198,6 +209,7 @@ export function CronField({
                             id={id}
                             value={value}
                             onChange={(event) => onChange(event.target.value)}
+                            onBlur={() => setLeft(true)}
                             placeholder={placeholder}
                             spellCheck={false}
                             autoCapitalize="off"

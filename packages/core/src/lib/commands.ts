@@ -56,7 +56,14 @@ export function termScore(command: PaletteCommand, query: string, group = ''): n
     if (asked === '') return 1
     const terms = asked.split(/\s+/)
     const label = command.label.toLowerCase()
-    const found = [label, group, command.hint ?? '', command.code ?? '', command.detail ?? '', ...(command.keywords ?? [])]
+    const found = [
+        label,
+        group,
+        command.hint ?? '',
+        command.code ?? '',
+        typeof command.detail === 'string' ? command.detail : '',
+        ...(command.keywords ?? []),
+    ]
         .join('\n')
         .toLowerCase()
     if (!terms.every((term) => found.includes(term))) return 0

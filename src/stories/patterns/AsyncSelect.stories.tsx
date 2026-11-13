@@ -140,6 +140,37 @@ function JobPicker() {
  */
 export const Marks: StoryObj = { name: 'Marks', render: () => <JobPicker /> }
 
+/** A job picker over a list it holds, narrowed as it is typed. */
+function LocalJobs() {
+    const [value, setValue] = useState<Job | null>(null)
+    return (
+        <Ground>
+            <Field label="Job" id="local-job">
+                <AsyncSelect
+                    id="local-job"
+                    value={value}
+                    onValueChange={setValue}
+                    items={JOB_OPTIONS}
+                    itemKey={(job) => job.code}
+                    itemLabel={(job) => job.name}
+                    itemDetail={(job) => job.code}
+                    itemMeta={(job) => (job.scheduled ? 'scheduled' : 'by hand')}
+                    defaultOpen
+                    defaultQuery="in"
+                    words={{ placeholder: 'Choose a job' }}
+                />
+            </Field>
+        </Ground>
+    )
+}
+
+/**
+ * `items` in place of `load`: a searchable select over a list the app already holds. Typing narrows
+ * it at once by the name or the code, with no pause and no searching line, and `itemMeta` puts a
+ * quiet word at each row's end.
+ */
+export const Local: StoryObj = { name: 'Local list', render: () => <LocalJobs /> }
+
 /** Places to run in: each country's parts, 240 in all, too many to send at once. */
 const PLACES = REGIONS.flatMap((country) =>
     ['North', 'South', 'East', 'West', 'Central', 'Coast', 'Highlands', 'Lakes'].map((part) => `${country} ${part}`),

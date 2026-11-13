@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { AsyncSelect, NO_ANSWER, nearEnd, offersCreate, pageOf, wantsMore, withPage, type AsyncAnswer } from './AsyncSelect'
+import { AsyncSelect, NO_ANSWER, filterLocal, nearEnd, offersCreate, pageOf, wantsMore, withPage, type AsyncAnswer } from './AsyncSelect'
 
 const key = (item: string) => item
 
@@ -110,5 +110,36 @@ describe('marks', () => {
         )
         expect(html).toContain('data-mark="fetch"')
         expect(html).toContain('data-mark="upload"')
+    })
+})
+
+describe('a list held here', () => {
+    const JOBS = [
+        { code: 'nightly-export', name: 'Nightly export' },
+        { code: 'sync-inventory', name: 'Sync inventory' },
+        { code: 'rebuild-index', name: 'Rebuild index' },
+    ]
+    const label = (job: (typeof JOBS)[number]) => job.name
+
+    it('keeps the options whose label or text detail holds every word typed, in any case', () => {
+        expect(filterLocal(JOBS, '', label)).toEqual(JOBS)
+        expect(filterLocal(JOBS, 'NIGHTLY', label).map((job) => job.code)).toEqual(['nightly-export'])
+        expect(filterLocal(JOBS, 'in', label).map((job) => job.code)).toEqual(['sync-inventory', 'rebuild-index'])
+        expect(filterLocal(JOBS, 'rebuild-index', label)).toEqual([])
+        expect(filterLocal(JOBS, 'rebuild-index', label, (job) => job.code).map((job) => job.code)).toEqual(['rebuild-index'])
+        expect(filterLocal(JOBS, 'sync  inv', label).map((job) => job.code)).toEqual(['sync-inventory'])
+    })
+
+    it('reads as a select over items, with no loader', () => {
+        const html = renderToStaticMarkup(
+            <AsyncSelect
+                value={JOBS[1] ?? null}
+                onValueChange={() => undefined}
+                items={JOBS}
+                itemKey={(job) => job.code}
+                itemLabel={label}
+            />,
+        )
+        expect(html).toContain('Sync inventory')
     })
 })

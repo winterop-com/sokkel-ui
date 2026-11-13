@@ -51,11 +51,25 @@ const THUMB = {
     md: 'size-10',
 } as const
 
+/** The status inks a result's line under its title can take. */
+export type SearchDetailTone = 'critical' | 'warning' | 'good' | 'info'
+
+const DETAIL_INK: Record<SearchDetailTone, string> = {
+    critical: 'text-critical-ink',
+    warning: 'text-warning-ink',
+    good: 'text-good-ink',
+    info: 'text-info-ink',
+}
+
 export interface SearchResultBodyProps {
     result: SearchResult
     /** The words marked in the title and the line under it, unless the result gives its own `matches`. */
     query: string
     size?: keyof typeof THUMB
+    /** Drawn as the line under the title in place of the result's `detail`, such as a node with a mark of its own. */
+    second?: ReactNode
+    /** Sets the line under the title in a status ink in place of the muted one. */
+    detailTone?: SearchDetailTone
     className?: string
 }
 
@@ -64,7 +78,8 @@ export interface SearchResultBodyProps {
  * the line under it and a quiet fact at the end. The row around it (an option in a list, a link
  * on a results page, a palette's item) is the caller's; this is what it holds.
  */
-export function SearchResultBody({ result, query, size = 'sm', className }: SearchResultBodyProps) {
+export function SearchResultBody({ result, query, size = 'sm', second, detailTone, className }: SearchResultBodyProps) {
+    const ink = detailTone === undefined ? 'text-muted-foreground' : DETAIL_INK[detailTone]
     const Icon = result.icon
     return (
         <span className={cn('flex min-w-0 flex-1 items-center gap-2.5', className)}>
@@ -104,12 +119,16 @@ export function SearchResultBody({ result, query, size = 'sm', className }: Sear
                     text={result.title}
                     ranges={result.matches ?? queryRanges(result.title, query)}
                 />
-                {result.detail !== undefined && (
-                    <Highlight
-                        className="block truncate text-xs text-muted-foreground"
-                        text={result.detail}
-                        ranges={result.matches === undefined ? queryRanges(result.detail, query) : []}
-                    />
+                {second !== undefined && second !== null ? (
+                    <span className={cn('block truncate text-xs', ink)}>{second}</span>
+                ) : (
+                    result.detail !== undefined && (
+                        <Highlight
+                            className={cn('block truncate text-xs', ink)}
+                            text={result.detail}
+                            ranges={result.matches === undefined ? queryRanges(result.detail, query) : []}
+                        />
+                    )
                 )}
             </span>
             {result.meta !== undefined && <span className="shrink-0 text-xs text-faint">{result.meta}</span>}

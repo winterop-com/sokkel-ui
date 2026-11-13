@@ -15,7 +15,7 @@ export default meta
 /** The day these stories call today. */
 const TODAY = '2026-11-09'
 
-/** A moment with its zone, and an empty optional one. */
+/** A moment with its zone, an empty optional one, and one set in the code face (`mono`). */
 export const Plain: StoryObj = {
     render: function Render() {
         const [at, setAt] = useState<string | null>('2026-11-10T02:00')
@@ -23,6 +23,7 @@ export const Plain: StoryObj = {
             <Stack gap="lg" className="max-w-sm">
                 <DateTimeField id="plain-next" label="Next run" zone="UTC" value={at} onValueChange={setAt} today={TODAY} />
                 <DateTimeField id="plain-until" label="Paused until" help="Runs start again at this time." today={TODAY} />
+                <DateTimeField id="plain-stamp" label="Started at" zone="UTC" mono defaultValue="2026-11-09T02:00" today={TODAY} />
             </Stack>
         )
     },

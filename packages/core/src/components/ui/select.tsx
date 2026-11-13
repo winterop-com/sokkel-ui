@@ -106,11 +106,19 @@ function SelectLabel({ className, ...props }: SelectLabelProps) {
 }
 
 export type SelectItemProps = SelectPrimitive.Item.Props & {
-    /** A quiet fact at the row's end, before the check, such as the value it would inherit; the chosen value never shows it. */
+    /** A quiet fact about the option, such as the value it would inherit; the chosen value never shows it. */
     detail?: React.ReactNode
+    /** Where the detail goes: at the row's end, before the check, or on a second line under the label. */
+    detailPlacement?: 'end' | 'below'
 }
 
-function SelectItem({ className, children, detail, ...props }: SelectItemProps) {
+function SelectItem({ className, children, detail, detailPlacement = 'end', ...props }: SelectItemProps) {
+    const below = detail !== undefined && detailPlacement === 'below'
+    const text = (
+        <SelectPrimitive.ItemText className={cn('flex flex-1 shrink-0 gap-2 whitespace-nowrap', below && 'min-w-0')}>
+            {children}
+        </SelectPrimitive.ItemText>
+    )
     return (
         <SelectPrimitive.Item
             data-slot="select-item"
@@ -120,8 +128,15 @@ function SelectItem({ className, children, detail, ...props }: SelectItemProps) 
             )}
             {...props}
         >
-            <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">{children}</SelectPrimitive.ItemText>
-            {detail !== undefined && <span className="shrink-0 pl-2 text-xs text-muted-foreground">{detail}</span>}
+            {below ? (
+                <div data-slot="select-item-lines" className="flex min-w-0 flex-1 flex-col">
+                    {text}
+                    <div className="text-xs whitespace-normal text-muted-foreground">{detail}</div>
+                </div>
+            ) : (
+                text
+            )}
+            {detail !== undefined && !below && <span className="shrink-0 pl-2 text-xs text-muted-foreground">{detail}</span>}
             <SelectPrimitive.ItemIndicator
                 render={<span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />}
             >
