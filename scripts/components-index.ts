@@ -249,6 +249,7 @@ const CORE_AREAS: Record<string, string> = {
     DateField: 'Forms and inputs',
     DateTimeField: 'Forms and inputs',
     Field: 'Forms and inputs',
+    FieldGroup: 'Forms and inputs',
     FilterBar: 'Forms and inputs',
     FileField: 'Forms and inputs',
     FilterChip: 'Forms and inputs',

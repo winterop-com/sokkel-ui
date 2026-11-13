@@ -2,10 +2,11 @@ import { useId, type HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
 import { describeCron, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
+import type { FieldWords, RequiredMark } from './Field'
 import { ISSUE_EDGE, IssueMark } from './IssueMark'
 import { Input } from './ui/input'
 
-export interface CronFieldWords {
+export interface CronFieldWords extends FieldWords {
     label: string
     invalid: string
     invalidDetail: string
@@ -29,6 +30,7 @@ const WORDS: CronFieldWords = {
     never: 'Never runs',
     checking: 'Checking',
     paused: 'Paused, so no runs are coming',
+    required: 'required',
 }
 
 const defaultDescribe = (expression: string) => describeCron(expression)
@@ -81,6 +83,10 @@ export interface CronFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'id
      * refused expression is not read back in words.
      */
     invalid?: string
+    /** Marked by a star after the label, as a required `Field` is; the input says so with `aria-required`. */
+    required?: boolean
+    /** How `required` is marked: a star in the label, or the word after it and outside it. */
+    requiredMark?: RequiredMark
     /** An example expression shown in the empty input, such as `0 2 * * *`. */
     placeholder?: string
     /** Draws the expression, its reading and its next runs, with no input and no presets. */
@@ -112,6 +118,7 @@ export interface CronFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'id
  * says when it is still asking; from then on the server's verdict is the field's, and the field's
  * own reading only puts the expression in words. An empty field says nothing yet. `readOnly` draws
  * a saved schedule with no input, `paused` one that will not run, and `count={0}` lists no runs.
+ * `required` marks the label as a required `Field` does.
  * Other attributes go on the root.
  */
 export function CronField({
@@ -124,6 +131,8 @@ export function CronField({
     runs: told,
     runsPending = false,
     invalid,
+    required = false,
+    requiredMark = 'star',
     placeholder,
     readOnly = false,
     paused = false,
@@ -153,6 +162,14 @@ export function CronField({
           ? [{ tone: 'critical' as const, text: invalid }]
           : []
     const line = empty || refused ? '' : !paused && !bad && !runsPending && runs.length === 0 ? words.never : (reading ?? '')
+    const star = required && requiredMark === 'star' && (
+        <>
+            <span className="ml-1 text-critical-ink" aria-hidden>
+                *
+            </span>
+            <span className="sr-only">{words.required}</span>
+        </>
+    )
     return (
         <div {...rest} className={cn('flex flex-col gap-3', className)}>
             <div className="flex flex-col gap-1.5">
@@ -160,12 +177,15 @@ export function CronField({
                     {readOnly ? (
                         <span id={`${id}-label`} className="text-sm leading-5 font-medium">
                             {words.label}
+                            {star}
                         </span>
                     ) : (
                         <label htmlFor={id} className="text-sm leading-5 font-medium">
                             {words.label}
+                            {star}
                         </label>
                     )}
+                    {required && requiredMark === 'word' && <span className="text-xs text-muted-foreground">{words.required}</span>}
                     {words.zone !== '' && <span className="font-mono text-xs text-muted-foreground">{words.zone}</span>}
                 </div>
                 {readOnly ? (
@@ -183,6 +203,7 @@ export function CronField({
                             autoCapitalize="off"
                             autoComplete="off"
                             aria-invalid={bad || undefined}
+                            aria-required={required || undefined}
                             className={cn('font-mono', bad && cn('pr-9', ISSUE_EDGE.critical))}
                         />
                         <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />

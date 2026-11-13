@@ -48,4 +48,27 @@ describe('SelectField', () => {
         const html = renderToStaticMarkup(<SelectField id="service" label="Service" options={SERVICES} value="api" disabled />)
         expect(html).toMatch(/<button[^>]*disabled=""/)
     })
+
+    it('says required in the words it is given', () => {
+        const html = renderToStaticMarkup(
+            <SelectField id="service" label="Service" options={SERVICES} required words={{ required: 'påkrevd' }} />,
+        )
+        expect(html).toContain('<span class="sr-only">påkrevd</span>')
+    })
+
+    it('draws the chosen option with its icon, and never its detail', () => {
+        const options = [
+            { value: 'api', label: 'API', icon: <svg data-mark="api" />, detail: 'inherited' },
+            { value: 'worker', label: 'Worker', icon: <svg data-mark="worker" /> },
+        ]
+        const html = renderToStaticMarkup(<SelectField id="service" label="Service" options={options} value="api" />)
+        expect(html).toContain('data-mark="api"')
+        expect(html).toContain('API')
+        expect(html).not.toContain('inherited')
+        const empty = renderToStaticMarkup(
+            <SelectField id="service" label="Service" options={options} value="" placeholder="Pick a service" />,
+        )
+        expect(empty).toContain('Pick a service')
+        expect(empty).not.toContain('data-mark')
+    })
 })

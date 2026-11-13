@@ -1,13 +1,13 @@
 import { Eraser } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Field } from './Field'
+import { Field, type FieldWords } from './Field'
 import type { Issue } from './IssueMark'
 import { Segmented } from './Segmented'
 import { Button } from './ui/button'
 
 /** The words a yes or no field says. */
-export interface YesNoFieldWords {
+export interface YesNoFieldWords extends FieldWords {
     yes: string
     no: string
     /** The button that takes the answer back. */
@@ -16,7 +16,7 @@ export interface YesNoFieldWords {
     unanswered: string
 }
 
-const WORDS: YesNoFieldWords = { yes: 'Yes', no: 'No', clear: 'Clear', unanswered: 'Not answered' }
+const WORDS: YesNoFieldWords = { yes: 'Yes', no: 'No', clear: 'Clear', unanswered: 'Not answered', required: 'required' }
 
 export interface YesNoFieldProps {
     id: string
@@ -67,6 +67,7 @@ export function YesNoField({
             id={id}
             label={label}
             required={required}
+            words={{ required: words.required }}
             description={description}
             help={help}
             error={error}

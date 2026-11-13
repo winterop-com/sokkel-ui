@@ -76,7 +76,8 @@ export const Described: StoryObj = {
 
 /**
  * Required fields marked by the word after the label rather than a star in it, so a screen reader
- * names the input by its label alone and hears that it is required from the input itself.
+ * names the input by its label alone and hears that it is required from the input itself. The
+ * word is the field's to translate: the last says it in Norwegian.
  */
 export const RequiredWord: StoryObj = {
     name: 'Required word',
@@ -85,6 +86,15 @@ export const RequiredWord: StoryObj = {
             <TextField id="word-name" label="Name" required requiredMark="word" defaultValue="Sync inventory" />
             <TextField id="word-code" label="Code" required requiredMark="word" mono defaultValue="sync-inventory" />
             <TextField id="word-owner" label="Owner" requiredMark="word" placeholder="grace" />
+            <TextField
+                id="word-host"
+                label="Vert"
+                required
+                requiredMark="word"
+                mono
+                defaultValue="api.example.org"
+                words={{ required: 'påkrevd' }}
+            />
         </Stack>
     ),
 }

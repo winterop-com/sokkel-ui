@@ -44,7 +44,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 252 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 253 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -238,6 +238,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **DateField** | `@winterop-com/sokkel-ui/DateField` | A date typed in one format, with a calendar beside it to pick from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-date-field--plain) |
 | **DateTimeField** | `@winterop-com/sokkel-ui/DateTimeField` | A date and a time typed as one, with a calendar and a list of times beside it to pick from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-date-and-time-field--plain) |
 | **Field** | `@winterop-com/sokkel-ui/Field` | A form control with its label, an optional hint beside the label, and help under the control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-field--variants) |
+| **FieldGroup** | `@winterop-com/sokkel-ui/FieldGroup` | A named set of fields that belong together, such as a window's start and end: a fieldset whose name is drawn as a field's label is, with a hint beside it, a sentence under it and controls at the end of its row, and the fields under them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-field-group--window) |
 | **FileField** | `@winterop-com/sokkel-ui/FileField` | A field that takes files: a zone they are dropped on, with a button that opens the picker, and under it the limits it holds them to (the types in `accept`, `maxSize` and `maxFiles`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-file-field--empty) |
 | **FilterBar** | `@winterop-com/sokkel-ui/FilterBar` | Filters on a listing, each a chip that says what it keeps: the field, how it compares and the value. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-filter-bar--empty) |
 | **FilterChip** | `@winterop-com/sokkel-ui/FilterChip` | One filter in a toolbar: the facet it filters on, how it compares, and what it is set to. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-filter-chip--unset) |

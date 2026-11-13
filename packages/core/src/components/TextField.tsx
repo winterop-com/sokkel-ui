@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
-import { Field, describedBy, type RequiredMark } from './Field'
+import { Field, describedBy, type FieldWords, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
@@ -49,6 +49,7 @@ export interface TextFieldProps {
     onBlur?: () => void
     /** Classes for the field, such as its span in a grid. */
     className?: string
+    words?: Partial<FieldWords>
 }
 
 /**
@@ -89,6 +90,7 @@ export function TextField({
     onEscape,
     onBlur,
     className,
+    words,
 }: TextFieldProps) {
     const all: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issues]
     const invalid = worst(all) === 'critical' || undefined
@@ -122,6 +124,7 @@ export function TextField({
             issueOpen={issueOpen}
             onIssueOpenChange={onIssueOpenChange}
             className={className}
+            words={words}
         >
             {multiline ? (
                 <Textarea {...shared} rows={rows} className={face} onChange={(event) => onChange?.(event.target.value)} />

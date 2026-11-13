@@ -3,14 +3,14 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { FRAME_BUTTON } from './entry'
-import { describedBy, Field } from './Field'
+import { describedBy, Field, type FieldWords } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { RelativeTime } from './RelativeTime'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 
 /** The words a secret field says. */
-export interface SecretFieldWords {
+export interface SecretFieldWords extends FieldWords {
     /** Said of a secret that is set, when the app does not say when. */
     set: string
     /** Said of a secret set at a time, given that time said relative to now. */
@@ -24,6 +24,7 @@ export interface SecretFieldWords {
 }
 
 export const SECRET_FIELD_WORDS: SecretFieldWords = {
+    required: 'required',
     set: 'Set',
     setWhen: (when) => <>Set {when}</>,
     replace: 'Replace',
@@ -242,6 +243,7 @@ export function SecretField({
             description={description}
             help={help}
             required={required}
+            words={{ required: words.required }}
             issues={issues}
             issueOpen={issueOpen}
             onIssueOpenChange={onIssueOpenChange}

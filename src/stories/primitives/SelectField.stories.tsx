@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { Clock, Cog, Globe } from 'lucide-react'
 import { useState } from 'react'
 
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -72,6 +73,40 @@ export const Help: StoryObj = {
                 placeholder="Choose a project"
             />
             <SelectField id="help-step" label="Retry from" required requiredMark="word" mono options={STEPS} defaultValue="validate" />
+        </Stack>
+    ),
+}
+
+/**
+ * Options with an icon before the label, in the list and in the select, and options with a quiet
+ * fact at the end of their row: here the value the job would inherit from its project.
+ */
+export const Icons: StoryObj = {
+    name: 'Icons and details',
+    render: () => (
+        <Stack gap="lg" className="max-w-md">
+            <SelectField
+                id="icons-service"
+                label="Runs on"
+                options={[
+                    { value: 'api', label: 'API', icon: <Globe /> },
+                    { value: 'worker', label: 'Worker', icon: <Cog /> },
+                    { value: 'scheduler', label: 'Scheduler', icon: <Clock /> },
+                ]}
+                defaultValue="worker"
+            />
+            <SelectField
+                id="icons-concurrency"
+                label="Concurrency"
+                help="How many runs of rebuild-index go at once."
+                options={[
+                    { value: '1', label: 'One at a time' },
+                    { value: '2', label: 'Two' },
+                    { value: '4', label: 'Four', detail: "harbor's default" },
+                    { value: '8', label: 'Eight' },
+                ]}
+                defaultValue="4"
+            />
         </Stack>
     ),
 }
