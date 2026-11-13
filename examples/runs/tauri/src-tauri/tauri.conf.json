@@ -6,7 +6,7 @@
     "build": {
         "frontendDist": "../../web/dist",
         "beforeBuildCommand": "cd ../web && bun install && bun run build",
-        "beforeDevCommand": "cd ../web && bun install && bun run build"
+        "beforeDevCommand": { "script": "cd ../web && bun install && bun run build", "wait": true }
     },
     "app": {
         "windows": [
