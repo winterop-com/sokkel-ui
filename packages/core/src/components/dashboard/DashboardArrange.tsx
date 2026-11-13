@@ -1,5 +1,5 @@
 import type { DragEndEvent, DragMoveEvent } from '@dnd-kit/core'
-import { Plus, StretchHorizontal, X } from 'lucide-react'
+import { Plus, Settings2, StretchHorizontal, X } from 'lucide-react'
 import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
@@ -32,6 +32,8 @@ export interface DashboardArrangeWords {
     /** A panel's size menu. */
     size: (panel: string) => string
     remove: (panel: string) => string
+    /** A panel's configure button. */
+    configure: (panel: string) => string
     /** Each width the size menu offers. */
     spans: Record<PanelSpan, string>
     /** The palette, for a screen reader. */
@@ -48,6 +50,7 @@ export const DASHBOARD_ARRANGE_WORDS: DashboardArrangeWords = {
     move: (panel) => `Move ${panel}`,
     size: (panel) => `Size of ${panel}`,
     remove: (panel) => `Remove ${panel}`,
+    configure: (panel) => `Configure ${panel}`,
     spans: { sixth: 'Sixth', quarter: 'Quarter', third: 'Third', half: 'Half', 'two-thirds': 'Two thirds', full: 'Full width' },
     palette: 'Widgets',
     add: (widget) => `Add ${widget}`,
@@ -104,6 +107,10 @@ export interface DashboardArrangeProps<T extends DashboardLayoutItem> {
     spans?: readonly PanelSpan[] | false
     /** Whether each panel has a remove button while arranging. */
     removable?: boolean
+    /** Opens a panel's options, such as its title, from a button in its head while arranging. */
+    onConfigure?: (item: T) => void
+    /** Which panels have options to configure; every panel when `onConfigure` is given and this is not. */
+    configurable?: (item: T) => boolean
     dense?: boolean
     words?: Partial<DashboardArrangeWords>
     className?: string
@@ -111,9 +118,10 @@ export interface DashboardArrangeProps<T extends DashboardLayoutItem> {
 
 /**
  * A dashboard whose panels the reader arranges. While `arranging`, each panel's head holds a grip
- * that drags it (a finger holds a moment first), a menu of widths and a remove button, and a line
- * at a panel's side shows where a dragged one lands; with the grip focused, the arrow keys move the
- * panel a place and Space or Enter picks it up. Widgets in the `palette` are dragged onto the grid
+ * that drags it (a finger holds a moment first), a menu of widths and a remove button, with
+ * `onConfigure` a button that opens its options, and a line at a panel's side shows where a dragged
+ * one lands; with the grip focused, the arrow keys move the panel a place and Space or Enter picks
+ * it up. Widgets in the `palette` are dragged onto the grid
  * to add a panel there, or pressed to add one at the end. Every change comes back as the layout,
  * an order of `{ id, span }` to keep, and `onAdd` for a widget dropped in.
  *
@@ -130,6 +138,8 @@ export function DashboardArrange<T extends DashboardLayoutItem>({
     onAdd,
     spans = ALL_SPANS,
     removable = true,
+    onConfigure,
+    configurable,
     dense = false,
     words: given,
     className,
@@ -228,6 +238,11 @@ export function DashboardArrange<T extends DashboardLayoutItem>({
                             aim={aim?.id === item.id ? aim.part : undefined}
                             spans={spans === false ? [] : spans}
                             removable={removable}
+                            onConfigure={
+                                onConfigure === undefined || (configurable !== undefined && !configurable(item))
+                                    ? undefined
+                                    : () => onConfigure(item)
+                            }
                             words={words}
                             refocus={refocus}
                             onStep={(by) => step(item.id, by)}
@@ -308,6 +323,7 @@ interface ArrangedPanelProps {
     aim: 'before' | 'after' | undefined
     spans: readonly PanelSpan[]
     removable: boolean
+    onConfigure: (() => void) | undefined
     words: DashboardArrangeWords
     refocus: { current: string | null }
     onStep: (by: number) => void
@@ -325,6 +341,7 @@ function ArrangedPanel({
     aim,
     spans,
     removable,
+    onConfigure,
     words,
     refocus,
     onStep,
@@ -364,6 +381,11 @@ function ArrangedPanel({
                     },
                 }}
             />
+            {onConfigure !== undefined && (
+                <IconButton size="icon-xs" label={words.configure(label)} onClick={onConfigure}>
+                    <Settings2 aria-hidden />
+                </IconButton>
+            )}
             {spans.length > 0 && (
                 <DropdownMenu>
                     <DropdownMenuTrigger

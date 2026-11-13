@@ -7,10 +7,12 @@ import { BoardCard } from '@winterop-com/sokkel-ui/board/BoardCard'
 import { BoardColumn } from '@winterop-com/sokkel-ui/board/BoardColumn'
 import { Callout } from '@winterop-com/sokkel-ui/Callout'
 import { DashboardArrange, type DashboardLayoutItem, type DashboardWidget } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
+import { DashboardEditActions, useDashboardEdit } from '@winterop-com/sokkel-ui/dashboard/DashboardEdit'
 import { DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { StatPanel } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
+import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import { DragDrop } from '@winterop-com/sokkel-ui/DragDrop'
 import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -20,6 +22,7 @@ import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SortableGrid, SortableList } from '@winterop-com/sokkel-ui/Sortable'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { moveTreeNode, Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { GaugePanel } from '@winterop-com/sokkel-ui-charts/dashboard/GaugePanel'
@@ -375,6 +378,8 @@ type PanelKind = 'success' | 'runs' | 'queue' | 'load' | 'activity' | 'depth' | 
 
 interface Placed extends DashboardLayoutItem {
     kind: PanelKind
+    /** The panel's own title, in place of its kind's name. */
+    title?: string
 }
 
 const NAMES: Record<PanelKind, string> = {
@@ -389,22 +394,23 @@ const NAMES: Record<PanelKind, string> = {
 
 /** One panel of the job runs dashboard, by its kind. */
 function panelOf(item: Placed): ReactNode {
+    const title = item.title ?? NAMES[item.kind]
     switch (item.kind) {
         case 'success':
-            return <StatPanel title={NAMES.success} value={99.3} unit="%" decimals={1} thresholds={HIGH_IS_GOOD} sparkline={RUNS} />
+            return <StatPanel title={title} value={99.3} unit="%" decimals={1} thresholds={HIGH_IS_GOOD} sparkline={RUNS} />
         case 'runs':
-            return <StatPanel title={NAMES.runs} value={3526} color="chart-2" sparkline={RUNS} delta="+6%" compared="vs yesterday" good />
+            return <StatPanel title={title} value={3526} color="chart-2" sparkline={RUNS} delta="+6%" compared="vs yesterday" good />
         case 'queue':
-            return <StatPanel title={NAMES.queue} value={30} thresholds={QUEUE_STEPS} sparkline={QUEUE['worker-3']} />
+            return <StatPanel title={title} value={30} thresholds={QUEUE_STEPS} sparkline={QUEUE['worker-3']} />
         case 'load':
-            return <GaugePanel title={NAMES.load} value={72} unit="%" thresholds={LOAD_STEPS} />
+            return <GaugePanel title={title} value={72} unit="%" thresholds={LOAD_STEPS} />
         case 'activity':
-            return <TimeSeriesPanel title={NAMES.activity} subtitle="every 15 min" x={TIMES} series={RUN_SERIES} labelEvery={16} />
+            return <TimeSeriesPanel title={title} subtitle="every 15 min" x={TIMES} series={RUN_SERIES} labelEvery={16} />
         case 'depth':
-            return <TimeSeriesPanel title={NAMES.depth} x={TIMES} series={QUEUE_SERIES} step labelEvery={16} />
+            return <TimeSeriesPanel title={title} x={TIMES} series={QUEUE_SERIES} step labelEvery={16} />
         case 'failures':
             return (
-                <DashboardPanel title={NAMES.failures} flush>
+                <DashboardPanel title={title} flush>
                     <ListRows flush>
                         <ListRow
                             icon={<TriangleAlert className="size-4 text-critical" aria-hidden />}
@@ -492,3 +498,73 @@ export const Dashboard: StoryObj = { name: 'Dashboard', render: () => <Arranged 
 
 /** The same dashboard with a palette of widgets: one dragged onto the grid adds a panel where it lands, and one pressed adds it at the end. */
 export const WidgetPalette: StoryObj = { name: 'Widget palette', render: () => <Arranged palette /> }
+
+/** The job runs dashboard behind an Edit button, each panel's title kept in the layout and changed from its configure button. */
+function Edited() {
+    const [kept, setKept] = useState(LAYOUT.slice(0, 5))
+    const [configuring, setConfiguring] = useState<Placed | null>(null)
+    const [title, setTitle] = useState('')
+    const edit = useDashboardEdit({
+        layout: kept,
+        defaultLayout: LAYOUT.slice(0, 5),
+        onSave: setKept,
+        same: (left, right) => left.id === right.id && left.span === right.span && left.title === right.title,
+    })
+    const named = (item: Placed) => item.title ?? NAMES[item.kind]
+    return (
+        <TooltipProvider>
+            <Stack gap="md">
+                <Row justify="between" wrap>
+                    <span className="text-section-title">Job runs</span>
+                    <Row gap="sm">
+                        <DashboardEditActions edit={edit} />
+                    </Row>
+                </Row>
+                <DashboardArrange
+                    layout={edit.layout}
+                    onLayoutChange={edit.change}
+                    label={named}
+                    renderPanel={panelOf}
+                    arranging={edit.editing}
+                    dense
+                    onConfigure={(item) => {
+                        setConfiguring(item)
+                        setTitle(named(item))
+                    }}
+                />
+            </Stack>
+            <DialogShell
+                open={configuring !== null}
+                onOpenChange={(open) => {
+                    if (!open) setConfiguring(null)
+                }}
+                title="Configure panel"
+                width="sm"
+                confirm={{
+                    label: 'Apply',
+                    onConfirm: () => {
+                        if (configuring === null) return
+                        const given = title.trim()
+                        edit.change(
+                            edit.layout.map((item) =>
+                                item.id === configuring.id
+                                    ? { ...item, title: given === '' || given === NAMES[item.kind] ? undefined : given }
+                                    : item,
+                            ),
+                        )
+                        setConfiguring(null)
+                    },
+                }}
+            >
+                <TextField id="panel-title" label="Title" value={title} onChange={setTitle} />
+            </DialogShell>
+        </TooltipProvider>
+    )
+}
+
+/**
+ * The dashboard behind an Edit button: while editing, panels move, take a width, come off and open
+ * their options from a configure button, all into a draft. Done keeps the draft, Cancel throws it
+ * away, and Reset puts the dashboard as it comes in the draft.
+ */
+export const EditMode: StoryObj = { name: 'Edit mode', render: () => <Edited /> }
