@@ -107,6 +107,22 @@ export function offersCreate<T>(text: string, items: readonly T[], label: (item:
     return wanted !== '' && !items.some((item) => label(item).trim().toLocaleLowerCase('en-US') === wanted)
 }
 
+/**
+ * The options whose label, or whose detail when it is text, holds every word typed, in any case,
+ * in their order; all of them for an empty query.
+ */
+export function filterLocal<T>(items: readonly T[], query: string, label: (item: T) => string, detail?: (item: T) => ReactNode): T[] {
+    const words = query.trim().toLocaleLowerCase('en-US').split(/\s+/).filter(Boolean)
+    if (words.length === 0) return [...items]
+    return items.filter((item) => {
+        const shown = detail?.(item)
+        const text = `${label(item)} ${typeof shown === 'string' || typeof shown === 'number' ? String(shown) : ''}`.toLocaleLowerCase(
+            'en-US',
+        )
+        return words.every((word) => text.includes(word))
+    })
+}
+
 const said = (reason: unknown) => (reason instanceof Error ? reason.message : String(reason))
 
 /** The row that makes an option of the typed text. */
@@ -116,8 +132,6 @@ class Creation {
 
 interface AsyncSelectBase<T> {
     id?: string
-    /** Answers a query with its options, or a page of them; scrolling near the list's end loads the next. */
-    load: AsyncLoad<T>
     itemKey: (item: T) => string
     itemLabel: (item: T) => string
     /** How an option is drawn in the list; its label alone otherwise. */
@@ -160,7 +174,23 @@ export interface AsyncSelectManyProps<T> extends AsyncSelectBase<T> {
     onValueChange: (value: T[]) => void
 }
 
-export type AsyncSelectProps<T> = AsyncSelectOneProps<T> | AsyncSelectManyProps<T>
+/** Where the options come from: a search the app answers, or a list held here. */
+export type AsyncSelectSource<T> =
+    | {
+          /** Answers a query with its options, or a page of them; scrolling near the list's end loads the next. */
+          load: AsyncLoad<T>
+          items?: never
+          filter?: never
+      }
+    | {
+          load?: never
+          /** Every option, held here and narrowed as the search is typed, at once: no pause, no load and no searching line. */
+          items: readonly T[]
+          /** Whether an option answers the query; its label, or its detail when that is text, holding every word typed otherwise. */
+          filter?: (item: T, query: string) => boolean
+      }
+
+export type AsyncSelectProps<T> = (AsyncSelectOneProps<T> | AsyncSelectManyProps<T>) & AsyncSelectSource<T>
 
 /**
  * A select whose options come from a search: its text is sent to `load` after a pause in typing.
@@ -174,11 +204,17 @@ export type AsyncSelectProps<T> = AsyncSelectOneProps<T> | AsyncSelectManyProps<
  * A loader that answers a page at a time (`{ items, next }`) gets the next page as the list is
  * scrolled near its end, the line under it saying so. With `onCreate`, typed text that names no
  * option is offered as a new one at the list's end.
+ *
+ * Given `items` in place of `load`, it is a searchable select over a list it holds: what is typed
+ * narrows the options at once, by `filter` or by every word in an option's label or text detail,
+ * with no pause, no load and no searching line. `itemMeta` puts a quiet figure at a row's end.
  */
 export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
     const {
         id,
         load,
+        items: local,
+        filter: matches,
         itemKey,
         itemLabel,
         renderItem,
@@ -215,16 +251,18 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
     }, [answer])
 
     const short = query.trim().length < minQuery
+    const held = local !== undefined
 
     useEffect(() => {
-        if (!open || short) return
+        const run = loadRef.current
+        if (!open || short || run === undefined) return
         const controller = new AbortController()
         const timer = setTimeout(
             () => {
                 more.current?.abort()
                 asked.current = query.trim()
                 setAnswer((last) => ({ ...last, loading: 'first', failed: null }))
-                loadRef.current(query.trim(), controller.signal).then(
+                run(query.trim(), controller.signal).then(
                     (page) => {
                         if (!controller.signal.aborted) setAnswer((last) => withPage(last, pageOf(page), 'first', itemKey))
                     },
@@ -241,17 +279,18 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
             controller.abort()
         }
         // oxlint-disable-next-line react-hooks/exhaustive-deps -- the key is read as a page lands; a new key function must not search again
-    }, [open, query, short, debounce, attempt])
+    }, [open, query, short, debounce, attempt, held])
 
     const loadMore = () => {
         const now = answerRef.current
-        if (!wantsMore(now) || now.next === undefined) return
+        const run = loadRef.current
+        if (!wantsMore(now) || now.next === undefined || run === undefined) return
         const controller = new AbortController()
         more.current?.abort()
         more.current = controller
         const cursor = now.next
         setAnswer((last) => ({ ...last, loading: 'more', failed: null }))
-        loadRef.current(asked.current, controller.signal, cursor).then(
+        run(asked.current, controller.signal, cursor).then(
             (page) => {
                 if (!controller.signal.aborted) setAnswer((last) => withPage(last, pageOf(page), 'more', itemKey))
             },
@@ -268,9 +307,20 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
         if (open && list !== null && wantsMore(answer) && nearEnd(list)) loadMore()
     })
 
-    const options = short || !answer.answered ? [] : answer.items
+    const known: AsyncAnswer<T> =
+        local === undefined
+            ? answer
+            : {
+                  ...NO_ANSWER,
+                  answered: true,
+                  items:
+                      matches === undefined
+                          ? filterLocal(local, query, itemLabel, itemDetail)
+                          : local.filter((item) => matches(item, query.trim())),
+              }
+    const options = short || !known.answered ? [] : known.items
     const offered =
-        onCreate !== undefined && !short && answer.answered && answer.loading !== 'first' && offersCreate(query, options, itemLabel)
+        onCreate !== undefined && !short && known.answered && known.loading !== 'first' && offersCreate(query, options, itemLabel)
     const items: (T | Creation)[] = offered ? [...options, new Creation(query.trim())] : [...options]
     const keyOf = (item: T | Creation) => (item instanceof Creation ? `create:${item.text}` : itemKey(item))
     const labelOf = (item: T | Creation) => (item instanceof Creation ? item.text : itemLabel(item))
@@ -349,7 +399,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
     const note = (
         <Combobox.Status className="empty:hidden">
             <Note
-                answer={answer}
+                answer={known}
                 short={short}
                 empty={items.length === 0}
                 minQuery={minQuery}
@@ -361,7 +411,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
     )
     const popup =
         'flex max-h-(--available-height) w-(--anchor-width) min-w-72 origin-(--transform-origin) flex-col overflow-hidden rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-pop'
-    const spinning = (answer.loading === 'first' && !short) || creating === 'busy'
+    const spinning = (known.loading === 'first' && !short) || creating === 'busy'
 
     const shared = {
         items,

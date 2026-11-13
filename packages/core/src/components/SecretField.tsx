@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { FRAME_BUTTON } from './entry'
-import { describedBy, Field, type FieldWords } from './Field'
+import { describedBy, Field, type FieldWords, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { RelativeTime } from './RelativeTime'
 import { Button } from './ui/button'
@@ -45,6 +45,8 @@ export interface SecretFieldProps {
     /** A sentence under the input. */
     help?: string
     required?: boolean
+    /** How `required` is marked: a star in the label, or the word after it. */
+    requiredMark?: RequiredMark
     /** Why the value is refused, as one critical issue. */
     error?: string | null
     issues?: readonly Issue[]
@@ -95,6 +97,7 @@ export function SecretField({
     description,
     help,
     required,
+    requiredMark,
     error,
     issues: given = [],
     issueOpen,
@@ -243,6 +246,7 @@ export function SecretField({
             description={description}
             help={help}
             required={required}
+            requiredMark={requiredMark}
             words={{ required: words.required }}
             issues={issues}
             issueOpen={issueOpen}

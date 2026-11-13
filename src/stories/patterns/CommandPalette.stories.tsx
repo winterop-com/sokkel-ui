@@ -26,6 +26,7 @@ import {
     type PaletteSearch,
     type PaletteGroup,
 } from '@winterop-com/sokkel-ui/CommandPalette'
+import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
 import type { Scheme } from '@winterop-com/sokkel-ui/lib/appearance'
 import { appearanceCommands, placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
@@ -325,6 +326,50 @@ export const SearchStale: StoryObj = { name: 'Search stale', render: () => <Reop
 export const SearchFailed: StoryObj = { name: 'Search failed', render: () => <Reopened later="fail" /> }
 /** Records as two lines, a drawn cover or a picture at the start, a person's round; one-line commands keep their height. */
 export const TwoLines: StoryObj = { name: 'Two lines', render: () => <Palette initial groups={TWO_LINES} /> }
+
+const RUNS: PaletteGroup[] = [
+    {
+        title: 'Runs of nightly-export',
+        verb: 'Compare',
+        commands: [
+            {
+                id: '4812',
+                label: 'Run 4812',
+                detail: 'Failed at upload: connection reset',
+                tone: 'critical',
+                code: 'ada',
+                icon: Workflow,
+                onSelect: () => undefined,
+            },
+            {
+                id: '4811',
+                label: 'Run 4811',
+                detail: <Dot status="running" size="md" say />,
+                keywords: ['running'],
+                code: 'scheduler',
+                icon: Workflow,
+                onSelect: () => undefined,
+            },
+            {
+                id: '4810',
+                label: 'Run 4810',
+                detail: <Dot status="succeeded" size="md" say />,
+                keywords: ['succeeded'],
+                code: 'scheduler',
+                icon: Workflow,
+                onSelect: () => undefined,
+            },
+            { id: '4790', label: 'Run 4790', hint: '73 rows rejected', tone: 'warning', icon: Workflow, onSelect: () => undefined },
+        ],
+    },
+]
+
+/**
+ * The palette as a chooser of its own, picking a run to compare: a row's second line is a node,
+ * such as a status dot with its word, or text in a status ink (`tone`), and a one-line row's hint
+ * takes the tone too.
+ */
+export const Chooser: StoryObj = { render: () => <Palette initial groups={RUNS} /> }
 
 const LOOKS = [
     { value: 'paper', label: 'Paper' },

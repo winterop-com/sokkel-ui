@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react'
+import type { CSSProperties, HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
 import { Field, describedBy, type FieldWords, type RequiredMark } from './Field'
@@ -27,11 +27,16 @@ export interface TextFieldProps {
     issues?: readonly Issue[]
     issueOpen?: boolean
     onIssueOpenChange?: (open: boolean) => void
+    /** The value set in the code face, for keys and addresses. */
     mono?: boolean
+    /** The label names a key, so it is drawn in the code face too. */
+    monoLabel?: boolean
     numeric?: boolean
     multiline?: boolean
     /** A text area's height in lines. */
     rows?: number
+    /** The most lines a text area grows to with its text; past them it scrolls. */
+    maxRows?: number
     type?: string
     value?: string
     defaultValue?: string | number
@@ -55,8 +60,9 @@ export interface TextFieldProps {
 /**
  * A labeled text input: a `Field` with its input inside, wired together. The label names the
  * input, the help line describes it, and an issue marks it invalid and draws its edge, so a form
- * states each of these once. `multiline` makes it a text area; `mono` sets it in the code face for
- * keys and addresses, `numeric` in figures that line up.
+ * states each of these once. `multiline` makes it a text area that grows with its text, up to
+ * `maxRows` lines and then scrolling; `mono` sets the value in the code face for keys and
+ * addresses, `monoLabel` the label too, and `numeric` sets it in figures that line up.
  */
 export function TextField({
     id,
@@ -73,9 +79,11 @@ export function TextField({
     issueOpen,
     onIssueOpenChange,
     mono = false,
+    monoLabel = false,
     numeric = false,
     multiline = false,
     rows,
+    maxRows,
     type,
     value,
     defaultValue,
@@ -125,9 +133,16 @@ export function TextField({
             onIssueOpenChange={onIssueOpenChange}
             className={className}
             words={words}
+            mono={monoLabel}
         >
             {multiline ? (
-                <Textarea {...shared} rows={rows} className={face} onChange={(event) => onChange?.(event.target.value)} />
+                <Textarea
+                    {...shared}
+                    rows={rows}
+                    className={cn(face, maxRows !== undefined && 'overflow-y-auto')}
+                    style={maxRows === undefined ? undefined : linesTall(rows, maxRows)}
+                    onChange={(event) => onChange?.(event.target.value)}
+                />
             ) : (
                 <Input
                     {...shared}
@@ -144,4 +159,14 @@ export function TextField({
             )}
         </Field>
     )
+}
+
+/** A text area's room past its padding and border, as the framed text area draws them. */
+const FRAME = '1rem + 2px'
+
+/** Holds a growing text area between `rows` lines (fewer than `maxRows`) and `maxRows`, after which it scrolls. */
+function linesTall(rows: number | undefined, maxRows: number): CSSProperties {
+    const most = Math.max(1, Math.floor(maxRows))
+    const least = Math.min(most, Math.max(1, Math.floor(rows ?? 4)))
+    return { minHeight: `calc(${String(least)}lh + ${FRAME})`, maxHeight: `calc(${String(most)}lh + ${FRAME})` }
 }
