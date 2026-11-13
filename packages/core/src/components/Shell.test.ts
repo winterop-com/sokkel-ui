@@ -38,7 +38,13 @@ describe('Shell', () => {
     })
 
     it('draws the banner between the top bar and the content, outside what scrolls', () => {
-        expect(SOURCE).toMatch(/<\/header>\s*\)\}\s*\{banner [^\n]*\{banner\}<\/div>\}\s*<main /)
+        expect(SOURCE).toMatch(/<\/header>\s*\)\}\s*\{banner [^\n]*\{banner\}<\/div>\}\s*<div ref=\{setPage\}/)
+    })
+
+    it("holds a screen's head above the scroller, outside it, with the scroller's room for its bar", () => {
+        expect(SOURCE).toMatch(/ref=\{setHeadTarget\}\s+className="[^"]*scroller-thin[^"]*overflow-hidden[^"]*"\s+\/>\s*<main /)
+        expect(SOURCE).toMatch(/<main className="[^"]*scroller-thin[^"]*overflow-y-auto/)
+        expect(SOURCE).toContain('<ShellScroller value={main}>')
     })
 
     it('draws the rail in its drawer under the drawer context, so it draws expanded there', () => {

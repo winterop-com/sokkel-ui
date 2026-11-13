@@ -1,20 +1,35 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 
-/**
- * Whether the window matches a media query, followed as it is resized; `initial` before the window
- * is read (on a server, the query's own answer in a browser otherwise).
- */
-export function useMedia(media: string, initial?: boolean): boolean {
-    const [matches, setMatches] = useState(() => initial ?? (typeof window === 'undefined' || window.matchMedia(media).matches))
-    useEffect(() => {
-        const query = window.matchMedia(media)
-        const change = () => setMatches(query.matches)
-        change()
-        query.addEventListener('change', change)
-        return () => query.removeEventListener('change', change)
-    }, [media])
-    return matches
+/** The window narrower than the `md` breakpoint (48rem): a phone, or a foldable folded. */
+export const MOBILE_QUERY = '(max-width: 767px)'
+
+/** A media query as a store: its answer now, and a way to hear it change that returns the way to stop. */
+export interface MediaStore {
+    matches: () => boolean
+    subscribe: (change: () => void) => () => void
 }
 
-/** Whether the window is phone-sized, under 768px wide; false until the window is read. */
-export const useIsMobile = () => useMedia('(max-width: 767px)', false)
+/** A media query of the window as a store, for `useSyncExternalStore`. */
+export function mediaStore(media: string): MediaStore {
+    return {
+        matches: () => window.matchMedia(media).matches,
+        subscribe: (change) => {
+            const query = window.matchMedia(media)
+            query.addEventListener('change', change)
+            return () => query.removeEventListener('change', change)
+        },
+    }
+}
+
+/**
+ * Whether the window matches a media query, followed as it is resized. In a browser the answer is
+ * read as the component first draws, so a phone never draws the wide layout first; `initial` is
+ * the answer on a server and while a server's page is hydrated (false when not given).
+ */
+export function useMedia(media: string, initial = false): boolean {
+    const store = useMemo(() => mediaStore(media), [media])
+    return useSyncExternalStore(store.subscribe, store.matches, () => initial)
+}
+
+/** Whether the window is phone-sized, under 768px wide (`MOBILE_QUERY`); false on a server. */
+export const useIsMobile = () => useMedia(MOBILE_QUERY)

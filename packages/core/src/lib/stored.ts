@@ -74,24 +74,33 @@ export function subscribeStored(key: string, listener: () => void): () => void {
 
 /**
  * Kept text read back as JSON, or `fallback` when there is none, it does not parse, or `check`
- * refuses it (a value kept by an older version of the app, or by hand).
+ * refuses it (a value kept by an older version of the app, or by hand). A value `check` lets
+ * through is handed to `normalize`, whose answer is read in its place.
  */
-export function parseStored<V>(raw: string | null, fallback: V, check?: (value: unknown) => boolean): V {
+export function parseStored<V>(raw: string | null, fallback: V, check?: (value: unknown) => boolean, normalize?: (value: V) => V): V {
     if (raw === null) return fallback
+    let value: unknown
     try {
-        const value: unknown = JSON.parse(raw)
-        return check === undefined || check(value) ? (value as V) : fallback
+        value = JSON.parse(raw)
     } catch {
         return fallback
     }
+    if (check !== undefined && !check(value)) return fallback
+    return normalize === undefined ? (value as V) : normalize(value as V)
 }
 
 /** Options for a value kept in storage. */
-export interface StoredOptions {
+export interface StoredOptions<V = unknown> {
     /** The prefix before the key, in place of the app's from `setStoredPrefix`. */
     prefix?: string
     /** Whether a kept value is one to use; one refused reads back as the initial value. */
     check?: (value: unknown) => boolean
+    /**
+     * Repairs a kept value `check` lets through, rather than refusing it: a width clamped to the
+     * room the app allows now, a list with the entries it no longer knows taken out. Its answer is
+     * read in the value's place, and what is kept stays as it was until the next write.
+     */
+    normalize?: (value: V) => V
 }
 
 /** One value shared by every reader, and the ways to read, change and watch it. */
@@ -112,10 +121,10 @@ export interface Store<V> {
  * is kept in `localStorage` as JSON (under the app's prefix), read back on load, and follows a
  * change made in another tab; without one it lasts until the page is left.
  */
-export function createStore<V>(initial: V, { key, ...options }: StoredOptions & { key?: string } = {}): Store<V> {
+export function createStore<V>(initial: V, { key, ...options }: StoredOptions<V> & { key?: string } = {}): Store<V> {
     const full = key === undefined ? undefined : storedKey(key, options.prefix)
     let raw = full === undefined ? null : readStored(full)
-    let current = full === undefined ? initial : parseStored(raw, initial, options.check)
+    let current = full === undefined ? initial : parseStored(raw, initial, options.check, options.normalize)
     const listeners = new Set<() => void>()
     const tell = () => {
         // A copy, so a listener that stops itself does not skip the next one.
@@ -143,7 +152,7 @@ export function createStore<V>(initial: V, { key, ...options }: StoredOptions & 
                     const now = readStored(full)
                     if (now === raw) return
                     raw = now
-                    current = parseStored(now, initial, options.check)
+                    current = parseStored(now, initial, options.check, options.normalize)
                     tell()
                 })
             return () => {
