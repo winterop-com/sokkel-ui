@@ -61,13 +61,13 @@ describe('a thing carried by the arrow keys', () => {
     })
 
     it('carries sideways to the card in line, else the nearest that way, such as the end of a shorter column', () => {
-        expect(middleOf(carriedTo('ArrowRight', a1, board), a1)).toEqual({ x: 351, y: 40 })
-        expect(middleOf(carriedTo('ArrowRight', a3, board), a3)).toEqual({ x: 351, y: 60 })
-        expect(middleOf(carriedTo('ArrowLeft', b1, board), b1)).toEqual({ x: 109, y: 30 })
+        expect(middleOf(carriedTo('ArrowRight', a1, board), a1)).toEqual({ x: 351, y: 39 })
+        expect(middleOf(carriedTo('ArrowRight', a3, board), a3)).toEqual({ x: 351, y: 59 })
+        expect(middleOf(carriedTo('ArrowLeft', b1, board), b1)).toEqual({ x: 109, y: 29 })
     })
 
     it('reaches an empty column by its list', () => {
-        expect(middleOf(carriedTo('ArrowRight', a1, [zoneA, a1, zoneB]), a1)).toEqual({ x: 351, y: 60 })
+        expect(middleOf(carriedTo('ArrowRight', a1, [zoneA, a1, zoneB]), a1)).toEqual({ x: 351, y: 59 })
     })
 })
 

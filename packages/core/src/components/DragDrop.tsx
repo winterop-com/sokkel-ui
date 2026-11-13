@@ -187,12 +187,13 @@ function inLine(a: DragRect, b: DragRect, way: { x: number; y: number }): boolea
  * Where a carried thing goes on an arrow key, given where it stands and the places that take it.
  * The thing's middle goes to the nearest place whose middle lies ahead of it that way, a pixel past
  * that middle, so a row carried down stands just past the middle of the row it reaches (after it),
- * one carried up just before it, and a step back first crosses the middle of the row it is on. A
- * place off to the side counts as farther; up and down keep to the places in line with the thing,
- * as a list's rows are, while left and right take those in line first and the nearest anywhere
- * that way after, as a column beside or a place in the rail is. A place around the one the thing
- * is over, such as its list, is where it is rather than a step. Answers where the thing's corner
- * goes, or undefined for a key that is no arrow, or with nothing that way.
+ * one carried up just before it, one carried sideways a pixel above the middle of what it reaches
+ * (before it), and a step back first crosses the middle of the row it is on. A place off to the
+ * side counts as farther; up and down keep to the places in line with the thing, as a list's rows
+ * are, while left and right take those in line first and the nearest anywhere that way after, as
+ * a column beside or a place in the rail is. A place around the one the thing is over, such as its
+ * list, is where it is rather than a step. Answers where the thing's corner goes, or undefined for
+ * a key that is no arrow, or with nothing that way.
  */
 export function carriedTo(code: string, from: DragRect, places: readonly DragRect[]): { x: number; y: number } | undefined {
     const way = ARROWS[code] as { x: number; y: number } | undefined
@@ -223,7 +224,7 @@ export function carriedTo(code: string, from: DragRect, places: readonly DragRec
     const to = nearest(true) ?? (way.x === 0 ? undefined : nearest(false))
     if (to === undefined) return undefined
     const end = middle(to)
-    return { x: end.x - from.width / 2 + way.x, y: end.y - from.height / 2 + way.y }
+    return { x: end.x - from.width / 2 + way.x, y: end.y - from.height / 2 + (way.x === 0 ? way.y : -1) }
 }
 
 /**
@@ -233,14 +234,20 @@ export function carriedTo(code: string, from: DragRect, places: readonly DragRec
  */
 const keyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
     const sorted = sortableKeyboardCoordinates(event, args)
-    const { active, collisionRect, droppableRects, droppableContainers } = args.context
+    const { active, activeNode, collisionRect, droppableRects, droppableContainers } = args.context
     if (sorted !== undefined || active === null || collisionRect === null || sortable(active)) return sorted
+    // A small copy starts at its thing's corner; while it is still over the thing, it is carried from the thing's middle.
+    const own = activeNode?.getBoundingClientRect()
+    const from =
+        own !== undefined && holds(own, middle(collisionRect))
+            ? { ...collisionRect, left: own.left + (own.width - collisionRect.width) / 2, top: own.top + (own.height - collisionRect.height) / 2 }
+            : collisionRect
     const drag = dragData(active)
     const places = droppableContainers.getEnabled().flatMap((entry) => {
         const rect = droppableRects.get(entry.id)
         return rect !== undefined && takes(dragData(entry), drag) ? [rect] : []
     })
-    return carriedTo(event.code, collisionRect, places)
+    return carriedTo(event.code, from, places)
 }
 
 /** Whether a thing is an item of a sortable group, which the engine itself moves among its own. */
