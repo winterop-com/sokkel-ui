@@ -16,7 +16,7 @@ const buttonVariants = cva(
             variant: {
                 default: 'bg-primary text-primary-foreground not-aria-disabled:hover:bg-primary/80',
                 outline:
-                    'border-border bg-background not-aria-disabled:hover:bg-hover not-aria-disabled:hover:text-foreground aria-expanded:bg-hover aria-expanded:text-foreground dark:bg-input/30 dark:not-aria-invalid:border-input',
+                    'border-border bg-background not-aria-disabled:hover:bg-hover not-aria-disabled:hover:text-foreground aria-expanded:bg-hover aria-expanded:text-foreground dark:bg-input/30 dark:not-aria-invalid:border-input dark:aria-expanded:bg-hover',
                 secondary:
                     'bg-secondary text-secondary-foreground not-aria-disabled:hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
                 ghost: 'not-aria-disabled:hover:bg-hover not-aria-disabled:hover:text-foreground aria-expanded:bg-hover aria-expanded:text-foreground',
@@ -52,7 +52,7 @@ const buttonVariants = cva(
 )
 
 /** A busy button keeps its look while it ignores presses. */
-const BUSY = 'cursor-progress opacity-100!'
+const BUSY = 'cursor-progress! opacity-100!'
 
 /** The sizes drawn smaller than a finger on a phone, which take a finger's hit area there instead of its height. */
 const SMALL = new Set(['xs', 'icon-xs'])

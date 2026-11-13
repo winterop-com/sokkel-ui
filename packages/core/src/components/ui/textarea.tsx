@@ -4,7 +4,7 @@ import { INVALID_EDGE } from '../../lib/issue-edge'
 import { cn } from '../../lib/utils'
 
 const FRAMED =
-    'flex field-sizing-content min-h-28 w-full rounded-control border border-input bg-field px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:disabled:bg-input/80'
+    'flex field-sizing-content min-h-28 w-full rounded-control border border-input bg-field px-2.5 py-2 text-base text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:disabled:bg-input/80'
 
 /** No frame of its own: the text area inherits its text size and takes its height and padding from `className`. */
 const BARE = 'field-sizing-content w-full min-w-0 resize-none bg-transparent outline-none placeholder:text-muted-foreground'

@@ -1,0 +1,384 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "shell",
+    "kind": "pattern",
+    "status": "draft",
+    "summary": "The frame every sokkel app has, on every target: the rail of places on the left, a thin top bar with the trail, search and palette, the page with its header as the one thing that scrolls, the settings dialog on its own route over the page, the status foot, and the states a page's read lands in.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/Shell.tsx",
+            "packages/core/src/components/Rail.tsx",
+            "packages/core/src/components/TopBar.tsx",
+            "packages/core/src/components/PageHeader.tsx",
+            "packages/core/src/components/StatusLine.tsx",
+            "packages/core/src/components/SettingsDialog.tsx",
+            "packages/core/src/components/settings-parts.tsx",
+            "packages/core/src/components/PageState.tsx",
+            "packages/core/src/components/ui/dialog.tsx",
+            "packages/core/src/hooks/use-overlay-route.ts"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/frame.rs (Shell, Rail, TopBar, StatusLine)",
+            "crates/core/src/widgets/page.rs (PageHeader, PageState)",
+            "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
+        ]
+    },
+    "anatomy": {
+        "rail": "The app's places, left. Head: the mark and name, leading home, as tall as the top bar. Groups of entries, each with an optional title. An entry: icon, label, an optional second line, a count or an unread dot, entries folded under it. Foot cell: the account menu. Its edge resizes it, and pulled outward expands a collapsed rail.",
+        "railEntry": "One place in the rail: icon, label, optional second line, count or unread dot.",
+        "railGroupTitle": "A group's title over its entries; a rule in its place when the rail is collapsed.",
+        "topBar": "Over the content, one strip with the rail's head across the window: a search field at its start, the trail after it, the app's actions, the palette button with its keys at the end, the panel toggle in the corner.",
+        "trail": "The crumbs to the current screen, in the top bar.",
+        "paletteButton": "The button at the top bar's end that opens the palette, with its keys.",
+        "banner": "Between the top bar and the content, not scrolling: a state that holds, such as the server not answering.",
+        "content": "The one scroller. A thin track (contentScrollbar) that keeps its room whether or not it scrolls.",
+        "contentScrollbar": "The content's scroll bar: a solid track whose room is kept.",
+        "shellHead": "A page header and tabs held above the scroller while the content scrolls.",
+        "pageHeader": "The page's title (its name, else its code), the code under it, a count, a description, meta, an aside picture, and actions with the primary last; actions that do not fit fold into More. No trail: the trail is in the top bar.",
+        "pageTitle": "The page header's title.",
+        "page": "The page's content at the page inset, sections a page gap apart.",
+        "pageState": "What a read landed in, kept distinct: loading, failed, empty, the content.",
+        "panel": "An optional side panel: a right column, a sheet, or tabs in a strip at the foot.",
+        "foot": "The status line: a short note at the start and facts at the end, one row of fixed height, level with the rail's foot cell so the account and the status read as one bar.",
+        "palette": "The command palette over the page: places, the screen's commands and the app's search, on Mod+K.",
+        "settings": "The settings dialog over the page it was opened from, on its own route: sections in a navigation with a search over every setting, the chosen section's rows, a footer saying changes are kept, with Done and Reset to defaults.",
+        "dialog": "The frame of the settings and shortcuts dialogs over the page.",
+        "shortcuts": "The keyboard shortcuts dialog, on ?.",
+        "drawer": "Below 768 the rail as a drawer from the top bar's menu button, drawn expanded, with the account."
+    },
+    "options": {
+        "places": {
+            "type": "rows",
+            "does": "The rail's groups: { id, title?, entries: [{ id, label, description?, icon?, href?, count?, unread?, entries? }] }. Data, the same on every target.",
+            "sokkel-ui": "Rail groups"
+        },
+        "railCollapsed": {
+            "type": "boolean",
+            "default": false,
+            "does": "The rail narrowed to its icons; kept by the app."
+        },
+        "railMode": {
+            "values": ["app", "collapsed", "hidden"],
+            "default": "app",
+            "does": "A work page with list and detail panes asks for the rail narrowed or hidden while it is shown.",
+            "sokkel-ui": "railMode, useRailMode"
+        },
+        "trail": {
+            "type": "rows",
+            "does": "The places above and the current screen; a screen states its own.",
+            "sokkel-ui": "TopBar trail, useShellTrail"
+        },
+        "trailEnds": {
+            "values": ["current", "ancestor"],
+            "default": "current",
+            "does": "ancestor: the trail stops at the screen above, for a page whose heading names the screen."
+        },
+        "search": {"type": "node", "does": "A search field at the top bar's start, focused by /."},
+        "palette": {"type": "rows", "does": "The command groups; without them no palette."},
+        "panel": {"type": "node", "does": "A side panel."},
+        "panelStrip": {
+            "type": "boolean",
+            "default": false,
+            "does": "Below 768 the panel's tabs stand in a strip at the foot."
+        },
+        "banner": {"type": "node", "does": "A banner under the top bar."},
+        "foot": {"type": "node", "does": "The status line: note, tone (quiet, live, warn, error), live dot, facts."},
+        "desktop": {
+            "type": "text",
+            "does": "A desktop window with its title bar hidden: the top strip is the title bar and leaves room for the window's buttons.",
+            "sokkel-ui": "Shell desktop; Electron hiddenInset, Tauri Overlay"
+        }
+    },
+    "sizes": {
+        "topBar": {"height": "spacing-shell-top", "padX": 12, "gap": 8},
+        "railHead": {"height": "spacing-shell-top", "padX": 12},
+        "railEntry": {
+            "height": "density.row",
+            "padX": 10,
+            "gap": 12,
+            "icon": 16,
+            "text": "text.body",
+            "phoneMinHeight": "spacing-finger",
+            "note": "A described entry grows to hold its second line (text.help)."
+        },
+        "railCollapsedEntry": {"height": "density.row", "width": 36},
+        "foot": {"height": "spacing-shell-foot", "padX": 12, "gap": 12, "text": "text.help"},
+        "paletteButton": {
+            "height": "density.control",
+            "padX": 10,
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "224 wide with no search field (md and up); an icon, a finger square, below 768."
+        },
+        "searchField": {
+            "height": "density.control",
+            "width": 224,
+            "radius": "radius-control",
+            "note": "224 up to 320 wide, 256 from lg; gives way to the palette button below 768."
+        },
+        "panelStripTab": {"height": "spacing-shell-tabs"},
+        "contentScrollbar": {
+            "width": 10,
+            "note": "Proposed: a solid track 10 wide whose room is kept whether or not the content scrolls, so the page head above ends at the same edge. sokkel-ui draws scrollbar-width: thin with scrollbar-gutter: stable (scroller-thin), at the browser's own thin width; egui's bars float over the content unless its scroll style is set solid at this width."
+        }
+    },
+    "layout": {
+        "railWidth": {
+            "value": 240,
+            "note": "Expanded, by default; the reader drags it between 200 and 360 and the app keeps it."
+        },
+        "railMin": 200,
+        "railMax": 360,
+        "railCollapsed": {"value": 57, "note": "3.5rem and its 1px edge."},
+        "railStrip": {"value": 72, "note": "The strip variant: a narrow column of labeled icons."},
+        "trafficLights": {
+            "value": "spacing-traffic-lights",
+            "note": "Room for the window's buttons at the strip's start, in a desktop window with its title bar hidden."
+        },
+        "pageInsetWide": {"value": "density.page-inset-wide", "note": "When the content box is 640 or wider."},
+        "pageInsetNarrow": {"value": "density.page-inset-narrow", "note": "Below 640 of the content box."},
+        "pageTop": "density.page-top",
+        "pageGap": "density.page-gap",
+        "pageBottom": 40,
+        "panelHead": "spacing-panel-head",
+        "overlayInset": "density.overlay-inset",
+        "panelSheetGap": {"value": 48, "note": "The panel's sheet stops 48 short of the window's far edge."},
+        "sequenceWait": {"value": 1000, "note": "ms for the second key of a sequence."}
+    },
+    "breakpoints": {
+        "phone": {
+            "width": "below 768",
+            "formFactors": ["foldable folded 344", "phone 360, 390, 430", "foldable open 690"],
+            "does": [
+                "The rail leaves the frame: a menu button at the top bar's start opens it as a drawer over the content, drawn expanded whatever the app holds, with the account in it; its entries a finger tall.",
+                "A press outside the drawer, a link, Escape or a change of route closes it.",
+                "The search field gives way to the palette button, an icon a finger square.",
+                "The trail shows only its last crumb (or, ending at an ancestor, that crumb as the way back after a back chevron).",
+                "The side panel is a sheet from the right; with panelStrip its tabs stand in a strip at the foot, each a finger tall, raising the panel as a sheet.",
+                "Dialogs fill the screen. Settings opens on its list of sections; a section shows its rows with a back button, and the footer stays clear of the home indicator.",
+                "Menu, command and combobox rows and tabs are a finger tall; the account menu leaves out Keyboard shortcuts.",
+                "The frame keeps clear of the notch and home indicator by the safe-area insets."
+            ]
+        },
+        "tablet": {
+            "width": "from 768",
+            "formFactors": ["tablet 768"],
+            "does": [
+                "The rail stands in the frame, expanded or collapsed as the app holds it.",
+                "The side panel is a sheet from the right, closed at the start."
+            ]
+        },
+        "desktop": {
+            "width": "from 1024",
+            "formFactors": ["tablet 1024", "desktop 1280, 1440, 1920"],
+            "does": [
+                "The side panel is the right column, level with the top bar, open at the start.",
+                "Desktop is the main target: every story is written at full width first."
+            ]
+        }
+    },
+    "routes": {
+        "settings": "#/settings: the settings dialog over the page it was opened from. Back (or Done, or Escape) returns to that page; a link opening the app on #/settings draws the app's home under it.",
+        "page": "#/<place>/...: the page in the content; a change moves focus to the new page's heading and closes the drawer."
+    },
+    "states": {
+        "rest": {"means": "A page shown in the frame."},
+        "hover": {"means": "The pointer over a rail entry, a crumb or a bar button.", "reached": "pointer over"},
+        "focus": {"means": "Keyboard focus on a frame control.", "reached": "Tab", "on": "keyboard"},
+        "active": {"means": "The rail entry of the place shown.", "reached": "the route"},
+        "loading": {"means": "The page's read is on its way: a spinner and Loading.", "reached": "the page's read"},
+        "failed": {
+            "means": "The read failed: headed by what the server answered (refused, nothing there, not answering), the diagnostic under it, Try again.",
+            "reached": "a refused or unanswered read"
+        },
+        "empty": {
+            "means": "The read came back with nothing: one line, or the app's own empty state with a way to make the first.",
+            "reached": "an empty read"
+        },
+        "drawerOpen": {
+            "means": "Below 768, the rail drawn as a drawer over the page, the page out of reach.",
+            "reached": "the menu button"
+        },
+        "settingsOpen": {
+            "means": "The settings dialog over the page, on #/settings.",
+            "reached": "an action the app gives it (a row in the account menu, a palette command) or a link to #/settings"
+        },
+        "paletteOpen": {"means": "The command palette over the page.", "reached": "Mod+K, the palette button"},
+        "railCollapsed": {
+            "means": "The rail narrowed to its icons; a group's title becomes a rule; a parent opens its entries in a flyout.",
+            "reached": "the rail's collapse control or edge"
+        }
+    },
+    "pieces": {
+        "rail": {"rest": {"ground": "sidebar", "ink": "sidebar-foreground", "edge": "border-strong"}},
+        "railEntry": {
+            "rest": {
+                "ink": "muted-foreground",
+                "radius": "radius-md",
+                "note": "Corners radius-sm at the start (beside the bar) and radius-md at the end."
+            },
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "active": {
+                "ground": "sidebar-accent",
+                "ink": "sidebar-accent-foreground",
+                "edge": "sidebar-primary",
+                "weight": 500,
+                "note": "A 2px bar at its start in the expanded rail; a washed square when collapsed."
+            }
+        },
+        "railGroupTitle": {
+            "rest": {
+                "ink": "faint",
+                "text": "text.help",
+                "weight": 500,
+                "note": "Upper case, tracked 0.025em; collapsed, a border-strong rule in its place."
+            }
+        },
+        "topBar": {"rest": {"ground": "sidebar", "rule": "border-strong"}},
+        "trail": {
+            "rest": {"ink": "muted-foreground", "text": "text.body", "note": "Chevrons between crumbs in faint."},
+            "hover": {"ink": "foreground"},
+            "active": {"ink": "foreground", "weight": 500, "note": "The current screen's crumb."}
+        },
+        "paletteButton": {
+            "rest": {"ground": "field", "edge": "border", "ink": "muted-foreground", "radius": "radius-control"},
+            "hover": {"edge": "border-strong", "ink": "foreground"}
+        },
+        "page": {"rest": {"ground": "background", "ink": "foreground"}},
+        "pageTitle": {
+            "rest": {"ink": "page-title-ink|foreground", "text": "text.page-title", "note": "In typeface-heading."}
+        },
+        "foot": {
+            "rest": {
+                "ground": "page-foot-ground",
+                "rule": "page-foot-line",
+                "ink": "page-foot-ink",
+                "text": "text.help",
+                "note": "The note's tone: quiet in page-foot-ink, live in info with a pulsing dot, warn in warning, error in destructive."
+            }
+        },
+        "drawer": {
+            "rest": {"note": "Not drawn."},
+            "drawerOpen": {
+                "ground": "sidebar",
+                "note": "elevation-pop under it and the scrim over the page; it slides in (200 ms in sokkel-ui, no motion token yet)."
+            }
+        },
+        "dialog": {
+            "rest": {"note": "Not drawn."},
+            "settingsOpen": {
+                "ground": "popover",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "note": "A foreground/10 hairline round it, over shade/10; its footer on muted/50 under a rule."
+            }
+        },
+        "pageState": {
+            "loading": {"ink": "muted-foreground", "note": "A spinner and words.loading."},
+            "failed": {"ground": "card", "edge": "border-strong", "radius": "radius-surface", "mark": "destructive"},
+            "empty": {"ink": "muted-foreground"},
+            "rest": {"note": "The content."}
+        },
+        "contentScrollbar": {
+            "rest": {"ground": "scroll-track", "mark": "scroll-thumb", "note": "The track's ground and the thumb."}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Mod+K"],
+            "does": "Opens the command palette; a second press closes it. On a Mac Ctrl+K opens it too.",
+            "when": "nothing but the top bar's search results stands over the page"
+        },
+        {"keys": ["?"], "does": "Opens the keyboard shortcuts dialog."},
+        {"keys": ["/"], "does": "Focuses the top bar's search field."},
+        {
+            "keys": ["Escape"],
+            "does": "Closes the layer on top: palette, dialog, sheet, menu, drawer; focus goes back where it was."
+        },
+        {"keys": ["Enter", "Space", "ArrowRight"], "does": "On a collapsed rail's edge: expands the rail."},
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "On the expanded rail's edge: resizes it; a double click puts the width back."
+        },
+        {
+            "keys": ["G then a letter"],
+            "does": "Goes to a place, as the app binds it; the second key within a second, never heard in a field."
+        },
+        {"keys": ["Back"], "does": "On #/settings: closes the dialog to the page it was opened from."}
+    ],
+    "words": {
+        "menu": "Open the navigation",
+        "close": "Close the navigation",
+        "showPanel": "Show the panel",
+        "hidePanel": "Hide the panel",
+        "panelTabs": "Panel",
+        "openPalette": "Open the command palette",
+        "openShortcuts": "Show the keyboard shortcuts",
+        "railCollapse": "Collapse the navigation",
+        "railExpand": "Expand the navigation",
+        "railResize": "Resize the navigation",
+        "unread": "Unread",
+        "places": "All places",
+        "search": "Search",
+        "palette": "Open the command palette",
+        "trail": "Where you are",
+        "back": "Back",
+        "more": "More",
+        "moreWays": "More ways",
+        "palettePlaceholder": "Search or run a command",
+        "settingsTitle": "Settings",
+        "settingsSearch": "Search",
+        "settingsSearchLabel": "Search the settings",
+        "settingsClear": "Clear the search",
+        "settingsNoMatch": "No setting matches the search.",
+        "settingsSaved": "Changes are saved as you make them",
+        "settingsDone": "Done",
+        "settingsReset": "Reset to defaults",
+        "settingsResetSection": "Reset {section} to its defaults?",
+        "settingsResetSectionDetail": "Every setting in {section} goes back to its default.",
+        "settingsResetAll": "Reset every setting to its default?",
+        "settingsResetAllDetail": "Every setting in every section goes back to its default.",
+        "settingsResetConfirm": "Reset",
+        "cancel": "Cancel",
+        "loading": "Loading",
+        "refused": "The server refused this read",
+        "missing": "Nothing is there",
+        "unreachable": "The server is not answering",
+        "partRefused": "Part of this page could not be read",
+        "retry": "Try again"
+    },
+    "appText": {
+        "name": "The app's name beside its mark.",
+        "places": "Every place's label and description; the palette repeats them.",
+        "trail": "Every crumb's label.",
+        "pageTitle": "Each page's title; the actions follow their context: on Runs the button is New, not New run.",
+        "settings": "Every section's and setting's title, description and keywords.",
+        "foot": "The status note and facts."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The window's width decides the frame (media queries at 768 and 1024); the page inset decides by the content's own box (a cqi clamp).",
+            "Links are real anchors through LinkProvider, so a middle click opens a tab; routes are hash routes in the examples.",
+            "useOverlayRoute (hooks/use-overlay-route) draws #/settings over the page it was opened from: it reads the app's route and goes back through the history and the hash, or through the app's own back and replace with a client router.",
+            "useOverlay makes the page inert under an overlay; useScrollMemory keeps each page's scroll; the safe-area insets pad the frame.",
+            "In a desktop shell (Electron, Tauri) the top strip is the window's title bar.",
+            "Shell's routeKey moves focus to the new page's first visible h1 after a route change, waiting up to 3000 ms while the page loads and until the reader presses a key or the pointer."
+        ],
+        "sokkel-ui-egui": [
+            "The window's width is the available rect; the page inset picks wide or narrow by the content rect, since a cqi clamp is CSS-only.",
+            "There are no URLs: a route is app state with a back stack; #/settings is the state settings-open with the page under it kept.",
+            "Overlays: egui's Modal for dialogs and the drawer, Popup for menus; the page under them must refuse input.",
+            "A native title bar can stay; a hidden one is the top strip, with egui's ViewportCommand::StartDrag.",
+            "A route change may move focus to the new page's heading as the frame sees fit; the wait is the renderer's own."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "still to build",
+            "spec": "This spec.",
+            "today": "As of sokkel-ui-egui 38693ff: Shell, Rail (groups, counts, collapse at 240 / 57), TopBar (the trail with chevrons, on sidebar with a border-strong rule), StatusLine (spacing-shell-foot), PageHeader and PageState, SettingsDialog with appearance settings and setting rows, Dialog, Select and the tooltip, DropdownMenu, and CommandPalette on Mod+K. A working app runs on it (examples/runs), with settings over the page on Mod+comma and from the rail. Not yet: rail resize by drag, the drawer below 768, the search field in the top bar, the panel, and settings as a route: egui has no URL, so the dialog is open state the app holds."
+        }
+    ]
+}
