@@ -24,6 +24,20 @@ test("a submit sends once and puts the server's refusal at its field", async ({ 
     await expect(code).toHaveAttribute('aria-invalid', 'true')
 })
 
+test('Escape in a picker that matches nothing closes its list and leaves the dialog around it open', async ({ page }) => {
+    await open(page, 'patterns-async-select--in-dialog')
+    const dialog = page.getByRole('dialog', { name: 'New schedule' })
+    const search = page.getByRole('combobox', { name: 'Search' })
+    await expect(page.getByText('Nothing matches.')).toBeVisible()
+    await search.click()
+    await page.keyboard.press('Escape')
+    await expect(search).toBeHidden()
+    // A dialog that is closing is still drawn while it fades; `data-open` goes at once.
+    await expect(dialog).toHaveAttribute('data-open', '')
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole('textbox', { name: 'Name' })).toHaveValue('Weekly digest')
+})
+
 test("a field's stored files are taken out and new ones go up before saving", async ({ page }) => {
     await open(page, 'primitives-inputs-file-field--editing')
     const summary = page.getByText(/^To save:|^Saving waits/)

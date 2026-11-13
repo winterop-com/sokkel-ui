@@ -49,7 +49,6 @@ import {
     type ShellSlot,
     type StatedTrail,
 } from './shell-context'
-import type { Crumb, TrailEnd } from './TopBar'
 
 export type { ShortcutGroup } from '../lib/shortcut-groups'
 export type { RailMode } from './shell-context'
@@ -885,27 +884,4 @@ export function ShellHead({ children, inset = true }: ShellHeadProps) {
     return slot.target && slot.shown === id ? createPortal(head, slot.target) : null
 }
 
-/** Options for a trail a screen states. */
-export interface ShellTrailOptions {
-    /** What the last crumb is, as `TopBar`'s `trailEnds`: the current screen (the default) or the one above it. */
-    ends?: TrailEnd
-}
-
-/**
- * States the calling screen's trail for the shell's top bar while the screen is mounted: the
- * `TopBar` in `Shell`'s `top` draws it in place of its own, keeping its search, its palette button
- * and its actions, rather than the screen drawing the whole bar with `ShellTop`. The latest screen
- * to state one goes before an earlier one; the bar's own trail is back once none does. Undefined
- * states nothing. Outside a `Shell` it does nothing.
- */
-export function useShellTrail(trail: readonly Crumb[] | undefined, { ends }: ShellTrailOptions = {}): void {
-    const state = useContext(ShellTrailAsk)
-    const id = useId()
-    // The trail is compared by what it says, so a screen can build it afresh on every render.
-    const said = trail === undefined ? undefined : JSON.stringify([trail, ends ?? null])
-    useBeforePaint(() => {
-        if (state === undefined || said === undefined) return
-        const [crumbs, end] = JSON.parse(said) as [Crumb[], TrailEnd | null]
-        return state(id, { trail: crumbs, ends: end ?? undefined })
-    }, [state, id, said])
-}
+export { useShellTrail, type ShellTrailOptions } from './shell-context'

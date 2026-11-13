@@ -145,6 +145,16 @@ interface AsyncSelectBase<T> {
     itemMark?: (item: T) => ReactNode
     /** A figure at the option's end, such as how many rows it holds. */
     itemMeta?: (item: T) => ReactNode
+    /** Sets `itemMeta` in the code face, for a code at the row's end rather than a figure. */
+    monoMeta?: boolean
+    /** Shows `itemMeta` at the end of the chosen value too, with one value. */
+    metaInValue?: boolean
+    /** Sets the options' labels in the code face, in the list, the chosen value and its chips: names that are codes. */
+    mono?: boolean
+    /** Shows the value and takes no input: no list opens, and a chip has no remove button. */
+    disabled?: boolean
+    /** Shows the value, focusable, but takes no change: no list opens, and a chip has no remove button. */
+    readOnly?: boolean
     /**
      * Makes an option of the typed text, given when the app allows it: the list then ends in a row
      * that offers it while no option is called that, and the option made is chosen.
@@ -207,7 +217,13 @@ export type AsyncSelectProps<T> = (AsyncSelectOneProps<T> | AsyncSelectManyProps
  *
  * Given `items` in place of `load`, it is a searchable select over a list it holds: what is typed
  * narrows the options at once, by `filter` or by every word in an option's label or text detail,
- * with no pause, no load and no searching line. `itemMeta` puts a quiet figure at a row's end.
+ * with no pause, no load and no searching line. `itemMeta` puts a quiet figure at a row's end, or a
+ * code with `monoMeta`, and at the chosen value's end too with `metaInValue`. `mono` sets labels
+ * that are codes in the code face, chips included. `disabled` and `readOnly` show the value without
+ * a list or remove buttons.
+ *
+ * The list is as wide as its longest row, from the field's width up to the window's less a margin.
+ * Escape closes the list and goes no further, so a dialog around the field stays open.
  */
 export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
     const {
@@ -221,6 +237,11 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
         itemDetail,
         itemMark,
         itemMeta,
+        monoMeta = false,
+        metaInValue = false,
+        mono = false,
+        disabled = false,
+        readOnly = false,
         onCreate,
         debounce = 250,
         minQuery = 0,
@@ -375,16 +396,14 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                                 <>
                                     {itemMark !== undefined && <Mark>{itemMark(item)}</Mark>}
                                     <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
-                                        <span className="min-w-0 truncate">{itemLabel(item)}</span>
+                                        <span className={cn('min-w-0 truncate', mono && 'font-mono')}>{itemLabel(item)}</span>
                                         {itemDetail !== undefined && (
                                             <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">
                                                 {itemDetail(item)}
                                             </span>
                                         )}
                                     </span>
-                                    {itemMeta !== undefined && (
-                                        <span className="shrink-0 text-xs text-faint tabular-nums">{itemMeta(item)}</span>
-                                    )}
+                                    {itemMeta !== undefined && <Meta mono={monoMeta}>{itemMeta(item)}</Meta>}
                                 </>
                             )}
                             <Combobox.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">
@@ -396,21 +415,29 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
             )}
         </Combobox.List>
     )
-    const note = (
-        <Combobox.Status className="empty:hidden">
-            <Note
-                answer={known}
-                short={short}
-                empty={items.length === 0}
-                minQuery={minQuery}
-                creating={creating}
-                words={words}
-                onRetry={retry}
-            />
-        </Combobox.Status>
+    const line = (
+        <Note
+            answer={known}
+            short={short}
+            empty={items.length === 0}
+            minQuery={minQuery}
+            creating={creating}
+            words={words}
+            onRetry={retry}
+        />
     )
+    // The line under an empty list is the combobox's own `Empty`, so Escape there closes the list
+    // and stops; without it Base UI lets the key on to a dialog around the field, which then closes.
+    const note = (
+        <>
+            <Combobox.Empty className="empty:hidden">{line}</Combobox.Empty>
+            <Combobox.Status className="empty:hidden">{items.length > 0 && line}</Combobox.Status>
+        </>
+    )
+    // As wide as its longest row, never narrower than the field nor wider than the window.
     const popup =
-        'flex max-h-(--available-height) w-(--anchor-width) min-w-72 origin-(--transform-origin) flex-col overflow-hidden rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-pop'
+        'flex max-h-(--available-height) w-max max-w-[calc(100vw-2rem)] min-w-[max(var(--anchor-width),--spacing(72))] origin-(--transform-origin) flex-col overflow-hidden rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-pop'
+    const locked = disabled || readOnly
     const spinning = (known.loading === 'first' && !short) || creating === 'busy'
 
     const shared = {
@@ -424,6 +451,8 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
             setCreating(null)
         },
         open,
+        disabled,
+        readOnly,
         itemToStringLabel: (item: unknown) => labelOf(item as T | Creation),
         isItemEqualToValue: (item: unknown, other: unknown) => keyOf(item as T | Creation) === keyOf(other as T | Creation),
     }
@@ -457,6 +486,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     aria-invalid={invalid || undefined}
                     className={cn(
                         'flex min-h-8 w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring aria-invalid:border-destructive',
+                        disabled && 'cursor-not-allowed bg-input/50 opacity-50',
                         className,
                     )}
                 >
@@ -465,16 +495,21 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                             <Combobox.Chip
                                 key={itemKey(item)}
                                 aria-label={itemLabel(item)}
-                                className="flex h-6 max-w-full min-w-0 items-center gap-0.5 rounded-sm bg-muted pr-0.5 pl-2 outline-none focus-within:bg-accent data-highlighted:bg-accent"
+                                className={cn(
+                                    'flex h-6 max-w-full min-w-0 items-center gap-0.5 rounded-sm bg-muted pl-2 outline-none focus-within:bg-accent data-highlighted:bg-accent',
+                                    locked ? 'pr-2' : 'pr-0.5',
+                                )}
                             >
                                 {itemMark !== undefined && <Mark>{itemMark(item)}</Mark>}
-                                <span className="min-w-0 truncate">{itemLabel(item)}</span>
-                                <Combobox.ChipRemove
-                                    aria-label={words.remove(itemLabel(item))}
-                                    className="flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-hover hover:text-foreground"
-                                >
-                                    <X className="size-3.5" aria-hidden />
-                                </Combobox.ChipRemove>
+                                <span className={cn('min-w-0 truncate', mono && 'font-mono text-xs')}>{itemLabel(item)}</span>
+                                {!locked && (
+                                    <Combobox.ChipRemove
+                                        aria-label={words.remove(itemLabel(item))}
+                                        className="flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-hover hover:text-foreground"
+                                    >
+                                        <X className="size-3.5" aria-hidden />
+                                    </Combobox.ChipRemove>
+                                )}
                             </Combobox.Chip>
                         ))}
                         {/* Inside the chips, so Backspace in the empty field takes the last of them. */}
@@ -483,16 +518,21 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                             ref={inputRef}
                             placeholder={chosen.length === 0 ? words.placeholder : undefined}
                             aria-label={chosen.length === 0 ? undefined : words.search}
-                            className="h-6 min-w-24 flex-1 bg-transparent px-1.5 text-base outline-none placeholder:text-muted-foreground md:text-sm"
+                            className={cn(
+                                'h-6 flex-1 bg-transparent px-1.5 text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-sm',
+                                locked && chosen.length > 0 ? 'w-0 min-w-0' : 'min-w-24',
+                            )}
                         />
                     </Combobox.Chips>
                     {spinning && <Spinner className="size-3.5 shrink-0 text-muted-foreground" />}
-                    <Combobox.Trigger
-                        aria-label={words.search}
-                        className="flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-hover"
-                    >
-                        <ChevronsUpDown className="size-4" aria-hidden />
-                    </Combobox.Trigger>
+                    {!locked && (
+                        <Combobox.Trigger
+                            aria-label={words.search}
+                            className="flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-hover"
+                        >
+                            <ChevronsUpDown className="size-4" aria-hidden />
+                        </Combobox.Trigger>
+                    )}
                 </Combobox.InputGroup>
                 <Combobox.Portal>
                     <Combobox.Positioner anchor={anchorRef} side="bottom" align="start" sideOffset={6} className="isolate z-50">
@@ -524,6 +564,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 aria-invalid={invalid || undefined}
                 className={cn(
                     'flex h-8 w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring aria-invalid:border-destructive',
+                    disabled && 'cursor-not-allowed bg-input/50 opacity-50',
                     className,
                 )}
             >
@@ -532,13 +573,18 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 ) : (
                     <span className="flex min-w-0 flex-1 items-center gap-2">
                         {itemMark !== undefined && <Mark>{itemMark(value)}</Mark>}
-                        <span className="min-w-0 shrink truncate">{itemLabel(value)}</span>
+                        <span className={cn('min-w-0 shrink truncate', mono && 'font-mono')}>{itemLabel(value)}</span>
                         {itemDetail !== undefined && (
                             <span className="min-w-0 shrink-[2] truncate font-mono text-xs text-muted-foreground">{itemDetail(value)}</span>
                         )}
+                        {metaInValue && itemMeta !== undefined && (
+                            <Meta mono={monoMeta} className="ml-auto">
+                                {itemMeta(value)}
+                            </Meta>
+                        )}
                     </span>
                 )}
-                <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                {!locked && <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
             </Combobox.Trigger>
             <Combobox.Portal>
                 <Combobox.Positioner side="bottom" align="start" sideOffset={6} className="isolate z-50">
@@ -565,6 +611,11 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
 /** An option's mark before its label, an icon sized as the rest of the field's. */
 function Mark({ children }: { children: ReactNode }) {
     return <span className="flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">{children}</span>
+}
+
+/** A quiet figure or code at a row's end. */
+function Meta({ mono, className, children }: { mono: boolean; className?: string; children: ReactNode }) {
+    return <span className={cn('shrink-0 text-xs text-faint', mono ? 'font-mono' : 'tabular-nums', className)}>{children}</span>
 }
 
 /** The line under the list: what to type, that a search runs, that nothing matched, that more load, or that it failed. */

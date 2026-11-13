@@ -597,7 +597,9 @@ column's room (`useTableCell`, a small module of its own so the tags carry no ta
 stacked card it wraps and shows them all. `DescriptionList`'s `row` layout sets its facts in one
 wrapping line, and a `DescriptionListGroup` holds lists split around a form or a heading on one
 term column, each one-column side list a subgrid of its tracks. `ListRow` takes a `tooltip` and
-`wrap`, and `ListRows flush` sets its rows square at a panel's own inset with hairlines between.
+`wrap`, and `ListRows flush` sets its rows square at a panel's own inset with hairlines between,
+or at a card's wider one with `inset="card"`. A `dense` row is one shorter line, its detail beside
+its title, a `mono` title a code, and its `icon` may hold a dot and a mark side by side.
 `LoadingBar tone="current"` is a thin line, known or not, in the ink around it.
 
 `SignIn` is every app's door: a brand pane, dark in every scheme on `--brand-ground`, with art over
@@ -694,7 +696,11 @@ drawn in the list, the chosen value and a chip alike. Given `items` in place of 
 searchable select over a list the app already holds, narrowed at once as it is typed, with no pause,
 no load and no searching line; `SelectField` stays the select with no search, whose options can
 carry their `detail` on a second line (`detailPlacement="below"`) and show it when chosen
-(`chosenDetail`).
+(`chosenDetail`). Its list is as wide as its longest row, from the field's width up to the window's
+less a margin; `monoMeta` sets a row's end as a code, `metaInValue` shows it beside the chosen value,
+`mono` sets labels that are codes in the code face, chips too, and `disabled` and `readOnly` show the
+value with no list and no remove buttons. Escape in its search closes the list and goes no further,
+so a dialog around it stays open, whether or not anything matches.
 
 A value is edited in place on one cycle, shared by `InlineEdit` and `DataTable`'s cells (`lib/edit`,
 pure and tested): it opens on a press, Enter or F2, Escape drops what was typed, and the app's save

@@ -70,6 +70,10 @@ export interface SearchResultBodyProps {
     second?: ReactNode
     /** Sets the line under the title in a status ink in place of the muted one. */
     detailTone?: SearchDetailTone
+    /** Sets the title in the code face, for a result named by a code. */
+    mono?: boolean
+    /** Lets the title and the line under it wrap onto more lines rather than end in an ellipsis. */
+    wrap?: boolean
     className?: string
 }
 
@@ -78,8 +82,18 @@ export interface SearchResultBodyProps {
  * the line under it and a quiet fact at the end. The row around it (an option in a list, a link
  * on a results page, a palette's item) is the caller's; this is what it holds.
  */
-export function SearchResultBody({ result, query, size = 'sm', second, detailTone, className }: SearchResultBodyProps) {
+export function SearchResultBody({
+    result,
+    query,
+    size = 'sm',
+    second,
+    detailTone,
+    mono = false,
+    wrap = false,
+    className,
+}: SearchResultBodyProps) {
     const ink = detailTone === undefined ? 'text-muted-foreground' : DETAIL_INK[detailTone]
+    const line = wrap ? 'block break-words' : 'block truncate'
     const Icon = result.icon
     return (
         <span className={cn('flex min-w-0 flex-1 items-center gap-2.5', className)}>
@@ -115,16 +129,16 @@ export function SearchResultBody({ result, query, size = 'sm', second, detailTon
             )}
             <span className="flex min-w-0 flex-1 flex-col">
                 <Highlight
-                    className={cn('block truncate', size === 'md' && 'font-medium')}
+                    className={cn(line, size === 'md' && 'font-medium', mono && 'font-mono text-xs')}
                     text={result.title}
                     ranges={result.matches ?? queryRanges(result.title, query)}
                 />
                 {second !== undefined && second !== null ? (
-                    <span className={cn('block truncate text-xs', ink)}>{second}</span>
+                    <span className={cn(line, 'text-xs', ink)}>{second}</span>
                 ) : (
                     result.detail !== undefined && (
                         <Highlight
-                            className={cn('block truncate text-xs', ink)}
+                            className={cn(line, 'text-xs', ink)}
                             text={result.detail}
                             ranges={result.matches === undefined ? queryRanges(result.detail, query) : []}
                         />
