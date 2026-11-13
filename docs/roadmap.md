@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.23.0** is the latest release (2026-11-13): `ShellHead`, `useShellTrail` and a thin shell
+- **0.24.0** is the latest release (2026-11-13): dnd-kit is the drag and drop engine: `DragDrop`,
+  `SortableList`, `SortableGrid`, DataTable `onReorder`, Tree reorder and drops from other parts,
+  Board on it, `DashboardArrange` with a widget palette, `RailDrops`, `DraggableTrackList`; every
+  dashboard example arranges by drag and the other examples order and move by drag. AsyncSelect's
+  Escape stops at its list; charts load one kind's builder and take `formatCategory`.
+- **0.23.0** (2026-11-13): `ShellHead`, `useShellTrail` and a thin shell
   scroller; media queries answer on the first render; stored values take `normalize`; refresh on
   return; `PointMenu` and graph node and pane menus; primitives with finger-sized rows, popups as
   wide as their rows and check gutters; Chip links, control size, outline tone and edged hues;

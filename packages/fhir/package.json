@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui-fhir",
-    "version": "0.23.0",
+    "version": "0.24.0",
     "description": "The health-data standards' languages, FHIRPath and CQL, for sokkel-ui's code editor.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
