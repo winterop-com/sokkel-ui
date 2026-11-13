@@ -1,87 +1,82 @@
-import { BarChart, GaugeChart, HeatmapChart, LineChart, PieChart, RadarChart, ScatterChart } from 'echarts/charts'
-import {
-    AriaComponent,
-    DataZoomComponent,
-    GridComponent,
-    LegendComponent,
-    MarkAreaComponent,
-    MarkLineComponent,
-    RadarComponent,
-    TitleComponent,
-    TooltipComponent,
-    VisualMapComponent,
-} from 'echarts/components'
+import { LegendComponent, TooltipComponent } from 'echarts/components'
 import { init as start, use } from 'echarts/core'
-import { CanvasRenderer, SVGRenderer } from 'echarts/renderers'
-
-/** The chart types, components and renderers every chart needs, registered on first use. */
-const PARTS = [
-    LineChart,
-    BarChart,
-    HeatmapChart,
-    GaugeChart,
-    PieChart,
-    RadarChart,
-    ScatterChart,
-    AriaComponent,
-    DataZoomComponent,
-    GridComponent,
-    LegendComponent,
-    MarkAreaComponent,
-    MarkLineComponent,
-    RadarComponent,
-    TitleComponent,
-    TooltipComponent,
-    VisualMapComponent,
-    CanvasRenderer,
-    SVGRenderer,
-]
+import { CanvasRenderer } from 'echarts/renderers'
 
 let registered = false
 
 /**
- * ECharts' `init`, with the parts this library draws with registered first. Registering inside the
- * call keeps it from being dropped by a bundler that treats this module as free of side effects.
+ * ECharts' `init`, with the canvas renderer, the legend every chart drives and the tooltip nearly
+ * every kind draws registered first. Registering inside the call keeps them from being dropped by a
+ * bundler that treats this module as free of side effects. Every other chart type and component
+ * loads on demand through `ensure`.
  */
 export function init(...args: Parameters<typeof start>): ReturnType<typeof start> {
     if (!registered) {
-        use(PARTS)
+        use([CanvasRenderer, LegendComponent, TooltipComponent])
         registered = true
     }
     return start(...args)
 }
 
+type Load = () => Promise<unknown>
+
+const grid: Load = () => import('echarts/lib/component/grid')
+const polar: Load = () => import('echarts/lib/component/polar')
+const parallel: Load = () => import('echarts/lib/component/parallel')
+
 /**
- * The chart types beyond the base set, each loaded the first time an option draws it, so an app
- * that draws only bars and lines never downloads a sankey or a treemap.
+ * Every chart type, each loaded the first time an option draws it, so an app that draws only bars
+ * downloads the bar series and the grid and never a line, a gauge or a sankey.
  */
-const SERIES: Record<string, () => Promise<unknown>> = {
+const SERIES: Record<string, Load> = {
+    bar: () => import('echarts/lib/chart/bar'),
     boxplot: () => import('echarts/lib/chart/boxplot'),
     candlestick: () => import('echarts/lib/chart/candlestick'),
     custom: () => import('echarts/lib/chart/custom'),
     funnel: () => import('echarts/lib/chart/funnel'),
+    gauge: () => import('echarts/lib/chart/gauge'),
     graph: () => import('echarts/lib/chart/graph'),
+    heatmap: () => import('echarts/lib/chart/heatmap'),
+    line: () => import('echarts/lib/chart/line'),
     parallel: () => import('echarts/lib/chart/parallel'),
     pictorialBar: () => import('echarts/lib/chart/pictorialBar'),
+    pie: () => import('echarts/lib/chart/pie'),
+    radar: () => import('echarts/lib/chart/radar'),
     sankey: () => import('echarts/lib/chart/sankey'),
+    scatter: () => import('echarts/lib/chart/scatter'),
     sunburst: () => import('echarts/lib/chart/sunburst'),
     themeRiver: () => import('echarts/lib/chart/themeRiver'),
     tree: () => import('echarts/lib/chart/tree'),
     treemap: () => import('echarts/lib/chart/treemap'),
 }
 
-/** The components beyond the base set, by the option key that asks for each. */
-const COMPONENTS: Record<string, () => Promise<unknown>> = {
+/** Every component, by the option key that asks for it. */
+const COMPONENTS: Record<string, Load> = {
+    aria: () => import('echarts/lib/component/aria'),
     calendar: () => import('echarts/lib/component/calendar'),
-    parallel: () => import('echarts/lib/component/parallel'),
-    parallelAxis: () => import('echarts/lib/component/parallel'),
-    polar: () => import('echarts/lib/component/polar'),
-    angleAxis: () => import('echarts/lib/component/polar'),
-    radiusAxis: () => import('echarts/lib/component/polar'),
+    dataZoom: () => import('echarts/lib/component/dataZoom'),
+    grid,
+    xAxis: grid,
+    yAxis: grid,
+    parallel,
+    parallelAxis: parallel,
+    polar,
+    angleAxis: polar,
+    radiusAxis: polar,
+    radar: () => import('echarts/lib/component/radar'),
     singleAxis: () => import('echarts/lib/component/singleAxis'),
+    title: () => import('echarts/lib/component/title'),
+    visualMap: () => import('echarts/lib/component/visualMap'),
 }
 
-const loaded = new Map<string, Promise<unknown>>()
+/** The marks a series can carry, by the series key that asks for each. */
+const MARKS: Record<string, Load> = {
+    markArea: () => import('echarts/lib/component/markArea'),
+    markLine: () => import('echarts/lib/component/markLine'),
+    markPoint: () => import('echarts/lib/component/markPoint'),
+}
+
+const loaded = new Map<Load, Promise<unknown>>()
 let parts = 0
 
 /**
@@ -92,24 +87,35 @@ export function partsLoaded(): number {
     return parts
 }
 
-/** Loads, once each, the chart types and components an option draws with beyond the base set. */
+function once(load: Load): Promise<unknown> {
+    let known = loaded.get(load)
+    if (known === undefined) {
+        known = load().then(() => {
+            parts += 1
+        })
+        loaded.set(load, known)
+    }
+    return known
+}
+
+/** Loads, once each, the chart types, components and marks an option draws with. */
 export function ensure(option: Record<string, unknown>): Promise<unknown> {
-    const series = option.series === undefined ? [] : Array.isArray(option.series) ? option.series : [option.series]
-    const wanted = [
-        ...series.map((entry) => `series:${String((entry as { type?: unknown }).type)}`),
-        ...Object.keys(option).map((key) => `component:${key}`),
-    ]
-    const loads = wanted.flatMap((want) => {
-        const [kind, name] = want.split(':') as ['series' | 'component', string]
-        const load = (kind === 'series' ? SERIES : COMPONENTS)[name]
-        if (load === undefined) return []
-        const known =
-            loaded.get(want) ??
-            load().then(() => {
-                parts += 1
-            })
-        loaded.set(want, known)
-        return [known]
-    })
-    return Promise.all(loads)
+    const series = (option.series === undefined ? [] : Array.isArray(option.series) ? option.series : [option.series]) as Record<
+        string,
+        unknown
+    >[]
+    const loads = new Set<Load>()
+    for (const entry of series) {
+        const load = SERIES[String(entry.type)]
+        if (load !== undefined) loads.add(load)
+        for (const key of Object.keys(entry)) if (key in MARKS && entry[key] !== undefined) loads.add(MARKS[key])
+    }
+    for (const key of Object.keys(option)) if (key in COMPONENTS && option[key] !== undefined) loads.add(COMPONENTS[key])
+    return Promise.all([...loads].map(once))
+}
+
+/** Loads the SVG renderer, which only an export to SVG draws with. */
+export async function ensureSvg(): Promise<void> {
+    const { install } = await import('echarts/lib/renderer/installSVGRenderer')
+    use(install)
 }

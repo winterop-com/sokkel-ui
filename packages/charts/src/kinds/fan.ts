@@ -1,5 +1,5 @@
 import { distinct, pivot } from '../data'
-import { SERIES_ORDER, tooltipMarkup, type ChartLook, type TooltipRow } from '../look'
+import { SERIES_ORDER, tokenColor, tooltipMarkup, type ChartLook, type TooltipRow } from '../look'
 import { edgeAxis, markRoom, stepLines, valueLabels, written } from './categories'
 import { colorOf, fieldsOf, legendColor, paletteToken, wordsOf, type ChartBand, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
@@ -243,11 +243,11 @@ export function fanLegend(spec: ChartSpec): LegendItem[] {
     const token = spec.colors?.[entry.name] ?? paletteToken(spec, 0) ?? SERIES_ORDER[0]
     const names = partNames(spec, entry)
     return [
-        { key: names.median, label: names.median, color: `var(--${token})`, values: entry.median },
+        { key: names.median, label: names.median, color: tokenColor(token), values: entry.median },
         ...entry.bands.map((band, at) => ({
             key: band.label,
             label: band.label,
-            color: `color-mix(in oklab, var(--${token}) ${String(bandMix(at, entry.bands.length))}%, var(--card))`,
+            color: `color-mix(in oklab, ${tokenColor(token)} ${String(bandMix(at, entry.bands.length))}%, var(--card))`,
         })),
         ...observed.map((item) => ({ ...item, values: entry.history.map((value, at) => value ?? entry.points[at]) })),
     ]

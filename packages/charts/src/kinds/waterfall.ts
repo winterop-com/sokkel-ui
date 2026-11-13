@@ -1,4 +1,4 @@
-import { tooltipMarkup } from '../look'
+import { tokenColor, tooltipMarkup } from '../look'
 import { runningTotals } from '../stats'
 import { shaped, valueTicks, written } from './categories'
 import { wordsOf, type ChartBuilder, type ChartSpec } from './spec'
@@ -112,15 +112,15 @@ export function waterfallLegend(spec: ChartSpec): LegendItem[] {
         {
             key: words.rise,
             label: words.rise,
-            color: `var(--${tone.rise})`,
+            color: tokenColor(tone.rise),
             values: steps.filter((step) => step.change >= 0).map((step) => step.change),
         },
         {
             key: words.fall,
             label: words.fall,
-            color: `var(--${tone.fall})`,
+            color: tokenColor(tone.fall),
             values: steps.filter((step) => step.change < 0).map((step) => step.change),
         },
-        { key: words.total, label: words.total, color: `var(--${tone.total})`, values: [total] },
+        { key: words.total, label: words.total, color: tokenColor(tone.total), values: [total] },
     ]
 }

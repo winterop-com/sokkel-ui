@@ -13,8 +13,8 @@
     },
     "dashboard": {
         "engines": ["echarts"],
-        "start": 202.2,
-        "lazy": 412,
+        "start": 202.4,
+        "lazy": 437,
         "css": 52
     },
     "map": {

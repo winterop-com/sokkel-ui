@@ -453,4 +453,36 @@ describe('the chart kinds', () => {
         const option = KINDS.gauge.build({ ...SPECS.gauge, small: true }, LOOK) as unknown as Dial
         expect(option.series[1].detail?.fontSize).toBe(18)
     })
+
+    it('draws a quiet axis: no value axis or lines across, the categories in mono', () => {
+        type Axes = { xAxis: Record<string, unknown>; yAxis: Record<string, unknown> }
+        for (const kind of ['bar', 'line'] as const) {
+            const option = KINDS[kind].build({ rows: ROWS, x: 'job', y: 'duration', quiet: true }, LOOK) as unknown as Axes
+            expect(option.yAxis).toMatchObject({ type: 'value', show: false, splitLine: { show: false } })
+            expect(option.xAxis).toMatchObject({ type: 'category', axisLabel: { fontFamily: 'monospace' } })
+        }
+        const lying = KINDS.bar.build({ rows: ROWS, x: 'job', y: 'duration', horizontal: true, quiet: true }, LOOK) as unknown as Axes
+        expect(lying.xAxis).toMatchObject({ type: 'value', show: false })
+        expect(lying.yAxis).toMatchObject({ type: 'category', axisLabel: { fontFamily: 'monospace' } })
+    })
+
+    it('draws a bar of zero as a baseline one pixel high, unparted', () => {
+        type Bars = { series: { barMinHeight?: number; data: unknown[] }[] }
+        const option = KINDS.bar.build({ rows: ROWS, x: 'job', y: 'failed', stack: 'stacked', baseline: true }, LOOK) as unknown as Bars
+        expect(option.series[0].barMinHeight).toBe(1)
+        expect(option.series[0].data[1]).toEqual({ value: 0, itemStyle: { borderWidth: 0 } })
+        const plain = KINDS.bar.build({ rows: ROWS, x: 'job', y: 'failed' }, LOOK) as unknown as Bars
+        expect(plain.series[0].barMinHeight).toBeUndefined()
+        expect(plain.series[0].data[1]).toBe(0)
+    })
+
+    it('draws a color token with an alpha, in the legend too', () => {
+        const spec: ChartSpec = { rows: ROWS, x: 'job', y: 'runs', series: 'state', colors: { succeeded: 'muted-foreground/45' } }
+        type Bars = { series: { name: string; itemStyle: { color: string } }[] }
+        const option = KINDS.bar.build(spec, LOOK) as unknown as Bars
+        expect(option.series.find((entry) => entry.name === 'succeeded')?.itemStyle.color).toBe('muted-foreground/45')
+        expect(chartLegend('bar', spec).find((item) => item.key === 'succeeded')?.color).toBe(
+            'color-mix(in oklab, var(--muted-foreground) 45%, transparent)',
+        )
+    })
 })
