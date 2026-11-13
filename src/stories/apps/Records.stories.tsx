@@ -22,6 +22,8 @@ import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
 import { DetailSheet } from '@winterop-com/sokkel-ui/DetailSheet'
 import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { SortableGrid } from '@winterop-com/sokkel-ui/Sortable'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { Stat } from '@winterop-com/sokkel-ui/Stat'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
@@ -925,7 +927,8 @@ const TILES: { state: State; label: string; count: number; note: string }[] = [
 
 function Overview() {
     const [kind, setKind] = useState<'all' | FormKind>('all')
-    const shown = FORMS.filter((form) => kind === 'all' || form.kind === kind)
+    const [forms, setForms] = useState(FORMS)
+    const shown = forms.filter((form) => kind === 'all' || form.kind === kind)
     return (
         <Page>
             <PageHeader title="Overview" description="What waits for review this month, and the forms a record starts from." />
@@ -954,7 +957,7 @@ function Overview() {
                 variant="flat"
                 title="Start a record"
                 meta={String(FORMS.length)}
-                description="The forms juniper offers. Each opens empty and is filed as a record when submitted."
+                description="The forms juniper offers, in the order the team keeps them; drag one to move it. Each opens empty and is filed as a record when submitted."
                 actions={
                     <Button size="sm" variant="outline">
                         All forms
@@ -977,13 +980,17 @@ function Overview() {
                             })),
                         ]}
                     />
-                    <Columns count={4} min="md" gap="md">
-                        {shown.map((form) => (
+                    <SortableGrid
+                        label="Forms"
+                        items={shown}
+                        itemKey={(form) => form.code}
+                        itemLabel={(form) => form.title}
+                        minItemWidth="14rem"
+                        onMove={(from, to) => setForms(moveItem(forms, forms.indexOf(shown[from]), forms.indexOf(shown[to])))}
+                        renderItem={(form) => (
                             <ItemCard
-                                key={form.code}
                                 title={form.title}
                                 code={form.code}
-                                href="#"
                                 status={
                                     <>
                                         <KindChip kind={form.kind} />
@@ -991,8 +998,8 @@ function Overview() {
                                     </>
                                 }
                             />
-                        ))}
-                    </Columns>
+                        )}
+                    />
                 </Stack>
             </Section>
         </Page>
@@ -1134,7 +1141,7 @@ function RecordsApp({ view, foot, children }: { view: View; foot?: ReactNode; ch
 const meta: Meta = { title: 'Apps/Records' }
 export default meta
 
-/** What waits for review: the month's records by state as tiles that lead to the list, Submitted edged as the one asking for work, and the forms a record starts from, each with its kind's chip and filtered by kind. */
+/** What waits for review: the month's records by state as tiles that lead to the list, Submitted edged as the one asking for work, and the forms a record starts from, each with its kind's chip, filtered by kind and put in order by drag. */
 export const RecordsOverview: StoryObj = {
     name: 'Overview',
     render: () => (

@@ -1,7 +1,7 @@
 import { tooltipMarkup } from '../look'
-import { valueTicks, written } from './categories'
+import { valueTicks } from './axes'
 import { stretches, tones } from './legends'
-import { categoryText, wordsOf, type ChartBuilder } from './spec'
+import { written, categoryText, wordsOf, type ChartBuilder } from './spec'
 
 interface Api {
     value: (dimension: number) => number

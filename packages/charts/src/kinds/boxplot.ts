@@ -1,8 +1,8 @@
 import { distinct, formatNumber, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
 import { spreadOf } from '../stats'
-import { valueTicks, written } from './categories'
-import { categoryLabels, categoryText, fieldsOf, wordsOf, type ChartBuilder } from './spec'
+import { valueTicks } from './axes'
+import { written, categoryLabels, categoryText, fieldsOf, wordsOf, type ChartBuilder } from './spec'
 
 /**
  * The spread of `y` in each category of `x`: a box from the lower to the upper quartile with the

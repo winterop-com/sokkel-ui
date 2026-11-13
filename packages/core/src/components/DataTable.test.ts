@@ -17,6 +17,7 @@ import {
     roomsWith,
     sortRows,
     stackColumns,
+    stackDefault,
     stackLabels,
     stacksAt,
     treeBranchKeys,
@@ -272,6 +273,13 @@ describe('content widths', () => {
         expect(stacksAt(900, 576, 1000, true)).toBe(true)
         expect(stacksAt(900, 576, 800, true)).toBe(false)
         expect(stacksAt(500, 576, 300, true)).toBe(true)
+    })
+
+    it('stacks a list below a phone width by default, and a table below 576 pixels', () => {
+        expect(stackDefault(true)).toBe(480)
+        expect(stackDefault(false)).toBe(576)
+        expect(stacksAt(522, stackDefault(true), 480, true)).toBe(false)
+        expect(stacksAt(400, stackDefault(true), 300, true)).toBe(true)
     })
 
     it('stacks a table below its stack width only once its columns no longer fit too', () => {

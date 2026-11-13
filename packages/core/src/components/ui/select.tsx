@@ -24,14 +24,20 @@ function SelectValue({ className, ...props }: SelectValueProps) {
 export type SelectTriggerProps = SelectPrimitive.Trigger.Props & {
     size?: 'sm' | 'default'
     variant?: 'field' | 'quiet'
+    /**
+     * The options' labels the select keeps room for: it is as wide as the widest of them, whichever
+     * is chosen, so it holds one width as the choice changes rather than taking a width set by hand.
+     */
+    widest?: readonly React.ReactNode[]
 }
 
 /**
  * The control that shows the chosen value and opens the list. `field` draws it as a form field;
  * `quiet` draws it as a ghost button, for a value picked in a bar or beside a heading, such as a
- * model in a composer or the order of a list.
+ * model in a composer or the order of a list. It is as wide as the chosen value, or with `widest`
+ * as the widest of the labels it is given.
  */
-function SelectTrigger({ className, size = 'default', variant = 'field', children, ...props }: SelectTriggerProps) {
+function SelectTrigger({ className, size = 'default', variant = 'field', widest, children, ...props }: SelectTriggerProps) {
     return (
         <SelectPrimitive.Trigger
             data-slot="select-trigger"
@@ -45,7 +51,22 @@ function SelectTrigger({ className, size = 'default', variant = 'field', childre
             )}
             {...props}
         >
-            {children}
+            {widest === undefined ? (
+                children
+            ) : (
+                // The value and every label share one cell, the labels unseen and flat, so the cell is as wide as the widest.
+                <span
+                    data-slot="select-sizer"
+                    className="grid min-w-0 flex-1 *:col-start-1 *:row-start-1 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5"
+                >
+                    {children}
+                    {widest.map((label, index) => (
+                        <span key={index} aria-hidden className="invisible h-0 overflow-hidden whitespace-nowrap">
+                            {label}
+                        </span>
+                    ))}
+                </span>
+            )}
             <SelectPrimitive.Icon render={<ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />} />
         </SelectPrimitive.Trigger>
     )

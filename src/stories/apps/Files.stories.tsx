@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { type DataColumn, DataTable, findInTree } from '@winterop-com/sokkel-ui/DataTable'
+import { DragDrop, type DragData } from '@winterop-com/sokkel-ui/DragDrop'
 import { DownloadButton, type DownloadState } from '@winterop-com/sokkel-ui/DownloadButton'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { ConfirmDialog, DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
@@ -31,7 +32,7 @@ import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
-import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
+import { moveTreeNode, Tree, treeAncestors, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { DropZone, UploadTray, type Upload } from '@winterop-com/sokkel-ui/UploadTray'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
@@ -41,6 +42,7 @@ import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { CHART, FIELD, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { useUploads } from '@winterop-com/sokkel-ui/hooks/use-uploads'
 import { PICKED_FILES, PICKED_LIMIT, useFakeUploader } from '../fixtures/uploader'
 import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
@@ -50,7 +52,8 @@ import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
  * A file browser for a project's stored data in the library's frame: the folder tree beside the
  * listing, the trail to the folder in the top bar, rows or tiles, a selection with its actions,
  * the chosen file previewed in the side panel, uploads in a tray over the corner, and an empty
- * folder that asks for files.
+ * folder that asks for files. Folders move in the tree by drag, and in the folder's own order the
+ * files are put in order and dropped onto a folder of the tree.
  */
 const GROUPS: RailGroup[] = [
     {
@@ -314,10 +317,10 @@ function storeTree(nodes: readonly TreeNode[], store: Record<string, StoredFile[
 const storeChildren = (row: StoreRow) => row.children
 
 /** The project's tree cut down to the names holding `text`. */
-function findInStore(text: string, store: Record<string, StoredFile[]>) {
+function findInStore(text: string, store: Record<string, StoredFile[]>, folders: readonly TreeNode[]) {
     const wanted = text.trim().toLowerCase()
     return findInTree({
-        rows: storeTree(FOLDERS, store),
+        rows: storeTree(folders, store),
         rowKey: (row) => row.id,
         childRows: storeChildren,
         match: wanted === '' ? undefined : (row) => row.entry.name.toLowerCase().includes(wanted),
@@ -361,10 +364,26 @@ const STORE_COLUMNS: DataColumn<StoreRow>[] = [
     },
 ]
 
-const PATHS: Record<string, string[]> = {
-    'harbor/shared/review': ['harbor', 'shared', 'review'],
-    'harbor/shared/archive': ['harbor', 'shared', 'archive'],
+/** The names of the folders down to `id`, from the top. */
+function pathOf(folders: readonly TreeNode[], id: string): string[] {
+    const ids = [...(treeAncestors(folders, id) ?? []), id]
+    const names: string[] = []
+    let level: readonly TreeNode[] = folders
+    for (const each of ids) {
+        const node = level.find((one) => one.id === each)
+        if (node === undefined) break
+        names.push(node.label)
+        level = node.children ?? []
+    }
+    return names
 }
+
+/** What the folder tree takes a dragged file as. */
+const FILE_DRAG = 'file'
+
+/** The file a row of the listing carries as it is dragged. */
+const carried = (drag: DragData): StoredFile | undefined =>
+    (drag.value as { row?: StoreRow } | undefined)?.row?.entry as StoredFile | undefined
 
 /** A download of a file in eight parts, one every 400ms once pressed, held by the story. */
 function useDownload() {
@@ -436,6 +455,7 @@ function FilesApp({
     dropping = false,
     uploads: initialUploads = [],
     live = false,
+    ordered = false,
 }: {
     view?: 'list' | 'grid' | 'tree'
     folder?: string
@@ -446,6 +466,8 @@ function FilesApp({
     uploads?: Upload[]
     /** Uploads through `useUploads` and a pretend uploader that Move uploads on sends further. */
     live?: boolean
+    /** The listing in the folder's own order, each row dragged by its grip to a new place or onto a folder of the tree. */
+    ordered?: boolean
 }) {
     const [collapsed, setCollapsed] = useState(false)
     const [view, setView] = useState(initialView)
@@ -474,17 +496,27 @@ function FilesApp({
         fake.step()
     }, [live, sending, fake])
     const [store, setStore] = useState<Record<string, StoredFile[]>>({ 'harbor/shared/review': REVIEW, 'harbor/shared/archive': [] })
+    const [folders, setFolders] = useState<TreeNode[]>(FOLDERS)
 
     const files = store[folder] ?? []
     const shown = sortFiles(
         files.filter((file) => file.name.toLowerCase().includes(query.trim().toLowerCase())),
         sort,
     )
+    // The folder in its own order, as the ordered listing draws it.
+    const listed = files.filter((each) => each.name.toLowerCase().includes(query.trim().toLowerCase()))
     const file = files.find((each) => each.id === chosen)
-    const path = PATHS[folder] ?? folder.split('/')
+    const path = pathOf(folders, folder)
     const total = files.reduce((sum, each) => sum + (each.size ?? 0), 0)
     const single = selected.length === 1 ? files.find((each) => each.id === selected[0]) : undefined
-    const found = findInStore(query, store)
+    const found = findInStore(query, store, folders)
+    // A file dropped on a folder of the tree leaves this folder for that one.
+    const moveFile = (moved: StoredFile, into: string) => {
+        if (into === folder) return
+        setStore({ ...store, [folder]: files.filter((each) => each.id !== moved.id), [into]: [...(store[into] ?? []), moved] })
+        setSelected(selected.filter((id) => id !== moved.id))
+        if (chosen === moved.id) setChosen(undefined)
+    }
 
     const open = (entry: FileEntry) => {
         if (entry.kind === 'folder') return
@@ -573,172 +605,201 @@ function FilesApp({
                     )
                 }
             >
-                <Row gap="none" align="stretch" className="h-full min-h-0">
-                    <SubNav title="Folders">
-                        <Tree
-                            label="Folders"
-                            nodes={FOLDERS}
-                            selected={[folder]}
-                            onSelect={(ids) => goTo(ids[0])}
-                            defaultExpanded={['harbor', 'harbor/shared']}
-                        />
-                    </SubNav>
-                    <DropZone
-                        open={dropping || undefined}
-                        className="min-w-0 flex-1"
-                        onFiles={(dropped) =>
-                            live
-                                ? sending.add(dropped)
-                                : setUploads([
-                                      ...uploads,
-                                      ...dropped.map((each, index) => ({
-                                          id: `drop-${uploads.length + index}`,
-                                          name: each.name,
-                                          size: each.size,
-                                          state: 'uploading' as const,
-                                          progress: 0,
-                                      })),
-                                  ])
-                        }
-                        words={{ detail: `The files go into ${path.join('/')}.` }}
-                    >
-                        <div className="h-full overflow-y-auto">
-                            <Page>
-                                <PageHeader
-                                    title={path[path.length - 1]}
-                                    count={files.length === 0 ? undefined : `${files.length} items, ${formatSize(total)}`}
-                                    actions={
-                                        <>
-                                            <Button variant="outline" size="sm">
-                                                <FolderPlus aria-hidden />
-                                                New folder
-                                            </Button>
-                                            {live && (
-                                                <Button variant="outline" size="sm" onClick={fake.step}>
-                                                    Move uploads on
-                                                </Button>
-                                            )}
-                                            <Button size="sm" onClick={() => (live ? sending.add(PICKED_FILES) : undefined)}>
-                                                <UploadIcon aria-hidden />
-                                                Upload
-                                            </Button>
-                                        </>
-                                    }
-                                />
-                                {files.length > 0 && (
-                                    <Toolbar
-                                        search={
-                                            selected.length > 0 ? undefined : (
-                                                <SearchField
-                                                    value={query}
-                                                    onChange={(text) => {
-                                                        setQuery(text)
-                                                        if (view === 'tree')
-                                                            setTreeOpen(new Set([...treeOpen, ...findInStore(text, store).open]))
-                                                    }}
-                                                    placeholder={view === 'tree' ? 'Find' : 'Filter this folder'}
-                                                />
-                                            )
-                                        }
-                                        end={
-                                            <Segmented
-                                                label="View"
-                                                value={view}
-                                                options={[
-                                                    { value: 'list', label: 'List' },
-                                                    { value: 'grid', label: 'Grid' },
-                                                    { value: 'tree', label: 'Tree' },
-                                                ]}
-                                                onValueChange={setView}
-                                            />
-                                        }
-                                    >
-                                        {selected.length > 0 && (
-                                            <SelectionBar count={selected.length} onClear={() => setSelected([])} framed>
-                                                <Button variant="ghost" size="sm">
-                                                    <Download aria-hidden />
-                                                    Download
-                                                </Button>
-                                                <Button variant="ghost" size="sm" onClick={() => setMoving(true)}>
-                                                    <FolderInput aria-hidden />
-                                                    Move
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    disabled={single === undefined}
-                                                    onClick={() => setRenaming(true)}
-                                                >
-                                                    <Pencil aria-hidden />
-                                                    Rename
-                                                </Button>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    className="ml-auto"
-                                                    onClick={() => setDeleting(true)}
-                                                >
-                                                    <Trash2 aria-hidden />
-                                                    Delete
-                                                </Button>
-                                            </SelectionBar>
-                                        )}
-                                    </Toolbar>
-                                )}
-                                {files.length === 0 ? (
-                                    empty
-                                ) : view === 'tree' ? (
-                                    <DataTable
-                                        variant="list"
-                                        columns={STORE_COLUMNS}
-                                        rows={found.rows}
-                                        rowKey={(row) => row.id}
-                                        childRows={found.childRows}
-                                        expanded={treeOpen}
-                                        onExpandedChange={setTreeOpen}
-                                        defaultSort={{ column: 'name', direction: 'asc' }}
-                                        onOpen={(row) => (row.entry.kind === 'folder' ? undefined : open(row.entry))}
-                                        opened={(row) => panelOpen && row.entry.id === chosen}
-                                        words={{ empty: 'Nothing matches.' }}
-                                    />
-                                ) : view === 'list' ? (
-                                    <FileList
-                                        entries={shown}
-                                        sort={sort}
-                                        onSortChange={setSort}
-                                        selected={selected}
-                                        onSelectedChange={setSelected}
-                                        active={panelOpen ? chosen : undefined}
-                                        onOpen={open}
-                                    />
-                                ) : (
-                                    <FileGrid
-                                        entries={shown}
-                                        selected={selected}
-                                        onSelectedChange={setSelected}
-                                        active={panelOpen ? chosen : undefined}
-                                        onOpen={open}
-                                    />
-                                )}
-                            </Page>
-                        </div>
-                        {uploads.length > 0 && (
-                            <UploadTray
-                                uploads={uploads}
-                                onRetry={(id) =>
-                                    live
-                                        ? sending.onRetry(id)
-                                        : setUploads(
-                                              uploads.map((each) => (each.id === id ? { ...each, state: 'uploading', progress: 0 } : each)),
-                                          )
-                                }
-                                onCancel={(id) => (live ? sending.onCancel(id) : setUploads(uploads.filter((each) => each.id !== id)))}
-                                onClose={() => (live ? sending.onClose() : setUploads([]))}
-                                className="absolute right-4 bottom-4 z-10 max-sm:right-2 max-sm:bottom-2 max-sm:left-2 max-sm:w-auto"
+                <DragDrop>
+                    <Row gap="none" align="stretch" className="h-full min-h-0">
+                        <SubNav title="Folders">
+                            <Tree
+                                label="Folders"
+                                nodes={folders}
+                                selected={[folder]}
+                                onSelect={(ids) => goTo(ids[0])}
+                                defaultExpanded={['harbor', 'harbor/shared']}
+                                onMove={(id, into, index) => setFolders(moveTreeNode(folders, id, { into, index }))}
+                                accepts={(drag) => drag.kind === FILE_DRAG}
+                                onDrop={(drag, into) => {
+                                    const moved = carried(drag)
+                                    if (moved !== undefined && into !== null) moveFile(moved, into)
+                                }}
                             />
-                        )}
-                    </DropZone>
-                </Row>
+                        </SubNav>
+                        <DropZone
+                            open={dropping || undefined}
+                            className="min-w-0 flex-1"
+                            onFiles={(dropped) =>
+                                live
+                                    ? sending.add(dropped)
+                                    : setUploads([
+                                          ...uploads,
+                                          ...dropped.map((each, index) => ({
+                                              id: `drop-${uploads.length + index}`,
+                                              name: each.name,
+                                              size: each.size,
+                                              state: 'uploading' as const,
+                                              progress: 0,
+                                          })),
+                                      ])
+                            }
+                            words={{ detail: `The files go into ${path.join('/')}.` }}
+                        >
+                            <div className="h-full overflow-y-auto">
+                                <Page>
+                                    <PageHeader
+                                        title={path[path.length - 1]}
+                                        count={files.length === 0 ? undefined : `${files.length} items, ${formatSize(total)}`}
+                                        actions={
+                                            <>
+                                                <Button variant="outline" size="sm">
+                                                    <FolderPlus aria-hidden />
+                                                    New folder
+                                                </Button>
+                                                {live && (
+                                                    <Button variant="outline" size="sm" onClick={fake.step}>
+                                                        Move uploads on
+                                                    </Button>
+                                                )}
+                                                <Button size="sm" onClick={() => (live ? sending.add(PICKED_FILES) : undefined)}>
+                                                    <UploadIcon aria-hidden />
+                                                    Upload
+                                                </Button>
+                                            </>
+                                        }
+                                    />
+                                    {files.length > 0 && (
+                                        <Toolbar
+                                            search={
+                                                selected.length > 0 ? undefined : (
+                                                    <SearchField
+                                                        value={query}
+                                                        onChange={(text) => {
+                                                            setQuery(text)
+                                                            if (view === 'tree')
+                                                                setTreeOpen(
+                                                                    new Set([...treeOpen, ...findInStore(text, store, folders).open]),
+                                                                )
+                                                        }}
+                                                        placeholder={view === 'tree' ? 'Find' : 'Filter this folder'}
+                                                    />
+                                                )
+                                            }
+                                            end={
+                                                <Segmented
+                                                    label="View"
+                                                    value={view}
+                                                    options={[
+                                                        { value: 'list', label: 'List' },
+                                                        { value: 'grid', label: 'Grid' },
+                                                        { value: 'tree', label: 'Tree' },
+                                                    ]}
+                                                    onValueChange={setView}
+                                                />
+                                            }
+                                        >
+                                            {selected.length > 0 && (
+                                                <SelectionBar count={selected.length} onClear={() => setSelected([])} framed>
+                                                    <Button variant="ghost" size="sm">
+                                                        <Download aria-hidden />
+                                                        Download
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={() => setMoving(true)}>
+                                                        <FolderInput aria-hidden />
+                                                        Move
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        disabled={single === undefined}
+                                                        onClick={() => setRenaming(true)}
+                                                    >
+                                                        <Pencil aria-hidden />
+                                                        Rename
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        className="ml-auto"
+                                                        onClick={() => setDeleting(true)}
+                                                    >
+                                                        <Trash2 aria-hidden />
+                                                        Delete
+                                                    </Button>
+                                                </SelectionBar>
+                                            )}
+                                        </Toolbar>
+                                    )}
+                                    {files.length === 0 ? (
+                                        empty
+                                    ) : view === 'tree' ? (
+                                        <DataTable
+                                            variant="list"
+                                            columns={STORE_COLUMNS}
+                                            rows={found.rows}
+                                            rowKey={(row) => row.id}
+                                            childRows={found.childRows}
+                                            expanded={treeOpen}
+                                            onExpandedChange={setTreeOpen}
+                                            defaultSort={{ column: 'name', direction: 'asc' }}
+                                            onOpen={(row) => (row.entry.kind === 'folder' ? undefined : open(row.entry))}
+                                            opened={(row) => panelOpen && row.entry.id === chosen}
+                                            words={{ empty: 'Nothing matches.' }}
+                                        />
+                                    ) : view === 'list' && ordered ? (
+                                        <DataTable
+                                            variant="list"
+                                            columns={STORE_COLUMNS}
+                                            rows={listed.map((each) => ({ id: each.id, entry: each }))}
+                                            rowKey={(row) => row.id}
+                                            rowLabel={(row) => row.entry.name}
+                                            onReorder={(from, to) =>
+                                                setStore({
+                                                    ...store,
+                                                    [folder]: moveItem(files, files.indexOf(listed[from]), files.indexOf(listed[to])),
+                                                })
+                                            }
+                                            dragKind={FILE_DRAG}
+                                            onOpen={(row) => open(row.entry)}
+                                            opened={(row) => panelOpen && row.entry.id === chosen}
+                                        />
+                                    ) : view === 'list' ? (
+                                        <FileList
+                                            entries={shown}
+                                            sort={sort}
+                                            onSortChange={setSort}
+                                            selected={selected}
+                                            onSelectedChange={setSelected}
+                                            active={panelOpen ? chosen : undefined}
+                                            onOpen={open}
+                                        />
+                                    ) : (
+                                        <FileGrid
+                                            entries={shown}
+                                            selected={selected}
+                                            onSelectedChange={setSelected}
+                                            active={panelOpen ? chosen : undefined}
+                                            onOpen={open}
+                                        />
+                                    )}
+                                </Page>
+                            </div>
+                            {uploads.length > 0 && (
+                                <UploadTray
+                                    uploads={uploads}
+                                    onRetry={(id) =>
+                                        live
+                                            ? sending.onRetry(id)
+                                            : setUploads(
+                                                  uploads.map((each) =>
+                                                      each.id === id ? { ...each, state: 'uploading', progress: 0 } : each,
+                                                  ),
+                                              )
+                                    }
+                                    onCancel={(id) => (live ? sending.onCancel(id) : setUploads(uploads.filter((each) => each.id !== id)))}
+                                    onClose={() => (live ? sending.onClose() : setUploads([]))}
+                                    className="absolute right-4 bottom-4 z-10 max-sm:right-2 max-sm:bottom-2 max-sm:left-2 max-sm:w-auto"
+                                />
+                            )}
+                        </DropZone>
+                    </Row>
+                </DragDrop>
             </Shell>
             <ConfirmDialog
                 open={deleting}
@@ -758,7 +819,7 @@ function FilesApp({
                     onConfirm: () => setMoving(false),
                 }}
             >
-                <Tree label="Folders" nodes={FOLDERS} selected={moveTo} onSelect={setMoveTo} defaultExpanded={['harbor']} />
+                <Tree label="Folders" nodes={folders} selected={moveTo} onSelect={setMoveTo} defaultExpanded={['harbor']} />
             </DialogShell>
             <DialogShell
                 open={renaming}
@@ -778,6 +839,13 @@ export default meta
 
 /** The review folder as rows, sorted by name, folders first. */
 export const List: StoryObj = { render: () => <FilesApp /> }
+
+/**
+ * The review folder in its own order: a row dragged by its grip goes to a new place, a line showing
+ * where, and one dropped on a folder of the tree moves into it. The folders move too: one dragged
+ * by its edge goes beside another, and by its middle into it.
+ */
+export const ManualOrder: StoryObj = { name: 'Manual order', render: () => <FilesApp ordered /> }
 
 /** The same folder as tiles: pictures for the images, icons for everything else. */
 export const Grid: StoryObj = { render: () => <FilesApp view="grid" /> }

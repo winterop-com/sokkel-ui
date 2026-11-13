@@ -9,7 +9,11 @@ controls and a table), `map` (regions and sites on maplibre with a legend and a 
 `styles.css`, so the CSS of an app that carries only its own modules' classes is measured too.
 `scripts/size-budget.ts` builds each with Vite against the built packages and measures it gzipped:
 the JavaScript loaded with the page (`start`), what a dynamic import fetches later (`lazy`) and the
-CSS. It fails when one grows past its budget in `budget.json`, or bundles an engine (ECharts,
+CSS. `lazy` adds up every chunk the app could ever fetch, so splitting an engine finer makes it
+grow while each page fetches less. The dashboard is held to one more measure, `first`: what a page
+drawing one bar chart fetches before it draws, the start and the chunks of the chart engine, the
+bar's builder, ECharts' bar series and its grid (the modules `first.fetches` names in
+`budget.json`, with everything they import). It fails when one grows past its budget in `budget.json`, or bundles an engine (ECharts,
 maplibre, React Flow, CodeMirror, Mermaid, dnd-kit) its budget does not list. The dashboard lists
 dnd-kit for its table, whose drag layer is in a lazy chunk that loads only for a table that reorders. CI runs it after building the
 packages.

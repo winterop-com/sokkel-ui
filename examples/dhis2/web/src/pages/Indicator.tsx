@@ -288,7 +288,6 @@ function Editor({ saved }: { saved: Indicator }) {
                                 onOpen={(one) => setUnit(one.id)}
                                 chevron
                                 minWidth="auto"
-                                stackBelow={false}
                             />
                         )}
                     </Stack>

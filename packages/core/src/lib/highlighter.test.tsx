@@ -19,6 +19,11 @@ describe('the highlighter', () => {
         expect(out).toContain('color:var(--code-comment);font-style:italic')
     })
 
+    it('draws a line too long to color plain', async () => {
+        const out = html(await highlightCode(`const rows = [${'1, '.repeat(7_000)}]`, 'ts'))
+        expect(out).not.toContain('color:var(--code-number)')
+    })
+
     it('colors jq', async () => {
         const out = html(await highlightCode('.runs[] | select(.state == "failed") | {job, $id} # mine', 'jq'))
         expect(out).toContain('color:var(--code-property)')

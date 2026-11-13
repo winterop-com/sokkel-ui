@@ -1,7 +1,6 @@
 import { tooltipMarkup } from '../look'
-import { written } from './categories'
 import { shaped } from './legends'
-import { categoryLabels, categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
+import { written, categoryLabels, categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
 
 /**
  * Categories around a circle, each a wedge as long as its combined `y` (or its rows counted), as

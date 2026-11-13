@@ -2,6 +2,8 @@ import { CircleAlert, CircleCheck, Network, Redo2, Scan, Undo2, ZoomIn, ZoomOut 
 import { Children, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { useGraphControls } from './context'
 
 /** The words a graph toolbar says. */
@@ -43,21 +45,36 @@ export const GRAPH_TOOLBAR_WORDS: GraphToolbarWords = {
 const BUTTON =
     'flex size-7 shrink-0 items-center justify-center rounded-chip text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
 
-export interface GraphToolbarButtonProps extends Omit<ComponentProps<'button'>, 'children'> {
+export interface GraphToolbarButtonProps extends Omit<ComponentProps<'button'>, 'children' | 'title'> {
+    /** What the button does: its accessible name, and its tooltip without `tooltip`. */
     label: string
+    /** What the tooltip says in place of the label, where the short name needs more said. */
+    tooltip?: ReactNode
+    /** The keys that do the same, drawn as a key in the tooltip. */
+    shortcut?: string
+    /** Which side the tooltip opens on; below by default, as the bar sits over the canvas's top. */
+    side?: 'top' | 'bottom' | 'left' | 'right'
     children: ReactNode
 }
 
 /**
- * A button of the app's in a graph toolbar, drawn as the toolbar's own: a glyph, named by `label`.
+ * A button of the app's in a graph toolbar, drawn as the toolbar's own: a glyph, named by `label`,
+ * with a tooltip saying the label, or `tooltip` in its place, and the `shortcut` that does the same.
  * It takes a ref and any button attribute, so it can be a menu's trigger. In the zoom cluster, a
  * canvas's `extraControls`, use `GraphControlButton`, which is drawn flush as the cluster's own.
  */
-export function GraphToolbarButton({ label, className, children, ...rest }: GraphToolbarButtonProps) {
+export function GraphToolbarButton({ label, tooltip, shortcut, side = 'bottom', className, children, ...rest }: GraphToolbarButtonProps) {
+    const said = tooltip === undefined || tooltip === '' ? label : tooltip
     return (
-        <button type="button" {...rest} className={cn(BUTTON, className)} aria-label={label} title={rest.title ?? label}>
-            {children}
-        </button>
+        <Tooltip>
+            <TooltipTrigger render={<button type="button" {...rest} className={cn(BUTTON, className)} aria-label={label} />}>
+                {children}
+            </TooltipTrigger>
+            <TooltipContent side={side}>
+                {said}
+                {shortcut !== undefined && <Kbd>{shortcut}</Kbd>}
+            </TooltipContent>
+        </Tooltip>
     )
 }
 
@@ -114,53 +131,33 @@ export function GraphToolbar({
     if (history)
         groups.push(
             <span key="history" className="flex items-center">
-                <button
-                    type="button"
-                    className={BUTTON}
-                    aria-label={words.undo}
-                    title={`${words.undo} (${shortcut(false)})`}
-                    disabled={!canUndo}
-                    onClick={onUndo}
-                >
+                <GraphToolbarButton label={words.undo} shortcut={shortcut(false)} disabled={!canUndo} onClick={onUndo}>
                     <Undo2 aria-hidden />
-                </button>
-                <button
-                    type="button"
-                    className={BUTTON}
-                    aria-label={words.redo}
-                    title={`${words.redo} (${shortcut(true)})`}
-                    disabled={!canRedo}
-                    onClick={onRedo}
-                >
+                </GraphToolbarButton>
+                <GraphToolbarButton label={words.redo} shortcut={shortcut(true)} disabled={!canRedo} onClick={onRedo}>
                     <Redo2 aria-hidden />
-                </button>
+                </GraphToolbarButton>
             </span>,
         )
     if (tidies || view)
         groups.push(
             <span key="view" className="flex items-center">
                 {tidies && (
-                    <button type="button" className={BUTTON} aria-label={words.layout} title={words.layout} onClick={onLayout}>
+                    <GraphToolbarButton label={words.layout} onClick={onLayout}>
                         <Network aria-hidden />
-                    </button>
+                    </GraphToolbarButton>
                 )}
                 {view && (
                     <>
-                        <button
-                            type="button"
-                            className={BUTTON}
-                            aria-label={words.zoomOut}
-                            title={words.zoomOut}
-                            onClick={controls.zoomOut}
-                        >
+                        <GraphToolbarButton label={words.zoomOut} onClick={controls.zoomOut}>
                             <ZoomOut aria-hidden />
-                        </button>
-                        <button type="button" className={BUTTON} aria-label={words.zoomIn} title={words.zoomIn} onClick={controls.zoomIn}>
+                        </GraphToolbarButton>
+                        <GraphToolbarButton label={words.zoomIn} onClick={controls.zoomIn}>
                             <ZoomIn aria-hidden />
-                        </button>
-                        <button type="button" className={BUTTON} aria-label={words.fit} title={words.fit} onClick={controls.fit}>
+                        </GraphToolbarButton>
+                        <GraphToolbarButton label={words.fit} onClick={controls.fit}>
                             <Scan aria-hidden />
-                        </button>
+                        </GraphToolbarButton>
                     </>
                 )}
             </span>,

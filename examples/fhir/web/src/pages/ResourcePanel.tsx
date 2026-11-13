@@ -216,6 +216,7 @@ function Vitals({ resourceKey }: { resourceKey: string }) {
                             x="day"
                             y="value"
                             unit={vital.unit}
+                            fit
                             {...state}
                         />
                     )}

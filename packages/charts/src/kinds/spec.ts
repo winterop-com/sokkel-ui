@@ -1,6 +1,6 @@
 import type { EChartsCoreOption } from 'echarts/core'
 
-import type { Aggregate, Row } from '../data'
+import { formatNumber, type Aggregate, type Row } from '../data'
 import { tokenColor, type ChartLook } from '../look'
 
 /**
@@ -79,7 +79,7 @@ export interface ChartSpec {
     showScale?: boolean
     /** A ring's total written in its middle, with this word under it, such as `runs`; under a gauge's figure, the word alone. */
     total?: string
-    /** A scatter's axes fitted to its points rather than starting at zero. */
+    /** A scatter's axes, or a line's, an area's or a step's value axis, fitted to the figures rather than starting at zero. */
     fit?: boolean
     /** How many bins a histogram splits its numbers into, or how wide each is. */
     bins?: number | { width: number }
@@ -296,6 +296,12 @@ export const measureName = (spec: ChartSpec, field: string | undefined): string 
 export function unitAt(spec: ChartSpec, index = 0): string {
     if (spec.unit === undefined) return ''
     return typeof spec.unit === 'string' ? spec.unit : (spec.unit[index] ?? '')
+}
+
+/** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
+export function written(spec: ChartSpec, value: number | null | undefined, field = 0): string {
+    if (value === null || value === undefined) return '-'
+    return `${(spec.format ?? formatNumber)(value)}${unitAt(spec, field)}`
 }
 
 /** The `y` fields as a list. */

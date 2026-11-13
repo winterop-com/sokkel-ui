@@ -66,7 +66,7 @@ function Choose<T extends string>({
 }) {
     return (
         <Select items={items} value={value} onValueChange={(next) => onChange(String(next) as T)}>
-            <SelectTrigger aria-label={label} className="w-40">
+            <SelectTrigger aria-label={label} widest={items.map((item) => item.label)}>
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>

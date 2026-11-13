@@ -1,8 +1,8 @@
 import { aggregate, aggregateAt, numberOf } from '../data'
 import { SERIES_ORDER, type ChartLook } from '../look'
 import { stepAt } from '../stats'
-import { tickWriter, written } from './categories'
-import { fieldsOf, type ChartBuilder, type ChartSpec, type ChartStep, type GaugeDial } from './spec'
+import { tickWriter } from './axes'
+import { written, fieldsOf, type ChartBuilder, type ChartSpec, type ChartStep, type GaugeDial } from './spec'
 
 /** Where a dial's arc runs and sits: its angles, its center, and the radius of its band and of its thick arc. */
 const GEOMETRY: Record<GaugeDial, { startAngle: number; endAngle: number; center: [string, string]; band: string; arc: string }> = {

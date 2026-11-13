@@ -633,7 +633,8 @@ the grid alike. Below its stack width a row becomes a card of labeled lines, or 
 row of its leads (a done box) and its title over one quiet line of the other columns, its values
 edited on a press rather than drawn as fields; a stacked list keeps each row's box and menu. The
 stack width is the table's own box's, never the window's, in pixels or a CSS length (`stackBelow="64rem"`
-for an app whose listings go to cards under its own width). With no
+for an app whose listings go to cards under its own width): 576 pixels for a table, and for a list 480, a
+phone's, or wherever its columns stop fitting, so a list in a narrow panel on a wide screen keeps its rows. With no
 rows it says `empty`, a sentence or a node such as an `Empty` with an action, alone without the column
 heads unless a search or tools in the bar may have emptied it. A row opens into a `detail` of its own,
 such as its own nested `DataTable`; `hasDetail` says which rows have one, so `detail` is built only for

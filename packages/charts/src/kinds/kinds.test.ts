@@ -423,6 +423,17 @@ describe('the chart kinds', () => {
         expect(tick(percent.yAxis)).toBe('1,500%')
     })
 
+    it('fits a line, area or step value axis to its figures with fit, never one stacked to shares', () => {
+        type Grid = { yAxis: { scale?: boolean } }
+        const base: ChartSpec = { rows: ROWS, x: 'job', y: 'duration' }
+        for (const kind of ['line', 'area', 'step'] as const) {
+            expect((KINDS[kind].build(base, LOOK) as unknown as Grid).yAxis.scale, kind).toBe(false)
+            expect((KINDS[kind].build({ ...base, fit: true }, LOOK) as unknown as Grid).yAxis.scale, kind).toBe(true)
+        }
+        const shares = KINDS.area.build({ ...base, series: 'state', stack: 'percent', fit: true }, LOOK) as unknown as Grid
+        expect(shares.yAxis.scale).toBe(false)
+    })
+
     it("writes a dual chart's ticks by each axis' own format, or the spec's", () => {
         type Dual = { yAxis: { axisLabel: { formatter: (value: number) => string } }[] }
         const spec: ChartSpec = { ...SPECS.dual, unit: undefined, format: (value) => `${value.toLocaleString('en-US')} runs` }

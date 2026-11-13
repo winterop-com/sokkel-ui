@@ -42,11 +42,14 @@ import { DayStrip } from '@winterop-com/sokkel-ui/calendar/DayStrip'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { SortableList } from '@winterop-com/sokkel-ui/Sortable'
 
 /**
  * A schedule of job runs and team events in the library's frame: the week with its hours, all-day
  * events on top and the line at the current time; the month with "+N more" on a full day; a mini
- * month and the calendars to show in the sidebar; and an event's details in a popover. On a phone
+ * month and the calendars to show in the sidebar, put in order by their grips; and an event's
+ * details in a popover. On a phone
  * the week becomes one day as a list. "Now" is fixed at Thursday 5 November 2026, 09:30.
  */
 const NOW = new Date(2026, 10, 5, 9, 30)
@@ -246,30 +249,51 @@ function Detail({ event }: { event: Entry }) {
     )
 }
 
-function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (shown: CalendarId[]) => void }) {
+type Calendar = (typeof CALENDARS)[number]
+
+/** The calendars to show, each toggled by its box and put in the reader's order by its grip. */
+function CalendarToggles({
+    calendars,
+    onReorder,
+    shown,
+    onChange,
+}: {
+    calendars: readonly Calendar[]
+    onReorder: (calendars: Calendar[]) => void
+    shown: CalendarId[]
+    onChange: (shown: CalendarId[]) => void
+}) {
     return (
         <Stack as="section" gap="2xs">
             <GroupLabel as="h3" className="px-1.5 pb-1">
                 Calendars
             </GroupLabel>
-            {CALENDARS.map((calendar) => {
-                const on = shown.includes(calendar.id)
-                return (
-                    <CheckboxField
-                        key={calendar.id}
-                        label={
-                            <Row as="span" className={cn(!on && 'text-muted-foreground')}>
-                                <Dot kind={calendar.color} />
-                                {calendar.name}
-                            </Row>
-                        }
-                        checked={on}
-                        onCheckedChange={(next) =>
-                            onChange(next ? [...shown, calendar.id] : shown.filter((other) => other !== calendar.id))
-                        }
-                    />
-                )
-            })}
+            <SortableList
+                label="Calendars"
+                variant="plain"
+                gripSide="end"
+                items={calendars}
+                itemKey={(calendar) => calendar.id}
+                itemLabel={(calendar) => calendar.name}
+                onMove={(from, to) => onReorder(moveItem(calendars, from, to))}
+                renderItem={(calendar) => {
+                    const on = shown.includes(calendar.id)
+                    return (
+                        <CheckboxField
+                            label={
+                                <Row as="span" className={cn(!on && 'text-muted-foreground')}>
+                                    <Dot kind={calendar.color} />
+                                    {calendar.name}
+                                </Row>
+                            }
+                            checked={on}
+                            onCheckedChange={(next) =>
+                                onChange(next ? [...shown, calendar.id] : shown.filter((other) => other !== calendar.id))
+                            }
+                        />
+                    )
+                }}
+            />
         </Stack>
     )
 }
@@ -281,6 +305,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
     const [view, setView] = useState<View>(initialView)
     const [anchor, setAnchor] = useState(NOW)
     const [mini, setMini] = useState(NOW)
+    const [calendars, setCalendars] = useState<Calendar[]>([...CALENDARS])
     const [shown, setShown] = useState<CalendarId[]>(CALENDARS.map((calendar) => calendar.id))
     const [openEvent, setOpenEvent] = useState<string | null>(open)
     const [collapsed, setCollapsed] = useState(false)
@@ -342,7 +367,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                     (event) => event.start,
                                 )}
                             />
-                            <CalendarToggles shown={shown} onChange={setShown} />
+                            <CalendarToggles calendars={calendars} onReorder={setCalendars} shown={shown} onChange={setShown} />
                         </Stack>
                     </SubNav>
                     <Stack gap="none" className="flex-1">
