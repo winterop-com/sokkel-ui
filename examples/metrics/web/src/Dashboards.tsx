@@ -2,6 +2,7 @@ import { type DataAction, type DataColumn, DataTable } from '@winterop-com/sokke
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { ExternalLink, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -38,17 +39,28 @@ const COLUMNS: DataColumn<Dashboard>[] = [
     },
 ]
 
-/** Every dashboard, to open one, make one or delete one. */
+/** Every dashboard, to open one, make one, put them in the order the rail lists them, or delete one. */
 export function DashboardsPage({
     dashboards: all,
     kept,
     onCreate,
+    onReorder,
 }: {
     dashboards: readonly Dashboard[]
     kept: URLSearchParams
     onCreate: () => void
+    /** Keeps the dashboards in a new order, by id. */
+    onReorder: (order: string[]) => Promise<unknown>
 }) {
     const [deleting, setDeleting] = useState<Dashboard | null>(null)
+    // The order as last dragged here, drawn until the backend has kept it.
+    const [held, setHeld] = useState<readonly Dashboard[] | null>(null)
+    const shown = held ?? all
+    const reorder = (from: number, to: number) => {
+        const next = moveItem(shown, from, to)
+        setHeld(next)
+        void onReorder(next.map((board) => board.id)).finally(() => setHeld(null))
+    }
     const open = (board: Dashboard) => go(`/d/${board.id}`, kept)
     const actions = (board: Dashboard): DataAction[] => [
         { id: 'open', label: 'Open', icon: <ExternalLink />, onSelect: () => open(board) },
@@ -72,7 +84,9 @@ export function DashboardsPage({
                 variant="list"
                 minWidth="auto"
                 columns={COLUMNS}
-                rows={all}
+                rows={shown}
+                rowLabel={(board) => board.title}
+                onReorder={reorder}
                 rowKey={(board) => board.id}
                 onOpen={open}
                 rowActions={actions}

@@ -28,91 +28,201 @@ import {
     funnel,
     kpis,
     levels,
+    refunds,
+    revenue,
     revenueByPlan,
     revenueByRegion,
     revenueSeries,
     SIGNUP_FUNNEL,
     topCustomers,
+    type Kpis,
+    type Segment,
     type TopCustomer,
 } from './metrics'
-import { BEFORE_COLOR, PANEL_NAMES, PLAN_COLORS, PLAN_NAMES, REGION_NAMES, REGIONS, type PanelId } from './model'
+import { BEFORE_COLOR, PANEL_NAMES, PLAN_COLORS, PLAN_NAMES, PLANS, REGION_NAMES, REGIONS, type PanelId } from './model'
 import { change, describe, PlanChip, points, useFeed, useSegment, useSpans } from './parts'
 import { useLoaded } from './state'
-import { go, rangeName } from './view'
+import { go, rangeName, type Span } from './view'
+import type { World } from './world'
 
-/** The six key figures as tiles, each with its trend over the range and its change from the period before. */
-export function KpiPanels() {
+/** The key figures a dashboard can show as a tile. */
+export const KPIS = ['revenue', 'mrr', 'arr', 'active', 'paying', 'arpa', 'signups', 'conversion', 'churn', 'refunded'] as const
+export type KpiId = (typeof KPIS)[number]
+
+export const KPI_NAMES: Record<KpiId, string> = {
+    revenue: 'Revenue',
+    mrr: 'MRR',
+    arr: 'ARR',
+    active: 'Active teams',
+    paying: 'Paying teams',
+    arpa: 'ARPA',
+    signups: 'Sign-ups',
+    conversion: 'Conversion',
+    churn: 'Churn',
+    refunded: 'Refunded',
+}
+
+/** The key figures once per world, segment and span, so every tile of a dashboard reads one count. */
+const counted = new WeakMap<World, Map<string, Kpis>>()
+
+function kpisOnce(world: World, segment: Segment, span: Span): Kpis {
+    let known = counted.get(world)
+    if (known === undefined) {
+        known = new Map()
+        counted.set(world, known)
+    }
+    const key = [segment.plan, segment.region, span.from, span.to, span.step, span.buckets.length].join('|')
+    let found = known.get(key)
+    if (found === undefined) {
+        found = kpis(world, segment, span)
+        known.set(key, found)
+    }
+    return found
+}
+
+/** One key figure as a tile, with its trend over the range and its change from the period before. */
+export function KpiPanel({ id }: { id: KpiId }) {
     const { world, money, view } = useLoaded()
     const segment = useSegment()
     const { span, previous } = useSpans()
-    const now = useMemo(() => kpis(world, segment, span), [world, segment, span])
-    const before = useMemo(() => (view.compare ? kpis(world, segment, previous) : undefined), [world, segment, previous, view.compare])
+    const now = kpisOnce(world, segment, span)
+    const before = view.compare ? kpisOnce(world, segment, previous) : undefined
     const short = (value: number) => money(value, true)
+    const versus = (a: number, b: number | undefined, higherIsGood = true) =>
+        b === undefined ? {} : { delta: change(a, b), good: higherIsGood ? a >= b : a <= b }
+    const title = KPI_NAMES[id]
+    switch (id) {
+        case 'revenue':
+            return (
+                <StatPanel
+                    title={title}
+                    value={now.revenue}
+                    format={short}
+                    color="chart-2"
+                    sparkline={now.trend.revenue}
+                    {...versus(now.revenue, before?.revenue)}
+                    info="Invoices paid in the range, less refunds."
+                    span="sixth"
+                />
+            )
+        case 'mrr':
+            return (
+                <StatPanel
+                    title={title}
+                    value={now.mrr}
+                    format={short}
+                    color="chart-1"
+                    sparkline={now.trend.mrr}
+                    {...versus(now.mrr, before?.mrr)}
+                    info="What the paying teams pay each month, at the end of the range."
+                    span="sixth"
+                />
+            )
+        case 'arr':
+            return <StatPanel title={title} value={now.mrr * 12} format={short} color="chart-1" note="MRR times twelve" span="sixth" />
+        case 'active':
+            return (
+                <StatPanel
+                    title={title}
+                    value={now.active}
+                    color="chart-3"
+                    sparkline={now.trend.active}
+                    {...versus(now.active, before?.active)}
+                    span="sixth"
+                />
+            )
+        case 'paying':
+            return <StatPanel title={title} value={now.paying} color="chart-2" {...versus(now.paying, before?.paying)} span="sixth" />
+        case 'arpa': {
+            const arpa = (of: Kpis) => (of.paying === 0 ? 0 : of.mrr / of.paying)
+            return (
+                <StatPanel
+                    title={title}
+                    value={arpa(now)}
+                    format={(value) => money(value)}
+                    color="chart-3"
+                    {...versus(arpa(now), before === undefined ? undefined : arpa(before))}
+                    info="Average revenue per account: MRR over the paying teams."
+                    span="sixth"
+                />
+            )
+        }
+        case 'signups':
+            return (
+                <StatPanel
+                    title={title}
+                    value={now.signups}
+                    color="chart-4"
+                    sparkline={now.trend.signups}
+                    {...versus(now.signups, before?.signups)}
+                    span="sixth"
+                />
+            )
+        case 'conversion':
+            return (
+                <StatPanel
+                    title={title}
+                    value={now.conversion}
+                    unit="%"
+                    decimals={1}
+                    color="good"
+                    sparkline={now.trend.conversion}
+                    delta={before === undefined ? undefined : points(now.conversion, before.conversion)}
+                    good={before === undefined ? undefined : now.conversion >= before.conversion}
+                    span="sixth"
+                />
+            )
+        case 'churn':
+            return (
+                <StatPanel
+                    title={title}
+                    value={now.churn}
+                    unit="%"
+                    decimals={1}
+                    color="critical"
+                    sparkline={now.trend.churn}
+                    delta={before === undefined ? undefined : points(now.churn, before.churn)}
+                    good={before === undefined ? undefined : now.churn <= before.churn}
+                    info="Paying teams that left in the range, as a share of those paying at its start."
+                    span="sixth"
+                />
+            )
+        case 'refunded':
+            return <RefundedPanel />
+    }
+}
+
+/** What was paid back in the range, and over how many invoices. */
+function RefundedPanel() {
+    const { world, money, view } = useLoaded()
+    const segment = useSegment()
+    const { span, previous } = useSpans()
+    const back = useMemo(() => refunds(world, segment, span.from, span.to), [world, segment, span])
+    const before = useMemo(
+        () => (view.compare ? refunds(world, segment, previous.from, previous.to) : undefined),
+        [world, segment, previous, view.compare],
+    )
+    return (
+        <StatPanel
+            title={KPI_NAMES.refunded}
+            value={back.amount}
+            format={(value) => money(value)}
+            color="warning"
+            note={`${String(back.count)} ${back.count === 1 ? 'invoice' : 'invoices'}`}
+            delta={before === undefined ? undefined : change(back.amount, before.amount)}
+            good={before === undefined ? undefined : back.amount <= before.amount}
+            span="sixth"
+        />
+    )
+}
+
+/** The six key figures of the overview as tiles, for a report. */
+export function KpiPanels() {
     return (
         <>
-            <StatPanel
-                title="Revenue"
-                value={now.revenue}
-                format={short}
-                color="chart-2"
-                sparkline={now.trend.revenue}
-                delta={before === undefined ? undefined : change(now.revenue, before.revenue)}
-                good={before === undefined ? undefined : now.revenue >= before.revenue}
-                info="Invoices paid in the range, less refunds."
-                span="sixth"
-            />
-            <StatPanel
-                title="MRR"
-                value={now.mrr}
-                format={short}
-                color="chart-1"
-                sparkline={now.trend.mrr}
-                delta={before === undefined ? undefined : change(now.mrr, before.mrr)}
-                good={before === undefined ? undefined : now.mrr >= before.mrr}
-                info="What the paying teams pay each month, at the end of the range."
-                span="sixth"
-            />
-            <StatPanel
-                title="Active teams"
-                value={now.active}
-                color="chart-3"
-                sparkline={now.trend.active}
-                delta={before === undefined ? undefined : change(now.active, before.active)}
-                good={before === undefined ? undefined : now.active >= before.active}
-                span="sixth"
-            />
-            <StatPanel
-                title="Sign-ups"
-                value={now.signups}
-                color="chart-4"
-                sparkline={now.trend.signups}
-                delta={before === undefined ? undefined : change(now.signups, before.signups)}
-                good={before === undefined ? undefined : now.signups >= before.signups}
-                span="sixth"
-            />
-            <StatPanel
-                title="Conversion"
-                value={now.conversion}
-                unit="%"
-                decimals={1}
-                color="good"
-                sparkline={now.trend.conversion}
-                delta={before === undefined ? undefined : points(now.conversion, before.conversion)}
-                good={before === undefined ? undefined : now.conversion >= before.conversion}
-                span="sixth"
-            />
-            <StatPanel
-                title="Churn"
-                value={now.churn}
-                unit="%"
-                decimals={1}
-                color="critical"
-                sparkline={now.trend.churn}
-                delta={before === undefined ? undefined : points(now.churn, before.churn)}
-                good={before === undefined ? undefined : now.churn <= before.churn}
-                info="Paying teams that left in the range, as a share of those paying at its start."
-                span="sixth"
-            />
+            {(['revenue', 'mrr', 'active', 'signups', 'conversion', 'churn'] as const).map((id) => (
+                <KpiPanel key={id} id={id} />
+            ))}
         </>
     )
 }
@@ -384,6 +494,38 @@ export function FeedPanel({ count = 7 }: { count?: number }) {
                 words={{ empty: 'Nothing has happened in this segment yet.' }}
             />
         </DashboardPanel>
+    )
+}
+
+/** Paid revenue over the range, by plan, as a donut. */
+export function PlansPanel() {
+    const { world, money, view } = useLoaded()
+    const segment = useSegment()
+    const { span } = useSpans()
+    const plans = useMemo(
+        () =>
+            PLANS.filter((plan) => plan !== 'free').map((plan) => ({
+                plan: PLAN_NAMES[plan],
+                revenue: revenue(world, { ...segment, plan }, span.from, span.to),
+            })),
+        [world, segment, span],
+    )
+    return (
+        <ChartPanel
+            kind="donut"
+            title="Revenue by plan"
+            subtitle={rangeName(view.range).toLowerCase()}
+            span="third"
+            rows={plans}
+            x="plan"
+            y="revenue"
+            total="revenue"
+            colors={{ [PLAN_NAMES.team]: PLAN_COLORS.team, [PLAN_NAMES.business]: PLAN_COLORS.business }}
+            format={(value) => money(value, true)}
+            bodyClassName="h-64"
+            empty={plans.every((one) => one.revenue === 0)}
+            file="revenue-by-plan"
+        />
     )
 }
 

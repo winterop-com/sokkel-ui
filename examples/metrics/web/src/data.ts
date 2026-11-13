@@ -1,6 +1,6 @@
 import { collection } from 'tidevann-shared/backend'
 
-import { type Dashboard, panel } from './model'
+import { type Dashboard, type Panel, panel } from './model'
 import { readNow, type Zone } from './query'
 import type { Aggregation, Label, MetricId } from './source'
 
@@ -10,8 +10,8 @@ const GOOD_LOW = (warning: number, critical: number) => [
     { value: critical, color: 'critical' },
 ]
 
-/** The demo's dashboards, each panel under an id of its place, so a link to one holds before anything is saved. */
-function seedDashboards(): Dashboard[] {
+/** The demo's dashboards, each panel under an id of its place, so a link to one holds before anything is saved. Reset layout puts a dashboard back as it is here. */
+export function seedDashboards(): Dashboard[] {
     return seededDashboards().map((board) => ({
         ...board,
         panels: board.panels.map((one, index) => ({ ...one, id: `${board.id}-${String(index + 1)}` })),
@@ -252,6 +252,30 @@ function seededDashboards(): Dashboard[] {
 
 export const dashboards = collection<Dashboard>('dashboards', seedDashboards)
 
+/** The panels the palette offers to drag onto a dashboard, one of each the demo's dashboards draw, by title. */
+const CATALOG = [
+    'Requests',
+    'Error rate',
+    'Queue depth',
+    'api CPU',
+    'Memory',
+    'Mean run',
+    'Requests by service',
+    'Latency p95 by service',
+    'Duration by job',
+    'CPU by host',
+    'Requests by project',
+    'Latency p95 by host',
+    'Hosts by p95',
+    'Logs',
+]
+
+/** The palette's panels, each under the id of the seeded panel it copies. */
+export function widgetCatalog(): Panel[] {
+    const seeded = seedDashboards().flatMap((board) => board.panels)
+    return CATALOG.flatMap((title) => seeded.find((one) => one.title === title) ?? [])
+}
+
 /** An alert rule: a metric's value against a threshold, held for a while before it fires. */
 export interface AlertRule {
     id: string
@@ -407,6 +431,8 @@ export interface Preferences {
     notify: boolean
     /** How long fired alerts are kept, in seconds. */
     keep: number
+    /** The dashboards in the order the person put them, by id; one not named follows in the order it was made. */
+    order?: string[]
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {

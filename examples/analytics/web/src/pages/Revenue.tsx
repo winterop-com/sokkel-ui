@@ -6,9 +6,6 @@ import { SavedViews, type SavedView } from '@winterop-com/sokkel-ui/SavedViews'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
-import { DashboardGrid } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { StatPanel } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
-import { ChartPanel } from '@winterop-com/sokkel-ui-charts/dashboard/ChartPanel'
 import { filterRows } from '@winterop-com/sokkel-ui/lib/filters'
 import { EMPTY_VIEW, type ListViewState } from '@winterop-com/sokkel-ui/lib/list-views'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
@@ -16,134 +13,41 @@ import { Banknote, CalendarDays, CircleDot, CopyIcon, Earth, ExternalLinkIcon, L
 import { useMemo, useState } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
+import { useArrangedBoard } from '../arrange'
 import { retryCharge, setInvoiceStatus } from '../backend'
 import { invoiceViews } from '../collections'
-import { kpis, levels, refunds, revenue } from '../metrics'
-import { isoDay, PLAN_COLORS, PLAN_NAMES, PLANS, REGION_NAMES, REGIONS, shortDay, type Invoice, type InvoiceStatus } from '../model'
-import { CohortsPanel, MovementsPanel, RegionsPanel, RevenuePanel } from '../panels'
-import { change, PlanChip, STATUSES, useSegment, useSpans, ViewBar } from '../parts'
+import { isoDay, PLAN_NAMES, PLANS, REGION_NAMES, REGIONS, shortDay, type Invoice, type InvoiceStatus } from '../model'
+import { PlanChip, STATUSES, useSegment, useSpans, ViewBar } from '../parts'
 import { useLoaded } from '../state'
 import { go, rangeName } from '../view'
 
 /** The revenue pages: the breakdowns, and the invoices behind them. */
 export function Revenue({ tab }: { tab: 'breakdowns' | 'invoices' }) {
     const { href } = useLoaded()
+    const board = useArrangedBoard('revenue')
     return (
         <>
             <PageHeader
                 title="Revenue"
                 description="What the paying teams pay, where it comes from and where it goes."
                 actions={
-                    <Segmented
-                        label="Revenue page"
-                        value={tab}
-                        onValueChange={(next) => go(href(next === 'invoices' ? 'revenue/invoices' : 'revenue'))}
-                        options={[
-                            { value: 'breakdowns', label: 'Breakdowns' },
-                            { value: 'invoices', label: 'Invoices' },
-                        ]}
-                    />
+                    <>
+                        {tab === 'breakdowns' && board.actions}
+                        <Segmented
+                            label="Revenue page"
+                            value={tab}
+                            onValueChange={(next) => go(href(next === 'invoices' ? 'revenue/invoices' : 'revenue'))}
+                            options={[
+                                { value: 'breakdowns', label: 'Breakdowns' },
+                                { value: 'invoices', label: 'Invoices' },
+                            ]}
+                        />
+                    </>
                 }
             />
             <ViewBar />
-            {tab === 'breakdowns' ? <Breakdowns /> : <Invoices />}
+            {tab === 'breakdowns' ? board.grid : <Invoices />}
         </>
-    )
-}
-
-/** MRR and what makes it, revenue by plan and region, MRR movements and retention by cohort. */
-function Breakdowns() {
-    const { world, money, view } = useLoaded()
-    const segment = useSegment()
-    const { span, previous } = useSpans()
-    const figures = useMemo(() => {
-        const now = kpis(world, segment, span)
-        const before = kpis(world, segment, previous)
-        const back = refunds(world, segment, span.from, span.to)
-        const backBefore = refunds(world, segment, previous.from, previous.to)
-        const plans = PLANS.filter((plan) => plan !== 'free').map((plan) => ({
-            plan: PLAN_NAMES[plan],
-            revenue: revenue(world, { ...segment, plan }, span.from, span.to),
-        }))
-        const mrrBefore = levels(world, segment, [previous.to]).mrr[0] ?? 0
-        return { now, before, back, backBefore, plans, mrrBefore }
-    }, [world, segment, span, previous])
-    const { now, before, back, backBefore } = figures
-    const arpa = now.paying === 0 ? 0 : now.mrr / now.paying
-    const arpaBefore = before.paying === 0 ? 0 : before.mrr / before.paying
-    const compare = view.compare
-    const short = (value: number) => money(value, true)
-    return (
-        <DashboardGrid>
-            <StatPanel
-                title="MRR"
-                value={now.mrr}
-                format={short}
-                color="chart-1"
-                sparkline={now.trend.mrr}
-                delta={compare ? change(now.mrr, figures.mrrBefore) : undefined}
-                good={compare ? now.mrr >= figures.mrrBefore : undefined}
-                span="sixth"
-            />
-            <StatPanel title="ARR" value={now.mrr * 12} format={short} color="chart-1" note="MRR times twelve" span="sixth" />
-            <StatPanel
-                title="Paying teams"
-                value={now.paying}
-                color="chart-2"
-                delta={compare ? change(now.paying, before.paying) : undefined}
-                good={compare ? now.paying >= before.paying : undefined}
-                span="sixth"
-            />
-            <StatPanel
-                title="ARPA"
-                value={arpa}
-                format={(value) => money(value)}
-                color="chart-3"
-                delta={compare ? change(arpa, arpaBefore) : undefined}
-                good={compare ? arpa >= arpaBefore : undefined}
-                info="Average revenue per account: MRR over the paying teams."
-                span="sixth"
-            />
-            <StatPanel
-                title="Revenue"
-                value={now.revenue}
-                format={short}
-                color="chart-2"
-                sparkline={now.trend.revenue}
-                delta={compare ? change(now.revenue, before.revenue) : undefined}
-                good={compare ? now.revenue >= before.revenue : undefined}
-                span="sixth"
-            />
-            <StatPanel
-                title="Refunded"
-                value={back.amount}
-                format={(value) => money(value)}
-                color="warning"
-                note={`${String(back.count)} ${back.count === 1 ? 'invoice' : 'invoices'}`}
-                delta={compare ? change(back.amount, backBefore.amount) : undefined}
-                good={compare ? back.amount <= backBefore.amount : undefined}
-                span="sixth"
-            />
-            <RevenuePanel />
-            <ChartPanel
-                kind="donut"
-                title="Revenue by plan"
-                subtitle={rangeName(view.range).toLowerCase()}
-                span="third"
-                rows={figures.plans}
-                x="plan"
-                y="revenue"
-                total="revenue"
-                colors={{ [PLAN_NAMES.team]: PLAN_COLORS.team, [PLAN_NAMES.business]: PLAN_COLORS.business }}
-                format={short}
-                bodyClassName="h-64"
-                empty={figures.plans.every((one) => one.revenue === 0)}
-                file="revenue-by-plan"
-            />
-            <MovementsPanel />
-            <RegionsPanel />
-            <CohortsPanel />
-        </DashboardGrid>
     )
 }
 

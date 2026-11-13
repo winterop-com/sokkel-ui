@@ -13,11 +13,13 @@ examples/
   records/       a records app: forms filled in sections, responses and receipts, households and
                  their visits, places on a map, an API playground and metadata health (GAPS.md
                  maps the records app it rehearses onto the library)
-  metrics/       live dashboards over a simulated source, a panel editor with a live preview, and alerts
+  metrics/       live dashboards over a simulated source, arranged by drag from a palette of panels
+                 and listed in the order dragged, a panel editor with a live preview, and alerts
   status/        a live operations board arranged by drag: services in the order dragged, regions
                  and incidents changing as the page watches, on-call, and the public status page
                  with its subscribe form
-  analytics/     a live sales dashboard: revenue, customers, funnels, reports and goals
+  analytics/     a live sales dashboard arranged by drag from a palette of figures and panels:
+                 revenue, customers, funnels and reports whose steps and panels drag into order, and goals
   notes/         a vault of linked notes: folders in the rail, markdown beside its preview in
                  tabs, [[links]] completed as typed, backlinks and mentions, tags, a quick
                  switcher, search, a graph of the links and a daily journal

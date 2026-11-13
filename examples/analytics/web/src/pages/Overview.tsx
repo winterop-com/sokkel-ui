@@ -1,30 +1,23 @@
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { DashboardGrid } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 
-import { CountriesPanel, CustomersPanel, FeedPanel, FunnelPanel, KpiPanels, RegionsPanel, RevenuePanel } from '../panels'
+import { useArrangedBoard } from '../arrange'
 import { ViewBar } from '../parts'
 import { useLoaded } from '../state'
 import { rangeName } from '../view'
 
-/** The overview: the key figures, revenue by plan, the sign-up funnel, revenue by country, the live feed, the top customers and the regions. */
+/** The overview: the key figures and panels as the person arranged them, by default revenue, the funnel, countries, the live feed, top customers and regions. */
 export function Overview() {
     const { view, prefs } = useLoaded()
+    const board = useArrangedBoard('overview')
     return (
         <>
             <PageHeader
                 title="Overview"
                 description={`${prefs.workspace}'s sales, ${rangeName(view.range).toLowerCase()}${view.compare ? ', against the period before' : ''}.`}
+                actions={board.actions}
             />
             <ViewBar />
-            <DashboardGrid>
-                <KpiPanels />
-                <RevenuePanel />
-                <FunnelPanel />
-                <CountriesPanel />
-                <FeedPanel />
-                <CustomersPanel />
-                <RegionsPanel />
-            </DashboardGrid>
+            {board.grid}
         </>
     )
 }
