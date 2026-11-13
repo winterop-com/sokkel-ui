@@ -1,8 +1,20 @@
 import { ChevronRight, Ellipsis, RotateCw, type LucideIcon } from 'lucide-react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react'
+import {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+    type PointerEvent as ReactPointerEvent,
+    type ReactNode,
+    type TouchEvent as ReactTouchEvent,
+} from 'react'
 
 import { cn } from '../lib/cn'
 import type { DataAction } from './DataTable'
+import type { DragData } from './DragDrop'
+import type { TreeDropAt } from './tree-drag'
 import { Button } from './ui/button'
 import { Checkbox } from './ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from './ui/context-menu'
@@ -61,6 +73,10 @@ export interface TreeWords {
     searching: string
     searchFailed: string
     empty: string
+    /** Said to a screen reader once a row is moved from the keyboard: where it went, its place counted from 1. */
+    moved: (item: string, into: string, place: number, count: number) => string
+    /** What `moved` calls the top level. */
+    topLevel: string
 }
 
 const WORDS: TreeWords = {
@@ -71,6 +87,8 @@ const WORDS: TreeWords = {
     searching: 'Searching',
     searchFailed: 'The search did not answer.',
     empty: 'Nothing matches.',
+    moved: (item, into, place, count) => `${item} moved to ${String(place)} of ${String(count)} in ${into}`,
+    topLevel: 'the top level',
 }
 
 /** A node's children as far as they are known: given, loaded, or not yet. */
@@ -117,20 +135,143 @@ export function treeAncestors(nodes: readonly TreeNode[], id: string, loads: Tre
     return visit(nodes, [])
 }
 
+/** Where a row is held over another: before it, after it, or inside it (a branch only). */
+export type TreeDropPart = 'before' | 'after' | 'inside'
+
 /**
- * Whether a node may be moved into a branch, or to the top level with null: never into itself or
- * below itself, and never where it already is.
+ * Which part of a row a point at `y` is in, given the row's top and height: a branch takes its
+ * middle half as inside and its quarters as before and after; a leaf splits at its middle.
  */
-export function canMoveInto(nodes: readonly TreeNode[], id: string, into: string | null, loads: TreeLoads = NO_LOADS): boolean {
-    if (into === id) return false
-    const above = treeAncestors(nodes, id, loads)
-    if (above === null || (above[above.length - 1] ?? null) === into) return false
-    return into === null || !(treeAncestors(nodes, into, loads) ?? []).includes(id)
+export function dropPart(y: number, top: number, height: number, branch: boolean): TreeDropPart {
+    const at = height > 0 ? (y - top) / height : 0.5
+    if (!branch) return at < 0.5 ? 'before' : 'after'
+    return at < 0.25 ? 'before' : at > 0.75 ? 'after' : 'inside'
 }
 
-/** Where a row dragged over another lands: inside a branch, an empty one too, or beside a leaf, in the leaf's parent. */
-export function dropInto(row: Pick<TreeRow, 'node' | 'parent'>): string | null {
-    return row.node.children !== undefined || row.node.hasChildren === true ? row.node.id : row.parent
+/** The children of a branch, or the top level for null, as far as they are known. */
+export function treeLevel(nodes: readonly TreeNode[], into: string | null, loads: TreeLoads = NO_LOADS): readonly TreeNode[] | undefined {
+    if (into === null) return nodes
+    const visit = (list: readonly TreeNode[]): readonly TreeNode[] | undefined | null => {
+        for (const node of list) {
+            if (node.id === into) return childrenOf(node, loads) ?? (node.hasChildren === true ? undefined : [])
+            const found = visit(childrenOf(node, loads) ?? [])
+            if (found !== null) return found
+        }
+        return null
+    }
+    return visit(nodes) ?? undefined
+}
+
+/** A node's parent (null for the top level) and its place among its parent's children, or null when the loaded tree does not hold it. */
+export function treePlace(
+    nodes: readonly TreeNode[],
+    id: string,
+    loads: TreeLoads = NO_LOADS,
+): { parent: string | null; index: number } | null {
+    const above = treeAncestors(nodes, id, loads)
+    if (above === null) return null
+    const parent = above[above.length - 1] ?? null
+    const index = (treeLevel(nodes, parent, loads) ?? []).findIndex((node) => node.id === id)
+    return { parent, index }
+}
+
+/** Where a node lands: the branch it goes into (null for the top level) and its place among the children it joins, counted without it. */
+export interface TreeTarget {
+    into: string | null
+    index: number
+}
+
+/**
+ * Where a node dropped on a part of a row lands: at the end of the row's branch, or beside the row
+ * in the row's own level. `id` is the node moved, left out of the count, or null for a thing from
+ * outside the tree. Undefined when the level is not loaded.
+ */
+export function treeTarget(
+    nodes: readonly TreeNode[],
+    id: string | null,
+    row: Pick<TreeRow, 'node' | 'parent'>,
+    part: TreeDropPart,
+    loads: TreeLoads = NO_LOADS,
+): TreeTarget | undefined {
+    const into = part === 'inside' ? row.node.id : row.parent
+    const level = treeLevel(nodes, into, loads)
+    if (level === undefined) return part === 'inside' ? { into, index: 0 } : undefined
+    const others = level.filter((node) => node.id !== id)
+    if (part === 'inside') return { into, index: others.length }
+    const at = others.findIndex((node) => node.id === row.node.id)
+    return at === -1 ? undefined : { into, index: part === 'before' ? at : at + 1 }
+}
+
+/**
+ * Whether a node may be moved to a place: never into itself or below itself, and never to where it
+ * already is. A place in its own level reorders it.
+ */
+export function canMoveTo(nodes: readonly TreeNode[], id: string, target: TreeTarget, loads: TreeLoads = NO_LOADS): boolean {
+    if (target.into === id) return false
+    const place = treePlace(nodes, id, loads)
+    if (place === null) return false
+    if (target.into !== null && (treeAncestors(nodes, target.into, loads) ?? []).includes(id)) return false
+    return !(place.parent === target.into && place.index === target.index)
+}
+
+/** The way a key moves a node: a place up or down its level, into the branch above it, or out beside its parent. */
+export type TreeKeyMove = 'up' | 'down' | 'in' | 'out'
+
+/** Where a node goes on a key, or undefined when it cannot go that way. */
+export function treeKeyTarget(
+    nodes: readonly TreeNode[],
+    id: string,
+    by: TreeKeyMove,
+    loads: TreeLoads = NO_LOADS,
+): TreeTarget | undefined {
+    const place = treePlace(nodes, id, loads)
+    if (place === null || place.index === -1) return undefined
+    const level = treeLevel(nodes, place.parent, loads) ?? []
+    if (by === 'up') return place.index > 0 ? { into: place.parent, index: place.index - 1 } : undefined
+    if (by === 'down') return place.index < level.length - 1 ? { into: place.parent, index: place.index + 1 } : undefined
+    if (by === 'in') {
+        const above = level[place.index - 1]
+        const inside = above === undefined || !isBranch(above, loads) ? undefined : childrenOf(above, loads)
+        return above === undefined || inside === undefined ? undefined : { into: above.id, index: inside.length }
+    }
+    if (place.parent === null) return undefined
+    const parent = treePlace(nodes, place.parent, loads)
+    return parent === null ? undefined : { into: parent.parent, index: parent.index + 1 }
+}
+
+/**
+ * The tree with the node `id` moved to `target`, for an app that holds its tree whole: taken from
+ * where it is and put among the target's children at its place. A target that held no children
+ * gets them.
+ */
+export function moveTreeNode(nodes: readonly TreeNode[], id: string, target: TreeTarget): TreeNode[] {
+    let moved: TreeNode | undefined
+    const without = (list: readonly TreeNode[]): TreeNode[] =>
+        list.flatMap((node) => {
+            if (node.id === id) {
+                moved = node
+                return []
+            }
+            return node.children === undefined ? [node] : [{ ...node, children: without(node.children) }]
+        })
+    const rest = without(nodes)
+    if (moved === undefined) return [...nodes]
+    const node = moved
+    const put = (list: readonly TreeNode[]) => {
+        const next = [...list]
+        next.splice(Math.max(0, Math.min(target.index, list.length)), 0, node)
+        return next
+    }
+    if (target.into === null) return put(rest)
+    const into = (list: readonly TreeNode[]): TreeNode[] =>
+        list.map((each) =>
+            each.id === target.into
+                ? { ...each, children: put(each.children ?? []) }
+                : each.children === undefined
+                  ? each
+                  : { ...each, children: into(each.children) },
+        )
+    return into(rest)
 }
 
 /** The ids of every node with a chosen node somewhere under it. */
@@ -245,10 +386,23 @@ export interface TreeProps {
     trails?: readonly TreeTrail[]
     /** What a row's menu offers, opened from a button at its end or a right-click: rename, move, delete. */
     actions?: (node: TreeNode) => DataAction[] | undefined
-    /** Lets a row be dragged into a branch, or beside a top-level row to the top level (null), and hears where it went. */
-    onMove?: (id: string, into: string | null) => void
+    /**
+     * Lets a row be moved: dragged into a branch or beside any row, to reorder its level, or moved
+     * from the keyboard with Alt (Option) and the arrows. Hears the node, the branch it goes into
+     * (null for the top level), and its place among the children it joins, counted without it;
+     * `moveTreeNode` applies it to a tree held whole.
+     */
+    onMove?: (id: string, into: string | null, index: number) => void
     /** Whether a node may go into a branch or the top level, beyond the tree's own rule that nothing goes into itself. */
     canMove?: (id: string, into: string | null) => boolean
+    /**
+     * Takes things dragged from another part inside the same `DragDrop`, such as a list's rows,
+     * dropped into a branch or beside a row: the thing's data, the branch (null for the top level)
+     * and the place among its children.
+     */
+    onDrop?: (drag: DragData, into: string | null, index: number) => void
+    /** Which things from outside the tree `onDrop` takes; every one without it. */
+    accepts?: (drag: DragData) => boolean
     /**
      * Why a node cannot be chosen, such as a place outside a form's assignment, or `undefined` when
      * it can. Such a row is drawn shut: quiet, with the reason at its end, never chosen, though a
@@ -280,8 +434,12 @@ export interface TreeProps {
  *
  * As a file tree, each node takes an `icon` (an open branch its `openIcon`), `actions` puts a menu
  * on each row, opened from a button at its end or a right-click, and `onMove` lets a row be dragged
- * into a branch, or beside a top-level row to the top level, a closed branch opening as a row is
- * held over it. A node never goes into itself or below itself, and `canMove` refuses more.
+ * into a branch (its middle) or beside a row (its upper or lower edge), a line showing where it
+ * lands and a closed branch opening as a row is held over it. From the keyboard, Alt (Option) with
+ * the up and down arrows moves the focused row a place in its level, with the right arrow into the
+ * branch above it and with the left arrow out beside its parent. A node never goes into itself or
+ * below itself, and `canMove` refuses more. Inside a `DragDrop` drawn around other parts, `onDrop`
+ * takes their things, such as a list's files dropped into a folder.
  *
  * `unavailable` shuts the rows a reader may not choose and says why on each, such as the places
  * outside what a form is assigned to; their branches still open to the rows under them.
@@ -299,6 +457,8 @@ export function Tree({
     actions,
     onMove,
     canMove,
+    onDrop,
+    accepts,
     unavailable,
     words: given,
     label,
@@ -487,50 +647,41 @@ export function Tree({
             else next.delete(id)
             return next
         })
-    const dragged = useRef<string | null>(null)
-    const [dropTarget, setDropTarget] = useState<string | null | undefined>(undefined)
+    const [dropAt, setDropAt] = useState<TreeDropAt | undefined>(undefined)
+    const show = useCallback(
+        (at: TreeDropAt | undefined) => setDropAt((now) => (now?.id === at?.id && now?.part === at?.part ? now : at)),
+        [],
+    )
     const opening = useRef<{ id: string; timer: number } | null>(null)
     const stopOpening = () => {
         if (opening.current !== null) window.clearTimeout(opening.current.timer)
         opening.current = null
     }
     useEffect(() => stopOpening, [])
-    const allowed = (into: string | null) => {
-        const id = dragged.current
-        return id !== null && canMoveInto(nodes, id, into, loads) && (canMove?.(id, into) ?? true)
-    }
-    /** A row held over: where the dragged row would land, said by a ring on that branch, and a closed branch opening after a moment. */
-    const dragOver = (event: DragEvent, into: string | null, row?: TreeRow) => {
-        if (!allowed(into)) {
-            if (row === undefined) setDropTarget(undefined)
-            return
-        }
-        event.preventDefault()
-        event.stopPropagation()
-        event.dataTransfer.dropEffect = 'move'
-        setDropTarget(into)
-        const closed = row !== undefined && into === row.node.id && matches === null && !open.has(row.node.id)
-        if (!closed) stopOpening()
-        else if (opening.current?.id !== row.node.id) {
-            stopOpening()
-            const id = row.node.id
-            opening.current = { id, timer: window.setTimeout(() => toggle(id, true), OPEN_AFTER) }
-        }
-    }
-    const drop = (event: DragEvent, into: string | null) => {
-        const id = dragged.current
+    /** A closed branch a row is held inside opens after a moment; null lets go of it. */
+    const hold = (id: string | null) => {
+        if (id === null || matches !== null || open.has(id)) return stopOpening()
+        if (opening.current?.id === id) return
         stopOpening()
-        setDropTarget(undefined)
-        if (id === null || !allowed(into)) return
-        event.preventDefault()
-        event.stopPropagation()
-        dragged.current = null
-        onMove?.(id, into)
+        opening.current = { id, timer: window.setTimeout(() => toggle(id, true), OPEN_AFTER) }
     }
-    const endDrag = () => {
-        dragged.current = null
-        stopOpening()
-        setDropTarget(undefined)
+    const drag = useTreeDrag(onMove !== undefined || onDrop !== undefined)
+    const [said, setSaid] = useState('')
+    /** Moves the focused row by a key, the focus staying on it. */
+    const keyMove = (row: TreeRow, by: TreeKeyMove) => {
+        if (onMove === undefined || row.trail !== undefined || matches !== null) return false
+        const id = row.node.id
+        const target = treeKeyTarget(nodes, id, by, loads)
+        if (target === undefined || !canMoveTo(nodes, id, target, loads) || canMove?.(id, target.into) === false) return true
+        if (target.into !== null) toggle(target.into, true)
+        pendingFocus.current = id
+        onMove(id, target.into, target.index)
+        const level = treeLevel(nodes, target.into, loads) ?? []
+        const count = level.some((node) => node.id === id) ? level.length : level.length + 1
+        const parent =
+            target.into === null ? words.topLevel : (items.find((each) => each.node.id === target.into)?.node.label ?? target.into)
+        setSaid(words.moved(row.node.label, parent, target.index + 1, count))
+        return true
     }
 
     const choose = (row: TreeRow) => {
@@ -566,32 +717,29 @@ export function Tree({
           ? 'empty'
           : null
 
-    return (
+    const tree = (root?: (element: HTMLElement | null) => void) => (
         <>
             <ul
-                ref={list}
+                ref={(element) => {
+                    list.current = element
+                    root?.(element)
+                }}
                 role="tree"
                 aria-label={label}
                 aria-multiselectable={selection === 'multiple' || undefined}
                 aria-busy={(remote && found?.state === 'loading') || undefined}
-                data-drop={dropTarget === null ? '' : undefined}
-                className={cn('flex flex-col text-sm', dropTarget === null && 'rounded-md ring-2 ring-ring ring-inset', className)}
+                data-drop={dropAt?.id === null ? '' : undefined}
+                className={cn('flex flex-col text-sm', dropAt?.id === null && 'rounded-md ring-2 ring-ring ring-inset', className)}
                 style={virtual ? { height: rows.length * rowHeight, paddingTop: first * rowHeight } : undefined}
-                onDragOver={onMove === undefined ? undefined : (event) => dragOver(event, null)}
-                onDragLeave={
-                    onMove === undefined
-                        ? undefined
-                        : (event) => {
-                              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDropTarget(undefined)
-                          }
-                }
-                onDrop={onMove === undefined ? undefined : (event) => drop(event, null)}
                 onKeyDown={(event) => {
                     if (current === undefined || !(event.target as HTMLElement).matches('[role="treeitem"]')) return
                     const index = items.indexOf(current)
                     const branch = current.trail === undefined && isBranch(current.node, loads)
                     const expanded = matches !== null || open.has(current.node.id)
-                    if (event.key === 'ArrowDown' && index < items.length - 1) move(items[index + 1])
+                    if (event.altKey && event.key.startsWith('Arrow') && onMove !== undefined) {
+                        const by = ({ ArrowUp: 'up', ArrowDown: 'down', ArrowRight: 'in', ArrowLeft: 'out' } as const)[event.key]
+                        if (by === undefined || !keyMove(current, by)) return
+                    } else if (event.key === 'ArrowDown' && index < items.length - 1) move(items[index + 1])
                     else if (event.key === 'ArrowUp' && index > 0) move(items[index - 1])
                     else if (event.key === 'Home' && items.length > 0) move(items[0])
                     else if (event.key === 'End' && items.length > 0) move(items[items.length - 1])
@@ -653,41 +801,41 @@ export function Tree({
                     const menu = actions?.(row.node)
                     const Icon = branch && expanded ? (row.node.openIcon ?? row.node.icon) : row.node.icon
                     const movable = onMove !== undefined && row.trail === undefined
-                    const item = (
+                    const at = dropAt?.id === row.node.id ? dropAt.part : undefined
+                    const draw = (dragProps: TreeRowDragProps = {}) => (
                         <li
                             key={row.node.id}
+                            {...dragProps}
                             data-id={row.node.id}
-                            data-drop={dropTarget === row.node.id ? '' : undefined}
+                            data-drop={at}
                             role="treeitem"
                             aria-level={row.level}
                             aria-expanded={branch ? expanded : undefined}
                             aria-selected={selection === 'none' ? undefined : isChosen}
                             aria-disabled={shut !== undefined || undefined}
                             tabIndex={row === current ? 0 : -1}
-                            draggable={movable || undefined}
-                            onDragStart={
-                                movable
-                                    ? (event) => {
-                                          dragged.current = row.node.id
-                                          event.dataTransfer.effectAllowed = 'move'
-                                          event.dataTransfer.setData('text/plain', row.node.label)
-                                      }
-                                    : undefined
-                            }
-                            onDragEnd={movable ? endDrag : undefined}
-                            onDragOver={movable ? (event) => dragOver(event, dropInto(row), row) : undefined}
-                            onDrop={movable ? (event) => drop(event, dropInto(row)) : undefined}
                             onFocus={() => setFocus(row.node.id)}
                             onClick={() => choose(row)}
                             style={indent}
                             className={cn(
-                                'group/row flex h-8 shrink-0 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                'group/row relative flex h-8 shrink-0 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                                 selection === 'single' && isChosen && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
-                                dropTarget === row.node.id && 'ring-2 ring-ring ring-inset',
+                                at === 'inside' && 'ring-2 ring-ring ring-inset',
+                                dragProps['data-dragging'] === true && 'opacity-40',
                                 menu !== undefined && 'pr-1',
                                 shut !== undefined && !isChosen && 'text-muted-foreground',
                             )}
                         >
+                            {(at === 'before' || at === 'after') && (
+                                <span
+                                    aria-hidden
+                                    style={{ left: indent.paddingLeft }}
+                                    className={cn(
+                                        'pointer-events-none absolute right-0 h-0.5 rounded-full bg-primary',
+                                        at === 'before' ? '-top-px' : '-bottom-px',
+                                    )}
+                                />
+                            )}
                             {branch ? (
                                 <button
                                     type="button"
@@ -760,6 +908,14 @@ export function Tree({
                             )}
                         </li>
                     )
+                    const item =
+                        drag === undefined || row.trail !== undefined ? (
+                            draw()
+                        ) : (
+                            <drag.TreeDragRow key={row.node.id} row={row} movable={movable}>
+                                {draw}
+                            </drag.TreeDragRow>
+                        )
                     if (menu === undefined) return item
                     return (
                         <ContextMenu key={row.node.id}>
@@ -791,6 +947,66 @@ export function Tree({
             ) : note === 'empty' ? (
                 <p className="px-2 py-6 text-center text-sm text-muted-foreground">{words.empty}</p>
             ) : null}
+            {onMove !== undefined && (
+                <span aria-live="polite" className="sr-only">
+                    {said}
+                </span>
+            )}
         </>
     )
+    if (drag === undefined) return tree()
+    return (
+        <drag.TreeDragArea
+            nodes={nodes}
+            loads={loads}
+            label={label}
+            searching={matches !== null}
+            onMove={onMove}
+            canMove={canMove}
+            onDrop={onDrop}
+            accepts={accepts}
+            show={show}
+            hold={hold}
+        >
+            {tree}
+        </drag.TreeDragArea>
+    )
+}
+
+/** What a row takes from the drag layer: its element, the press that starts a drag, and whether it is dragged now. */
+export interface TreeRowDragProps {
+    ref?: (element: HTMLElement | null) => void
+    onPointerDown?: (event: ReactPointerEvent<HTMLElement>) => void
+    onTouchStart?: (event: ReactTouchEvent<HTMLElement>) => void
+    'data-dragging'?: true
+}
+
+type TreeDragModule = typeof import('./tree-drag')
+let treeDrag: TreeDragModule | undefined
+let treeDragLoad: Promise<TreeDragModule> | undefined
+
+/** The tree's drag layer, fetched the first time a tree that moves rows is drawn, so a tree that only picks never carries the drag engine. */
+function useTreeDrag(wanted: boolean): TreeDragModule | undefined {
+    const [loaded, setLoaded] = useState(treeDrag)
+    useEffect(() => {
+        if (!wanted || loaded !== undefined) return
+        let live = true
+        treeDragLoad ??= import('./tree-drag').then(
+            (module) => (treeDrag = module),
+            (error: unknown) => {
+                treeDragLoad = undefined
+                throw error
+            },
+        )
+        treeDragLoad.then(
+            (module) => {
+                if (live) setLoaded(module)
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
+    }, [wanted, loaded])
+    return wanted ? (loaded ?? treeDrag) : undefined
 }

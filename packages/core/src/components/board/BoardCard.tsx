@@ -9,7 +9,7 @@ import { TITLE_LINES, type TitleLines } from '../../lib/title-lines'
 import { DueText } from '../DueText'
 import { PersonAvatar } from '../PersonAvatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { DropLine, useBoardDrag, useBoardZone } from './Board'
+import { BoardGrip, BoardItem } from './Board'
 
 /** A label on a card: its name, and the color it wears, which follows from the name by default. */
 export interface BoardLabelSpec {
@@ -43,6 +43,8 @@ export interface BoardCardWords {
     comments: (count: number) => string
     checklist: (done: number, total: number) => string
     assignee: (name: string) => string
+    /** The grip's name, what the keyboard picks the card up by. */
+    move: (card: string) => string
 }
 
 const WORDS: BoardCardWords = {
@@ -52,6 +54,7 @@ const WORDS: BoardCardWords = {
     comments: (count) => `${count} ${count === 1 ? 'comment' : 'comments'}`,
     checklist: (done, total) => `${done} of ${total} checklist items done`,
     assignee: (name) => `Assigned to ${name}`,
+    move: (card) => `Move ${card}`,
 }
 
 export interface BoardCardProps {
@@ -86,11 +89,38 @@ export interface BoardCardProps {
  *
  * The whole card is one control that opens the item; `selected` marks the open one. A `menu`,
  * such as "Move to", sits at the head's right and keeps its own press. Inside a `Board` the card
- * drags; it fades while it is dragged, and a line above it shows a card landing before it.
+ * drags from anywhere, and from the keyboard by the grip beside its menu; it fades while it is
+ * dragged, a copy of it follows the pointer, and a line above it shows a card landing before it.
  *
  * The title takes up to `titleLines` lines, three by default; one cut short shows its whole text on hover.
  */
-export function BoardCard({
+export function BoardCard(props: BoardCardProps) {
+    const { id, code, title, selected = false, className } = props
+    const label = code ?? (typeof title === 'string' ? title : id)
+    const look = cn(CARD, selected && 'border-primary ring-1 ring-primary hover:border-primary', className)
+    return (
+        <BoardItem
+            id={id}
+            label={label}
+            as="article"
+            data-selected={selected || undefined}
+            className={look}
+            preview={() => (
+                <article className={look}>
+                    <CardFace {...props} overlay />
+                </article>
+            )}
+        >
+            <CardFace {...props} />
+        </BoardItem>
+    )
+}
+
+const CARD =
+    'group/card flex shrink-0 cursor-grab [touch-action:manipulation] flex-col gap-2 rounded-surface border border-border-strong bg-card p-3 text-sm text-card-foreground shadow-surface transition-[background-color,border-color,opacity] select-none hover:border-foreground/25 active:cursor-grabbing'
+
+/** What a card shows, on the board and in the copy that follows the pointer (`overlay`), which holds no controls. */
+function CardFace({
     id,
     code,
     title,
@@ -105,29 +135,16 @@ export function BoardCard({
     onSelect,
     menu,
     titleLines = 3,
-    className,
     words: given,
-}: BoardCardProps) {
+    overlay = false,
+}: BoardCardProps & { overlay?: boolean }) {
     const words = { ...WORDS, ...given }
-    const drag = useBoardDrag()
-    const zone = useBoardZone()
-    const dragged = drag?.card === id
-    const landing = drag !== null && !dragged && drag.zone === zone && drag.before === id
     const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     const hasFoot = due !== undefined || comments !== undefined || checklist !== undefined || assignee !== undefined
+    const tool = 'md:opacity-0 md:group-hover/card:opacity-100 md:focus-visible:opacity-100'
     return (
-        <article
-            data-board-card={id}
-            data-selected={selected || undefined}
-            className={cn(
-                'group/card relative flex shrink-0 cursor-grab [touch-action:manipulation] flex-col gap-2 rounded-surface border border-border-strong bg-card p-3 text-sm text-card-foreground shadow-surface transition-[background-color,border-color,opacity] select-none hover:border-foreground/25 active:cursor-grabbing',
-                selected && 'border-primary ring-1 ring-primary hover:border-primary',
-                dragged && 'opacity-40',
-                className,
-            )}
-        >
-            {landing && <DropLine />}
-            {onSelect !== undefined && (
+        <>
+            {onSelect !== undefined && !overlay && (
                 <button
                     type="button"
                     aria-pressed={selected}
@@ -148,8 +165,14 @@ export function BoardCard({
                         {title}
                     </h4>
                 </div>
-                {menu !== undefined && (
-                    <div data-board-nodrag className="pointer-events-auto relative z-10 -mt-1 -mr-1.5">
+                {!overlay && (
+                    <BoardGrip
+                        move={words.move}
+                        className={cn('pointer-events-auto relative z-10 -mt-1', menu === undefined && '-mr-1.5', tool)}
+                    />
+                )}
+                {menu !== undefined && !overlay && (
+                    <div data-no-drag className="pointer-events-auto relative z-10 -mt-1 -mr-1.5">
                         <DropdownMenu>
                             <DropdownMenuTrigger
                                 aria-label={words.menu}
@@ -211,6 +234,6 @@ export function BoardCard({
                     )}
                 </div>
             )}
-        </article>
+        </>
     )
 }
