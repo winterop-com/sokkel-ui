@@ -6,7 +6,14 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.22.7** is the latest release (2026-11-13): PageState `frame={false}` and `problems`;
+- **0.23.0** is the latest release (2026-11-13): `ShellHead`, `useShellTrail` and a thin shell
+  scroller; media queries answer on the first render; stored values take `normalize`; refresh on
+  return; `PointMenu` and graph node and pane menus; primitives with finger-sized rows, popups as
+  wide as their rows and check gutters; Chip links, control size, outline tone and edged hues;
+  TagChips as chips fitting a table cell; ListRow tooltip, wrap and flush; `DescriptionListGroup`;
+  AsyncSelect over held `items`; two-line select options; a palette chooser; Markdown `measure`;
+  charts load ECharts per kind, colors take an alpha, and bars and lines draw a quiet axis.
+- **0.22.7** (2026-11-13): PageState `frame={false}` and `problems`;
   ConfirmDialog `status`; `ProblemLine`.
 - **0.22.6** (2026-11-13): DescriptionList `termWidth="auto"`, wide values
   in the side layout and `size="sm"`; `Group`; Chip `menu` and `selected`; TagChips `onSelect`;
