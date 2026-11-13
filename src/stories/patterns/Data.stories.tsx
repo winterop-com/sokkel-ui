@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
+import { Code } from '@winterop-com/sokkel-ui/Code'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { Group } from '@winterop-com/sokkel-ui/Group'
+import { Inspector } from '@winterop-com/sokkel-ui/Inspector'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { Section } from '@winterop-com/sokkel-ui/Section'
@@ -57,6 +61,107 @@ function Facts() {
                 />
             </Section>
         </Ground>
+    )
+}
+
+const PAYLOAD = `{
+  "job": "import-orders",
+  "project": "larkspur",
+  "since": "2026-11-04T00:00:00Z",
+  "sites": ["oslo", "bergen", "tromso"],
+  "retry": { "attempts": 3, "backoff": "30s" }
+}`
+
+function Aligned() {
+    return (
+        <Ground>
+            <Section title="Schedule">
+                <DescriptionList
+                    termWidth="auto"
+                    items={[
+                        { term: 'Job', value: 'send-digest', code: true },
+                        { term: 'Every', value: 'day at 07:00' },
+                        { term: 'Time zone', value: 'Europe/Oslo' },
+                        { term: 'Skip when the last run failed', value: 'on' },
+                        { term: 'Owner', value: 'margaret' },
+                    ]}
+                />
+            </Section>
+            <Section title="Two columns">
+                <DescriptionList
+                    termWidth="auto"
+                    columns={2}
+                    items={[
+                        { term: 'Job', value: 'rebuild-index', code: true },
+                        { term: 'State', value: 'running' },
+                        { term: 'Started by', value: 'linus' },
+                        { term: 'Service', value: 'worker', code: true },
+                        { term: 'Started', value: '2026-11-04 03:00', numeric: true },
+                        { term: 'Documents indexed', value: '48,210', numeric: true },
+                        { term: 'Note', value: 'Rebuilt after the schema for orders gained the site field.', wide: true },
+                    ]}
+                />
+            </Section>
+        </Ground>
+    )
+}
+
+function WideValues() {
+    return (
+        <Ground>
+            <Section title="Run">
+                <DescriptionList
+                    items={[
+                        { term: 'Job', value: 'import-orders', code: true },
+                        { term: 'Project', value: 'larkspur' },
+                        { term: 'Payload', value: <Code value={PAYLOAD} language="json" size="sm" />, wide: true },
+                        { term: 'Rule', value: 'orders.total >= 0 and orders.site in sites', code: true, wide: true },
+                        { term: 'Started by', value: 'ada' },
+                    ]}
+                />
+            </Section>
+        </Ground>
+    )
+}
+
+function DenseFacts() {
+    return (
+        <Inspector title="validate" code="step_03" status={<StatusChip status="failed" />} resizable={false}>
+            <Group title="Step">
+                <DescriptionList
+                    size="sm"
+                    termWidth="auto"
+                    items={[
+                        { term: 'Job', value: 'import-orders', code: true },
+                        { term: 'Service', value: 'worker', code: true },
+                        { term: 'Took', value: '0.3s', numeric: true },
+                        { term: 'Retried from', value: null },
+                        { term: 'Rule', value: 'orders.total >= 0', code: true, wide: true },
+                    ]}
+                />
+            </Group>
+            <Group title="Failed checks" count={2} countTone="critical">
+                <DescriptionList
+                    size="sm"
+                    termWidth="auto"
+                    items={[
+                        { term: 'orders.total', value: 'negative on 3 rows' },
+                        { term: 'orders.site', value: 'unknown site on 1 row' },
+                    ]}
+                />
+            </Group>
+            <Group title="Facts in a line">
+                <DescriptionList
+                    size="sm"
+                    layout="row"
+                    items={[
+                        { term: 'Rows', value: '1,204', numeric: true },
+                        { term: 'Sites', value: '3', numeric: true },
+                        { term: 'Project', value: 'larkspur' },
+                    ]}
+                />
+            </Group>
+        </Inspector>
     )
 }
 
@@ -289,6 +394,12 @@ const meta: Meta = { title: 'Patterns/Data', parameters: { frame: 'padded' } }
 export default meta
 
 export const Description: StoryObj = { name: 'Description list', render: () => <Facts /> }
+/** Terms in a column as wide as the longest of them, in one column and in two, a wide note under its term. */
+export const AutoTerms: StoryObj = { name: 'Auto terms', render: () => <Aligned /> }
+/** Wide values in the side layout, a JSON body and a rule each set under its term at the list's full width. */
+export const Wide: StoryObj = { name: 'Wide values', render: () => <WideValues /> }
+/** The small size in a narrow inspector: values at the size of help text, tighter gaps, groups with counts. */
+export const Dense: StoryObj = { name: 'Dense', render: () => <DenseFacts /> }
 export const Stats: StoryObj = { name: 'Stats', render: () => <Numbers /> }
 /**
  * Runs by state as tiles, each leading to the runs it counts. Queued is the one that asks for work:

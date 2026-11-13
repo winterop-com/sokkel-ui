@@ -10,7 +10,7 @@ import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 const meta: Meta = { title: 'Patterns/Marks' }
 export default meta
 
-/** Counts alone, over an icon, past their limit, and small and round as a strip of icons shows them. */
+/** Counts alone, over an icon, past their limit, small and round as a strip of icons shows them, and quiet as a group's count. */
 export const Counts: StoryObj = {
     render: () => (
         <Row gap="xl" wrap className="p-6">
@@ -31,6 +31,8 @@ export const Counts: StoryObj = {
                 <Inbox aria-hidden />
                 <Count value={1} size="sm" shape="round" className="absolute -top-0.5 -right-0.5" />
             </Button>
+            <Count value={5} tone="quiet" />
+            <Count value={5} size="sm" tone="quiet" />
         </Row>
     ),
 }
