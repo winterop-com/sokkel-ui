@@ -27,13 +27,13 @@ import { TimeField } from '@winterop-com/sokkel-ui/TimeField'
 import { TreeSelect } from '@winterop-com/sokkel-ui/TreeSelect'
 import { YesNoField } from '@winterop-com/sokkel-ui/YesNoField'
 import { TextLink } from '@winterop-com/sokkel-ui/TextLink'
-import { Eraser, Send, Sparkles } from 'lucide-react'
+import { Eraser, ListOrdered, Send, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
-import { day, households, Refused, submit, Unreachable } from '../data/backend'
+import { arranged, day, households, layouts, Refused, submit, Unreachable } from '../data/backend'
 import {
     answerIssue,
     cellKey,
@@ -65,7 +65,22 @@ const PLACE_MEANING: Record<Form['kind'], string> = {
 
 /** A form opened to fill in: where and when it is for, its sections of questions or its grid of counts, and Submit at the foot. */
 export function FormFill({ formId, householdId, keepPlace }: { formId: string; householdId?: string; keepPlace: boolean }) {
-    const form = formOf(formId)
+    const served = formOf(formId)
+    const { rows: kept, error } = useCollection(layouts)
+    // The form asks its questions in the order its layout keeps, once the layout is read.
+    if (served !== undefined && kept === undefined && error === undefined)
+        return (
+            <Page>
+                <PageState loading>{null}</PageState>
+            </Page>
+        )
+    const form =
+        served === undefined
+            ? undefined
+            : arranged(
+                  served,
+                  kept?.find((layout) => layout.id === served.id),
+              )
     if (form === undefined)
         return (
             <Page>
@@ -248,7 +263,20 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
                             {form.repeats === true && <span>Each visit is its own record</span>}
                         </>
                     }
-                    actions={<ApiLink path={`/forms/${form.id}`} />}
+                    actions={
+                        <>
+                            <ApiLink path={`/forms/${form.id}`} />
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => go(`/forms/${form.id}/layout`)}
+                                reason={form.sections.length === 0 ? 'A grid of counts has no sections to order.' : undefined}
+                            >
+                                <ListOrdered aria-hidden />
+                                Layout
+                            </Button>
+                        </>
+                    }
                 />
                 <Section
                     title="Filed for"
@@ -362,38 +390,40 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
                     </Columns>
                 </Section>
                 {form.grid !== undefined && <CountGrid form={form} answers={answers} onAnswer={set} />}
-                {form.sections.map((section) => (
-                    <Section
-                        key={section.id}
-                        title={section.title}
-                        description={section.description}
-                        meta={count(section.questions.length, 'question')}
-                    >
-                        <Columns
-                            count={section.questions.some((question) => question.type === 'multiline') ? 2 : 3}
-                            min="sm"
-                            gap="lg"
-                            fields
+                {form.sections
+                    .filter((section) => section.questions.length > 0)
+                    .map((section) => (
+                        <Section
+                            key={section.id}
+                            title={section.title}
+                            description={section.description}
+                            meta={count(section.questions.length, 'question')}
                         >
-                            {section.questions.map((question) => (
-                                <QuestionField
-                                    key={question.repeats === true ? `${question.id}-${String(round)}` : question.id}
-                                    question={question}
-                                    value={answers[question.id] ?? null}
-                                    context={context}
-                                    answers={answers}
-                                    onAnswer={(value) => set(question.id, value)}
-                                    onIssue={(text) =>
-                                        setFieldIssues((all) => (all[question.id] === text ? all : { ...all, [question.id]: text }))
-                                    }
-                                    error={issueOf(question.id)}
-                                    hold={holdIssue(question.id)}
-                                    today={today}
-                                />
-                            ))}
-                        </Columns>
-                    </Section>
-                ))}
+                            <Columns
+                                count={section.questions.some((question) => question.type === 'multiline') ? 2 : 3}
+                                min="sm"
+                                gap="lg"
+                                fields
+                            >
+                                {section.questions.map((question) => (
+                                    <QuestionField
+                                        key={question.repeats === true ? `${question.id}-${String(round)}` : question.id}
+                                        question={question}
+                                        value={answers[question.id] ?? null}
+                                        context={context}
+                                        answers={answers}
+                                        onAnswer={(value) => set(question.id, value)}
+                                        onIssue={(text) =>
+                                            setFieldIssues((all) => (all[question.id] === text ? all : { ...all, [question.id]: text }))
+                                        }
+                                        error={issueOf(question.id)}
+                                        hold={holdIssue(question.id)}
+                                        today={today}
+                                    />
+                                ))}
+                            </Columns>
+                        </Section>
+                    ))}
             </Page>
             <FormBar
                 note={seed === null ? `${String(answered)} of ${String(total)} answered` : `Test data from seed ${String(seed)}`}
