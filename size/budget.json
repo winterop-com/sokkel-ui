@@ -1,14 +1,14 @@
 {
     "forms": {
         "engines": [],
-        "start": 192.7,
-        "lazy": 78.4,
+        "start": 193.2,
+        "lazy": 78.7,
         "css": 51
     },
     "forms-lean": {
         "engines": [],
-        "start": 192.7,
-        "lazy": 78.4,
+        "start": 193.2,
+        "lazy": 78.7,
         "css": 22
     },
     "dashboard": {
