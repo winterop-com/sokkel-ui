@@ -44,12 +44,12 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 258 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 259 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
-- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 17 modules
+- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 18 modules
 
 ## @winterop-com/sokkel-ui
 
@@ -385,7 +385,8 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **DragDrop**, DragGrip | `@winterop-com/sokkel-ui/DragDrop` | Where things are dragged and dropped. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
+| **DragDrop**, DragGrip | `@winterop-com/sokkel-ui/DragDrop` | Where things are dragged and dropped. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-draggable-track-list--onto-playlist) |
+| **RailDrops** | `@winterop-com/sokkel-ui/RailDrops` | One drag scope over a shell whose rail takes drops: a `DragDrop` the page's parts and the rail share, inside which a rail entry with a `drop` becomes a place things dragged from the page land on, such as a song onto a playlist. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-draggable-track-list--onto-playlist) |
 | **SortableGroup**, SortableItem, SortableGrip, SortableList, SortableGrid | `@winterop-com/sokkel-ui/Sortable` | The order of a set of `SortableItem`s, the library's layer over the drag engine for anything put in order by hand. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
 
 ### Dashboard frame
@@ -523,6 +524,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **ChannelRow** | `@winterop-com/sokkel-ui-media/ChannelRow` | The channel a video comes from, under the video: its picture and name, which open its page, how many follow it, and Follow, which turns to Following with a check once pressed and back on the next press. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-channel-row--follow) |
 | **ChapterList** | `@winterop-com/sokkel-ui-media/ChapterList` | The chapters of a book, a podcast or a long work, in order: each one's number, its title over where it starts, and its length at the end, the last one's running to `duration`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-chapter-list--chapters) |
 | **Cover**, Eyebrow, Words, ScreenWords, Scrub, LinePosition, Steps, Speed, ShuffleButton, RepeatButton, Volume, Extras, FullscreenButton, Backdrop | `@winterop-com/sokkel-ui-media/MediaBarParts` | The cover, square and filled edge to edge; without artwork one drawn from the seed, or a note glyph. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
+| **DraggableTrackList** | `@winterop-com/sokkel-ui-media/DraggableTrackList` | A track list whose rows are dragged elsewhere on the page, such as a song onto a playlist in the rail: a `TrackList` whose rows drag as a whole once a mouse moves a few pixels or a finger holds still a moment, the title on a small card following the pointer, and whose grip at each row's end picks the row up from the keyboard, the arrows carrying it to a target and Space or Enter dropping it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-draggable-track-list--onto-playlist) |
 | **LineBar**, RowsBar, PanelBar, StageBar | `@winterop-com/sokkel-ui-media/MediaBarLayouts` | The one-line bar, drawn by every layout until it grows: what plays at the left with the cover growing with the height, the transport over the position in the middle, the speed, the volume and the extra controls at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
 | **Lyrics** | `@winterop-com/sokkel-ui-media/Lyrics` | The lyrics of what plays, filling the box it is given and scrolling within it, as a panel beside the player or the fullscreen view in the visualizer's place (`MediaBar`'s `lyrics`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) |
 | **MediaActions** | `@winterop-com/sokkel-ui-media/MediaActions` | What the viewer does with a video or an episode, in one row under it: like and dislike joined, the like count on the first, then the app's actions (Share, Save, Download) as outlined buttons, and More. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-media-actions--rating) |

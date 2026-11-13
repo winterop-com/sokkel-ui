@@ -462,6 +462,10 @@
             "types": "./dist/components/Rail.d.ts",
             "import": "./dist/components/Rail.js"
         },
+        "./RailDrops": {
+            "types": "./dist/components/RailDrops.d.ts",
+            "import": "./dist/components/RailDrops.js"
+        },
         "./RelativeTime": {
             "types": "./dist/components/RelativeTime.d.ts",
             "import": "./dist/components/RelativeTime.js"

@@ -13,6 +13,7 @@ import {
     orderColumns,
     outgrown,
     rangeKeys,
+    widenTrack,
     roomsWith,
     sortRows,
     stackColumns,
@@ -22,6 +23,15 @@ import {
     watchFonts,
     widestOf,
 } from './DataTable'
+
+describe('widenTrack', () => {
+    it('widens a length and a minmax floor, and leaves a fraction', () => {
+        expect(widenTrack('3rem', '1rem')).toBe('calc(3rem + 1rem)')
+        expect(widenTrack('minmax(14rem,1fr)', '1rem')).toBe('minmax(calc(14rem + 1rem),1fr)')
+        expect(widenTrack('1fr', '1rem')).toBe('1fr')
+        expect(widenTrack('max-content', '1rem')).toBe('max-content')
+    })
+})
 
 describe('row groups', () => {
     const runs = [

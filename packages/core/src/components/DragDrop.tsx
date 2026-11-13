@@ -16,6 +16,7 @@ import {
     type Announcements,
     type Collision,
     type CollisionDetection,
+    type Modifier,
     type DragEndEvent,
     type DragMoveEvent,
     type DragOverEvent,
@@ -60,6 +61,12 @@ export interface DragData {
     accepts?: (drag: DragData) => boolean
     /** What follows the pointer while it is dragged; its label in a chip without it. */
     preview?: () => ReactNode
+    /**
+     * Whether what follows the pointer is a small card held at the pointer, rather than a copy the
+     * thing's own size held where it was grabbed: for a wide thing carried to another part of the
+     * page, such as a row onto a place in the rail, so the target stays in sight.
+     */
+    compact?: boolean
 }
 
 /** The words a drag says to a screen reader, each with an English default. */
@@ -336,9 +343,18 @@ function DragDropRoot({
                 }}
             >
                 {children}
-                <DragOverlay dropAnimation={still ? null : undefined} zIndex={60}>
+                <DragOverlay
+                    dropAnimation={still ? null : undefined}
+                    zIndex={60}
+                    modifiers={active?.compact === true ? COMPACT_MODIFIERS : undefined}
+                >
                     {active === null ? null : (
-                        <div className="pointer-events-none h-full cursor-grabbing rounded-surface bg-card shadow-pop">
+                        <div
+                            className={cn(
+                                'pointer-events-none cursor-grabbing rounded-surface bg-card shadow-pop',
+                                active.compact === true ? 'w-fit max-w-80' : 'h-full',
+                            )}
+                        >
                             {active.preview?.() ?? <DragChip label={active.label} />}
                         </div>
                     )}
@@ -348,9 +364,25 @@ function DragDropRoot({
     )
 }
 
+/** How far a compact copy stands from the pointer, in pixels, so the pointer still shows the target under it. */
+const COMPACT_OFFSET = 12
+
+/** Holds a compact copy just below and right of the pointer, wherever on the thing the drag began. */
+const atPointer: Modifier = ({ activatorEvent, draggingNodeRect, transform }) => {
+    const point = activatorEvent === null ? null : getEventCoordinates(activatorEvent)
+    if (point === null || draggingNodeRect === null || activatorEvent instanceof globalThis.KeyboardEvent) return transform
+    return {
+        ...transform,
+        x: transform.x + point.x - draggingNodeRect.left + COMPACT_OFFSET,
+        y: transform.y + point.y - draggingNodeRect.top + COMPACT_OFFSET,
+    }
+}
+
+const COMPACT_MODIFIERS = [atPointer]
+
 /** What follows the pointer for a thing that draws no copy of itself: its name on a card. */
 function DragChip({ label }: { label: string }) {
-    return <div className="rounded-surface border border-border-strong px-3 py-1.5 text-sm whitespace-nowrap">{label}</div>
+    return <div className="truncate rounded-surface border border-border-strong px-3 py-1.5 text-sm">{label}</div>
 }
 
 /** The press, touch and key handlers and the attributes a grip spreads to start a drag. */

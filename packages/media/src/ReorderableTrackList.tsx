@@ -19,6 +19,8 @@ const WORDS: Pick<ReorderableTrackListWords, 'move' | 'moved'> = {
 export interface ReorderableTrackListProps extends Omit<TrackListProps, 'words' | 'row'> {
     /** Moves the track at `from` to `to`, both indexes into `tracks`; the list draws the order it is given. */
     onMove: (from: number, to: number) => void
+    /** What a target outside the list takes its rows as, such as a playlist in the rail; each carries its `Track`. Only the list takes them without it. */
+    kind?: string
     words?: Partial<ReorderableTrackListWords>
 }
 
@@ -38,7 +40,7 @@ function SortableRow({ track, index: _index, ...props }: TrackRowProps) {
  * the focus following it, and a screen reader is told its new place; Space or Enter picks it up to
  * carry it further. It draws no disc heads, an order of one's own having no discs.
  */
-export function ReorderableTrackList({ tracks, onMove, actions, words: given, ...list }: ReorderableTrackListProps) {
+export function ReorderableTrackList({ tracks, onMove, kind, actions, words: given, ...list }: ReorderableTrackListProps) {
     const words = { ...WORDS, ...given }
     const byId = new Map(tracks.map((track) => [track.id, track]))
     const flat = tracks.map((track) => (track.disc === undefined ? track : { ...track, disc: undefined }))
@@ -46,6 +48,7 @@ export function ReorderableTrackList({ tracks, onMove, actions, words: given, ..
         <SortableGroup
             ids={tracks.map((track) => track.id)}
             onMove={onMove}
+            kind={kind}
             label={(id) => titleOf(byId.get(id))}
             value={(id) => byId.get(id)}
             preview={(id) => {

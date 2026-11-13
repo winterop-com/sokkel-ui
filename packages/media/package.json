@@ -38,6 +38,10 @@
             "types": "./dist/chapters.d.ts",
             "import": "./dist/chapters.js"
         },
+        "./DraggableTrackList": {
+            "types": "./dist/DraggableTrackList.d.ts",
+            "import": "./dist/DraggableTrackList.js"
+        },
         "./hls-source": {
             "types": "./dist/hls-source.d.ts",
             "import": "./dist/hls-source.js"

@@ -537,6 +537,19 @@ export function stackColumns<C extends { stack?: DataColumn<unknown>['stack'] }>
     }
 }
 
+/** The room a row's grip takes at the start of its first cell, with `onReorder`. */
+const GRIP = '1.375rem'
+
+/**
+ * A track widened by `by` at its floor: a length grows by it, a `minmax` floor grows by it, and a
+ * fraction or `auto` is left, having room to give.
+ */
+export function widenTrack(width: string, by: string): string {
+    const range = /^minmax\(\s*([^,]+?)\s*,(.*)\)$/.exec(width)
+    if (range !== null) return `minmax(calc(${range[1]} + ${by}),${range[2]})`
+    return /^\d*\.?\d+(px|rem|em|ch)$/.test(width) ? `calc(${width} + ${by})` : width
+}
+
 /** The least width of a grid track: its own length, a `minmax` floor, or nothing for a fraction or `auto`. */
 function trackMin(width: string): string {
     const floor = /^minmax\(\s*([^,]+?)\s*,/.exec(width)?.[1] ?? width
@@ -988,7 +1001,7 @@ export interface DataTableProps<T> {
     reorderable?: boolean
     /**
      * Lets the reader put the rows in order: a grip at the start of each row drags it (a finger
-     * holds it a moment first), a line showing where it lands, and Alt (Option) with the up and
+     * holds it a moment first), a stacked list's items too, a line showing where it lands, and Alt (Option) with the up and
      * down arrows moves the active row a place. Hears where the row at `from` goes, both places
      * among `rows` as given. Rows reorder while they are drawn as given: not sorted, grouped or a
      * tree; the drag engine loads only for a table that reorders.
@@ -1609,7 +1622,10 @@ export function DataTable<T>({
         const need = contentWidths[column.id]
         return measuring || need === undefined ? 'max-content' : contentTrack(need, column)
     }
-    const template = [selectable ? CHECK : undefined, ...shown.map(track), endWidth].filter(Boolean).join(' ')
+    // The first column makes room for the row's grip, so its own content keeps the width it was given.
+    const trackAt = (column: DataColumn<T>, index: number) =>
+        index === 0 && ordering && widths[column.id] === undefined ? widenTrack(track(column), GRIP) : track(column)
+    const template = [selectable ? CHECK : undefined, ...shown.map(trackAt), endWidth].filter(Boolean).join(' ')
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
     const least = [
         selectable ? CHECK : undefined,
@@ -1617,6 +1633,7 @@ export function DataTable<T>({
         endWidth,
     ].filter(Boolean)
     if (list) least.push('2 * var(--density-panel-pad)', `${String(0.75 * (least.length - 1))}rem`)
+    if (ordering) least.push(GRIP)
     const rowMin = minWidth === 'auto' ? `calc(${least.join(' + ')})` : `max(${minWidth}, calc(${least.join(' + ')}))`
     const grid = { gridTemplateColumns: template, minWidth: rowMin }
     const canResize = resizable && !gridView
@@ -2157,7 +2174,7 @@ export function DataTable<T>({
      * over the primary values and one quiet line of facts, and the menu. An editable value opens on
      * a press, its editor taking its line's place while open.
      */
-    const compactRow = (entry: FlatRow<T>, listed: boolean, box: ReactNode, menu: ReactNode) => {
+    const compactRow = (entry: FlatRow<T>, listed: boolean, box: ReactNode, menu: ReactNode, grip: ReactNode = null) => {
         const title = stackParts.title
         const isOpen = (column: DataColumn<T>) => edits !== undefined && editing?.isOpen(edits, entry, column) === true
         const valueOf = (column: DataColumn<T>) =>
@@ -2169,6 +2186,7 @@ export function DataTable<T>({
         const open = stackParts.facts.find(isOpen)
         return (
             <div className="flex min-w-0 items-start gap-2 text-sm">
+                {grip !== null && <span className="-mr-1 flex h-6 items-center">{grip}</span>}
                 {box !== null && (
                     <span className="flex h-6 items-center" onClick={keep}>
                         {box}
@@ -2775,92 +2793,114 @@ export function DataTable<T>({
                                 empty
                             )
                         ) : listed ? (
-                            <ul className="divide-y divide-border">
-                                {drawn.map((entry) => {
-                                    if (isGroupHead(entry))
-                                        return (
-                                            <li
-                                                key={`group:${entry.key}`}
-                                                role="row"
-                                                aria-expanded={!entry.folded}
-                                                data-group={entry.key}
-                                                onClick={() => foldGroup(entry.key)}
-                                                className="flex min-w-0 cursor-pointer items-center bg-panel-ground px-(--density-panel-pad) py-1.5 text-sm font-medium"
-                                            >
-                                                {selectable && (
-                                                    <span className="mr-2 flex" onClick={(event) => event.stopPropagation()}>
-                                                        {groupBox(entry)}
-                                                    </span>
-                                                )}
-                                                {groupTitle(entry)}
-                                            </li>
-                                        )
-                                    const chosen = selection.has(entry.key)
-                                    const isOpened = opened?.(entry.row) === true
-                                    const title = stackParts.title
-                                    const actions = actionsOf(entry.row)
-                                    const box = boxFor(entry)
-                                    const menu = menuFor(actions, 'ghost')
-                                    const tone = rowTone?.(entry.row)
-                                    return withDetail(
-                                        entry,
-                                        withMenu(
-                                            entry,
-                                            actions,
-                                            <li
-                                                key={entry.key}
-                                                role="row"
-                                                data-tone={tone}
-                                                aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
-                                                aria-expanded={entry.branch ? entry.open : undefined}
-                                                aria-level={tree ? entry.depth + 1 : undefined}
-                                                data-row={entry.key}
-                                                data-active={entry.key === active || undefined}
-                                                onClick={(event) => press(entry, event)}
-                                                className={cn(
-                                                    'flex flex-col gap-1 px-(--density-panel-pad) text-sm',
-                                                    // A row and its open detail read as one item, with no line between them.
-                                                    '[&:has(+[data-detail])]:border-b-0',
-                                                    compact ? 'py-2' : 'py-2.5',
-                                                    tone !== undefined && tone !== 'muted' && TONE_GROUND[tone],
-                                                    tone === 'muted' && MUTED_ITEM,
-                                                    hover && 'hover:bg-hover',
-                                                    pressable && 'cursor-pointer',
-                                                    (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
-                                                    'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
-                                                )}
-                                            >
-                                                {compact ? (
-                                                    compactRow(entry, true, box, menu)
-                                                ) : (
-                                                    <>
-                                                        <div className="flex min-w-0 items-center gap-2">
-                                                            {box !== null && (
-                                                                <span className="flex" onClick={keep}>
-                                                                    {box}
-                                                                </span>
+                            wrapRows(
+                                <ul className="divide-y divide-border">
+                                    {drawn.map((entry) => {
+                                        if (isGroupHead(entry))
+                                            return (
+                                                <li
+                                                    key={`group:${entry.key}`}
+                                                    role="row"
+                                                    aria-expanded={!entry.folded}
+                                                    data-group={entry.key}
+                                                    onClick={() => foldGroup(entry.key)}
+                                                    className="flex min-w-0 cursor-pointer items-center bg-panel-ground px-(--density-panel-pad) py-1.5 text-sm font-medium"
+                                                >
+                                                    {selectable && (
+                                                        <span className="mr-2 flex" onClick={(event) => event.stopPropagation()}>
+                                                            {groupBox(entry)}
+                                                        </span>
+                                                    )}
+                                                    {groupTitle(entry)}
+                                                </li>
+                                            )
+                                        const chosen = selection.has(entry.key)
+                                        const isOpened = opened?.(entry.row) === true
+                                        const title = stackParts.title
+                                        const actions = actionsOf(entry.row)
+                                        const box = boxFor(entry)
+                                        const menu = menuFor(actions, 'ghost')
+                                        const tone = rowTone?.(entry.row)
+                                        const item = ({
+                                            grip: handle,
+                                            ref: dragRef,
+                                            'data-dragging': draggedItem,
+                                            className: passedClass,
+                                            ...passed
+                                        }: TableRowDrag & Record<string, unknown> = {}) => {
+                                            const grip = ordering ? rowGrip(entry.row, handle) : null
+                                            return (
+                                                <li
+                                                    key={entry.key}
+                                                    {...passed}
+                                                    ref={dragRef}
+                                                    data-dragging={draggedItem}
+                                                    role="row"
+                                                    data-tone={tone}
+                                                    aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
+                                                    aria-expanded={entry.branch ? entry.open : undefined}
+                                                    aria-level={tree ? entry.depth + 1 : undefined}
+                                                    data-row={entry.key}
+                                                    data-active={entry.key === active || undefined}
+                                                    onClick={(event) => press(entry, event)}
+                                                    className={cn(
+                                                        'flex flex-col gap-1 px-(--density-panel-pad) text-sm',
+                                                        // A row and its open detail read as one item, with no line between them.
+                                                        '[&:has(+[data-detail])]:border-b-0',
+                                                        compact ? 'py-2' : 'py-2.5',
+                                                        tone !== undefined && tone !== 'muted' && TONE_GROUND[tone],
+                                                        tone === 'muted' && MUTED_ITEM,
+                                                        hover && 'hover:bg-hover',
+                                                        pressable && 'cursor-pointer',
+                                                        (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
+                                                        'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
+                                                        ordering && 'relative',
+                                                        draggedItem === true && 'opacity-40',
+                                                        typeof passedClass === 'string' && passedClass,
+                                                    )}
+                                                >
+                                                    {rowAt?.key === entry.key && (
+                                                        <span
+                                                            aria-hidden
+                                                            className={cn(
+                                                                'pointer-events-none absolute inset-x-0 z-2 h-0.5 bg-primary',
+                                                                rowAt.part === 'before' ? '-top-px' : '-bottom-px',
                                                             )}
-                                                            {leadsOf(entry, true)}
-                                                            {title !== undefined && (
-                                                                <div
-                                                                    role="gridcell"
-                                                                    className="flex min-w-0 flex-1 items-center font-medium"
-                                                                >
-                                                                    {opens && treeControl(entry)}
-                                                                    <span className="min-w-0 truncate">{title.cell(entry.row)}</span>
-                                                                </div>
-                                                            )}
-                                                            {menu}
-                                                        </div>
-                                                        {stackedLines(entry, true)}
-                                                    </>
-                                                )}
-                                            </li>,
-                                        ),
-                                        'item',
-                                    )
-                                })}
-                            </ul>
+                                                        />
+                                                    )}
+                                                    {compact ? (
+                                                        compactRow(entry, true, box, menu, grip)
+                                                    ) : (
+                                                        <>
+                                                            <div className="flex min-w-0 items-center gap-2">
+                                                                {grip}
+                                                                {box !== null && (
+                                                                    <span className="flex" onClick={keep}>
+                                                                        {box}
+                                                                    </span>
+                                                                )}
+                                                                {leadsOf(entry, true)}
+                                                                {title !== undefined && (
+                                                                    <div
+                                                                        role="gridcell"
+                                                                        className="flex min-w-0 flex-1 items-center font-medium"
+                                                                    >
+                                                                        {opens && treeControl(entry)}
+                                                                        <span className="min-w-0 truncate">{title.cell(entry.row)}</span>
+                                                                    </div>
+                                                                )}
+                                                                {menu}
+                                                            </div>
+                                                            {stackedLines(entry, true)}
+                                                        </>
+                                                    )}
+                                                </li>
+                                            )
+                                        }
+                                        return withDetail(entry, withMenu(entry, actions, reorderRow(entry, item)), 'item')
+                                    })}
+                                </ul>,
+                            )
                         ) : gridView && groupHeads !== undefined ? (
                             <div className="flex flex-col gap-4 p-4">
                                 {groupHeads.map((head) => (

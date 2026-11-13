@@ -953,19 +953,26 @@ its own kind unless its `accepts` says otherwise, the smallest target under the 
 row is found before the list around it. Each part that drags draws a `DragDrop` around itself, and
 one an app draws around several parts makes them one, each part hearing every drag through
 `useDragDrop` and acting on its own: a list's rows given a `kind` a tree's `accepts` takes are dropped
-into its folders through the tree's `onDrop`.
+into its folders through the tree's `onDrop`, and inside a `RailDrops` drawn around the shell a rail
+entry's `drop` makes its row a place such things land (a song onto a playlist); a rail outside one
+never loads the engine. A thing carried to another part rather than put in order says `compact` in its data,
+and a small card with its label follows at the pointer in place of a copy its own size, so the
+target stays in sight.
 
 `SortableList` and `SortableGrid` are the sortable parts built on it, with `SortableGroup`,
 `SortableItem` and `SortableGrip` for a part that draws its own items, as `ReorderableTrackList`
-does: an item is dragged by its grip or as a whole, the rest moving aside to show where it lands, the
-arrow keys on a focused grip move it a place with the focus following, and `onMove(from, to)` says
-where it went; `moveItem` and `insertItem` in `lib/reorder` apply it without loading the engine. A
-board's cards drag between its columns with a line where they land and a grip for the keyboard;
-`DataTable`'s `onReorder` draws a grip at each row's start and moves the active row with Alt and the
-arrows, while the rows are drawn as given; and `DashboardArrange` draws a dashboard whose panels are
-arranged while `arranging`: a grip, a width and a remove in each panel's head (`PanelTools`, which
-the library's panels draw), a line where a dragged panel lands, a palette of widgets dragged onto the
-grid to add one, and the layout handed back as an order of `{ id, span }` to keep.
+does: an item is dragged by its grip or as a whole, the rest moving aside to show where it lands,
+the arrow keys on a focused grip move it a place with the focus following, and `onMove(from, to)`
+says where it went; `moveItem` and `insertItem` in `lib/reorder` apply it without loading the
+engine. `DraggableTrackList` lends a track list's rows to targets elsewhere on the page without an
+order of its own: a row drags as a whole, its grip carrying it from the keyboard. A board's cards
+drag between its columns with a line where they land and a grip for the keyboard; `DataTable`'s
+`onReorder` draws a grip at each row's start, a stacked list's items included, and moves the active
+row with Alt and the arrows, while the rows are drawn as given; and `DashboardArrange` draws a
+dashboard whose panels are arranged while `arranging`: a grip, a width and a remove in each panel's
+head (`PanelTools`, which the library's panels draw), a line where a dragged panel lands, a palette
+of widgets dragged onto the grid to add one, and the layout handed back as an order of
+`{ id, span }` to keep.
 
 ## Maps at scale
 
