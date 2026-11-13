@@ -3,15 +3,9 @@
 import type { SharedDocument } from '@winterop-com/sokkel-ui/CodeEditor'
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-} from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { BlockPicker } from '@winterop-com/sokkel-ui-graph/BlockPicker'
 import type { BlockGroup, PipelineBlock } from '@winterop-com/sokkel-ui-graph/blocks'
-import type { GraphControls, GraphEditing, GraphPointer } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
+import type { GraphControls, GraphEditing, GraphMenu } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
 import { GraphNotice, GraphOverlay, type GraphAnchor } from '@winterop-com/sokkel-ui-graph/GraphOverlay'
 import { GraphToolbar } from '@winterop-com/sokkel-ui-graph/GraphToolbar'
 import { GraphControlButton } from '@winterop-com/sokkel-ui-graph/GraphViewButtons'
@@ -116,7 +110,6 @@ export function PipelineCanvas({ fileId, doc, pipeline, issues, selected, onSele
     const [controls, setControls] = useState<GraphControls | null>(null)
     const [picker, setPicker] = useState<Picker | null>(null)
     const [notice, setNotice] = useState<Notice | null>(null)
-    const [menu, setMenu] = useState<{ step: string; at: GraphPointer } | null>(null)
 
     const undo = () => {
         if (doc.undo()) setNotice(null)
@@ -210,11 +203,22 @@ export function PipelineCanvas({ fileId, doc, pipeline, issues, selected, onSele
             setPicker({ mode: 'drop', source, at: { x: at.x, y: at.y } })
         },
         onPaneMenu: (at) => setPicker({ mode: 'here', at: { x: at.x, y: at.y } }),
-        onNodeMenu: (id, at) => {
-            onSelect(id)
-            setPicker(null)
-            setMenu({ step: id, at })
-        },
+    }
+
+    /** A step's menu, opened where it was right-clicked. */
+    const stepMenu = (id: string): GraphMenu => {
+        onSelect(id)
+        setPicker(null)
+        return {
+            head: id,
+            items: [
+                { id: 'after', label: 'Add a step after', onSelect: () => setPicker({ mode: 'after', source: id }) },
+                { id: 'settings', label: 'Settings', onSelect: () => onSettings(id) },
+                { id: 'text', label: 'Show in the text', onSelect: () => onShowText(id) },
+                { id: 'line', separator: true },
+                { id: 'remove', label: 'Remove step', destructive: true, onSelect: () => remove([id]) },
+            ],
+        }
     }
 
     const pick = (block: PipelineBlock) => {
@@ -280,6 +284,7 @@ export function PipelineCanvas({ fileId, doc, pipeline, issues, selected, onSele
                 selected={selected}
                 onSelect={onSelect}
                 editing={editing}
+                nodeMenu={stepMenu}
                 onControls={setControls}
                 words={{ label: pipeline.name === '' ? 'Pipeline' : pipeline.name, empty: 'No steps yet' }}
                 emptyAction={
@@ -328,54 +333,6 @@ export function PipelineCanvas({ fileId, doc, pipeline, issues, selected, onSele
                     </GraphNotice>
                 )}
             </PipelineGraph>
-            <DropdownMenu
-                open={menu !== null}
-                onOpenChange={(open) => {
-                    if (!open) setMenu(null)
-                }}
-            >
-                <DropdownMenuContent anchor={menu === null ? undefined : pointAt(menu.at)} side="bottom" align="start" className="w-48">
-                    <DropdownMenuItem
-                        onClick={() => {
-                            if (menu !== null) setPicker({ mode: 'after', source: menu.step })
-                            setMenu(null)
-                        }}
-                    >
-                        Add a step after
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        onClick={() => {
-                            if (menu !== null) onSettings(menu.step)
-                            setMenu(null)
-                        }}
-                    >
-                        Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        onClick={() => {
-                            if (menu !== null) onShowText(menu.step)
-                            setMenu(null)
-                        }}
-                    >
-                        Show in the text
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => {
-                            if (menu !== null) remove([menu.step])
-                            setMenu(null)
-                        }}
-                    >
-                        Remove step
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
         </>
     )
-}
-
-/** A point on the screen as the box a menu opens beside. */
-function pointAt(at: GraphPointer) {
-    return { getBoundingClientRect: () => DOMRect.fromRect({ x: at.clientX, y: at.clientY, width: 0, height: 0 }) }
 }

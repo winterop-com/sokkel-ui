@@ -138,9 +138,6 @@ export function toolbarEntries(item: ToolbarItem): ToolbarEntry[] {
 /** How the plain buttons in the row look: bare, or framed as a page header's actions are. */
 export type ToolbarItemVariant = 'ghost' | 'outline'
 
-/** The critical tint a destroying tool takes under the pointer, as `IconButton`'s `destructive`. */
-const DESTRUCTIVE = 'not-aria-disabled:hover:bg-critical/10 not-aria-disabled:hover:text-critical-ink'
-
 /** A tool as the row draws it: the app's own node, a split button for one with related ways, or a plain button. */
 function Inline({
     item,
@@ -186,7 +183,8 @@ function Inline({
             title={title}
             aria-pressed={item.pressed}
             onClick={item.onSelect}
-            className={cn(item.pressed === true && 'bg-muted text-foreground', item.destructive === true && DESTRUCTIVE)}
+            destructiveHover={item.destructive === true}
+            className={cn(item.pressed === true && 'bg-muted text-foreground')}
         >
             {icon}
             {item.face ?? item.label}

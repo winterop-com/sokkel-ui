@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 import { ConsequenceList } from '@winterop-com/sokkel-ui/ConsequenceList'
 import { ConfirmDialog, DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
+import { InlineCode } from '@winterop-com/sokkel-ui/InlineCode'
 import { ProblemLine } from '@winterop-com/sokkel-ui/Problem'
 import { TypedConfirmDialog } from '@winterop-com/sokkel-ui/TypedConfirmDialog'
 import { pictureOf } from '../fixtures/portraits'
@@ -19,6 +20,26 @@ export function ConfirmDelete() {
                 open={open}
                 onOpenChange={setOpen}
                 question="Delete import-orders?"
+                detail="Its runs stay in the history; the job stops running."
+                confirm={{ label: 'Delete', destructive: true, onConfirm: () => setOpen(false) }}
+            />
+        </Behind>
+    )
+}
+
+/** The question names what it acts on in the code face, a part of a sentence like any other. */
+export function ConfirmNamed() {
+    const [open, setOpen] = useState(true)
+    return (
+        <Behind action="Delete" onAction={() => setOpen(true)}>
+            <ConfirmDialog
+                open={open}
+                onOpenChange={setOpen}
+                question={
+                    <>
+                        Delete <InlineCode value="import-orders" />?
+                    </>
+                }
                 detail="Its runs stay in the history; the job stops running."
                 confirm={{ label: 'Delete', destructive: true, onConfirm: () => setOpen(false) }}
             />

@@ -23,6 +23,7 @@ import { CircleAlert } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from 'react'
 
 import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
+import { PointMenu, menuPoint, type PointMenuItem } from '@winterop-com/sokkel-ui/PointMenu'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { GRAPH_DRAG_TYPE } from './blocks'
 import {
@@ -100,6 +101,33 @@ export interface GraphPointer {
     y: number
 }
 
+/** A menu a canvas opens at a right click: its rows, and a line in the code face over them naming what it acts on. */
+export interface GraphMenu {
+    head?: ReactNode
+    items: readonly PointMenuItem[]
+}
+
+/** What a canvas's menu gives for a right click: the rows alone, a menu with its head, or null for none. */
+export type GraphMenuItems = GraphMenu | readonly PointMenuItem[] | null
+
+/** The rows and head a canvas's menu was given, or null for an empty one. */
+export function graphMenu(given: GraphMenuItems): GraphMenu | null {
+    if (given === null) return null
+    const menu: GraphMenu = 'items' in given ? given : { items: given }
+    return menu.items.length === 0 ? null : menu
+}
+
+/**
+ * The menus a canvas opens at a right click (or the menu key on a chosen box), on any canvas, editable
+ * or not: each is asked for its rows when it opens and drawn by the canvas as a `PointMenu`.
+ */
+export interface GraphMenus {
+    /** The rows a box's menu offers, such as Run from here or Remove; null or none leaves the browser's own menu. */
+    nodeMenu?: (node: string, at: GraphPointer) => GraphMenuItems
+    /** The rows the ground's menu offers, such as Add a step here; null or none leaves the browser's own menu. */
+    paneMenu?: (at: GraphPointer) => GraphMenuItems
+}
+
 /**
  * What the gestures of an editable canvas report. The canvas changes nothing itself: the app owns
  * the graph, applies what it accepts, and hands the canvas the result.
@@ -169,7 +197,7 @@ export function fitDirection(width: number | undefined): GraphDirection {
  * edges are routed and how much room the layout keeps (`routing`, `spacing`), and the bounds each
  * node box is sized from its words between (`minNodeWidth`, `maxNodeWidth`).
  */
-export interface GraphViewProps extends GraphLayoutStyle, GraphSizing {
+export interface GraphViewProps extends GraphLayoutStyle, GraphSizing, GraphMenus {
     /** The id of the chosen node, or null for none. */
     selected?: string | null
     /** Called with the node chosen, or null when the ground was clicked. */
@@ -303,7 +331,7 @@ function placementKey(nodes: readonly Node[]): string {
         .join('|')
 }
 
-export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> {
+export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> extends GraphMenus {
     nodes: N[]
     edges: E[]
     /** Node kinds beyond `box`, the node box. */
@@ -374,6 +402,8 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     onSelect,
     onSelectionChange,
     editing,
+    nodeMenu,
+    paneMenu,
     controls = true,
     extraControls,
     toolbar,
@@ -461,6 +491,22 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     const pointer = (event: { clientX: number; clientY: number }): GraphPointer => {
         const at = flowRef.current?.screenToFlowPosition({ x: event.clientX, y: event.clientY }) ?? { x: 0, y: 0 }
         return { clientX: event.clientX, clientY: event.clientY, ...at }
+    }
+    // The menu open at a right click, with the point it opened at.
+    const [menu, setMenu] = useState<{ x: number; y: number; menu: GraphMenu } | null>(null)
+    const [lastMenu, setLastMenu] = useState<GraphMenu | null>(null)
+    if (menu !== null && menu.menu !== lastMenu) setLastMenu(menu.menu)
+    /** Opens a menu at a right click when it has rows, keeping the browser's own menu away; one from the menu key opens at the element. */
+    const openMenu = (
+        event: { clientX: number; clientY: number; currentTarget?: EventTarget | null; preventDefault: () => void },
+        ask: (at: GraphPointer) => GraphMenuItems,
+    ): boolean => {
+        const point = menuPoint(event)
+        const rows = graphMenu(ask(pointer({ clientX: point.x, clientY: point.y })))
+        if (rows === null) return false
+        event.preventDefault()
+        setMenu({ ...point, menu: rows })
+        return true
     }
 
     const reportSize = useRef(onSize)
@@ -642,18 +688,22 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                     : undefined
                             }
                             onNodeContextMenu={
-                                editable && editing.onNodeMenu !== undefined
+                                nodeMenu !== undefined || (editable && editing.onNodeMenu !== undefined)
                                     ? (event, node) => {
+                                          if (nodeMenu !== undefined) openMenu(event, (at) => nodeMenu(node.id, at))
+                                          if (!editable || editing.onNodeMenu === undefined) return
                                           event.preventDefault()
-                                          editing.onNodeMenu?.(node.id, pointer(event))
+                                          editing.onNodeMenu(node.id, pointer(event))
                                       }
                                     : undefined
                             }
                             onPaneContextMenu={
-                                editable && editing.onPaneMenu !== undefined
+                                paneMenu !== undefined || (editable && editing.onPaneMenu !== undefined)
                                     ? (event) => {
+                                          if (paneMenu !== undefined) openMenu(event, paneMenu)
+                                          if (!editable || editing.onPaneMenu === undefined) return
                                           event.preventDefault()
-                                          editing.onPaneMenu?.(pointer(event))
+                                          editing.onPaneMenu(pointer(event))
                                       }
                                     : undefined
                             }
@@ -754,6 +804,14 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 {editing?.canConnect !== undefined && <ConnectionVerdict canConnect={editing.canConnect} />}
                                 {children}
                             </ViewControls>
+                            {(nodeMenu !== undefined || paneMenu !== undefined) && (
+                                <PointMenu
+                                    at={menu === null ? null : { x: menu.x, y: menu.y }}
+                                    onClose={() => setMenu(null)}
+                                    head={(menu?.menu ?? lastMenu)?.head}
+                                    items={(menu?.menu ?? lastMenu)?.items ?? []}
+                                />
+                            )}
                         </ReactFlow>
                     </div>
                 </GraphEditingContext>

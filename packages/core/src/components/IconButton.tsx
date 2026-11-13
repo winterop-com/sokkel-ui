@@ -69,12 +69,8 @@ export function IconButton({
                         aria-pressed={on}
                         disabled={held || disabled}
                         focusableWhenDisabled={held || props.focusableWhenDisabled}
-                        className={cn(
-                            variant === 'ghost' && 'text-muted-foreground',
-                            on === true && 'bg-muted text-foreground',
-                            destructive && 'not-aria-disabled:hover:bg-critical/10 not-aria-disabled:hover:text-critical-ink',
-                            className,
-                        )}
+                        destructiveHover={destructive || props.destructiveHover}
+                        className={cn(variant === 'ghost' && 'text-muted-foreground', on === true && 'bg-muted text-foreground', className)}
                     />
                 }
             >

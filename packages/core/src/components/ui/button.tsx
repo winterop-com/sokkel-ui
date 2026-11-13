@@ -34,10 +34,16 @@ const buttonVariants = cva(
                     'size-7 rounded-[min(var(--control-radius),12px)] in-data-[slot=button-group]:rounded-control max-md:min-h-finger max-md:min-w-finger',
                 'icon-lg': 'size-9 max-md:min-h-finger max-md:min-w-finger',
             },
+            /** The critical tint under the pointer, on any variant, for a button that destroys. */
+            destructiveHover: {
+                true: 'not-aria-disabled:hover:bg-critical/10 not-aria-disabled:hover:text-critical-ink',
+                false: '',
+            },
         },
         defaultVariants: {
             variant: 'default',
             size: 'default',
+            destructiveHover: false,
         },
     },
 )
@@ -63,7 +69,8 @@ export type ButtonProps = ButtonPrimitive.Props &
  * button stays in the tab order so a keyboard reaches the reason too. `busy` says the work a press
  * started is under way: a spinner takes the place of a leading icon (an icon-only button's icon), or
  * comes before the label, the label stays, and the button is shut, `aria-busy` and `aria-disabled`,
- * keeping its focus and its look while it ignores presses.
+ * keeping its focus and its look while it ignores presses. `destructiveHover` gives any variant the
+ * critical tint under the pointer, for a button that destroys but should not shout until pointed at.
  */
 function Button({
     className,
@@ -74,6 +81,7 @@ function Button({
     disabled,
     focusableWhenDisabled,
     busy = false,
+    destructiveHover = false,
     children,
     ...props
 }: ButtonProps) {
@@ -85,7 +93,7 @@ function Button({
         <ButtonPrimitive
             data-slot="button"
             data-button-size={size ?? 'default'}
-            className={cn(buttonVariants({ variant, size, className }), busy && BUSY)}
+            className={cn(buttonVariants({ variant, size, destructiveHover, className }), busy && BUSY)}
             disabled={held || busy || disabled}
             focusableWhenDisabled={held || busy || focusableWhenDisabled}
             aria-busy={busy || undefined}

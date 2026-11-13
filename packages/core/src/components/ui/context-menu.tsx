@@ -52,7 +52,8 @@ function ContextMenuContent({
                 <ContextMenuPrimitive.Popup
                     data-slot="context-menu-content"
                     className={cn(
-                        'z-50 max-h-(--available-height) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-surface bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+                        'z-50 max-h-(--available-height) w-max max-w-[calc(100vw-2rem)] min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-surface bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+                        GUTTER,
                         className,
                     )}
                     {...props}
@@ -61,6 +62,15 @@ function ContextMenuContent({
         </ContextMenuPrimitive.Portal>
     )
 }
+
+/**
+ * A menu holding a check or a radio item keeps their indicators in a gutter at the start, and its
+ * plain rows step in past it, so every row's words start at one edge.
+ */
+const GUTTER = 'has-[[role=menuitemcheckbox],[role=menuitemradio]]:**:data-menu-row:pl-7'
+
+/** Every row a finger tall below `md`. */
+const ROW_FINGER = 'max-md:min-h-finger'
 
 export type ContextMenuGroupProps = BaseContextMenu.Group.Props
 
@@ -76,6 +86,7 @@ function ContextMenuLabel({ className, inset, ...props }: ContextMenuLabelProps)
     return (
         <ContextMenuPrimitive.GroupLabel
             data-slot="context-menu-label"
+            data-menu-row=""
             data-inset={inset || undefined}
             className={cn('px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7', className)}
             {...props}
@@ -92,9 +103,11 @@ function ContextMenuItem({ className, inset, variant = 'default', ...props }: Co
     return (
         <ContextMenuPrimitive.Item
             data-slot="context-menu-item"
+            data-menu-row=""
             data-inset={inset || undefined}
             data-variant={variant}
             className={cn(
+                ROW_FINGER,
                 "group/context-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
                 className,
             )}
@@ -117,8 +130,10 @@ function ContextMenuSubTrigger({ className, inset, children, ...props }: Context
     return (
         <ContextMenuPrimitive.SubmenuTrigger
             data-slot="context-menu-sub-trigger"
+            data-menu-row=""
             data-inset={inset || undefined}
             className={cn(
+                ROW_FINGER,
                 "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
@@ -146,13 +161,14 @@ function ContextMenuCheckboxItem({ className, children, checked, inset, ...props
             data-slot="context-menu-checkbox-item"
             data-inset={inset || undefined}
             className={cn(
-                "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                ROW_FINGER,
+                "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             checked={checked}
             {...props}
         >
-            <span className="pointer-events-none absolute right-2">
+            <span className="pointer-events-none absolute left-1.5 flex size-4 items-center justify-center">
                 <ContextMenuPrimitive.CheckboxItemIndicator>
                     <CheckIcon />
                 </ContextMenuPrimitive.CheckboxItemIndicator>
@@ -178,12 +194,13 @@ function ContextMenuRadioItem({ className, children, inset, ...props }: ContextM
             data-slot="context-menu-radio-item"
             data-inset={inset || undefined}
             className={cn(
-                "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                ROW_FINGER,
+                "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             {...props}
         >
-            <span className="pointer-events-none absolute right-2">
+            <span className="pointer-events-none absolute left-1.5 flex size-4 items-center justify-center">
                 <ContextMenuPrimitive.RadioItemIndicator>
                     <CheckIcon />
                 </ContextMenuPrimitive.RadioItemIndicator>
