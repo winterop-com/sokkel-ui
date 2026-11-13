@@ -1,13 +1,14 @@
 /** What every part of the studio reads and does: the files and their open documents, the runs, the tabs and the reader's settings. */
 
 import { createSharedDocument, type SharedDocument } from '@winterop-com/sokkel-ui/CodeEditor'
+import { insertItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 import { files as fileRows, prefs as prefRows, runs as runRows } from './backend'
-import { DEFAULT_PREFS, kindOf, type FileKind, type Prefs, type Project, type Run, type WorkFile } from './model'
+import { DEFAULT_PREFS, fileOrder, kindOf, type FileKind, type Prefs, type Project, type Run, type WorkFile } from './model'
 import { template } from './seed'
 
 /** A question the studio is asking in a dialog. */
@@ -50,7 +51,8 @@ export interface StudioState {
     closeNow: (ids: readonly string[]) => void
     createFile: (project: Project, kind: FileKind, name: string) => Promise<WorkFile>
     renameFile: (id: string, name: string) => Promise<void>
-    moveFile: (id: string, project: Project) => Promise<void>
+    /** Moves a file into a project, at `index` among the files of its kind there (counted without it), or at the end. */
+    moveFile: (id: string, project: Project, index?: number) => Promise<void>
     deleteFile: (id: string) => Promise<void>
     /** Runs a pipeline from its document as it stands, and answers with the run. */
     run: (id: string) => Promise<Run | undefined>
@@ -218,8 +220,18 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         await fileRows.update(id, { name: `${name}${kindOf(file.kind).extension}` }).catch(failed('The file was not renamed'))
     }, [])
 
-    const moveFile = useCallback(async (id: string, project: Project) => {
-        await fileRows.update(id, { project }).catch(failed('The file was not moved'))
+    const moveFile = useCallback(async (id: string, project: Project, index?: number) => {
+        const file = savedRef.current.get(id)
+        if (file === undefined) return
+        const group = [...savedRef.current.values()]
+            .filter((one) => one.project === project && one.kind === file.kind && one.id !== id)
+            .sort(fileOrder)
+        const order = insertItem(group, { ...file, project }, index ?? group.length)
+        await Promise.all(
+            order.map((one, rank) =>
+                one.id === id ? fileRows.update(id, { project, rank }) : one.rank === rank ? undefined : fileRows.update(one.id, { rank }),
+            ),
+        ).catch(failed('The file was not moved'))
     }, [])
 
     const deleteFile = useCallback(

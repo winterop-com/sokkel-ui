@@ -7,6 +7,8 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { SortableList } from '@winterop-com/sokkel-ui/Sortable'
 import { ArrowDown, ArrowUp, Play, Shuffle, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -17,7 +19,7 @@ import { plural } from '../format'
 import { RemoveEntry, VideoCard, watchHref } from '../parts'
 import { NotFound } from './NotFound'
 
-/** One playlist, or Watch later: play it in order or shuffled, rename it, reorder and remove its videos, or delete it. */
+/** One playlist, or Watch later: play it in order or shuffled, rename it, put its videos in order by drag or from their menus, remove them, or delete it. */
 export function Playlist({ id }: { id: string }) {
     const { rows, ready } = useRows(playlists)
     const [deleting, setDeleting] = useState(false)
@@ -114,10 +116,15 @@ export function Playlist({ id }: { id: string }) {
                     </EmptyContent>
                 </Empty>
             ) : (
-                <Stack gap="md">
-                    {videos.map((video, index) => (
+                <SortableList
+                    label={list.name}
+                    variant="plain"
+                    items={videos}
+                    itemKey={(video) => video.id}
+                    itemLabel={(video) => video.title}
+                    onMove={(from, to) => void save({ videos: moveItem(videos, from, to).map((one) => one.id) })}
+                    renderItem={(video, { index }) => (
                         <VideoCard
-                            key={video.id}
                             video={video}
                             layout="row"
                             list={list.id}
@@ -142,8 +149,8 @@ export function Playlist({ id }: { id: string }) {
                                 </>
                             }
                         />
-                    ))}
-                </Stack>
+                    )}
+                />
             )}
             <ConfirmDialog
                 open={deleting}

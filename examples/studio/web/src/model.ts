@@ -26,7 +26,13 @@ export interface WorkFile {
     name: string
     text: string
     updated: number
+    /** Its place among the files of its project and kind, as the reader put them; files without one follow, by name. */
+    rank?: number
 }
+
+/** The order of the files in one of a project's groups: by the reader's ranks, then by name. */
+export const fileOrder = (a: WorkFile, b: WorkFile) =>
+    (a.rank ?? Number.POSITIVE_INFINITY) - (b.rank ?? Number.POSITIVE_INFINITY) || a.name.localeCompare(b.name)
 
 export type StepState = 'queued' | 'running' | 'succeeded' | 'failed' | 'skipped' | 'cancelled'
 export type RunState = 'running' | 'succeeded' | 'failed' | 'cancelled'

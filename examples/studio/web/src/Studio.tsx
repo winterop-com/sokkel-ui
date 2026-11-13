@@ -36,7 +36,7 @@ import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { Dialogs } from './Dialogs'
-import { clock, counted, kindOf, KINDS, PROJECTS, type FileKind, type Project, type WorkFile } from './model'
+import { clock, counted, fileOrder, kindOf, KINDS, PROJECTS, type FileKind, type Project, type WorkFile } from './model'
 import { Settings } from './Settings'
 import { tabHref, useStudio } from './state'
 import { tablesWith } from './tables'
@@ -62,7 +62,7 @@ function workspaceTree(
                 label: kind.plural,
                 children: files
                     .filter((file) => file.project === project && file.kind === kind.kind)
-                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .sort(fileOrder)
                     .map((file) => ({
                         id: file.id,
                         label: file.name,
@@ -323,19 +323,19 @@ export function Studio({ frame }: { frame: Frame }) {
                                     ...(file === undefined ? [] : [`project:${file.project}`, `group:${file.project}:${file.kind}`]),
                                 ]}
                                 actions={rowActions}
-                                onMove={(id, into) => {
+                                onMove={(id, into, index) => {
+                                    const moving = byId.get(id)
                                     const place = into === null ? undefined : placeOf(into)
-                                    if (place !== undefined) void moveFile(id, place.project)
+                                    if (moving === undefined || place === undefined) return
+                                    // Dropped on a project, a file goes to the end of its kind's group there.
+                                    void moveFile(id, place.project, place.kind === undefined ? undefined : index)
                                 }}
                                 canMove={(id, into) => {
                                     const moving = byId.get(id)
                                     const place = into === null ? undefined : placeOf(into)
-                                    return (
-                                        moving !== undefined &&
-                                        place !== undefined &&
-                                        place.project !== moving.project &&
-                                        (place.kind === undefined || place.kind === moving.kind)
-                                    )
+                                    if (moving === undefined || place === undefined) return false
+                                    // A file reorders within its kind's group, and moves into another project's.
+                                    return place.kind === undefined ? place.project !== moving.project : place.kind === moving.kind
                                 }}
                             />
                         ),

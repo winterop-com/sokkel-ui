@@ -18,6 +18,7 @@ import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { Tree } from '@winterop-com/sokkel-ui/Tree'
 import { YesNoField } from '@winterop-com/sokkel-ui/YesNoField'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -48,7 +49,7 @@ const EVENT_DATE = '2026-11-02'
 
 type Draft = Omit<ProgramRule, 'id'>
 
-/** The program's rules in a list, the chosen one's condition and actions edited, and the program's form beside them, reacting to every rule as it is filled. */
+/** The program's rules in the order they run, dragged into another order to number their priorities again, the chosen one's condition and actions edited, and the program's form beside them, reacting to every rule as it is filled. */
 export function ProgramRules({ selected }: { selected?: string }) {
     const { rows, error } = useCollection(programRules)
     const ordered = useMemo(() => [...(rows ?? [])].sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name)), [rows])
@@ -59,6 +60,22 @@ export function ProgramRules({ selected }: { selected?: string }) {
         () => ordered.map((one) => (one.id === saved?.id && editing !== undefined ? { ...editing, id: one.id } : one)),
         [ordered, saved, editing],
     )
+
+    /** Moves a rule to another place in the run order, numbering every rule's priority from 1 in the new order. */
+    const reorder = (id: string, index: number) => {
+        const from = ordered.findIndex((one) => one.id === id)
+        if (from === -1) return
+        const next = moveItem(ordered, from, index)
+        const priorities = new Map(next.map((one, place) => [one.id, place + 1]))
+        setDraft((now) => {
+            const priority = now === null ? undefined : priorities.get(now.id)
+            return now === null || priority === undefined ? now : { id: now.id, rule: { ...now.rule, priority } }
+        })
+        const changed = next.filter((one, place) => one.priority !== place + 1)
+        Promise.all(changed.map((one) => programRules.update(one.id, { priority: priorities.get(one.id) ?? one.priority }))).catch(
+            (failure: unknown) => toast.error('Not moved', { description: failure instanceof Error ? failure.message : String(failure) }),
+        )
+    }
 
     const create = () => {
         const made = (ordered.length + 1).toString()
@@ -98,6 +115,7 @@ export function ProgramRules({ selected }: { selected?: string }) {
                     nodes={ordered.map((one) => ({ id: one.id, label: one.name, meta: String(one.priority) }))}
                     selected={saved === undefined ? [] : [saved.id]}
                     onSelect={(ids) => ids[0] !== undefined && go(`/program-rules/${ids[0]}`)}
+                    onMove={(id, _into, index) => reorder(id, index)}
                 />
             </SubNav>
             <Fill>
