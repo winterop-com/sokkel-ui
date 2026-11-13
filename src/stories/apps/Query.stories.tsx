@@ -7,6 +7,7 @@ import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import { CodeEditor, type CodeCompletion, type CodeMark } from '@winterop-com/sokkel-ui/CodeEditor'
 import { JQ_BUILTINS } from '@winterop-com/sokkel-ui/code/jq'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { DropZone } from '@winterop-com/sokkel-ui/UploadTray'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -19,7 +20,8 @@ import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
- * A query playground in the library's frame: the runs and jobs as JSON in one pane, a jq program in
+ * A query playground in the library's frame: the runs and jobs as JSON in one pane, which a JSON
+ * file dragged onto it from the desktop replaces, a jq program in
  * the next with jq's built-ins completed and explained on hover, and what it gives in a third. Mod-Enter
  * runs the program; a compile error is underlined at its column with the message on hover. The
  * workspace's settings are YAML checked against their JSON Schema as they are typed.
@@ -112,6 +114,7 @@ function Pane({ title, meta, actions, children }: { title: string; meta?: ReactN
 
 function Workbench({ broken }: { broken: boolean }) {
     const [input, setInput] = useState(INPUT)
+    const [source, setSource] = useState('1.1 kB')
     const [program, setProgram] = useState(broken ? BROKEN : PROGRAM)
     const [ran, setRan] = useState(broken ? BROKEN : PROGRAM)
     const failed = ran === BROKEN
@@ -121,18 +124,33 @@ function Workbench({ broken }: { broken: boolean }) {
             minShare={0.2}
             maxShare={0.7}
             first={
-                <Pane title="Input" meta="1.1 kB">
-                    <CodeEditor
-                        label="Input"
-                        language="json"
-                        variant="pane"
-                        size="sm"
-                        value={input}
-                        onChange={setInput}
-                        folding
-                        bracketColors
-                        indentGuides
-                    />
+                <Pane title="Input" meta={source}>
+                    <DropZone
+                        accept=".json,application/json"
+                        maxFiles={1}
+                        words={{ title: 'Drop to read', detail: 'A JSON file becomes the input.' }}
+                        onFiles={(files) => {
+                            const [file] = files
+                            if (file === undefined) return
+                            void file.text().then((text) => {
+                                setInput(text)
+                                setSource(file.name)
+                            })
+                        }}
+                        className="h-full"
+                    >
+                        <CodeEditor
+                            label="Input"
+                            language="json"
+                            variant="pane"
+                            size="sm"
+                            value={input}
+                            onChange={setInput}
+                            folding
+                            bracketColors
+                            indentGuides
+                        />
+                    </DropZone>
                 </Pane>
             }
             second={

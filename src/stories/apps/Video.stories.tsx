@@ -8,6 +8,7 @@ import {
     ListPlus,
     ListVideo,
     RectangleHorizontal,
+    Play,
     Plus,
     Share2,
     SlidersHorizontal,
@@ -17,8 +18,15 @@ import {
     type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
+import { ReorderableTrackList, type Track } from '@winterop-com/sokkel-ui-media/ReorderableTrackList'
 import { ChannelRow } from '@winterop-com/sokkel-ui-media/ChannelRow'
 import { MediaActions, type MediaRating } from '@winterop-com/sokkel-ui-media/MediaActions'
 import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
@@ -51,12 +59,18 @@ import { Stack } from '@winterop-com/sokkel-ui/Layout'
  * A video site in the library's frame: a home grid of videos under topic chips, and a watch page
  * with the player, the channel and its follow button, likes, sharing and saving, a description
  * that unfolds, comments with a pinned one and replies, and what plays next beside it all. On a
- * narrow window what plays next moves under the video.
+ * narrow window what plays next moves under the video. Watch later is put in order by drag, and a
+ * video dragged onto a playlist in the rail is added there.
  */
-const meta: Meta = { title: 'Apps/Video', parameters: { layout: 'fullscreen' } }
+const meta: Meta = {
+    title: 'Apps/Video',
+    parameters: { layout: 'fullscreen' },
+}
 export default meta
 
 type Channel = 'ada' | 'grace' | 'linus' | 'margaret'
+
+type View = 'home' | 'watch' | 'later'
 
 const CHANNELS: Record<Channel, { color: KindColor; followers: number }> = {
     ada: { color: 'blue', followers: 48_200 },
@@ -225,8 +239,20 @@ const COMMENTS: Comment[] = [
         text: 'The moment the light reaches the breakwater at 4:12 is worth the whole thing.',
         likes: '348',
         replies: [
-            { id: 'c2r1', by: 'grace', days: 14, text: 'That was the only clear morning of the four.', likes: '96' },
-            { id: 'c2r2', by: 'linus', days: 8, text: 'Went back to it three times.', likes: '12' },
+            {
+                id: 'c2r1',
+                by: 'grace',
+                days: 14,
+                text: 'That was the only clear morning of the four.',
+                likes: '96',
+            },
+            {
+                id: 'c2r2',
+                by: 'linus',
+                days: 8,
+                text: 'Went back to it three times.',
+                likes: '12',
+            },
         ],
     },
     {
@@ -236,11 +262,72 @@ const COMMENTS: Comment[] = [
         text: 'Which harbor is this? It looks like the one on the far side of the bay, but the breakwater is longer than I remember.',
         likes: '57',
     },
-    { id: 'c4', by: 'linus', days: 4, text: 'Quiet, slow and exactly right for an early start.', likes: '21' },
+    {
+        id: 'c4',
+        by: 'linus',
+        days: 4,
+        text: 'Quiet, slow and exactly right for an early start.',
+        likes: '21',
+    },
 ]
 
-function groups(view: 'home' | 'watch'): RailGroup[] {
+/** What a video's drag is, taken by Watch later and the playlists in the rail. */
+const VIDEO = 'video'
+
+/** The lists in the rail that take videos, by id. */
+const LISTS: { id: string; label: string }[] = [
+    { id: 'later', label: 'Watch later' },
+    { id: 'coasts', label: 'Coasts' },
+    { id: 'trains', label: 'Night trains' },
+]
+
+/** A video as a row of a list: its wide cover, its channel and views, and its length. */
+const rowOf = (video: Video): Track => ({
+    id: video.id,
+    title: video.title,
+    subtitle: <MetaLine inline items={[video.channel, video.views]} />,
+    artwork: <Artwork cover={video.cover} wide />,
+    duration: video.length,
+})
+
+const byId = (...ids: string[]) => ids.map((id) => rowOf(VIDEOS.find((video) => video.id === id) ?? VIDEOS[0]))
+
+/** What each list holds as the story opens. */
+const LIST_VIDEOS: Record<string, Track[]> = {
+    later: byId('v2', 'v5', 'v8', 'v11', 'v4', 'v9'),
+    coasts: byId('v1', 'v3'),
+    trains: byId('v12'),
+}
+
+/** The lists and what is dropped on them: a video let go on a list in the rail joins its end, once. */
+function useLists() {
+    const [lists, setLists] = useState(LIST_VIDEOS)
+    const add = (list: string, drag: DragData) => {
+        const video = drag.value as Track
+        const name = LISTS.find((each) => each.id === list)?.label ?? list
+        if (lists[list].some((each) => each.id === video.id)) {
+            toast(`Already in ${name}`)
+            return
+        }
+        setLists({ ...lists, [list]: [...lists[list], video] })
+        toast(`Added to ${name}`)
+    }
+    const move = (list: string, from: number, to: number) => setLists({ ...lists, [list]: moveItem(lists[list], from, to) })
+    return { lists, add, move }
+}
+
+type Lists = ReturnType<typeof useLists>
+
+function groups(view: View, lists: Lists): RailGroup[] {
     const entry = (id: string, label: string, icon: LucideIcon, active = false) => ({ id, label, icon, href: '#', active })
+    const list = (id: string, label: string, icon: LucideIcon) => ({
+        ...entry(id, label, icon, view === id),
+        count: lists.lists[id].length,
+        drop: {
+            accepts: (drag: DragData) => drag.kind === VIDEO,
+            onDrop: (drag: DragData) => lists.add(id, drag),
+        },
+    })
     return [
         {
             id: 'browse',
@@ -253,7 +340,12 @@ function groups(view: 'home' | 'watch'): RailGroup[] {
         {
             id: 'library',
             title: 'Library',
-            entries: [entry('later', 'Watch later', Clock), entry('liked', 'Liked', ThumbsUp), entry('playlists', 'Playlists', ListVideo)],
+            entries: [list('later', 'Watch later', Clock), entry('liked', 'Liked', ThumbsUp)],
+        },
+        {
+            id: 'playlists',
+            title: 'Playlists',
+            entries: LISTS.slice(1).map((each) => list(each.id, each.label, ListVideo)),
         },
         {
             id: 'channels',
@@ -263,9 +355,10 @@ function groups(view: 'home' | 'watch'): RailGroup[] {
     ]
 }
 
-const TRAILS: Record<'home' | 'watch', Crumb[]> = {
+const TRAILS: Record<View, Crumb[]> = {
     home: [{ label: 'Home' }],
     watch: [{ label: 'Home', href: '#' }, { label: WATCHING.channel, href: '#' }, { label: WATCHING.title }],
+    later: [{ label: 'Watch later' }],
 }
 
 /** The topic chips over the videos: one chosen, the row scrolling sideways when it runs out of room. */
@@ -462,7 +555,12 @@ function WatchPage() {
                                 likes={4_100 + (rating === 'like' ? 1 : 0)}
                                 onRatingChange={setRating}
                                 actions={[
-                                    { id: 'share', label: 'Share', icon: <Share2 aria-hidden />, onSelect: () => undefined },
+                                    {
+                                        id: 'share',
+                                        label: 'Share',
+                                        icon: <Share2 aria-hidden />,
+                                        onSelect: () => undefined,
+                                    },
                                     {
                                         id: 'save',
                                         label: saved ? 'Saved' : 'Save',
@@ -470,7 +568,12 @@ function WatchPage() {
                                         pressed: saved,
                                         onSelect: () => setSaved(!saved),
                                     },
-                                    { id: 'playlist', label: 'Add to playlist', icon: <ListPlus aria-hidden />, onSelect: () => undefined },
+                                    {
+                                        id: 'playlist',
+                                        label: 'Add to playlist',
+                                        icon: <ListPlus aria-hidden />,
+                                        onSelect: () => undefined,
+                                    },
                                 ]}
                                 menu={
                                     <DropdownMenuItem>
@@ -493,50 +596,99 @@ function WatchPage() {
     )
 }
 
-function VideoApp({ view }: { view: 'home' | 'watch' }) {
+/** Watch later in the viewer's own order: each row dragged by its grip, or moved by the arrows once the grip is focused. */
+function LaterPage({ lists }: { lists: Lists }) {
+    const videos = lists.lists.later
+    const total = videos.reduce((sum, video) => sum + (video.duration ?? 0), 0)
+    return (
+        <Page>
+            <PageHeader
+                title="Watch later"
+                count={`${String(videos.length)} videos, ${formatTime(total)}`}
+                actions={
+                    <Button size="sm">
+                        <Play className="fill-current" aria-hidden />
+                        Play all
+                    </Button>
+                }
+            />
+            <ReorderableTrackList
+                kind={VIDEO}
+                tracks={videos}
+                artwork="wide"
+                onMove={(from, to) => lists.move('later', from, to)}
+                onPlay={() => undefined}
+            />
+        </Page>
+    )
+}
+
+function VideoApp({ view }: { view: View }) {
     const [collapsed, setCollapsed] = useState(view === 'watch')
+    const lists = useLists()
     return (
         <TooltipProvider>
-            <Shell
-                rail={
-                    <Rail
-                        mark={<TidevannMark />}
-                        name="Tidevann"
-                        groups={groups(view)}
-                        collapsed={collapsed}
-                        onCollapsedChange={setCollapsed}
-                        foot={
-                            <AccountMenu
-                                name="ada"
-                                image={pictureOf('ada')}
-                                where="tidevann.example.org"
-                                collapsed={collapsed}
-                                onSettings={() => undefined}
-                            />
-                        }
-                    />
-                }
-                top={
-                    <TopBar
-                        trail={TRAILS[view]}
-                        onSearch={() => undefined}
-                        actions={
-                            <Button size="sm" variant="outline">
-                                <Plus aria-hidden />
-                                Upload
-                            </Button>
-                        }
-                    />
-                }
-            >
-                {view === 'home' ? <HomePage /> : <WatchPage />}
-            </Shell>
+            <RailDrops>
+                <Shell
+                    rail={
+                        <Rail
+                            mark={<TidevannMark />}
+                            name="Tidevann"
+                            groups={groups(view, lists)}
+                            collapsed={collapsed}
+                            onCollapsedChange={setCollapsed}
+                            foot={
+                                <AccountMenu
+                                    name="ada"
+                                    image={pictureOf('ada')}
+                                    where="tidevann.example.org"
+                                    collapsed={collapsed}
+                                    onSettings={() => undefined}
+                                />
+                            }
+                        />
+                    }
+                    top={
+                        <TopBar
+                            trail={TRAILS[view]}
+                            onSearch={() => undefined}
+                            actions={
+                                <Button size="sm" variant="outline">
+                                    <Plus aria-hidden />
+                                    Upload
+                                </Button>
+                            }
+                        />
+                    }
+                >
+                    {view === 'home' && <HomePage />}
+                    {view === 'watch' && <WatchPage />}
+                    {view === 'later' && <LaterPage lists={lists} />}
+                </Shell>
+            </RailDrops>
+            <Toaster />
         </TooltipProvider>
     )
 }
 
 /** The videos of the channels followed, under topic chips, in a grid that fills the width. */
-export const HomeGrid: StoryObj = { name: 'Home', render: () => <VideoApp view="home" /> }
+export const HomeGrid: StoryObj = {
+    name: 'Home',
+    render: () => <VideoApp view="home" />,
+}
 
 /** One video playing, with its channel, actions, description and comments, and what plays next beside it. */
-export const Watch: StoryObj = { name: 'Watch', render: () => <VideoApp view="watch" /> }
+export const Watch: StoryObj = {
+    name: 'Watch',
+    render: () => <VideoApp view="watch" />,
+}
+
+/**
+ * Watch later in the viewer's own order: a row dragged by the grip at its end (a finger holds it a
+ * moment first) moves the rest aside to show where it lands, and with the grip focused the arrows
+ * move it a place. A row let go on a playlist in the rail is added there, its count going up.
+ */
+export const WatchLater: StoryObj = {
+    name: 'Watch later',
+    render: () => <VideoApp view="later" />,
+}

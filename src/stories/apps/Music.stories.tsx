@@ -22,6 +22,11 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
+import { DraggableTrackList } from '@winterop-com/sokkel-ui-media/DraggableTrackList'
+import { ReorderableTrackList } from '@winterop-com/sokkel-ui-media/ReorderableTrackList'
 import { MediaBar, type RepeatMode } from '@winterop-com/sokkel-ui-media/MediaBar'
 import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
 import { SoundVisualizer } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
@@ -60,9 +65,10 @@ import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
  * A music and video library player in the library's frame: the rail of library views and
  * playlists, an album grid with drawn covers, an album's tracks with the one playing marked, the
  * queue in the side panel, a film in the video player, and the player bar across the whole
- * window under all of it.
+ * window under all of it. Songs drag: an album's rows onto a playlist in the rail, the queue and a
+ * playlist into their own order.
  */
-type View = 'library' | 'album' | 'queue' | 'series' | 'video'
+type View = 'library' | 'album' | 'playlist' | 'queue' | 'series' | 'video'
 
 interface Release {
     id: string
@@ -73,9 +79,27 @@ interface Release {
 }
 
 const ALBUMS: Release[] = [
-    { id: 'open-water', title: 'Open Water', artist: 'Grace', year: 2025, cover: { motif: 'wave', from: 'blue', to: 'teal' } },
-    { id: 'northern-coast', title: 'Northern Coast', artist: 'Ada', year: 2024, cover: { motif: 'sun', from: 'violet', to: 'pink' } },
-    { id: 'high-desert', title: 'High Desert', artist: 'Linus', year: 2024, cover: { motif: 'peaks', from: 'amber', to: 'coral' } },
+    {
+        id: 'open-water',
+        title: 'Open Water',
+        artist: 'Grace',
+        year: 2025,
+        cover: { motif: 'wave', from: 'blue', to: 'teal' },
+    },
+    {
+        id: 'northern-coast',
+        title: 'Northern Coast',
+        artist: 'Ada',
+        year: 2024,
+        cover: { motif: 'sun', from: 'violet', to: 'pink' },
+    },
+    {
+        id: 'high-desert',
+        title: 'High Desert',
+        artist: 'Linus',
+        year: 2024,
+        cover: { motif: 'peaks', from: 'amber', to: 'coral' },
+    },
     {
         id: 'glass-harbor',
         title: 'Glass Harbor',
@@ -83,13 +107,55 @@ const ALBUMS: Release[] = [
         year: 2023,
         cover: { motif: 'rings', from: 'teal', to: 'green' },
     },
-    { id: 'slow-current', title: 'Slow Current', artist: 'Margaret', year: 2023, cover: { motif: 'bands', from: 'jade', to: 'blue' } },
-    { id: 'archipelago', title: 'Archipelago', artist: 'Juniper Trio', year: 2022, cover: { motif: 'dots', from: 'pink', to: 'amber' } },
-    { id: 'lowlands', title: 'Lowlands', artist: 'Ada', year: 2022, cover: { motif: 'bands', from: 'green', to: 'jade' } },
-    { id: 'river-delta', title: 'River Delta', artist: 'Grace', year: 2021, cover: { motif: 'sun', from: 'teal', to: 'blue' } },
-    { id: 'meridian', title: 'Meridian', artist: 'Larkspur', year: 2021, cover: { motif: 'rings', from: 'coral', to: 'violet' } },
-    { id: 'salt-and-cedar', title: 'Salt and Cedar', artist: 'Linus', year: 2020, cover: { motif: 'peaks', from: 'jade', to: 'teal' } },
-    { id: 'equinox', title: 'Equinox', artist: 'Margaret', year: 2020, cover: { motif: 'dots', from: 'violet', to: 'blue' } },
+    {
+        id: 'slow-current',
+        title: 'Slow Current',
+        artist: 'Margaret',
+        year: 2023,
+        cover: { motif: 'bands', from: 'jade', to: 'blue' },
+    },
+    {
+        id: 'archipelago',
+        title: 'Archipelago',
+        artist: 'Juniper Trio',
+        year: 2022,
+        cover: { motif: 'dots', from: 'pink', to: 'amber' },
+    },
+    {
+        id: 'lowlands',
+        title: 'Lowlands',
+        artist: 'Ada',
+        year: 2022,
+        cover: { motif: 'bands', from: 'green', to: 'jade' },
+    },
+    {
+        id: 'river-delta',
+        title: 'River Delta',
+        artist: 'Grace',
+        year: 2021,
+        cover: { motif: 'sun', from: 'teal', to: 'blue' },
+    },
+    {
+        id: 'meridian',
+        title: 'Meridian',
+        artist: 'Larkspur',
+        year: 2021,
+        cover: { motif: 'rings', from: 'coral', to: 'violet' },
+    },
+    {
+        id: 'salt-and-cedar',
+        title: 'Salt and Cedar',
+        artist: 'Linus',
+        year: 2020,
+        cover: { motif: 'peaks', from: 'jade', to: 'teal' },
+    },
+    {
+        id: 'equinox',
+        title: 'Equinox',
+        artist: 'Margaret',
+        year: 2020,
+        cover: { motif: 'dots', from: 'violet', to: 'blue' },
+    },
     {
         id: 'morning-fjord',
         title: 'Morning Fjord',
@@ -97,10 +163,34 @@ const ALBUMS: Release[] = [
         year: 2019,
         cover: { motif: 'wave', from: 'pink', to: 'violet' },
     },
-    { id: 'highland', title: 'Highland', artist: 'Juniper Trio', year: 2019, cover: { motif: 'peaks', from: 'blue', to: 'violet' } },
-    { id: 'atoll', title: 'Atoll', artist: 'Grace', year: 2018, cover: { motif: 'rings', from: 'jade', to: 'amber' } },
-    { id: 'coastal-plain', title: 'Coastal Plain', artist: 'Ada', year: 2017, cover: { motif: 'wave', from: 'green', to: 'teal' } },
-    { id: 'tidewater', title: 'Tidewater', artist: 'Larkspur', year: 2016, cover: { motif: 'sun', from: 'coral', to: 'pink' } },
+    {
+        id: 'highland',
+        title: 'Highland',
+        artist: 'Juniper Trio',
+        year: 2019,
+        cover: { motif: 'peaks', from: 'blue', to: 'violet' },
+    },
+    {
+        id: 'atoll',
+        title: 'Atoll',
+        artist: 'Grace',
+        year: 2018,
+        cover: { motif: 'rings', from: 'jade', to: 'amber' },
+    },
+    {
+        id: 'coastal-plain',
+        title: 'Coastal Plain',
+        artist: 'Ada',
+        year: 2017,
+        cover: { motif: 'wave', from: 'green', to: 'teal' },
+    },
+    {
+        id: 'tidewater',
+        title: 'Tidewater',
+        artist: 'Larkspur',
+        year: 2016,
+        cover: { motif: 'sun', from: 'coral', to: 'pink' },
+    },
 ]
 
 const PLAYING = ALBUMS[0]
@@ -161,14 +251,106 @@ const HISTORY: Track[] = TRACKS.slice(0, CURRENT).map((track, index) => ({
     duration: track.duration,
 }))
 
-const FILM = { title: 'The First Light', series: 'Coastline', by: 'Margaret', year: 2025, length: 96 }
+/** What a song's drag is, taken by the rail's playlists. */
+const SONG = 'song'
+
+const PLAYLISTS = [
+    { id: 'morning-run', label: 'Morning run' },
+    { id: 'deep-focus', label: 'Deep focus' },
+    { id: 'long-drive', label: 'Long drive' },
+    { id: 'sunday-slow', label: 'Sunday slow' },
+]
+
+/** The playlist a story opens on its page. */
+const OPEN_PLAYLIST = PLAYLISTS[0]
+
+/** A song of an album as a row of a playlist or the queue, with its cover and where it is from. */
+function songOf(album: Release, id: string, title: string, duration: number): Track {
+    return {
+        id,
+        title,
+        subtitle: <MetaLine inline items={[album.artist, album.title]} />,
+        artwork: <Artwork cover={album.cover} />,
+        duration,
+    }
+}
+
+/** The songs each playlist holds as the story opens. */
+const PLAYLIST_SONGS: Record<string, Track[]> = {
+    'morning-run': [
+        ...THEN,
+        songOf(ALBUMS[1], 'm1', 'First Ferry', 233),
+        songOf(ALBUMS[5], 'm2', 'Island Hopping', 198),
+        songOf(ALBUMS[8], 'm3', 'Noon Line', 262),
+    ],
+    'deep-focus': [songOf(ALBUMS[3], 'd1', 'Glass Floor', 402), songOf(ALBUMS[10], 'd2', 'Long Night', 377)],
+    'long-drive': [
+        songOf(ALBUMS[2], 'l1', 'Dry Heat', 224),
+        songOf(ALBUMS[13], 'l2', 'Reef Road', 291),
+        songOf(ALBUMS[15], 'l3', 'Coast Road', 244),
+    ],
+    'sunday-slow': [],
+}
+
+/** The playlists and what is dropped on them: a song let go on a playlist in the rail joins its end, once. */
+function usePlaylists() {
+    const [lists, setLists] = useState(PLAYLIST_SONGS)
+    const add = (list: string, drag: DragData) => {
+        const track = drag.value as Track
+        const name = PLAYLISTS.find((each) => each.id === list)?.label ?? list
+        if (lists[list].some((each) => each.title === track.title)) {
+            toast(`${String(track.title)} is already in ${name}`)
+            return
+        }
+        // An album's rows carry no cover; their id says which album they are from.
+        const album = SHELF.find((each) => track.id.startsWith(`${each.id}/`))
+        const entry =
+            album === undefined || track.artwork !== undefined
+                ? { ...track, id: `${list}:${track.id}` }
+                : songOf(album, `${list}:${track.id}`, String(track.title), track.duration ?? 0)
+        setLists({ ...lists, [list]: [...lists[list], entry] })
+        toast(`Added ${String(track.title)} to ${name}`)
+    }
+    const move = (list: string, from: number, to: number) => setLists({ ...lists, [list]: moveItem(lists[list], from, to) })
+    return { lists, add, move }
+}
+
+type Playlists = ReturnType<typeof usePlaylists>
+
+const FILM = {
+    title: 'The First Light',
+    series: 'Coastline',
+    by: 'Margaret',
+    year: 2025,
+    length: 96,
+}
 
 const EPISODES: Track[] = [
-    { title: 'The First Light', cover: { motif: 'sun', from: 'amber', to: 'pink' }, duration: 96 },
-    { title: 'Fishing Villages', cover: { motif: 'wave', from: 'blue', to: 'jade' }, duration: 1712 },
-    { title: 'The Island Ferry', cover: { motif: 'rings', from: 'teal', to: 'blue' }, duration: 1498 },
-    { title: 'Cliffs and Caves', cover: { motif: 'peaks', from: 'violet', to: 'blue' }, duration: 1835 },
-    { title: 'Evening Tide', cover: { motif: 'bands', from: 'coral', to: 'violet' }, duration: 1650 },
+    {
+        title: 'The First Light',
+        cover: { motif: 'sun', from: 'amber', to: 'pink' },
+        duration: 96,
+    },
+    {
+        title: 'Fishing Villages',
+        cover: { motif: 'wave', from: 'blue', to: 'jade' },
+        duration: 1712,
+    },
+    {
+        title: 'The Island Ferry',
+        cover: { motif: 'rings', from: 'teal', to: 'blue' },
+        duration: 1498,
+    },
+    {
+        title: 'Cliffs and Caves',
+        cover: { motif: 'peaks', from: 'violet', to: 'blue' },
+        duration: 1835,
+    },
+    {
+        title: 'Evening Tide',
+        cover: { motif: 'bands', from: 'coral', to: 'violet' },
+        duration: 1650,
+    },
 ].map((episode, index) => ({
     id: `e${String(index + 1)}`,
     title: episode.title,
@@ -177,10 +359,27 @@ const EPISODES: Track[] = [
     duration: episode.duration,
 }))
 
-/** The rail's places, the one shown (`place`, or the view's) marked active. */
-function groups(view: View, place?: string): RailGroup[] {
-    const shown = place ?? (view === 'video' || view === 'series' ? 'series' : 'albums')
-    const entry = (id: string, label: string, icon: LucideIcon) => ({ id, label, icon, href: `#${id}`, active: id === shown })
+/** The rail's places, the one shown (`place`, or the view's) marked active, and with `playlists` each playlist taking songs dropped on it. */
+function groups(view: View, place?: string, playlists?: Playlists): RailGroup[] {
+    const shown = place ?? (view === 'video' || view === 'series' ? 'series' : view === 'playlist' ? OPEN_PLAYLIST.id : 'albums')
+    const entry = (id: string, label: string, icon: LucideIcon) => ({
+        id,
+        label,
+        icon,
+        href: `#${id}`,
+        active: id === shown,
+    })
+    const playlist = (id: string, label: string) =>
+        playlists === undefined
+            ? entry(id, label, ListMusic)
+            : {
+                  ...entry(id, label, ListMusic),
+                  count: playlists.lists[id].length,
+                  drop: {
+                      accepts: (drag: DragData) => drag.kind === SONG,
+                      onDrop: (drag: DragData) => playlists.add(id, drag),
+                  },
+              }
     return [
         {
             id: 'library',
@@ -194,12 +393,7 @@ function groups(view: View, place?: string): RailGroup[] {
         {
             id: 'playlists',
             title: 'Playlists',
-            entries: [
-                entry('morning-run', 'Morning run', ListMusic),
-                entry('deep-focus', 'Deep focus', ListMusic),
-                entry('long-drive', 'Long drive', ListMusic),
-                entry('sunday-slow', 'Sunday slow', ListMusic),
-            ],
+            entries: PLAYLISTS.map((each) => playlist(each.id, each.label)),
         },
         {
             id: 'watch',
@@ -212,6 +406,7 @@ function groups(view: View, place?: string): RailGroup[] {
 const TRAILS: Record<View, Crumb[]> = {
     library: [{ label: 'Albums' }],
     album: [],
+    playlist: [{ label: 'Playlists', href: '#' }, { label: OPEN_PLAYLIST.label }],
     queue: [],
     series: [{ label: 'Series', href: '#' }, { label: FILM.series }],
     video: [{ label: 'Series', href: '#' }, { label: FILM.series, href: '#' }, { label: FILM.title }],
@@ -312,7 +507,7 @@ function LibraryPage() {
 function AlbumPage({ album = PLAYING, shelf = ALBUMS, from = 'Music' }: { album?: Release; shelf?: Release[]; from?: string }) {
     const total = TRACKS.reduce((sum, track) => sum + track.duration, 0)
     const [starred, setStarred] = useState(true)
-    const [stars, setStars] = useState<ReadonlySet<string>>(() => new Set(STARRED))
+    const [stars, setStars] = useState<ReadonlySet<string>>(() => new Set(STARRED.map((id) => `${album.id}/${id}`)))
     const star = (id: string, on: boolean) =>
         setStars((now) => {
             const next = new Set(now)
@@ -370,9 +565,13 @@ function AlbumPage({ album = PLAYING, shelf = ALBUMS, from = 'Music' }: { album?
                     </Row>
                 </Row>
                 <Stack gap="2xl" className="flex-1">
-                    <TrackList
-                        tracks={ALBUM_TRACKS}
-                        current={album.id === PLAYING.id ? `t${String(CURRENT + 1)}` : undefined}
+                    <DraggableTrackList
+                        kind={SONG}
+                        tracks={ALBUM_TRACKS.map((track) => ({
+                            ...track,
+                            id: `${album.id}/${track.id}`,
+                        }))}
+                        current={album.id === PLAYING.id ? `${album.id}/t${String(CURRENT + 1)}` : undefined}
                         playing={album.id === PLAYING.id}
                         onPlay={() => undefined}
                         actions={(track) => (
@@ -394,8 +593,16 @@ function AlbumPage({ album = PLAYING, shelf = ALBUMS, from = 'Music' }: { album?
     )
 }
 
-/** The queue: what is playing, what comes after it, and the playlist it moves on to. */
-function QueueBody({ history = false }: { history?: boolean }) {
+/** The queue: what is playing, what comes after it in the order dragged, and the playlist it moves on to. */
+function QueueBody({
+    history = false,
+    upNext = NEXT_UP,
+    onMove,
+}: {
+    history?: boolean
+    upNext?: Track[]
+    onMove?: (from: number, to: number) => void
+}) {
     if (history) {
         return (
             <PanelSection title="Played this session">
@@ -403,7 +610,7 @@ function QueueBody({ history = false }: { history?: boolean }) {
             </PanelSection>
         )
     }
-    const next = NEXT_UP.reduce((sum, track) => sum + track.duration, 0)
+    const next = upNext.reduce((sum, track) => sum + (track.duration ?? 0), 0)
     return (
         <>
             <PanelSection title="Now playing">
@@ -421,19 +628,58 @@ function QueueBody({ history = false }: { history?: boolean }) {
                 </Row>
             </PanelSection>
             <PanelSection
-                title={`Up next, ${String(NEXT_UP.length)} tracks, ${String(Math.round(next / 60))} min`}
+                title={`Up next, ${String(upNext.length)} tracks, ${String(Math.round(next / 60))} min`}
                 actions={
                     <Button size="xs" variant="ghost">
                         Clear
                     </Button>
                 }
             >
-                <TrackList tracks={NEXT_UP} variant="plain" onPlay={() => undefined} className="-mx-2" />
+                <ReorderableTrackList
+                    kind={SONG}
+                    tracks={upNext}
+                    onMove={(from, to) => onMove?.(from, to)}
+                    variant="plain"
+                    onPlay={() => undefined}
+                    className="-mx-2"
+                />
             </PanelSection>
             <PanelSection title="Then, from Morning run">
                 <TrackList tracks={THEN} variant="plain" onPlay={() => undefined} className="-mx-2" />
             </PanelSection>
         </>
+    )
+}
+
+/** A playlist's page: its songs in the listener's own order, each row dragged by its grip or moved by the arrows. */
+function PlaylistPage({ playlists }: { playlists: Playlists }) {
+    const songs = playlists.lists[OPEN_PLAYLIST.id]
+    const total = songs.reduce((sum, track) => sum + (track.duration ?? 0), 0)
+    return (
+        <Page>
+            <PageHeader
+                title={OPEN_PLAYLIST.label}
+                count={`${String(songs.length)} songs, ${String(Math.round(total / 60))} min`}
+                actions={
+                    <>
+                        <Button size="sm" variant="outline">
+                            <Shuffle aria-hidden />
+                            Shuffle
+                        </Button>
+                        <Button size="sm">
+                            <Play className="fill-current" aria-hidden />
+                            Play
+                        </Button>
+                    </>
+                }
+            />
+            <ReorderableTrackList
+                kind={SONG}
+                tracks={songs}
+                onMove={(from, to) => playlists.move(OPEN_PLAYLIST.id, from, to)}
+                onPlay={() => undefined}
+            />
+        </Page>
     )
 }
 
@@ -560,70 +806,86 @@ function Player({ queueOpen, size, fullscreen = false }: { queueOpen: boolean; s
 function MusicApp({ view, player, fullscreen = false }: { view: View; player?: number; fullscreen?: boolean }) {
     const [collapsed, setCollapsed] = useState(false)
     const [tab, setTab] = useState('queue')
+    const [upNext, setUpNext] = useState(NEXT_UP)
+    const playlists = usePlaylists()
     const queue = view === 'queue'
+    const moveNext = (from: number, to: number) => setUpNext(moveItem(upNext, from, to))
     return (
         <TooltipProvider>
-            <Shell
-                rail={
-                    <Rail
-                        mark={<TidevannMark />}
-                        name="Tidevann"
-                        groups={groups(view)}
-                        collapsed={collapsed}
-                        onCollapsedChange={setCollapsed}
-                        foot={
-                            <AccountMenu
-                                name="ada"
-                                image={pictureOf('ada')}
-                                where="tidevann.example.org"
-                                collapsed={collapsed}
-                                onSettings={() => undefined}
-                            />
-                        }
-                    />
-                }
-                top={<TopBar trail={TRAILS[view]} onSearch={() => undefined} />}
-                panel={
-                    queue ? (
-                        <SidePanel
-                            tabs={[
-                                { id: 'queue', label: 'Queue', content: <QueueBody /> },
-                                { id: 'history', label: 'History', content: <QueueBody history /> },
-                            ]}
-                            active={tab}
-                            onActiveChange={setTab}
+            <RailDrops>
+                <Shell
+                    rail={
+                        <Rail
+                            mark={<TidevannMark />}
+                            name="Tidevann"
+                            groups={groups(view, undefined, playlists)}
+                            collapsed={collapsed}
+                            onCollapsedChange={setCollapsed}
+                            foot={
+                                <AccountMenu
+                                    name="ada"
+                                    image={pictureOf('ada')}
+                                    where="tidevann.example.org"
+                                    collapsed={collapsed}
+                                    onSettings={() => undefined}
+                                />
+                            }
                         />
-                    ) : undefined
-                }
-                foot={
-                    <StatusLine note="Playing on this computer">
-                        <StatusItem label="library">{`${String(ALBUMS.length)} albums`}</StatusItem>
-                    </StatusLine>
-                }
-                bottom={
-                    view === 'video' || view === 'series' ? undefined : <Player queueOpen={queue} size={player} fullscreen={fullscreen} />
-                }
-            >
-                {view === 'library' && <LibraryPage />}
-                {view === 'album' && <AlbumPage />}
-                {view === 'series' && <SeriesPage />}
-                {view === 'video' && <Watch />}
-                {queue && (
-                    <>
-                        <div className="hidden lg:block">
-                            <AlbumPage />
-                        </div>
-                        <div className="lg:hidden">
-                            <Page>
-                                <PageHeader title="Queue" count={`${String(NEXT_UP.length + THEN.length)} tracks`} />
-                                <div className="-mx-(--density-page-inset) border-y border-border">
-                                    <QueueBody />
-                                </div>
-                            </Page>
-                        </div>
-                    </>
-                )}
-            </Shell>
+                    }
+                    top={<TopBar trail={TRAILS[view]} onSearch={() => undefined} />}
+                    panel={
+                        queue ? (
+                            <SidePanel
+                                tabs={[
+                                    {
+                                        id: 'queue',
+                                        label: 'Queue',
+                                        content: <QueueBody upNext={upNext} onMove={moveNext} />,
+                                    },
+                                    {
+                                        id: 'history',
+                                        label: 'History',
+                                        content: <QueueBody history />,
+                                    },
+                                ]}
+                                active={tab}
+                                onActiveChange={setTab}
+                            />
+                        ) : undefined
+                    }
+                    foot={
+                        <StatusLine note="Playing on this computer">
+                            <StatusItem label="library">{`${String(ALBUMS.length)} albums`}</StatusItem>
+                        </StatusLine>
+                    }
+                    bottom={
+                        view === 'video' || view === 'series' ? undefined : (
+                            <Player queueOpen={queue} size={player} fullscreen={fullscreen} />
+                        )
+                    }
+                >
+                    {view === 'library' && <LibraryPage />}
+                    {view === 'album' && <AlbumPage />}
+                    {view === 'playlist' && <PlaylistPage playlists={playlists} />}
+                    {view === 'series' && <SeriesPage />}
+                    {view === 'video' && <Watch />}
+                    {queue && (
+                        <>
+                            <div className="hidden lg:block">
+                                <AlbumPage />
+                            </div>
+                            <div className="lg:hidden">
+                                <Page>
+                                    <PageHeader title="Queue" count={`${String(upNext.length + THEN.length)} tracks`} />
+                                    <div className="-mx-(--density-page-inset) border-y border-border">
+                                        <QueueBody upNext={upNext} onMove={moveNext} />
+                                    </div>
+                                </Page>
+                            </div>
+                        </>
+                    )}
+                </Shell>
+            </RailDrops>
             <Toaster />
         </TooltipProvider>
     )
@@ -631,12 +893,48 @@ function MusicApp({ view, player, fullscreen = false }: { view: View; player?: n
 
 /** More records on the shelf, by artists the album grid leaves out, so the library's tree is taller than the rail. */
 const MORE: Release[] = [
-    { id: 'shoals', title: 'Shoals', artist: 'Brackwater Duo', year: 2024, cover: { motif: 'wave', from: 'teal', to: 'blue' } },
-    { id: 'neap-tide', title: 'Neap Tide', artist: 'Brackwater Duo', year: 2021, cover: { motif: 'bands', from: 'blue', to: 'violet' } },
-    { id: 'sea-glass', title: 'Sea Glass', artist: 'Eelgrass', year: 2023, cover: { motif: 'dots', from: 'jade', to: 'teal' } },
-    { id: 'quayside', title: 'Quayside', artist: 'Eelgrass', year: 2020, cover: { motif: 'rings', from: 'amber', to: 'pink' } },
-    { id: 'long-swell', title: 'Long Swell', artist: 'Eelgrass', year: 2018, cover: { motif: 'wave', from: 'violet', to: 'blue' } },
-    { id: 'ebb-and-flow', title: 'Ebb and Flow', artist: 'Kelpwood', year: 2023, cover: { motif: 'sun', from: 'green', to: 'amber' } },
+    {
+        id: 'shoals',
+        title: 'Shoals',
+        artist: 'Brackwater Duo',
+        year: 2024,
+        cover: { motif: 'wave', from: 'teal', to: 'blue' },
+    },
+    {
+        id: 'neap-tide',
+        title: 'Neap Tide',
+        artist: 'Brackwater Duo',
+        year: 2021,
+        cover: { motif: 'bands', from: 'blue', to: 'violet' },
+    },
+    {
+        id: 'sea-glass',
+        title: 'Sea Glass',
+        artist: 'Eelgrass',
+        year: 2023,
+        cover: { motif: 'dots', from: 'jade', to: 'teal' },
+    },
+    {
+        id: 'quayside',
+        title: 'Quayside',
+        artist: 'Eelgrass',
+        year: 2020,
+        cover: { motif: 'rings', from: 'amber', to: 'pink' },
+    },
+    {
+        id: 'long-swell',
+        title: 'Long Swell',
+        artist: 'Eelgrass',
+        year: 2018,
+        cover: { motif: 'wave', from: 'violet', to: 'blue' },
+    },
+    {
+        id: 'ebb-and-flow',
+        title: 'Ebb and Flow',
+        artist: 'Kelpwood',
+        year: 2023,
+        cover: { motif: 'sun', from: 'green', to: 'amber' },
+    },
     {
         id: 'lantern-rock',
         title: 'Lantern Rock',
@@ -644,10 +942,34 @@ const MORE: Release[] = [
         year: 2022,
         cover: { motif: 'peaks', from: 'coral', to: 'amber' },
     },
-    { id: 'estuary', title: 'Estuary', artist: 'Saltmarsh Ensemble', year: 2025, cover: { motif: 'bands', from: 'teal', to: 'jade' } },
-    { id: 'skerries', title: 'Skerries', artist: 'Saltmarsh Ensemble', year: 2019, cover: { motif: 'rings', from: 'blue', to: 'teal' } },
-    { id: 'pilot-light', title: 'Pilot Light', artist: 'The Tidelines', year: 2024, cover: { motif: 'sun', from: 'pink', to: 'coral' } },
-    { id: 'driftwood', title: 'Driftwood', artist: 'The Tidelines', year: 2022, cover: { motif: 'peaks', from: 'jade', to: 'green' } },
+    {
+        id: 'estuary',
+        title: 'Estuary',
+        artist: 'Saltmarsh Ensemble',
+        year: 2025,
+        cover: { motif: 'bands', from: 'teal', to: 'jade' },
+    },
+    {
+        id: 'skerries',
+        title: 'Skerries',
+        artist: 'Saltmarsh Ensemble',
+        year: 2019,
+        cover: { motif: 'rings', from: 'blue', to: 'teal' },
+    },
+    {
+        id: 'pilot-light',
+        title: 'Pilot Light',
+        artist: 'The Tidelines',
+        year: 2024,
+        cover: { motif: 'sun', from: 'pink', to: 'coral' },
+    },
+    {
+        id: 'driftwood',
+        title: 'Driftwood',
+        artist: 'The Tidelines',
+        year: 2022,
+        cover: { motif: 'peaks', from: 'jade', to: 'green' },
+    },
     {
         id: 'shingle-beach',
         title: 'Shingle Beach',
@@ -671,7 +993,11 @@ const LIBRARY: TreeNode[] = [...new Set(SHELF.map((album) => album.artist))]
             id: artistId(artist),
             label: artist,
             meta: albums.length,
-            children: albums.map((album) => ({ id: album.id, label: album.title, meta: album.year })),
+            children: albums.map((album) => ({
+                id: album.id,
+                label: album.title,
+                meta: album.year,
+            })),
         }
     })
 
@@ -711,6 +1037,7 @@ function LibraryApp({ collapsed: start = false, drawer = false }: { collapsed?: 
     const [place, setPlace] = useState('artists')
     const [chosen, setChosen] = useState(PLAYING.id)
     const [query, setQuery] = useState('')
+    const playlists = usePlaylists()
     const album = SHELF.find((each) => each.id === chosen)
     const artist = LIBRARY.find((node) => node.id === chosen)?.label ?? album?.artist ?? PLAYING.artist
     const go = (id: string) => setPlace(id)
@@ -719,71 +1046,73 @@ function LibraryApp({ collapsed: start = false, drawer = false }: { collapsed?: 
     const trail: Crumb[] = library ? [] : [{ label: labelOf(place) }]
     return (
         <TooltipProvider>
-            <Shell
-                route={`${place}:${chosen}`}
-                drawerOpen={drawerOpen}
-                onDrawerOpenChange={setDrawerOpen}
-                palette={placeCommands(PLACES, (href) => go(href.slice(1)))}
-                rail={
-                    <LinkProvider render={routerLink((href) => go(href.slice(1)))}>
-                        <Rail
-                            mark={<TidevannMark />}
-                            name="Tidevann"
-                            groups={groups('library', place)}
-                            collapsed={collapsed}
-                            onCollapsedChange={setCollapsed}
-                            body={
-                                library
-                                    ? {
-                                          title: 'Artists',
-                                          search: <SearchField value={query} onChange={setQuery} />,
-                                          content: (
-                                              <Tree
-                                                  label="Artists"
-                                                  nodes={LIBRARY}
-                                                  query={query}
-                                                  selected={[chosen]}
-                                                  onSelect={([id]) => {
-                                                      if (id !== undefined) setChosen(id)
-                                                  }}
-                                                  defaultExpanded={[artistId(artist)]}
-                                              />
-                                          ),
-                                      }
-                                    : undefined
-                            }
-                            foot={
-                                <AccountMenu
-                                    name="ada"
-                                    image={pictureOf('ada')}
-                                    where="tidevann.example.org"
-                                    collapsed={collapsed}
-                                    onSettings={() => undefined}
-                                />
-                            }
-                        />
-                    </LinkProvider>
-                }
-                top={<TopBar trail={trail} />}
-                foot={
-                    <StatusLine note="Playing on this computer">
-                        <StatusItem label="library">{`${String(SHELF.length)} albums`}</StatusItem>
-                    </StatusLine>
-                }
-                bottom={<Player queueOpen={false} />}
-            >
-                {library ? (
-                    album === undefined ? (
-                        <ArtistPage artist={artist} />
+            <RailDrops>
+                <Shell
+                    route={`${place}:${chosen}`}
+                    drawerOpen={drawerOpen}
+                    onDrawerOpenChange={setDrawerOpen}
+                    palette={placeCommands(PLACES, (href) => go(href.slice(1)))}
+                    rail={
+                        <LinkProvider render={routerLink((href) => go(href.slice(1)))}>
+                            <Rail
+                                mark={<TidevannMark />}
+                                name="Tidevann"
+                                groups={groups('library', place, playlists)}
+                                collapsed={collapsed}
+                                onCollapsedChange={setCollapsed}
+                                body={
+                                    library
+                                        ? {
+                                              title: 'Artists',
+                                              search: <SearchField value={query} onChange={setQuery} />,
+                                              content: (
+                                                  <Tree
+                                                      label="Artists"
+                                                      nodes={LIBRARY}
+                                                      query={query}
+                                                      selected={[chosen]}
+                                                      onSelect={([id]) => {
+                                                          if (id !== undefined) setChosen(id)
+                                                      }}
+                                                      defaultExpanded={[artistId(artist)]}
+                                                  />
+                                              ),
+                                          }
+                                        : undefined
+                                }
+                                foot={
+                                    <AccountMenu
+                                        name="ada"
+                                        image={pictureOf('ada')}
+                                        where="tidevann.example.org"
+                                        collapsed={collapsed}
+                                        onSettings={() => undefined}
+                                    />
+                                }
+                            />
+                        </LinkProvider>
+                    }
+                    top={<TopBar trail={trail} />}
+                    foot={
+                        <StatusLine note="Playing on this computer">
+                            <StatusItem label="library">{`${String(SHELF.length)} albums`}</StatusItem>
+                        </StatusLine>
+                    }
+                    bottom={<Player queueOpen={false} />}
+                >
+                    {library ? (
+                        album === undefined ? (
+                            <ArtistPage artist={artist} />
+                        ) : (
+                            <AlbumPage album={album} shelf={SHELF} from="Artists" />
+                        )
+                    ) : place === 'series' || place === 'films' ? (
+                        <SeriesPage />
                     ) : (
-                        <AlbumPage album={album} shelf={SHELF} from="Artists" />
-                    )
-                ) : place === 'series' || place === 'films' ? (
-                    <SeriesPage />
-                ) : (
-                    <PlacePage label={labelOf(place)} />
-                )}
-            </Shell>
+                        <PlacePage label={labelOf(place)} />
+                    )}
+                </Shell>
+            </RailDrops>
             <Toaster />
         </TooltipProvider>
     )
@@ -793,15 +1122,33 @@ const meta: Meta = { title: 'Apps/Music' }
 export default meta
 
 /** The album grid, its covers drawn, with the playing album marked and the player bar along the foot. */
-export const Library: StoryObj = { name: 'Library', render: () => <MusicApp view="library" /> }
+export const Library: StoryObj = {
+    name: 'Library',
+    render: () => <MusicApp view="library" />,
+}
 
 /**
  * One album's page: back and the trail through the music and its artist over the title, the
  * artist and year under it, and Download, the favorite star and Add to playlist at its end. The
  * cover stays beside the tracks as they scroll; the one playing is drawn in the accent with a
- * speaker for its number, and each row carries its own add to the queue and star.
+ * speaker for its number, and each row carries its own add to the queue and star. A row dragged
+ * onto a playlist in the rail (from the keyboard, its grip picks it up) adds it there, the
+ * playlist's count going up.
  */
-export const Album: StoryObj = { name: 'Album', render: () => <MusicApp view="album" /> }
+export const Album: StoryObj = {
+    name: 'Album',
+    render: () => <MusicApp view="album" />,
+}
+
+/**
+ * A playlist in the listener's own order: a row dragged by the grip at its end (a finger holds it
+ * a moment first) moves the rest aside to show where it lands, and with the grip focused the
+ * arrows move it a place. A row let go on another playlist in the rail is added there.
+ */
+export const Playlist: StoryObj = {
+    name: 'Playlist',
+    render: () => <MusicApp view="playlist" />,
+}
 
 /**
  * The library in the rail itself, in one column: on Artists the rail holds a tree of the artists
@@ -811,7 +1158,10 @@ export const Album: StoryObj = { name: 'Album', render: () => <MusicApp view="al
  * Artists brings it back; the palette still goes to every place. The head, the width, the edge
  * and the account stay as they are on every other page.
  */
-export const LibraryRail: StoryObj = { name: 'Library rail', render: () => <LibraryApp /> }
+export const LibraryRail: StoryObj = {
+    name: 'Library rail',
+    render: () => <LibraryApp />,
+}
 
 /**
  * The app holds the rail collapsed: a tree has no icon form, so the rail draws the places' icons,
@@ -819,10 +1169,20 @@ export const LibraryRail: StoryObj = { name: 'Library rail', render: () => <Libr
  * opens as the drawer, here open, drawn expanded with the library in it; an album chosen there
  * opens in the page and closes the drawer.
  */
-export const LibraryCollapsed: StoryObj = { name: 'Library collapsed', render: () => <LibraryApp collapsed drawer /> }
+export const LibraryCollapsed: StoryObj = {
+    name: 'Library collapsed',
+    render: () => <LibraryApp collapsed drawer />,
+}
 
-/** The queue in the side panel beside the album, its button pressed in the bar, with Clear at the end of Up next's heading; on a phone the queue is the page. */
-export const Queue: StoryObj = { name: 'Queue', render: () => <MusicApp view="queue" /> }
+/**
+ * The queue in the side panel beside the album, its button pressed in the bar, with Clear at the
+ * end of Up next's heading; on a phone the queue is the page. Up next is put in order by each row's
+ * grip, and a row let go on a playlist in the rail is added there.
+ */
+export const Queue: StoryObj = {
+    name: 'Queue',
+    render: () => <MusicApp view="queue" />,
+}
 
 /**
  * The player dragged up from its top edge, docked between the album and the foot: the cover
@@ -830,17 +1190,29 @@ export const Queue: StoryObj = { name: 'Queue', render: () => <MusicApp view="qu
  * waveform, the visualizer rising behind them, and the account still at the window's bottom edge
  * beside the foot strip.
  */
-export const NowPlaying: StoryObj = { name: 'Now playing', render: () => <MusicApp view="album" player={300} /> }
+export const NowPlaying: StoryObj = {
+    name: 'Now playing',
+    render: () => <MusicApp view="album" player={300} />,
+}
 
 /**
  * The fullscreen view, opened from the player's corner button or with F: what plays across the
  * head, the visualizer between, and the waveform along the foot, dark whatever the scheme. F or
  * Escape leaves it.
  */
-export const Fullscreen: StoryObj = { name: 'Fullscreen', render: () => <MusicApp view="album" player={300} fullscreen /> }
+export const Fullscreen: StoryObj = {
+    name: 'Fullscreen',
+    render: () => <MusicApp view="album" player={300} fullscreen />,
+}
 
 /** A series' episodes as wide covers, with their lengths and how far each was watched. */
-export const Series: StoryObj = { name: 'Series', render: () => <MusicApp view="series" /> }
+export const Series: StoryObj = {
+    name: 'Series',
+    render: () => <MusicApp view="series" />,
+}
 
 /** A film in the video player with its controls shown and the rest of its series beside it. */
-export const Video: StoryObj = { name: 'Video', render: () => <MusicApp view="video" /> }
+export const Video: StoryObj = {
+    name: 'Video',
+    render: () => <MusicApp view="video" />,
+}
