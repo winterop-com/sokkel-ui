@@ -18,6 +18,7 @@ import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { insertItem, moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { ListRow, ListRows } from '@winterop-com/sokkel-ui/ListRow'
+import { MessageRow } from '@winterop-com/sokkel-ui/MessageRow'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SortableGrid, SortableList } from '@winterop-com/sokkel-ui/Sortable'
@@ -274,7 +275,9 @@ export const BoardColumns: StoryObj = {
         return (
             <Board
                 onMove={onMove}
-                canDrop={({ from, to }) => to !== 'running' || from === 'running' || cards.filter((card) => card.column === to).length < RUNNING_LIMIT}
+                canDrop={({ from, to }) =>
+                    to !== 'running' || from === 'running' || cards.filter((card) => card.column === to).length < RUNNING_LIMIT
+                }
                 onColumnMove={(from, to) => setColumns(moveItem(columns, from, to))}
             >
                 <Row gap="md" align="start">
@@ -505,6 +508,81 @@ export const SortedToFolders: StoryObj = {
                             nodeOf={(drag) => (drag.value as { row?: Runbook } | undefined)?.row?.id}
                             className="p-1"
                         />
+                    </Section>
+                </Columns>
+            </DragDrop>
+        )
+    },
+}
+
+interface Mail {
+    id: string
+    from: string
+    subject: string
+    time: string
+    folder: string
+}
+
+const MAIL: Mail[] = [
+    { id: 'm1', from: 'grace', subject: 'Harbor launch checklist', time: '09:42', folder: 'inbox' },
+    { id: 'm2', from: 'scheduler', subject: 'nightly-export failed at validate', time: '08:15', folder: 'inbox' },
+    { id: 'm3', from: 'margaret', subject: 'Juniper budget for the first quarter', time: '07:58', folder: 'inbox' },
+    { id: 'm4', from: 'linus', subject: 'Re: rebuild-index timings', time: 'Yesterday', folder: 'inbox' },
+    { id: 'm5', from: 'ada', subject: 'Cutover plan for Saturday', time: 'Nov 3', folder: 'harbor' },
+    { id: 'm6', from: 'grace', subject: 'Release notes for 2.1.0', time: 'Nov 2', folder: 'juniper' },
+    { id: 'm7', from: 'scheduler', subject: 'Your weekly digest', time: 'Oct 28', folder: 'archive' },
+]
+
+const MAIL_FOLDERS = [
+    { id: 'harbor', label: 'harbor' },
+    { id: 'juniper', label: 'juniper' },
+    { id: 'archive', label: 'Archive' },
+]
+
+/**
+ * The inbox's messages dragged onto folders, each folder holding its messages: a message drags as
+ * a whole, a small card with its subject at the pointer, and from the keyboard by the grip at its
+ * end (on hover or focus), the arrows carrying it to a folder. Let go on a folder, it moves there.
+ */
+export const MessagesToFolders: StoryObj = {
+    name: 'Messages to folders',
+    render: function Render() {
+        const [mail, setMail] = useState(MAIL)
+        const nodes: TreeNode[] = MAIL_FOLDERS.map((each) =>
+            folder(
+                each.id,
+                each.label,
+                mail.filter((one) => one.folder === each.id).map((one) => file(one.id, one.subject)),
+            ),
+        )
+        const inbox = mail.filter((one) => one.folder === 'inbox')
+        return (
+            <DragDrop>
+                <Columns count={2} min="sm" gap="lg" className="mx-auto max-w-4xl">
+                    <Section title="Folders" flush>
+                        <Tree
+                            label="Folders"
+                            nodes={nodes}
+                            selection="none"
+                            defaultExpanded={['harbor']}
+                            order={{ sorted: true }}
+                            accepts={(drag) => drag.kind === 'mail'}
+                            onDrop={(drag, into) => {
+                                if (into !== null) setMail(mail.map((one) => (one.id === drag.value ? { ...one, folder: into } : one)))
+                            }}
+                            className="p-1"
+                        />
+                    </Section>
+                    <Section title="Inbox" meta={String(inbox.length)} flush>
+                        {inbox.map((one) => (
+                            <MessageRow
+                                key={one.id}
+                                from={one.from}
+                                subject={one.subject}
+                                time={one.time}
+                                drag={{ kind: 'mail', label: one.subject, value: one.id }}
+                            />
+                        ))}
                     </Section>
                 </Columns>
             </DragDrop>
