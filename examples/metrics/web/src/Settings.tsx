@@ -4,7 +4,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { Bell, Database, LayoutDashboard, Palette } from 'lucide-react'
 import { useState } from 'react'
 
@@ -48,7 +48,10 @@ export function SettingsPage({ prefs, frame, open, onClose }: { prefs: Preferenc
                                     label="Range"
                                     value={prefs.range}
                                     onChange={(range) => set({ range })}
-                                    options={PRESETS.map((preset) => ({ value: preset.id, label: preset.label }))}
+                                    options={PRESETS.map((preset) => ({
+                                        value: preset.id,
+                                        label: preset.label,
+                                    }))}
                                 />
                             ),
                             keywords: ['time', 'default'],
@@ -142,23 +145,14 @@ export function SettingsPage({ prefs, frame, open, onClose }: { prefs: Preferenc
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Look',
-                            description: 'The theme, light or dark, the density, the corners and the typeface.',
-                            control: (
-                                <ThemePicker
-                                    value={settings}
-                                    onChange={setSettings}
-                                    themes={THEMES}
-                                    corners={CORNERS}
-                                    typefaces={TYPEFACES}
-                                    system
-                                />
-                            ),
-                            layout: 'below',
-                            keywords: ['theme', 'dark', 'light', 'density'],
-                        },
+                        ...themeSettings({
+                            value: settings,
+                            onChange: setSettings,
+                            themes: THEMES,
+                            corners: CORNERS,
+                            typefaces: TYPEFACES,
+                            system: true,
+                        }),
                     ],
                 },
             ],
@@ -204,9 +198,17 @@ export function SettingsPage({ prefs, frame, open, onClose }: { prefs: Preferenc
                 onSearchChange={setSearch}
                 onReset={(section) => {
                     if (section === 'dashboards')
-                        set({ range: DEFAULT_PREFERENCES.range, refresh: DEFAULT_PREFERENCES.refresh, zone: DEFAULT_PREFERENCES.zone })
+                        set({
+                            range: DEFAULT_PREFERENCES.range,
+                            refresh: DEFAULT_PREFERENCES.refresh,
+                            zone: DEFAULT_PREFERENCES.zone,
+                        })
                     if (section === 'alerts')
-                        set({ evaluate: DEFAULT_PREFERENCES.evaluate, notify: DEFAULT_PREFERENCES.notify, keep: DEFAULT_PREFERENCES.keep })
+                        set({
+                            evaluate: DEFAULT_PREFERENCES.evaluate,
+                            notify: DEFAULT_PREFERENCES.notify,
+                            keep: DEFAULT_PREFERENCES.keep,
+                        })
                     if (section === 'appearance') setSettings({ ...DEFAULT_APPEARANCE })
                 }}
             />

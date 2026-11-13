@@ -1,7 +1,7 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import {
     CAPTION_BACKGROUNDS,
@@ -28,9 +28,23 @@ import { forgetClips, keptClipsSize, RENDITIONS, useClipCache } from '../clips'
 import { DEFAULT_PREFS, downloads, setPrefs, usePrefs, useRows, watched, type Prefs, type Quality } from '../data'
 import { bytesOf, plural } from '../format'
 
-const COLOR_NAMES: Record<CaptionColor, string> = { white: 'White', yellow: 'Yellow', green: 'Green', cyan: 'Cyan', magenta: 'Magenta' }
-const BACKGROUND_NAMES: Record<CaptionBackground, string> = { none: 'None', translucent: 'Translucent', solid: 'Solid' }
-const EDGE_NAMES: Record<CaptionEdge, string> = { outline: 'Outline', shadow: 'Drop shadow', none: 'None' }
+const COLOR_NAMES: Record<CaptionColor, string> = {
+    white: 'White',
+    yellow: 'Yellow',
+    green: 'Green',
+    cyan: 'Cyan',
+    magenta: 'Magenta',
+}
+const BACKGROUND_NAMES: Record<CaptionBackground, string> = {
+    none: 'None',
+    translucent: 'Translucent',
+    solid: 'Solid',
+}
+const EDGE_NAMES: Record<CaptionEdge, string> = {
+    outline: 'Outline',
+    shadow: 'Drop shadow',
+    none: 'None',
+}
 
 /** The preferences each section holds, which its Reset to defaults puts back. */
 const HELD: Record<string, (keyof Omit<Prefs, 'id'>)[]> = {
@@ -120,7 +134,10 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                                     onValueChange={(quality: Quality) => setPrefs({ quality })}
                                     options={[
                                         { value: 'auto' as Quality, label: 'Auto' },
-                                        ...RENDITIONS.map((one) => ({ value: one.id as Quality, label: one.label })),
+                                        ...RENDITIONS.map((one) => ({
+                                            value: one.id as Quality,
+                                            label: one.label,
+                                        })),
                                     ]}
                                 />
                             ),
@@ -212,7 +229,10 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                                     label="Caption edge"
                                     value={captions.edge}
                                     onValueChange={(edge: CaptionEdge) => setCaptions({ edge })}
-                                    options={CAPTION_EDGES.map((edge) => ({ value: edge, label: EDGE_NAMES[edge] }))}
+                                    options={CAPTION_EDGES.map((edge) => ({
+                                        value: edge,
+                                        label: EDGE_NAMES[edge],
+                                    }))}
                                 />
                             ),
                         },
@@ -258,14 +278,12 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Theme',
-                            description: 'The theme, the scheme and the density.',
-                            layout: 'below',
-                            keywords: ['dark', 'light', 'scheme', 'density'],
-                            control: <ThemePicker value={look} onChange={setLook} themes={THEMES} system />,
-                        },
+                        ...themeSettings({
+                            value: look,
+                            onChange: setLook,
+                            themes: THEMES,
+                            system: true,
+                        }),
                     ],
                 },
             ],

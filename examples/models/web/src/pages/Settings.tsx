@@ -8,7 +8,7 @@ import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ArrowDownToLine, Boxes, Cpu, Database, FolderOpen, Palette } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -69,7 +69,13 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
     const [resetting, setResetting] = useState(false)
     const [busy, setBusy] = useState(false)
     const save = (patch: Partial<Omit<Prefs, 'id'>>) =>
-        void setPrefs(patch).catch((error: unknown) => toast.add({ type: 'error', title: 'Could not save', description: String(error) }))
+        void setPrefs(patch).catch((error: unknown) =>
+            toast.add({
+                type: 'error',
+                title: 'Could not save',
+                description: String(error),
+            }),
+        )
 
     const groups: SettingsGroup[] = [
         {
@@ -150,7 +156,10 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                                     label="Pulls at a time"
                                     value={String(prefs.parallel)}
                                     onValueChange={(value) => save({ parallel: Number(value) })}
-                                    options={['1', '2', '3', '4'].map((value) => ({ value, label: value }))}
+                                    options={['1', '2', '3', '4'].map((value) => ({
+                                        value,
+                                        label: value,
+                                    }))}
                                 />
                             ),
                         },
@@ -256,14 +265,12 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Theme',
-                            description: 'The theme, the scheme and the density.',
-                            layout: 'below',
-                            keywords: ['dark', 'light', 'scheme', 'density', 'compact'],
-                            control: <ThemePicker value={look} onChange={setLook} themes={THEMES} system />,
-                        },
+                        ...themeSettings({
+                            value: look,
+                            onChange: setLook,
+                            themes: THEMES,
+                            system: true,
+                        }),
                     ],
                 },
                 {

@@ -17,7 +17,7 @@ import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import type { ShortcutGroup } from '@winterop-com/sokkel-ui/ShortcutsDialog'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import {
     Braces,
@@ -107,7 +107,9 @@ function railGroups(place: string, waiting: number): RailGroup[] {
                 entry('forms', 'Forms', 'Start a record', ClipboardList, '#/forms'),
                 entry('responses', 'Responses', 'What was filed', Inbox, '#/responses', waiting > 0 ? { count: waiting } : {}),
                 entry('people', 'Households', 'Who the survey follows', Users, '#/people', { keywords: ['people', 'register'] }),
-                entry('places', 'Places', 'Regions and sites', MapPin, '#/places', { keywords: ['map', 'hierarchy'] }),
+                entry('places', 'Places', 'Regions and sites', MapPin, '#/places', {
+                    keywords: ['map', 'hierarchy'],
+                }),
             ],
         },
         {
@@ -127,7 +129,11 @@ const SHORTCUTS: ShortcutGroup[] = [
         title: 'Forms',
         shortcuts: [
             { id: 'form-next', action: 'Move to the next field', keys: ['Tab'] },
-            { id: 'form-cell', action: 'Save a count and move down', keys: ['Enter'] },
+            {
+                id: 'form-cell',
+                action: 'Save a count and move down',
+                keys: ['Enter'],
+            },
         ],
     },
 ]
@@ -182,7 +188,9 @@ export function App() {
                           description: refused === 0 ? 'The register took them all.' : `${String(refused)} refused; each receipt says why.`,
                       }),
             (failure: unknown) =>
-                toast.error('Nothing was sent on', { description: failure instanceof Error ? failure.message : String(failure) }),
+                toast.error('Nothing was sent on', {
+                    description: failure instanceof Error ? failure.message : String(failure),
+                }),
         )
     }
 
@@ -203,8 +211,19 @@ export function App() {
             title: 'Actions',
             verb: 'Run',
             commands: [
-                { id: 'send-on', label: 'Send on every received response', icon: Send, keywords: ['forward'], onSelect: sendOn },
-                { id: 'check-server', label: 'Check the server again', icon: ServerCrash, onSelect: server.check },
+                {
+                    id: 'send-on',
+                    label: 'Send on every received response',
+                    icon: Send,
+                    keywords: ['forward'],
+                    onSelect: sendOn,
+                },
+                {
+                    id: 'check-server',
+                    label: 'Check the server again',
+                    icon: ServerCrash,
+                    onSelect: server.check,
+                },
                 {
                     id: 'settings',
                     label: 'Settings',
@@ -242,7 +261,12 @@ export function App() {
                     results: (homes ?? [])
                         .filter((home) => home.identifier.toLowerCase().includes(asked))
                         .slice(0, 8)
-                        .map((home) => ({ id: home.id, title: home.identifier, detail: `${String(home.size)} people`, icon: Users })),
+                        .map((home) => ({
+                            id: home.id,
+                            title: home.identifier,
+                            detail: `${String(home.size)} people`,
+                            icon: Users,
+                        })),
                 },
             ]
             return found
@@ -258,14 +282,13 @@ export function App() {
                     id: 'appearance',
                     label: 'Appearance',
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Theme',
-                            description: 'Every theme has a light and a dark scheme.',
-                            layout: 'below',
-                            keywords: ['dark', 'light', 'scheme', 'density', ...APP_THEMES.map((theme) => theme.label)],
-                            control: <ThemePicker value={settings} onChange={setSettings} themes={APP_THEMES} system themeList />,
-                        },
+                        ...themeSettings({
+                            value: settings,
+                            onChange: setSettings,
+                            themes: APP_THEMES,
+                            system: true,
+                            themeList: true,
+                        }),
                     ],
                 },
                 {
@@ -352,7 +375,9 @@ export function App() {
                             onOpen: (result, group) => go(group.kind === 'responses' ? `/responses/${result.id}` : `/people/${result.id}`),
                         }}
                         paletteFoot={{ mark: <TidevannMark />, name: 'Records' }}
-                        paletteWords={{ placeholder: 'Go to a page, open a form, find a response' }}
+                        paletteWords={{
+                            placeholder: 'Go to a page, open a form, find a response',
+                        }}
                         shortcuts={SHORTCUTS}
                         desktop={frame.desktop}
                         route={route.join('/')}

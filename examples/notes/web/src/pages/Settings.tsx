@@ -2,7 +2,7 @@ import { CodeEditor } from '@winterop-com/sokkel-ui/CodeEditor'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
@@ -144,7 +144,9 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                                     size="sm"
                                     value={prefs.dailyFolder ?? ''}
                                     onChange={(event) =>
-                                        void setPrefs({ dailyFolder: event.target.value === '' ? null : event.target.value })
+                                        void setPrefs({
+                                            dailyFolder: event.target.value === '' ? null : event.target.value,
+                                        })
                                     }
                                 >
                                     <NativeSelectOption value="">Top of the vault</NativeSelectOption>
@@ -178,14 +180,12 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Theme',
-                            description: 'The theme, the scheme and the density.',
-                            layout: 'below',
-                            keywords: ['dark', 'light', 'scheme', 'density', 'compact'],
-                            control: <ThemePicker value={look} onChange={setLook} themes={THEMES} system />,
-                        },
+                        ...themeSettings({
+                            value: look,
+                            onChange: setLook,
+                            themes: THEMES,
+                            system: true,
+                        }),
                     ],
                 },
                 {
@@ -262,7 +262,11 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                             lineNumbers: DEFAULT_PREFS.lineNumbers,
                             defaultView: DEFAULT_PREFS.defaultView,
                         })
-                    if (section === 'daily') void setPrefs({ dailyFolder: DEFAULT_PREFS.dailyFolder, template: TEMPLATE })
+                    if (section === 'daily')
+                        void setPrefs({
+                            dailyFolder: DEFAULT_PREFS.dailyFolder,
+                            template: TEMPLATE,
+                        })
                 }}
             />
             <ConfirmDialog

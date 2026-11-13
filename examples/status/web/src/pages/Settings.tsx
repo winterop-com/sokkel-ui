@@ -5,7 +5,7 @@ import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import type { AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
 import { CORNERS, DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -28,7 +28,13 @@ const OFFERED = new Set(CARRIED)
 const APP_THEMES = THEMES.filter((theme) => OFFERED.has(theme.value))
 
 const SUBSCRIBER_COLUMNS: DataColumn<Subscriber>[] = [
-    { id: 'email', header: 'Email', width: 'minmax(12rem,1fr)', cell: (one) => one.email, sortValue: (one) => one.email },
+    {
+        id: 'email',
+        header: 'Email',
+        width: 'minmax(12rem,1fr)',
+        cell: (one) => one.email,
+        sortValue: (one) => one.email,
+    },
     {
         id: 'services',
         header: 'Hears about',
@@ -139,7 +145,11 @@ export function Settings({
                                 <Segmented
                                     label="A reading every"
                                     value={String(options.interval)}
-                                    onValueChange={(next) => setSettings({ interval: Number(next) as Options['interval'] })}
+                                    onValueChange={(next) =>
+                                        setSettings({
+                                            interval: Number(next) as Options['interval'],
+                                        })
+                                    }
                                     options={[
                                         { value: '1000', label: '1 s' },
                                         { value: '2000', label: '2 s' },
@@ -440,22 +450,13 @@ export function Settings({
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Look',
-                            description: 'The theme, the scheme, the density and the corners.',
-                            keywords: ['theme', 'dark', 'light', 'density'],
-                            control: (
-                                <ThemePicker
-                                    value={appearance.settings}
-                                    onChange={appearance.setSettings}
-                                    themes={APP_THEMES}
-                                    corners={CORNERS}
-                                    system
-                                />
-                            ),
-                            layout: 'below',
-                        },
+                        ...themeSettings({
+                            value: appearance.settings,
+                            onChange: appearance.setSettings,
+                            themes: APP_THEMES,
+                            corners: CORNERS,
+                            system: true,
+                        }),
                     ],
                 },
             ],
@@ -485,7 +486,11 @@ export function Settings({
                 onOpenChange={setResetting}
                 question="Reset the demo data?"
                 detail="Every incident, window, deploy, shift, handover and subscriber goes back to how the demo started."
-                confirm={{ label: 'Reset', destructive: true, onConfirm: () => void resetAll().then(() => window.location.reload()) }}
+                confirm={{
+                    label: 'Reset',
+                    destructive: true,
+                    onConfirm: () => void resetAll().then(() => window.location.reload()),
+                }}
             />
         </>
     )

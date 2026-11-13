@@ -2,7 +2,7 @@ import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { InlineEdit } from '@winterop-com/sokkel-ui/InlineEdit'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
@@ -71,7 +71,10 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                                     label="Currency"
                                     value={prefs.currency}
                                     onValueChange={(currency: Currency) => void setPrefs({ currency })}
-                                    options={(Object.keys(RATES) as Currency[]).map((value) => ({ value, label: value }))}
+                                    options={(Object.keys(RATES) as Currency[]).map((value) => ({
+                                        value,
+                                        label: value,
+                                    }))}
                                 />
                             ),
                         },
@@ -177,14 +180,12 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        {
-                            id: 'look',
-                            title: 'Theme',
-                            description: 'The theme, the scheme and the density.',
-                            layout: 'below',
-                            keywords: ['dark', 'light', 'scheme', 'density', 'compact'],
-                            control: <ThemePicker value={look} onChange={setLook} themes={THEMES} system />,
-                        },
+                        ...themeSettings({
+                            value: look,
+                            onChange: setLook,
+                            themes: THEMES,
+                            system: true,
+                        }),
                     ],
                 },
             ],
