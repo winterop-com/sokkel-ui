@@ -762,6 +762,10 @@
             "types": "./dist/components/dashboard/DashboardArrange.d.ts",
             "import": "./dist/components/dashboard/DashboardArrange.js"
         },
+        "./dashboard/DashboardEdit": {
+            "types": "./dist/components/dashboard/DashboardEdit.d.ts",
+            "import": "./dist/components/dashboard/DashboardEdit.js"
+        },
         "./dashboard/DashboardRow": {
             "types": "./dist/components/dashboard/DashboardRow.d.ts",
             "import": "./dist/components/dashboard/DashboardRow.js"

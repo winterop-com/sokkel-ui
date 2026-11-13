@@ -1,5 +1,6 @@
 import { TimeSeriesPanel } from '@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel'
 import { DashboardArrange, type DashboardLayoutItem, type DashboardWidget } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
+import { DashboardEditActions, useDashboardEdit } from '@winterop-com/sokkel-ui/dashboard/DashboardEdit'
 import { DashboardPanel, KpiRow } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { useStore } from '@winterop-com/sokkel-ui/hooks/use-store'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -18,12 +19,10 @@ import {
     CircleCheck,
     Gauge,
     Globe,
-    LayoutGrid,
     Pause,
     PhoneCall,
     Play,
     Rocket,
-    RotateCcw,
     Siren,
     TriangleAlert,
     Waves,
@@ -63,9 +62,6 @@ const LABELS = Object.fromEntries(WIDGETS.map((widget) => [widget.id, widget.lab
 /** The board as it comes: the map beside what is open, then the last ninety days. */
 const DEFAULT_LAYOUT: DashboardLayoutItem[] = WIDGETS.slice(0, 3).map((widget) => ({ id: widget.id, span: widget.span }))
 
-const sameLayout = (left: readonly DashboardLayoutItem[], right: readonly DashboardLayoutItem[]) =>
-    left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.span === right[index]?.span)
-
 /**
  * The board: the figures, every service as a tile in the person's order, and the panels they
  * arranged, the sites on a map, the open incidents and the last ninety days to begin with.
@@ -76,10 +72,13 @@ export function Overview({ options, onReport }: { options: Settings; onReport: (
     const uptime = useUptime()
     const services = useServiceOrder()
     const kept = useStore(layoutStore).overview
-    const [arranging, setArranging] = useState(false)
     const [site, setSite] = useState<string | null>(null)
-    const layout = (kept ?? DEFAULT_LAYOUT).filter((item) => LABELS[item.id as WidgetId] !== undefined)
-    const keep = (next: DashboardLayoutItem[]) => setLayout({ overview: next })
+    const edit = useDashboardEdit({
+        layout: (kept ?? DEFAULT_LAYOUT).filter((item) => LABELS[item.id as WidgetId] !== undefined),
+        defaultLayout: DEFAULT_LAYOUT,
+        onSave: (overview) => setLayout({ overview }),
+    })
+    const layout = edit.layout
 
     const open = (rows.incidents ?? []).filter((incident) => incident.state !== 'resolved')
     const working = SERVICE_IDS.filter((id) => state.health[id] === 'operational').length
@@ -293,41 +292,28 @@ export function Overview({ options, onReport }: { options: Settings; onReport: (
             <PageHeader
                 title="Overview"
                 description={
-                    arranging
+                    edit.editing
                         ? 'Drag a panel by its grip to move it, set its width or remove it, and drag a widget in to add it.'
                         : options.live
                           ? `Live, a reading every ${String(options.interval / 1000)} s, the last at ${formatClock(new Date(state.at), options.clock)}.`
                           : `Paused at ${formatClock(new Date(state.at), options.clock)}.`
                 }
                 actions={
-                    arranging ? (
-                        <>
-                            <Button
-                                variant="ghost"
-                                onClick={() => setLayout({ overview: null })}
-                                reason={sameLayout(layout, DEFAULT_LAYOUT) ? 'The layout is the default.' : undefined}
-                            >
-                                <RotateCcw aria-hidden />
-                                Reset layout
-                            </Button>
-                            <Button onClick={() => setArranging(false)}>Done</Button>
-                        </>
-                    ) : (
-                        <>
-                            <Button variant="outline" onClick={() => setSettings({ live: !options.live })}>
-                                {options.live ? <Pause aria-hidden /> : <Play aria-hidden />}
-                                {options.live ? 'Pause' : 'Resume'}
-                            </Button>
-                            <Button variant="outline" onClick={() => setArranging(true)}>
-                                <LayoutGrid aria-hidden />
-                                Arrange
-                            </Button>
+                    <DashboardEditActions
+                        edit={edit}
+                        size="default"
+                        primary={
                             <Button onClick={onReport}>
                                 <Siren aria-hidden />
                                 Report incident
                             </Button>
-                        </>
-                    )
+                        }
+                    >
+                        <Button variant="outline" onClick={() => setSettings({ live: !options.live })}>
+                            {options.live ? <Pause aria-hidden /> : <Play aria-hidden />}
+                            {options.live ? 'Pause' : 'Resume'}
+                        </Button>
+                    </DashboardEditActions>
                 }
             />
             <KpiRow
@@ -343,12 +329,12 @@ export function Overview({ options, onReport }: { options: Settings; onReport: (
             <ServiceTiles services={services} state={state} uptime={uptime} />
             <DashboardArrange
                 layout={layout}
-                onLayoutChange={keep}
+                onLayoutChange={edit.change}
                 renderPanel={panelOf}
                 label={(item) => LABELS[item.id as WidgetId]}
-                arranging={arranging}
+                arranging={edit.editing}
                 palette={WIDGETS.filter((widget) => !shown.has(widget.id))}
-                onAdd={(widget, index) => keep(insertItem(layout, { id: widget.id, span: widget.span }, index))}
+                onAdd={(widget, index) => edit.change(insertItem(layout, { id: widget.id, span: widget.span }, index))}
             />
         </Stack>
     )

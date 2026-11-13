@@ -976,9 +976,12 @@ drag between its columns with a line where they land and a grip for the keyboard
 `onReorder` draws a grip at each row's start, a stacked card's and a stacked list's items included, and moves the active
 row with Alt and the arrows, while the rows are drawn as given; and `DashboardArrange` draws a
 dashboard whose panels are arranged while `arranging`: a grip, a width and a remove in each panel's
-head (`PanelTools`, which the library's panels draw), a line where a dragged panel lands, a palette
-of widgets dragged onto the grid to add one, and the layout handed back as an order of
-`{ id, span }` to keep.
+head (`PanelTools`, which the library's panels draw), with `onConfigure` a button that opens a
+panel's options, a line where a dragged panel lands, a palette of widgets dragged onto the grid to
+add one, and the layout handed back as an order of `{ id, span }` to keep. `DashboardEdit` puts it
+behind an Edit button, the one word every dashboard uses: `useDashboardEdit` holds the changes in a
+draft that Done keeps, Cancel throws away and Reset fills with the default, and
+`DashboardEditActions` draws Edit, Reset, Cancel and Done in the page header.
 
 ## Maps at scale
 

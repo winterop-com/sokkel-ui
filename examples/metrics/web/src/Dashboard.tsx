@@ -19,7 +19,7 @@ import {
     Copy,
     CopyPlus,
     LayoutDashboard,
-    LayoutGrid,
+    Pencil,
     Maximize2,
     MoreHorizontal,
     PencilLine,
@@ -221,8 +221,8 @@ export function DashboardPage({
                                 disabled={panels.length === 0 && palette.length === 0}
                                 onClick={() => setArranging(true)}
                             >
-                                <LayoutGrid aria-hidden />
-                                Arrange
+                                <Pencil aria-hidden />
+                                Edit
                             </Button>
                             <Button size="sm" onClick={() => go(`/d/${dashboard.id}/new`, kept)}>
                                 <Plus aria-hidden />

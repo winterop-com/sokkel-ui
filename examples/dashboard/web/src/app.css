@@ -1,0 +1,11 @@
+@import '@winterop-com/sokkel-ui/styles.css';
+@import '@winterop-com/sokkel-ui-charts/styles.css';
+@import '@winterop-com/sokkel-ui-maps/styles.css';
+
+/* The themes the settings offer beside the base one. */
+@import '@winterop-com/sokkel-ui/themes/paper.css';
+@import '@winterop-com/sokkel-ui/themes/contrast.css';
+@import '@winterop-com/sokkel-ui/themes/ocean.css';
+
+/* The parts every example shares, which Tailwind would not find inside node_modules. */
+@source '../../../shared';

@@ -18,18 +18,7 @@ import {
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { useWindowedPane, WindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
-import {
-    CopyPlus,
-    FileSpreadsheet,
-    LayoutDashboard,
-    LayoutGrid,
-    MoreHorizontal,
-    PencilLine,
-    Plus,
-    Presentation,
-    Trash2,
-    X,
-} from 'lucide-react'
+import { CopyPlus, FileSpreadsheet, LayoutDashboard, Pencil, MoreHorizontal, PencilLine, Plus, Presentation, Trash2, X } from 'lucide-react'
 import { createElement, type ReactNode, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { go } from 'tidevann-shared/router'
@@ -224,8 +213,8 @@ export function BoardPage({
                           },
                           {
                               id: 'board-arrange',
-                              label: arranging ? 'Stop arranging the board' : 'Arrange the board',
-                              icon: LayoutGrid,
+                              label: arranging ? 'Stop editing the board' : 'Edit the board',
+                              icon: Pencil,
                               onSelect: () => setArranging(!arranging),
                           },
                           { id: 'board-add', label: 'Add a chart to the board', icon: Plus, onSelect: () => setAdding(true) },
@@ -289,8 +278,8 @@ export function BoardPage({
                 </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => setArranging(true)} disabled={arranging}>
-                <LayoutGrid aria-hidden />
-                Arrange
+                <Pencil aria-hidden />
+                Edit the board
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => takeOff(entry)}>
@@ -403,8 +392,8 @@ export function BoardPage({
                                 onClick={() => setArranging(true)}
                                 reason={items.length === 0 && charts.length === 0 ? 'Save a chart first.' : undefined}
                             >
-                                <LayoutGrid aria-hidden />
-                                Arrange
+                                <Pencil aria-hidden />
+                                Edit
                             </Button>
                         )}
                         <Button size="sm" onClick={() => setAdding(true)}>
@@ -427,8 +416,8 @@ export function BoardPage({
                     </EmptyHeader>
                     <EmptyContent>
                         <Button size="sm" onClick={() => (charts.length === 0 ? setAdding(true) : setArranging(true))}>
-                            <LayoutGrid aria-hidden />
-                            Arrange
+                            <Pencil aria-hidden />
+                            Edit
                         </Button>
                     </EmptyContent>
                 </Empty>

@@ -44,7 +44,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 259 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 260 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -394,6 +394,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **DashboardArrange** | `@winterop-com/sokkel-ui/dashboard/DashboardArrange` | A dashboard whose panels the reader arranges. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
+| **DashboardEditActions** | `@winterop-com/sokkel-ui/dashboard/DashboardEdit` | A dashboard's edit buttons for its page header: Edit, and while editing Reset (shut while the layout is the default), Cancel and Done. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) |
 | **DashboardGrid**, PanelFailure, StaleMark, DashboardPanel, KpiRow | `@winterop-com/sokkel-ui/dashboard/DashboardGrid` | The grid a dashboard's panels sit in: twelve columns, a panel's span following the grid's own width, not the window's, so a dashboard beside a rail or a panel lays out for the room it has. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-gauges--arc) |
 | **DashboardRow** | `@winterop-com/sokkel-ui/dashboard/DashboardRow` | A collapsible group of a dashboard's panels under a heading, such as Overview or Latency. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dashboard-panels--key-figures) |
 | **PanelTools**, PanelToolsProvider | `@winterop-com/sokkel-ui/dashboard/panel-tools` | The tools the grid around a panel gives its head; nothing outside an arranged grid. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-drag-and-drop--list) (in DashboardArrange) |
