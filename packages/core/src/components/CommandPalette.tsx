@@ -33,6 +33,8 @@ export interface PaletteCommand {
     hint?: string
     /** An addressable code after the label, in the code face, such as a record's or a job's id. */
     code?: string
+    /** Sets the label in the code face, for a command named by a code rather than words. */
+    mono?: boolean
     /**
      * The keys that run it outside the palette, shown at the row's end, as `keyLabels` writes them;
      * `bindingKeys` from `lib/keys` gives them, `next` with them, from the binding that runs it.
@@ -179,6 +181,11 @@ const GROUP = '**:[[cmdk-group-heading]]:px-(--palette-row-inset-x)'
 /** A row's room at its ends and over and under its text, from the palette's row tokens. */
 const ROW = 'px-(--palette-row-inset-x) py-(--palette-row-inset-y)'
 
+/** How wide the palette is from `sm` up, as a dialog's widths are: `sm` by default. */
+export type PaletteWidth = 'sm' | 'md' | 'lg'
+
+const WIDTH: Record<PaletteWidth, string> = { sm: 'sm:max-w-sm', md: 'sm:max-w-lg', lg: 'sm:max-w-2xl' }
+
 export interface CommandPaletteProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -195,6 +202,17 @@ export interface CommandPaletteProps {
      * shows its Close button there instead.
      */
     foot?: PaletteFoot
+    /** How wide it is from `sm` up: `sm` by default, `md` or `lg` for a chooser whose rows say more. */
+    width?: PaletteWidth
+    /**
+     * A line over the search saying what is being chosen, for a palette that stands as a chooser;
+     * a screen reader reads it as the dialog's description, in place of the placeholder.
+     */
+    description?: string
+    /** Lets each row's label, hint and code wrap onto more lines rather than end in an ellipsis. */
+    wrap?: boolean
+    /** Classes for the dialog's box. */
+    className?: string
     words?: Partial<CommandPaletteWords>
 }
 
@@ -218,6 +236,10 @@ export interface CommandPaletteProps {
  * command that cannot run now is listed `disabled`, dimmed and passed over, with why in its hint.
  * The first row is active whenever the rows change and the active one is gone, the search's results
  * arriving on their own included, so Enter opens it without an arrow pressed first.
+ *
+ * As a standalone chooser it takes a `width`, a `description` over the search, and `wrap` for rows
+ * whose words must be read whole; a row's `mono` sets a label that is a code in the code face. On
+ * one line the hint gives way first, then the code, and the label last.
  */
 export function CommandPalette({
     open,
@@ -227,6 +249,10 @@ export function CommandPalette({
     defaultQuery = '',
     filter = 'fuzzy',
     foot,
+    width = 'sm',
+    description,
+    wrap = false,
+    className,
     words: given,
 }: CommandPaletteProps) {
     const words = { ...WORDS, ...given }
@@ -275,8 +301,19 @@ export function CommandPalette({
         if (next !== chosen) setChosen(next)
     })
     return (
-        <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
+        <CommandDialog
+            open={open}
+            onOpenChange={onOpenChange}
+            title={words.title}
+            description={description ?? words.placeholder}
+            className={cn(WIDTH[width], className)}
+        >
             <Command shouldFilter={score === undefined} className="p-(--palette-inset)" value={chosen} onValueChange={setChosen}>
+                {description !== undefined && (
+                    <p aria-hidden className="px-(--palette-row-inset-x) pt-1 pb-2 text-sm text-pretty text-muted-foreground">
+                        {description}
+                    </p>
+                )}
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
                 <CommandList ref={list} className={cn('max-h-[min(24rem,60svh)]', seeAll ? 'scroll-pb-12' : 'scroll-fade-b pb-1.5')}>
                     {found.length === 0 && (answer.state === 'idle' || answer.state === 'done') && (
@@ -308,28 +345,52 @@ export function CommandPalette({
                                                     query=""
                                                     second={typeof command.detail === 'string' ? undefined : command.detail}
                                                     detailTone={command.tone}
+                                                    mono={command.mono}
+                                                    wrap={wrap}
                                                 />
                                             ) : (
                                                 <>
                                                     {Icon !== undefined && <Icon className="text-muted-foreground" aria-hidden />}
-                                                    <span className="truncate">{command.label}</span>
-                                                    {hint !== undefined && (
+                                                    {/* On one line the hint gives way first, then the code, and the label last. */}
+                                                    <span
+                                                        className={cn(
+                                                            'flex min-w-0 flex-1 items-baseline gap-x-2',
+                                                            wrap && 'flex-wrap [&>*]:break-words',
+                                                        )}
+                                                    >
                                                         <span
                                                             className={cn(
-                                                                'truncate text-xs',
-                                                                command.tone === undefined
-                                                                    ? 'text-muted-foreground'
-                                                                    : TONE_INK[command.tone],
+                                                                'min-w-0',
+                                                                !wrap && 'truncate',
+                                                                command.mono === true && 'font-mono text-xs',
                                                             )}
                                                         >
-                                                            {hint}
+                                                            {command.label}
                                                         </span>
-                                                    )}
-                                                    {command.code !== undefined && (
-                                                        <span className="truncate font-mono text-xs text-muted-foreground">
-                                                            {command.code}
-                                                        </span>
-                                                    )}
+                                                        {hint !== undefined && (
+                                                            <span
+                                                                className={cn(
+                                                                    'min-w-0 shrink-[4] text-xs',
+                                                                    !wrap && 'truncate',
+                                                                    command.tone === undefined
+                                                                        ? 'text-muted-foreground'
+                                                                        : TONE_INK[command.tone],
+                                                                )}
+                                                            >
+                                                                {hint}
+                                                            </span>
+                                                        )}
+                                                        {command.code !== undefined && (
+                                                            <span
+                                                                className={cn(
+                                                                    'min-w-0 shrink-[2] font-mono text-xs text-muted-foreground',
+                                                                    !wrap && 'truncate',
+                                                                )}
+                                                            >
+                                                                {command.code}
+                                                            </span>
+                                                        )}
+                                                    </span>
                                                 </>
                                             )}
                                             {(kind !== undefined || command.keys !== undefined) && (

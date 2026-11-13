@@ -1,5 +1,5 @@
 import { Eye, EyeOff, KeyRound } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type HTMLInputAutoCompleteAttribute, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { FRAME_BUTTON } from './entry'
@@ -67,6 +67,11 @@ export interface SecretFieldProps {
     /** Starts open for a new secret, as if Replace was pressed. */
     defaultReplacing?: boolean
     placeholder?: string
+    /**
+     * What the browser may fill in: `new-password` by default, for a secret being set;
+     * `current-password` for a box that asks for one already held, as a sign-in or a confirm does.
+     */
+    autoComplete?: HTMLInputAutoCompleteAttribute
     /** Set in the code face, as keys and tokens are. */
     mono?: boolean
     readOnly?: boolean
@@ -109,6 +114,7 @@ export function SecretField({
     now,
     defaultReplacing = false,
     placeholder,
+    autoComplete = 'new-password',
     mono = true,
     readOnly = false,
     disabled = false,
@@ -168,7 +174,7 @@ export function SecretField({
                         type={shown ? 'text' : 'password'}
                         value={value ?? ''}
                         placeholder={placeholder}
-                        autoComplete="new-password"
+                        autoComplete={autoComplete}
                         spellCheck={false}
                         readOnly={readOnly}
                         disabled={disabled}

@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ChevronRight, Clock } from 'lucide-react'
+import { ChevronRight, Clock, Server } from 'lucide-react'
 import { useState } from 'react'
 
 import { Chip } from '@winterop-com/sokkel-ui/Chip'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
+import { Card, CardHeader, CardTitle } from '@winterop-com/sokkel-ui/primitives/card'
 import { ListRow, ListRows } from '@winterop-com/sokkel-ui/ListRow'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { TextLink } from '@winterop-com/sokkel-ui/TextLink'
@@ -140,6 +141,45 @@ export const Flush: StoryObj = {
             </Section>
         )
     },
+}
+
+const SERVICES = [
+    { name: 'api', status: 'succeeded', note: 'p95 120 ms', host: 'api.example.org' },
+    { name: 'worker', status: 'running', note: '3 runs in flight', host: 'worker.example.org' },
+    { name: 'scheduler', status: 'failed', note: 'missed 2 ticks', host: 'scheduler.example.org' },
+]
+
+/**
+ * Dense one-line rows in a card (`dense`), each a status dot and a mark before the service's name
+ * in the code face (`mono`), its note beside it. `inset="card"` lines the flush rows up with the
+ * card's own padding, as its title is.
+ */
+export const Dense: StoryObj = {
+    render: () => (
+        <Card className="max-w-md">
+            <CardHeader>
+                <CardTitle>Health</CardTitle>
+            </CardHeader>
+            <ListRows label="Services" flush inset="card">
+                {SERVICES.map((service) => (
+                    <ListRow
+                        key={service.name}
+                        dense
+                        mono
+                        icon={
+                            <>
+                                <Dot status={service.status} size="md" />
+                                <Server />
+                            </>
+                        }
+                        title={service.name}
+                        detail={service.note}
+                        aside={service.host}
+                    />
+                ))}
+            </ListRows>
+        </Card>
+    ),
 }
 
 /** Rows that are links, each to its run's page, with the project as a chip at the end. */

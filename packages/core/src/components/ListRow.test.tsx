@@ -50,5 +50,19 @@ describe('ListRow', () => {
         )
         expect(boxed).toContain('rounded-control')
         expect(boxed).not.toContain('divide-y')
+        const card = renderToStaticMarkup(
+            <ListRows flush inset="card">
+                <ListRow title="api" />
+            </ListRows>,
+        )
+        expect(card).toContain('px-[var(--card-spacing,--spacing(4))]')
+        expect(card).not.toContain('--density-panel-pad')
+    })
+
+    it('draws a dense row on one line, its code title in the code face', () => {
+        const html = renderToStaticMarkup(<ListRow dense mono title="scheduler" detail="missed 2 ticks" icon={<i />} />)
+        expect(html).toContain('py-1')
+        expect(html).not.toContain('flex-col')
+        expect(html).toMatch(/data-slot="list-row-title" class="[^"]*font-mono/)
     })
 })

@@ -1,5 +1,5 @@
 import { ArrowUpRight, ChevronDown, X } from 'lucide-react'
-import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
+import type { ComponentProps, KeyboardEvent, MouseEvent, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { KIND_CHIP, type KindColor } from '../lib/kind'
@@ -50,9 +50,10 @@ const HUE_SELECTED = 'data-selected:bg-current/20'
  */
 export type ChipSize = 'default' | 'control'
 
+// An icon given its own size class keeps it, so a 16px mark is not drawn at 14px.
 const SIZE: Record<ChipSize, string> = {
-    default: 'h-5 text-badge [&_svg]:size-3',
-    control: 'h-(--density-control) text-xs max-md:h-finger [&_svg]:size-3.5',
+    default: "h-5 text-badge [&_svg:not([class*='size-'])]:size-3",
+    control: "h-(--density-control) text-xs max-md:h-finger [&_svg:not([class*='size-'])]:size-3.5",
 }
 
 /** Where a chip's menu lines up with the chip. */
@@ -95,7 +96,11 @@ export interface ChipMenuItem {
     destructive?: boolean
 }
 
-export interface ChipProps {
+/**
+ * A chip's props. Any other attribute of a `span` (`data-*`, `aria-*`, a handler) and `ref` go to
+ * the chip's root, so a chip can be the `render` target of a tooltip's or a popover's trigger.
+ */
+export interface ChipProps extends Omit<ComponentProps<'span'>, 'children' | 'title' | 'onSelect' | 'className'> {
     children: ReactNode
     /** Neutral by default. */
     tone?: ChipTone
@@ -108,7 +113,7 @@ export interface ChipProps {
     mono?: boolean
     /** `default` for a chip in a line or a cell, `control` for one that stands alone as a control. */
     size?: ChipSize
-    /** Drawn before the words, at the chip's icon size. */
+    /** Drawn before the words, at the chip's icon size, or at its own where it carries a `size-*` class. */
     icon?: ReactNode
     /** Said on hover: the whole value when the chip cuts it short, or what it means. */
     title?: string
@@ -160,7 +165,8 @@ export interface ChipProps {
  * the tab order with its own focus ring. No press reaches a row or card around the chip. `selected`
  * makes a select chip a toggle, pressed, edged in its ink and on a stronger wash while on. With
  * `menu` the chip is a menu's trigger, opening its items under it at `menuAlign`. A long value ends
- * in an ellipsis inside the room it is given.
+ * in an ellipsis inside the room it is given. Any other `span` attribute and `ref` go to its root,
+ * so it can stand as a tooltip trigger's `render` target, and an icon with its own `size-*` class keeps it.
  */
 export function Chip({
     children,
@@ -183,14 +189,16 @@ export function Chip({
     onRemove,
     words: given,
     className,
+    ...rest
 }: ChipProps) {
     const words = { ...WORDS, ...given }
     const remove = typeof words.remove === 'function' ? words.remove(textOf(children)) : words.remove
     const control = size === 'control'
     const start = control ? 'pl-2.5' : 'pl-1.5'
     const end = onRemove === undefined && (control ? 'pr-2.5' : 'pr-1.5')
+    // Over the chip's 1px edge too, so a control chip's link or button is as tall as the chip.
     const press = cn(
-        'flex h-full min-w-0 cursor-pointer items-center gap-1 rounded-chip hover:underline hover:underline-offset-2',
+        '-my-px flex h-[calc(100%+2px)] min-w-0 cursor-pointer items-center gap-1 rounded-chip hover:underline hover:underline-offset-2',
         start,
         end,
         RING,
@@ -203,6 +211,7 @@ export function Chip({
     )
     return (
         <span
+            {...rest}
             data-slot="chip"
             data-selected={selected === true ? '' : undefined}
             title={title}

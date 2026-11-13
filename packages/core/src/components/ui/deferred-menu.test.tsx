@@ -69,7 +69,12 @@ describe('a menu before Base UI’s menu has loaded', () => {
         ).toBe(
             shape(
                 <BaseMenu.Root disabled>
-                    <BaseMenu.Trigger data-slot="dropdown-menu-trigger" nativeButton={false} render={<span className="chip" />}>
+                    <BaseMenu.Trigger
+                        data-slot="dropdown-menu-trigger"
+                        className={FINGER_HIT}
+                        nativeButton={false}
+                        render={<span className="chip" />}
+                    >
                         Actions
                     </BaseMenu.Trigger>
                 </BaseMenu.Root>,

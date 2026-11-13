@@ -13,6 +13,12 @@ describe('a secret field', () => {
         expect(html).toMatch(/<input[^>]*type="password"[^>]*id="token"|<input[^>]*id="token"[^>]*type="password"/)
         expect(html).toContain('aria-label="Show"')
         expect(html).not.toContain('>Replace<')
+        expect(html).toContain('autoComplete="new-password"')
+    })
+
+    it('asks the browser for a password already held when told to', () => {
+        const html = renderToStaticMarkup(<SecretField id="pw" label="Password" autoComplete="current-password" />)
+        expect(html).toContain('autoComplete="current-password"')
     })
 
     it('shows a set secret as set, with when, and Replace in place of an input', () => {
