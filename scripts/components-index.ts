@@ -234,6 +234,7 @@ const CORE_AREAS: Record<string, string> = {
     Unfoldable: 'Page layout',
     WindowedPane: 'Page layout',
     GroupLabel: 'Page layout',
+    Group: 'Page layout',
     // Forms and inputs.
     AddressInput: 'Forms and inputs',
     ComputedField: 'Forms and inputs',
