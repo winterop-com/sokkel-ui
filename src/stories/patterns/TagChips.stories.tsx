@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { useState } from 'react'
 
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Surface } from '@winterop-com/sokkel-ui/Section'
@@ -34,4 +35,25 @@ export const Room: StoryObj = {
 /** Held to three even where more would fit, in the outline look. */
 export const Capped: StoryObj = {
     render: () => <TagChips tags={TAGS} max={3} variant="outline" />,
+}
+
+/**
+ * Tags a press filters by: each shown tag is a button, and the +N chip opens a menu of the rest,
+ * each filtering the same way.
+ */
+export const Selectable: StoryObj = {
+    render: function Render() {
+        const [filter, setFilter] = useState<string | undefined>(undefined)
+        return (
+            <Stack gap="md">
+                <Surface className="max-w-sm">
+                    <Row gap="md" className="px-3 py-2">
+                        <span className="shrink-0 font-mono text-sm">nightly-export</span>
+                        <TagChips tags={TAGS} onSelect={setFilter} words={{ select: (tag) => `Filter by ${tag}` }} />
+                    </Row>
+                </Surface>
+                <span className="text-sm text-muted-foreground">{filter === undefined ? 'No filter' : `Filtered by ${filter}`}</span>
+            </Stack>
+        )
+    },
 }

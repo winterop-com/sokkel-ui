@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Clock, GitBranch, Server, Tag } from 'lucide-react'
+import { Clock, Copy, Filter, GitBranch, Server, SquareArrowOutUpRight, Tag } from 'lucide-react'
 import { useState } from 'react'
 
 import { Chip, type ChipTone } from '@winterop-com/sokkel-ui/Chip'
@@ -119,6 +119,60 @@ export const Interactive: StoryObj = {
             </Stack>
         )
     },
+}
+
+/** Many toggles, each turned on and off by itself: the projects a list shows, each pressed and ringed while on. */
+export const Toggles: StoryObj = {
+    render: function Render() {
+        const [on, setOn] = useState<readonly string[]>(['harbor', 'larkspur'])
+        return (
+            <Stack gap="md">
+                <Row gap="xs" wrap>
+                    {['harbor', 'juniper', 'larkspur', 'nightly', 'hourly', 'critical-path'].map((tag) => (
+                        <Chip
+                            key={tag}
+                            mono
+                            selected={on.includes(tag)}
+                            onSelect={() => setOn(on.includes(tag) ? on.filter((other) => other !== tag) : [...on, tag])}
+                        >
+                            {tag}
+                        </Chip>
+                    ))}
+                </Row>
+                <Row gap="xs" wrap>
+                    {TONES.filter((tone) => tone !== 'absent').map((tone) => (
+                        <Chip key={tone} tone={tone} selected={tone === 'critical' || tone === 'info'} onSelect={() => undefined}>
+                            {tone}
+                        </Chip>
+                    ))}
+                </Row>
+                <span className="text-sm text-muted-foreground">Showing {on.length === 0 ? 'every project' : on.join(', ')}</span>
+            </Stack>
+        )
+    },
+}
+
+/** A chip that opens a menu of what to do with its value: filter by the project, copy it, or open it. */
+export const Menu: StoryObj = {
+    render: () => (
+        <Row gap="xs" wrap>
+            <Chip
+                mono
+                defaultOpen
+                selectLabel="harbor, more"
+                menu={[
+                    { label: 'Filter by harbor', icon: <Filter aria-hidden />, onSelect: () => undefined },
+                    { label: 'Copy the name', icon: <Copy aria-hidden />, onSelect: () => undefined },
+                    { label: 'Open the project', icon: <SquareArrowOutUpRight aria-hidden />, onSelect: () => undefined },
+                ]}
+            >
+                harbor
+            </Chip>
+            <Chip mono menu={[{ label: 'Filter by juniper', onSelect: () => undefined }]}>
+                juniper
+            </Chip>
+        </Row>
+    ),
 }
 
 interface Job {

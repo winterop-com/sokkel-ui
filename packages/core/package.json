@@ -274,6 +274,10 @@
             "types": "./dist/components/FormBar.d.ts",
             "import": "./dist/components/FormBar.js"
         },
+        "./Group": {
+            "types": "./dist/components/Group.d.ts",
+            "import": "./dist/components/Group.js"
+        },
         "./GroupLabel": {
             "types": "./dist/components/GroupLabel.d.ts",
             "import": "./dist/components/GroupLabel.js"
@@ -349,6 +353,10 @@
         "./Link": {
             "types": "./dist/components/Link.d.ts",
             "import": "./dist/components/Link.js"
+        },
+        "./ListRow": {
+            "types": "./dist/components/ListRow.d.ts",
+            "import": "./dist/components/ListRow.js"
         },
         "./ListingBar": {
             "types": "./dist/components/ListingBar.d.ts",

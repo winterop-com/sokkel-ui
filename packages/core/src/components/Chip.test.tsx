@@ -100,6 +100,37 @@ describe('Chip', () => {
         expect(selected).toHaveBeenCalledWith(expect.objectContaining({ stopPropagation: expect.any(Function) }))
         expect(removed).toHaveBeenCalledWith(expect.objectContaining({ stopPropagation: expect.any(Function) }))
     })
+
+    it('says a toggle chip is pressed and rings it while it is on', () => {
+        const on = renderToStaticMarkup(
+            <Chip selected onSelect={() => undefined}>
+                harbor
+            </Chip>,
+        )
+        expect(on).toContain('aria-pressed="true"')
+        expect(on).toContain('ring-current')
+        expect(on).toContain('data-selected')
+        const off = renderToStaticMarkup(
+            <Chip selected={false} onSelect={() => undefined}>
+                harbor
+            </Chip>,
+        )
+        expect(off).toContain('aria-pressed="false"')
+        expect(off).not.toContain('ring-current')
+        expect(renderToStaticMarkup(<Chip onSelect={() => undefined}>harbor</Chip>)).not.toContain('aria-pressed')
+    })
+
+    it('is a menu trigger with menu, its items opened under it', () => {
+        const html = renderToStaticMarkup(
+            <Chip menu={[{ label: 'Filter by harbor', onSelect: () => undefined }]} selectLabel="harbor actions">
+                harbor
+            </Chip>,
+        )
+        expect(html).toContain('data-slot="chip-select"')
+        expect(html).toContain('aria-haspopup="menu"')
+        expect(html).toContain('aria-label="harbor actions"')
+        expect(html).not.toContain('aria-pressed')
+    })
 })
 
 interface ButtonProps {
