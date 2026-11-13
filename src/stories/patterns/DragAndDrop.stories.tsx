@@ -176,7 +176,7 @@ interface Card {
     id: string
     code: string
     title: string
-    column: 'queued' | 'running' | 'succeeded'
+    column: 'queued' | 'running' | 'succeeded' | 'archived'
     assignee: string
 }
 
@@ -220,6 +220,75 @@ export const BoardStory: StoryObj = {
                                 title={column.title}
                                 icon={column.icon}
                                 count={held.length}
+                                empty="No items"
+                            >
+                                {held.map((card) => (
+                                    <BoardCard
+                                        key={card.id}
+                                        id={card.id}
+                                        code={card.code}
+                                        title={card.title}
+                                        assignee={{ name: card.assignee }}
+                                    />
+                                ))}
+                            </BoardColumn>
+                        )
+                    })}
+                </Row>
+            </Board>
+        )
+    },
+}
+
+const ARRANGED_COLUMNS = [
+    ...COLUMNS,
+    { id: 'archived', title: 'Archived', icon: <CircleDashed className="size-4 text-faint" aria-hidden />, locked: true },
+]
+
+/** How many cards Running takes before it refuses another. */
+const RUNNING_LIMIT = 2
+
+/**
+ * A board whose columns move too: a column drags by its head, or from the keyboard by the grip at
+ * the head's end, a line between the columns showing where it lands. Archived is locked: its card
+ * stays, none lands in it, and no column moves across it. Running refuses a third card, so no line
+ * shows there while one is carried over it.
+ */
+export const BoardColumns: StoryObj = {
+    name: 'Board columns',
+    render: function Render() {
+        const [cards, setCards] = useState<Card[]>([
+            ...CARDS,
+            { id: 'f', code: 'TID-1', title: 'Move the export to the new bucket', column: 'archived', assignee: 'grace' },
+        ])
+        const [columns, setColumns] = useState(ARRANGED_COLUMNS)
+        const onMove = ({ card, to, index }: BoardMove) =>
+            setCards((now) => {
+                const moving = now.find((each) => each.id === card)
+                if (moving === undefined) return now
+                const rest = now.filter((each) => each.id !== card)
+                const inColumn = rest.filter((each) => each.column === to)
+                const at = index >= inColumn.length ? rest.length : rest.indexOf(inColumn[index])
+                return insertItem(rest, { ...moving, column: to as Card['column'] }, at)
+            })
+        return (
+            <Board
+                onMove={onMove}
+                canDrop={({ from, to }) => to !== 'running' || from === 'running' || cards.filter((card) => card.column === to).length < RUNNING_LIMIT}
+                onColumnMove={(from, to) => setColumns(moveItem(columns, from, to))}
+            >
+                <Row gap="md" align="start">
+                    {columns.map((column) => {
+                        const held = cards.filter((card) => card.column === column.id)
+                        return (
+                            <BoardColumn
+                                key={column.id}
+                                id={column.id}
+                                title={column.title}
+                                icon={column.icon}
+                                count={held.length}
+                                limit={column.id === 'running' ? RUNNING_LIMIT : undefined}
+                                locked={'locked' in column && column.locked}
                                 empty="No items"
                             >
                                 {held.map((card) => (

@@ -21,9 +21,11 @@ import {
     type DragMoveEvent,
     type DragOverEvent,
     type DragStartEvent,
+    type KeyboardCoordinateGetter,
     type Over,
     type PointerSensorOptions,
     type TouchSensorOptions,
+    type UniqueIdentifier,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { getEventCoordinates } from '@dnd-kit/utilities'
@@ -155,9 +157,15 @@ function area(collision: Collision): number {
     return rect == null ? Number.POSITIVE_INFINITY : rect.width * rect.height
 }
 
+/** Whether a thing is an item of a sortable group, which the engine itself moves among its own. */
+function sortable(active: Active | null): boolean {
+    return active?.data.current?.sortable !== undefined
+}
+
 /**
  * Where a drag is: the smallest target under the pointer that takes the thing (a row before the
- * list around it), else the targets the thing itself overlaps; from the keyboard, the nearest.
+ * list around it), else the targets the thing itself overlaps. From the keyboard, the smallest
+ * target under the thing's middle, which the arrows set on a target, else the nearest.
  */
 export const dragCollision: CollisionDetection = (args) => {
     const drag = dragData(args.active)
@@ -165,10 +173,122 @@ export const dragCollision: CollisionDetection = (args) => {
         (container) => container.id === args.active.id || takes(dragData(container), drag),
     )
     const within = { ...args, droppableContainers }
-    if (args.pointerCoordinates === null) return closestCorners(within)
+    if (args.pointerCoordinates === null) {
+        if (sortable(args.active)) return closestCorners(within)
+        const { left, top, width, height } = args.collisionRect
+        const under = pointerWithin({ ...within, pointerCoordinates: { x: left + width / 2, y: top + height / 2 } })
+        return under.length > 0 ? [...under].sort((a, b) => area(a) - area(b)) : closestCorners(within)
+    }
     const hits = pointerWithin(within)
     if (hits.length > 0) return [...hits].sort((a, b) => area(a) - area(b))
     return rectIntersection(within)
+}
+
+/** A box on the page, in the window's coordinates. */
+export interface DragRect {
+    left: number
+    top: number
+    width: number
+    height: number
+}
+
+/** The way each arrow key carries a thing. */
+const ARROWS: Record<string, { x: number; y: number }> = {
+    ArrowUp: { x: 0, y: -1 },
+    ArrowDown: { x: 0, y: 1 },
+    ArrowLeft: { x: -1, y: 0 },
+    ArrowRight: { x: 1, y: 0 },
+}
+
+/** How much a step across the arrow's way counts against one along it, in choosing where the arrow goes. */
+const ACROSS = 2
+
+const middle = (rect: DragRect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+
+const holds = (rect: DragRect, point: { x: number; y: number }) =>
+    point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height
+
+/** Whether two boxes share some of their extent across the way an arrow goes: some width going up or down, some height going sideways. */
+function besides(a: DragRect, b: DragRect, way: { x: number; y: number }): boolean {
+    return way.x === 0 ? a.left < b.left + b.width && b.left < a.left + a.width : a.top < b.top + b.height && b.top < a.top + a.height
+}
+
+/**
+ * Where an arrow key carries a thing being dragged from `from`: of the `targets`, the nearest
+ * whose middle lies past the thing's own middle that way, a target off to the side counting as
+ * farther. Up and down keep to the targets in line with the thing, as a list's rows are; left and
+ * right take those in line first and the nearest anywhere that way after, as a column beside or a
+ * place in the rail is. A target the thing's middle is already in, such as the list around the row
+ * it is over, is where it is rather than a step. Undefined for a key that is not an arrow, or with
+ * no target that way.
+ */
+export function keyboardStep<T extends { rect: DragRect }>(key: string, from: DragRect, targets: readonly T[]): T | undefined {
+    const way = ARROWS[key] as { x: number; y: number } | undefined
+    if (way === undefined) return undefined
+    const start = middle(from)
+    const nearest = (inLine: boolean) => {
+        let best: T | undefined
+        let bestScore = Number.POSITIVE_INFINITY
+        for (const target of targets) {
+            if (holds(target.rect, start) || (inLine && !besides(from, target.rect, way))) continue
+            const end = middle(target.rect)
+            const along = (end.x - start.x) * way.x + (end.y - start.y) * way.y
+            if (along <= 1) continue
+            const across = Math.abs((end.x - start.x) * way.y) + Math.abs((end.y - start.y) * way.x)
+            const score = along + ACROSS * across
+            if (score < bestScore) {
+                best = target
+                bestScore = score
+            }
+        }
+        return best
+    }
+    return nearest(true) ?? (way.x === 0 ? undefined : nearest(false))
+}
+
+/**
+ * Where a thing carried by an arrow onto `target` stands: its middle on the target's, a pixel past
+ * it the way it went, so it lands in the half of the target it moved into (after a row it moved
+ * down onto, before one it moved up onto).
+ */
+export function keyboardLanding(key: string, from: DragRect, target: DragRect): { x: number; y: number } {
+    const way = ARROWS[key] ?? { x: 0, y: 0 }
+    const end = middle(target)
+    return { x: end.x - from.width / 2 + way.x, y: end.y - from.height / 2 + way.y }
+}
+
+/**
+ * Where the arrow keys carry a thing being dragged: a sortable item steps among its own the
+ * engine's way, and anything else to the nearest target that way that takes it.
+ */
+export const dragKeyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
+    if (!(event.code in ARROWS)) return undefined
+    const { active, collisionRect, droppableRects, droppableContainers } = args.context
+    if (active === null || collisionRect === null) {
+        event.preventDefault()
+        return undefined
+    }
+    const drag = dragData(active)
+    const enabled = droppableContainers.getEnabled().filter((container) => container.id === active.id || takes(dragData(container), drag))
+    if (sortable(active)) {
+        const kept = new Map(enabled.map((container) => [container.id, container]))
+        const only = Object.assign(kept, {
+            getEnabled: () => [...kept.values()],
+            toArray: () => [...kept.values()],
+            getNodeFor: (id: UniqueIdentifier | null | undefined) => (id == null ? undefined : (kept.get(id)?.node.current ?? undefined)),
+        })
+        return sortableKeyboardCoordinates(event, {
+            ...args,
+            context: { ...args.context, droppableContainers: only as unknown as typeof droppableContainers },
+        })
+    }
+    event.preventDefault()
+    const targets = enabled.flatMap((container) => {
+        const rect = droppableRects.get(container.id)
+        return rect === undefined ? [] : [{ id: container.id, rect }]
+    })
+    const next = keyboardStep(event.code, collisionRect, targets)
+    return next === undefined ? undefined : keyboardLanding(event.code, collisionRect, next.rect)
 }
 
 /**
@@ -276,7 +396,7 @@ function DragDropRoot({
     const sensors = useSensors(
         useSensor(PressSensor, { activationConstraint: { distance: DISTANCE } }),
         useSensor(HoldSensor, { activationConstraint: { delay: HOLD, tolerance: HOLD_TOLERANCE } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+        useSensor(KeyboardSensor, { coordinateGetter: dragKeyboardCoordinates }),
     )
     const announcements = useMemo<Announcements>(() => {
         const name = (entry: Active | Over | null) => dragData(entry)?.label ?? String(entry?.id ?? '')
