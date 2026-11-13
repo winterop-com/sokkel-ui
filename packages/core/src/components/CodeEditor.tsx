@@ -42,7 +42,7 @@ import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 
 import { cn } from '../lib/cn'
-import { pluginLanguage, pluginLanguageForMediaType, type PluginLanguageNames } from '../lib/plugins'
+import { onPluginsChange, pluginLanguage, pluginLanguageForMediaType, type PluginLanguageNames } from '../lib/plugins'
 import { bracketColors as colorBrackets, indentGuides as drawGuides } from './code/guides'
 import { jq } from './code/jq'
 import { markdown } from './code/markdown'
@@ -155,6 +155,17 @@ export interface CodeRange {
     to?: number
     path?: readonly (string | number)[]
 }
+
+/** Where the word being completed stands: the text before it on its line. */
+export interface CodeCompletionContext {
+    before: string
+}
+
+/** The words offered for the word being typed, by the word and where it stands. */
+export type CodeCompletionSource = (
+    word: string,
+    context: CodeCompletionContext,
+) => readonly CodeCompletion[] | Promise<readonly CodeCompletion[]>
 
 /** A schema a document names by its `$schema` address, found by the app; nothing when it has none. */
 export type CodeSchemaResolver = (address: string) => JsonSchema | undefined | Promise<JsonSchema | undefined>
@@ -558,8 +569,12 @@ export interface CodeEditorProps {
     /** Folds long lines at the editor's edge instead of scrolling sideways. */
     wrap?: boolean
     marks?: readonly CodeMark[]
-    /** Words offered while typing, beside the language's own: a list, or a function of the word being typed (a leading `$` or `@` included, a `.` not). */
-    completions?: readonly CodeCompletion[] | ((word: string) => readonly CodeCompletion[] | Promise<readonly CodeCompletion[]>)
+    /**
+     * Words offered while typing, beside the language's own: a list, or a function of the word being
+     * typed (a leading `$` or `@` included, a `.` not) and of what comes before it on its line, so the
+     * words can follow where the word is, such as inside an expression's `#{`.
+     */
+    completions?: readonly CodeCompletion[] | CodeCompletionSource
     /**
      * Whether the language's own words (jq's built-ins) are offered beside `completions`; an app's
      * word replaces the language's of the same label either way, its detail and docs being its own.
@@ -968,7 +983,8 @@ export function CodeEditor({
         if (word === null) return null
         const afterDot = context.state.sliceDoc(word.from - 1, word.from) === '.'
         if (word.from === word.to && !context.explicit && !afterDot) return null
-        const list = typeof given === 'function' ? await given(word.text) : given
+        const before = context.state.sliceDoc(context.state.doc.lineAt(word.from).from, word.from)
+        const list = typeof given === 'function' ? await given(word.text, { before }) : given
         return { from: word.from, options: list.map(toCompletion), validFor: /^[$@]?\w*$/ }
     }
 
@@ -1017,6 +1033,14 @@ export function CodeEditor({
         return () => {
             live = false
         }
+    }, [language])
+
+    // A plugin's language installed again, as with a server's names, replaces the one shown.
+    useEffect(() => {
+        if (typeof language !== 'string' || language in NAMED || isLazy(language)) return
+        return onPluginsChange(() =>
+            view.current?.dispatch({ effects: compartments.current.language.reconfigure(languageExtension(language)) }),
+        )
     }, [language])
 
     // A language that loaded after the editor was made is put in once it is there.

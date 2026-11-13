@@ -1,12 +1,14 @@
 import type { StreamParser } from '@codemirror/language'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { CodeEditor, languageForMediaType, type CodeLanguage } from '@winterop-com/sokkel-ui/CodeEditor'
+import { CodeEditor, languageForMediaType, type CodeCompletionSource, type CodeLanguage } from '@winterop-com/sokkel-ui/CodeEditor'
 import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
+import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { registerPlugins } from '@winterop-com/sokkel-ui/lib/plugins'
-import { dhis2 } from '@winterop-com/sokkel-ui-dhis2/plugin'
+import { DHIS2_FUNCTIONS } from '@winterop-com/sokkel-ui-dhis2/names'
+import { dhis2, dhis2Plugin } from '@winterop-com/sokkel-ui-dhis2/plugin'
 import { dhis2RuleParser } from '@winterop-com/sokkel-ui-dhis2/rule'
 
 registerPlugins([dhis2])
@@ -61,22 +63,44 @@ function Expression({
     mediaType,
     language,
     initial,
+    completions,
+    hover,
 }: {
     title: string
     mediaType: string
     language: CodeLanguage
     initial: string
+    completions?: CodeCompletionSource
+    hover?: (word: string) => string | undefined
 }) {
     const [value, setValue] = useState(initial)
     return (
         <Stack gap="none" className="h-full min-h-0">
             <PaneHeader title={title} meta={mediaType} />
             <Fill>
-                <CodeEditor label={title} language={language} variant="pane" size="sm" value={value} onChange={setValue} />
+                <CodeEditor
+                    label={title}
+                    language={language}
+                    variant="pane"
+                    size="sm"
+                    value={value}
+                    onChange={setValue}
+                    completions={completions}
+                    hover={hover}
+                />
             </Fill>
         </Stack>
     )
 }
+
+/** The data elements the indicator reads, by uid, as an app's metadata names them. */
+const ELEMENTS: Record<string, string> = { FH8ab5Rog83: 'Items shipped on time', QOlfIKgNJ3D: 'Items shipped' }
+
+/** Inside `#{` the data elements by name, putting in their uid; elsewhere the functions. */
+const offerItems: CodeCompletionSource = (_word, { before }) =>
+    /#\{[^}]*$/.test(before)
+        ? Object.entries(ELEMENTS).map(([id, name]) => ({ label: name, detail: id, kind: 'variable' as const, apply: id }))
+        : ['firstNonNull', 'if', 'isNull'].map((name) => ({ label: name, kind: 'function' as const, apply: `${name}(` }))
 
 const meta: Meta = { title: 'Editors/DHIS2 expressions' }
 export default meta
@@ -84,7 +108,9 @@ export default meta
 /**
  * An indicator from the `dhis2` plugin, picked by its media type: data elements with a wildcard
  * disaggregation, a reporting rate, a constant, `[days]`, functions, one written after a value
- * (`.periodOffset`) and a dotted one (`orgUnit.group`), and comments across lines.
+ * (`.periodOffset`) and a dotted one (`orgUnit.group`), and comments across lines. Typed inside
+ * `#{`, a name offers the data elements by name and puts in the uid, since the editor's
+ * `completions` hear what comes before the word; a uid names its data element on hover.
  */
 export const Indicator: StoryObj = {
     render: () => (
@@ -93,6 +119,8 @@ export const Indicator: StoryObj = {
             mediaType="text/x-dhis2-expression"
             language={languageForMediaType('text/x-dhis2-expression')}
             initial={INDICATOR}
+            completions={offerItems}
+            hover={(word) => ELEMENTS[word]}
         />
     ),
 }
@@ -121,4 +149,53 @@ export const ProgramRule: StoryObj = {
 export const OlderServer: StoryObj = {
     name: 'Older server',
     render: () => <Expression title="Condition" mediaType="text/x-dhis2-rule" language={OLDER} initial={OLDER_RULE} />,
+}
+
+/** The functions each server in the story knows: the older one lacks three the latest has. */
+const SERVERS = {
+    older: DHIS2_FUNCTIONS.filter((name) => !['d2:validatePattern', 'd2:yearsBetween', 'd2:inUserGroup'].includes(name)),
+    latest: DHIS2_FUNCTIONS,
+} as const
+
+/** A condition with the server to read it for picked above it; the plugin installed at the top of the module comes back once the story is left. */
+function ServerSwitch() {
+    const [server, setServer] = useState<keyof typeof SERVERS>('older')
+    const [value, setValue] = useState(RULE)
+    useEffect(() => {
+        registerPlugins([dhis2Plugin({ functions: SERVERS[server] })])
+    }, [server])
+    useEffect(() => () => registerPlugins([dhis2]), [])
+    return (
+        <Stack gap="none" className="h-full min-h-0">
+            <PaneHeader
+                title="Condition"
+                meta="text/x-dhis2-rule"
+                actions={
+                    <Segmented
+                        label="Server"
+                        size="sm"
+                        value={server}
+                        onValueChange={setServer}
+                        options={[
+                            { value: 'older', label: 'Older server' },
+                            { value: 'latest', label: 'Latest server' },
+                        ]}
+                    />
+                }
+            />
+            <Fill>
+                <CodeEditor label="Condition" language="dhis2-rule" variant="pane" size="sm" value={value} onChange={setValue} />
+            </Fill>
+        </Stack>
+    )
+}
+
+/**
+ * The plugin installed again with another server's names, as an app does when the server it talks
+ * to changes: the editor showing `dhis2-rule` takes the new names at once. On the older server,
+ * `d2:validatePattern`, `d2:yearsBetween` and `d2:inUserGroup` read as plain names.
+ */
+export const ServerVersions: StoryObj = {
+    name: 'Server versions',
+    render: () => <ServerSwitch />,
 }
