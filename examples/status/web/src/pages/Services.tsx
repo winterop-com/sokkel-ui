@@ -1,12 +1,18 @@
 import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
+import { useStore } from '@winterop-com/sokkel-ui/hooks/use-store'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Sparkline } from '@winterop-com/sokkel-ui/Stat'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { formatUptime, overallUptime } from '@winterop-com/sokkel-ui/UptimeBar'
 
 import { go } from 'tidevann-shared/router'
-import { type Service, SERVICE_IDS, SERVICES } from '../data'
+import { RotateCcw } from 'lucide-react'
+
+import { type Service, SERVICE_IDS } from '../data'
+import { layout, setLayout, useServiceOrder } from '../layout'
 import { type LiveState, useLive } from '../live'
 import { type UptimeByService, useUptime } from '../parts/uptime'
 import { formatCount, formatMs, formatRate } from '../status'
@@ -99,20 +105,42 @@ function columns(state: LiveState, uptime: UptimeByService): DataColumn<Service>
 /** The host is in the column menu, out of the way until asked for. */
 const HIDDEN: ReadonlySet<string> = new Set(['host'])
 
-/** Every service with its state, its latency now and over the last minutes, its errors and its uptime; a row opens it. */
+/**
+ * Every service with its state, its latency now and over the last minutes, its errors and its
+ * uptime; a row opens it. Unsorted, the rows stand in the person's order, dragged by their grips,
+ * and the overview's tiles and uptime follow it.
+ */
 export function Services() {
     const state = useLive()
     const uptime = useUptime()
+    const services = useServiceOrder()
+    const ordered = useStore(layout).services !== null
     const down = SERVICE_IDS.filter((id) => state.health[id] !== 'operational').length
     return (
         <Stack gap="section" className="h-full">
-            <PageHeader title="Services" count={down === 0 ? 'all operational' : `${String(down)} not operational`} />
+            <PageHeader
+                title="Services"
+                count={down === 0 ? 'all operational' : `${String(down)} not operational`}
+                actions={
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setLayout({ services: null })}
+                        reason={ordered ? undefined : 'The services are in the board’s own order.'}
+                    >
+                        <RotateCcw aria-hidden />
+                        Reset order
+                    </Button>
+                }
+            />
             <DataTable
                 className="min-h-0 flex-1"
                 minWidth="auto"
                 columns={columns(state, uptime)}
-                rows={SERVICES}
+                rows={services}
                 rowKey={(service) => service.id}
+                rowLabel={(service) => service.id}
+                onReorder={(from, to) => setLayout({ services: moveItem(services, from, to).map((service) => service.id) })}
                 defaultHiddenColumns={HIDDEN}
                 onOpen={(service) => go(`/services/${service.id}`)}
                 rowActions={(service) => [

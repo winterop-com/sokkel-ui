@@ -961,7 +961,7 @@ does: an item is dragged by its grip or as a whole, the rest moving aside to sho
 arrow keys on a focused grip move it a place with the focus following, and `onMove(from, to)` says
 where it went; `moveItem` and `insertItem` in `lib/reorder` apply it without loading the engine. A
 board's cards drag between its columns with a line where they land and a grip for the keyboard;
-`DataTable`'s `onReorder` draws a grip at each row's start and moves the active row with Alt and the
+`DataTable`'s `onReorder` draws a grip at each row's start, a stacked card's too, and moves the active row with Alt and the
 arrows, while the rows are drawn as given; and `DashboardArrange` draws a dashboard whose panels are
 arranged while `arranging`: a grip, a width and a remove in each panel's head (`PanelTools`, which
 the library's panels draw), a line where a dragged panel lands, a palette of widgets dragged onto the

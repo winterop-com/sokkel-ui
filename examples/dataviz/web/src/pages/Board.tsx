@@ -1,8 +1,10 @@
-import { DashboardGrid, DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { DashboardArrange, type DashboardWidget } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
+import { DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { type Filter, type FilterField, FilterBar } from '@winterop-com/sokkel-ui/FilterBar'
 import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
 import { InlineEdit } from '@winterop-com/sokkel-ui/InlineEdit'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { insertItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -10,32 +12,25 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
     DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { useWindowedPane, WindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
 import {
-    ArrowLeft,
-    ArrowRight,
     CopyPlus,
     FileSpreadsheet,
     LayoutDashboard,
+    LayoutGrid,
     MoreHorizontal,
     PencilLine,
     Plus,
     Presentation,
-    Ruler,
     Trash2,
     X,
 } from 'lucide-react'
-import { type ReactNode, useMemo, useState } from 'react'
+import { createElement, type ReactNode, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { go } from 'tidevann-shared/router'
 
@@ -45,6 +40,7 @@ import { AddChartDialog, BoardDialog, SPANS } from '../dialogs'
 import { type Board, type BoardItem, counted, type Dataset, freshId, now, type Preferences, type SavedChart } from '../model'
 import { download, fileName, toCsv } from '../parse'
 import { filtersFor, shape, typedRows } from '../shape'
+import { VIEW_ICONS } from '../views'
 import { useDeleteBoard } from './Boards'
 
 /**
@@ -86,60 +82,86 @@ interface Placed {
     dataset: Dataset | undefined
 }
 
-/** The board's charts in their grid, drawn larger while the board is presented in its window. */
+/**
+ * The board's charts in their grid, drawn larger while the board is presented in its window. While
+ * arranging, each panel drags by its grip, takes a width from its head and comes off the board, and
+ * saved charts are dragged in from the palette.
+ */
 function BoardGrid({
+    items,
     placed,
     filters,
     prefs,
     menu,
+    arranging,
+    palette,
+    onItemsChange,
+    onAdd,
 }: {
+    items: readonly BoardItem[]
     placed: readonly Placed[]
     filters: readonly Filter[]
     prefs: Preferences
-    menu: (entry: Placed, index: number) => ReactNode
+    menu: (entry: Placed) => ReactNode
+    arranging: boolean
+    palette: readonly DashboardWidget[]
+    onItemsChange: (items: BoardItem[]) => void
+    onAdd: (chartId: string, span: BoardItem['span'], index: number) => void
 }) {
     const large = useWindowedPane()?.windowed === true
+    const byId = new Map(placed.map((entry) => [entry.item.id, entry]))
+    const draw = (item: BoardItem) => {
+        const entry = byId.get(item.id) ?? { item, chart: undefined, dataset: undefined }
+        const { chart, dataset } = entry
+        if (chart === undefined || dataset === undefined)
+            return (
+                <DashboardPanel title={chart?.name ?? 'A deleted chart'} menu={menu(entry)}>
+                    <p className="text-sm text-muted-foreground">
+                        {chart === undefined
+                            ? 'This chart was deleted. Remove it from the board.'
+                            : 'The dataset this chart reads was deleted.'}
+                    </p>
+                </DashboardPanel>
+            )
+        const own = filtersFor(dataset, filters)
+        const reaching =
+            own.length === filters.length
+                ? ''
+                : ` · ${String(filters.length - own.length)} ${filters.length - own.length === 1 ? 'filter does' : 'filters do'} not apply`
+        return (
+            <ChartView
+                dataset={dataset}
+                spec={chart.spec}
+                title={chart.name}
+                subtitle={`${dataset.name}${own.length > 0 ? ' · filtered' : ''}${reaching}`}
+                prefs={prefs}
+                filters={own}
+                mode="panel"
+                menu={menu(entry)}
+                file={fileName(chart.name)}
+                large={large}
+            />
+        )
+    }
     return (
-        <DashboardGrid>
-            {placed.map((entry, index) => {
-                const { item, chart, dataset } = entry
-                if (chart === undefined || dataset === undefined)
-                    return (
-                        <DashboardPanel key={item.id} title={chart?.name ?? 'A deleted chart'} span={item.span} menu={menu(entry, index)}>
-                            <p className="text-sm text-muted-foreground">
-                                {chart === undefined
-                                    ? 'This chart was deleted. Remove it from the board.'
-                                    : 'The dataset this chart reads was deleted.'}
-                            </p>
-                        </DashboardPanel>
-                    )
-                const own = filtersFor(dataset, filters)
-                const reaching =
-                    own.length === filters.length
-                        ? ''
-                        : ` · ${String(filters.length - own.length)} ${filters.length - own.length === 1 ? 'filter does' : 'filters do'} not apply`
-                return (
-                    <ChartView
-                        key={item.id}
-                        dataset={dataset}
-                        spec={chart.spec}
-                        title={chart.name}
-                        subtitle={`${dataset.name}${own.length > 0 ? ' · filtered' : ''}${reaching}`}
-                        prefs={prefs}
-                        filters={own}
-                        mode="panel"
-                        span={item.span}
-                        menu={menu(entry, index)}
-                        file={fileName(chart.name)}
-                        large={large}
-                    />
-                )
-            })}
-        </DashboardGrid>
+        <DashboardArrange
+            layout={items}
+            onLayoutChange={onItemsChange}
+            renderPanel={draw}
+            label={(item) => byId.get(item.id)?.chart?.name ?? 'A deleted chart'}
+            arranging={arranging && !large}
+            palette={palette}
+            onAdd={(widget, index) => onAdd(widget.id, widget.span ?? 'half', index)}
+            spans={SPANS.map((span) => span.value)}
+            words={{ palette: 'Saved charts', end: 'Drop a chart here to add it at the end' }}
+        />
     )
 }
 
-/** A board: its saved charts in a grid, filtered together, rearranged from each panel's menu and presented full screen. */
+/**
+ * A board: its saved charts in a grid, filtered together and presented full screen. Arranged, its
+ * panels are moved, resized and taken off by drag, and saved charts are dragged onto it.
+ */
 export function BoardPage({
     board,
     charts,
@@ -155,14 +177,20 @@ export function BoardPage({
 }) {
     const [adding, setAdding] = useState(false)
     const [details, setDetails] = useState(false)
+    // An empty board opens arranged, with the saved charts ready to drag onto it.
+    const [arranging, setArranging] = useState(() => board?.items.length === 0 && charts.length > 0)
     const remove = useDeleteBoard()
+    // The items as last changed here, shown until the backend answers with them, so a quick second move never reads a stale first.
+    const [pending, setPending] = useState<BoardItem[] | null>(null)
+    const latest = useRef<BoardItem[] | null>(null)
+    const items = pending ?? board?.items ?? []
     const placed: Placed[] = useMemo(
         () =>
-            (board?.items ?? []).map((item) => {
+            items.map((item) => {
                 const chart = charts.find((one) => one.id === item.chartId)
                 return { item, chart, dataset: chart === undefined ? undefined : datasets.find((one) => one.id === chart.datasetId) }
             }),
-        [board, charts, datasets],
+        [items, charts, datasets],
     )
     const used = useMemo(
         () => [
@@ -194,6 +222,12 @@ export function BoardPage({
                               icon: Presentation,
                               onSelect: () => go(presenting ? `/boards/${board.id}` : `/boards/${board.id}/present`),
                           },
+                          {
+                              id: 'board-arrange',
+                              label: arranging ? 'Stop arranging the board' : 'Arrange the board',
+                              icon: LayoutGrid,
+                              onSelect: () => setArranging(!arranging),
+                          },
                           { id: 'board-add', label: 'Add a chart to the board', icon: Plus, onSelect: () => setAdding(true) },
                           ...(filters.length > 0
                               ? [
@@ -208,7 +242,7 @@ export function BoardPage({
                       ],
                   },
               ],
-        [board, presenting, filters],
+        [board, presenting, filters, arranging],
     )
 
     if (board === undefined)
@@ -220,19 +254,27 @@ export function BoardPage({
             </Page>
         )
 
-    const save = (items: BoardItem[]) => boardStore.update(board.id, { items, updatedAt: now() })
-    const move = (index: number, by: number) => {
-        const items = [...board.items]
-        const [moved] = items.splice(index, 1)
-        items.splice(index + by, 0, moved)
-        void save(items)
+    const save = (next: BoardItem[]) => {
+        latest.current = next
+        setPending(next)
+        return boardStore.update(board.id, { items: next, updatedAt: now() }).finally(() => {
+            if (latest.current === next) setPending(null)
+        })
     }
     const csvOf = (entry: Placed) => {
         if (entry.chart === undefined || entry.dataset === undefined) return
         const shaped = shape(entry.dataset, entry.chart.spec, filtersFor(entry.dataset, filters))
         download(`${fileName(entry.chart.name)}.csv`, toCsv(shaped.table.names, shaped.table.rows), 'text/csv')
     }
-    const menu = (entry: Placed, index: number) => (
+    const takeOff = (entry: Placed) => {
+        const before = items
+        void save(items.filter((item) => item.id !== entry.item.id)).then(() =>
+            toast.success(`${entry.chart?.name ?? 'The chart'} taken off ${board.name}`, {
+                action: { label: 'Undo', onClick: () => void save(before) },
+            }),
+        )
+    }
+    const menu = (entry: Placed) => (
         <>
             {entry.chart !== undefined && (
                 <DropdownMenuItem onClick={() => go(`/charts/${entry.item.chartId}`)}>
@@ -246,54 +288,29 @@ export function BoardPage({
                     Download CSV
                 </DropdownMenuItem>
             )}
-            <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                    <Ruler aria-hidden />
-                    Width
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                    <DropdownMenuRadioGroup
-                        value={entry.item.span}
-                        onValueChange={(span) =>
-                            void save(
-                                board.items.map((item) =>
-                                    item.id === entry.item.id ? { ...item, span: span as BoardItem['span'] } : item,
-                                ),
-                            )
-                        }
-                    >
-                        {SPANS.map((span) => (
-                            <DropdownMenuRadioItem key={span.value} value={span.value}>
-                                {span.label}
-                            </DropdownMenuRadioItem>
-                        ))}
-                    </DropdownMenuRadioGroup>
-                </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuItem disabled={index === 0} onClick={() => move(index, -1)}>
-                <ArrowLeft aria-hidden />
-                Move earlier
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={index === board.items.length - 1} onClick={() => move(index, 1)}>
-                <ArrowRight aria-hidden />
-                Move later
+            <DropdownMenuItem onClick={() => setArranging(true)} disabled={arranging}>
+                <LayoutGrid aria-hidden />
+                Arrange
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-                variant="destructive"
-                onClick={() =>
-                    void save(board.items.filter((item) => item.id !== entry.item.id)).then(() =>
-                        toast.success(`${entry.chart?.name ?? 'The chart'} taken off ${board.name}`, {
-                            action: { label: 'Undo', onClick: () => void save(board.items) },
-                        }),
-                    )
-                }
-            >
+            <DropdownMenuItem variant="destructive" onClick={() => takeOff(entry)}>
                 <Trash2 aria-hidden />
                 Remove from board
             </DropdownMenuItem>
         </>
     )
+
+    // The saved charts not on the board yet, offered to drag onto it.
+    const onBoard = new Set(items.map((item) => item.chartId))
+    const palette: DashboardWidget[] = charts
+        .filter((chart) => !onBoard.has(chart.id))
+        .sort((left, right) => left.name.localeCompare(right.name))
+        .map((chart) => ({
+            id: chart.id,
+            label: chart.name,
+            icon: createElement(VIEW_ICONS[chart.spec.view], { 'aria-hidden': true }),
+            span: 'half',
+        }))
 
     const filterBar = (
         <Row gap="sm" wrap>
@@ -318,8 +335,14 @@ export function BoardPage({
                         onSave={(value) => boardStore.update(board.id, { name: value.trim(), updatedAt: now() }).then(() => undefined)}
                     />
                 }
-                count={counted(board.items.length, 'chart')}
-                description={board.description === '' ? undefined : board.description}
+                count={counted(items.length, 'chart')}
+                description={
+                    arranging
+                        ? 'Drag a chart onto the board, move a panel by its grip, set its width or take it off.'
+                        : board.description === ''
+                          ? undefined
+                          : board.description
+                }
                 actions={
                     <>
                         <DropdownMenu>
@@ -338,7 +361,7 @@ export function BoardPage({
                                                 {
                                                     name: `${board.name} copy`,
                                                     description: board.description,
-                                                    items: board.items.map((item) => ({ ...item, id: freshId('it') })),
+                                                    items: items.map((item) => ({ ...item, id: freshId('it') })),
                                                     filters: [...filters],
                                                     updatedAt: now(),
                                                 },
@@ -364,11 +387,26 @@ export function BoardPage({
                             variant="outline"
                             size="sm"
                             onClick={() => go(`/boards/${board.id}/present`)}
-                            reason={board.items.length === 0 ? 'Add a chart first.' : undefined}
+                            reason={items.length === 0 ? 'Add a chart first.' : undefined}
                         >
                             <Presentation aria-hidden />
                             Present
                         </Button>
+                        {arranging ? (
+                            <Button size="sm" onClick={() => setArranging(false)}>
+                                Done
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setArranging(true)}
+                                reason={items.length === 0 && charts.length === 0 ? 'Save a chart first.' : undefined}
+                            >
+                                <LayoutGrid aria-hidden />
+                                Arrange
+                            </Button>
+                        )}
                         <Button size="sm" onClick={() => setAdding(true)}>
                             <Plus aria-hidden />
                             Add chart
@@ -376,19 +414,21 @@ export function BoardPage({
                     </>
                 }
             />
-            {board.items.length === 0 ? (
+            {items.length === 0 && !arranging ? (
                 <Empty>
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
                             <LayoutDashboard aria-hidden />
                         </EmptyMedia>
                         <EmptyTitle>No charts yet</EmptyTitle>
-                        <EmptyDescription>Add saved charts to arrange them here, filter them together and present them.</EmptyDescription>
+                        <EmptyDescription>
+                            Drag saved charts onto the board to arrange them here, filter them together and present them.
+                        </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent>
-                        <Button size="sm" onClick={() => setAdding(true)}>
-                            <Plus aria-hidden />
-                            Add chart
+                        <Button size="sm" onClick={() => (charts.length === 0 ? setAdding(true) : setArranging(true))}>
+                            <LayoutGrid aria-hidden />
+                            Arrange
                         </Button>
                     </EmptyContent>
                 </Empty>
@@ -402,12 +442,22 @@ export function BoardPage({
                     words={{ close: 'Stop presenting', away: 'Presented full screen.' }}
                 >
                     <Stack gap="md">
-                        {filterBar}
-                        <BoardGrid placed={placed} filters={filters} prefs={prefs} menu={menu} />
+                        {items.length > 0 && filterBar}
+                        <BoardGrid
+                            items={items}
+                            placed={placed}
+                            filters={filters}
+                            prefs={prefs}
+                            menu={menu}
+                            arranging={arranging}
+                            palette={palette}
+                            onItemsChange={(next) => void save(next)}
+                            onAdd={(chartId, span, index) => void save(insertItem(items, { id: freshId('it'), chartId, span }, index))}
+                        />
                     </Stack>
                 </WindowedPane>
             )}
-            <AddChartDialog open={adding} onOpenChange={setAdding} board={board} charts={charts} datasets={datasets} />
+            <AddChartDialog open={adding} onOpenChange={setAdding} board={{ ...board, items }} charts={charts} datasets={datasets} />
             <BoardDialog open={details} onOpenChange={setDetails} editing={board} />
             {remove.dialog}
         </Page>

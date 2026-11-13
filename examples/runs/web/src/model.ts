@@ -1,5 +1,6 @@
 /** What Tidevann's jobs console holds: jobs, their runs, the saved views of the runs and a person's preferences. */
 
+import type { DashboardLayoutItem } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
 import type { ListViewState } from '@winterop-com/sokkel-ui/lib/list-views'
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
 import type { Row } from 'tidevann-shared/backend'
@@ -99,6 +100,8 @@ export interface Prefs extends Row {
     wrapLog: boolean
     /** Whether the scheduler starts runs on their schedules. */
     scheduler: boolean
+    /** The overview's panels as the person arranged them, in order with their widths; none for the default. */
+    overview?: DashboardLayoutItem[]
 }
 
 export const DEFAULT_PREFS: Prefs = {
