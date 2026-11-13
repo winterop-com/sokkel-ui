@@ -1,5 +1,6 @@
 import { ChartPanel } from '@winterop-com/sokkel-ui-charts/dashboard/ChartPanel'
 import { DashboardArrange, type DashboardLayoutItem, type DashboardWidget } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
+import { DashboardEditActions, useDashboardEdit } from '@winterop-com/sokkel-ui/dashboard/DashboardEdit'
 import { DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { StatPanel } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
@@ -19,10 +20,8 @@ import {
     CircleX,
     Clock,
     Hourglass,
-    LayoutGrid,
     ListChecks,
     ListOrdered,
-    RotateCcw,
     Timer,
     TriangleAlert,
 } from 'lucide-react'
@@ -77,9 +76,6 @@ const DEFAULT_LAYOUT: DashboardLayoutItem[] = WIDGETS.slice(0, 12).map((widget) 
 
 const TRIGGERS = ['schedule', 'manual', 'retry'] as const
 
-const sameLayout = (left: readonly DashboardLayoutItem[], right: readonly DashboardLayoutItem[]) =>
-    left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.span === right[index]?.span)
-
 const median = (values: readonly number[]) => {
     const sorted = [...values].sort((a, b) => a - b)
     return sorted.length === 0 ? null : (sorted[Math.floor(sorted.length / 2)] ?? null)
@@ -88,14 +84,12 @@ const median = (values: readonly number[]) => {
 /** The console's front page: how the last day went, what is going now, what failed and what comes next. */
 export function Overview() {
     const { runs, jobs, now, prefs, setPrefs } = useConsole()
-    const [arranging, setArranging] = useState(false)
-    // Held here as it changes and kept in the preferences behind it, so a quick second move never reads a stale first.
-    const [arranged, setArranged] = useState<DashboardLayoutItem[] | null>(null)
-    const layout = (arranged ?? prefs.overview ?? DEFAULT_LAYOUT).filter((item) => LABELS[item.id as WidgetId] !== undefined)
-    const keep = (next: DashboardLayoutItem[]) => {
-        setArranged(next)
-        void setPrefs({ overview: next })
-    }
+    const edit = useDashboardEdit({
+        layout: (prefs.overview ?? DEFAULT_LAYOUT).filter((item) => LABELS[item.id as WidgetId] !== undefined),
+        defaultLayout: DEFAULT_LAYOUT,
+        onSave: (overview) => setPrefs({ overview }),
+    })
+    const layout = edit.layout
     const actions = useActions()
     // The charts are built again once a minute, or when a run changes state, not with every tick of the clock.
     const minute = Math.floor(now / 60_000)
@@ -423,51 +417,30 @@ export function Overview() {
             <PageHeader
                 title="Overview"
                 description={
-                    arranging
+                    edit.editing
                         ? 'Drag a panel by its grip to move it, set its width or remove it, and drag a widget in to add it.'
                         : "The last 24 hours of Tidevann's runs, on the UTC clock."
                 }
                 actions={
-                    arranging ? (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => keep(DEFAULT_LAYOUT)}
-                                reason={sameLayout(layout, DEFAULT_LAYOUT) ? 'The layout is the default.' : undefined}
-                            >
-                                <RotateCcw aria-hidden />
-                                Reset layout
-                            </Button>
-                            <Button size="sm" onClick={() => setArranging(false)}>
-                                Done
-                            </Button>
-                        </>
-                    ) : (
-                        <>
-                            <RefreshControl
-                                onRefresh={refresh}
-                                refreshing={refreshing}
-                                interval={every}
-                                onIntervalChange={setEvery}
-                                updated={`updated ${clock(updated, true)}`}
-                            />
-                            <Button variant="outline" size="sm" onClick={() => setArranging(true)}>
-                                <LayoutGrid aria-hidden />
-                                Arrange
-                            </Button>
-                        </>
-                    )
+                    <DashboardEditActions edit={edit}>
+                        <RefreshControl
+                            onRefresh={refresh}
+                            refreshing={refreshing}
+                            interval={every}
+                            onIntervalChange={setEvery}
+                            updated={`updated ${clock(updated, true)}`}
+                        />
+                    </DashboardEditActions>
                 }
             />
             <DashboardArrange
                 layout={layout}
-                onLayoutChange={keep}
+                onLayoutChange={edit.change}
                 renderPanel={panelOf}
                 label={(item) => LABELS[item.id as WidgetId]}
-                arranging={arranging}
+                arranging={edit.editing}
                 palette={WIDGETS.filter((widget) => !shown.has(widget.id))}
-                onAdd={(widget, index) => keep(insertItem(layout, { id: widget.id, span: widget.span }, index))}
+                onAdd={(widget, index) => edit.change(insertItem(layout, { id: widget.id, span: widget.span }, index))}
             />
         </>
     )

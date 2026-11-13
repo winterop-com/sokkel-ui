@@ -4,6 +4,7 @@
  */
 
 import { DashboardArrange, type DashboardWidget } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
+import { DashboardEditActions, useDashboardEdit } from '@winterop-com/sokkel-ui/dashboard/DashboardEdit'
 import { insertItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
@@ -16,16 +17,14 @@ import {
     ChartBar,
     ChartColumn,
     ChartPie,
-    Check,
     CreditCard,
     Earth,
     Grid3x3,
     LayoutDashboard,
-    LayoutGrid,
     ListFilter,
+    Pencil,
     Percent,
     Repeat,
-    RotateCcw,
     Trophy,
     Undo2,
     UserMinus,
@@ -34,7 +33,7 @@ import {
     Users,
     type LucideIcon,
 } from 'lucide-react'
-import { useRef, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
 import { layouts } from './collections'
@@ -88,109 +87,74 @@ export const WIDGET_PARTS: Record<WidgetId, Widget> = {
 }
 
 const isWidget = (id: string): id is WidgetId => (WIDGETS as readonly string[]).includes(id)
-const sameLayout = (a: readonly Placed[], b: readonly Placed[]) =>
-    a.length === b.length && a.every((one, index) => one.id === b[index]?.id && one.span === b[index]?.span)
 
 export interface ArrangedBoard {
-    /** The page header's actions: Arrange, or Reset layout and Done while arranging. */
+    /** The page header's actions: Edit, or Reset, Cancel and Done while editing. */
     actions: ReactNode
     /** The dashboard itself. */
     grid: ReactNode
 }
 
 /**
- * A dashboard the person arranges: its panels as the backend keeps them, and while arranging, each
+ * A dashboard the person edits: its panels as the backend keeps them, and while editing, each
  * dragged to its place, resized or removed, and the widgets not on it offered in a palette to drag
- * in. Every change is saved as it is made; Reset layout puts the dashboard as it comes back.
+ * in. Done keeps the edits, Cancel throws them away, and Reset puts the dashboard as it comes.
  */
 export function useArrangedBoard(board: BoardId): ArrangedBoard {
-    const [arranging, setArranging] = useState(false)
     const { rows } = useCollection(layouts)
     const stored = rows?.find((row) => row.id === board)
-    // The layout as last changed here, drawn until the backend has kept it, so a drop never jumps back.
-    const [held, setHeld] = useState<Placed[] | null>(null)
-    const writes = useRef(0)
-    const layout = (held ?? stored?.panels ?? DEFAULT_LAYOUTS[board]).filter((one) => isWidget(one.id))
-    const keep = (next: Placed[]) => {
-        setHeld(next)
-        writes.current += 1
-        const write = writes.current
+    const save = (next: Placed[]) => {
         const saved = stored === undefined ? layouts.create({ panels: next }, board) : layouts.update(board, { panels: next })
-        void saved.then(
-            () => {
-                if (writes.current === write) setHeld(null)
-            },
-            (error: unknown) => {
-                if (writes.current === write) setHeld(null)
-                toast.add({
-                    type: 'error',
-                    title: 'Could not save the layout',
-                    description: error instanceof Error ? error.message : String(error),
-                })
-            },
-        )
+        return saved.catch((error: unknown) => {
+            toast.add({
+                type: 'error',
+                title: 'Could not save the layout',
+                description: error instanceof Error ? error.message : String(error),
+            })
+        })
     }
+    const edit = useDashboardEdit<Placed>({
+        layout: (stored?.panels ?? DEFAULT_LAYOUTS[board]).filter((one) => isWidget(one.id)),
+        defaultLayout: DEFAULT_LAYOUTS[board],
+        onSave: save,
+    })
+    const layout = edit.layout
     const placed = new Set(layout.map((one) => one.id))
     const palette: DashboardWidget[] = WIDGETS.filter((id) => !placed.has(id)).map((id) => {
         const { label, icon: Icon, span } = WIDGET_PARTS[id]
         return { id, label, span, icon: <Icon aria-hidden /> }
     })
-    const isDefault = sameLayout(layout, DEFAULT_LAYOUTS[board])
 
-    const actions = arranging ? (
-        <>
-            <Button
-                variant="outline"
-                size="sm"
-                reason={isDefault ? 'The dashboard is as it comes.' : undefined}
-                onClick={() => {
-                    keep(DEFAULT_LAYOUTS[board])
-                    toast.add({ title: 'Layout reset' })
-                }}
-            >
-                <RotateCcw aria-hidden />
-                Reset layout
-            </Button>
-            <Button size="sm" onClick={() => setArranging(false)}>
-                <Check aria-hidden />
-                Done
-            </Button>
-        </>
-    ) : (
-        <Button variant="outline" size="sm" onClick={() => setArranging(true)}>
-            <LayoutGrid aria-hidden />
-            Arrange
-        </Button>
-    )
+    const actions = <DashboardEditActions edit={edit} />
 
     const grid =
-        layout.length === 0 && !arranging ? (
+        layout.length === 0 && !edit.editing ? (
             <Empty>
                 <EmptyHeader>
                     <EmptyMedia variant="icon">
                         <LayoutDashboard aria-hidden />
                     </EmptyMedia>
                     <EmptyTitle>Nothing on this dashboard</EmptyTitle>
-                    <EmptyDescription>Arrange it and drag in the figures and panels to show.</EmptyDescription>
+                    <EmptyDescription>Edit it and drag in the figures and panels to show.</EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                    <Button size="sm" onClick={() => setArranging(true)}>
-                        <LayoutGrid aria-hidden />
-                        Arrange
+                    <Button size="sm" onClick={edit.edit}>
+                        <Pencil aria-hidden />
+                        Edit
                     </Button>
                 </EmptyContent>
             </Empty>
         ) : (
             <DashboardArrange
                 layout={layout}
-                onLayoutChange={keep}
+                onLayoutChange={edit.change}
                 label={(item) => WIDGET_PARTS[item.id].label}
                 renderPanel={(item) => WIDGET_PARTS[item.id].draw()}
-                arranging={arranging}
+                arranging={edit.editing}
                 palette={palette}
                 onAdd={(widget, index) => {
                     if (!isWidget(widget.id)) return
-                    keep(insertItem(layout, { id: widget.id, span: widget.span ?? WIDGET_PARTS[widget.id].span }, index))
+                    edit.change(insertItem(layout, { id: widget.id, span: widget.span ?? WIDGET_PARTS[widget.id].span }, index))
                 }}
             />
         )
