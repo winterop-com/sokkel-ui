@@ -1,0 +1,159 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "tooltip",
+    "kind": "part",
+    "status": "draft",
+    "summary": "A short line about a control, in a small inverted box beside it with an arrow toward it: shown once the pointer rests on the control or while it has keyboard focus, and gone when both leave. It names an icon button, says why a control is off (a button's reason), and can add the key that does the same.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ui/tooltip.tsx",
+            "packages/core/src/components/ui/kbd.tsx",
+            "packages/core/src/lib/finger.ts"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/overlay.rs (tooltip, tooltip_shown)",
+            "examples/storybook/src/stories/overlays.rs (Primitives/Overlays/Tooltip)"
+        ]
+    },
+    "anatomy": {
+        "trigger": "The control the tooltip speaks for. Below 768 it takes a finger's hit area, centered on it, and keeps its drawn size.",
+        "box": "The line on the foreground ground in the background's ink: one line as wide as its words up to 320, then wrapping. Beside the trigger, above it by default, 4 away, centered on it.",
+        "arrow": "A 10 square turned 45 degrees at the box's edge toward the trigger, in the box's ground.",
+        "keys": "The key that does the same, after the words: a small key cap on a wash of the background over the box's ground."
+    },
+    "options": {
+        "side": {
+            "values": ["top", "bottom", "left", "right", "inline-start", "inline-end"],
+            "default": "top",
+            "does": "Which side of the trigger the box stands on; it moves to the other side when there is no room.",
+            "sokkel-ui": "TooltipContent side"
+        },
+        "align": {
+            "values": ["start", "center", "end"],
+            "default": "center",
+            "does": "Where along that side the box lines up with the trigger.",
+            "sokkel-ui": "TooltipContent align"
+        },
+        "sideOffset": {"type": "length", "default": 4, "does": "How far the box stands from the trigger."},
+        "delay": {
+            "type": "number",
+            "default": 600,
+            "does": "ms the pointer rests on the trigger before the box shows; keyboard focus shows it at once.",
+            "sokkel-ui": "Base UI's 600 by default; TooltipProvider delay, 0 unless set, for the tooltips inside it"
+        },
+        "open": {
+            "type": "boolean",
+            "default": false,
+            "does": "Shown whatever the pointer does, as a story or a guided tour shows it.",
+            "sokkel-ui": "open, defaultOpen"
+        },
+        "keys": {
+            "type": "node",
+            "does": "A key after the words, drawn as a key cap.",
+            "sokkel-ui": "Kbd inside TooltipContent"
+        }
+    },
+    "sizes": {
+        "box": {
+            "padX": 12,
+            "padY": 6,
+            "gap": 6,
+            "text": "text.help",
+            "radius": "radius-md",
+            "note": "At most 320 wide (layout.maxWidth); with keys its end pads 6."
+        },
+        "arrow": {
+            "height": 10,
+            "width": 10,
+            "radius": "radius-mini",
+            "note": "Turned 45 degrees, half of it out past the box's edge."
+        },
+        "keys": {"height": 20, "padX": 4, "text": "text.badge", "radius": "radius-sm", "note": "At least 20 wide."},
+        "trigger": {"phoneHitArea": "spacing-finger"}
+    },
+    "layout": {
+        "maxWidth": 320,
+        "gap": {"value": 4, "note": "Between the trigger and the box."},
+        "keysPadEnd": {"value": 6, "note": "The box's end pad when it holds keys."},
+        "openDelay": {
+            "value": 600,
+            "note": "ms before the box shows under a resting pointer: Base UI's own, for a tooltip outside a TooltipProvider; 0 inside sokkel-ui's TooltipProvider, whose tooltips share one delay group."
+        }
+    },
+    "states": {
+        "rest": {"means": "Not shown."},
+        "open": {
+            "means": "Shown.",
+            "reached": "the pointer resting on the trigger for the delay, keyboard focus on the trigger, or open",
+            "sokkel-ui": "data-open"
+        }
+    },
+    "pieces": {
+        "box": {
+            "rest": {
+                "ground": "foreground",
+                "ink": "background",
+                "radius": "radius-md",
+                "text": "text.help",
+                "note": "No edge and no shadow."
+            }
+        },
+        "arrow": {"rest": {"ground": "foreground", "radius": "radius-mini"}},
+        "keys": {
+            "rest": {
+                "ground": "background/20",
+                "ink": "background",
+                "radius": "radius-sm",
+                "text": "text.badge",
+                "dark": {"ground": "background/10"}
+            }
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Shows the box while the trigger has keyboard focus.",
+            "when": "focus reaches the trigger"
+        },
+        {"keys": ["Escape"], "does": "Hides the box; focus stays on the trigger.", "when": "the box is shown"}
+    ],
+    "words": {},
+    "appText": {
+        "text": "What the control does or why it is off, and the keys that do the same; never the only place a thing is said."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Base UI's Tooltip: the box is a portal on z-50, shown on hover and on focus-visible, and it moves to the other side of the trigger when there is no room.",
+            "Outside a TooltipProvider a tooltip waits Base UI's 600 ms; sokkel-ui's TooltipProvider sets 0, and its tooltips share one delay group.",
+            "TooltipTrigger adds the finger hit area (FINGER_HIT) unless its render element places itself or draws its own ::after (takesFinger).",
+            "The box fades and zooms in from the trigger's side.",
+            "A Button's reason and an IconButton's name show in this tooltip.",
+            "The rail's collapsed entries and SwitchField's reason draw a box of their own on the popover ground, without an arrow (parts/rail)."
+        ],
+        "sokkel-ui-egui": [
+            "tooltip(response, text) shows it under a resting pointer or with keyboard focus; tooltip_shown(response, text) shows it whatever the pointer does.",
+            "egui's Popup with PopupKind::Tooltip.",
+            "Hover comes from last frame's rects; the delay counts from the first frame the pointer is over the trigger."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "side",
+            "spec": "Above the trigger by default, 4 away, centered; side and align as options.",
+            "today": "As of 26b411f (overlay.rs unchanged since bee2a97): always under the trigger (RectAlign::BOTTOM), 4 away."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "delay",
+            "spec": "600 ms under a resting pointer, 0 inside a provider; keyboard focus shows it at once.",
+            "today": "0.5 s (TOOLTIP_DELAY); keyboard focus shows it at once."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 26b411f, the tooltip draws the box on the foreground ground in the background's ink, radius-md, padded 12 by 6, text.help, at most 320 wide, on hover and keyboard focus. Not yet: the arrow, keys, side and align, a delay group, Escape, and the finger hit area below 768."
+        }
+    ]
+}

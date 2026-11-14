@@ -1,0 +1,418 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "select",
+    "kind": "part",
+    "status": "draft",
+    "summary": "One value chosen from a list: a trigger that shows the chosen option, or the placeholder, with a chevron at its end, and the list it opens: rows with an optional lead (an icon, or a theme's swatch), the label, a quiet detail at the row's end or under the label, and a check on the chosen one; groups under labels, separators between them, and arrows that scroll a long list. As a field it wears the text field's frame (parts/text-field): the label, the help and the issue mark.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ui/select.tsx",
+            "packages/core/src/components/SelectField.tsx",
+            "packages/core/src/components/ThemePicker.tsx",
+            "packages/core/src/lib/appearance.ts",
+            "packages/core/src/lib/issue-edge.ts",
+            "packages/core/src/lib/focus.ts"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/overlay.rs (Select, paint_swatch)",
+            "crates/core/src/tokens.rs (Swatch, swatch)",
+            "examples/storybook/src/stories/overlays.rs (Primitives/Inputs/Select)"
+        ]
+    },
+    "anatomy": {
+        "trigger": "The control: the chosen option's lead and label (and its detail with chosenDetail), else the placeholder, and the chevron at its end. As wide as what it shows, as wide as the widest label with widest, or the room it is given (a field's select fills its row).",
+        "value": "What the trigger shows, on one line and cut short: the chosen option's lead and label, or the placeholder while nothing is chosen.",
+        "chevron": "A down chevron at the trigger's end.",
+        "list": "The popup that holds the rows, on the popover ground, scrolling when it is taller than the room: laid over the trigger with the chosen row level with the value (alignItemWithTrigger), or under it, 4 away; as wide as the trigger and at least 144.",
+        "row": "One option: its lead, its label, its detail, and the check at its end on the chosen one. Washed while highlighted by the pointer, the arrows or typing.",
+        "lead": "Before an option's label, in the row and in the trigger: its icon, in the muted ink, or a theme's swatch.",
+        "swatch": "A theme's sample before its name: 28 by 16 on that theme's background with its edge, and its foreground, primary and third chart color as three dots. An option without a theme, among options with themes, draws an empty dashed box.",
+        "detail": "A quiet fact about an option, such as the value it would inherit: at the row's end before the check, or on a second line under the label (detailPlacement below). The trigger shows the chosen option's with chosenDetail.",
+        "check": "The chosen row's check, inside the row's end.",
+        "group": "Rows under one label, padded 4 all round.",
+        "groupLabel": "A group's name over its rows, small and muted.",
+        "separator": "A rule between groups, across the list's full width.",
+        "scrollArrow": "At the list's top or foot while it can scroll that way: a chevron on the popover ground; resting the pointer on it scrolls."
+    },
+    "options": {
+        "variant": {
+            "values": ["field", "quiet"],
+            "default": "field",
+            "does": "field: a form field's control (the field ground, the input edge). quiet: a ghost button that shows the chosen value, for a value picked in a bar or beside a heading, such as a list's order.",
+            "sokkel-ui": "SelectTrigger variant"
+        },
+        "size": {
+            "values": ["default", "sm"],
+            "default": "default",
+            "does": "The trigger's height: density.control or density.control-sm.",
+            "sokkel-ui": "SelectTrigger size"
+        },
+        "options": {
+            "type": "rows",
+            "does": "The choices: [{ value, label, icon?, detail?, disabled? }]. A disabled one is shown and cannot be chosen.",
+            "sokkel-ui": "SelectField options (SelectFieldOption); the primitive takes items on Select and a SelectItem per option"
+        },
+        "value": {
+            "type": "text",
+            "does": "The chosen option's value; an empty string, or a value no option has, chooses none.",
+            "sokkel-ui": "value, defaultValue, onChange (onValueChange on the primitive)"
+        },
+        "placeholder": {"type": "text", "does": "Shown in the trigger while nothing is chosen."},
+        "widest": {
+            "type": "rows",
+            "does": "Labels the trigger keeps room for: it is as wide as the widest of them whichever is chosen, so it holds one width as the choice changes.",
+            "sokkel-ui": "SelectTrigger widest"
+        },
+        "detailPlacement": {
+            "values": ["end", "below"],
+            "default": "end",
+            "does": "Where each option's detail goes in the list: at the row's end, or on a second line under its label.",
+            "sokkel-ui": "SelectField detailPlacement, SelectItem detailPlacement"
+        },
+        "chosenDetail": {
+            "type": "boolean",
+            "default": false,
+            "does": "The trigger shows the chosen option's detail after its label, quiet, on its one line."
+        },
+        "swatch": {
+            "type": "boolean",
+            "default": false,
+            "does": "Each option leads with its theme's swatch, drawn in that theme; an option with no theme leads with an empty dashed box.",
+            "sokkel-ui": "ThemePicker's theme select (ThemeOption swatch); not an option of Select or SelectField themselves"
+        },
+        "mono": {
+            "type": "boolean",
+            "default": false,
+            "does": "The labels in the code face, in the list and in the trigger, for keys and names."
+        },
+        "alignItemWithTrigger": {
+            "type": "boolean",
+            "default": true,
+            "does": "The list is laid over the trigger with the chosen row level with the value, when a pointer opened it and there is room; otherwise, and when false, it opens under the trigger. The theme select sets false.",
+            "sokkel-ui": "SelectContent alignItemWithTrigger"
+        },
+        "readOnly": {
+            "type": "boolean",
+            "default": false,
+            "does": "Shows the value; the list opens to look through, but nothing can be chosen."
+        },
+        "disabled": {"type": "boolean", "default": false, "does": "Cannot be used now."}
+    },
+    "sizes": {
+        "default": {
+            "height": "density.control",
+            "gap": 6,
+            "icon": 16,
+            "text": "text.body",
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "note": "density.control: 32 regular, 28 compact. Pads 10 at its start and 8 at its end (layout); a finger tall below 768."
+        },
+        "sm": {
+            "height": "density.control-sm",
+            "gap": 6,
+            "icon": 16,
+            "text": "text.body",
+            "radius": "radius-control",
+            "radiusMax": 10,
+            "phoneMinHeight": "spacing-finger",
+            "note": "density.control-sm: 28 regular, 24 compact; its corners at most 10."
+        },
+        "row": {
+            "padY": 4,
+            "gap": 6,
+            "icon": 16,
+            "text": "text.body",
+            "radius": "radius-md",
+            "phoneMinHeight": "spacing-finger",
+            "note": "30 tall at every density: 4 over and under a 22 line, more for a detail under the label. Pads 6 at its start and 32 at its end, the room for the check (layout). A finger tall below 768."
+        },
+        "lead": {"icon": 16, "note": "An option's icon, in the row and in the trigger."},
+        "swatch": {
+            "height": 16,
+            "width": 28,
+            "gap": 2,
+            "note": "Its corners half of --radius, which no corner role holds, and a 1px edge; the three dots 6 across, 2 apart."
+        },
+        "detail": {"text": "text.help"},
+        "check": {"height": 16, "width": 16},
+        "group": {"padX": 4, "padY": 4},
+        "groupLabel": {"padX": 6, "padY": 4, "text": "text.help"},
+        "scrollArrow": {"padY": 4, "icon": 16}
+    },
+    "layout": {
+        "triggerPadStart": 10,
+        "triggerPadEnd": {"value": 8, "note": "Before the chevron."},
+        "quietPadStart": 8,
+        "quietPadEnd": 6,
+        "listGap": {"value": 4, "note": "From the trigger, when the list opens under it rather than over it."},
+        "listMinWidth": {"value": 144, "note": "The list is as wide as the trigger, and at least this."},
+        "listInset": {
+            "value": 0,
+            "note": "Rows outside a group stand flush with the list's edge, as SelectField's and the theme select's do; a group pads its rows 4 (sizes.group)."
+        },
+        "rowPadStart": 6,
+        "rowPadEnd": {"value": 32, "note": "The check stands in it, 8 from the row's end."},
+        "checkEnd": 8,
+        "leadGap": {
+            "value": 8,
+            "note": "Between an option's lead and its label in the row; 6 in the trigger, the value's own gap."
+        },
+        "detailGap": {"value": 8, "note": "Before a detail at the row's end."},
+        "separatorGap": {
+            "value": 4,
+            "note": "Above and below a separator, which runs across its group's pad to the list's edges."
+        },
+        "swatchGap": {"value": 8, "note": "Between the swatch and the label, in the row and in the trigger."},
+        "swatchDot": 6,
+        "listEase": {
+            "value": 100,
+            "note": "ms the list fades and zooms in over, as far as motion allows; none while it is laid over the trigger. No motion token yet."
+        }
+    },
+    "states": {
+        "rest": {"means": "Holding a value; nothing over it."},
+        "placeholder": {
+            "means": "Nothing chosen: the trigger shows the placeholder.",
+            "reached": "no value, or a value no option has",
+            "sokkel-ui": "data-placeholder"
+        },
+        "hover": {"means": "The pointer is over the trigger.", "reached": "pointer over"},
+        "focus": {
+            "means": "Keyboard focus on the trigger.",
+            "reached": "Tab",
+            "on": "keyboard",
+            "sokkel-ui": "focus-visible:border-ring ring-1 ring-ring"
+        },
+        "open": {
+            "means": "The list is open.",
+            "reached": "a press on the trigger, Enter, Space, ArrowDown or ArrowUp on it, or defaultOpen",
+            "sokkel-ui": "data-popup-open"
+        },
+        "highlighted": {
+            "means": "A row under the pointer, or reached by the arrows or by typing.",
+            "reached": "pointer over a row, the arrows, Home, End, a character",
+            "sokkel-ui": "focus: Base UI moves the focus to the highlighted row"
+        },
+        "chosen": {
+            "means": "The row of the chosen value: its check shows.",
+            "reached": "value",
+            "sokkel-ui": "data-selected, ItemIndicator"
+        },
+        "disabled": {
+            "means": "Cannot be used now: the whole select, or one option that is shown but cannot be chosen.",
+            "reached": "disabled, or an option's disabled",
+            "effect": {"opacity": 0.5, "focusable": false, "cursor": "not-allowed"},
+            "sokkel-ui": "The trigger: disabled:opacity-50 disabled:cursor-not-allowed. A row: data-disabled:opacity-50, no pointer events."
+        },
+        "readOnly": {
+            "means": "Shows a value that cannot be changed here; no look of its own. The list opens to look through, and typing on the closed trigger changes nothing.",
+            "reached": "readOnly"
+        },
+        "invalid": {
+            "means": "The value is refused: the edge alone at rest, no ring.",
+            "reached": "aria-invalid, or an error or a critical issue on a field",
+            "sokkel-ui": "INVALID_EDGE (lib/issue-edge)"
+        },
+        "invalid+focus": {
+            "means": "An invalid trigger with keyboard focus: the critical edge and a 3px ring, only with focus.",
+            "reached": "focus on an invalid trigger",
+            "on": "keyboard"
+        },
+        "noTheme": {
+            "means": "A swatch for an option with no theme, among options with themes.",
+            "reached": "an option without swatch in a select whose options have them"
+        }
+    },
+    "variants": {
+        "field": {
+            "rest": {
+                "ground": "field",
+                "edge": "input",
+                "ink": "inherit",
+                "radius": "radius-control",
+                "text": "text.body"
+            },
+            "placeholder": {"ink": "muted-foreground"},
+            "hover": {"dark": {"ground": "input/50"}, "note": "No look of its own in light."},
+            "focus": {"edge": "ring", "ring": {"color": "ring", "width": 1}},
+            "open": {"note": "No look of its own: the list is what shows it."},
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {
+                "edge": "critical",
+                "ring": {"color": "critical/20", "width": 3, "dark": {"color": "critical/40"}}
+            }
+        },
+        "quiet": {
+            "rest": {
+                "ground": "none",
+                "edge": "none",
+                "ink": "inherit",
+                "radius": "radius-control",
+                "text": "text.action",
+                "weight": 500
+            },
+            "placeholder": {"ink": "muted-foreground"},
+            "hover": {"ground": "hover"},
+            "open": {"ground": "hover"},
+            "focus": {"edge": "none", "ring": {"color": "ring", "width": 1}},
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {
+                "edge": "critical",
+                "ring": {"color": "critical/20", "width": 3, "dark": {"color": "critical/40"}}
+            }
+        }
+    },
+    "pieces": {
+        "chevron": {"rest": {"ink": "muted-foreground"}},
+        "list": {
+            "rest": {
+                "ground": "popover",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "ring": {"color": "foreground/10", "width": 1},
+                "note": "The 1px ring is its edge, outside the box. Under it Tailwind's shadow-md: two layers, 0 4 6 -1 and 0 2 4 -2, black at 10 percent; no elevation token."
+            }
+        },
+        "row": {
+            "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body"},
+            "highlighted": {
+                "ground": "accent",
+                "ink": "accent-foreground",
+                "note": "Its lead, detail and check in accent-foreground too."
+            },
+            "disabled": {"opacity": 0.5}
+        },
+        "lead": {"rest": {"ink": "muted-foreground"}, "highlighted": {"ink": "accent-foreground"}},
+        "swatch": {
+            "rest": {
+                "ground": "background",
+                "edge": "border",
+                "note": "That theme's colors, whatever the page wears; its dots foreground, primary and chart-3."
+            },
+            "noTheme": {"ground": "none", "edge": "border-strong", "note": "The edge dashed."}
+        },
+        "detail": {
+            "rest": {"ink": "muted-foreground", "text": "text.help"},
+            "highlighted": {"ink": "accent-foreground"}
+        },
+        "check": {"rest": {"note": "Drawn only on the chosen row, in the row's ink."}},
+        "groupLabel": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "separator": {"rest": {"ground": "border", "note": "1 tall."}},
+        "scrollArrow": {"rest": {"ground": "popover"}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the trigger; a disabled select is passed over."},
+        {
+            "keys": ["Enter", "Space", "ArrowDown", "ArrowUp"],
+            "does": "Opens the list, the chosen row highlighted.",
+            "when": "the trigger has focus"
+        },
+        {
+            "keys": ["a character"],
+            "does": "Chooses the next option whose label starts with what was typed, the list staying closed; nothing while readOnly.",
+            "when": "the trigger has focus and the list is closed"
+        },
+        {
+            "keys": ["ArrowDown", "ArrowUp"],
+            "does": "Moves the highlight a row; it stops at the first and the last.",
+            "when": "the list is open"
+        },
+        {
+            "keys": ["Home", "End"],
+            "does": "Moves the highlight to the first or the last row.",
+            "when": "the list is open"
+        },
+        {
+            "keys": ["a character"],
+            "does": "Moves the highlight to the next row whose label starts with what was typed, past disabled rows.",
+            "when": "the list is open"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Chooses the highlighted row and closes the list, focus back on the trigger; a disabled row, or any row while readOnly, is not chosen.",
+            "when": "a row is highlighted"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the list without choosing, focus back on the trigger.",
+            "when": "the list is open"
+        }
+    ],
+    "words": {},
+    "appText": {
+        "name": "The name the select is known by: its field's label, or an aria-label on a bare trigger.",
+        "options": "Every option's label and detail, every group's label, and the placeholder."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Base UI's Select. The list is a portal on z-50 and opens on a mouse down; laid over the trigger (alignItemWithTrigger) only for a pointer and only where there is room, else under it, flipping above when there is no room below.",
+            "Focus goes back to the trigger after a keyboard close and nowhere after a pointer close (returnFocusOnKeyboard), so a pressed trigger draws no focus ring.",
+            "widest lays the value and every label, unseen and flat, in one grid cell, so the trigger is as wide as the widest.",
+            "A hidden input carries the value for a form.",
+            "As a field (SelectField) the trigger fills its row, the field's label names it, and a refused value marks it aria-invalid; the issue mark and the warning edge are the text field's (parts/text-field).",
+            "The theme select (ThemePicker) draws each swatch in its own theme with data-theme-scope, opens under the trigger at most 320 tall, and is as wide as its widest row up to 384 and the room it has; a theme's description stands under its name there."
+        ],
+        "sokkel-ui-egui": [
+            "Select::new(&mut chosen, options, label): the chosen option is an index, and the label names it for AccessKit.",
+            "The list is egui's Popup::menu, closing on a click outside.",
+            "A swatch's colors come from tokens::swatch(theme, dark): the theme's background, border, foreground, primary and chart-3, resolved."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "trigger width",
+            "spec": "As wide as what it shows, as the widest label with widest, or the room it is given.",
+            "today": "As of 26b411f (overlay.rs unchanged since bee2a97): 220 unless set with width()."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "trigger edge and ring",
+            "spec": "The input edge, the ring edge and a 1px ring with keyboard focus; nothing of its own while open.",
+            "today": "The ring edge while open or focused, and the shared 2px focus ring 2 off."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "trigger hover",
+            "spec": "No look in light; input/50 in dark.",
+            "today": "The hover ground in both schemes, while closed."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "list placement",
+            "spec": "Laid over the trigger with the chosen row level with the value when a pointer opened it and there is room, else under it 4 away; at least 144 wide.",
+            "today": "Always under, 4 away, as wide as the trigger with no least width."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "list inset",
+            "spec": "Rows outside a group flush with the list's edge (open question); 4 in a group.",
+            "today": "4 all round."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "list edge and shadow",
+            "spec": "A 1px foreground/10 ring outside the box; Tailwind's shadow-md, two layers black at 10 percent.",
+            "today": "A 1px foreground/10 stroke inside the box; one shadow 0 4 blur 12, black at 24 (90 in dark)."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "rows",
+            "spec": "30 tall at every density (a finger below 768); the label 6 in, the check 8 from the end; highlighted in accent with accent-foreground ink.",
+            "today": "density.control less 4 (28, 24 compact); the label 8 in, the check centered 14 from the end; highlighted in hover with popover-foreground ink."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "swatch",
+            "spec": "Corners half of --radius; in a row at the row's 6 inset.",
+            "today": "Corners half of radius-control; in a row 8 in. In the trigger it matches: 10 in, the label 36 in."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 26b411f, Select draws the field trigger at density.control with the value, the chevron and an optional swatch, and a list of rows with a check on the chosen one. Not yet: size sm, the quiet variant, the placeholder, widest, invalid, disabled and readOnly, option icons and details (end and below, chosenDetail), disabled options, groups with labels and separators, scroll arrows, mono, finger-tall rows below 768, and the keys (opening from the keyboard, the arrows, Home, End, typing, Enter, Space, Escape)."
+        }
+    ]
+}
