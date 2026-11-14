@@ -39,4 +39,17 @@ describe('TagChips', () => {
         expect(stacked).toContain('flex-wrap')
         expect(stacked).not.toContain('more:')
     })
+
+    it('draws its measuring ruler only in a row that clips it, never on a stacked card', () => {
+        const row = renderToStaticMarkup(<TagChips tags={['nightly', 'harbor', 'csv']} />)
+        expect(row).toContain('overflow-hidden')
+        expect(row).toContain('invisible absolute')
+        const stacked = renderToStaticMarkup(
+            <TableCellContext value={{ width: 320, stacked: true, columnWidth: 200 }}>
+                <TagChips tags={['nightly', 'harbor', 'csv', 'europe', 'retry-on-failure', 'archived-input']} />
+            </TableCellContext>,
+        )
+        expect(stacked).not.toContain('invisible absolute')
+        expect(stacked).not.toContain('aria-hidden')
+    })
 })
