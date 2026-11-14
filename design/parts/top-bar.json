@@ -161,14 +161,23 @@
             "reached": "trailEnds current",
             "sokkel-ui": "aria-current=page"
         },
-        "phone": {"means": "The window is narrower than 768.", "reached": "the window's width"}
+        "phone": {"means": "The window is narrower than 768.", "reached": "the window's width"},
+        "phone+focus": {
+            "means": "Keyboard focus on the menu button or the palette's button below 768, where each is a finger square at the window's top edge.",
+            "reached": "Tab, the window narrower than 768",
+            "on": "keyboard"
+        }
     },
     "pieces": {
         "bar": {"rest": {"ground": "sidebar", "rule": "border-strong"}},
         "menu": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md"},
             "hover": {"ground": "hover", "ink": "foreground"},
-            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
+            "phone+focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"},
+                "note": "Below 768 the square stands a finger tall in a bar barely taller, so its outline is drawn its offset inside it, where the window's top edge cannot cut it."
+            }
         },
         "mark": {"rest": {"ground": "primary", "ink": "primary-foreground", "radius": "radius-md"}},
         "crumb": {
@@ -190,7 +199,11 @@
             "rest": {"ground": "field", "edge": "border", "ink": "muted-foreground", "radius": "radius-control"},
             "hover": {"edge": "border-strong", "ink": "foreground"},
             "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
-            "phone": {"ground": "none", "edge": "none"}
+            "phone": {"ground": "none", "edge": "none"},
+            "phone+focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"},
+                "note": "Below 768 the square stands a finger tall in a bar barely taller, so its outline is drawn its offset inside it, where the window's top edge cannot cut it."
+            }
         },
         "keys": {
             "rest": {

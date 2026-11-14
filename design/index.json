@@ -1,6 +1,6 @@
 {
     "$description": "The sokkel-design contract: its version, which moves in lockstep with sokkel-ui before 1.0, the foundations every part refers to, and every part and pattern with its status. A stable part is drawn by both renderers from its spec and compared side by side; a draft one is not yet. CHANGELOG.md says what each version changed.",
-    "version": "0.28.0",
+    "version": "0.28.1",
     "tokens": {
         "source": "sokkel-ui: packages/core/tokens/tokens.json, at the commit sokkel-ui.json pins",
         "pin": "sokkel-ui.json",
