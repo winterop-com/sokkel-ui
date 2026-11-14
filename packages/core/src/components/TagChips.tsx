@@ -114,18 +114,21 @@ export function TagChips({ tags, max, variant = 'secondary', mono = true, onSele
             data-slot="tag-chips"
             className={cn('relative flex min-w-0 flex-1 items-center gap-1', stacked ? 'flex-wrap' : 'overflow-hidden', className)}
         >
-            <div ref={ruler} aria-hidden className="invisible absolute top-0 left-0 flex gap-1">
-                {tags.map((tag, index) => (
-                    <Chip key={index} mono={mono} tone={tone}>
-                        {tag}
+            {/* Only where the row clips it: on a wrapping card it would widen whatever scrolls around it. */}
+            {!stacked && (
+                <div ref={ruler} aria-hidden className="invisible absolute top-0 left-0 flex gap-1">
+                    {tags.map((tag, index) => (
+                        <Chip key={index} mono={mono} tone={tone}>
+                            {tag}
+                        </Chip>
+                    ))}
+                    <Chip mono={mono} tone="outline">
+                        {words.more(tags.length)}
+                        {/* The menu chip's chevron, after the words' gap. */}
+                        {onSelect !== undefined && <ChevronDown className="ms-1 inline" />}
                     </Chip>
-                ))}
-                <Chip mono={mono} tone="outline">
-                    {words.more(tags.length)}
-                    {/* The menu chip's chevron, after the words' gap. */}
-                    {onSelect !== undefined && <ChevronDown className="ms-1 inline" />}
-                </Chip>
-            </div>
+                </div>
+            )}
             {tags.slice(0, shown).map((tag, index) => (
                 <Chip
                     key={index}
