@@ -127,7 +127,7 @@ export function CommentComposer({
                     }}
                     placeholder={words.placeholder}
                     aria-label={words.placeholder}
-                    className="min-h-(--density-control) resize-none"
+                    className="min-h-(--density-control) resize-none max-md:min-h-finger"
                 />
                 {(draft !== '' || onCancel !== undefined) && (
                     <div className="flex flex-wrap items-center justify-end gap-2">

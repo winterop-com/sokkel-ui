@@ -134,7 +134,7 @@ export const Busy: StoryObj = {
     ),
 }
 
-/** Buttons that cannot be pressed now and say why on hover and focus; they stay in the tab order. */
+/** Buttons that cannot be pressed now and say why on hover and focus, and on a tap on a touch screen; they stay in the tab order. */
 export const Reason: StoryObj = {
     render: () => (
         <Row gap="md" align="stretch" wrap>

@@ -216,7 +216,9 @@ export function IssueCount({ critical, warning = 0, list, defaultOpen = false, w
     }
     return (
         <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger render={<button type="button" aria-label={label} className={face} />}>{said}</PopoverTrigger>
+            <PopoverTrigger render={<button type="button" aria-label={label} className={cn(face, 'max-md:min-h-finger')} />}>
+                {said}
+            </PopoverTrigger>
             <PopoverContent side="top" align="start" sideOffset={6} className="w-[min(22rem,calc(100vw-2rem))] gap-1 p-1.5">
                 {list.map((entry, index) => {
                     const Mark = ICON[entry.issue.tone]

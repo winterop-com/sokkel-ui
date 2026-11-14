@@ -2,3 +2,9 @@
 
 /** How long a busy palette or dialog holds, in ms, before it offers Stop waiting: the `busy-release` token. */
 export const BUSY_RELEASE = 5000
+
+/** How long a read is in flight, in ms, before a part shows it waits (a Searching line, earlier results dimmed): the `wait-shown` token. */
+export const WAIT_SHOWN = 300
+
+/** How long a tooltip a tap showed stays up, in ms, unless the next press closes it first: the `tip-hold` token. */
+export const TIP_HOLD = 4000

@@ -62,7 +62,7 @@ const SPINNER: Record<string, string | undefined> = { xs: 'size-3', 'icon-xs': '
 
 export type ButtonProps = ButtonPrimitive.Props &
     VariantProps<typeof buttonVariants> & {
-        /** Why the button cannot be pressed now; given, the button is disabled and shows it. */
+        /** Why the button cannot be pressed now; given, the button is disabled and shows it on hover, focus and a tap. */
         reason?: ReactNode
         /** Which side the reason opens on. */
         reasonSide?: 'top' | 'bottom' | 'left' | 'right'
@@ -71,8 +71,9 @@ export type ButtonProps = ButtonPrimitive.Props &
     }
 
 /**
- * A button. `reason` disables it and says why: the reason shows on hover and on focus, and the
- * button stays in the tab order so a keyboard reaches the reason too. The reason is also the
+ * A button. `reason` disables it and says why: the reason shows on hover and on focus, and on a tap
+ * by touch or pen, which has no hover, until the next press or for `tip-hold`; the button stays in
+ * the tab order so a keyboard reaches the reason too. The reason is also the
  * button's description (`aria-describedby`), read from a copy kept beside it, so a screen reader
  * says it whether or not the tooltip is open. `busy` says the work a press
  * started is under way: a spinner takes the place of a leading icon (an icon-only button's icon), or
@@ -124,7 +125,7 @@ function Button({
     if (!held) return button
     return (
         <>
-            <Tooltip>
+            <Tooltip tap>
                 <TooltipTrigger render={button} />
                 <TooltipContent side={reasonSide}>{reason}</TooltipContent>
             </Tooltip>

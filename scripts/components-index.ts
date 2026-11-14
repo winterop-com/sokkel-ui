@@ -98,7 +98,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'hooks/use-busy-release':
             'the wait after which a busy palette or dialog offers Stop waiting, and which closes it heeds then; their `busyRelease` options set it',
         'lib/css-pixels': 'a length token in pixels, for a part that hands a size to an engine',
-        'lib/durations': 'the waits in ms that tokens.json defines, which `useBusyRelease` reads',
+        'lib/durations':
+            'the waits in ms that tokens.json defines, which `useBusyRelease`, `useSearch` and a tooltip that takes a tap read',
         'lib/edit': "the edit cycle `InlineEdit` and `DataTable`'s editable cells share; their types are exported by both",
         'lib/finger': "the finger-sized hit area the primitives' bare triggers wear on a phone",
         'lib/focus': 'where focus goes when a popup closes',
@@ -117,6 +118,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'lib/shortcut-groups':
             'what the shortcuts dialog lists, kept apart from the registry so only the dialog carries it; its types are exported by `ShortcutsDialog` and `Shell`',
         'lib/table': "the head text every table shares, a layout constant, and the columns' order, which `lib/list-views` exports",
+        'lib/tap-tip': 'what a tooltip with `tap` does on a press by touch or pen, apart from Base UI so it is tested without a browser',
         'lib/theme-list': 'the theme list `lib/appearance` exports as `THEMES`',
         'lib/breakpoints': 'the breakpoints in px that tokens.json defines, which `MOBILE_QUERY` reads',
         'lib/uploads': 'the store behind `useUploads`, which exports its types',

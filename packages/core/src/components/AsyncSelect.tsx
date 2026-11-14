@@ -489,7 +489,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     ref={anchorRef}
                     aria-invalid={invalid || undefined}
                     className={cn(
-                        'flex min-h-(--density-control) w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
+                        'flex min-h-(--density-control) w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring max-md:min-h-finger',
                         invalid && ISSUE_WITHIN_EDGE.critical,
                         disabled && 'cursor-not-allowed bg-input/50 opacity-disabled',
                         className,
@@ -568,7 +568,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 id={id}
                 aria-invalid={invalid || undefined}
                 className={cn(
-                    'flex h-(--density-control) w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring',
+                    'flex h-(--density-control) w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring max-md:min-h-finger',
                     INVALID_EDGE,
                     disabled && 'cursor-not-allowed bg-input/50 opacity-disabled',
                     className,

@@ -112,7 +112,7 @@ export const Variants: StoryObj = {
     ),
 }
 
-/** Actions that cannot be taken now: the tooltip names each and says why, on hover and on focus. */
+/** Actions that cannot be taken now: the tooltip names each and says why, on hover and on focus, and on a tap on a touch screen. */
 export const Reason: StoryObj = {
     render: () => (
         <Row gap="2xs">

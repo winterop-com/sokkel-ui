@@ -28,7 +28,7 @@ export function InlineField({ id, label, size = 'default', children, className }
             data-slot="inline-field"
             className={cn(
                 'flex min-w-0 items-center',
-                size === 'default' ? 'min-h-(--density-control) py-1 text-sm' : 'gap-2 text-xs',
+                size === 'default' ? 'min-h-(--density-control) py-1 text-sm max-md:min-h-finger' : 'gap-2 text-xs',
                 className,
             )}
         >

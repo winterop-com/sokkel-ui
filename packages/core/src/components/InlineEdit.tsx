@@ -222,7 +222,7 @@ export function InlineEdit<K extends EditorKind = 'text'>(props: InlineEditProps
         'flex min-w-0 items-center gap-2 text-left',
         title
             ? 'w-fit max-w-full border-b-2 border-transparent py-0.5 font-heading text-page-title text-page-title-ink'
-            : 'min-h-(--density-control) w-full rounded-control border border-transparent px-2.5 py-1 text-sm',
+            : 'min-h-(--density-control) w-full rounded-control border border-transparent px-2.5 py-1 text-sm max-md:min-h-finger',
         kind === 'multiline' && 'items-start',
         className,
     )

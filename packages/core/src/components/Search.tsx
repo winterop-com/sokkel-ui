@@ -3,7 +3,7 @@ import { useContext, useEffect, useId, useRef, useState, type ReactNode } from '
 
 import { useSearch } from '../hooks/use-search'
 import { cn } from '../lib/cn'
-import { queryRanges, searchEntries, searchKey, type SearchGroup, type SearchResult, type SearchSource } from '../lib/search'
+import { queryRanges, searchEntries, searchKey, searchWait, type SearchGroup, type SearchResult, type SearchSource } from '../lib/search'
 import { GroupLabel } from './GroupLabel'
 import { Highlight } from './Highlight'
 import { SearchField } from './SearchField'
@@ -249,10 +249,11 @@ export interface SearchProps {
  *
  * The search is the app's: it answers at once or with a promise, and the component never fetches.
  * The first query is asked at once and each change after a pause in typing. Results belong to the
- * query they answer: while the next answer is awaited the last results stay in place but dimmed,
- * once the wait is long enough to see, and cannot be chosen; with none the list says it is
- * searching. A failed search says so (`words.failed`) with a Retry option in the results' place,
- * whatever was listed before, which Enter takes as it does a result.
+ * query they answer: while the next answer is awaited the last results stay in place and cannot be
+ * chosen, dimmed once the wait has run `wait-shown` (300 ms), long enough to see; with none the list
+ * says it is searching then, so an answer that comes sooner draws neither. A failed search says so
+ * (`words.failed`) with a Retry option in the results' place, whatever was listed before, which
+ * Enter takes as it does a result.
  */
 export function Search({
     search,
@@ -299,8 +300,8 @@ export function Search({
     const optionId = (index: number) => `${id}-option-${String(index)}`
 
     const answer = useSearch(search, query, { debounce, minQuery, enabled: open })
-    // An earlier query's results stay while the next answer comes, dimmed and out of reach.
-    const stale = answer.state === 'loading'
+    // An earlier query's results stay while the next answer comes, out of reach at once and dimmed once the wait is slow.
+    const { stale, searching, dimmed } = searchWait(answer, answer.slow)
     const failed = answer.state === 'failed'
     const listed = answer.groups.filter((group) => group.results.length > 0)
     const entries = stale ? [] : searchEntries(listed)
@@ -421,7 +422,7 @@ export function Search({
                                     aria-label={group.title}
                                     inert={stale}
                                     // Dimmed only once an answer is slow, so a quick one never flickers.
-                                    className={cn('flex flex-col transition-opacity', stale && 'opacity-50 delay-300')}
+                                    className={cn('flex flex-col transition-opacity', dimmed && 'opacity-50')}
                                 >
                                     <SearchGroupHeading group={group} className="px-2 pt-1.5 pb-1" />
                                     {group.results.map((result) => {
@@ -471,10 +472,11 @@ export function Search({
                                         {answer.state === 'done' ? (
                                             words.empty(trimmed)
                                         ) : (
-                                            <>
+                                            // Until the wait is slow the line keeps its room unseen, so the list does not jump.
+                                            <span className={cn('flex items-center gap-2', !searching && 'invisible')}>
                                                 <Spinner className="text-faint" />
                                                 {words.searching}
-                                            </>
+                                            </span>
                                         )}
                                     </div>
                                 )
@@ -501,7 +503,7 @@ export function Search({
                             onClick={() => choose(lead)}
                         >
                             <span className="min-w-0 flex-1 truncate">{words.seeAll(trimmed)}</span>
-                            {stale && listed.length > 0 && <Spinner className="text-faint" />}
+                            {dimmed && <Spinner className="text-faint" />}
                             <ArrowRight className="size-4 shrink-0" aria-hidden />
                         </div>
                     </div>

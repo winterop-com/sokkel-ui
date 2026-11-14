@@ -178,7 +178,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **HoverCard**, HoverCardTrigger, HoverCardContent | `@winterop-com/sokkel-ui/primitives/hover-card` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-overlays-hovercard--trigger) |
 | **Popover**, PopoverTrigger, PopoverContent, PopoverHeader, PopoverTitle, PopoverDescription | `@winterop-com/sokkel-ui/primitives/popover` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-overlays-popover--trigger) |
 | **Sheet**, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription | `@winterop-com/sokkel-ui/primitives/sheet` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-overlays-sheet--triggers) |
-| **Tooltip**, TooltipProvider, TooltipTrigger, TooltipContent | `@winterop-com/sokkel-ui/primitives/tooltip` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-overlays-tooltip--trigger) |
+| **Tooltip**, TooltipProvider, TooltipTrigger, TooltipContent | `@winterop-com/sokkel-ui/primitives/tooltip` | A tooltip: shown under a resting pointer and on keyboard focus, and with `tap` on a tap by a finger or a pen, which have no hover. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-overlays-tooltip--trigger) |
 
 ### Frame and navigation
 

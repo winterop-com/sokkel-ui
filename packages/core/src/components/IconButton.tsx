@@ -24,7 +24,7 @@ export type IconButtonProps = Omit<
     pressed?: boolean
     /** Which side the tooltip opens on. */
     side?: 'top' | 'bottom' | 'left' | 'right'
-    /** Why the button cannot be pressed now; given, the button is disabled and its tooltip says it. */
+    /** Why the button cannot be pressed now; given, the button is disabled and its tooltip says it, a tap showing it too. */
     reason?: ReactNode
 }
 
@@ -32,7 +32,9 @@ export type IconButtonProps = Omit<
  * A button that shows only an icon. Its label is its accessible name and its tooltip, so the two
  * never drift apart. A ghost button draws its icon in the quiet ink until hovered; `pressed` marks
  * a toggle as on, filled as a pressed toggle is everywhere else. `reason` disables the button and
- * adds why to its tooltip, under the label, and to its description (`aria-describedby`) for a screen reader; the button stays focusable so the reason can be read.
+ * adds why to its tooltip, under the label, and to its description (`aria-describedby`) for a
+ * screen reader; the button stays focusable so the reason can be read, and a tap by touch or pen
+ * shows the tooltip, as a shut `Button`'s does.
  * `tooltip` gives the tooltip a longer sentence than the name, `shortcut` draws the key that does
  * the same beside it, and `destructive` tints a button that deletes in the critical tone under the
  * pointer.
@@ -59,7 +61,7 @@ export function IconButton({
     const given = (props as { 'aria-pressed'?: boolean | 'true' | 'false' | 'mixed' })['aria-pressed']
     const on = pressed ?? (given === undefined ? undefined : given === true || given === 'true')
     const shown = (
-        <Tooltip>
+        <Tooltip tap={held}>
             <TooltipTrigger
                 render={
                     <Button

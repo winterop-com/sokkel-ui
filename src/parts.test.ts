@@ -96,6 +96,16 @@ const busyReleaseIn = (text: string, anchor: string) =>
     /'busy-release'/.test(readFileSync(join(ROOT, 'scripts', 'build-tokens.ts'), 'utf8'))
         ? 'busy-release'
         : undefined
+/**
+ * A wait a part holds for, by its token: the token's name when the token builds its constant into
+ * `lib/durations` and the part's source holds the wait by that constant (`uses`).
+ */
+const waitToken = (token: string, constant: string, uses: boolean) =>
+    uses &&
+    new RegExp(`export const ${constant} = \\d+\\b`).test(source('lib/durations.ts')) &&
+    new RegExp(`duration\\('${token}'\\)`).test(readFileSync(join(ROOT, 'scripts', 'build-tokens.ts'), 'utf8'))
+        ? token
+        : undefined
 /** Whether a part closes only as `letsGo` (or `closing`, which reads it) says while busy, after `useBusyRelease`'s wait. */
 const releasedBy = (text: string) => /useBusyRelease\(/.test(text) && /(letsGo|closing)\(/.test(text)
 
@@ -2307,6 +2317,13 @@ const TOOLTIP_ADAPTER: Adapter = {
                 gap: () => defaultIn(TOOLTIP, 'function TooltipContent(', 'sideOffset'),
                 keysPadEnd: () => resolve([TOOLTIP_BOX], ['has-data-[slot=kbd]'], READ.padEnd),
                 openDelay: () => (ownDefault ? delay : "Base UI's own delay, or a provider's"),
+                // A tap's hold is `tapTip`'s, `TIP_HOLD` unless given, and the tooltip hands it no other.
+                tapHold: () =>
+                    waitToken(
+                        'tip-hold',
+                        'TIP_HOLD',
+                        /hold: number = TIP_HOLD\)/.test(source('lib/tap-tip.ts')) && /tapTip\(\w+\)/.test(TOOLTIP),
+                    ),
             }),
         ]
     },
@@ -3051,6 +3068,14 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
                 metaFoldBelow: () => belowSm(classesOf(meta?.parent)),
                 widthFrom: () => (/(?:^|\s)md:max-w-/.test(classesOf(bySlot(full, 'dialog-content'))) ? 'breakpoint-md' : undefined),
                 busyRelease: () => busyReleaseIn(PALETTE, 'export function CommandPalette('),
+                // The search's wait shows once `useSearch` says slow, after `WAIT_SHOWN`, and the palette draws it through `searchWait`.
+                searchingAfter: () =>
+                    waitToken(
+                        'wait-shown',
+                        'WAIT_SHOWN',
+                        /useBusyRelease\(state\.state === 'loading', WAIT_SHOWN\)/.test(source('hooks/use-search.ts')) &&
+                            /searchWait\(answer, answer\.slow\)/.test(PALETTE),
+                    ),
             }),
         ]
     },

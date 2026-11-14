@@ -8,7 +8,7 @@ import { activeRow, filterCommands, mergeCommands, runCommand, termScore } from 
 import { BUSY_RELEASE } from '../lib/durations'
 import { keyLabels } from '../lib/keys'
 import { cn } from '../lib/utils'
-import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
+import { searchWait, type SearchGroup, type SearchResult, type SearchSource } from '../lib/search'
 import { ProblemLine } from './ProseText'
 import { SearchResultBody, type SearchDetailTone } from './Search'
 import { Button } from './ui/button'
@@ -291,9 +291,11 @@ export interface CommandPaletteProps {
  * so the palette serves as a standalone chooser whose rows say their state. The
  * groups are listed by their `rank`, one group to a title. With `search` the app's own results for
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
- * marked; an earlier query's results stay dimmed and passed over until the query's own come, a
- * failed search says so above a Retry row, and while the search waits or has failed the palette
- * never says that no command matches. On a touch screen, which has no Escape, a Close button stands at its foot. `filter`
+ * marked; an earlier query's results stay, out of reach, until the query's own come, dimmed and
+ * passed over once the wait has run `wait-shown` (300 ms), when with none listed the palette says it
+ * is searching, so an answer that comes sooner draws neither. A failed search says so above a Retry
+ * row, and while the search shows its wait or has failed the palette never says that no command
+ * matches. On a touch screen, which has no Escape, a Close button stands at its foot. `filter`
  * chooses how the commands are matched: by their letters (`fuzzy`), by every word typed (`terms`),
  * or by the app's own score. `foot` adds a strip with the app's mark and the keys it answers, its
  * verb beside Enter following the chosen row (`verb` on a row or its group: Open, Switch, Run). A
@@ -395,8 +397,9 @@ export function CommandPalette({
     const listed = useMemo(() => (score === undefined ? merged : filterCommands(merged, query, score)), [merged, query, score])
     const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery, debounce: search?.debounce })
     const found = answer.groups.filter((group) => group.results.length > 0)
-    // An earlier query's results stay while the next answer comes, dimmed and passed over.
-    const stale = answer.state === 'loading'
+    // An earlier query's results stay while the next answer comes, out of reach at once, and dimmed and passed
+    // over once the wait is slow; with none, the list says it is searching then. A quicker answer draws neither.
+    const { stale, searching, dimmed } = searchWait(answer, answer.slow)
     const said = { ...PALETTE_SEARCH_WORDS, ...search?.words }
     const trimmed = query.trim()
     // The row to the full results page stays in sight under the scrolling rows.
@@ -443,9 +446,7 @@ export function CommandPalette({
                             <span className={cn('min-w-0 flex-1 truncate', QUIET)}>{words.stopWaiting}</span>
                         </CommandItem>
                     )}
-                    {found.length === 0 && (answer.state === 'idle' || answer.state === 'done') && (
-                        <CommandEmpty>{words.empty}</CommandEmpty>
-                    )}
+                    {found.length === 0 && answer.state !== 'failed' && !searching && <CommandEmpty>{words.empty}</CommandEmpty>}
                     {listed.map((group, index) => (
                         <div key={group.title}>
                             {index > 0 && <CommandSeparator className="-mx-(--palette-inset)" />}
@@ -569,9 +570,9 @@ export function CommandPalette({
                                             className={ROW}
                                             value={`search ${group.kind} ${result.id}`}
                                             forceMount
-                                            disabled={stale}
+                                            disabled={dimmed}
                                             onSelect={() => {
-                                                if (busy !== undefined) return
+                                                if (busy !== undefined || stale) return
                                                 onOpenChange(false)
                                                 search.onOpen(result, group)
                                             }}
@@ -582,7 +583,7 @@ export function CommandPalette({
                                 </CommandGroup>
                             </div>
                         ))}
-                    {((found.length === 0 && stale) || answer.state === 'failed') && (
+                    {(searching || answer.state === 'failed') && (
                         <div role="status" className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
                             {answer.state === 'failed' ? (
                                 said.failed(answer.reason)

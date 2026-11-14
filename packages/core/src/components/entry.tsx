@@ -284,7 +284,7 @@ export function TypedField<V extends string | number>({
                 event.currentTarget.querySelector('input')?.focus()
             }}
             className={cn(
-                'flex h-(--density-control) w-full min-w-0 cursor-text items-center gap-1 rounded-control border border-input bg-field px-2.5 text-base transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring md:text-sm',
+                'flex h-(--density-control) w-full min-w-0 cursor-text items-center gap-1 rounded-control border border-input bg-field px-2.5 text-base transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring max-md:min-h-finger md:text-sm',
                 disabled === true && 'cursor-not-allowed bg-input/50 opacity-disabled',
                 tone !== null && ISSUE_WITHIN_EDGE[tone],
                 buttons !== false && 'pr-1',
