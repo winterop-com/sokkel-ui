@@ -290,6 +290,39 @@ describe('runCommand', () => {
         expect(said).toEqual(['busy'])
     })
 
+    it('hands the command a signal that letting go aborts while it runs, and never after it settles', async () => {
+        const { said, run } = palette()
+        let signal: AbortSignal | undefined
+        const letGo = runCommand((handed) => {
+            signal = handed?.signal
+            return new Promise(() => undefined)
+        }, run)
+        expect(said).toEqual(['busy'])
+        expect(signal?.aborted).toBe(false)
+        letGo()
+        expect(signal?.aborted).toBe(true)
+
+        const done = palette()
+        let kept: AbortSignal | undefined
+        let fulfil: () => void = () => undefined
+        const after = runCommand((handed) => {
+            kept = handed?.signal
+            return new Promise<void>((resolve) => (fulfil = resolve))
+        }, done.run)
+        fulfil()
+        await settled()
+        after()
+        expect(kept?.aborted).toBe(false)
+        expect(done.said).toEqual(['busy', 'idle', 'closed'])
+
+        const quick = palette()
+        let instant: AbortSignal | undefined
+        runCommand((handed) => {
+            instant = handed?.signal
+        }, quick.run)()
+        expect(instant?.aborted).toBe(false)
+    })
+
     it("reads a refusal's words from an error or a string, and none from anything else", () => {
         expect(refusalOf(new Error('The scheduler is restarting.'))).toBe('The scheduler is restarting.')
         expect(refusalOf('Refused')).toBe('Refused')

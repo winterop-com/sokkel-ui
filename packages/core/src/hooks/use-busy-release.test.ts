@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { runCommand } from '../lib/commands'
 import { BUSY_RELEASE } from '../lib/durations'
-import { letsGo, releaser } from './use-busy-release'
+import { closing, letsGo, releaser } from './use-busy-release'
 
 /** A releaser over the token's wait, with every answer it gave. */
 function timed(wait = BUSY_RELEASE) {
@@ -114,5 +114,13 @@ describe('letting a busy part go', () => {
         expect(letsGo(true, true, 'outside-press')).toBe(false)
         // Mod+K asks with no reason of Base UI's.
         expect(letsGo(true, true, undefined)).toBe(false)
+    })
+
+    it('tells a closing with nothing running from one that lets the work go, which a dialog reports to onStopWaiting', () => {
+        expect(closing(false, false, 'escape-key')).toBe('closed')
+        expect(closing(true, false, 'escape-key')).toBe('held')
+        expect(closing(true, true, 'outside-press')).toBe('held')
+        expect(closing(true, true, 'escape-key')).toBe('let go')
+        expect(closing(true, true, 'close-press')).toBe('let go')
     })
 })

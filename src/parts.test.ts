@@ -96,8 +96,8 @@ const busyReleaseIn = (text: string, anchor: string) =>
     /'busy-release'/.test(readFileSync(join(ROOT, 'scripts', 'build-tokens.ts'), 'utf8'))
         ? 'busy-release'
         : undefined
-/** Whether a part closes only as `letsGo` says while busy, after `useBusyRelease`'s wait. */
-const releasedBy = (text: string) => /useBusyRelease\(/.test(text) && /letsGo\(/.test(text)
+/** Whether a part closes only as `letsGo` (or `closing`, which reads it) says while busy, after `useBusyRelease`'s wait. */
+const releasedBy = (text: string) => /useBusyRelease\(/.test(text) && /(letsGo|closing)\(/.test(text)
 
 /** The elevation a part's classes put under it, by its token: `shadow-pop` is elevation-pop, `shadow-dialog` elevation-dialog. */
 const elevationOf = (layers: readonly string[], on: readonly string[] = []) =>
@@ -2522,7 +2522,8 @@ const DIALOG_ADAPTER: Adapter = {
     keys: {
         Tab: BASE_UI('dialog', 'holds focus inside'),
         'Escape (dismissible, and not busy or busy past busy-release)': () =>
-            /if \(!next && \(!dismissible \|\| !letsGo\(busy, released, details\.reason\)\)\) return/.test(DIALOG_SHELL) &&
+            /const asked = closing\(busy, released, details\.reason\)/.test(DIALOG_SHELL) &&
+            /if \(!next && \(!dismissible \|\| asked === 'held'\)\) return/.test(DIALOG_SHELL) &&
             /const released = useBusyRelease\(busy, busyRelease\)/.test(DIALOG_SHELL) &&
             releasedBy(DIALOG_SHELL)
                 ? true
