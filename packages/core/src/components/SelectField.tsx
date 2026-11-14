@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { Field, describedBy, type FieldWords, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
+import { ThemeSwatch } from './theme-swatch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
 /** One choice in a select field. */
@@ -11,6 +12,12 @@ export interface SelectFieldOption {
     label: string
     /** Drawn before the label, in the list and in the select once chosen, such as a status dot or a kind's icon. */
     icon?: ReactNode
+    /**
+     * The theme whose sample leads the option in place of an icon, drawn in that theme as the theme
+     * picker draws it. Among options that have one, an option without one leads with an empty
+     * dashed box, so the labels line up.
+     */
+    swatch?: string
     /**
      * A quiet fact about the option in the list, such as the value it would inherit or what a role
      * may do: at the row's end, or under the label with `detailPlacement="below"`. The select shows
@@ -67,10 +74,11 @@ export interface SelectFieldProps {
  * A labeled choice from a list: a `Field` with the library's select inside, wired together, laid
  * out as `TextField` and `NumberField` are. The label names the select, the help line describes
  * it, and an issue marks it invalid and draws its edge. `placeholder` shows while nothing is
- * chosen; `readOnly` shows the value with its list closed. An option's `icon` goes before its label
- * in the list and in the select once chosen. Its `detail` is a quiet fact at the end of its row in
- * the list, or on a second line under its label with `detailPlacement="below"`; `chosenDetail`
- * shows the chosen option's detail in the select too, after its label.
+ * chosen; `readOnly` shows the value with its list closed. An option's `icon`, or a theme's
+ * `swatch`, goes before its label in the list and in the select once chosen, 8 before it. Its
+ * `detail` is a quiet fact at the end of its row in the list, or on a second line under its label
+ * with `detailPlacement="below"`; `chosenDetail` shows the chosen option's detail in the select
+ * too, after its label.
  */
 export function SelectField({
     id,
@@ -104,14 +112,17 @@ export function SelectField({
     const invalid = worst(all) === 'critical' || undefined
     const known = (given: string | undefined) =>
         given === undefined ? undefined : options.some((option) => option.value === given) ? given : null
-    // With icons or a chosen detail, the select draws the chosen option's icon and detail with its label; without, its label alone.
-    const drawn = chosenDetail || options.some((option) => option.icon !== undefined)
+    const swatches = options.some((option) => option.swatch !== undefined)
+    // An option's lead: its theme's swatch where the options have them, else its icon.
+    const leadOf = (option: SelectFieldOption) => (swatches ? <ThemeSwatch theme={option.swatch ?? null} /> : option.icon)
+    // With leads or a chosen detail, the select draws the chosen option's lead and detail with its label; without, its label alone.
+    const drawn = chosenDetail || swatches || options.some((option) => option.icon !== undefined)
     const shown = (chosen: string | null) => {
         const option = options.find((one) => one.value === chosen)
         return option === undefined ? (
             placeholder
         ) : (
-            <OptionRow icon={option.icon} label={option.label} detail={chosenDetail ? option.detail : undefined} />
+            <OptionRow lead={leadOf(option)} swatch={swatches} label={option.label} detail={chosenDetail ? option.detail : undefined} />
         )
     }
     return (
@@ -160,7 +171,11 @@ export function SelectField({
                             detailPlacement={detailPlacement}
                             className={cn(mono && 'font-mono')}
                         >
-                            {option.icon === undefined ? option.label : <OptionRow icon={option.icon} label={option.label} />}
+                            {!swatches && option.icon === undefined ? (
+                                option.label
+                            ) : (
+                                <OptionRow lead={leadOf(option)} swatch={swatches} label={option.label} />
+                            )}
                         </SelectItem>
                     ))}
                 </SelectContent>
@@ -169,15 +184,21 @@ export function SelectField({
     )
 }
 
-/** An option's icon before its label, the icon sized and toned as the rest of the field's, and its detail after it in the select. */
-function OptionRow({ icon, label, detail }: { icon: ReactNode; label: string; detail?: ReactNode }) {
+/**
+ * An option's lead before its label, and its detail after it in the select: an icon sized and toned
+ * as the rest of the field's, or a theme's swatch as it is drawn.
+ */
+function OptionRow({ lead, swatch, label, detail }: { lead: ReactNode; swatch: boolean; label: string; detail?: ReactNode }) {
     return (
         <>
-            {icon !== undefined && (
-                <span aria-hidden className="flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">
-                    {icon}
-                </span>
-            )}
+            {lead !== undefined &&
+                (swatch ? (
+                    lead
+                ) : (
+                    <span aria-hidden className="flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">
+                        {lead}
+                    </span>
+                ))}
             <span className="min-w-0 truncate">{label}</span>
             {detail !== undefined && <span className="min-w-0 shrink-[2] truncate text-xs text-muted-foreground">{detail}</span>}
         </>

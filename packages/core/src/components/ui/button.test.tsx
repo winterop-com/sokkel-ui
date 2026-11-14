@@ -54,6 +54,57 @@ describe('Button busy', () => {
     })
 })
 
+/** The id a button's `aria-describedby` names, and the text of the element it names. */
+function described(html: string): { ids: string[]; said: string[] } {
+    const ids = (/aria-describedby="([^"]*)"/.exec(html)?.[1] ?? '').split(' ').filter(Boolean)
+    const said = ids.map((id) => {
+        const at = html.indexOf(`id="${id}"`)
+        if (at < 0) return ''
+        const open = html.indexOf('>', at) + 1
+        return html.slice(open, html.indexOf('<', open))
+    })
+    return { ids, said }
+}
+
+describe('Button reason', () => {
+    it('is described by its reason, from a copy always drawn beside it, so a screen reader says it', () => {
+        const html = renderToStaticMarkup(<Button reason="Nothing to save yet">Save</Button>)
+        const { ids, said } = described(html)
+        expect(ids).toHaveLength(1)
+        expect(said).toEqual(['Nothing to save yet'])
+        // The copy stands outside the button, so the button's name stays its own words.
+        expect(html).toMatch(/>Save<\/button>/)
+        expect(html).toMatch(/<span id="[^"]+" aria-hidden="true" class="sr-only">Nothing to save yet<\/span>/)
+    })
+
+    it('keeps a description it was given, and adds the reason after it', () => {
+        const html = renderToStaticMarkup(
+            <Button reason="The project is archived" aria-describedby="export-help">
+                Export
+            </Button>,
+        )
+        const { ids, said } = described(html)
+        expect(ids[0]).toBe('export-help')
+        expect(said[1]).toBe('The project is archived')
+    })
+
+    it('gives each shut button a description of its own', () => {
+        const html = renderToStaticMarkup(
+            <>
+                <Button reason="Paused by ada">Run now</Button>
+                <Button reason="No run to cancel">Cancel run</Button>
+            </>,
+        )
+        const ids = [...html.matchAll(/aria-describedby="([^"]+)"/g)].map((match) => match[1])
+        expect(new Set(ids).size).toBe(2)
+    })
+
+    it('is described by nothing without a reason', () => {
+        expect(renderToStaticMarkup(<Button>Save</Button>)).not.toContain('aria-describedby')
+        expect(renderToStaticMarkup(<Button disabled>Save</Button>)).not.toContain('aria-describedby')
+    })
+})
+
 /** The classes of the first element in `html`. */
 const classes = (html: string) => (/class="([^"]*)"/.exec(html)?.[1] ?? '').split(/\s+/)
 

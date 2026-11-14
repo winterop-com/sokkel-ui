@@ -43,8 +43,12 @@ const WORDS: SearchWords = {
     clear: 'Clear the search',
 }
 
-/** A row of the list a person can choose: a result, Retry, or the way to the results page. */
-const OPTION = 'flex cursor-default items-center rounded-md px-2 py-1.5 text-sm select-none aria-selected:bg-muted'
+/** A row of the list a person can choose: a result, Retry, or the way to the results page, highlighted as every list of choices is. */
+const OPTION =
+    'group/search-option flex cursor-default items-center rounded-md px-2 py-1.5 text-sm select-none aria-selected:bg-accent aria-selected:text-accent-foreground'
+
+/** A quiet ink in a row takes the highlight's own while its row is the active one: in the search's list or the palette's. */
+const ON_ACTIVE = 'group-aria-selected/search-option:text-accent-foreground group-data-selected/command-item:text-accent-foreground'
 
 const THUMB = {
     sm: 'size-8',
@@ -70,7 +74,7 @@ export interface SearchResultBodyProps {
     second?: ReactNode
     /** Sets the line under the title in a status ink in place of the muted one. */
     detailTone?: SearchDetailTone
-    /** Sets the quiet fact at the end in a status ink in place of the faint one. */
+    /** Sets the quiet fact at the end in a status ink in place of the muted one. */
     metaTone?: SearchDetailTone
     /** Sets the title in the code face, for a result named by a code. */
     mono?: boolean
@@ -95,7 +99,7 @@ export function SearchResultBody({
     wrap = false,
     className,
 }: SearchResultBodyProps) {
-    const ink = detailTone === undefined ? 'text-muted-foreground' : DETAIL_INK[detailTone]
+    const ink = detailTone === undefined ? cn('text-muted-foreground', ON_ACTIVE) : DETAIL_INK[detailTone]
     const line = wrap ? 'block break-words' : 'block truncate'
     const Icon = result.icon
     return (
@@ -149,7 +153,14 @@ export function SearchResultBody({
                 )}
             </span>
             {result.meta !== undefined && (
-                <span className={cn('shrink-0 text-xs', metaTone === undefined ? 'text-faint' : DETAIL_INK[metaTone])}>{result.meta}</span>
+                <span
+                    className={cn(
+                        'shrink-0 text-xs',
+                        metaTone === undefined ? cn('text-muted-foreground', ON_ACTIVE) : DETAIL_INK[metaTone],
+                    )}
+                >
+                    {result.meta}
+                </span>
             )}
         </span>
     )
@@ -450,7 +461,7 @@ export function Search({
                                         }}
                                         onClick={() => choose(0)}
                                     >
-                                        <RotateCw className="size-4 text-muted-foreground" aria-hidden />
+                                        <RotateCw className={cn('size-4 text-muted-foreground', ON_ACTIVE)} aria-hidden />
                                         {words.retry}
                                     </div>
                                 </>
@@ -482,7 +493,7 @@ export function Search({
                             id={optionId(lead)}
                             role="option"
                             aria-selected={highlighted === lead}
-                            className="flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground select-none aria-selected:bg-muted aria-selected:text-foreground"
+                            className="flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground select-none aria-selected:bg-accent aria-selected:text-accent-foreground"
                             onMouseDown={(event) => event.preventDefault()}
                             onMouseMove={() => {
                                 if (highlighted !== lead) move(lead)

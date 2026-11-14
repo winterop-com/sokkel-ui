@@ -10,10 +10,16 @@ import { SearchIcon } from 'lucide-react'
 
 export type CommandProps = React.ComponentProps<typeof CommandPrimitive>
 
-function Command({ className, ...props }: CommandProps) {
+/**
+ * cmdk's list of commands. Its own Ctrl+N, Ctrl+J, Ctrl+P and Ctrl+K are off (`vimBindings`), so
+ * Ctrl+K means one thing, the palette's key; the arrows stop at the first and last rows, and Home
+ * and End reach them.
+ */
+function Command({ className, vimBindings = false, ...props }: CommandProps) {
     return (
         <CommandPrimitive
             data-slot="command"
+            vimBindings={vimBindings}
             className={cn('flex size-full flex-col overflow-hidden rounded-surface! bg-popover p-1 text-popover-foreground', className)}
             {...props}
         />
@@ -112,7 +118,7 @@ function CommandItem({ className, ...props }: CommandItemProps) {
         <CommandPrimitive.Item
             data-slot="command-item"
             className={cn(
-                "group/command-item relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-disabled max-md:min-h-finger data-selected:bg-muted data-selected:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-selected:*:[svg]:text-foreground",
+                "group/command-item relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-disabled max-md:min-h-finger data-selected:bg-accent data-selected:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-selected:*:[svg]:text-accent-foreground",
                 className,
             )}
             {...props}
@@ -126,7 +132,7 @@ function CommandShortcut({ className, ...props }: CommandShortcutProps) {
     return (
         <span
             data-slot="command-shortcut"
-            className={cn('ml-auto text-xs text-muted-foreground group-data-selected/command-item:text-foreground', className)}
+            className={cn('ml-auto text-xs text-muted-foreground group-data-selected/command-item:text-accent-foreground', className)}
             {...props}
         />
     )

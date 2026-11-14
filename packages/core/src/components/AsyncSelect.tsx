@@ -382,11 +382,14 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 <Combobox.Item
                     key={keyOf(item)}
                     value={item}
-                    className="relative flex min-h-8 w-full cursor-default items-center gap-2 rounded-md py-1 pr-8 pl-2 text-sm outline-none select-none data-highlighted:bg-hover pointer-coarse:min-h-finger"
+                    className="group/option relative flex min-h-(--density-control) w-full cursor-default items-center gap-2 rounded-md py-0.5 pr-8 pl-2 text-sm outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground pointer-coarse:min-h-finger"
                 >
                     {item instanceof Creation ? (
                         <>
-                            <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                            <Plus
+                                className="size-4 shrink-0 text-muted-foreground group-data-highlighted/option:text-accent-foreground"
+                                aria-hidden
+                            />
                             <span className="min-w-0 flex-1 truncate">{words.create(item.text)}</span>
                         </>
                     ) : (
@@ -399,7 +402,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                                     <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
                                         <span className={cn('min-w-0 truncate', mono && 'font-mono')}>{itemLabel(item)}</span>
                                         {itemDetail !== undefined && (
-                                            <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">
+                                            <span className="min-w-0 truncate font-mono text-xs text-muted-foreground group-data-highlighted/option:text-accent-foreground">
                                                 {itemDetail(item)}
                                             </span>
                                         )}
@@ -613,12 +616,26 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
 
 /** An option's mark before its label, an icon sized as the rest of the field's. */
 function Mark({ children }: { children: ReactNode }) {
-    return <span className="flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">{children}</span>
+    return (
+        <span className="flex shrink-0 items-center text-muted-foreground group-data-highlighted/option:text-accent-foreground [&_svg]:size-4">
+            {children}
+        </span>
+    )
 }
 
 /** A quiet figure or code at a row's end. */
 function Meta({ mono, className, children }: { mono: boolean; className?: string; children: ReactNode }) {
-    return <span className={cn('shrink-0 text-xs text-faint', mono ? 'font-mono' : 'tabular-nums', className)}>{children}</span>
+    return (
+        <span
+            className={cn(
+                'shrink-0 text-xs text-muted-foreground group-data-highlighted/option:text-accent-foreground',
+                mono ? 'font-mono' : 'tabular-nums',
+                className,
+            )}
+        >
+            {children}
+        </span>
+    )
 }
 
 /** The line under the list: what to type, that a search runs, that nothing matched, that more load, or that it failed. */

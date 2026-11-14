@@ -1,4 +1,3 @@
-import { Tooltip } from '@base-ui/react/tooltip'
 import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, X, type LucideIcon } from 'lucide-react'
 import {
     Fragment,
@@ -26,6 +25,7 @@ import { Dot } from './Dot'
 import { GroupLabel } from './GroupLabel'
 import { Link, type LinkProps } from './Link'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import type { DragData } from './DragDrop'
 
 /**
@@ -632,17 +632,15 @@ function RowFace({ entry, active, unread, end = true }: { entry: RailEntry; acti
     )
 }
 
-/** A collapsed rail's tooltip for an entry, beside it: its label, then its description. */
+/** A collapsed rail's tooltip for an entry, the library's own, beside it: its label, then its description, quieter. */
 function Tip({ entry }: { entry: RailEntry }) {
     return (
-        <Tooltip.Portal>
-            <Tooltip.Positioner side="right" sideOffset={8}>
-                <Tooltip.Popup className="rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
-                    {entry.label}
-                    {entry.description !== undefined && <span className="text-muted-foreground"> {entry.description}</span>}
-                </Tooltip.Popup>
-            </Tooltip.Positioner>
-        </Tooltip.Portal>
+        <TooltipContent side="right" sideOffset={8}>
+            <span>
+                {entry.label}
+                {entry.description !== undefined && <span className="text-background/70"> {entry.description}</span>}
+            </span>
+        </TooltipContent>
     )
 }
 
@@ -833,8 +831,8 @@ function RailFlyout({ entry, unread, defaultOpen }: { entry: RailEntry; unread: 
             defaultOpen={defaultOpen}
             sideOffset={12}
             trigger={(props) => (
-                <Tooltip.Root>
-                    <Tooltip.Trigger
+                <Tooltip>
+                    <TooltipTrigger
                         render={
                             <button
                                 {...props}
@@ -846,9 +844,9 @@ function RailFlyout({ entry, unread, defaultOpen }: { entry: RailEntry; unread: 
                     >
                         <EntryMark entry={entry} initial />
                         <Corner entry={entry} unread={unread} />
-                    </Tooltip.Trigger>
+                    </TooltipTrigger>
                     <Tip entry={entry} />
-                </Tooltip.Root>
+                </Tooltip>
             )}
         />
     )
@@ -968,9 +966,9 @@ function StripLink({ entry, unread }: { entry: RailEntry; unread: string }) {
 function RailLink({ entry, collapsed, unread }: { entry: RailEntry; collapsed: boolean; unread: string }) {
     if (collapsed) {
         return (
-            <Tooltip.Root>
+            <Tooltip>
                 {/* The link names itself, its icon being all it draws; the tooltip shows the name to the eye. */}
-                <Tooltip.Trigger
+                <TooltipTrigger
                     render={(props) => (
                         <Droppable entry={entry}>
                             <Link
@@ -987,7 +985,7 @@ function RailLink({ entry, collapsed, unread }: { entry: RailEntry; collapsed: b
                     )}
                 />
                 <Tip entry={entry} />
-            </Tooltip.Root>
+            </Tooltip>
         )
     }
     return renderLink(

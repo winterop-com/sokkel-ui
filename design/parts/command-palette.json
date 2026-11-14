@@ -3,7 +3,7 @@
     "id": "command-palette",
     "kind": "part",
     "status": "stable",
-    "summary": "One search over everything an app can do, over the page on Mod+K: a dialog box a third of the way down the window with the search at its top, the commands in groups under their titles (each row its icon, its label, a quiet hint or code after it, and at its end a summary, its kind or the keys that run it), the app's own search results under them, and an optional strip at its foot. Choosing a row runs it and closes the palette. A command whose onSelect answers a promise keeps the palette open and its row busy until it settles: fulfilled, the palette closes; rejected, it stays and says why under the rows.",
+    "summary": "One search over everything an app can do, over the page on Mod+K, which closes it again: a dialog box a third of the way down the window with the search at its top, the commands in groups under their titles (each row its icon, its label, a quiet hint or code after it, and at its end a summary, its kind or the keys that run it), the app's own search results under them, and an optional strip at its foot. Its active row wears the highlight every list of choices does. Choosing a row runs it and closes the palette. A command whose onSelect answers a promise holds the palette open and its row busy until it settles: fulfilled, the palette closes; rejected, it stays and says why under the rows. Once it has run busy-release (5 seconds) a Stop waiting row appears, and it or Escape lets the palette go, the command left to settle unheard.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/CommandPalette.tsx",
@@ -24,22 +24,23 @@
         ]
     },
     "anatomy": {
-        "box": "parts/dialog's box, a third of the way down the window and centered across: 384 wide (width), padded by palette-inset, with no close of its own. The page under it is shaded by the dialog's backdrop.",
+        "box": "parts/dialog's box, a third of the way down the window and centered across, edged in border-strong on elevation-dialog: 384 wide from 768 (width), padded by palette-inset, with no close of its own. The page under it is shaded by the dialog's backdrop.",
         "description": "A line over the search saying what is being chosen (description), for a palette that stands as a chooser.",
         "search": "The search at the top: a search icon at its start, then the query or words.placeholder, on the input's tint. Focus starts in it.",
         "searchIcon": "The search's icon, at half strength.",
         "list": "The groups and the search's results, scrolling past 384 or 60 percent of the window, fading at its foot.",
         "groupTitle": "A group's title over its rows, small and muted, its start level with the rows' icons.",
         "separator": "A rule between two groups, across the palette's whole width.",
-        "row": "One command: its icon, its label (in the code face with mono), a hint or code after it, and at its end a summary, its kind and its keys, or a spinner while it runs. Washed while it is the active row.",
+        "row": "One command: its icon, its label (in the code face with mono), a hint or code after it, and at its end a summary, its kind and its keys, or a spinner while it runs. Washed in the accent while it is the active row, its icon, label and quiet words in accent-foreground.",
         "icon": "A command's icon at the row's start.",
         "hint": "A quiet fact after the label, in words (hint); a disabled command's reason in its place; in a status ink with tone.",
         "code": "An addressable code after the label, in the code face (code).",
-        "meta": "A quiet summary at the row's end in the code face with tabular figures (meta): a count, a size, when it last ran. In a status ink with metaTone, so a summary saying something is missing reads critical. Below 640 it folds under the label.",
+        "meta": "A quiet summary at the row's end in the code face with tabular figures (meta): a count, a size, when it last ran. In the muted ink on a one-line row and a two-line row alike, accent-foreground on the active row; in a status ink with metaTone, which stays its tone, so a summary saying something is missing reads critical. Below 640 it folds under the label.",
         "kind": "What the row is (Page, Form), faint, before its keys, where its group's kind does not already say it.",
         "keys": "The keys that run the command outside the palette, as key caps, a sequence's two presses with words.sequence between.",
         "twoLineRow": "A command with a detail or artwork: two lines, drawn as a search result is, a picture or its icon on a tile at its start and its meta, hint or code at its end.",
         "spinner": "While the command's promise is pending: a spinner at its row's end in the keys' place, named words.running.",
+        "stopWaiting": "Once a running command has run busy-release: words.stopWaiting, a row at the list's top, which closes the palette and lets the command go, nothing cancelled.",
         "refusal": "Why the last command was refused, under the list across the palette's whole width, its words inset as the rows' are: the rejection's words, else words.refused.",
         "empty": "words.empty, centered, while no command matches and the app's search is not waiting.",
         "results": "The app's search results under the commands, grouped by kind as parts of the search draw them; Searching while it waits, its failure with a Retry row, and a row to see all results at the list's foot.",
@@ -60,7 +61,7 @@
         },
         "onSelect": {
             "type": "callback",
-            "does": "Runs the command. Nothing back, or a value: the palette closes. A promise: the palette stays open, the row busy, until it settles; fulfilled, it closes; rejected, it stays open and says why under the rows. A command that throws is refused the same way.",
+            "does": "Runs the command. Nothing back, or a value: the palette closes. A promise: the palette holds open, the row busy, until it settles, Escape, a press outside, its Close and Mod+K doing nothing meanwhile; once it has run busyRelease, Stop waiting, Escape and the Close let the palette go and the command's answer goes unheard. Fulfilled, it closes; rejected, it stays open and says why under the rows. A command that throws is refused the same way.",
             "sokkel-ui": "PaletteCommand onSelect, runCommand"
         },
         "meta": {"type": "text", "does": "A quiet summary at the row's end.", "sokkel-ui": "PaletteCommand meta"},
@@ -94,7 +95,7 @@
         "width": {
             "values": ["sm", "md", "lg"],
             "default": "sm",
-            "does": "How wide from 640 up: sm 384, md 512 or lg 672, for a chooser whose rows say more.",
+            "does": "How wide from 768 up: sm 384, md 512 or lg 672, for a chooser whose rows say more.",
             "sokkel-ui": "PaletteWidth"
         },
         "description": {
@@ -105,6 +106,12 @@
             "type": "boolean",
             "default": false,
             "does": "Lets each row's label, hint and code wrap rather than end in an ellipsis."
+        },
+        "busyRelease": {
+            "type": "number",
+            "default": 5000,
+            "does": "ms a running command holds the palette before Stop waiting appears and Escape lets it go: the busy-release token.",
+            "sokkel-ui": "CommandPalette busyRelease, BUSY_RELEASE (lib/durations, from busy-release) by default"
         }
     },
     "sizes": {
@@ -113,7 +120,7 @@
             "padX": "palette-inset",
             "padY": "palette-inset",
             "radius": "radius-surface",
-            "note": "sm; md 512, lg 672 (width). palette-inset is 4 in most themes and 8 in indigo."
+            "note": "sm, from 768; md 512, lg 672 (width). palette-inset is 4 in most themes and 8 in indigo."
         },
         "md": {"width": 512},
         "lg": {"width": 672},
@@ -166,8 +173,12 @@
         "kindGap": {"value": 8, "note": "Between the kind and the keys."},
         "metaFoldBelow": {"value": 640, "note": "Below this window width a meta folds under its label."},
         "widthFrom": {
-            "value": 640,
-            "note": "The window width from which the width option holds; below it the box is the window less 32."
+            "value": "breakpoint-md",
+            "note": "The window width (768) from which the width option holds, as a dialog's does; below it the box is the window less 32."
+        },
+        "busyRelease": {
+            "value": "busy-release",
+            "note": "How long a running command holds the palette (5000 ms) before Stop waiting appears and Escape and the Close let it go."
         }
     },
     "states": {
@@ -175,7 +186,7 @@
             "means": "Open: the search holds defaultQuery, every command is listed by group, and the first row is active."
         },
         "active": {
-            "means": "The row the arrows or the pointer are on: washed; Enter runs it. The first row drawn becomes active whenever the active one is gone.",
+            "means": "The row the arrows or the pointer are on: washed in the accent, as every list of choices is; Enter runs it. The first row drawn becomes active whenever the active one is gone.",
             "reached": "the arrows, the pointer, or the rows changing",
             "sokkel-ui": "data-selected (cmdk)"
         },
@@ -189,18 +200,26 @@
             "reached": "a query no command matches"
         },
         "busy": {
-            "means": "A command's onSelect answered a promise that has not settled: the palette stays open, the row is busy with a spinner named words.running at its end, and another choice is ignored until it settles.",
+            "means": "A command's onSelect answered a promise that has not settled: the palette holds open (Escape, a press outside, its Close and Mod+K do nothing), the row is busy with a spinner named words.running at its end, and another choice is ignored until it settles.",
             "reached": "a pending promise from onSelect",
             "sokkel-ui": "aria-busy on the row"
         },
+        "released": {
+            "means": "A command has run busy-release without settling: words.stopWaiting stands at the list's top, and it, Escape and the Close let the palette go; a press outside and Mod+K still do nothing. Closing cancels nothing: the command settles on its own and its answer, a refusal included, is not said.",
+            "reached": "a pending promise past busy-release"
+        },
         "refused": {
-            "means": "The promise was rejected, or onSelect threw: the palette stays open and says why under the rows, the rejection's own words or words.refused. Typing, or choosing again, clears it.",
+            "means": "The promise was rejected, or onSelect threw: the palette stays open and the refusal stays shown under the rows, the rejection's own words or words.refused, until typing or choosing again clears it.",
             "reached": "a rejected promise from onSelect"
         },
         "critical": {"means": "A meta or hint in the critical ink.", "reached": "metaTone or tone critical"},
         "warning": {"means": "A meta or hint in the warning ink.", "reached": "metaTone or tone warning"},
         "good": {"means": "A meta or hint in the good ink.", "reached": "metaTone or tone good"},
         "info": {"means": "A meta or hint in the info ink.", "reached": "metaTone or tone info"},
+        "twoLine": {
+            "means": "A row with a detail or artwork, drawn as a search result is: its meta, hint or code the quiet fact at its end.",
+            "reached": "detail or artwork"
+        },
         "phone": {
             "means": "Below 768 the search and every row are a finger tall; below 640 a meta folds under its label.",
             "reached": "a window below 768"
@@ -214,10 +233,10 @@
         "box": {
             "rest": {
                 "ground": "popover",
+                "edge": "border-strong",
                 "ink": "popover-foreground",
                 "radius": "radius-surface",
-                "ring": {"color": "foreground/10", "width": 1},
-                "note": "parts/dialog's box: its ring is its edge, outside the box, and no shadow."
+                "note": "parts/dialog's box: a 1px border-strong edge and elevation-dialog under it."
             }
         },
         "description": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
@@ -227,34 +246,42 @@
         "separator": {"rest": {"ground": "border", "note": "1 tall."}},
         "row": {
             "rest": {"ink": "foreground", "radius": "radius-lg", "text": "text.body"},
-            "active": {"ground": "muted", "ink": "foreground"},
+            "active": {"ground": "accent", "ink": "accent-foreground"},
             "disabled": {"opacity": "disabled-opacity"}
         },
-        "icon": {"rest": {"ink": "muted-foreground"}, "active": {"ink": "foreground"}},
+        "icon": {"rest": {"ink": "muted-foreground"}, "active": {"ink": "accent-foreground"}},
         "hint": {
             "rest": {"ink": "muted-foreground", "text": "text.help"},
+            "active": {"ink": "accent-foreground", "note": "Unless a tone sets it, which stays."},
             "critical": {"ink": "critical-ink"},
             "warning": {"ink": "warning-ink"},
             "good": {"ink": "good-ink"},
             "info": {"ink": "info-ink"}
         },
-        "code": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "code": {"rest": {"ink": "muted-foreground", "text": "text.help"}, "active": {"ink": "accent-foreground"}},
         "meta": {
-            "rest": {
-                "ink": "muted-foreground",
-                "text": "text.help",
-                "note": "A two-line row's meta is the search result's quiet fact, in faint (open questions)."
-            },
+            "rest": {"ink": "muted-foreground", "text": "text.help"},
+            "active": {"ink": "accent-foreground", "note": "Unless a tone sets it, which stays."},
             "critical": {"ink": "critical-ink"},
             "warning": {"ink": "warning-ink"},
             "good": {"ink": "good-ink"},
-            "info": {"ink": "info-ink"}
+            "info": {"ink": "info-ink"},
+            "twoLine": {
+                "ink": "muted-foreground",
+                "note": "The search result's quiet fact at the row's end, in the same ink as on one line."
+            }
         },
-        "kind": {"rest": {"ink": "faint"}},
+        "kind": {"rest": {"ink": "faint"}, "active": {"ink": "accent-foreground"}},
         "keys": {"rest": {"ground": "muted", "ink": "muted-foreground", "radius": "radius-sm", "text": "text.badge"}},
         "spinner": {
             "rest": {"note": "Drawn only while busy."},
-            "busy": {"ink": "muted-foreground", "note": "foreground on the active row."}
+            "busy": {"ink": "muted-foreground", "note": "accent-foreground on the active row."}
+        },
+        "stopWaiting": {
+            "rest": {"note": "Drawn only once released."},
+            "released": {
+                "note": "A row as the command rows are, in the box's ink, its icon muted-foreground, on accent while it is the active row."
+            }
         },
         "refusal": {
             "rest": {"note": "Drawn only once refused."},
@@ -271,7 +298,7 @@
     "keyboard": [
         {
             "keys": ["Mod+K"],
-            "does": "Opens the palette, from a field too; on a Mac Ctrl+K as well. In a Shell a second press closes it; usePaletteShortcut, for a palette an app draws, only opens it."
+            "does": "Opens the palette, from a field too; on a Mac Ctrl+K as well. A second press closes it, in a Shell or not, usePaletteShortcut included, unless a command is running."
         },
         {
             "keys": ["a character"],
@@ -280,21 +307,20 @@
         },
         {
             "keys": ["ArrowDown", "ArrowUp"],
-            "does": "Moves the active row, past disabled rows; it stops at the first and the last.",
-            "when": "the palette is open"
-        },
-        {
-            "keys": ["Ctrl+N", "Ctrl+J", "Ctrl+P", "Ctrl+K"],
-            "does": "Moves the active row down (N, J) or up (P, K), as the arrows do: cmdk's own keys. In a Shell Ctrl+K also closes the palette, being its key (open questions).",
+            "does": "Moves the active row, past disabled rows; it stops at the first and the last, as every list of choices does.",
             "when": "the palette is open"
         },
         {"keys": ["Home", "End"], "does": "Makes the first or the last row active.", "when": "the palette is open"},
         {
             "keys": ["Enter"],
-            "does": "Runs the active command: the palette closes, or stays open and busy while its promise is pending.",
-            "when": "a row is active and no command is running"
+            "does": "Runs the active command: the palette closes, or stays open and busy while its promise is pending; on Stop waiting, closes the palette and lets the command go.",
+            "when": "a row is active and no command is running, or Stop waiting is active"
         },
-        {"keys": ["Escape"], "does": "Closes the palette, focus back where it was.", "when": "the palette is open"}
+        {
+            "keys": ["Escape"],
+            "does": "Closes the palette, focus back where it was; once a running command has run busy-release, closes it and lets the command go.",
+            "when": "the palette is open, and no command is running or it has run busy-release"
+        }
     ],
     "words": {
         "placeholder": "Search or run a command",
@@ -306,6 +332,7 @@
         "sequence": "then",
         "running": "Running",
         "refused": "The command did not run.",
+        "stopWaiting": "Stop waiting",
         "searching": "Searching",
         "searchFailed": "The search did not answer.",
         "retry": "Retry",
@@ -324,12 +351,14 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "cmdk's Command inside the library's dialog (ui/command): the box is Base UI's Dialog, a portal over the page it makes inert; its title and description are read to a screen reader only.",
+            "cmdk's own Ctrl+N, Ctrl+J, Ctrl+P and Ctrl+K are off (vimBindings false, the Command primitive's default), so Ctrl+K is the palette's key alone. The open palette binds Mod+K itself (useShortcuts, before the shell's own), closing through the same hold a running command keeps.",
             "fuzzy is cmdk's own matching; terms and an app's function score the commands themselves (filterCommands), the order then theirs.",
             "In a Shell the palette takes the app's groups and each screen's (useCommands), ranked, a screen's first at equal rank.",
             "The active row is held as cmdk's value, so the foot can say its verb.",
             "A command that settles after the palette closed, or opened again, is let go.",
-            "pointer-coarse decides the touch screen's Close; max-md the finger heights; max-sm the meta's fold.",
-            "The list fades at its foot (scroll-fade-b), and keeps the see-all row in sight under the scrolling rows."
+            "pointer-coarse decides the touch screen's Close; max-md the finger heights and, with md:max-w, the width; max-sm the meta's fold.",
+            "The list fades at its foot (scroll-fade-b), and keeps the see-all row in sight under the scrolling rows.",
+            "The wait is BUSY_RELEASE, generated from the busy-release token (lib/durations); useBusyRelease releases the palette once it has run, and only Escape (escape-key, close-watcher) and the Close (close-press) are heeded then. A command settling after the palette closed is let go (runCommand's current)."
         ],
         "sokkel-ui-egui": [
             "CommandPalette::new(id, groups, &mut query, &mut highlight).words(..).show(ctx) returns PaletteOutcome { run, close }; the app runs the command it names by group and index.",
@@ -348,8 +377,8 @@
         {
             "renderer": "sokkel-ui-egui",
             "what": "rows",
-            "spec": "radius-lg; the group's foreground ink; the active row's ink and icon foreground.",
-            "today": "radius-md; popover-foreground ink; the active row's icon stays muted-foreground."
+            "spec": "radius-lg; the group's foreground ink; the active row on accent, its ink and icon accent-foreground.",
+            "today": "radius-md; popover-foreground ink; the active row on muted, its icon muted-foreground."
         },
         {
             "renderer": "sokkel-ui-egui",
@@ -366,8 +395,8 @@
         {
             "renderer": "sokkel-ui-egui",
             "what": "edge and shadow",
-            "spec": "parts/dialog's: a 1px foreground/10 ring outside the box, no shadow.",
-            "today": "The menu's popover frame: a stroke inside the box and a shadow 0 4 blur 12, black at 9 percent (35 in dark)."
+            "spec": "parts/dialog's: a 1px border-strong edge, and elevation-dialog under it.",
+            "today": "The menu's popover frame: a foreground/10 stroke inside the box and a shadow 0 4 blur 12, black at 9 percent (35 in dark)."
         },
         {
             "renderer": "sokkel-ui-egui",
@@ -385,7 +414,7 @@
             "renderer": "sokkel-ui-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 26b411f, CommandPalette draws the box 384 wide a third of the way down over a shade/10 backdrop, padded by palette-inset, the search a control tall on input/30, group titles 32 tall at text.badge, rows 34 tall with an icon and keys or a hint, the active row on muted, rules between groups, words.placeholder and words.empty, ArrowDown, ArrowUp, Enter and Escape. Not yet: a command's promise (busy and refused, words.running and words.refused), meta and metaTone, hint tones, code, mono, sequences and words.sequence, kind, verbs, the foot and words.palette and words.open, two-line rows, disabled commands, the app's search and its results, width, description, wrap, ranks, the touch screen's Close, finger rows below 768, Home, End and the Ctrl bindings, and words.title and words.close."
+            "today": "As of 26b411f, CommandPalette draws the box 384 wide a third of the way down over a shade/10 backdrop, padded by palette-inset, the search a control tall on input/30, group titles 32 tall at text.badge, rows 34 tall with an icon and keys or a hint, the active row on muted, rules between groups, words.placeholder and words.empty, ArrowDown, ArrowUp, Enter and Escape. Not yet: a command's promise (busy, held open, and refused, words.running and words.refused), meta and metaTone, hint tones, code, mono, sequences and words.sequence, kind, verbs, the foot and words.palette and words.open, two-line rows, disabled commands, the app's search and its results, width, description, wrap, ranks, the touch screen's Close, finger rows below 768, Home, End, Mod+K closing the open palette, and words.title and words.close."
         }
     ]
 }

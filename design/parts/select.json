@@ -3,13 +3,15 @@
     "id": "select",
     "kind": "part",
     "status": "stable",
-    "summary": "One value chosen from a list: a trigger that shows the chosen option, or the placeholder, with a chevron at its end, and the list it opens: rows with an optional lead (an icon, or a theme's swatch), the label, a quiet detail at the row's end or under the label, and a check on the chosen one; groups under labels, separators between them, and arrows that scroll a long list. As a field it wears the text field's frame (parts/text-field): the label, the help and the issue mark.",
+    "summary": "One value chosen from a list: a trigger that shows the chosen option, or the placeholder, with a chevron at its end, and the list it opens: rows padded 4 in from its edge, each with an optional lead (an icon, or a theme's swatch) 8 before the label, a quiet detail at the row's end or under the label, and a check on the chosen one; groups under labels, separators between them, and arrows that scroll a long list. As a field it wears the text field's frame (parts/text-field): the label, the help and the issue mark.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/ui/select.tsx",
             "packages/core/src/components/SelectField.tsx",
             "packages/core/src/components/ThemePicker.tsx",
+            "packages/core/src/components/theme-swatch.tsx",
             "packages/core/src/lib/appearance.ts",
+            "packages/core/src/lib/popup.ts",
             "packages/core/src/lib/issue-edge.ts",
             "packages/core/src/lib/focus.ts"
         ],
@@ -23,13 +25,13 @@
         "trigger": "The control: the chosen option's lead and label (and its detail with chosenDetail), else the placeholder, and the chevron at its end. As wide as what it shows, as wide as the widest label with widest, or the room it is given (a field's select fills its row).",
         "value": "What the trigger shows, on one line and cut short: the chosen option's lead and label, or the placeholder while nothing is chosen.",
         "chevron": "A down chevron at the trigger's end.",
-        "list": "The popup that holds the rows, on the popover ground, scrolling when it is taller than the room: laid over the trigger with the chosen row level with the value (alignItemWithTrigger), or under it, 4 away; as wide as the trigger and at least 144.",
-        "row": "One option: its lead, its label, its detail, and the check at its end on the chosen one. Washed while highlighted by the pointer, the arrows or typing.",
-        "lead": "Before an option's label, in the row and in the trigger: its icon, in the muted ink, or a theme's swatch.",
+        "list": "The popup that holds the rows, wearing every popup's look (popover ground, radius-surface, a 1px border-strong edge, elevation-pop) and padded 4, scrolling when it is taller than the room: laid over the trigger with the chosen row level with the value (alignItemWithTrigger), or under it, 4 away; as wide as the trigger and at least 144.",
+        "row": "One option, a control tall: its lead, its label, its detail, and the check at its end on the chosen one. Washed while highlighted by the pointer, the arrows or typing.",
+        "lead": "Before an option's label, 8 before it, in the row and in the trigger: its icon, in the muted ink, or a theme's swatch.",
         "swatch": "A theme's sample before its name: 28 by 16 on that theme's background with its edge, and its foreground, primary and third chart color as three dots. An option without a theme, among options with themes, draws an empty dashed box.",
         "detail": "A quiet fact about an option, such as the value it would inherit: at the row's end before the check, or on a second line under the label (detailPlacement below). The trigger shows the chosen option's with chosenDetail.",
         "check": "The chosen row's check, inside the row's end.",
-        "group": "Rows under one label, padded 4 all round.",
+        "group": "Rows under one label, with no pad of their own: the list pads every row 4, in a group or not.",
         "groupLabel": "A group's name over its rows, small and muted.",
         "separator": "A rule between groups, across the list's full width.",
         "scrollArrow": "At the list's top or foot while it can scroll that way: a chevron on the popover ground; resting the pointer on it scrolls."
@@ -75,10 +77,9 @@
             "does": "The trigger shows the chosen option's detail after its label, quiet, on its one line."
         },
         "swatch": {
-            "type": "boolean",
-            "default": false,
-            "does": "Each option leads with its theme's swatch, drawn in that theme; an option with no theme leads with an empty dashed box.",
-            "sokkel-ui": "ThemePicker's theme select (ThemeOption swatch); not an option of Select or SelectField themselves"
+            "type": "text",
+            "does": "The theme whose swatch leads the option, drawn in that theme; among options with swatches, an option with none leads with an empty dashed box.",
+            "sokkel-ui": "SelectFieldOption swatch; the theme select (ThemePicker's ThemeOption swatch) draws the same part, ThemeSwatch"
         },
         "mono": {
             "type": "boolean",
@@ -106,7 +107,7 @@
             "text": "text.body",
             "radius": "radius-control",
             "phoneMinHeight": "spacing-finger",
-            "note": "density.control: 32 regular, 28 compact. Pads 10 at its start and 8 at its end (layout); a finger tall below 768."
+            "note": "density.control: 32 regular, 28 compact. Pads 10 at its start and 8 at its end (layout); 6 before the chevron, 8 between a lead and its label (layout.leadGap); a finger tall below 768."
         },
         "sm": {
             "height": "density.control-sm",
@@ -119,15 +120,19 @@
             "note": "density.control-sm: 28 regular, 24 compact; its corners at most 10."
         },
         "row": {
-            "padY": 4,
+            "height": "density.control",
+            "padY": 2,
             "gap": 6,
             "icon": 16,
             "text": "text.body",
             "radius": "radius-md",
             "phoneMinHeight": "spacing-finger",
-            "note": "30 tall at every density: 4 over and under a 22 line, more for a detail under the label. Pads 6 at its start and 32 at its end, the room for the check (layout). A finger tall below 768."
+            "note": "A one-line row is density.control tall, 32 regular and 28 compact (at least, with 2 over and under its 22 line); a detail under the label makes it taller. Pads 6 at its start and 32 at its end, the room for the check (layout). A finger tall below 768."
         },
-        "lead": {"icon": 16, "note": "An option's icon, in the row and in the trigger."},
+        "lead": {
+            "icon": 16,
+            "note": "An option's icon, in the row and in the trigger, 8 before its label (layout.leadGap)."
+        },
         "swatch": {
             "height": 16,
             "width": 28,
@@ -136,7 +141,6 @@
         },
         "detail": {"text": "text.help"},
         "check": {"height": 16, "width": 16},
-        "group": {"padX": 4, "padY": 4},
         "groupLabel": {"padX": 6, "padY": 4, "text": "text.help"},
         "scrollArrow": {"padY": 4, "icon": 16}
     },
@@ -148,20 +152,20 @@
         "listGap": {"value": 4, "note": "From the trigger, when the list opens under it rather than over it."},
         "listMinWidth": {"value": 144, "note": "The list is as wide as the trigger, and at least this."},
         "listInset": {
-            "value": 0,
-            "note": "Rows outside a group stand flush with the list's edge, as SelectField's and the theme select's do; a group pads its rows 4 (sizes.group)."
+            "value": 4,
+            "note": "The list pads every row 4 from its edge, in a group or not; a group has no pad of its own."
         },
         "rowPadStart": 6,
         "rowPadEnd": {"value": 32, "note": "The check stands in it, 8 from the row's end."},
         "checkEnd": 8,
         "leadGap": {
             "value": 8,
-            "note": "Between an option's lead and its label in the row; 6 in the trigger, the value's own gap."
+            "note": "Between an option's lead (an icon or a swatch) and its label, in the row and in the trigger."
         },
         "detailGap": {"value": 8, "note": "Before a detail at the row's end."},
         "separatorGap": {
             "value": 4,
-            "note": "Above and below a separator, which runs across its group's pad to the list's edges."
+            "note": "Above and below a separator, which runs across the list's pad to its edges."
         },
         "swatchGap": {"value": 8, "note": "Between the swatch and the label, in the row and in the trigger."},
         "swatchDot": 6,
@@ -262,10 +266,10 @@
         "list": {
             "rest": {
                 "ground": "popover",
+                "edge": "border-strong",
                 "ink": "popover-foreground",
                 "radius": "radius-surface",
-                "ring": {"color": "foreground/10", "width": 1},
-                "note": "The 1px ring is its edge, outside the box. Under it Tailwind's shadow-md: two layers, 0 4 6 -1 and 0 2 4 -2, black at 10 percent; no elevation token."
+                "note": "Every popup's look: a 1px border-strong edge, and elevation-pop under it."
             }
         },
         "row": {
@@ -340,12 +344,12 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "Base UI's Select. The list is a portal on layer-popover and opens on a mouse down; laid over the trigger (alignItemWithTrigger) only for a pointer and only where there is room, else under it, flipping above when there is no room below.",
+            "Base UI's Select. The list is a portal on layer-popover and opens on a mouse down; laid over the trigger (alignItemWithTrigger) only for a pointer and only where there is room, else under it, flipping above when there is no room below. It wears the popup look every popup shares (lib/popup).",
             "Focus goes back to the trigger after a keyboard close and nowhere after a pointer close (returnFocusOnKeyboard), so a pressed trigger draws no focus ring.",
             "widest lays the value and every label, unseen and flat, in one grid cell, so the trigger is as wide as the widest.",
             "A hidden input carries the value for a form.",
             "As a field (SelectField) the trigger fills its row, the field's label names it, and a refused value marks it aria-invalid; the issue mark and the warning edge are the text field's (parts/text-field).",
-            "The theme select (ThemePicker) draws each swatch in its own theme with data-theme-scope, opens under the trigger at most 320 tall, and is as wide as its widest row up to 384 and the room it has; a theme's description stands under its name there."
+            "The theme select (ThemePicker) draws each swatch in its own theme with data-theme-scope, opens under the trigger at most 320 tall, and is as wide as its widest row up to 384 and the room it has; a theme's description stands under its name there. A SelectField whose options name a swatch draws the same ThemeSwatch."
         ],
         "sokkel-ui-egui": [
             "Select::new(&mut chosen, options, label): the chosen option is an index, and the label names it for AccessKit.",
@@ -380,20 +384,14 @@
         },
         {
             "renderer": "sokkel-ui-egui",
-            "what": "list inset",
-            "spec": "Rows outside a group flush with the list's edge (open question); 4 in a group.",
-            "today": "4 all round."
-        },
-        {
-            "renderer": "sokkel-ui-egui",
             "what": "list edge and shadow",
-            "spec": "A 1px foreground/10 ring outside the box; Tailwind's shadow-md, two layers black at 10 percent.",
+            "spec": "Every popup's look: a 1px border-strong edge inside the box, and elevation-pop under it.",
             "today": "A 1px foreground/10 stroke inside the box; one shadow 0 4 blur 12, black at 24 (90 in dark)."
         },
         {
             "renderer": "sokkel-ui-egui",
             "what": "rows",
-            "spec": "30 tall at every density (a finger below 768); the label 6 in, the check 8 from the end; highlighted in accent with accent-foreground ink.",
+            "spec": "density.control tall (32, 28 compact; a finger below 768); the label 6 in, the check 8 from the end; highlighted in accent with accent-foreground ink.",
             "today": "density.control less 4 (28, 24 compact); the label 8 in, the check centered 14 from the end; highlighted in hover with popover-foreground ink."
         },
         {

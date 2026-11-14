@@ -75,6 +75,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             'what a cell knows of the table it is drawn in, apart from `DataTable` so `TagChips` reads it without the table; `useTableCell` and `TableCell` are exported by `DataTable`',
         'components/table-reorder':
             "what `DataTable` drags its rows with, loaded the first time a table with `onReorder` or a `dragKind` is drawn; its words are `DataTable`'s",
+        'components/theme-swatch': "a theme's sample before its name, which the theme picker and a select field's options lead with",
         'components/calendar/calendar-drag':
             'what the week and month views move their events with, loaded the first time one is drawn with `onEventMove`',
         'components/calendar/event-keys': "the keys that move and resize a calendar event, and the views' drag layer loader",
@@ -94,7 +95,10 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/ui/menu-engine': "Base UI's menu, which `primitives/dropdown-menu` and `AccountMenu` load on first use",
         'hooks/use-drag-size': "the drag on a resizable edge, for the library's own panels",
         'hooks/use-file-drop': 'files dragged onto `DropZone` and `FileField`, which take them',
+        'hooks/use-busy-release':
+            'the wait after which a busy palette or dialog offers Stop waiting, and which closes it heeds then; their `busyRelease` options set it',
         'lib/css-pixels': 'a length token in pixels, for a part that hands a size to an engine',
+        'lib/durations': 'the waits in ms that tokens.json defines, which `useBusyRelease` reads',
         'lib/edit': "the edit cycle `InlineEdit` and `DataTable`'s editable cells share; their types are exported by both",
         'lib/finger': "the finger-sized hit area the primitives' bare triggers wear on a phone",
         'lib/focus': 'where focus goes when a popup closes',
@@ -106,6 +110,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             'what `Markdown` and `PlainMarkdown` read raw HTML with under `allowHtml`, loaded the first time a text allows it; an app preloads it with `loadHtml`',
         'lib/math': 'how `Markdown` reads math',
         'lib/overlay': 'the open overlays `useOverlay` keeps',
+        'lib/popup': 'the look every popup wears: its ground, corners, edge and elevation',
         'lib/percent': 'how the library writes a share as a percent',
         'lib/scroll-memory': "where `useScrollMemory` keeps a scroller's place",
         'lib/shortcuts': 'the key registry `useShortcuts` binds in; its types are exported by `hooks/use-shortcuts` and `ShortcutsDialog`',

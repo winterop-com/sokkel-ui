@@ -3,7 +3,7 @@
     "id": "settings-dialog",
     "kind": "part",
     "status": "stable",
-    "summary": "An app's preferences as one large dialog over the page it was opened from, on its own route (principle 9): a head with the title and a close; the sections in a column under their group titles, with a search over every setting at its top; the shown section's rows beside it, scrolling on their own; and a footer with Reset to defaults for the shown section, a note that changes are kept as they are made, and Done. Below 640 it fills the screen, and the column is a list to go into.",
+    "summary": "An app's preferences as one large dialog over the page it was opened from, on its own route (principle 9): a head with the title and a close; the sections in a column under their group titles, with a search over every setting at its top; the shown section's rows beside it, scrolling on their own; and a footer with Reset to defaults for the shown section, a note that changes are kept as they are made, and Done. Below 768 it fills the screen, and the column is a list of sections to go into.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/SettingsDialog.tsx",
@@ -20,7 +20,7 @@
         ]
     },
     "anatomy": {
-        "box": "The dialog's box (parts/dialog) with no padding of its own: 896 wide and 704 tall, at most the window less 32 across and 64 down. The page under it is shaded by the dialog's backdrop.",
+        "box": "The dialog's box (parts/dialog) with no padding of its own, its 1px border-strong edge and elevation-dialog under it: 896 wide and 704 tall, at most the window less 32 across and 64 down. The page under it is shaded by the dialog's backdrop. Below 768 it is a full-screen sheet, with no edge or shadow.",
         "head": "48 tall across the box under a rule: the title at its start, the close at its end; on a phone in a section, Back before the title.",
         "title": "words.title, in the heading face.",
         "close": "An icon-sm ghost button at the head's end, named words.close; it closes the dialog.",
@@ -129,7 +129,7 @@
             "text": "text.body",
             "radius": "radius-md",
             "phoneMinHeight": "spacing-finger",
-            "note": "34 tall from 640: 6 over and under a 22 line; 2 apart (layout). A finger tall on a phone."
+            "note": "34 tall from 768: 6 over and under a 22 line; 2 apart (layout). A finger tall below 768, where the column is a list."
         },
         "pane": {"padX": 32, "padY": 20, "note": "16 across on a phone."},
         "heading": {"text": "text.detail-title", "note": "4 under it (layout)."},
@@ -158,7 +158,10 @@
             "value": 512,
             "note": "The row's own width from which auto places its control at the end (a container query)."
         },
-        "phoneBelow": {"value": 640, "note": "Below this window width the dialog fills the screen."},
+        "phoneBelow": {
+            "value": "breakpoint-md",
+            "note": "Below this window width (768) the dialog fills the screen and the column is a list of sections to go into, at the dialog's own line (parts/dialog)."
+        },
         "phoneHeadStart": {"value": 8, "note": "The head's start pad on a phone."},
         "sectionsBetween": {"value": 16, "note": "Between the search and the first group, and between groups."}
     },
@@ -187,27 +190,27 @@
             "reached": "Reset to defaults"
         },
         "phoneList": {
-            "means": "Below 640, on the list: the column fills the screen, each entry a finger tall with a chevron, none marked; a section reset is left out.",
-            "reached": "a window below 640, phoneStart list, or Back"
+            "means": "Below 768, on the list: the column fills the screen, each entry a finger tall with a chevron, none marked; a section reset is left out.",
+            "reached": "a window below 768, phoneStart list, or Back"
         },
         "phoneSection": {
-            "means": "Below 640, in a section: the pane fills the screen, with Back in the head.",
-            "reached": "a window below 640, phoneStart section, or an entry chosen"
+            "means": "Below 768, in a section: the pane fills the screen, with Back in the head.",
+            "reached": "a window below 768, phoneStart section, or an entry chosen"
         }
     },
     "pieces": {
         "box": {
             "rest": {
                 "ground": "popover",
+                "edge": "border-strong",
                 "ink": "popover-foreground",
                 "radius": "radius-surface",
-                "ring": {"color": "foreground/10", "width": 1},
-                "note": "parts/dialog's box: its ring is its edge, outside the box, and no shadow."
+                "note": "parts/dialog's box: a 1px border-strong edge and elevation-dialog under it; below 768 a sheet with neither."
             }
         },
         "head": {"rest": {"rule": "border", "note": "The rule along its foot."}},
         "title": {"rest": {"text": "text.detail-title", "note": "In the heading face, the box's ink."}},
-        "column": {"rest": {"rule": "border", "note": "The rule along its end, from 640; no ground of its own."}},
+        "column": {"rest": {"rule": "border", "note": "The rule along its end, from 768; no ground of its own."}},
         "groupTitle": {"rest": {"ink": "muted-foreground", "text": "text.badge"}},
         "entry": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md", "text": "text.body"},
@@ -282,8 +285,8 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "The app holds open, active and search; useOverlayRoute (hooks/use-overlay-route) draws the dialog on #/settings over the page it was opened from, and closing goes back through the history.",
-            "Base UI's Dialog through the dialog primitives, with the dialog's box and footer; the backdrop blurs on the web only (parts/dialog).",
-            "From 640 the search takes focus on opening; on a phone the view in sight does, so no keyboard rises.",
+            "Base UI's Dialog through the dialog primitives, with the dialog's box, its sheet below breakpoint-md (SHEET) and its footer.",
+            "From 768 the search takes focus on opening; on a phone or a foldable the view in sight does, so no keyboard rises.",
             "The pane is keyed by the shown section, so a new section starts at its top.",
             "A row's auto layout is a container query on the row (@lg, 32rem).",
             "On a phone the footer pads its foot by the home indicator's inset (env(safe-area-inset-bottom)).",
@@ -306,7 +309,7 @@
         {
             "renderer": "sokkel-ui-egui",
             "what": "edge and shadow",
-            "spec": "parts/dialog's: a 1px foreground/10 ring outside the box, no shadow.",
+            "spec": "parts/dialog's: a 1px border-strong edge, and elevation-dialog under it.",
             "today": "A 1px foreground/10 stroke inside the box, and a shadow 0 14 blur 44, black at 18 percent (47 in dark)."
         },
         {
@@ -361,7 +364,7 @@
             "renderer": "sokkel-ui-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 26b411f, SettingsDialog draws the box at 896 by 704, the head (48, the title, a 28 close 16 from the end), the column (224, padded 12, the search, group titles, entries 34 tall and 2 apart with the shown one on secondary at text.action), the pane padded 32 by 20 with the section's title and its rows (16 down, title text.action, description text.body muted), and the footer (65, muted/50 under a rule, Reset to defaults while the section has reset, words.saved, Done); reset false and the search over every setting's words and keywords. Not yet: the phone (the full-screen sheet below 640, the list and the section with Back, phoneStart), resetScope all, the app's own footer note, a section's heading, lead and foot, the nested shade under the reset's question, Enter and Space on an entry, and the route."
+            "today": "As of 26b411f, SettingsDialog draws the box at 896 by 704, the head (48, the title, a 28 close 16 from the end), the column (224, padded 12, the search, group titles, entries 34 tall and 2 apart with the shown one on secondary at text.action), the pane padded 32 by 20 with the section's title and its rows (16 down, title text.action, description text.body muted), and the footer (65, muted/50 under a rule, Reset to defaults while the section has reset, words.saved, Done); reset false and the search over every setting's words and keywords. Not yet: the phone (the full-screen sheet below 768, the list and the section with Back, phoneStart), resetScope all, the app's own footer note, a section's heading, lead and foot, the nested shade under the reset's question, Enter and Space on an entry, and the route."
         }
     ]
 }

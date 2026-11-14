@@ -1,8 +1,8 @@
-import { Tooltip } from '@base-ui/react/tooltip'
 import { CircleHelp } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Switch } from './ui/switch'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 export interface SwitchFieldProps {
     id: string
@@ -41,8 +41,8 @@ export function SwitchField({ id, label, explain, note, reason, checked, default
                     </span>
                     {note !== undefined && <span className="min-w-0 text-xs wrap-anywhere text-faint">{note}</span>}
                     {explain !== undefined && !held && (
-                        <Tooltip.Root>
-                            <Tooltip.Trigger
+                        <Tooltip>
+                            <TooltipTrigger
                                 render={(props) => (
                                     <button
                                         {...props}
@@ -54,14 +54,8 @@ export function SwitchField({ id, label, explain, note, reason, checked, default
                                     </button>
                                 )}
                             />
-                            <Tooltip.Portal>
-                                <Tooltip.Positioner sideOffset={6}>
-                                    <Tooltip.Popup className="max-w-64 rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
-                                        {explain}
-                                    </Tooltip.Popup>
-                                </Tooltip.Positioner>
-                            </Tooltip.Portal>
-                        </Tooltip.Root>
+                            <TooltipContent>{explain}</TooltipContent>
+                        </Tooltip>
                     )}
                 </span>
                 {held && (

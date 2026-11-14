@@ -86,6 +86,26 @@ function source(path: string): string {
     return readFileSync(join(CORE, path), 'utf8')
 }
 
+/** The look every popup wears (`lib/popup`), laid under the popup's own classes. */
+const POPUP_LOOK = /export const POPUP = '([^']+)'/.exec(source('lib/popup.ts'))?.[1] ?? ''
+
+/** The busy wait a part holds for: `busy-release` when its `busyRelease` defaults to the token's generated constant. */
+const BUSY_WAIT = /export const BUSY_RELEASE = (\d+)\b/.exec(source('lib/durations.ts'))?.[1]
+const busyReleaseIn = (text: string, anchor: string) =>
+    defaultIn(text, anchor, 'busyRelease') === 'BUSY_RELEASE' &&
+    /'busy-release'/.test(readFileSync(join(ROOT, 'scripts', 'build-tokens.ts'), 'utf8'))
+        ? 'busy-release'
+        : undefined
+/** Whether a part closes only as `letsGo` says while busy, after `useBusyRelease`'s wait. */
+const releasedBy = (text: string) => /useBusyRelease\(/.test(text) && /letsGo\(/.test(text)
+
+/** The elevation a part's classes put under it, by its token: `shadow-pop` is elevation-pop, `shadow-dialog` elevation-dialog. */
+const elevationOf = (layers: readonly string[], on: readonly string[] = []) =>
+    resolve(layers, on, (name) => {
+        const token = /^shadow-(pop|dialog|none)$/.exec(name)?.[1]
+        return token === undefined ? undefined : token === 'none' ? 'none' : `elevation-${token}`
+    }) ?? 'none'
+
 // The contract
 
 type Length = number | string | { regular: number; compact: number }
@@ -785,7 +805,7 @@ const TEXT_FIELD_ADAPTER: Adapter = {
             // The popover opens in a portal, which a server drawing leaves out: its classes are read from the sources.
             const popup = literalAfter(source('components/ui/popover.tsx'), 'data-slot="popover-content"')
             const own = literalAfter(source('components/IssueMark.tsx'), 'initialFocus={false}')
-            return { layers: [popup, own], on: [] }
+            return { layers: [POPUP_LOOK, popup, own], on: [] }
         }
         return undefined
     },
@@ -1130,6 +1150,9 @@ function once<T>(make: () => T): () => T {
 
 // Rail
 
+/** The collapsed rail's tooltip: the library's own box, when the rail draws its tips with `TooltipContent`. */
+const railTip = () => (/function Tip\([\s\S]*?<TooltipContent side="right"/.test(RAIL) ? TOOLTIP_BOX : '')
+
 const RAIL = source('components/Rail.tsx')
 const RESIZE_HANDLE = source('components/ResizeHandle.tsx')
 
@@ -1260,8 +1283,8 @@ const RAIL_ADAPTER: Adapter = {
             strip: [strip, strip.find((element) => element.tag === 'aside')],
             stripTile: [strip, stripTile(strip, 'Schedules')],
         }
-        // The collapsed rail's tooltip opens in a portal, which a server drawing leaves out: its classes are read from the source.
-        if (size === 'tooltip') return { layers: [literalAfter(RAIL, '<Tooltip.Popup className=')], on: [] }
+        // The collapsed rail's tooltip is the library's, in a portal a server drawing leaves out: its box's classes are read from the source.
+        if (size === 'tooltip') return { layers: [railTip()], on: [] }
         const [elements, element] = drawn[size] ?? [[], undefined]
         return key === 'icon' ? pieceWhere(iconOf(elements, element)) : pieceWhere(element)
     },
@@ -1328,7 +1351,7 @@ const RAIL_ADAPTER: Adapter = {
                 return at(iconEntry(collapsed, active ? 'Runs' : state === 'open' ? 'Projects' : 'Schedules'), state)
             case 'tooltip':
                 // Opened in a portal, which a server drawing leaves out: its classes are read from the source.
-                return { layers: [literalAfter(RAIL, '<Tooltip.Popup className=')], on: frameOn(state) }
+                return { layers: [railTip()], on: frameOn(state) }
             case 'edge':
                 return at(
                     expanded.find((element) => element.parent?.attrs.role === 'separator'),
@@ -2116,6 +2139,7 @@ const SELECT_ADAPTER: Adapter = {
             case 'detail':
                 return { layers: [SELECT_LIST.row, SELECT_LIST.detailEnd], on: rowOn(state) }
             case 'list':
+                return { layers: [POPUP_LOOK, SELECT_LIST.list], on: [] }
             case 'row':
             case 'groupLabel':
             case 'separator':
@@ -2155,7 +2179,26 @@ const SELECT_ADAPTER: Adapter = {
         const quiet = selectTrigger(select({ variant: 'quiet' }))
         const swatch = swatchOf(themePicker('tidevann'))
         const on = (classes: string, read: Reader) => resolve([classes], [], read)
+        // A field's options led by a theme's swatch draw the theme picker's part, in that theme.
+        const fieldSwatch = swatchOf(
+            selectField({
+                options: [
+                    { value: 'workspace', label: 'As the workspace' },
+                    { value: 'paper', label: 'Paper', swatch: 'paper' },
+                ],
+                defaultValue: 'paper',
+            }),
+        )
         return [
+            // The list's note: elevation-pop under it, as under every popup.
+            check('pieces.list.rest.elevation', 'elevation-pop', elevationOf([POPUP_LOOK, SELECT_LIST.list])),
+            check(
+                'options.swatch (SelectField)',
+                "the theme picker's swatch, in that theme",
+                fieldSwatch?.attrs['data-theme-scope'] === 'paper' && classesOf(fieldSwatch) === classesOf(swatch)
+                    ? "the theme picker's swatch, in that theme"
+                    : undefined,
+            ),
             check('options.variant.default', 'field', defaultIn(SELECT, 'function SelectTrigger(', 'variant')),
             check('options.size.default', 'default', defaultIn(SELECT, 'function SelectTrigger(', 'size')),
             check('options.alignItemWithTrigger.default', 'true', defaultIn(SELECT, 'function SelectContent(', 'alignItemWithTrigger')),
@@ -2171,7 +2214,12 @@ const SELECT_ADAPTER: Adapter = {
                 rowPadStart: () => on(SELECT_LIST.row, READ.padStart),
                 rowPadEnd: () => on(SELECT_LIST.row, READ.padEnd),
                 checkEnd: () => on(SELECT_LIST.check, lengthOf('right-')),
-                leadGap: () => on(SELECT_LIST.label, READ.gap),
+                leadGap: () => {
+                    // In the list the label's own gap, in the trigger the value's, which the trigger gives it.
+                    const list = on(SELECT_LIST.label, READ.gap)
+                    const value = resolve([classesOf(trigger)], ['*', 'data-[slot=select-value]'], READ.gap)
+                    return list === value ? list : `${String(list)} in the list, ${String(value)} in the trigger`
+                },
                 detailGap: () => on(SELECT_LIST.detailEnd, READ.padStart),
                 separatorGap: () => on(SELECT_LIST.separator, lengthOf('my-')),
                 swatchGap: () => lengthOn(swatch?.parent, READ.gap),
@@ -2238,24 +2286,22 @@ const TOOLTIP_ADAPTER: Adapter = {
     more: () => {
         const containers = readFileSync(join(ROOT, 'node_modules', 'tailwindcss', 'theme.css'), 'utf8')
         const xs = /--container-xs: ([\d.]+)rem;/.exec(containers)?.[1]
-        const delays = readFileSync(
-            join(ROOT, 'packages', 'core', 'node_modules', '@base-ui', 'react', 'tooltip', 'utils', 'constants.mjs'),
-            'utf8',
-        )
+        // The library's own delay, the trigger's default with or without a provider, and the provider's when it gives none.
+        const delay = numberIn(TOOLTIP, /export const TOOLTIP_DELAY = (\d+)\b/)
+        const ownDefault =
+            /function TooltipTrigger\(\{ className, delay, \.\.\.props \}/.test(TOOLTIP) &&
+            /delay=\{delay \?\? shared\}/.test(TOOLTIP) &&
+            /function TooltipProvider\(\{ delay = TOOLTIP_DELAY,/.test(TOOLTIP)
         return [
             check('options.side.default', 'top', defaultIn(TOOLTIP, 'function TooltipContent(', 'side')),
             check('options.align.default', 'center', defaultIn(TOOLTIP, 'function TooltipContent(', 'align')),
             check('options.sideOffset.default', '4', defaultIn(TOOLTIP, 'function TooltipContent(', 'sideOffset')),
-            check('options.delay.default', '600', numberIn(delays, /OPEN_DELAY = (\d+);/)),
+            check('options.delay.default', String(SPECS.get('tooltip')?.options?.delay?.default), ownDefault ? delay : undefined),
             ...layoutChecks('tooltip', {
                 maxWidth: () => (/(?:^|\s)max-w-xs(?:\s|$)/.test(TOOLTIP_BOX) && xs !== undefined ? String(Number(xs) * 16) : undefined),
                 gap: () => defaultIn(TOOLTIP, 'function TooltipContent(', 'sideOffset'),
                 keysPadEnd: () => resolve([TOOLTIP_BOX], ['has-data-[slot=kbd]'], READ.padEnd),
-                // A tooltip outside the library's provider waits Base UI's delay; inside it, none.
-                openDelay: () =>
-                    /function TooltipProvider\(\{ delay = 0,/.test(TOOLTIP)
-                        ? numberIn(delays, /OPEN_DELAY = (\d+);/)
-                        : 'a provider with a delay of its own',
+                openDelay: () => (ownDefault ? delay : "Base UI's own delay, or a provider's"),
             }),
         ]
     },
@@ -2267,10 +2313,10 @@ const DROPDOWN = source('components/ui/dropdown-menu.tsx')
 const DEFERRED_MENU = source('components/ui/deferred-menu.tsx')
 /** The menu opens in a portal, and its parts load after the page is drawn: its classes are read from the source. */
 const MENU = {
-    popup: [literalAfter(DROPDOWN, 'data-slot="dropdown-menu-content"', 'className={cn(')],
-    item: [literalAfter(DROPDOWN, 'const ROW_FINGER ='), literalAfter(DROPDOWN, 'function DropdownMenuItem(', 'ROW_FINGER,')],
-    checkItem: [literalAfter(DROPDOWN, 'const ROW_FINGER ='), literalAfter(DROPDOWN, 'function DropdownMenuCheckboxItem(', 'ROW_FINGER,')],
-    subTrigger: [literalAfter(DROPDOWN, 'const ROW_FINGER ='), literalAfter(DROPDOWN, 'function DropdownMenuSubTrigger(', 'ROW_FINGER,')],
+    popup: [POPUP_LOOK, literalAfter(DROPDOWN, 'data-slot="dropdown-menu-content"', 'className={cn(', 'POPUP,')],
+    item: [literalAfter(DROPDOWN, 'const ROW_HEIGHT ='), literalAfter(DROPDOWN, 'function DropdownMenuItem(', 'ROW_HEIGHT,')],
+    checkItem: [literalAfter(DROPDOWN, 'const ROW_HEIGHT ='), literalAfter(DROPDOWN, 'function DropdownMenuCheckboxItem(', 'ROW_HEIGHT,')],
+    subTrigger: [literalAfter(DROPDOWN, 'const ROW_HEIGHT ='), literalAfter(DROPDOWN, 'function DropdownMenuSubTrigger(', 'ROW_HEIGHT,')],
     check: [literalAfter(DROPDOWN, 'function DropdownMenuCheckboxItem(', '<span', 'className=')],
     label: [literalAfter(DROPDOWN, 'data-slot="dropdown-menu-label"', 'cn(')],
     separator: [literalAfter(DROPDOWN, 'data-slot="dropdown-menu-separator"', 'cn(')],
@@ -2323,7 +2369,11 @@ const DROPDOWN_MENU_ADAPTER: Adapter = {
             menuTrigger()?.tag === 'button' && /const opens = event\.key === 'ArrowDown' \|\| event\.key === 'ArrowUp'/.test(DEFERRED_MENU)
                 ? true
                 : 'the trigger is not a native button, or the stand-in does not open on the arrows',
-        'ArrowDown, ArrowUp (the menu is open)': BASE_UI('menu', 'moves the highlight, wrapping at the ends'),
+        'ArrowDown, ArrowUp (the menu is open)': () =>
+            /function DropdownMenu\(\{ loopFocus = false,/.test(DROPDOWN) &&
+            /function DropdownMenuSub\(\{ loopFocus = false,/.test(DROPDOWN)
+                ? true
+                : 'the menu or its submenu wraps at its ends (loopFocus)',
         'Home, End (the menu is open)': BASE_UI('menu', 'moves the highlight to the ends'),
         'a character (the menu is open)': BASE_UI('menu', 'moves the highlight by typing'),
         'Enter, Space (a row is highlighted)': BASE_UI('menu', 'does the highlighted row'),
@@ -2334,20 +2384,22 @@ const DROPDOWN_MENU_ADAPTER: Adapter = {
     more: () => {
         const on = (classes: string, read: Reader) => resolve([classes], [], read)
         return [
+            // The popup's note: elevation-pop under the menu and its submenus alike.
+            check('pieces.popup.rest.elevation', 'elevation-pop', elevationOf(MENU.popup)),
             check('options.align.default', 'start', defaultIn(DROPDOWN, 'function DropdownMenuContent(', 'align')),
             check('options.side.default', 'bottom', defaultIn(DROPDOWN, 'function DropdownMenuContent(', 'side')),
             check('options.variant.default', 'default', defaultIn(DROPDOWN, 'function DropdownMenuItem(', 'variant')),
             ...layoutChecks('dropdown-menu', {
                 gap: () => defaultIn(DROPDOWN, 'function DropdownMenuContent(', 'sideOffset'),
-                minWidth: () => numberIn(MENU.popup[0], /min-w-\[max\(var\(--anchor-width\),--spacing\((\d+)\)\)\]/, 'step'),
-                windowRoom: () => numberIn(MENU.popup[0], /max-w-\[calc\(100vw-(\d+)rem\)\]/, 'rem'),
+                minWidth: () => numberIn(MENU.popup[1], /min-w-\[max\(var\(--anchor-width\),--spacing\((\d+)\)\)\]/, 'step'),
+                windowRoom: () => numberIn(MENU.popup[1], /max-w-\[calc\(100vw-(\d+)rem\)\]/, 'rem'),
                 gutter: () => numberIn(GUTTER, /\*\*:data-menu-row:pl-(\d+)$/, 'step'),
                 checkStart: () => on(MENU.check[0], lengthOf('left-')),
                 checkItemPadEnd: () => on(MENU.checkItem[1], READ.padEnd),
                 separatorGap: () => on(MENU.separator[0], lengthOf('my-')),
                 submenuMinWidth: () => on(MENU.submenu[0], lengthOf('min-w-')),
                 submenuGap: () => defaultIn(DROPDOWN, 'function DropdownMenuSubContent(', 'sideOffset'),
-                openEase: () => durationIn(MENU.popup[0], /duration-(\w+)/),
+                openEase: () => durationIn(MENU.popup[1], /duration-(\w+)/),
             }),
         ]
     },
@@ -2361,13 +2413,15 @@ const tailwind = (kind: 'container' | 'breakpoint', name: string) => {
     const rem = new RegExp(`--${kind}-${name}: ([\\d.]+)rem;`).exec(TAILWIND)?.[1]
     return rem === undefined ? undefined : String(Number(rem) * 16)
 }
-/** The width a `sm:max-w-<size>` class holds from 640 up, in px. */
+/** The width a `md:max-w-<size>` class holds from 768 up, where a dialog is a box, in px. */
 const widthFrom = (classes: string | undefined) => {
-    const size = /(?:^|\s)sm:max-w-(\w+)(?:\s|$)/.exec(classes ?? '')?.[1]
+    const size = /(?:^|\s)md:max-w-(\w+)(?:\s|$)/.exec(classes ?? '')?.[1]
     return size === undefined ? undefined : tailwind('container', size)
 }
 /** The window width below which a class list's `max-sm` variants hold, in px. */
 const belowSm = (classes: string) => (/(?:^|\s)max-sm:/.test(classes) ? tailwind('breakpoint', 'sm') : undefined)
+/** The breakpoint below which a class list's `max-md` variants hold: `md`, which tokens.json defines for the classes. */
+const belowMd = (classes: string) => (/(?:^|\s)max-md:/.test(classes) ? 'breakpoint-md' : undefined)
 
 const DIALOG = source('components/ui/dialog.tsx')
 const DIALOG_SHELL = source('components/DialogShell.tsx')
@@ -2379,7 +2433,8 @@ const DIALOG_PARTS = {
     title: literalAfter(DIALOG, 'data-slot="dialog-title"', 'cn('),
     description: literalAfter(DIALOG, 'data-slot="dialog-description"', 'cn('),
     shellBox: literalAfter(DIALOG_SHELL, '<DialogContent', 'className={cn('),
-    sheet: literalAfter(DIALOG_SHELL, '<DialogContent', "phone === 'sheet' &&"),
+    sheet: literalAfter(DIALOG_SHELL, 'export const SHEET ='),
+    fit: literalAfter(DIALOG_SHELL, 'const FIT_WIDTHS', 'sm:'),
     body: literalAfter(DIALOG_SHELL, '<div ref={body} className='),
     footer: literalAfter(DIALOG_SHELL, '<DialogFooter', 'cn('),
     note: literalAfter(DIALOG_SHELL, '{footer !== undefined && <div className='),
@@ -2410,7 +2465,12 @@ const confirmWhere = (state: 'shut' | 'busy') => {
 const DIALOG_ADAPTER: Adapter = {
     wordObjects: { DIALOG_SHELL_WORDS },
     complete: ['DIALOG_SHELL_WORDS'],
-    words: { cancel: 'DIALOG_SHELL_WORDS.cancel', back: 'DIALOG_SHELL_WORDS.back', close: 'DIALOG_SHELL_WORDS.close' },
+    words: {
+        cancel: 'DIALOG_SHELL_WORDS.cancel',
+        back: 'DIALOG_SHELL_WORDS.back',
+        close: 'DIALOG_SHELL_WORDS.close',
+        stopWaiting: 'DIALOG_SHELL_WORDS.stopWaiting',
+    },
     options: {
         width: Object.keys(DIALOG_WIDTHS),
         phone: propValues(DIALOG_SHELL, 'DialogShellProps', 'phone'),
@@ -2437,7 +2497,10 @@ const DIALOG_ADAPTER: Adapter = {
             case 'backdrop':
                 return { layers: [DIALOG_PARTS.backdrop], on: [] }
             case 'box':
-                return { layers: [DIALOG_PARTS.box, DIALOG_PARTS.shellBox], on: state === 'phone' ? ['max-sm'] : [] }
+                return {
+                    layers: [DIALOG_PARTS.box, DIALOG_PARTS.shellBox, ...(state === 'phone' ? [DIALOG_PARTS.sheet] : [])],
+                    on: state === 'phone' ? ['max-md'] : [],
+                }
             case 'nestedShade':
                 return { layers: [DIALOG_PARTS.nested], on: state === 'nested' ? ['data-nested-dialog-open', 'after'] : [] }
             case 'title':
@@ -2458,10 +2521,12 @@ const DIALOG_ADAPTER: Adapter = {
     },
     keys: {
         Tab: BASE_UI('dialog', 'holds focus inside'),
-        'Escape (dismissible, and not busy)': () =>
-            /const held = busy \|\| !dismissible/.test(DIALOG_SHELL) && /if \(!next && held\) return/.test(DIALOG_SHELL)
+        'Escape (dismissible, and not busy or busy past busy-release)': () =>
+            /if \(!next && \(!dismissible \|\| !letsGo\(busy, released, details\.reason\)\)\) return/.test(DIALOG_SHELL) &&
+            /const released = useBusyRelease\(busy, busyRelease\)/.test(DIALOG_SHELL) &&
+            releasedBy(DIALOG_SHELL)
                 ? true
-                : 'Escape is not held while the dialog is busy or cannot be dismissed',
+                : 'Escape is not held while the dialog cannot be dismissed, or while busy before the wait',
         'Enter (the confirm has focus (initialFocus confirm opens on it), not shut or busy)': () =>
             firstButton(button())?.tag === 'button' && /initialFocus === 'confirm' \? verb/.test(DIALOG_SHELL)
                 ? true
@@ -2474,7 +2539,24 @@ const DIALOG_ADAPTER: Adapter = {
             ...['sm', 'md', 'lg', 'xl'].map((size) =>
                 check(`sizes.${size}.width`, String(SPECS.get('dialog')?.sizes?.[size]?.width), widthFrom(DIALOG_WIDTHS[size])),
             ),
+            // A boxed dialog stands on elevation-dialog; a full-screen sheet has none.
+            check('pieces.box.rest.elevation', 'elevation-dialog', elevationOf([DIALOG_PARTS.box, DIALOG_PARTS.shellBox])),
+            check(
+                'pieces.box.phone.elevation',
+                'none',
+                elevationOf([DIALOG_PARTS.box, DIALOG_PARTS.shellBox, DIALOG_PARTS.sheet], ['max-md']),
+            ),
+            // A fit dialog, as ConfirmDialog is, stays a box below md at its width, inside the window's margins.
+            check(
+                'options.phone (fit)',
+                'sm 384 below md too',
+                /^max-md:max-w-\[min\(24rem,calc\(100%-2rem\)\)\]$/.test(DIALOG_PARTS.fit) &&
+                    /phone === 'sheet' \? SHEET : FIT_WIDTHS\[width\]/.test(DIALOG_SHELL)
+                    ? 'sm 384 below md too'
+                    : undefined,
+            ),
             check('options.width.default', 'md', defaultIn(DIALOG_SHELL, 'export function DialogShell(', 'width')),
+            check('options.busyRelease.default', String(SPECS.get('dialog')?.options?.busyRelease?.default), BUSY_WAIT),
             check('options.phone.default', 'sheet', defaultIn(DIALOG_SHELL, 'export function DialogShell(', 'phone')),
             check('options.dismissible.default', 'true', defaultIn(DIALOG_SHELL, 'export function DialogShell(', 'dismissible')),
             check(
@@ -2499,7 +2581,8 @@ const DIALOG_ADAPTER: Adapter = {
                 closeInset: () =>
                     inset('top') === inset('right') ? inset('top') : `${String(inset('top'))} down, ${String(inset('right'))} in`,
                 closeRoom: () => numberIn(DIALOG_SHELL, /parts\.close \? 'pr-(\d+)'/, 'step'),
-                phoneBelow: () => belowSm(DIALOG_PARTS.sheet),
+                busyRelease: () => busyReleaseIn(DIALOG_SHELL, 'export function DialogShell('),
+                phoneBelow: () => belowMd(DIALOG_PARTS.sheet),
                 openEase: () => durationIn(DIALOG_PARTS.box, /duration-(\w+)/),
             }),
         ]
@@ -2514,7 +2597,7 @@ const SETTING_ROW = source('components/SettingRow.tsx')
 /** The settings dialog opens in a portal, and its navigation is a private module: its classes are read from the sources. */
 const SETTINGS_LOOK = {
     box: literalAfter(SETTINGS, '<DialogContent', 'className={cn('),
-    sheet: literalAfter(SETTINGS, '<DialogContent', 'NESTED,'),
+    sheet: /NESTED,\s*SHEET\b/.test(SETTINGS) ? DIALOG_PARTS.sheet : '',
     head: literalAfter(SETTINGS, '<div className='),
     column: literalAfter(SETTINGS, '<nav', 'cn('),
     pane: literalAfter(SETTINGS, 'ref={pane}', 'cn('),
@@ -2534,12 +2617,12 @@ const SETTINGS_LOOK = {
     rows: literalAfter(SETTINGS_PARTS, 'const rows = (', '<div className='),
 }
 const SETTINGS_BOX = [DIALOG_PARTS.box, SETTINGS_LOOK.box]
-/** An entry in the dialog's column: from 640 (`sm`) it is marked and hovered; below it, a finger-tall row of the list. */
+/** An entry in the dialog's column: from 768 (`md`) it is marked and hovered; below it, a finger-tall row of the list. */
 const entryWhere = (state: string): Where => {
     const shown = state === 'shown'
     const layers = [SETTINGS_LOOK.entry, SETTINGS_LOOK.entryInDialog, shown ? SETTINGS_LOOK.entryShown : SETTINGS_LOOK.entryRest]
-    const on: Record<string, string[]> = { hover: ['sm', 'hover'], focus: ['sm', 'focus-visible'], phoneList: [] }
-    return { layers, on: on[state] ?? ['sm'] }
+    const on: Record<string, string[]> = { hover: ['md', 'hover'], focus: ['md', 'focus-visible'], phoneList: [] }
+    return { layers, on: on[state] ?? ['md'] }
 }
 /** A setting's row, with a note: the row, the grid that places its control, its title, description and note. */
 const SETTING = once(() => {
@@ -2597,10 +2680,10 @@ const SETTINGS_DIALOG_ADAPTER: Adapter = {
             head: { layers: [SETTINGS_LOOK.head], on: [] },
             title: { layers: [DIALOG_PARTS.title], on: [] },
             close: /<DialogClose render=\{<Button variant="ghost" size="icon-sm"/.test(SETTINGS) ? cornerClose() : undefined,
-            column: { layers: [SETTINGS_LOOK.column], on: ['sm'] },
+            column: { layers: [SETTINGS_LOOK.column], on: ['md'] },
             groupTitle: { layers: [SETTINGS_LOOK.groupTitle], on: [] },
             entry: entryWhere('rest'),
-            pane: { layers: [SETTINGS_LOOK.pane], on: ['sm'] },
+            pane: { layers: [SETTINGS_LOOK.pane], on: ['md'] },
             heading: { layers: [SETTINGS_LOOK.heading], on: [] },
             row: pieceWhere(key === 'gap' ? setting.grid : setting.row),
             rowTitle: pieceWhere(setting.title),
@@ -2621,7 +2704,7 @@ const SETTINGS_DIALOG_ADAPTER: Adapter = {
             case 'title':
                 return { layers: [DIALOG_PARTS.title], on: [] }
             case 'column':
-                return { layers: [SETTINGS_LOOK.column], on: ['sm'] }
+                return { layers: [SETTINGS_LOOK.column], on: ['md'] }
             case 'groupTitle':
                 return { layers: [SETTINGS_LOOK.groupTitle], on: [] }
             case 'entry':
@@ -2665,6 +2748,14 @@ const SETTINGS_DIALOG_ADAPTER: Adapter = {
         const route = SPECS.get('settings-dialog')?.routes?.settings ?? ''
         return [
             check('sizes.box.width', '896', widthFrom(SETTINGS_LOOK.box)),
+            // The settings dialog stands on elevation-dialog as every boxed dialog does; its sheet below md has none.
+            check('pieces.box.rest.elevation', 'elevation-dialog', elevationOf(SETTINGS_BOX)),
+            // A phone's view is decided at the same line: the search takes focus from md up.
+            check(
+                'layout.phoneBelow (focus)',
+                'breakpoint-md',
+                /matchMedia\('\(min-width: 48rem\)'\)/.test(SETTINGS) ? 'breakpoint-md' : undefined,
+            ),
             check('sizes.box.height', '704', numberIn(SETTINGS_LOOK.box, /h-\[min\((\d+)rem,/, 'rem')),
             check('options.phoneStart.default', 'list', defaultIn(SETTINGS, 'export function SettingsDialog(', 'phoneStart')),
             check('options.resetScope.default', 'section', defaultIn(SETTINGS, 'export function SettingsDialog(', 'resetScope')),
@@ -2694,8 +2785,8 @@ const SETTINGS_DIALOG_ADAPTER: Adapter = {
                 noteTop: () => lengthOn(setting.note, lengthOf('mt-')),
                 controlTop: () => numberIn(SETTING_ROW, /layout !== 'trailing' && 'mt-(\d+)'/, 'step'),
                 trailingFrom: () => (/@lg:grid-cols-/.test(SETTING_ROW) ? tailwind('container', 'lg') : undefined),
-                phoneBelow: () => belowSm(SETTINGS_LOOK.sheet),
-                phoneHeadStart: () => resolve([SETTINGS_LOOK.head], ['max-sm'], READ.padStart),
+                phoneBelow: () => belowMd(SETTINGS_LOOK.sheet),
+                phoneHeadStart: () => resolve([SETTINGS_LOOK.head], ['max-md'], READ.padStart),
                 sectionsBetween: () => resolve([SETTINGS_LOOK.column], [], READ.gap),
             }),
         ]
@@ -2747,6 +2838,8 @@ const PALETTE_ON: Record<string, string[]> = {
     active: [...IN_DIALOG, 'data-selected', '*', '[svg]'],
     disabled: [...IN_DIALOG, 'data-[disabled=true]'],
 }
+/** A row's quiet words, while their row is the active one: the row's group, which they take the highlight's ink from. */
+const QUIET_ON = (state: string) => (state === 'active' ? ['group-data-selected/command-item'] : [])
 /** A group title takes its look from its group's classes for the heading cmdk draws. */
 const GROUP_TITLE = ['**', '[[cmdk-group-heading]]']
 const TONE_STATES = new Set(['critical', 'warning', 'good', 'info'])
@@ -2779,6 +2872,7 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
         sequence: 'COMMAND_PALETTE_WORDS.sequence',
         running: 'COMMAND_PALETTE_WORDS.running',
         refused: 'COMMAND_PALETTE_WORDS.refused',
+        stopWaiting: 'COMMAND_PALETTE_WORDS.stopWaiting',
         searching: 'PALETTE_SEARCH_WORDS.searching',
         searchFailed: ['PALETTE_SEARCH_WORDS.failed', (said: (reason: string) => string, fill) => said(String(fill.reason))],
         retry: 'PALETTE_SEARCH_WORDS.retry',
@@ -2848,15 +2942,21 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
                     : { layers: [classesOf(row), classesOf(icon)], on: PALETTE_ON[state] ?? IN_DIALOG, around: ancestors(icon) }
             }
             case 'hint':
-                return pieceWhere(spanOf(paletteWith({ label: 'Runs', hint: 'every run', tone: toned }), 'every run'))
+                return pieceWhere(spanOf(paletteWith({ label: 'Runs', hint: 'every run', tone: toned }), 'every run'), QUIET_ON(state))
             case 'code':
-                return pieceWhere(spanOf(full, 'job_01'))
+                return pieceWhere(spanOf(full, 'job_01'), QUIET_ON(state))
             case 'meta':
+                if (state === 'twoLine') {
+                    // A two-line row's meta is the search result's quiet fact at its end.
+                    const two = paletteWith({ label: 'import-orders', detail: 'harbor', meta: 'no upload step' })
+                    return pieceWhere(spanOf(two, 'no upload step'))
+                }
                 return pieceWhere(
                     spanOf(paletteWith({ label: 'import-orders', meta: 'no upload step', metaTone: toned }), 'no upload step'),
+                    QUIET_ON(state),
                 )
             case 'kind':
-                return pieceWhere(spanOf(full, 'Form'))
+                return pieceWhere(spanOf(full, 'Form'), QUIET_ON(state))
             case 'keys':
                 return pieceWhere(bySlot(full, 'kbd'))
             case 'spinner':
@@ -2877,29 +2977,47 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
         return row === undefined ? undefined : { layers: [classesOf(row)], on: PALETTE_ON.disabled }
     },
     keys: {
-        'Mod+K': () =>
-            /key, mod: true, alsoCtrl: true, inFields: true/.test(source('hooks/use-palette-shortcut.ts'))
-                ? true
-                : 'usePaletteShortcut does not bind Mod+K, Ctrl+K on a Mac and from a field',
+        'Mod+K': () => {
+            const opens = /key, mod: true, alsoCtrl: true, inFields: true/.test(source('hooks/use-palette-shortcut.ts'))
+            // An open palette closes itself on the same keys, in a Shell or not, held while a command runs.
+            const closes =
+                /id: 'palette-close',\s+key: 'k',\s+mod: true,\s+alsoCtrl: true,\s+inFields: true,\s+inDialogs: true,\s+disabled: !open,\s+run: \(\) => close\(false\)/.test(
+                    PALETTE,
+                )
+            return opens && closes ? true : `usePaletteShortcut opens ${String(opens)}, the open palette closes ${String(closes)}`
+        },
         'a character (the palette is open)': () =>
             bySlot(PALETTES().full, 'command-input')?.tag === 'input' ? true : "the search is not cmdk's input",
-        'ArrowDown, ArrowUp (the palette is open)': () =>
-            /\bloop\b/.test(PALETTE) || /\bloop\b/.test(COMMAND) ? 'the palette loops at its ends' : true,
-        'Ctrl+N, Ctrl+J, Ctrl+P, Ctrl+K (the palette is open)': () =>
-            /vimBindings/.test(PALETTE) || /vimBindings/.test(COMMAND) ? "cmdk's own keys are set" : true,
+        'ArrowDown, ArrowUp (the palette is open)': () => {
+            if (/\bloop\b/.test(PALETTE) || /\bloop\b/.test(COMMAND)) return 'the palette loops at its ends'
+            // cmdk's Ctrl+N, Ctrl+J, Ctrl+P and Ctrl+K are off, so Ctrl+K is the palette's key alone.
+            return /function Command\(\{ className, vimBindings = false,/.test(COMMAND) && /vimBindings=\{vimBindings\}/.test(COMMAND)
+                ? true
+                : "cmdk's own Ctrl keys move the active row"
+        },
         'Home, End (the palette is open)': skip('cmdk moves the active row to the ends in a browser; the server draws none active'),
-        'Enter (a row is active and no command is running)': () =>
-            /if \(busy !== undefined\) return/.test(PALETTE) ? true : 'a choice made while a command runs is not ignored',
-        'Escape (the palette is open)': BASE_UI('dialog', 'closes on Escape'),
+        'Enter (a row is active and no command is running, or Stop waiting is active)': () =>
+            /if \(busy !== undefined\) return/.test(PALETTE) && /value="stop-waiting" forceMount onSelect=\{stopWaiting\}/.test(PALETTE)
+                ? true
+                : 'a choice made while a command runs is not ignored, or Stop waiting does not close',
+        'Escape (the palette is open, and no command is running or it has run busy-release)': () =>
+            /if \(!next && !letsGo\(busy !== undefined, released, details\?\.reason\)\) return/.test(PALETTE) &&
+            /onOpenChange=\{close\}/.test(PALETTE) &&
+            releasedBy(PALETTE)
+                ? true
+                : 'a running command does not hold the palette open until the wait',
     },
     more: () => {
         const { full } = PALETTES()
         const meta = spanOf(full, '4m 12s')
         return [
             check('sizes.box.width', '384', widthFrom(classesOf(bySlot(full, 'dialog-content')))),
+            // The palette's box is a boxed dialog's: elevation-dialog under it.
+            check('pieces.box.rest.elevation', 'elevation-dialog', elevationOf(paletteBox(full))),
             check('sizes.md.width', '512', widthFrom(classesOf(bySlot(palette({ width: 'md' }), 'dialog-content')))),
             check('sizes.lg.width', '672', widthFrom(classesOf(bySlot(palette({ width: 'lg' }), 'dialog-content')))),
             check('options.filter.default', 'fuzzy', defaultIn(PALETTE, 'export function CommandPalette(', 'filter')),
+            check('options.busyRelease.default', String(SPECS.get('command-palette')?.options?.busyRelease?.default), BUSY_WAIT),
             check('options.width.default', 'sm', defaultIn(PALETTE, 'export function CommandPalette(', 'width')),
             check('options.wrap.default', 'false', defaultIn(PALETTE, 'export function CommandPalette(', 'wrap')),
             check(
@@ -2925,7 +3043,8 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
                 metaGap: () => lengthOn(meta?.parent, READ.gapX),
                 kindGap: () => lengthOn(spanOf(full, 'Form')?.parent, READ.gap),
                 metaFoldBelow: () => belowSm(classesOf(meta?.parent)),
-                widthFrom: () => (/sm:max-w-/.test(classesOf(bySlot(full, 'dialog-content'))) ? tailwind('breakpoint', 'sm') : undefined),
+                widthFrom: () => (/(?:^|\s)md:max-w-/.test(classesOf(bySlot(full, 'dialog-content'))) ? 'breakpoint-md' : undefined),
+                busyRelease: () => busyReleaseIn(PALETTE, 'export function CommandPalette('),
             }),
         ]
     },

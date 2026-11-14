@@ -192,6 +192,22 @@ and a color, which the build writes as a box-shadow; `--elevation-dialog` is `--
 until a theme sets its own. `src/rules.test.ts` fails a hand-set focus ring, disabled opacity,
 `z-40` or `z-50`, or a 100 or 200 ms duration.
 
+The overlays share one look each. Every popup (a select's list, a menu and its submenus, the
+account menu, a combobox's list, a popover) wears `lib/popup`'s `POPUP`: the popover ground and
+ink, `radius-surface`, a 1px `border-strong` edge and `elevation-pop`, with no shadow or look of
+its own. Every list of choices (a select, a menu, the palette, the top bar's search) highlights its
+row in `accent` with `accent-foreground` for its icon, label and quiet words, stops at its first and
+last rows, and is reached at them by Home and End; a one-line select or menu row is
+`density.control` tall. There is one tooltip, the inverted one, waiting 500 ms under the pointer
+from the primitive's own default and showing at once on keyboard focus. A dialog is a box on
+`elevation-dialog` with a `border-strong` edge from `md` (768), and below it a full-screen sheet with
+neither, the settings dialog a list of sections to go into; a `ConfirmDialog` stays a box. No
+backdrop blurs what is under it, so every renderer draws the same one. Work under way holds its
+overlay: a palette whose command runs, or a dialog whose confirm is busy, ignores Escape, a press
+outside and its close, until the work has run `busy-release` (5 seconds, a token, and `busyRelease`
+on the part); then Stop waiting, Escape and the close let it go, nothing cancelled and the work's
+answer unheard.
+
 Beyond its colors a theme can give the frame's parts a look of their own, through tokens the parts
 read (`$parts` in `tokens.json` lists them): the heading face, a section head's ground, rule and
 ink and a page title's ink (each ink `foreground` unless a theme sets one); a table's head (ground, rule, ink, case) and its zebra; a wash over the
@@ -317,8 +333,9 @@ a Norwegian keyboard as on an American one: a character that is not a letter is 
 whatever Shift, Option or AltGr the layout took, a letter by its case with `shift` saying so, and a
 letter key that Option or a non-Latin layout turned into another character by its place. `mod` is
 ⌘ on a Mac and Ctrl elsewhere, the other one refusing the press, save a binding with `alsoCtrl`,
-which a Mac's Ctrl answers too: the palette's, so ⌘K and Ctrl K both open it there, while Ctrl
-keeps its editing keys in a field for every other binding. Keys are quiet while typing in a
+which a Mac's Ctrl answers too: the palette's, so ⌘K and Ctrl K both open it there and close it
+again (cmdk's own Ctrl keys are off, so Ctrl K means one thing), while Ctrl keeps its editing keys
+in a field for every other binding. Keys are quiet while typing in a
 field, where a slider keeps its arrows and a button its Space, and while a dialog, a sheet, a menu,
 an overlay or the shell's palette is open, unless a binding asks (`inFields`, `inDialogs`); `scope`
 hears a binding only inside an element marked `data-shortcut-scope`, before the same key outside it.
@@ -830,8 +847,9 @@ search for a section keeps it whole), the chosen section's rows beside it, and u
 outside the scrolling, that says changes are kept as they are made (or the app's own `footer`, such
 as when they last synced) and closes with Done. `onReset` adds Reset to defaults at the footer's
 start, for the shown section or for every setting, asked once more before it runs; a section with
-nothing to put back (an account, sample data) says `reset: false` and shows none. On a phone the
-dialog is a full-screen sheet with the footer at its foot, clear of the home indicator.
+nothing to put back (an account, sample data) says `reset: false` and shows none. Below `md` (768),
+on a phone or a foldable, the dialog is a full-screen sheet with the footer at its foot, clear of
+the home indicator, and its sections a list to go into.
 
 Settings are only ever this dialog, opened over the page the person is on; the library has no
 settings page to embed. `useOverlayRoute(route, 'settings')` gives it a route of its own

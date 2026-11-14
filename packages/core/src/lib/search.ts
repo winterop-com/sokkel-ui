@@ -112,8 +112,8 @@ export type SearchKeyAction = { type: 'move'; index: number } | { type: 'open'; 
 
 /**
  * What a key pressed in the search field does, given the highlighted entry (-1 for none) and the
- * number of entries. The arrows move and wrap around the ends, Home and End jump to them, Enter
- * opens the highlighted entry, and Escape closes the list. Any other key, or a move with nothing
+ * number of entries. The arrows move and stop at the first and last entries, as every list of
+ * choices does, Home and End jump to them, Enter opens the highlighted entry, and Escape closes the list. Any other key, or a move with nothing
  * listed, does nothing here.
  */
 export function searchKey(key: string, highlighted: number, count: number, open: boolean): SearchKeyAction | null {
@@ -121,9 +121,9 @@ export function searchKey(key: string, highlighted: number, count: number, open:
     if (!open || count === 0) return null
     switch (key) {
         case 'ArrowDown':
-            return { type: 'move', index: highlighted < 0 || highlighted >= count - 1 ? 0 : highlighted + 1 }
+            return { type: 'move', index: highlighted < 0 ? 0 : Math.min(highlighted + 1, count - 1) }
         case 'ArrowUp':
-            return { type: 'move', index: highlighted <= 0 ? count - 1 : highlighted - 1 }
+            return { type: 'move', index: highlighted < 0 ? count - 1 : Math.max(highlighted - 1, 0) }
         case 'Home':
             return { type: 'move', index: 0 }
         case 'End':

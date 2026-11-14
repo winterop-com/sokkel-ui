@@ -6,6 +6,7 @@ import type { Menu as BaseMenu } from '@base-ui/react/menu'
 import { cn } from '../../lib/utils'
 import { FINGER_HIT, takesFinger } from '../../lib/finger'
 import { returnFocusOnKeyboard } from '../../lib/focus'
+import { POPUP } from '../../lib/popup'
 import { menu as MenuPrimitive } from './deferred-menu'
 import { ChevronRightIcon, CheckIcon } from 'lucide-react'
 
@@ -14,9 +15,10 @@ export type DropdownMenuProps = BaseMenu.Root.Props
 /**
  * A menu opened from a trigger. Base UI's menu loads once the page is drawn, the trigger drawn until
  * then by a stand-in that looks and reads the same, a press on it opening the menu once it is here.
+ * The arrows stop at its first and last rows, as every list of choices does; Home and End reach them.
  */
-function DropdownMenu({ ...props }: DropdownMenuProps) {
-    return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+function DropdownMenu({ loopFocus = false, ...props }: DropdownMenuProps) {
+    return <MenuPrimitive.Root data-slot="dropdown-menu" loopFocus={loopFocus} {...props} />
 }
 
 export type DropdownMenuPortalProps = BaseMenu.Portal.Props
@@ -60,7 +62,8 @@ function DropdownMenuContent({
                 <MenuPrimitive.Popup
                     data-slot="dropdown-menu-content"
                     className={cn(
-                        'z-popover max-h-(--available-height) w-max max-w-[calc(100vw-2rem)] min-w-[max(var(--anchor-width),--spacing(32))] origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-surface bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-fast outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95',
+                        POPUP,
+                        'z-popover max-h-(--available-height) w-max max-w-[calc(100vw-2rem)] min-w-[max(var(--anchor-width),--spacing(32))] origin-(--transform-origin) overflow-x-hidden overflow-y-auto p-1 duration-fast outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95',
                         GUTTER,
                         className,
                     )}
@@ -78,8 +81,8 @@ function DropdownMenuContent({
  */
 const GUTTER = 'has-[[role=menuitemcheckbox],[role=menuitemradio]]:**:data-menu-row:pl-7'
 
-/** Every row a finger tall below `md`. */
-const ROW_FINGER = 'max-md:min-h-finger'
+/** Every row a control tall, at the density's height, and a finger tall below `md`. */
+const ROW_HEIGHT = 'min-h-(--density-control) max-md:min-h-finger'
 
 export type DropdownMenuGroupProps = BaseMenu.Group.Props
 
@@ -116,8 +119,8 @@ function DropdownMenuItem({ className, inset, variant = 'default', ...props }: D
             data-inset={inset || undefined}
             data-variant={variant}
             className={cn(
-                ROW_FINGER,
-                "group/dropdown-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
+                ROW_HEIGHT,
+                "group/dropdown-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-0.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
                 className,
             )}
             {...props}
@@ -127,8 +130,8 @@ function DropdownMenuItem({ className, inset, variant = 'default', ...props }: D
 
 export type DropdownMenuSubProps = BaseMenu.SubmenuRoot.Props
 
-function DropdownMenuSub({ ...props }: DropdownMenuSubProps) {
-    return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
+function DropdownMenuSub({ loopFocus = false, ...props }: DropdownMenuSubProps) {
+    return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" loopFocus={loopFocus} {...props} />
 }
 
 export type DropdownMenuSubTriggerProps = BaseMenu.SubmenuTrigger.Props & {
@@ -142,8 +145,8 @@ function DropdownMenuSubTrigger({ className, inset, children, ...props }: Dropdo
             data-menu-row=""
             data-inset={inset || undefined}
             className={cn(
-                ROW_FINGER,
-                "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-popup-open:bg-accent data-popup-open:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                ROW_HEIGHT,
+                "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-0.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-popup-open:bg-accent data-popup-open:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             {...props}
@@ -167,10 +170,7 @@ function DropdownMenuSubContent({
     return (
         <DropdownMenuContent
             data-slot="dropdown-menu-sub-content"
-            className={cn(
-                'w-auto min-w-[96px] rounded-surface bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-fast data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
-                className,
-            )}
+            className={cn('w-auto min-w-[96px]', className)}
             align={align}
             alignOffset={alignOffset}
             side={side}
@@ -190,8 +190,8 @@ function DropdownMenuCheckboxItem({ className, children, checked, inset, ...prop
             data-slot="dropdown-menu-checkbox-item"
             data-inset={inset || undefined}
             className={cn(
-                ROW_FINGER,
-                "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                ROW_HEIGHT,
+                "relative flex cursor-default items-center gap-1.5 rounded-md py-0.5 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             checked={checked}
@@ -226,8 +226,8 @@ function DropdownMenuRadioItem({ className, children, inset, ...props }: Dropdow
             data-slot="dropdown-menu-radio-item"
             data-inset={inset || undefined}
             className={cn(
-                ROW_FINGER,
-                "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                ROW_HEIGHT,
+                "relative flex cursor-default items-center gap-1.5 rounded-md py-0.5 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             {...props}

@@ -60,7 +60,7 @@ export function ShortcutsDialog({ open, onOpenChange, groups = NONE, words: give
     const shown = useMemo(() => shortcutGroups(registered, groups, words.general), [registered, groups, words.general])
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="md:max-w-md">
                 <DialogHeader>
                     <DialogTitle>{words.title}</DialogTitle>
                 </DialogHeader>

@@ -45,7 +45,8 @@ describe('CommandPalette summaries', () => {
             { id: 'send-digest', label: 'send-digest', detail: 'juniper', meta: '3 sent', metaTone: 'critical', disabled: 'Paused by ada' },
         ])
         expect(inkOf(html, '2 sites missing')).toContain('text-warning-ink')
-        expect(inkOf(html, 'Paused by ada')).toEqual(expect.arrayContaining(['text-faint']))
+        // A two-line row's quiet fact wears the muted ink, as a one-line row's meta does.
+        expect(inkOf(html, 'Paused by ada')).toEqual(expect.arrayContaining(['text-muted-foreground']))
         expect(html).not.toContain('text-critical-ink')
     })
 })

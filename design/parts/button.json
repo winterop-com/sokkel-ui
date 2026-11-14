@@ -303,7 +303,7 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "Base UI's Button; focusableWhenDisabled keeps a reasoned or busy button in the tab order.",
-            "The tooltip is Base UI's Tooltip around the button; a reason wraps the button in one.",
+            "The tooltip is the library's (parts/tooltip) around the button; a reason wraps the button in one, and is also the button's description: aria-describedby names a visually hidden copy of the reason, always in the page beside the button, so a screen reader says it with or without the tooltip open. An icon button's reason is described the same way.",
             "The busy spinner is aria-hidden; the button says aria-busy.",
             "The hover expressions stay in its classes (hover:bg-primary/80); its parts test maps each paint expression to the class it expects."
         ],

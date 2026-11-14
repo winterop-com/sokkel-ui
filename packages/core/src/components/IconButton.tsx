@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react'
+import { useId, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Button } from './ui/button'
@@ -32,7 +32,7 @@ export type IconButtonProps = Omit<
  * A button that shows only an icon. Its label is its accessible name and its tooltip, so the two
  * never drift apart. A ghost button draws its icon in the quiet ink until hovered; `pressed` marks
  * a toggle as on, filled as a pressed toggle is everywhere else. `reason` disables the button and
- * adds why to its tooltip, under the label; the button stays focusable so the reason can be read.
+ * adds why to its tooltip, under the label, and to its description (`aria-describedby`) for a screen reader; the button stays focusable so the reason can be read.
  * `tooltip` gives the tooltip a longer sentence than the name, `shortcut` draws the key that does
  * the same beside it, and `destructive` tints a button that deletes in the critical tone under the
  * pointer.
@@ -53,16 +53,20 @@ export function IconButton({
     ...props
 }: IconButtonProps) {
     const held = reason !== undefined && reason !== null && reason !== false
+    const reasonId = useId()
     const said = tooltip ?? label
     // `aria-pressed` reaches here through the spread despite the type; `pressed` wins, and it stands in.
     const given = (props as { 'aria-pressed'?: boolean | 'true' | 'false' | 'mixed' })['aria-pressed']
     const on = pressed ?? (given === undefined ? undefined : given === true || given === 'true')
-    return (
+    const shown = (
         <Tooltip>
             <TooltipTrigger
                 render={
                     <Button
                         {...props}
+                        aria-describedby={
+                            held ? [props['aria-describedby'], reasonId].filter(Boolean).join(' ') : props['aria-describedby']
+                        }
                         variant={variant}
                         size={size}
                         aria-label={label}
@@ -88,5 +92,15 @@ export function IconButton({
                 {shortcut !== undefined && <Kbd>{shortcut}</Kbd>}
             </TooltipContent>
         </Tooltip>
+    )
+    if (!held) return shown
+    return (
+        <>
+            {shown}
+            {/* The reason unseen and always drawn, for the description to point at, as `Button` keeps its own. */}
+            <span id={reasonId} aria-hidden className="sr-only">
+                {reason}
+            </span>
+        </>
     )
 }

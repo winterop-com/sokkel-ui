@@ -1,12 +1,24 @@
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
+import { createContext, useContext } from 'react'
 
 import { FINGER_HIT, takesFinger } from '../../lib/finger'
 import { cn } from '../../lib/utils'
 
+/** How long a tooltip waits under a resting pointer, in milliseconds; keyboard focus shows it at once. */
+export const TOOLTIP_DELAY = 500
+
+/** The delay a provider gives the tooltips inside it, and the library's own outside one. */
+const Delay = createContext(TOOLTIP_DELAY)
+
 export type TooltipProviderProps = TooltipPrimitive.Provider.Props
 
-function TooltipProvider({ delay = 0, ...props }: TooltipProviderProps) {
-    return <TooltipPrimitive.Provider data-slot="tooltip-provider" delay={delay} {...props} />
+/** Tooltips that share one wait: once one has shown, its neighbors show at once. */
+function TooltipProvider({ delay = TOOLTIP_DELAY, ...props }: TooltipProviderProps) {
+    return (
+        <Delay value={delay}>
+            <TooltipPrimitive.Provider data-slot="tooltip-provider" delay={delay} {...props} />
+        </Delay>
+    )
 }
 
 export type TooltipProps = TooltipPrimitive.Root.Props
@@ -17,10 +29,22 @@ function Tooltip({ ...props }: TooltipProps) {
 
 export type TooltipTriggerProps = TooltipPrimitive.Trigger.Props
 
-/** A trigger takes a finger-sized hit area on a phone, drawn by the tooltip or given as a `render` element that allows it (`takesFinger`). */
-function TooltipTrigger({ className, ...props }: TooltipTriggerProps) {
+/**
+ * A trigger takes a finger-sized hit area on a phone, drawn by the tooltip or given as a `render`
+ * element that allows it (`takesFinger`). It waits `TOOLTIP_DELAY` under a resting pointer, or its
+ * provider's delay, with or without a provider.
+ */
+function TooltipTrigger({ className, delay, ...props }: TooltipTriggerProps) {
+    const shared = useContext(Delay)
     const finger = takesFinger(props.render, className)
-    return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" className={finger ? cn(FINGER_HIT, className) : className} {...props} />
+    return (
+        <TooltipPrimitive.Trigger
+            data-slot="tooltip-trigger"
+            delay={delay ?? shared}
+            className={finger ? cn(FINGER_HIT, className) : className}
+            {...props}
+        />
+    )
 }
 
 export type TooltipContentProps = TooltipPrimitive.Popup.Props &

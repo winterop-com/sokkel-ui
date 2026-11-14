@@ -38,7 +38,7 @@
         "chevronButton": "The chevron's own button, for a parent that has a page of its own; a parent without one folds on a press anywhere on its row.",
         "children": "A parent's entries, unfolded under it in the expanded rail, their labels lined up under the parent's label.",
         "iconEntry": "One place in the collapsed rail: a tile with its icon alone, named in a tooltip beside it.",
-        "tooltip": "A collapsed entry's label, then its description, beside it at the rail's end.",
+        "tooltip": "A collapsed entry's label, then its description, beside it at the rail's end, in the library's one tooltip (parts/tooltip).",
         "flyout": "A parent's entries in a popover beside a collapsed rail or a strip, under the parent's label as a group title; a link chosen there closes it.",
         "edge": "The resize handle along the rail's end edge: a line in the accent while hovered, focused or dragged, nothing otherwise.",
         "footCell": "The account control's cell at the rail's foot, as tall as the status line and level with it.",
@@ -163,7 +163,13 @@
             "note": "Inside the group's own 8: 16 from the rail's start. Upper case, tracked 0.025em."
         },
         "chevronButton": {"height": 28, "width": 28, "radius": "radius-md", "note": "4 from the row's end."},
-        "tooltip": {"padX": 8, "padY": 4, "text": "text.help", "radius": "radius-md"},
+        "tooltip": {
+            "padX": 12,
+            "padY": 6,
+            "text": "text.help",
+            "radius": "radius-md",
+            "note": "parts/tooltip's box, with its 10 arrow toward the entry."
+        },
         "footCell": {"height": "spacing-shell-foot"},
         "edge": {"width": 8, "note": "The hit area, straddling the rail's end edge; the line drawn in it is 2 wide."},
         "strip": {"width": 72},
@@ -305,7 +311,10 @@
                 "note": "Tracked -0.025em (tracking-tight)."
             }
         },
-        "home": {"rest": {"radius": "radius-md"}, "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}},
+        "home": {
+            "rest": {"radius": "radius-md"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        },
         "collapse": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md"},
             "hover": {"ground": "hover", "ink": "foreground"},
@@ -378,11 +387,11 @@
         },
         "tooltip": {
             "rest": {
-                "ground": "popover",
-                "ink": "popover-foreground",
+                "ground": "foreground",
+                "ink": "background",
                 "radius": "radius-md",
                 "text": "text.help",
-                "note": "The label, then the description in muted-foreground; elevation-pop under it."
+                "note": "parts/tooltip's box, inverted, with no edge or shadow: the label, then the description at 70 percent of the background's ink."
             }
         },
         "edge": {
@@ -467,7 +476,7 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "Each entry's link and the home link are Link, drawn as the app's LinkProvider says, so a middle click opens a tab; the active entry says aria-current=page.",
-            "The collapsed rail's tooltips and the flyouts are Base UI's; a flyout opened from the keyboard focuses its first entry.",
+            "The collapsed rail's tooltips are the library's (ui/tooltip, waiting 500 ms) and the flyouts Base UI's popover in every popup's look; a flyout opened from the keyboard focuses its first entry.",
             "The width eases over motion-base (200 ms, transition-[width]) as far as the document's motion allows.",
             "Reordering loads the drag engine only inside RailDrops; a press that does not move still follows the link, and a finger holds a moment before it drags.",
             "A body stays mounted while hidden, so a tree's open levels and its scroll come back as left.",
@@ -513,14 +522,8 @@
         },
         {
             "renderer": "sokkel-ui-egui",
-            "what": "untitled group's top",
-            "spec": "A group without a title at the top of the places keeps 4 above its first entry, room for the entry's focus look.",
-            "today": "As of d1b3b24: its first entry stands right under the head."
-        },
-        {
-            "renderer": "sokkel-ui-egui",
             "what": "collapsed entry tooltip",
-            "spec": "A collapsed entry's name shows in the library's token-painted tooltip, 8 away and padded 8 by 4.",
+            "spec": "A collapsed entry's name shows in the library's one tooltip (parts/tooltip), 8 away.",
             "today": "As of 267236c: egui's own on_hover_text (frame.rs:202), not the library's tooltip."
         },
         {

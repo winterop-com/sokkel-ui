@@ -3,12 +3,13 @@
     "id": "dropdown-menu",
     "kind": "part",
     "status": "stable",
-    "summary": "A menu of actions opened from a trigger: rows with an icon, a label and the keys that do the same, groups under labels, separators, check and radio rows with their marks in a gutter at the start, rows that open a submenu beside them, and destructive rows in the destructive ink. As wide as its widest row; every row a finger tall on a phone.",
+    "summary": "A menu of actions opened from a trigger: rows a control tall with an icon, a label and the keys that do the same, groups under labels, separators, check and radio rows with their marks in a gutter at the start, rows that open a submenu beside them, and destructive rows in the destructive ink. As wide as its widest row; every row a finger tall on a phone; the arrows stop at its first and last rows.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/ui/dropdown-menu.tsx",
             "packages/core/src/components/ui/deferred-menu.tsx",
             "packages/core/src/components/ui/menu-engine.ts",
+            "packages/core/src/lib/popup.ts",
             "packages/core/src/lib/finger.ts",
             "packages/core/src/lib/focus.ts"
         ],
@@ -19,7 +20,7 @@
     },
     "anatomy": {
         "trigger": "The control that opens the menu, most often a button or an icon button. Below 768 it takes a finger's hit area, centered on it, and keeps its drawn size.",
-        "popup": "The box under the trigger, 4 away, its start level with the trigger's (align start), padded 4: as wide as its widest row, at least the trigger and 128, at most the window less 32. A menu taller than the room scrolls.",
+        "popup": "The box under the trigger, 4 away, its start level with the trigger's (align start), padded 4, in every popup's look (popover ground, radius-surface, a 1px border-strong edge, elevation-pop): as wide as its widest row, at least the trigger and 128, at most the window less 32. A menu taller than the room scrolls.",
         "item": "An action: its icon, its label, and at its end the keys that do the same.",
         "checkItem": "A row that turns something on or off, or picks one of a group: its check in the gutter at its start while it is on.",
         "check": "The mark of a check row that is on or of the chosen radio row, 6 from the row's start.",
@@ -28,7 +29,7 @@
         "separator": "A rule between groups, across the menu's full width.",
         "shortcut": "The keys that do the same at a row's end, small, spaced wide and muted.",
         "subTrigger": "A row that opens a submenu: a chevron at its end; washed while its submenu is open.",
-        "submenu": "A popup beside its row, at the row's end, its first row level with it; at least 96 wide."
+        "submenu": "A popup beside its row, at the row's end, its first row level with it, in the menu's own look; at least 96 wide."
     },
     "options": {
         "align": {
@@ -76,33 +77,36 @@
         "trigger": {"phoneHitArea": "spacing-finger"},
         "popup": {"padX": 4, "padY": 4, "radius": "radius-surface"},
         "item": {
+            "height": "density.control",
             "padX": 6,
-            "padY": 4,
+            "padY": 2,
             "gap": 6,
             "icon": 16,
             "text": "text.body",
             "radius": "radius-md",
             "phoneMinHeight": "spacing-finger",
-            "note": "30 tall at every density: 4 over and under a 22 line. A finger tall below 768."
+            "note": "A one-line row is density.control tall, 32 regular and 28 compact (at least, with 2 over and under its 22 line). A finger tall below 768."
         },
         "checkItem": {
-            "padY": 4,
+            "height": "density.control",
+            "padY": 2,
             "gap": 6,
             "icon": 16,
             "text": "text.body",
             "radius": "radius-md",
             "phoneMinHeight": "spacing-finger",
-            "note": "Pads 28 at its start, where its check stands, and 6 at its end (layout)."
+            "note": "Pads 28 at its start, where its check stands, and 6 at its end (layout); as tall as an item."
         },
         "subTrigger": {
+            "height": "density.control",
             "padX": 6,
-            "padY": 4,
+            "padY": 2,
             "gap": 6,
             "icon": 16,
             "text": "text.body",
             "radius": "radius-md",
             "phoneMinHeight": "spacing-finger",
-            "note": "Its chevron 16 at its end."
+            "note": "Its chevron 16 at its end; as tall as an item."
         },
         "check": {"height": 16, "width": 16},
         "label": {"padX": 6, "padY": 4, "text": "text.badge"},
@@ -167,10 +171,10 @@
         "popup": {
             "rest": {
                 "ground": "popover",
+                "edge": "border-strong",
                 "ink": "popover-foreground",
                 "radius": "radius-surface",
-                "ring": {"color": "foreground/10", "width": 1},
-                "note": "The 1px ring is its edge, outside the box. Under it Tailwind's shadow-md, two layers black at 10 percent (0 4 6 -1, 0 2 4 -2), and shadow-lg under a submenu (0 10 15 -3, 0 4 6 -4); no elevation token."
+                "note": "Every popup's look, the menu's and every submenu's alike: a 1px border-strong edge, and elevation-pop under it."
             }
         },
         "item": {
@@ -215,7 +219,7 @@
         },
         {
             "keys": ["ArrowDown", "ArrowUp"],
-            "does": "Moves the highlight a row, wrapping at the ends.",
+            "does": "Moves the highlight a row; it stops at the first and the last.",
             "when": "the menu is open"
         },
         {
@@ -248,11 +252,12 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "Base UI's Menu, fetched after the page is drawn (deferred-menu, menu-engine): until it is here the trigger is a stand-in that looks and reads the same, and a press, ArrowDown or ArrowUp on it opens the menu once it arrives.",
+            "The menu and its submenus stop at their ends (Base UI's loopFocus off), as every list of choices does.",
             "The menu is a portal on layer-popover, and moves to the other side of the trigger when there is no room.",
             "A submenu also opens under a resting pointer.",
             "Focus goes back to the trigger after a keyboard close and nowhere after a pointer close (returnFocusOnKeyboard).",
             "Check and radio rows keep the menu open (Base UI's closeOnClick is off for them); an action closes it.",
-            "AccountMenu and NavBar give their menus a border-strong edge and elevation-pop over this popup's look (an open question).",
+            "AccountMenu and NavBar draw their menus with Base UI's Menu at once, in the same popup look (lib/popup), their rows density.control tall in the same highlight, stopping at the ends.",
             "The trigger takes the finger hit area (FINGER_HIT) unless its render element places itself or draws its own ::after (takesFinger)."
         ],
         "sokkel-ui-egui": [
@@ -270,8 +275,14 @@
         },
         {
             "renderer": "sokkel-ui-egui",
+            "what": "row height",
+            "spec": "density.control tall on one line (32, 28 compact), a finger below 768.",
+            "today": "As of 26b411f (menu.rs unchanged since 5dd7c34): 30 tall at every density."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
             "what": "popup edge and shadow",
-            "spec": "A 1px foreground/10 ring outside the box; Tailwind's shadow-md, two layers black at 10 percent.",
+            "spec": "Every popup's look: a 1px border-strong edge inside the box, and elevation-pop under the menu and its submenus.",
             "today": "A 1px foreground/10 stroke inside the box; one shadow 0 4 blur 12, black at 24 (90 in dark)."
         },
         {
@@ -302,7 +313,7 @@
             "renderer": "sokkel-ui-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 26b411f, DropdownMenu draws actions 30 tall, 6 in, with a 16 icon and 22 to the label, keys or a hint at the end, labels in text.badge, separators, destructive and disabled rows, the accent highlight under the pointer, and start or end alignment. Not yet: check and radio rows, the gutter, inset, submenus, side, finger-tall rows below 768, the trigger's finger hit area, and the keys (opening from the keyboard, the arrows wrapping, Home, End, typing, Enter, Space, ArrowRight, ArrowLeft, Escape)."
+            "today": "As of 26b411f, DropdownMenu draws actions 30 tall, 6 in, with a 16 icon and 22 to the label, keys or a hint at the end, labels in text.badge, separators, destructive and disabled rows, the accent highlight under the pointer, and start or end alignment. Not yet: check and radio rows, the gutter, inset, submenus, side, finger-tall rows below 768, the trigger's finger hit area, and the keys (opening from the keyboard, the arrows stopping at the ends, Home, End, typing, Enter, Space, ArrowRight, ArrowLeft, Escape)."
         }
     ]
 }

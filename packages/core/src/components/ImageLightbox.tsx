@@ -500,7 +500,7 @@ export function ImageLightbox({
                 )}
             </Dialog.Trigger>
             <Dialog.Portal>
-                <Dialog.Backdrop className="fixed inset-0 z-dialog bg-shade/85 backdrop-blur-sm" />
+                <Dialog.Backdrop className="fixed inset-0 z-dialog bg-shade/85" />
                 <Dialog.Popup initialFocus={room} className="fixed inset-0 z-dialog outline-none">
                     <Viewer
                         images={shown}

@@ -192,7 +192,7 @@ export function WindowedPane({
                 <DialogContent
                     showCloseButton={false}
                     initialFocus={body}
-                    className="inset-3 flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 p-0 sm:inset-6 sm:max-w-none"
+                    className="inset-3 flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 p-0 sm:inset-6 md:max-w-none"
                 >
                     <div className="flex min-h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad)">
                         <DialogTitle className="min-w-0 flex-1 truncate text-section-title">{title}</DialogTitle>
