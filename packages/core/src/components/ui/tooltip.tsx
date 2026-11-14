@@ -1,7 +1,8 @@
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 
 import { FINGER_HIT, takesFinger } from '../../lib/finger'
+import { tapTip } from '../../lib/tap-tip'
 import { cn } from '../../lib/utils'
 
 /** How long a tooltip waits under a resting pointer, in milliseconds; keyboard focus shows it at once. */
@@ -21,10 +22,43 @@ function TooltipProvider({ delay = TOOLTIP_DELAY, ...props }: TooltipProviderPro
     )
 }
 
-export type TooltipProps = TooltipPrimitive.Root.Props
+/** What a trigger tells its tooltip when a press ends on it, given the tooltip takes a tap. */
+const Tap = createContext<((pointerType: string) => void) | null>(null)
 
-function Tooltip({ ...props }: TooltipProps) {
-    return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+export type TooltipProps = TooltipPrimitive.Root.Props & {
+    /**
+     * A tap by touch or pen on the trigger shows the tooltip too, for a trigger a tap does nothing
+     * else with, such as a shut button saying why. It stays up for `tip-hold` (`TIP_HOLD`), until the
+     * next press anywhere, or until a tap on the trigger again.
+     */
+    tap?: boolean
+}
+
+/**
+ * A tooltip: shown under a resting pointer and on keyboard focus, and with `tap` on a tap by a
+ * finger or a pen, which have no hover. It holds whether it is open itself, or as `open` says.
+ */
+function Tooltip({ tap = false, open, defaultOpen = false, onOpenChange, ...props }: TooltipProps) {
+    const [held, setHeld] = useState(defaultOpen)
+    const [taps] = useState(() => tapTip(setHeld))
+    useEffect(() => taps.stop, [taps])
+    const shown = open ?? held
+    return (
+        <Tap value={tap ? (pointerType) => taps.press(pointerType, shown) : null}>
+            <TooltipPrimitive.Root
+                data-slot="tooltip"
+                open={shown}
+                onOpenChange={(next, details) => {
+                    if (!taps.allows(next, details.reason)) return details.cancel()
+                    onOpenChange?.(next, details)
+                    if (details.isCanceled) return
+                    setHeld(next)
+                    if (!next) taps.stop()
+                }}
+                {...props}
+            />
+        </Tap>
+    )
 }
 
 export type TooltipTriggerProps = TooltipPrimitive.Trigger.Props
@@ -32,10 +66,13 @@ export type TooltipTriggerProps = TooltipPrimitive.Trigger.Props
 /**
  * A trigger takes a finger-sized hit area on a phone, drawn by the tooltip or given as a `render`
  * element that allows it (`takesFinger`). It waits `TOOLTIP_DELAY` under a resting pointer, or its
- * provider's delay, with or without a provider.
+ * provider's delay, with or without a provider. In a tooltip that takes a tap, it tells the tooltip
+ * of a press ending on it on `pointerup`, which a shut button still hears where Base UI's button
+ * drops its own press and click.
  */
 function TooltipTrigger({ className, delay, ...props }: TooltipTriggerProps) {
     const shared = useContext(Delay)
+    const tap = useContext(Tap)
     const finger = takesFinger(props.render, className)
     return (
         <TooltipPrimitive.Trigger
@@ -43,6 +80,10 @@ function TooltipTrigger({ className, delay, ...props }: TooltipTriggerProps) {
             delay={delay ?? shared}
             className={finger ? cn(FINGER_HIT, className) : className}
             {...props}
+            onPointerUp={(event) => {
+                props.onPointerUp?.(event)
+                tap?.(event.pointerType)
+            }}
         />
     )
 }

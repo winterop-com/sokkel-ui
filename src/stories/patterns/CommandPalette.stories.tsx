@@ -287,6 +287,22 @@ export const SeeAll: StoryObj = {
     ),
 }
 /**
+ * The app's search answering at once with no pause in typing (`debounce: 0`): each key's results
+ * take the last ones' place with no Searching line between and nothing dimmed, as the wait is shown
+ * only once it has run `wait-shown`.
+ */
+export const SearchAtOnce: StoryObj = {
+    name: 'Search at once',
+    render: () => (
+        <Palette
+            initial
+            query="nightly"
+            filter="terms"
+            search={{ search: (query) => searchTidevann(query, 4), onOpen: () => undefined, debounce: 0 }}
+        />
+    ),
+}
+/**
  * The palette opened on `harbor`, whose results come at once, then closed and opened again on
  * `juniper`, whose search never answers or fails, as a server gone quiet or down after the first search.
  */

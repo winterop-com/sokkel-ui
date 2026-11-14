@@ -15,6 +15,8 @@
             "packages/core/src/components/ui/kbd.tsx",
             "packages/core/src/components/ui/spinner.tsx",
             "packages/core/src/lib/commands.ts",
+            "packages/core/src/hooks/use-search.ts",
+            "packages/core/src/lib/search.ts",
             "packages/core/src/hooks/use-palette-shortcut.ts"
         ],
         "sokkel-ui-egui": [
@@ -42,8 +44,8 @@
         "spinner": "While the command's promise is pending: a spinner at its row's end in the keys' place, named words.running.",
         "stopWaiting": "Once a running command has run busy-release: words.stopWaiting, a row at the list's top, which closes the palette and lets the command go, aborting the signal it was handed.",
         "refusal": "Why the last command was refused, under the list across the palette's whole width, its words inset as the rows' are: the rejection's words, else words.refused.",
-        "empty": "words.empty, centered, while no command matches and the app's search is not waiting.",
-        "results": "The app's search results under the commands, grouped by kind as parts of the search draw them; Searching while it waits, its failure with a Retry row, and a row to see all results at the list's foot.",
+        "empty": "words.empty, centered, while no command matches and the app's search has not failed or shown its wait.",
+        "results": "The app's search results under the commands, grouped by kind as parts of the search draw them; Searching once a wait with nothing listed has run wait-shown, its failure with a Retry row, and a row to see all results at the list's foot.",
         "foot": "An optional strip at the box's foot (foot): the app's mark and name at its start, and at its end the active row's verb beside Enter and words.palette beside the keys that open it.",
         "close": "On a touch screen, which has no Escape: words.close, a small ghost button at the foot, in the keys' place or in a strip of its own."
     },
@@ -81,7 +83,7 @@
         },
         "search": {
             "type": "node",
-            "does": "The app's own search, its results listed under the commands: { search, onOpen, onSeeAll?, minQuery?, debounce?, words? }.",
+            "does": "The app's own search, its results listed under the commands: { search, onOpen, onSeeAll?, minQuery?, debounce?, words? }. debounce is the pause in typing before a changed query is asked; at 0 each is asked at once.",
             "sokkel-ui": "PaletteSearch"
         },
         "defaultQuery": {"type": "text", "default": "", "does": "What the search holds each time the palette opens."},
@@ -179,6 +181,10 @@
         "busyRelease": {
             "value": "busy-release",
             "note": "How long a running command holds the palette (5000 ms) before Stop waiting appears and Escape and the Close let it go."
+        },
+        "searchingAfter": {
+            "value": "wait-shown",
+            "note": "How long the app's search waits for an answer (300 ms) before Searching shows or the earlier results dim; a quicker answer draws neither."
         }
     },
     "states": {
@@ -196,8 +202,12 @@
             "effect": {"piece": "row", "opacity": "disabled-opacity"}
         },
         "empty": {
-            "means": "No command matches and the app's search is not waiting or failed: words.empty.",
+            "means": "No command matches and the app's search has not failed or shown its wait: words.empty. A wait shorter than wait-shown leaves it standing, so a quick answer never swaps it for Searching.",
             "reached": "a query no command matches"
+        },
+        "searching": {
+            "means": "The app's search has waited wait-shown for its answer: with no results listed, words.searching under the commands; with an earlier query's results listed, they are dimmed and passed over. A shorter wait draws neither, the earlier results only out of reach, so a search that answers at once never flickers.",
+            "reached": "a search slower than wait-shown"
         },
         "busy": {
             "means": "A command's onSelect answered a promise that has not settled: the palette holds open (Escape, a press outside, its Close and Mod+K do nothing), the row is busy with a spinner named words.running at its end, and another choice is ignored until it settles.",
@@ -358,7 +368,8 @@
             "A command that settles after the palette closed, or opened again, is let go.",
             "pointer-coarse decides the touch screen's Close; max-md the finger heights and, with md:max-w, the width; max-sm the meta's fold.",
             "The list fades at its foot (scroll-fade-b), and keeps the see-all row in sight under the scrolling rows.",
-            "The wait is BUSY_RELEASE, generated from the busy-release token (lib/durations); useBusyRelease releases the palette once it has run, and only Escape (escape-key, close-watcher) and the Close (close-press) are heeded then. A command settling after the palette closed is let go (runCommand's current)."
+            "The wait is BUSY_RELEASE, generated from the busy-release token (lib/durations); useBusyRelease releases the palette once it has run, and only Escape (escape-key, close-watcher) and the Close (close-press) are heeded then. A command settling after the palette closed is let go (runCommand's current).",
+            "useSearch says slow once a query has waited WAIT_SHOWN (lib/durations, from wait-shown), timed as useBusyRelease times its wait, and searchWait (lib/search) turns it into the Searching line and the dimmed results; an earlier query's results are out of reach from the wait's first moment, a choice of one ignored."
         ],
         "sokkel-ui-egui": [
             "CommandPalette::new(id, groups, &mut query, &mut highlight).words(..).show(ctx) returns PaletteOutcome { run, close }; the app runs the command it names by group and index.",

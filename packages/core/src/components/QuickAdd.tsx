@@ -120,7 +120,7 @@ export function QuickAdd({
             data-slot="quick-add"
             aria-busy={adding || undefined}
             className={cn(
-                'relative flex h-(--density-control) min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
+                'relative flex h-(--density-control) min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring max-md:min-h-finger',
                 error !== null && ['pr-9', ISSUE_WITHIN_EDGE.critical],
                 className,
             )}

@@ -1,18 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { WAIT_SHOWN } from '../lib/durations'
 import { SEARCH_IDLE, searchFor, type SearchSource, type SearchState } from '../lib/search'
+import { useBusyRelease } from './use-busy-release'
 
-/** Where a search stands, and the way to ask its query again after a failure. */
-export type SearchAnswer = SearchState & { retry: () => void }
+/**
+ * Where a search stands, the way to ask its query again after a failure, and whether the query has
+ * waited `wait-shown` for its answer (`slow`), from which a list shows the wait.
+ */
+export type SearchAnswer = SearchState & { retry: () => void; slow: boolean }
 
 /**
  * Runs an app's `search` for a query and keeps where it stands. The first query is asked at once
- * and each change after a pause in typing; an answer given at once lands without a wait. Older
- * answers are dropped and their signal aborted. Results belong to the query they answer: while
- * the next query waits, the last results stay only as stale (`loading`), and a failure keeps none;
- * emptying the query or closing the list (`enabled` false) drops them, so the next query starts from nothing.
- * `retry` asks the query again at once. Below `minQuery` characters, or while `enabled` is false,
- * nothing is asked.
+ * and each change after a pause in typing (`debounce`; none at 0, when each is asked at once); an
+ * answer given at once lands without a wait. Older answers are dropped and their signal aborted.
+ * Results belong to the query they answer: while the next query waits, the last results stay only
+ * as stale (`loading`), and a failure keeps none; emptying the query or closing the list (`enabled`
+ * false) drops them, so the next query starts from nothing. `slow` turns true once a query has
+ * waited `wait-shown` (`WAIT_SHOWN`), so a list says it is searching, or dims the stale results,
+ * only for a wait long enough to see (`searchWait`). `retry` asks the query again at once. Below
+ * `minQuery` characters, or while `enabled` is false, nothing is asked.
  */
 export function useSearch(
     search: SearchSource | undefined,
@@ -55,8 +62,8 @@ export function useSearch(
                 fail(reason)
             }
         }
-        // The first query, and one asked again, go at once; a changed one after a pause in typing.
-        const now = asked.current !== tries
+        // The first query, one asked again and every one with no pause go at once; a changed one after a pause in typing.
+        const now = asked.current !== tries || debounce <= 0
         asked.current = tries
         if (now) ask()
         const timer = now ? undefined : setTimeout(ask, debounce)
@@ -66,5 +73,8 @@ export function useSearch(
         }
     }, [active, trimmed, debounce, tries])
 
-    return { ...(active ? searchFor(held, trimmed) : SEARCH_IDLE), retry: () => setTries((count) => count + 1) }
+    const state = active ? searchFor(held, trimmed) : SEARCH_IDLE
+    // Timed as a busy part's wait: from the first moment without the query's answer, across keys typed meanwhile.
+    const slow = useBusyRelease(state.state === 'loading', WAIT_SHOWN)
+    return { ...state, slow, retry: () => setTries((count) => count + 1) }
 }

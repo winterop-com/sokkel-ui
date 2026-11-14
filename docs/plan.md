@@ -199,7 +199,9 @@ its own. Every list of choices (a select, a menu, the palette, the top bar's sea
 row in `accent` with `accent-foreground` for its icon, label and quiet words, stops at its first and
 last rows, and is reached at them by Home and End; a one-line select or menu row is
 `density.control` tall. There is one tooltip, the inverted one, waiting 500 ms under the pointer
-from the primitive's own default and showing at once on keyboard focus. A dialog is a box on
+from the primitive's own default and showing at once on keyboard focus; with `tap` a tap by touch
+or pen, which has no hover, shows it too, held `tip-hold` (4 seconds, a token) or until the next
+press anywhere, as a shut button's reason shows on a touch screen. A dialog is a box on
 `elevation-dialog` with a `border-strong` edge from `md` (768), and below it a full-screen sheet with
 neither, the settings dialog a list of sections to go into; a `ConfirmDialog` stays a box. No
 backdrop blurs what is under it, so every renderer draws the same one. Work under way holds its
@@ -376,10 +378,13 @@ an app's own rule never reads how the library marks them. On a touch screen the 
 A `Search`'s results open on typing, a press on the field or the down arrow, never on focus alone,
 so focus the palette or the shortcuts dialog gives back to the search as it closes leaves them closed.
 Results belong to the query they answer (`useSearch` tags each state with it): while the next answer
-comes an earlier query's results stay dimmed and out of reach, in `Search` and the palette alike, so
-the list does not jump yet nothing from the old query opens as the new one's; a failed search shows
+comes an earlier query's results stay out of reach, in `Search` and the palette alike, so the list
+does not jump yet nothing from the old query opens as the new one's. The wait shows only once it has
+run `wait-shown` (300 ms, a token): then the earlier results dim, or with none the list says it is
+searching, so an answer that comes sooner, as one with no pause in typing (`debounce: 0`) often
+does, draws neither and the list never flickers between keys; a failed search shows
 its failure (`words.failed`) over a Retry row, whatever was listed before, and the palette never says
-no command matches while its search waits or has failed. Stale results stand only while a query is
+no command matches while its search shows its wait or has failed. Stale results stand only while a query is
 refined in one open list: emptying the field or closing the list lets them go, so a query typed
 after says it is searching. `Shell`'s `routeKey` moves the focus out of the field a result was
 opened from to the new page's first `h1` a reader can see (laid out, outside any inert or
@@ -669,8 +674,8 @@ phone.
 carries no chip; `lib/status` holds the map's types, the run states and each color as a CSS color.
 
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
-disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
-reaches it; `SwitchField` takes `reason` too, said in a line under its label, and its whole row is
+disables it and shows the reason on hover and focus, and on a tap by touch or pen, which has no
+hover, the button kept in the tab order so a keyboard reaches it; `SwitchField` takes `reason` too, said in a line under its label, and its whole row is
 the label, a long label breaking within its room and its note wrapping under it, never under the
 switch. A button whose press is under way takes `busy`: a `Spinner` in place of its leading icon
 (an icon-only button's icon), or before a label with none, the label kept, and the button shut

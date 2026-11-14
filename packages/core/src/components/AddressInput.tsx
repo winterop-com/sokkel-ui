@@ -124,7 +124,7 @@ export function AddressInput({
             <div
                 data-slot="address-input"
                 className={cn(
-                    'flex min-h-(--density-control) min-w-0 cursor-text flex-wrap items-center gap-1 text-sm',
+                    'flex min-h-(--density-control) min-w-0 cursor-text flex-wrap items-center gap-1 text-sm max-md:min-h-finger',
                     bare
                         ? 'py-1'
                         : 'rounded-control border border-input bg-field px-1.5 py-1 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',

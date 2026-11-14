@@ -67,6 +67,28 @@ export function searchFor(held: SearchState, query: string, asking = false): Sea
     return held.query === query && (!asking || held.state === 'done') ? held : { state: 'loading', query, groups: held.groups }
 }
 
+/** How a list of a search's results draws its wait. */
+export interface SearchWait {
+    /** An earlier query's results stand for the one waited on: out of reach, so none opens as the new query's. */
+    stale: boolean
+    /** The list says it is searching: the wait is slow and nothing earlier is listed. */
+    searching: boolean
+    /** The earlier results are dimmed: the wait is slow and they are listed. */
+    dimmed: boolean
+}
+
+/**
+ * How a list draws where its search stands, given whether the wait has run `wait-shown` (`slow`).
+ * An earlier query's results go out of reach the moment the next query waits, but the wait is shown
+ * only once it is slow: then the list says it is searching where nothing is listed, and dims what
+ * is. An answer that comes sooner draws neither, so a quick search never flickers.
+ */
+export function searchWait(state: SearchState, slow: boolean): SearchWait {
+    const stale = state.state === 'loading'
+    const listed = state.groups.some((group) => group.results.length > 0)
+    return { stale, searching: stale && slow && !listed, dimmed: stale && slow && listed }
+}
+
 /** A result in the order the keyboard moves through them, with its group and its place in the list. */
 export interface SearchEntry {
     group: SearchGroup

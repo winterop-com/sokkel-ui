@@ -365,6 +365,8 @@
     --motion-base: 200ms;
     --motion-ease: cubic-bezier(0, 0, 0.2, 1);
     --busy-release: 5000ms;
+    --wait-shown: 300ms;
+    --tip-hold: 4000ms;
     --layer-drawer: 40;
     --layer-dialog: 50;
     --layer-popover: 60;

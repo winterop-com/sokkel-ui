@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { releaser } from '../hooks/use-busy-release'
+import { WAIT_SHOWN } from './durations'
 import {
     countFacets,
     filterGroups,
@@ -11,9 +16,11 @@ import {
     searchEntries,
     searchFor,
     searchKey,
+    searchWait,
     toggleChosen,
     type SearchGroup,
     type SearchState,
+    type SearchWait,
 } from './search'
 
 const GROUPS: SearchGroup[] = [
@@ -185,5 +192,120 @@ describe('a cleared search', () => {
         expect(searchFor(SEARCH_IDLE, 'Uganda')).toEqual({ state: 'loading', query: 'Uganda', groups: [] })
         // The same query asked again after reopening starts from nothing too.
         expect(searchFor(SEARCH_IDLE, 'Laos', true)).toEqual({ state: 'loading', query: 'Laos', groups: [] })
+    })
+})
+
+/** The jobs a search over Tidevann's jobs finds for a query: those whose name holds it. */
+const JOBS = ['nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest', 'import-orders']
+const jobsFor = (query: string): SearchGroup[] => {
+    const results = JOBS.filter((job) => job.includes(query)).map((job) => ({ id: job, title: job }))
+    return results.length === 0 ? [] : [{ kind: 'jobs', title: 'Jobs', results }]
+}
+
+/**
+ * Keys typed into a list over a search that answers `answerIn` ms after each ask, with no pause in
+ * typing: as `useSearch` holds the answer and times its wait (`releaser` over `wait-shown`, as
+ * `useBusyRelease` runs it), and as the list draws it (`searchWait`). Every drawing is kept, with
+ * when it was drawn.
+ */
+function typist(answerIn: number, found: (query: string) => SearchGroup[] = jobsFor) {
+    let held: SearchState = SEARCH_IDLE
+    let query = ''
+    let loading = false
+    let slow = false
+    const drawn: (SearchWait & { at: number; query: string })[] = []
+    const start = Date.now()
+    const draw = () => {
+        const state = searchFor(held, query)
+        const now = state.state === 'loading'
+        if (now !== loading) {
+            loading = now
+            timing.busy(now)
+        }
+        drawn.push({ ...searchWait(state, loading && slow), at: Date.now() - start, query })
+    }
+    const timing = releaser(WAIT_SHOWN, (released) => {
+        if (released === slow) return
+        slow = released
+        draw()
+    })
+    return {
+        drawn,
+        type(next: string) {
+            query = next
+            draw()
+            held = searchFor(held, next, true)
+            setTimeout(() => {
+                if (query !== next) return
+                held = { state: 'done', query: next, groups: found(next) }
+                draw()
+            }, answerIn)
+        },
+    }
+}
+
+describe("a search's wait", () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('is the wait-shown token, 300 ms', () => {
+        const tokens = JSON.parse(readFileSync(join(__dirname, '..', '..', 'tokens', 'tokens.json'), 'utf8')) as {
+            themes: { tidevann: { light: Record<string, string> } }
+        }
+        expect(tokens.themes.tidevann.light['wait-shown']).toBe('300ms')
+        expect(WAIT_SHOWN).toBe(300)
+    })
+
+    it('never draws Searching nor dims for answers that come within a frame, eleven keys typed 120 ms apart', () => {
+        const typing = typist(16, () => [])
+        for (let length = 1; length <= 11; length++) setTimeout(() => typing.type('nightly-exp'.slice(0, length)), (length - 1) * 120)
+        vi.advanceTimersByTime(11 * 120 + 1000)
+        expect(typing.drawn.filter((drawing) => drawing.searching || drawing.dimmed)).toEqual([])
+        // Each key left the list out of reach only until its answer.
+        expect(typing.drawn.filter((drawing) => drawing.stale).map((drawing) => drawing.query)).toEqual(
+            [...'nightly-exp'].map((_, index) => 'nightly-exp'.slice(0, index + 1)),
+        )
+        expect(typing.drawn.at(-1)).toMatchObject({ stale: false, query: 'nightly-exp' })
+    })
+
+    it('keeps earlier results undimmed for a quick answer, though out of reach until it comes', () => {
+        const typing = typist(40)
+        typing.type('n')
+        vi.advanceTimersByTime(100)
+        typing.type('ni')
+        expect(typing.drawn.at(-1)).toMatchObject({ stale: true, dimmed: false, searching: false })
+        vi.advanceTimersByTime(40)
+        expect(typing.drawn.at(-1)).toMatchObject({ stale: false, dimmed: false, searching: false })
+        expect(typing.drawn.some((drawing) => drawing.dimmed)).toBe(false)
+    })
+
+    it('says it is searching once a wait with nothing listed has run wait-shown, and not before', () => {
+        const typing = typist(1000)
+        typing.type('nightly')
+        vi.advanceTimersByTime(WAIT_SHOWN - 1)
+        expect(typing.drawn.some((drawing) => drawing.searching)).toBe(false)
+        vi.advanceTimersByTime(1)
+        expect(typing.drawn.at(-1)).toMatchObject({ stale: true, searching: true, dimmed: false, at: WAIT_SHOWN })
+        vi.advanceTimersByTime(1000)
+        expect(typing.drawn.at(-1)).toMatchObject({ stale: false, searching: false, dimmed: false })
+    })
+
+    it('dims the earlier results once a wait has run wait-shown, counted from the first key without an answer', () => {
+        const typing = typist(1000)
+        typing.type('n')
+        vi.advanceTimersByTime(1000)
+        expect(typing.drawn.at(-1)).toMatchObject({ stale: false, query: 'n' })
+        // Keys typed 120 ms apart while the answers are slow: the wait runs on from the first of them.
+        typing.type('ni')
+        vi.advanceTimersByTime(120)
+        typing.type('nig')
+        vi.advanceTimersByTime(WAIT_SHOWN - 121)
+        expect(typing.drawn.some((drawing) => drawing.dimmed)).toBe(false)
+        vi.advanceTimersByTime(1)
+        expect(typing.drawn.at(-1)).toMatchObject({ stale: true, dimmed: true, searching: false, query: 'nig' })
     })
 })

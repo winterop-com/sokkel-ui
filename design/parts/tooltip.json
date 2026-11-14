@@ -3,12 +3,13 @@
     "id": "tooltip",
     "kind": "part",
     "status": "stable",
-    "summary": "The library's one tooltip: a short line about a control, in a small inverted box beside it with an arrow toward it, shown once the pointer has rested on the control for 500 ms or at once while it has keyboard focus, and gone when both leave. It names an icon button, says why a control is off (a button's reason), names a collapsed rail's entries, and can add the key that does the same.",
+    "summary": "The library's one tooltip: a short line about a control, in a small inverted box beside it with an arrow toward it, shown once the pointer has rested on the control for 500 ms or at once while it has keyboard focus, and gone when both leave. It names an icon button, says why a control is off (a button's reason), names a collapsed rail's entries, and can add the key that does the same. A touch screen has no hover: there a tap on a shut button shows its reason (tap), held tip-hold or until the next press.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/ui/tooltip.tsx",
             "packages/core/src/components/ui/kbd.tsx",
-            "packages/core/src/lib/finger.ts"
+            "packages/core/src/lib/finger.ts",
+            "packages/core/src/lib/tap-tip.ts"
         ],
         "sokkel-ui-egui": [
             "crates/core/src/widgets/overlay.rs (tooltip, tooltip_shown)",
@@ -47,6 +48,12 @@
             "does": "Shown whatever the pointer does, as a story or a guided tour shows it.",
             "sokkel-ui": "open, defaultOpen"
         },
+        "tap": {
+            "type": "boolean",
+            "default": false,
+            "does": "A tap by touch or pen on the trigger shows the box too, for a trigger a tap does nothing else with, such as a shut button saying why. It stays up for tip-hold, until the next press anywhere, or until a tap on the trigger again. A mouse press does nothing more: hover and focus show it as ever.",
+            "sokkel-ui": "Tooltip tap; Button and IconButton set it while they have a reason"
+        },
         "keys": {
             "type": "node",
             "does": "A key after the words, drawn as a key cap.",
@@ -78,13 +85,17 @@
         "openDelay": {
             "value": 500,
             "note": "ms before the box shows under a resting pointer: the primitive's own default, so it holds with or without a provider; a provider's tooltips share one delay group, a neighbor showing at once after one has shown."
+        },
+        "tapHold": {
+            "value": "tip-hold",
+            "note": "How long a box a tap showed stays up (4000 ms), unless the next press anywhere, or a tap on the trigger again, closes it first."
         }
     },
     "states": {
         "rest": {"means": "Not shown."},
         "open": {
             "means": "Shown.",
-            "reached": "the pointer resting on the trigger for the delay, keyboard focus on the trigger, or open",
+            "reached": "the pointer resting on the trigger for the delay, keyboard focus on the trigger, a tap on the trigger with tap, or open",
             "sokkel-ui": "data-open"
         }
     },
@@ -128,6 +139,7 @@
             "TooltipTrigger adds the finger hit area (FINGER_HIT) unless its render element places itself or draws its own ::after (takesFinger).",
             "The box fades and zooms in from the trigger's side.",
             "A Button's reason and an IconButton's name show in this tooltip; a Button's reason is also its description (aria-describedby), from a copy always in the page (parts/button).",
+            "Tooltip holds whether it is open itself, Base UI's root controlled (or as open says), so a tap can open it: with tap, TooltipTrigger tells the tooltip of a press that ends on it (pointerup, which a shut Base UI button still hears where it drops its own press and click), and a press by touch or pen shows it. A second tap, Base UI's outside press, or TIP_HOLD (lib/durations, from tip-hold) closes it; while a tap holds it a hover's close is refused (lib/tap-tip), as a pen lifting reports one.",
             "The rail's collapsed entries (parts/rail) and SwitchField's help mark show in this tooltip too; no part draws a tooltip of its own."
         ],
         "sokkel-ui-egui": [
@@ -147,7 +159,7 @@
             "renderer": "sokkel-ui-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 26b411f, the tooltip draws the box on the foreground ground in the background's ink, radius-md, padded 12 by 6, text.help, at most 320 wide, on hover and keyboard focus. Not yet: the arrow, keys, side and align, a delay group, Escape, and the finger hit area below 768."
+            "today": "As of 26b411f, the tooltip draws the box on the foreground ground in the background's ink, radius-md, padded 12 by 6, text.help, at most 320 wide, on hover and keyboard focus. Not yet: the arrow, keys, side and align, a delay group, Escape, the finger hit area below 768, and tap."
         }
     ]
 }

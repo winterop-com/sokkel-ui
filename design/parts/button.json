@@ -13,7 +13,7 @@
         "label": "The words, on one line, never wrapped. Absent in an icon button.",
         "icon": "A glyph before the label (start) or after it (end); the whole content of an icon button.",
         "spinner": "While busy: in the leading icon's place, or before the label when there is no icon. The label stays.",
-        "tooltip": "An icon button's label, or the reason a button cannot be pressed now, with a shortcut key when given."
+        "tooltip": "An icon button's label, or the reason a button cannot be pressed now, with a shortcut key when given. A reason shows on a tap by touch or pen too."
     },
     "options": {
         "variant": {
@@ -39,7 +39,7 @@
         },
         "reason": {
             "type": "text",
-            "does": "Why it cannot be pressed now. Disables it, keeps it in the tab order, and says the reason in a tooltip on hover and focus."
+            "does": "Why it cannot be pressed now. Disables it, keeps it in the tab order, and says the reason in a tooltip on hover and focus, and on a tap by touch or pen (parts/tooltip tap), held tip-hold or until the next press."
         },
         "disabled": {
             "type": "boolean",
@@ -197,7 +197,7 @@
             "means": "Cannot be pressed now.",
             "reached": "reason or disabled",
             "effect": {"opacity": "disabled-opacity", "presses": false, "cursor": "not-allowed"},
-            "sokkel-ui": "With reason: focusable, tooltip on hover and focus. With disabled alone: out of the tab order."
+            "sokkel-ui": "With reason: focusable, tooltip on hover, on focus and on a tap by touch or pen (Tooltip tap). With disabled alone: out of the tab order."
         },
         "invalid": {
             "means": "Marked invalid by a form, as a control in a refused group.",
@@ -303,7 +303,7 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "Base UI's Button; focusableWhenDisabled keeps a reasoned or busy button in the tab order.",
-            "The tooltip is the library's (parts/tooltip) around the button; a reason wraps the button in one, and is also the button's description: aria-describedby names a visually hidden copy of the reason, always in the page beside the button, so a screen reader says it with or without the tooltip open. An icon button's reason is described the same way.",
+            "The tooltip is the library's (parts/tooltip) around the button; a reason wraps the button in one that takes a tap (tap), so a touch screen, which has no hover, shows it too, and is also the button's description: aria-describedby names a visually hidden copy of the reason, always in the page beside the button, so a screen reader says it with or without the tooltip open. An icon button's reason is described, and shown on a tap, the same way.",
             "The busy spinner is aria-hidden; the button says aria-busy.",
             "The hover expressions stay in its classes (hover:bg-primary/80); its parts test maps each paint expression to the class it expects."
         ],
@@ -330,7 +330,7 @@
         {
             "renderer": "sokkel-ui-egui",
             "what": "missing options and states",
-            "spec": "Icon sizes, IconButton (label, pressed, shortcut), destructiveHover, opensMenu and open, inGroup, iconPlace end, invalid, phone heights below md and the xs hit area.",
+            "spec": "Icon sizes, IconButton (label, pressed, shortcut), destructiveHover, opensMenu and open, inGroup, iconPlace end, invalid, phone heights below md, the xs hit area, and a reason's tooltip on a tap.",
             "today": "Not built."
         }
     ]
