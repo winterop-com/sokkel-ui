@@ -130,14 +130,12 @@
         "mark": {"rest": {"note": "Not drawn."}, "toneCritical": {"ink": "critical"}},
         "title": {
             "rest": {
-                "ink": "section-head-ink|foreground",
+                "ink": "section-head-ink",
                 "text": "text.head",
                 "note": "In typeface-heading; the table head's size, weight and tracking, but not its case."
             }
         },
-        "flatTitle": {
-            "rest": {"ink": "section-head-ink|foreground", "text": "text.section-title", "note": "In typeface-heading."}
-        },
+        "flatTitle": {"rest": {"ink": "section-head-ink", "text": "text.section-title", "note": "In typeface-heading."}},
         "meta": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face."}},
         "description": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
         "body": {

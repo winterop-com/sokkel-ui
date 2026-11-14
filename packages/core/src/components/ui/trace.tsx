@@ -11,7 +11,7 @@ function Trace({ className, ...props }: TraceProps) {
         <div
             data-slot="trace"
             className={cn(
-                'flex w-full min-w-0 flex-col gap-2 *:has-[>[data-slot=trace-line]]:flex *:has-[>[data-slot=trace-line]]:w-fit *:has-[>[data-slot=trace-line]]:max-w-full *:has-[>[data-slot=trace-line]]:min-w-0 *:has-[>[data-slot=trace-line]]:rounded-md *:has-[>[data-slot=trace-line]]:text-left *:has-[>[data-slot=trace-line]]:outline-none has-[>[data-slot=trace-line]]:focus-visible:outline-offset-2 has-[>[data-slot=trace-line]]:focus-visible:outline-solid *:has-[>[data-slot=trace-line]]:focus-visible:outline-2 *:has-[>[data-slot=trace-line]]:focus-visible:outline-ring',
+                'flex w-full min-w-0 flex-col gap-2 *:has-[>[data-slot=trace-line]]:flex *:has-[>[data-slot=trace-line]]:w-fit *:has-[>[data-slot=trace-line]]:max-w-full *:has-[>[data-slot=trace-line]]:min-w-0 *:has-[>[data-slot=trace-line]]:rounded-md *:has-[>[data-slot=trace-line]]:text-left *:has-[>[data-slot=trace-line]]:outline-none has-[>[data-slot=trace-line]]:focus-visible:outline-offset-focus has-[>[data-slot=trace-line]]:focus-visible:outline-solid *:has-[>[data-slot=trace-line]]:focus-visible:outline-focus *:has-[>[data-slot=trace-line]]:focus-visible:outline-ring',
                 className,
             )}
             {...props}
@@ -85,7 +85,7 @@ function TraceCollapsibleTrigger({ className, children, ...props }: TraceCollaps
         <CollapsibleTrigger
             data-slot="trace-collapsible-trigger"
             className={cn(
-                'group/trace-collapsible-trigger flex w-fit max-w-full min-w-0 cursor-pointer items-center gap-1 rounded-md text-left text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid has-[[data-status=error]]:text-destructive',
+                'group/trace-collapsible-trigger flex w-fit max-w-full min-w-0 cursor-pointer items-center gap-1 rounded-md text-left text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid has-[[data-status=error]]:text-destructive',
                 className,
             )}
             {...props}
@@ -104,7 +104,7 @@ function TraceCollapsibleContent({ className, children, ...props }: TraceCollaps
     return (
         <CollapsibleContent
             data-slot="trace-collapsible-content"
-            className="h-(--collapsible-panel-height) min-w-0 overflow-hidden transition-[height] duration-200 data-ending-style:h-0 data-starting-style:h-0"
+            className="h-(--collapsible-panel-height) min-w-0 overflow-hidden transition-[height] duration-base data-ending-style:h-0 data-starting-style:h-0"
             {...props}
         >
             <div

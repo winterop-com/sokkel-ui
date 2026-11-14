@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "settings-dialog",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "An app's preferences as one large dialog over the page it was opened from, on its own route (principle 9): a head with the title and a close; the sections in a column under their group titles, with a search over every setting at its top; the shown section's rows beside it, scrolling on their own; and a footer with Reset to defaults for the shown section, a note that changes are kept as they are made, and Done. Below 640 it fills the screen, and the column is a list to go into.",
     "sources": {
         "sokkel-ui": [
@@ -212,7 +212,7 @@
         "entry": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md", "text": "text.body"},
             "hover": {"ground": "hover", "ink": "foreground"},
-            "focus": {"ring": {"color": "ring", "width": 2}},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}},
             "shown": {"ground": "secondary", "ink": "foreground", "text": "text.action"},
             "phoneList": {"ground": "none", "ink": "inherit", "note": "The box's ink, none marked."}
         },
@@ -268,6 +268,12 @@
         "cancel": "Cancel",
         "close": "Close",
         "back": "Back"
+    },
+    "samples": {
+        "resetSection": [{"with": {"section": "General"}, "says": "Reset General to its defaults?"}],
+        "resetSectionDetail": [
+            {"with": {"section": "General"}, "says": "Every setting in General goes back to its default."}
+        ]
     },
     "appText": {
         "groups": "Every group's title, every section's label, heading, lead and foot, and every setting's title, description, note and keywords.",

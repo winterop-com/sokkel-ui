@@ -111,7 +111,7 @@ export function MediaSlider({
                     settle(null)
                 }}
             >
-                <SliderPrimitive.Control className="group/media-slider relative flex h-4 w-full cursor-pointer touch-none items-center select-none data-disabled:cursor-default data-disabled:opacity-50">
+                <SliderPrimitive.Control className="group/media-slider relative flex h-4 w-full cursor-pointer touch-none items-center select-none data-disabled:cursor-default data-disabled:opacity-disabled">
                     <SliderPrimitive.Track className={cn('relative h-1 w-full overflow-hidden rounded-mini select-none', TRACK[tone])}>
                         {buffered?.map((range) => (
                             <span

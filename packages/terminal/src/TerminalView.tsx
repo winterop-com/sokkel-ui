@@ -305,7 +305,7 @@ export function TerminalView({
 
     const bar = title !== undefined || actions !== undefined || onClear !== undefined
     const tool =
-        'flex size-6 items-center justify-center rounded-sm text-terminal-muted outline-none hover:bg-terminal-foreground/10 hover:text-terminal-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring'
+        'flex size-6 items-center justify-center rounded-sm text-terminal-muted outline-none hover:bg-terminal-foreground/10 hover:text-terminal-foreground focus-visible:outline-focus focus-visible:outline-solid focus-visible:outline-ring'
 
     return (
         <div

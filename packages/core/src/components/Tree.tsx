@@ -875,7 +875,7 @@ export function Tree({
                                         <button
                                             type="button"
                                             onClick={() => retry(row.node.id)}
-                                            className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                                            className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                                         >
                                             <RotateCw className="size-3.5" aria-hidden />
                                             {words.retry}
@@ -909,7 +909,7 @@ export function Tree({
                             onClick={() => choose(row)}
                             style={indent}
                             className={cn(
-                                'group/row relative flex h-8 shrink-0 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                'group/row relative flex h-8 shrink-0 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring focus-visible:ring-inset',
                                 selection === 'single' && isChosen && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
                                 at === 'inside' && 'ring-2 ring-ring ring-inset',
                                 dragProps['data-dragging'] === true && 'opacity-40',
@@ -1024,7 +1024,7 @@ export function Tree({
                     <button
                         type="button"
                         onClick={() => setAttempt((count) => count + 1)}
-                        className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                        className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                     >
                         <RotateCw className="size-3.5" aria-hidden />
                         {words.retry}

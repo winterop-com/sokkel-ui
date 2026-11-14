@@ -107,7 +107,7 @@ export function IOCard({ title, code, description, status, menu, input, output, 
                         <DropdownMenuTrigger
                             aria-label={words.menu}
                             title={words.menu}
-                            className="-mt-1 -mr-1 flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                            className="-mt-1 -mr-1 flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                         >
                             <MoreHorizontal className="size-4" aria-hidden />
                         </DropdownMenuTrigger>

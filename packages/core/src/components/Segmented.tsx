@@ -116,7 +116,7 @@ export function Segmented<T extends string>({
                 size === 'md'
                     ? cn('grid w-full grid-cols-2 md:flex md:min-h-(--density-control) md:flex-wrap', !fill && 'md:w-auto')
                     : cn('max-w-full flex-wrap', fill ? 'flex w-full' : 'inline-flex w-fit shrink-0'),
-                disabled && 'opacity-50',
+                disabled && 'opacity-disabled',
                 className,
             )}
         >
@@ -131,7 +131,7 @@ export function Segmented<T extends string>({
                         aria-disabled={off || undefined}
                         disabled={disabled}
                         className={cn(
-                            'transition-colors outline-none focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring',
+                            'transition-colors outline-none focus-visible:z-10 focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-ring',
                             OPTION[variant],
                             size === 'md'
                                 ? cn(

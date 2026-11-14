@@ -516,7 +516,7 @@ export function Composer({
                         label={uploading ? words.waiting : words.send}
                         variant="default"
                         aria-disabled={!ready || undefined}
-                        className={cn(!ready && 'cursor-not-allowed opacity-50')}
+                        className={cn(!ready && 'cursor-not-allowed opacity-disabled')}
                         onClick={ready ? onSend : undefined}
                     >
                         <ArrowUp aria-hidden />

@@ -152,7 +152,7 @@ export function UptimeBar({
                 role="img"
                 aria-label={overall === null ? label : `${label}: ${words.uptime(format(overall))}`}
                 tabIndex={0}
-                className="flex h-7 gap-px rounded-mini outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                className="flex h-7 gap-px rounded-mini outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                 onKeyDown={move}
                 onBlur={() => setActive(null)}
                 onPointerLeave={() => setActive(null)}

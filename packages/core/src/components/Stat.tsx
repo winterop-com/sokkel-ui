@@ -82,7 +82,7 @@ export function Stat({
                 <Cover
                     {...(href !== undefined ? { href } : { type: 'button' as const, onClick: onSelect })}
                     className={cn(
-                        'absolute inset-0 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                        'absolute inset-0 outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
                         tile && 'rounded-surface',
                     )}
                 >

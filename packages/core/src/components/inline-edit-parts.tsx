@@ -248,7 +248,7 @@ export function InlineEditor({
                     look === 'field' && 'min-h-20',
                     // In a cell the text area grows down over the rows under it, from the cell's own height.
                     look === 'cell' &&
-                        'absolute inset-x-0 top-0 z-10 min-h-full rounded-none border-0 bg-field px-3 py-2 ring-2 ring-ring ring-inset focus-visible:ring-2',
+                        'absolute inset-x-0 top-0 z-10 min-h-full rounded-none border-0 bg-field px-3 py-2 ring-2 ring-ring ring-inset focus-visible:ring-focus',
                     look === 'title' && cn(SHAPE.title, 'min-h-0'),
                     end && 'pr-9',
                     edge,

@@ -86,7 +86,7 @@ export function ShowMore({
                         type="button"
                         aria-expanded={open}
                         onClick={toggle}
-                        className="self-start rounded-mini text-sm font-medium outline-none hover:underline hover:underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        className="self-start rounded-mini text-sm font-medium outline-none hover:underline hover:underline-offset-2 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring"
                     >
                         {open ? words.less : words.more}
                     </button>

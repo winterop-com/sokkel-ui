@@ -94,7 +94,7 @@ export interface TextLinkButtonProps
 
 export type TextLinkProps = TextLinkAnchorProps | TextLinkButtonProps
 
-const BASE = 'rounded-mini underline-offset-2 outline-none focus-visible:outline-2 focus-visible:outline-ring'
+const BASE = 'rounded-mini underline-offset-2 outline-none focus-visible:outline-focus focus-visible:outline-ring'
 
 /**
  * A link inside text or a value: a job named in a run's facts, a host in a table, a sentence's way

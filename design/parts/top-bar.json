@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "top-bar",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "The thin bar over the content: a search field at its start, the trail to the current screen, the button that opens the command palette, and the screen's actions at its end. On a phone the trail keeps its last crumb and the palette's button is an icon.",
     "sources": {
         "sokkel-ui": [
@@ -140,7 +140,7 @@
             "note": "The bar's start pad in a desktop window where no rail head leaves the room."
         },
         "phoneBelow": {
-            "value": 768,
+            "value": "breakpoint-md",
             "note": "The md breakpoint: below it the last crumb alone, the palette as an icon, the search field gone."
         }
     },

@@ -83,8 +83,8 @@ function QuestionnaireChoice({ children, className, ...props }: QuestionnaireCho
         <QuestionnairePrimitive.Choice
             data-slot="questionnaire-choice"
             className={cn(
-                'group/questionnaire-choice relative flex min-h-11 cursor-pointer items-start gap-2.5 rounded-control border border-input bg-transparent px-3 py-2.5 text-start text-sm transition-colors outline-none select-none hover:bg-hover has-[>input:focus-visible]:outline-2 has-[>input:focus-visible]:outline-offset-2 has-[>input:focus-visible]:outline-ring has-[>input:focus-visible]:outline-solid data-invalid:border-critical/80 dark:bg-input/20 data-checked:border-primary/40 data-checked:bg-muted dark:data-checked:bg-muted',
-                'data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50',
+                'group/questionnaire-choice relative flex min-h-11 cursor-pointer items-start gap-2.5 rounded-control border border-input bg-transparent px-3 py-2.5 text-start text-sm transition-colors outline-none select-none hover:bg-hover has-[>input:focus-visible]:outline-focus has-[>input:focus-visible]:outline-offset-focus has-[>input:focus-visible]:outline-ring has-[>input:focus-visible]:outline-solid data-invalid:border-critical/80 dark:bg-input/20 data-checked:border-primary/40 data-checked:bg-muted dark:data-checked:bg-muted',
+                'data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-disabled',
                 className,
             )}
             {...props}
@@ -135,7 +135,7 @@ function QuestionnaireInput({ className, ...props }: QuestionnaireInputProps) {
             <QuestionnairePrimitive.Input
                 data-slot="questionnaire-input"
                 className={cn(
-                    'h-8 min-h-11 w-full min-w-0 rounded-control border border-input bg-transparent px-2.5 py-1 text-base transition-[color,box-shadow,background-color] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 sm:min-h-0 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80',
+                    'h-8 min-h-11 w-full min-w-0 rounded-control border border-input bg-transparent px-2.5 py-1 text-base transition-[color,box-shadow,background-color] outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-disabled sm:min-h-0 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80',
                     'selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground',
                     INVALID_EDGE,
                     className,

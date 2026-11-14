@@ -58,7 +58,7 @@ function ThemeCard({ theme, chosen }: { theme: ThemeOption; chosen: boolean }) {
             value={theme.value}
             data-slot="theme-card"
             className={cn(
-                'flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-surface border text-left transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                'flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-surface border text-left transition-colors outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring',
                 chosen ? 'border-primary ring-1 ring-primary' : 'border-border hover:border-border-strong',
             )}
         >

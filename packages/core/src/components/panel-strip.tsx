@@ -88,7 +88,7 @@ export function PanelTabStrip({ tabs, active, open, label, tabId, panelId, onPre
                         aria-controls={panelId}
                         tabIndex={tab.id === active ? 0 : -1}
                         className={cn(
-                            'flex min-h-finger min-w-finger flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                            'flex min-h-finger min-w-finger flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
                             Icon === undefined ? 'text-sm' : 'text-xs',
                             on ? 'bg-secondary font-medium text-foreground' : 'text-muted-foreground hover:bg-hover hover:text-foreground',
                         )}

@@ -188,7 +188,7 @@ const MARK: Record<Exclude<MessageFormat, 'codeBlock'>, [string, string]> = {
 const GROUP_GAP = 2
 
 const ACTION =
-    'flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-pressed:text-foreground data-popup-open:bg-hover data-popup-open:text-foreground [&_svg]:size-4'
+    'flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-disabled aria-pressed:text-foreground data-popup-open:bg-hover data-popup-open:text-foreground [&_svg]:size-4'
 
 export interface MessageComposerActionProps {
     label: string
@@ -434,7 +434,7 @@ export function MessageComposer({
 
     const later = schedule !== undefined || onSendLater !== undefined
     const chevron = cn(
-        'flex h-7 items-center justify-center rounded-r-md border-l px-1 outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        'flex h-7 items-center justify-center rounded-r-md border-l px-1 outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
         empty ? 'border-transparent text-faint' : 'border-primary-foreground/25 bg-primary text-primary-foreground hover:bg-primary/90',
     )
 
@@ -646,7 +646,7 @@ export function MessageComposer({
                         aria-label={words.attach}
                         title={words.attach}
                         onClick={onAttach}
-                        className="mr-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="mr-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground outline-none hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring/50"
                     >
                         <Plus className="size-4" aria-hidden />
                     </button>
@@ -689,7 +689,7 @@ export function MessageComposer({
                         disabled={empty || disabled}
                         onClick={send}
                         className={cn(
-                            'flex h-7 items-center justify-center rounded-l-md px-2 outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                            'flex h-7 items-center justify-center rounded-l-md px-2 outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
                             !later && 'rounded-r-md',
                             empty ? 'text-faint' : 'bg-primary text-primary-foreground hover:bg-primary/90',
                         )}

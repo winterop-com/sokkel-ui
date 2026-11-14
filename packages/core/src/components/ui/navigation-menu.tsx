@@ -38,7 +38,7 @@ function NavigationMenuItem({ className, ...props }: NavigationMenuItemProps) {
 }
 
 const navigationMenuTriggerStyle = cva(
-    'group/navigation-menu-trigger inline-flex h-(--density-control-lg) w-max items-center justify-center rounded-control px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-hover data-popup-open:hover:bg-hover data-open:bg-hover data-open:hover:bg-hover data-open:focus:bg-hover',
+    'group/navigation-menu-trigger inline-flex h-(--density-control-lg) w-max items-center justify-center rounded-control px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-disabled data-popup-open:bg-hover data-popup-open:hover:bg-hover data-open:bg-hover data-open:hover:bg-hover data-open:focus:bg-hover',
 )
 
 export type NavigationMenuTriggerProps = NavigationMenuPrimitive.Trigger.Props
@@ -92,7 +92,7 @@ function NavigationMenuPositioner({
                 align={align}
                 alignOffset={alignOffset}
                 className={cn(
-                    'isolate z-50 h-(--positioner-height) w-(--positioner-width) max-w-(--available-width) transition-[top,left,right,bottom] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none data-[side=bottom]:before:top-[-10px] data-[side=bottom]:before:right-0 data-[side=bottom]:before:left-0',
+                    'isolate z-popover h-(--positioner-height) w-(--positioner-width) max-w-(--available-width) transition-[top,left,right,bottom] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none data-[side=bottom]:before:top-[-10px] data-[side=bottom]:before:right-0 data-[side=bottom]:before:left-0',
                     className,
                 )}
                 {...props}
@@ -112,7 +112,7 @@ function NavigationMenuLink({ className, ...props }: NavigationMenuLinkProps) {
         <NavigationMenuPrimitive.Link
             data-slot="navigation-menu-link"
             className={cn(
-                "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-muted/50 data-active:hover:bg-hover data-active:focus:bg-hover [&_svg:not([class*='size-'])]:size-4",
+                "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-muted/50 data-active:hover:bg-hover data-active:focus:bg-hover [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             {...props}

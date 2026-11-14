@@ -675,7 +675,7 @@ export function SignIn({
                                     <button
                                         type="button"
                                         disabled={busy}
-                                        className="rounded-mini text-primary-ink underline-offset-2 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+                                        className="rounded-mini text-primary-ink underline-offset-2 outline-none hover:underline focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring disabled:opacity-disabled"
                                         onClick={() => {
                                             setAsked(true)
                                             onChangeServer?.()

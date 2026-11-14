@@ -187,7 +187,7 @@ export function Position({
                     barWidth={broad ? 4 : 3}
                     barGap={2}
                     barRadius={broad ? 2 : 1}
-                    className="min-w-0 flex-1 aria-disabled:opacity-50"
+                    className="min-w-0 flex-1 aria-disabled:opacity-disabled"
                 />
             )}
             <span className={cn(time, 'shrink-0', tone === 'overlay' && 'text-terminal-muted')}>{formatRemaining(at, duration)}</span>

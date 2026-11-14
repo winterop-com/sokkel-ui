@@ -115,7 +115,7 @@ function Groups({
                                     type="button"
                                     aria-current={example.id === chosen ? 'true' : undefined}
                                     onClick={() => onChoose(example)}
-                                    className="flex w-full min-w-0 flex-col gap-0.5 rounded-control px-2 py-1.5 text-left outline-none hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid aria-current:bg-accent aria-current:text-accent-foreground"
+                                    className="flex w-full min-w-0 flex-col gap-0.5 rounded-control px-2 py-1.5 text-left outline-none hover:bg-hover focus-visible:outline-focus focus-visible:-outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid aria-current:bg-accent aria-current:text-accent-foreground"
                                 >
                                     {example.label !== undefined && <span className="truncate text-sm">{example.label}</span>}
                                     {example.code !== undefined && (

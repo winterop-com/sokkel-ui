@@ -165,7 +165,7 @@ export function RelativeTime({
                         dateTime={when.toISOString()}
                         tabIndex={0}
                         className={cn(
-                            'rounded-mini whitespace-nowrap tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                            'rounded-mini whitespace-nowrap tabular-nums outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring',
                             className,
                         )}
                     />

@@ -114,7 +114,7 @@ export function TimeList({ value, times, format, disabled, onPick, label, autoFo
                     disabled={!open(time)}
                     onClick={() => onPick(time)}
                     className={cn(
-                        'flex h-8 w-full shrink-0 items-center rounded-md px-2 text-left text-sm tabular-nums outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50',
+                        'flex h-8 w-full shrink-0 items-center rounded-md px-2 text-left text-sm tabular-nums outline-none hover:bg-hover focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-disabled',
                         time === chosen && 'bg-secondary font-medium',
                     )}
                 >

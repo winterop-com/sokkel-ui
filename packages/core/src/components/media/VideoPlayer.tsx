@@ -1112,7 +1112,7 @@ export function VideoPlayer({
             {cue !== '' && (
                 <div
                     className={cn(
-                        'pointer-events-none absolute inset-x-0 z-1 flex justify-center px-4 transition-[bottom] duration-200',
+                        'pointer-events-none absolute inset-x-0 z-1 flex justify-center px-4 transition-[bottom] duration-base',
                         shown ? 'bottom-16' : 'bottom-[max(1rem,2.5cqw)]',
                     )}
                 >
@@ -1165,7 +1165,7 @@ export function VideoPlayer({
                 ref={controls}
                 inert={covered}
                 className={cn(
-                    'absolute inset-x-0 bottom-0 bg-linear-to-t from-terminal/90 via-terminal/55 to-transparent px-2 pt-10 pb-1.5 transition-opacity duration-200 @lg:px-3',
+                    'absolute inset-x-0 bottom-0 bg-linear-to-t from-terminal/90 via-terminal/55 to-transparent px-2 pt-10 pb-1.5 transition-opacity duration-base @lg:px-3',
                     shown ? 'opacity-100' : 'pointer-events-none opacity-0',
                 )}
                 onPointerEnter={() => {

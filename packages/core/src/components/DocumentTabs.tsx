@@ -120,7 +120,7 @@ export function DocumentTabs({ tabs, active, onActiveChange, onClose, end, class
                                 aria-selected={shown}
                                 tabIndex={shown || (active === null && index === 0) ? 0 : -1}
                                 className={cn(
-                                    'flex h-full min-w-0 flex-1 items-center gap-1.5 ps-3 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                    'flex h-full min-w-0 flex-1 items-center gap-1.5 ps-3 outline-none focus-visible:ring-focus focus-visible:ring-ring focus-visible:ring-inset',
                                     onClose === undefined ? 'pe-3' : 'pe-1',
                                 )}
                                 onClick={() => onActiveChange(tab.id)}

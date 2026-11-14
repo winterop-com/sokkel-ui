@@ -2142,7 +2142,7 @@ export function DataTable<T>({
                 }}
                 // The button's own keys press it rather than moving the active row.
                 onKeyDown={(event) => event.stopPropagation()}
-                className="mr-1 flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="mr-1 flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring/50"
             >
                 <ChevronRightIcon className={cn('size-3.5 transition-transform', !head.folded && 'rotate-90')} />
             </button>
@@ -2642,7 +2642,7 @@ export function DataTable<T>({
                     'group/card relative min-w-0 overflow-hidden rounded-surface [&>*:first-child]:h-full',
                     pressable && 'cursor-pointer',
                     chosen ? 'ring-2 ring-primary' : isOpened && 'ring-2 ring-ring/60',
-                    'group-focus-visible/table:data-active:ring-2 group-focus-visible/table:data-active:ring-ring',
+                    'group-focus-visible/table:data-active:ring-focus group-focus-visible/table:data-active:ring-ring',
                     dragged === true && 'opacity-40',
                     typeof passedClass === 'string' && passedClass,
                 )}

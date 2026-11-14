@@ -394,7 +394,7 @@ export function Rail({
                 data-collapsed={collapsed || undefined}
                 style={collapsed ? undefined : { width: held.style }}
                 className={cn(
-                    'flex h-full shrink-0 flex-col border-r border-border-strong bg-sidebar text-sidebar-foreground transition-[width] duration-200',
+                    'flex h-full shrink-0 flex-col border-r border-border-strong bg-sidebar text-sidebar-foreground transition-[width] duration-base',
                     collapsed && 'w-[calc(3.5rem+1px)]',
                 )}
             >
@@ -415,7 +415,7 @@ export function Rail({
                                 : renderLink(
                                       { id: 'home', label: name, href: markHref },
                                       head,
-                                      'flex min-w-0 items-center gap-2 rounded-md pe-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                                      'flex min-w-0 items-center gap-2 rounded-md pe-1.5 outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
                                   )}
                             {/* In the drawer it closes the drawer; in the frame it narrows the rail. */}
                             {(drawer !== undefined || collapsible) && (
@@ -556,7 +556,7 @@ function Droppable({ entry, children }: { entry: RailEntry; children: ReactEleme
 
 /** The control at the end of the expanded rail's head: collapse, or close in the shell's drawer. */
 const HEAD_BUTTON =
-    'ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid'
+    'ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid'
 
 /** Covers the rail's edge along its head, where the window's buttons straddle it, in the rail's own ground. */
 const UNDRAWN_EDGE = 'relative after:absolute after:inset-y-0 after:-right-px after:w-px after:bg-sidebar'
@@ -868,7 +868,7 @@ function Strip({
             ? renderLink(
                   { id: 'home', label: name, href: markHref },
                   face,
-                  'rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                  'rounded-md outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
               )
             : face
     return (
@@ -921,7 +921,7 @@ function Strip({
 
 function stripClass(active: boolean): string {
     return cn(
-        'group/entry flex flex-col items-center gap-0.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        'group/entry flex flex-col items-center gap-0.5 rounded-md outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
         active ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
     )
 }

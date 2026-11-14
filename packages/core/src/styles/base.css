@@ -41,14 +41,27 @@
 }
 
 /*
- * A scroller's thin, stable track: the room for its bar is kept whether or not it scrolls, so a box
- * beside it with the same utility (and no scrolling of its own) ends at the same right edge, and its
- * thumb is drawn in the scroll area's line color.
+ * A scroller's bar, `--scrollbar-width` wide on a solid track: the room for it is kept whether or not
+ * the content scrolls, so a box beside it with the same utility (and no scrolling of its own) ends at
+ * the same right edge. The thumb is drawn in the scroll area's line color on the scroll track.
+ * Chromium and WebKit take the width from the scroll bar's own pseudo-elements, which they ignore
+ * once `scrollbar-width` or `scrollbar-color` is set, so those are set only where the pseudo-elements
+ * are not known (Firefox), which draws its own thin bar in the same colors.
  */
 @utility scroller-thin {
-    scrollbar-width: thin;
     scrollbar-gutter: stable;
-    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+    &::-webkit-scrollbar {
+        width: var(--scrollbar-width);
+        height: var(--scrollbar-width);
+        background-color: var(--scroll-track);
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: var(--scroll-thumb);
+    }
+    @supports not selector(::-webkit-scrollbar) {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+    }
 }
 
 @layer base {
@@ -116,7 +129,7 @@
     [data-fullscreen='window'] {
         position: fixed !important;
         inset: 0 !important;
-        z-index: 50 !important;
+        z-index: var(--layer-dialog) !important;
         width: auto !important;
         height: auto !important;
         min-width: 0 !important;

@@ -52,7 +52,8 @@ import { TopBar, TOP_BAR_WORDS, type TopBarProps } from '@winterop-com/sokkel-ui
  * against what can be read from the components without a browser: drawn by React on the server, or
  * read from their sources. For each part:
  *
- *   words     every word the spec lists is the component's English default, and every default is in the spec
+ *   words     every word the spec lists is the component's English default, and every default is in the spec;
+ *             a word said as a function says what each of the spec's samples says (zero, one, many, each value it interpolates)
  *   options   each option's values are the component's variant keys or prop values, no more and no fewer
  *   sizes     each size's lengths are the tokens and steps its classes use (heights by density token)
  *   paints    each state's ground, edge, ink, rule, ring, radius, text and opacity are the classes the
@@ -135,6 +136,7 @@ interface Spec {
     pieces?: Record<string, Record<string, Paint>>
     keyboard: { keys: string[]; does: string; when?: string }[]
     words: Record<string, string | { one: string; other: string }>
+    samples?: Record<string, { with: Record<string, string | number | boolean>; says: string }[]>
     routes?: Record<string, string>
     drift?: { renderer: string; what: string; spec: string; today: string }[]
 }
@@ -348,6 +350,9 @@ const lengthOf =
         return prefix === undefined ? undefined : length(name.slice(prefix.length))
     }
 
+/** The ring widths the theme names (`ring-focus`, `outline-focus`), by the token each stands for. */
+const RING_WIDTHS: Record<string, string> = { focus: 'focus-ring-width', invalid: 'invalid-ring-width' }
+
 const READ = {
     ground: prefixed('bg-'),
     edge: prefixed('border-'),
@@ -361,10 +366,14 @@ const READ = {
         if (name === 'ring' || name === 'outline') return '1'
         const inset = /^shadow-\[inset_(\d+)px_0_0_var\(--[a-z0-9-]+\)\]$/.exec(name)
         if (inset !== null) return inset[1]
+        const token = /^(?:ring|outline)-(focus|invalid)$/.exec(name)?.[1]
+        if (token !== undefined) return RING_WIDTHS[token]
         return /^(?:ring|outline)-(\d+)$/.exec(name)?.[1]
     },
-    ringOffset: (name: string) => /^(?:ring|outline)-offset-(\d+)$/.exec(name)?.[1],
+    ringOffset: (name: string) =>
+        /^(?:ring|outline)-offset-focus$/.test(name) ? 'focus-ring-offset' : /^(?:ring|outline)-offset-(\d+)$/.exec(name)?.[1],
     opacity: (name: string) => {
+        if (name === 'opacity-disabled') return 'disabled-opacity'
         const match = /^opacity-(\d+)$/.exec(name)
         return match === null ? undefined : String(Number(match[1]) / 100)
     },
@@ -1054,6 +1063,13 @@ const numberIn = (text: string, pattern: RegExp, unit: 'px' | 'step' | 'rem' = '
     return String(Number(found) * (unit === 'step' ? 4 : unit === 'rem' ? 16 : 1))
 }
 
+/** The motion token a `duration-<name>` class in a source names (`duration-fast` is motion-fast), or a plain number of ms. */
+const durationIn = (text: string, pattern: RegExp) => {
+    const found = pattern.exec(text)?.[1]
+    if (found === undefined) return undefined
+    return /^\d+$/.test(found) ? found : `motion-${found}`
+}
+
 /** A class's length on an element, read with one of the length readers. */
 const lengthOn = (element: El | undefined, read: Reader) => (element === undefined ? undefined : resolve([classesOf(element)], [], read))
 
@@ -1433,7 +1449,7 @@ const RAIL_ADAPTER: Adapter = {
                     return rem === undefined ? undefined : String(Number(rem) * 16)
                 },
                 trafficLights: () => (/ps-\(--spacing-traffic-lights\)/.test(RAIL) ? 'spacing-traffic-lights' : undefined),
-                widthEase: () => numberIn(RAIL, /transition-\[width\] duration-(\d+)/),
+                widthEase: () => durationIn(RAIL, /transition-\[width\] duration-(\w+)/),
             }),
         ]
     },
@@ -1564,10 +1580,12 @@ const TOP_BAR_ADAPTER: Adapter = {
             panelToggleRoom: () => numberIn(shellSource, /!stripping && 'pr-(\d+)'/, 'step'),
             trafficLights: () =>
                 /lights && 'ps-\(--spacing-traffic-lights\)/.test(source('components/AppBar.tsx')) ? 'spacing-traffic-lights' : undefined,
-            phoneBelow: () => {
-                const below = /MOBILE_QUERY = '\(max-width: (\d+)px\)'/.exec(source('hooks/use-mobile.ts'))?.[1]
-                return below === undefined || !/max-md:hidden/.test(TOP_BAR) ? undefined : String(Number(below) + 1)
-            },
+            // The phone query stands one px under the md breakpoint, which tokens.json defines for both the classes and the script.
+            phoneBelow: () =>
+                /MOBILE_QUERY = `\(max-width: \$\{String\(BREAKPOINTS\.md - 1\)\}px\)`/.test(source('hooks/use-mobile.ts')) &&
+                /max-md:hidden/.test(TOP_BAR)
+                    ? 'breakpoint-md'
+                    : undefined,
         })
     },
 }
@@ -2130,7 +2148,7 @@ const SELECT_ADAPTER: Adapter = {
                         ),
                         READ.square,
                     ),
-                listEase: () => numberIn(SELECT_LIST.list, /duration-(\d+)/),
+                listEase: () => durationIn(SELECT_LIST.list, /duration-(\w+)/),
             }),
         ]
     },
@@ -2295,7 +2313,7 @@ const DROPDOWN_MENU_ADAPTER: Adapter = {
                 separatorGap: () => on(MENU.separator[0], lengthOf('my-')),
                 submenuMinWidth: () => on(MENU.submenu[0], lengthOf('min-w-')),
                 submenuGap: () => defaultIn(DROPDOWN, 'function DropdownMenuSubContent(', 'sideOffset'),
-                openEase: () => numberIn(MENU.popup[0], /duration-(\d+)/),
+                openEase: () => durationIn(MENU.popup[0], /duration-(\w+)/),
             }),
         ]
     },
@@ -2448,7 +2466,7 @@ const DIALOG_ADAPTER: Adapter = {
                     inset('top') === inset('right') ? inset('top') : `${String(inset('top'))} down, ${String(inset('right'))} in`,
                 closeRoom: () => numberIn(DIALOG_SHELL, /parts\.close \? 'pr-(\d+)'/, 'step'),
                 phoneBelow: () => belowSm(DIALOG_PARTS.sheet),
-                openEase: () => numberIn(DIALOG_PARTS.box, /duration-(\d+)/),
+                openEase: () => durationIn(DIALOG_PARTS.box, /duration-(\w+)/),
             }),
         ]
     },
@@ -3011,6 +3029,13 @@ function wordChecks(spec: Spec, adapter: Adapter): Check[] {
             else {
                 checks.push(check(`${name}.one`, filled(wanted.one, { count: 1 }), say({ ...FILL, count: 1 })))
                 checks.push(check(`${name}.other`, filled(wanted.other, {}), say(FILL)))
+            }
+            // A word said as a function is called with each sample's values: zero, one and many, and what it interpolates.
+            for (const sample of spec.samples?.[key] ?? []) {
+                const values = Object.fromEntries(
+                    Object.entries(sample.with).map(([slot, value]) => [slot, typeof value === 'boolean' ? String(value) : value]),
+                )
+                checks.push(check(`${name} with ${JSON.stringify(sample.with)}`, sample.says, say({ ...FILL, ...values })))
             }
         }
     }

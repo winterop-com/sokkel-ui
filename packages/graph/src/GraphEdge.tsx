@@ -193,7 +193,7 @@ export function GraphEdge({
                             const at = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY })
                             onInsert({ id, source, target }, { clientX: event.clientX, clientY: event.clientY, ...at })
                         }}
-                        className="nodrag nopan pointer-events-auto absolute flex size-4 items-center justify-center rounded-full border border-border-strong bg-card text-muted-foreground outline-none group-data-graph-connecting/graph:hidden hover:border-ring hover:bg-ring hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        className="nodrag nopan pointer-events-auto absolute flex size-4 items-center justify-center rounded-full border border-border-strong bg-card text-muted-foreground outline-none group-data-graph-connecting/graph:hidden hover:border-ring hover:bg-ring hover:text-background focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring"
                         style={{ transform: `translate(-50%, -50%) translate(${String(labelAt.x)}px, ${String(labelAt.y)}px)` }}
                     >
                         <Plus className="size-2.5" aria-hidden />

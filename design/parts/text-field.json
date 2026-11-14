@@ -115,7 +115,7 @@
             "value": 320,
             "note": "min(320, window width - 32); opens below the mark, aligned to its end, 6 away; padding 12, 12 between issues."
         },
-        "phoneBelow": 768
+        "phoneBelow": "breakpoint-md"
     },
     "states": {
         "rest": {"means": "Empty with its placeholder, or holding a value."},
@@ -131,7 +131,7 @@
         "disabled": {
             "means": "Cannot be used now.",
             "reached": "disabled",
-            "effect": {"opacity": 0.5, "focusable": false, "cursor": "not-allowed"}
+            "effect": {"opacity": "disabled-opacity", "focusable": false, "cursor": "not-allowed"}
         },
         "readOnly": {
             "means": "Shows a value that cannot be changed here. No look of its own today; focusable and selectable.",
@@ -147,11 +147,8 @@
             "reached": "focus on an invalid control",
             "on": "any",
             "status": "today",
-            "effect": {
-                "piece": "control",
-                "ring": {"color": "critical/20", "width": 3, "dark": {"color": "critical/40"}}
-            },
-            "sokkel-ui": "The primitive draws aria-invalid:focus-visible:ring-3, the ring only on focus, as ISSUE_EDGE states; src/rules.test.ts fails a ring drawn at rest."
+            "effect": {"piece": "control", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}},
+            "sokkel-ui": "The primitive draws aria-invalid:focus-visible:ring-invalid ring-invalid-ring, the ring only on focus, as ISSUE_EDGE states; src/rules.test.ts fails a ring drawn at rest."
         },
         "warning": {
             "means": "The worst issue is a warning: allowed, but worth a look.",
@@ -189,7 +186,7 @@
                 "radius": "radius-control"
             },
             "focus": {"edge": "ring"},
-            "disabled": {"ground": "input/50", "opacity": 0.5, "dark": {"ground": "input/80"}},
+            "disabled": {"ground": "input/50", "opacity": "disabled-opacity", "dark": {"ground": "input/80"}},
             "invalid": {"edge": "critical/80"},
             "invalid+focus": {"edge": "critical"},
             "warning": {"edge": "warning/80"},
@@ -204,7 +201,7 @@
             "warning": {"ink": "warning-ink"},
             "hover": {"ground": "hover"},
             "issueOpen": {"ground": "hover"},
-            "focus": {"ring": {"color": "ring/50", "width": 2}}
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
         },
         "issuePopover": {
             "rest": {
@@ -242,6 +239,10 @@
         "issueWarning": "Warning: ",
         "errors": {"one": "{count} error", "other": "{count} errors"},
         "warnings": {"one": "{count} warning", "other": "{count} warnings"}
+    },
+    "samples": {
+        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1200 errors"}],
+        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1200 warnings"}]
     },
     "appText": {
         "label": "Required.",

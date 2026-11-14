@@ -175,7 +175,7 @@ export function MonthGrid<E extends CalendarEvent>({
                                 <button
                                     type="button"
                                     aria-label={day.toDateString()}
-                                    className="absolute inset-0 z-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                                    className="absolute inset-0 z-0 outline-none focus-visible:ring-focus focus-visible:ring-ring focus-visible:ring-inset"
                                     onClick={() => onSelectDay(day)}
                                 />
                             )}

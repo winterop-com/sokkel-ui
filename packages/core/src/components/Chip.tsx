@@ -59,7 +59,7 @@ const SIZE: Record<ChipSize, string> = {
 /** Where a chip's menu lines up with the chip. */
 export type ChipMenuAlign = 'start' | 'center' | 'end'
 
-const RING = 'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid'
+const RING = 'focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid'
 
 export interface ChipWords {
     /** The remove button's name and tooltip, or a function of the chip's words ("Remove harbor"). */

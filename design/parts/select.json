@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "select",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "One value chosen from a list: a trigger that shows the chosen option, or the placeholder, with a chevron at its end, and the list it opens: rows with an optional lead (an icon, or a theme's swatch), the label, a quiet detail at the row's end or under the label, and a check on the chosen one; groups under labels, separators between them, and arrows that scroll a long list. As a field it wears the text field's frame (parts/text-field): the label, the help and the issue mark.",
     "sources": {
         "sokkel-ui": [
@@ -166,8 +166,8 @@
         "swatchGap": {"value": 8, "note": "Between the swatch and the label, in the row and in the trigger."},
         "swatchDot": 6,
         "listEase": {
-            "value": 100,
-            "note": "ms the list fades and zooms in over, as far as motion allows; none while it is laid over the trigger. No motion token yet."
+            "value": "motion-fast",
+            "note": "How long the list fades and zooms in, as far as motion allows; none while it is laid over the trigger."
         }
     },
     "states": {
@@ -202,7 +202,7 @@
         "disabled": {
             "means": "Cannot be used now: the whole select, or one option that is shown but cannot be chosen.",
             "reached": "disabled, or an option's disabled",
-            "effect": {"opacity": 0.5, "focusable": false, "cursor": "not-allowed"},
+            "effect": {"opacity": "disabled-opacity", "focusable": false, "cursor": "not-allowed"},
             "sokkel-ui": "The trigger: disabled:opacity-50 disabled:cursor-not-allowed. A row: data-disabled:opacity-50, no pointer events."
         },
         "readOnly": {
@@ -238,10 +238,7 @@
             "focus": {"edge": "ring", "ring": {"color": "ring", "width": 1}},
             "open": {"note": "No look of its own: the list is what shows it."},
             "invalid": {"edge": "critical/80"},
-            "invalid+focus": {
-                "edge": "critical",
-                "ring": {"color": "critical/20", "width": 3, "dark": {"color": "critical/40"}}
-            }
+            "invalid+focus": {"edge": "critical", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}}
         },
         "quiet": {
             "rest": {
@@ -257,10 +254,7 @@
             "open": {"ground": "hover"},
             "focus": {"edge": "none", "ring": {"color": "ring", "width": 1}},
             "invalid": {"edge": "critical/80"},
-            "invalid+focus": {
-                "edge": "critical",
-                "ring": {"color": "critical/20", "width": 3, "dark": {"color": "critical/40"}}
-            }
+            "invalid+focus": {"edge": "critical", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}}
         }
     },
     "pieces": {
@@ -281,7 +275,7 @@
                 "ink": "accent-foreground",
                 "note": "Its lead, detail and check in accent-foreground too."
             },
-            "disabled": {"opacity": 0.5}
+            "disabled": {"opacity": "disabled-opacity"}
         },
         "lead": {"rest": {"ink": "muted-foreground"}, "highlighted": {"ink": "accent-foreground"}},
         "swatch": {
@@ -346,7 +340,7 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "Base UI's Select. The list is a portal on z-50 and opens on a mouse down; laid over the trigger (alignItemWithTrigger) only for a pointer and only where there is room, else under it, flipping above when there is no room below.",
+            "Base UI's Select. The list is a portal on layer-popover and opens on a mouse down; laid over the trigger (alignItemWithTrigger) only for a pointer and only where there is room, else under it, flipping above when there is no room below.",
             "Focus goes back to the trigger after a keyboard close and nowhere after a pointer close (returnFocusOnKeyboard), so a pressed trigger draws no focus ring.",
             "widest lays the value and every label, unseen and flat, in one grid cell, so the trigger is as wide as the widest.",
             "A hidden input carries the value for a form.",

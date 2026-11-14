@@ -260,7 +260,7 @@ export function SortableItem({ id, as: Tag = 'div', handle: by = 'grip', ref, cl
                 className={cn(
                     sortable.isDragging && 'opacity-40',
                     by === 'item' &&
-                        'cursor-grab touch-manipulation outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid active:cursor-grabbing',
+                        'cursor-grab touch-manipulation outline-none select-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid active:cursor-grabbing',
                     className,
                 )}
             >

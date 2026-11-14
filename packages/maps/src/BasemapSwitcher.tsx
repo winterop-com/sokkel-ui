@@ -155,7 +155,7 @@ export function BasemapGallery({ basemaps, value, onValueChange, words: given, c
                         aria-checked={chosen}
                         onClick={() => onValueChange(basemap.id)}
                         className={cn(
-                            'flex min-w-0 flex-col gap-1 rounded-md p-1 text-left text-2xs outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring',
+                            'flex min-w-0 flex-col gap-1 rounded-md p-1 text-left text-2xs outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring',
                             chosen ? 'font-medium text-foreground' : 'text-muted-foreground',
                         )}
                     >

@@ -90,7 +90,7 @@ export function ItemCard({
             {interactive && (
                 <Cover
                     {...(href !== undefined ? { href } : { type: 'button' as const, onClick: onSelect, 'aria-pressed': selected })}
-                    className="absolute inset-0 z-0 rounded-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                    className="absolute inset-0 z-0 rounded-surface outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                 >
                     <span className="sr-only">{typeof heading === 'string' ? heading : code}</span>
                 </Cover>
@@ -120,7 +120,7 @@ export function ItemCard({
                                 <DropdownMenuTrigger
                                     aria-label={words.menu}
                                     title={words.menu}
-                                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                                 >
                                     <MoreHorizontal className="size-4" aria-hidden />
                                 </DropdownMenuTrigger>

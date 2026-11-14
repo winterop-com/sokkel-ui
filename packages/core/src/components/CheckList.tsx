@@ -65,7 +65,7 @@ function Group({ node }: { node: CheckNode }) {
                 type="button"
                 aria-expanded={open}
                 onClick={() => setOpen(!open)}
-                className="flex w-full items-start gap-2.5 px-3 py-2 outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                className="flex w-full items-start gap-2.5 px-3 py-2 outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring focus-visible:ring-inset"
             >
                 <Line check={node.check} status={status} />
                 <ChevronRight

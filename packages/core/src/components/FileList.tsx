@@ -341,7 +341,7 @@ function TileFace({
             {...pressable(onOpen === undefined ? undefined : () => onOpen(entry))}
             className={cn(
                 'group/tile relative flex min-w-0 flex-col overflow-hidden rounded-surface border border-border bg-card text-sm outline-none',
-                onOpen !== undefined && 'cursor-pointer hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring',
+                onOpen !== undefined && 'cursor-pointer hover:border-border-strong focus-visible:ring-focus focus-visible:ring-ring',
                 selected && 'border-primary ring-1 ring-primary',
                 active && !selected && 'border-border-strong ring-1 ring-border-strong',
                 source.enabled && DRAG_GROUP,

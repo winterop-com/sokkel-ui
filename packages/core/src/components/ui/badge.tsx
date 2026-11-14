@@ -6,7 +6,7 @@ import { INVALID_EDGE } from '../../lib/issue-edge'
 import { KIND_CHIP, type KindColor } from '../../lib/kind'
 
 const badgeVariants = cva(
-    `group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-chip border border-transparent px-1.5 py-0.5 text-badge whitespace-nowrap transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:pointer-events-none [&>svg]:size-3! ${INVALID_EDGE}`,
+    `group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-chip border border-transparent px-1.5 py-0.5 text-badge whitespace-nowrap transition-all focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:pointer-events-none [&>svg]:size-3! ${INVALID_EDGE}`,
     {
         variants: {
             variant: {

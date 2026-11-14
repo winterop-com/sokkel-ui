@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "rail",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "The app's places down the window's start: a head with the mark and the name, groups of entries, and a foot cell for the account. Expanded, collapsed to its icons, or a strip of labeled icons; its end edge resizes it, and pulled outward expands a collapsed rail.",
     "sources": {
         "sokkel-ui": [
@@ -229,8 +229,8 @@
             "note": "The head's start pad in a desktop window with its title bar hidden."
         },
         "widthEase": {
-            "value": 200,
-            "note": "ms the width eases over as the rail collapses or expands, as far as motion allows; no motion token yet."
+            "value": "motion-base",
+            "note": "How long the width eases as the rail collapses or expands, as far as motion allows."
         }
     },
     "states": {
@@ -289,11 +289,11 @@
                 "note": "Tracked -0.025em (tracking-tight)."
             }
         },
-        "home": {"rest": {"radius": "radius-md"}, "focus": {"ring": {"color": "ring/50", "width": 2}}},
+        "home": {"rest": {"radius": "radius-md"}, "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}},
         "collapse": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md"},
             "hover": {"ground": "hover", "ink": "foreground"},
-            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
         },
         "groupTitle": {"rest": {"ink": "faint", "text": "text.badge", "note": "Upper case, tracked 0.025em."}},
         "groupRule": {
@@ -382,7 +382,7 @@
             "rest": {"ink": "muted-foreground"},
             "hover": {"ink": "foreground"},
             "active": {"ink": "foreground", "weight": 500},
-            "focus": {"ring": {"color": "ring/50", "width": 2}}
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
         },
         "stripTile": {
             "rest": {"radius": "radius-md"},
@@ -447,7 +447,7 @@
             "Each entry's link and the home link are Link, drawn as the app's LinkProvider says, so a middle click opens a tab; the active entry says aria-current=page.",
             "The collapsed rail's tooltips and the flyouts are Base UI's; a flyout opened from the keyboard focuses its first entry.",
             "An expanded or icon entry has no ring of its own: it takes the browser's focus outline, in ring/50 from base.css.",
-            "The width eases over 200 ms (transition-[width]) as far as the document's motion allows.",
+            "The width eases over motion-base (200 ms, transition-[width]) as far as the document's motion allows.",
             "Reordering loads the drag engine only inside RailDrops; a press that does not move still follows the link, and a finger holds a moment before it drags.",
             "A body stays mounted while hidden, so a tree's open levels and its scroll come back as left.",
             "In a desktop window (Shell desktop) the head is a window drag region (data-window-drag)."

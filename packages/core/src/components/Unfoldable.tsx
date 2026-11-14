@@ -66,7 +66,7 @@ export function Unfoldable({
                         onClick={toggle}
                         className={cn(
                             row,
-                            'cursor-pointer outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset max-md:min-h-finger',
+                            'cursor-pointer outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring focus-visible:ring-inset max-md:min-h-finger',
                         )}
                     >
                         <ChevronRight

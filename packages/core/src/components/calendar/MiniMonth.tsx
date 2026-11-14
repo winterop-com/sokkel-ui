@@ -115,7 +115,7 @@ export function MiniMonth({
                                 aria-pressed={chosen}
                                 aria-current={today ? 'date' : undefined}
                                 className={cn(
-                                    'relative flex size-7 items-center justify-center rounded-md text-xs tabular-nums outline-none hover:bg-foreground/10 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
+                                    'relative flex size-7 items-center justify-center rounded-md text-xs tabular-nums outline-none hover:bg-foreground/10 focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid',
                                     !isSameMonth(day, month) && 'text-faint',
                                     chosen && !today && 'ring-1 ring-primary',
                                     today && 'bg-primary font-medium text-primary-foreground hover:bg-primary',

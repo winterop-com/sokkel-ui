@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "shell",
     "kind": "pattern",
-    "status": "draft",
+    "status": "stable",
     "summary": "The frame every sokkel app has, on every target: the rail of places on the left, a thin top bar with the trail, search and palette, the page with its header as the one thing that scrolls, the settings dialog on its own route over the page, the status foot, and the states a page's read lands in.",
     "sources": {
         "sokkel-ui": ["packages/core/src/components/Shell.tsx", "packages/core/src/hooks/use-overlay-route.ts"],
@@ -72,8 +72,8 @@
         },
         "panelStripTab": {"height": "spacing-shell-tabs"},
         "contentScrollbar": {
-            "width": 10,
-            "note": "Proposed: a solid track 10 wide whose room is kept whether or not the content scrolls, so the page head above ends at the same edge. sokkel-ui draws scrollbar-width: thin with scrollbar-gutter: stable (scroller-thin), at the browser's own thin width; egui's bars float over the content unless its scroll style is set solid at this width."
+            "width": "scrollbar-width",
+            "note": "A solid track scrollbar-width wide (10) whose room is kept whether or not the content scrolls, so the page head above ends at the same edge. sokkel-ui draws it with scroller-thin (the scroll bar's own pseudo-elements, scrollbar-gutter: stable); egui's bars float over the content unless its scroll style is set solid at this width."
         }
     },
     "layout": {
@@ -93,7 +93,7 @@
     },
     "breakpoints": {
         "phone": {
-            "width": "below 768",
+            "width": "below breakpoint-md",
             "formFactors": ["foldable folded 344", "phone 360, 390, 430", "foldable open 690"],
             "does": [
                 "The rail leaves the frame: the top bar's menu button opens it as a drawer over the content, drawn expanded whatever the app holds, with the account in it (parts/rail, state drawer).",
@@ -106,7 +106,7 @@
             ]
         },
         "tablet": {
-            "width": "from 768",
+            "width": "from breakpoint-md",
             "formFactors": ["tablet 768"],
             "does": [
                 "The rail stands in the frame, expanded or collapsed as the app holds it.",
@@ -114,7 +114,7 @@
             ]
         },
         "desktop": {
-            "width": "from 1024",
+            "width": "from breakpoint-lg",
             "formFactors": ["tablet 1024", "desktop 1280, 1440, 1920"],
             "does": [
                 "The side panel is the right column, level with the top bar, open at the start.",
@@ -148,7 +148,7 @@
         "panelToggle": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md"},
             "hover": {"ground": "hover", "ink": "foreground"},
-            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
             "panelOpen": {"ink": "foreground"}
         },
         "page": {"rest": {"ground": "background", "ink": "foreground"}},
@@ -156,7 +156,7 @@
             "rest": {"note": "Not drawn."},
             "drawerOpen": {
                 "ground": "sidebar",
-                "note": "elevation-pop under it and the scrim over the page; it slides in (200 ms in sokkel-ui, no motion token yet)."
+                "note": "elevation-pop under it and the scrim over the page; it slides in over motion-base."
             }
         },
         "contentScrollbar": {
@@ -196,7 +196,7 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "The window's width decides the frame (media queries at 768 and 1024); the page inset decides by the content's own box (a cqi clamp).",
+            "The window's width decides the frame (media queries at breakpoint-md and breakpoint-lg, 768 and 1024); the page inset decides by the content's own box (a cqi clamp).",
             "Links are real anchors through LinkProvider, so a middle click opens a tab; routes are hash routes in the examples.",
             "useOverlayRoute (hooks/use-overlay-route) draws #/settings over the page it was opened from: it reads the app's route and goes back through the history and the hash, or through the app's own back and replace with a client router.",
             "useOverlay makes the page inert under an overlay; useScrollMemory keeps each page's scroll; the safe-area insets pad the frame.",

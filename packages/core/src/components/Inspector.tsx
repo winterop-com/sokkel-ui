@@ -82,7 +82,7 @@ export function Inspector({
     const panel = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: defaultSize, min: minSize, max: maxSize })
     const tool =
-        'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'
+        'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-solid focus-visible:outline-ring'
     return (
         <div className="flex max-w-full shrink-0 self-stretch">
             {resizable && held.changeable && (

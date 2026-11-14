@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "tooltip",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "A short line about a control, in a small inverted box beside it with an arrow toward it: shown once the pointer rests on the control or while it has keyboard focus, and gone when both leave. It names an icon button, says why a control is off (a button's reason), and can add the key that does the same.",
     "sources": {
         "sokkel-ui": [
@@ -123,7 +123,7 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "Base UI's Tooltip: the box is a portal on z-50, shown on hover and on focus-visible, and it moves to the other side of the trigger when there is no room.",
+            "Base UI's Tooltip: the box is a portal on layer-popover, shown on hover and on focus-visible, and it moves to the other side of the trigger when there is no room.",
             "Outside a TooltipProvider a tooltip waits Base UI's 600 ms; sokkel-ui's TooltipProvider sets 0, and its tooltips share one delay group.",
             "TooltipTrigger adds the finger hit area (FINGER_HIT) unless its render element places itself or draws its own ::after (takesFinger).",
             "The box fades and zooms in from the trigger's side.",

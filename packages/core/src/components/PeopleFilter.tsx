@@ -40,7 +40,7 @@ export function PeopleFilter({ people, chosen, onChange, className, words: given
                         aria-pressed={on}
                         title={on ? words.stop(person.name) : words.show(person.name)}
                         className={cn(
-                            'relative rounded-full ring-2 ring-background transition-[opacity,box-shadow] outline-none hover:z-10 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                            'relative rounded-full ring-2 ring-background transition-[opacity,box-shadow] outline-none hover:z-10 focus-visible:z-10 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
                             on && 'z-10 ring-primary',
                             chosen.length > 0 && !on && 'opacity-50 hover:opacity-100',
                         )}

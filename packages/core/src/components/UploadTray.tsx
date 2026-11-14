@@ -67,7 +67,7 @@ function Row({
                 {upload.state === 'failed' && onRetry !== undefined && (
                     <button
                         type="button"
-                        className="flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs text-foreground outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
+                        className="flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs text-foreground outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring"
                         onClick={() => onRetry(upload.id)}
                     >
                         <RotateCw aria-hidden className="size-3" />
@@ -79,7 +79,7 @@ function Row({
                         type="button"
                         aria-label={`${words.cancel} ${upload.name}`}
                         title={words.cancel}
-                        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring"
                         onClick={() => onCancel(upload.id)}
                     >
                         <X aria-hidden className="size-3.5" />
@@ -186,7 +186,7 @@ export function UploadTray({
                     aria-expanded={unfolded}
                     aria-label={unfolded ? words.fold : words.unfold}
                     title={unfolded ? words.fold : words.unfold}
-                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring"
                     onClick={toggle}
                 >
                     <ChevronDown aria-hidden className={cn('size-4 transition-transform', !unfolded && 'rotate-180')} />
@@ -196,7 +196,7 @@ export function UploadTray({
                         type="button"
                         aria-label={words.close}
                         title={words.close}
-                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring"
                         onClick={onClose}
                     >
                         <X aria-hidden className="size-4" />

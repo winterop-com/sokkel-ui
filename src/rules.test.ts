@@ -57,7 +57,29 @@ const RULES: Rule[] = [
     {
         name: 'an invalid ring drawn at rest instead of on focus',
         // A field with an issue is marked at rest by its edge alone; the ring comes with focus, as `ISSUE_EDGE` draws it.
-        pattern: /(?:^|[\s"'`])(?=[^\s"'`]*invalid)(?![^\s"'`]*focus)[^\s"'`]*:ring-[1-9]/,
+        pattern: /(?:^|[\s"'`])(?=[^\s"'`]*invalid)(?![^\s"'`]*focus)[^\s"'`]*:ring-(?:[1-9]|invalid(?![\w-]))/,
+        in: ALL,
+    },
+    {
+        name: 'a focus ring set by hand instead of focus-ring-width and focus-ring-offset',
+        // Keyboard focus draws `outline-focus outline-offset-focus` (or `ring-focus`), so a theme sets its width and offset once.
+        pattern: /(?:^|[\s"'`])[^\s"'`]*focus[^\s"'`]*:-?(?:outline|ring|outline-offset)-2(?![\w./-])/,
+        in: ALL,
+    },
+    {
+        name: 'a disabled look at an opacity set by hand instead of disabled-opacity',
+        pattern: /(?:^|[\s"'`])[^\s"'`]*disabled[^\s"'`]*:opacity-50(?![\w./-])/,
+        in: ALL,
+    },
+    {
+        name: 'a stacking layer set by hand instead of a layer token',
+        // The drawer, dialogs, popups and toasts stand on `z-drawer`, `z-dialog`, `z-popover` and `z-toast`, in that order.
+        pattern: /(?<![\w-])z-(?:40|50)(?![\w-])/,
+        in: ALL,
+    },
+    {
+        name: 'a motion duration set by hand instead of motion-fast or motion-base',
+        pattern: /(?<![\w-])duration-(?:100|200)(?![\w-])/,
         in: ALL,
     },
     {

@@ -1,7 +1,9 @@
 import { useMemo, useSyncExternalStore } from 'react'
 
-/** The window narrower than the `md` breakpoint (48rem): a phone, or a foldable folded. */
-export const MOBILE_QUERY = '(max-width: 767px)'
+import { BREAKPOINTS } from '../lib/breakpoints'
+
+/** The window narrower than the `md` breakpoint (`breakpoint-md`, 768): a phone, or a foldable folded. */
+export const MOBILE_QUERY = `(max-width: ${String(BREAKPOINTS.md - 1)}px)`
 
 /** A media query as a store: its answer now, and a way to hear it change that returns the way to stop. */
 export interface MediaStore {

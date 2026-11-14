@@ -193,7 +193,7 @@ export function StatPanel({
     const interactive = href !== undefined || onSelect !== undefined
     const Cover = href !== undefined ? Link : 'button'
     const tool = cn(
-        'pointer-events-auto flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
+        'pointer-events-auto flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid',
         filled ? 'text-on-fill/80 hover:text-on-fill' : 'text-muted-foreground hover:text-foreground',
     )
     return (
@@ -223,7 +223,7 @@ export function StatPanel({
             {interactive && (
                 <Cover
                     {...(href !== undefined ? { href } : { type: 'button' as const, onClick: onSelect })}
-                    className="absolute inset-0 rounded-surface outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                    className="absolute inset-0 rounded-surface outline-none focus-visible:outline-focus focus-visible:-outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                 >
                     <span className="sr-only">{typeof title === 'string' ? `${title}: ${written}` : written}</span>
                 </Cover>

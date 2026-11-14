@@ -12,7 +12,7 @@ import { Switch } from '../components/ui/switch'
 import { Textarea } from '../components/ui/textarea'
 import { FIELD_EDGE, HOLDS_INVALID_EDGE, INVALID_EDGE, ISSUE_EDGE, ISSUE_WITHIN_EDGE } from './issue-edge'
 
-/** A class's variants and its utility, split on the colons outside brackets: `[&>:first-child]:focus-visible:ring-3`. */
+/** A class's variants and its utility, split on the colons outside brackets: `[&>:first-child]:focus-visible:ring-invalid`. */
 function parts(name: string): { variants: string[]; utility: string } {
     const pieces: string[] = []
     let depth = 0
@@ -52,19 +52,14 @@ const invalidClasses = (html: string) =>
     classesOf([...html.matchAll(/<[^>]*aria-invalid="true"[^>]*>/g)].map(([tag]) => tag).find((tag) => tag.includes('class="')) ?? '')
 
 describe('the issue edge', () => {
-    it('draws the same tints in every form: the edge at 80 at rest and full with focus, a 3px ring at 20, 40 in dark', () => {
+    it('draws the same tints in every form: the edge at 80 at rest and full with focus, the invalid ring with focus', () => {
         for (const [form, classes] of Object.entries(CRITICAL)) {
-            expect(utilities(classes), form).toEqual([
-                'border-critical',
-                'border-critical/80',
-                'ring-3',
-                'ring-critical/20',
-                'ring-critical/40',
-            ])
+            expect(utilities(classes), form).toEqual(['border-critical', 'border-critical/80', 'ring-invalid', 'ring-invalid-ring'])
             for (const name of names(classes)) {
                 const { utility, variants } = parts(name)
                 expect(focused(name), name).toBe(utility !== 'border-critical/80')
-                expect(variants.includes('dark'), name).toBe(utility === 'ring-critical/40')
+                // The invalid ring's token is 20 percent in light and 40 in dark, so no class says dark.
+                expect(variants.includes('dark'), name).toBe(false)
             }
         }
         for (const [form, classes] of Object.entries(WARNING)) {

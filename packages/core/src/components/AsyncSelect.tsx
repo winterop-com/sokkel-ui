@@ -488,7 +488,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     className={cn(
                         'flex min-h-(--density-control) w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
                         invalid && ISSUE_WITHIN_EDGE.critical,
-                        disabled && 'cursor-not-allowed bg-input/50 opacity-50',
+                        disabled && 'cursor-not-allowed bg-input/50 opacity-disabled',
                         className,
                     )}
                 >
@@ -537,7 +537,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     )}
                 </Combobox.InputGroup>
                 <Combobox.Portal>
-                    <Combobox.Positioner anchor={anchorRef} side="bottom" align="start" sideOffset={6} className="isolate z-50">
+                    <Combobox.Positioner anchor={anchorRef} side="bottom" align="start" sideOffset={6} className="isolate z-popover">
                         <Combobox.Popup initialFocus={false} className={popup}>
                             {list}
                             {note}
@@ -567,7 +567,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 className={cn(
                     'flex h-(--density-control) w-full min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring',
                     INVALID_EDGE,
-                    disabled && 'cursor-not-allowed bg-input/50 opacity-50',
+                    disabled && 'cursor-not-allowed bg-input/50 opacity-disabled',
                     className,
                 )}
             >
@@ -590,7 +590,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 {!locked && <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
             </Combobox.Trigger>
             <Combobox.Portal>
-                <Combobox.Positioner side="bottom" align="start" sideOffset={6} className="isolate z-50">
+                <Combobox.Positioner side="bottom" align="start" sideOffset={6} className="isolate z-popover">
                     <Combobox.Popup initialFocus={inputRef} className={popup}>
                         <div className="flex items-center gap-2 border-b border-border px-2.5">
                             <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -649,7 +649,7 @@ function Note<T>({
                 <button
                     type="button"
                     onClick={onRetry}
-                    className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                    className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                 >
                     <RotateCw className="size-3.5" aria-hidden />
                     {words.retry}

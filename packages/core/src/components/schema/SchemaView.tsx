@@ -57,7 +57,7 @@ function Field({
                         aria-expanded={expanded}
                         aria-label={name}
                         onClick={() => setExpanded(!expanded)}
-                        className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid"
+                        className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:text-foreground focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid"
                     >
                         <ChevronRight className={cn('size-3.5 transition-transform', expanded && 'rotate-90')} aria-hidden />
                     </button>

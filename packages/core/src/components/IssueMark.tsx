@@ -82,7 +82,7 @@ export function IssueMark({ issues, open, onOpenChange, className, words }: Issu
                         type="button"
                         aria-label={spoken(issues, { ...ISSUE_WORDS, ...words })}
                         className={cn(
-                            'absolute inset-y-0 right-1 my-auto flex size-(--density-control-sm) items-center justify-center rounded-md outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-hover',
+                            'absolute inset-y-0 right-1 my-auto flex size-(--density-control-sm) items-center justify-center rounded-md outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring/50 data-popup-open:bg-hover',
                             INK[tone],
                             className,
                         )}
@@ -122,7 +122,7 @@ export function IssueMark({ issues, open, onOpenChange, className, words }: Issu
                                                 onOpenChange?.(false)
                                                 action.onClick()
                                             }}
-                                            className="flex items-center gap-1 rounded-sm text-xs text-foreground underline decoration-border-strong underline-offset-3 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-3"
+                                            className="flex items-center gap-1 rounded-sm text-xs text-foreground underline decoration-border-strong underline-offset-3 outline-none hover:decoration-foreground focus-visible:ring-focus focus-visible:ring-ring/50 [&_svg]:size-3"
                                         >
                                             {action.icon}
                                             {action.label}
@@ -187,7 +187,7 @@ export function IssueCount({ critical, warning = 0, list, defaultOpen = false, w
     if (tone === null) return null
     const label = [critical > 0 && words.errors(critical), warning > 0 && words.warnings(warning)].filter(Boolean).join(', ')
     const face = cn(
-        'flex h-(--density-control-sm) min-w-0 items-center rounded-control border text-xs font-medium tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        'flex h-(--density-control-sm) min-w-0 items-center rounded-control border text-xs font-medium tabular-nums outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
         EDGE[tone],
     )
     const figures = (

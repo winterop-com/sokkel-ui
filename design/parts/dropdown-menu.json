@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "dropdown-menu",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "A menu of actions opened from a trigger: rows with an icon, a label and the keys that do the same, groups under labels, separators, check and radio rows with their marks in a gutter at the start, rows that open a submenu beside them, and destructive rows in the destructive ink. As wide as its widest row; every row a finger tall on a phone.",
     "sources": {
         "sokkel-ui": [
@@ -128,10 +128,7 @@
             "value": 0,
             "note": "A submenu stands right at its row's end, 3 above it so its first row is level."
         },
-        "openEase": {
-            "value": 100,
-            "note": "ms the menu fades and zooms in over, as far as motion allows; no motion token yet."
-        }
+        "openEase": {"value": "motion-fast", "note": "How long the menu fades and zooms in, as far as motion allows."}
     },
     "states": {
         "rest": {"means": "A row with nothing over it."},
@@ -189,12 +186,12 @@
                 "ink": "destructive",
                 "dark": {"ground": "destructive/20"}
             },
-            "disabled": {"opacity": 0.5}
+            "disabled": {"opacity": "disabled-opacity"}
         },
         "checkItem": {
             "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body"},
             "highlighted": {"ground": "accent", "ink": "accent-foreground"},
-            "disabled": {"opacity": 0.5}
+            "disabled": {"opacity": "disabled-opacity"}
         },
         "subTrigger": {
             "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body"},
@@ -251,7 +248,7 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "Base UI's Menu, fetched after the page is drawn (deferred-menu, menu-engine): until it is here the trigger is a stand-in that looks and reads the same, and a press, ArrowDown or ArrowUp on it opens the menu once it arrives.",
-            "The menu is a portal on z-50, and moves to the other side of the trigger when there is no room.",
+            "The menu is a portal on layer-popover, and moves to the other side of the trigger when there is no room.",
             "A submenu also opens under a resting pointer.",
             "Focus goes back to the trigger after a keyboard close and nowhere after a pointer close (returnFocusOnKeyboard).",
             "Check and radio rows keep the menu open (Base UI's closeOnClick is off for them); an action closes it.",

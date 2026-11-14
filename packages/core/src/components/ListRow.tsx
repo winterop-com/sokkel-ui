@@ -44,7 +44,7 @@ const FLUSH: Record<ListRowsInset, string> = {
 }
 
 const PRESS =
-    'cursor-pointer outline-none hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid aria-current:bg-accent aria-current:text-accent-foreground'
+    'cursor-pointer outline-none hover:bg-hover focus-visible:outline-focus focus-visible:-outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid aria-current:bg-accent aria-current:text-accent-foreground'
 
 /**
  * One row of a list that is not a table: a title over a muted second line, an optional `icon`

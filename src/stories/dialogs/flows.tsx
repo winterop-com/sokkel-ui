@@ -169,7 +169,7 @@ export function useNewJob(start: number) {
                                     type="button"
                                     aria-pressed={source === one.value}
                                     onClick={() => setSource(one.value)}
-                                    className="min-w-0 flex-1 rounded-control border border-border p-3 text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
+                                    className="min-w-0 flex-1 rounded-control border border-border p-3 text-left outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
                                 >
                                     <Stack as="span" gap="2xs" className="h-full">
                                         <Row as="span" justify="between" className="text-sm font-medium">
