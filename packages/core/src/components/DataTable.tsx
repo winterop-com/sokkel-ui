@@ -50,7 +50,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
-import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnBands, columnName, columnOrder } from '../lib/table'
+import { STACK_EDIT_HEIGHT, TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnBands, columnName, columnOrder } from '../lib/table'
 import type { CellAt, EditedValue, EditOption, EditorKind, EditValue } from '../lib/edit'
 import type { CellEdit, CellFocus, OpenCell, TableEditing, TableEditingContext } from './table-editing'
 import type { RowDropAt, TableRowDrag } from './table-reorder'
@@ -550,6 +550,30 @@ export function stackColumns<C extends { stack?: DataColumn<unknown>['stack'] }>
     }
 }
 
+/**
+ * A stacked card's height in pixels, which the virtualized cards are placed by: its padding and
+ * edge, its title, each primary value over its lines, each labeled line and the line of facts. A
+ * line that holds a field to edit in is `editLine` tall, the height `STACK_EDIT_HEIGHT` draws there,
+ * and so are a compact card's editable title and facts, as their editor opens in their place.
+ */
+export function stackedCardPixels<C extends { stackLines?: number }>(
+    parts: { title?: C; primary: readonly C[]; lines: readonly C[]; facts: readonly C[] },
+    editable: (column: C | undefined) => boolean,
+    compact: boolean,
+    editLine: number,
+): number {
+    const titleEdits = compact && editable(parts.title)
+    const factsEdit = compact && parts.facts.some(editable)
+    return (
+        STACK_PAD * 2 +
+        (titleEdits ? editLine : STACK_TITLE) +
+        parts.primary.reduce((sum, column) => sum + (column.stackLines ?? 2) * STACK_PRIMARY_LINE, 0) +
+        parts.lines.reduce((sum, column) => sum + (editable(column) ? editLine : STACK_LINE), 0) +
+        (parts.facts.length > 0 ? (factsEdit ? editLine : STACK_FACTS) : 0) +
+        2
+    )
+}
+
 /** The room a row's grip takes at the start of its first cell, with `onReorder`. */
 const GRIP = '1.375rem'
 
@@ -968,7 +992,7 @@ const STACK_LINE = 20
 const STACK_PRIMARY_LINE = 22
 /** The height of a stacked card's line of secondary facts, room for an avatar among them. */
 const STACK_FACTS = 24
-/** The height of a stacked card's line that holds a field to edit in, in pixels. */
+/** The height of a stacked card's line that holds a field to edit in, in pixels, until `STACK_EDIT_HEIGHT` is measured. */
 const STACK_EDIT_LINE = 36
 /** The height of a stacked card's title line. */
 const STACK_TITLE = 24
@@ -1610,10 +1634,13 @@ export function DataTable<T>({
     const cardProbe = useRef<HTMLDivElement>(null)
     const widthProbe = useRef<HTMLDivElement>(null)
     const stackProbe = useRef<HTMLDivElement>(null)
+    const editProbe = useRef<HTMLDivElement>(null)
     const [columnsWidth, setColumnsWidth] = useState(768)
     const [stackWidth, setStackWidth] = useState(typeof stackBelow === 'number' ? stackBelow : 576)
     const [rowHeight, setRowHeight] = useState(40)
     const [cardBox, setCardBox] = useState({ width: 192, height: 256 })
+    // A stacked line that edits, measured as it is drawn, so the cards are placed at the height their lines take at this width.
+    const [editLine, setEditLine] = useState(STACK_EDIT_LINE)
     const [view, setView] = useState<ScrollView>({ top: 0, height: 800, width: 1200, full: 0 })
     // The width of the rows' scroll bar, which the head beside it leaves free.
     const [gutter, setGutter] = useState(0)
@@ -1627,6 +1654,7 @@ export function DataTable<T>({
             setCardBox({ width: measureCard.offsetWidth || 192, height: measureCard.offsetHeight || 256 })
             setColumnsWidth(widthProbe.current?.offsetWidth || 768)
             if (stackProbe.current !== null) setStackWidth(stackProbe.current.offsetWidth)
+            setEditLine(editProbe.current?.offsetHeight || STACK_EDIT_LINE)
             setView(viewOf(box))
             setGutter(box.offsetWidth - box.clientWidth)
         }
@@ -1637,6 +1665,7 @@ export function DataTable<T>({
         observer.observe(measureCard)
         if (stackProbe.current !== null) observer.observe(stackProbe.current)
         if (widthProbe.current !== null) observer.observe(widthProbe.current)
+        if (editProbe.current !== null) observer.observe(editProbe.current)
         return () => observer.disconnect()
     }, [])
     const [shownView, setShownView] = useHeld(viewValue, defaultView, onViewChange)
@@ -1651,14 +1680,7 @@ export function DataTable<T>({
     // Compact, an editable title or line of facts is as tall as the editor that opens in its place.
     const titleEdits = compact && editable(stackParts.title)
     const factsEdit = compact && stackParts.facts.some(editable)
-    const cardPixels = stacked
-        ? STACK_PAD * 2 +
-          (titleEdits ? STACK_EDIT_LINE : STACK_TITLE) +
-          stackParts.primary.reduce((sum, column) => sum + (column.stackLines ?? 2) * STACK_PRIMARY_LINE, 0) +
-          stackParts.lines.reduce((sum, column) => sum + (editable(column) ? STACK_EDIT_LINE : STACK_LINE), 0) +
-          (stackParts.facts.length > 0 ? (factsEdit ? STACK_EDIT_LINE : STACK_FACTS) : 0) +
-          2
-        : cardBox.height
+    const cardPixels = stacked ? stackedCardPixels(stackParts, editable, compact, editLine) : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
     const perLine = stacked ? 1 : gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
     const lineHeight = gridView ? cardPixels + GAP : rowHeight
@@ -2494,7 +2516,7 @@ export function DataTable<T>({
                                 role={listed ? 'gridcell' : undefined}
                                 className={cn(
                                     'flex min-w-0 items-center',
-                                    title.stackTitle === 'free' ? 'min-h-6 py-0.5' : titleEdits && !listed ? 'h-9' : 'h-6',
+                                    title.stackTitle === 'free' ? 'min-h-6 py-0.5' : titleEdits && !listed ? STACK_EDIT_HEIGHT : 'h-6',
                                 )}
                             >
                                 <span className={cn('min-w-0', title.stackTitle === 'free' ? 'flex-1' : 'truncate')}>
@@ -2505,7 +2527,7 @@ export function DataTable<T>({
                     {primaryLines(entry, listed)}
                     {open !== undefined && edits !== undefined
                         ? editing?.line(edits, entry, open, listed)
-                        : facts.length > 0 && factsLine(facts, listed, factsEdit ? 'h-9' : 'h-6')}
+                        : facts.length > 0 && factsLine(facts, listed, factsEdit ? STACK_EDIT_HEIGHT : 'h-6')}
                 </div>
                 {menu !== null && <span className="flex h-6 items-center">{menu}</span>}
             </div>
@@ -3164,6 +3186,7 @@ export function DataTable<T>({
                             <div ref={probe} className="h-(--density-row) w-px" />
                             <div ref={cardProbe} style={{ width: cardWidth, height: cardHeight }} />
                             <div ref={widthProbe} style={{ width: rowMin }} />
+                            <div ref={editProbe} className={cn(STACK_EDIT_HEIGHT, 'w-px')} />
                             {stacked && (
                                 <div ref={labelProbe} className="w-max text-xs">
                                     <span className="block w-48" />

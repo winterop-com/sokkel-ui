@@ -7,6 +7,13 @@ export const TABLE_HEAD_TEXT = 'text-head text-table-head-ink [text-transform:va
 /** A table's head row: its ground and the rule under it, from the table-head tokens. */
 export const TABLE_HEAD_ROW = 'border-b border-table-head-line bg-table-head-ground'
 
+/**
+ * The height of a stacked card's line that holds a field to edit in: 36 px, and below `md` a finger
+ * and 4 px, as its field and editor stand a finger tall there. A compact card's editable title and
+ * facts take it too, as their editor opens in their place.
+ */
+export const STACK_EDIT_HEIGHT = 'h-9 max-md:h-[calc(var(--spacing-finger)+--spacing(1))]'
+
 /** A column's name where it stands alone, as in a stacked card's line: its band before its header. */
 export function columnName(column: { header: string; band?: string }): string {
     return column.band === undefined ? column.header : `${column.band} · ${column.header}`

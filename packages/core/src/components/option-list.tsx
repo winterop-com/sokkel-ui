@@ -100,7 +100,7 @@ export function OptionList({
                     data-autofocus
                     placeholder={words.search}
                     aria-label={words.search}
-                    className="h-9 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
+                    className="h-9 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground max-md:min-h-finger md:text-sm"
                 />
             </div>
             <Combobox.Empty className="px-3 py-2 text-sm text-muted-foreground empty:hidden">{words.empty}</Combobox.Empty>

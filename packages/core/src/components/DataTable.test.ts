@@ -23,6 +23,7 @@ import {
     sortRows,
     stackColumns,
     stackDefault,
+    stackedCardPixels,
     stackLabels,
     stacksAt,
     stillAsks,
@@ -287,6 +288,34 @@ describe('stackColumns', () => {
     it('keeps the first column as the title when nothing leads', () => {
         const plain: { id: string; stack?: 'line' }[] = [{ id: 'job' }, { id: 'state' }]
         expect(stackColumns(plain, 'compact').title?.id).toBe('job')
+    })
+})
+
+describe('a stacked card’s height', () => {
+    const columns = [
+        { id: 'job' },
+        { id: 'schedule', edit: true },
+        { id: 'retries', edit: true },
+        { id: 'project' },
+        { id: 'note', stack: 'primary' as const, stackLines: 3 },
+        { id: 'last', stack: 'secondary' as const },
+    ]
+    const editable = (column: { edit?: boolean } | undefined) => column?.edit === true
+    // A card's padding and edge, its title and its three lines of note, around its labeled lines and its facts.
+    const around = 2 * 8 + 2 + 24 + 3 * 22
+
+    it('holds each line that edits at the height its line is drawn: 36, and a finger and 4 below md', () => {
+        const parts = stackColumns(columns, 'labeled')
+        expect(stackedCardPixels(parts, editable, false, 36)).toBe(around + 36 + 36 + 20 + 24)
+        expect(stackedCardPixels(parts, editable, false, 48)).toBe(around + 48 + 48 + 20 + 24)
+    })
+
+    it('holds a compact card’s editable facts at the edit line’s height, and its title once it edits', () => {
+        const parts = stackColumns(columns, 'compact')
+        expect(stackedCardPixels(parts, editable, true, 48)).toBe(around + 48)
+        expect(stackedCardPixels(parts, () => false, true, 48)).toBe(around + 24)
+        // The title's 24 becomes the edit line's 48, the facts staying at 24.
+        expect(stackedCardPixels(parts, (column) => column?.id === 'job', true, 48)).toBe(around - 24 + 48 + 24)
     })
 })
 

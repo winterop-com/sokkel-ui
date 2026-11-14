@@ -111,7 +111,7 @@ export function CapabilityPicker({
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={words.search}
                     aria-label={words.search}
-                    className="h-10 flex-1 text-sm"
+                    className="h-10 flex-1 text-base max-md:min-h-finger md:text-sm"
                 />
             </div>
             <div role="group" aria-label={words.filters} className="flex flex-wrap items-center gap-1.5 border-b border-border px-3 py-2">

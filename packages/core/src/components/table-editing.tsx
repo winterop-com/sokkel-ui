@@ -2,7 +2,7 @@ import { CircleAlertIcon } from 'lucide-react'
 import type { CSSProperties, Dispatch, HTMLAttributes, KeyboardEvent, MouseEvent, ReactNode, RefObject, SetStateAction } from 'react'
 
 import { cn } from '../lib/cn'
-import { columnName } from '../lib/table'
+import { STACK_EDIT_HEIGHT, columnName } from '../lib/table'
 import {
     draftOf,
     EDIT_WORDS,
@@ -427,7 +427,7 @@ export const tableEditing: TableEditing = {
                 key={column.id}
                 role={listed ? 'gridcell' : undefined}
                 data-column={column.id}
-                className={cn('flex min-w-0 items-center gap-2 text-xs', !listed && 'h-9')}
+                className={cn('flex min-w-0 items-center gap-2 text-xs', !listed && STACK_EDIT_HEIGHT)}
                 style={indent}
             >
                 {label && (
@@ -441,7 +441,7 @@ export const tableEditing: TableEditing = {
                 {isOpen(table, entry, column) ? (
                     // The open editor takes the field's place at the field's size, so the card does not move.
                     <span
-                        className="relative flex h-(--density-control) min-w-0 flex-1 text-sm"
+                        className="relative flex h-(--density-control) min-w-0 flex-1 text-sm max-md:min-h-finger"
                         onClick={(event) => event.stopPropagation()}
                     >
                         {contentOf(table, entry, column, 'field')}
@@ -458,7 +458,7 @@ export const tableEditing: TableEditing = {
                             openEdit(table, entry, column)
                         }}
                         className={cn(
-                            'flex h-(--density-control) min-w-0 flex-1 items-center rounded-control border px-2.5 text-sm',
+                            'flex h-(--density-control) min-w-0 flex-1 items-center rounded-control border px-2.5 text-sm max-md:min-h-finger',
                             opens ? 'cursor-text border-input bg-field' : 'border-transparent',
                             column.align === 'end' && 'justify-end tabular-nums',
                             edit?.error != null && 'border-critical/80 bg-critical/8',

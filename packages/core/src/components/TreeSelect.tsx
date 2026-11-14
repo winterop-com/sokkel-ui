@@ -216,7 +216,7 @@ export function TreeSelect({
                         onChange={(event) => setQuery(event.target.value)}
                         placeholder={words.search}
                         aria-label={words.search}
-                        className="h-9 flex-1 text-sm"
+                        className="h-9 flex-1 text-base max-md:min-h-finger md:text-sm"
                     />
                     {value.length > 0 && !optional && (
                         <button

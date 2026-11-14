@@ -2,7 +2,9 @@ import { Combobox } from '@base-ui/react'
 import { Check, ChevronsUpDown, Plus, RotateCw, Search, X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type UIEvent } from 'react'
 
+import { useBusyRelease } from '../hooks/use-busy-release'
 import { cn } from '../lib/cn'
+import { WAIT_SHOWN } from '../lib/durations'
 import { INVALID_EDGE, ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { Spinner } from './ui/spinner'
 
@@ -95,6 +97,34 @@ export function withPage<T>(answer: AsyncAnswer<T>, page: AsyncPage<T>, at: 'fir
 /** Whether the next page should load: there is one, nothing runs, and the first page did not fail. */
 export function wantsMore(answer: AsyncAnswer<unknown>): boolean {
     return answer.answered && answer.next !== undefined && answer.loading === null && answer.failed === null
+}
+
+/**
+ * Whether the list waits for its query's options: no answer yet, asked or still in the pause in
+ * typing, or a first page on its way in place of the options listed. A query too short to ask
+ * waits for nothing.
+ */
+export function waitsForFirst(answer: AsyncAnswer<unknown>, short: boolean): boolean {
+    return !short && (answer.loading === 'first' || !answer.answered)
+}
+
+/**
+ * What the line under the list says, `waiting` for the Searching line's room kept unseen, or null
+ * for no line. Searching shows only once the wait is slow, having run `wait-shown`: before that an
+ * earlier answer of nothing still says nothing matches, and with no answer the line keeps its room
+ * unseen, so an answer that comes sooner draws no Searching and the list does not jump.
+ */
+export function noteOf(
+    answer: AsyncAnswer<unknown>,
+    { short, empty, creating, slow }: { short: boolean; empty: boolean; creating: 'busy' | 'failed' | null; slow: boolean },
+): 'typeMore' | 'createFailed' | 'failed' | 'loadingMore' | 'searching' | 'waiting' | 'empty' | null {
+    if (short) return 'typeMore'
+    if (creating === 'failed') return 'createFailed'
+    if (answer.failed !== null) return 'failed'
+    if (answer.loading === 'more') return 'loadingMore'
+    if (!empty) return null
+    if (slow && waitsForFirst(answer, short)) return 'searching'
+    return answer.answered ? 'empty' : 'waiting'
 }
 
 /** Whether a list is scrolled within `margin` pixels of its end, or is too short to scroll at all. */
@@ -419,13 +449,13 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
             )}
         </Combobox.List>
     )
+    // The wait for a query's options shows once it has run `wait-shown`, timed from the first moment
+    // without an answer across keys typed meanwhile, so an answer that comes sooner draws no wait.
+    const slow = useBusyRelease(open && waitsForFirst(known, short), WAIT_SHOWN)
     const line = (
         <Note
-            answer={known}
-            short={short}
-            empty={items.length === 0}
+            note={noteOf(known, { short, empty: items.length === 0, creating, slow })}
             minQuery={minQuery}
-            creating={creating}
             words={words}
             onRetry={retry}
         />
@@ -442,7 +472,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
     const popup =
         'flex max-h-(--available-height) w-max max-w-[calc(100vw-2rem)] min-w-[max(var(--anchor-width),--spacing(72))] origin-(--transform-origin) flex-col overflow-hidden rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-pop'
     const locked = disabled || readOnly
-    const spinning = (known.loading === 'first' && !short) || creating === 'busy'
+    const spinning = (slow && known.loading === 'first') || creating === 'busy'
 
     const shared = {
         items,
@@ -601,7 +631,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                                 ref={inputRef}
                                 placeholder={words.search}
                                 aria-label={words.search}
-                                className="h-9 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
+                                className="h-9 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground max-md:min-h-finger md:text-sm"
                             />
                             {spinning && <Spinner className="size-3.5 text-muted-foreground" />}
                         </div>
@@ -638,28 +668,22 @@ function Meta({ mono, className, children }: { mono: boolean; className?: string
     )
 }
 
-/** The line under the list: what to type, that a search runs, that nothing matched, that more load, or that it failed. */
-function Note<T>({
-    answer,
-    short,
-    empty,
+/** The line under the list (`noteOf`): what to type, that a search runs, that nothing matched, that more load, or that it failed. */
+function Note({
+    note,
     minQuery,
-    creating,
     words,
     onRetry,
 }: {
-    answer: AsyncAnswer<T>
-    short: boolean
-    empty: boolean
+    note: ReturnType<typeof noteOf>
     minQuery: number
-    creating: 'busy' | 'failed' | null
     words: AsyncSelectWords
     onRetry: () => void
 }) {
     const line = 'flex min-h-9 items-center gap-2 px-3 py-2 text-sm text-muted-foreground'
-    if (short) return <p className={line}>{words.typeMore(minQuery)}</p>
-    if (creating === 'failed') return <p className={cn(line, 'border-t border-border text-critical')}>{words.createFailed}</p>
-    if (answer.failed !== null)
+    if (note === 'typeMore') return <p className={line}>{words.typeMore(minQuery)}</p>
+    if (note === 'createFailed') return <p className={cn(line, 'border-t border-border text-critical')}>{words.createFailed}</p>
+    if (note === 'failed')
         return (
             <div className={cn(line, 'border-t border-border')}>
                 <span className="min-w-0 flex-1 text-critical">{words.failed}</span>
@@ -673,14 +697,15 @@ function Note<T>({
                 </button>
             </div>
         )
-    if (answer.loading === 'more')
+    if (note === 'loadingMore')
         return (
             <p className={cn(line, 'border-t border-border')}>
                 <Spinner className="size-3.5" />
                 {words.loadingMore}
             </p>
         )
-    if ((answer.loading === 'first' || !answer.answered) && empty) return <p className={line}>{words.loading}</p>
-    if (answer.answered && answer.loading === null && empty) return <p className={line}>{words.empty}</p>
+    // Until the wait is slow the Searching line keeps its room unseen, so the list does not jump when it shows.
+    if (note === 'searching' || note === 'waiting') return <p className={cn(line, note === 'waiting' && 'invisible')}>{words.loading}</p>
+    if (note === 'empty') return <p className={line}>{words.empty}</p>
     return null
 }
