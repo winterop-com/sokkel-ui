@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui-dhis2",
-    "version": "0.27.0",
+    "version": "0.28.0",
     "description": "DHIS2's expression languages, for indicators, validation rules, predictors, program rules and program indicators, for sokkel-ui's code editor.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
