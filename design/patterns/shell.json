@@ -7,16 +7,13 @@
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/Shell.tsx",
-            "packages/core/src/components/PageHeader.tsx",
             "packages/core/src/components/SettingsDialog.tsx",
             "packages/core/src/components/settings-parts.tsx",
-            "packages/core/src/components/PageState.tsx",
             "packages/core/src/components/ui/dialog.tsx",
             "packages/core/src/hooks/use-overlay-route.ts"
         ],
         "sokkel-ui-egui": [
-            "crates/core/src/widgets/frame.rs (Shell; Rail, TopBar and StatusLine have their own specs)",
-            "crates/core/src/widgets/page.rs (PageHeader, PageState)",
+            "crates/core/src/widgets/frame.rs (Shell; Rail, TopBar and StatusLine have their own specs, as PageHeader and PageState in page.rs do)",
             "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
         ]
     },
@@ -27,10 +24,9 @@
         "content": "The one scroller. A thin track (contentScrollbar) that keeps its room whether or not it scrolls.",
         "contentScrollbar": "The content's scroll bar: a solid track whose room is kept.",
         "shellHead": "A page header and tabs held above the scroller while the content scrolls.",
-        "pageHeader": "The page's title (its name, else its code), the code under it, a count, a description, meta, an aside picture, and actions with the primary last; actions that do not fit fold into More. No trail: the trail is in the top bar.",
-        "pageTitle": "The page header's title.",
-        "page": "The page's content at the page inset, sections a page gap apart.",
-        "pageState": "What a read landed in, kept distinct: loading, failed, empty, the content.",
+        "pageHeader": "The page's head (parts/page-header): its title, what is known about it, and its actions. Held above the scroller with ShellHead. No trail: the trail is in the top bar.",
+        "page": "The page's content at the page inset, its sections (parts/section) a page gap apart.",
+        "pageState": "What the page's read landed in, in the content's place: loading, failed, empty, or the content (parts/page-state).",
         "panel": "An optional side panel: a right column, a sheet, or tabs in a strip at the foot.",
         "panelToggle": "A side panel's toggle in the window's top-right corner: over the top bar's end while the panel is closed or a sheet, in the panel header's corner while it is a column and open.",
         "foot": "The status line (parts/status-line), one row of fixed height, level with the rail's foot cell so the account and the status read as one bar.",
@@ -140,15 +136,6 @@
         "rest": {"means": "A page shown in the frame."},
         "hover": {"means": "The pointer over the panel toggle.", "reached": "pointer over"},
         "focus": {"means": "Keyboard focus on the panel toggle.", "reached": "Tab", "on": "keyboard"},
-        "loading": {"means": "The page's read is on its way: a spinner and Loading.", "reached": "the page's read"},
-        "failed": {
-            "means": "The read failed: headed by what the server answered (refused, nothing there, not answering), the diagnostic under it, Try again.",
-            "reached": "a refused or unanswered read"
-        },
-        "empty": {
-            "means": "The read came back with nothing: one line, or the app's own empty state with a way to make the first.",
-            "reached": "an empty read"
-        },
         "drawerOpen": {
             "means": "Below 768, the rail drawn as a drawer over the page, the page out of reach.",
             "reached": "the menu button"
@@ -171,9 +158,6 @@
             "panelOpen": {"ink": "foreground"}
         },
         "page": {"rest": {"ground": "background", "ink": "foreground"}},
-        "pageTitle": {
-            "rest": {"ink": "page-title-ink|foreground", "text": "text.page-title", "note": "In typeface-heading."}
-        },
         "drawer": {
             "rest": {"note": "Not drawn."},
             "drawerOpen": {
@@ -189,12 +173,6 @@
                 "radius": "radius-surface",
                 "note": "A foreground/10 hairline round it, over shade/10; its footer on muted/50 under a rule."
             }
-        },
-        "pageState": {
-            "loading": {"ink": "muted-foreground", "note": "A spinner and words.loading."},
-            "failed": {"ground": "card", "edge": "border-strong", "radius": "radius-surface", "mark": "destructive"},
-            "empty": {"ink": "muted-foreground"},
-            "rest": {"note": "The content."}
         },
         "contentScrollbar": {
             "rest": {"ground": "scroll-track", "mark": "scroll-thumb", "note": "The track's ground and the thumb."}
@@ -225,10 +203,7 @@
         "panelTabs": "Panel",
         "openPalette": "Open the command palette",
         "openShortcuts": "Show the keyboard shortcuts",
-        "trail": "Where you are",
         "back": "Back",
-        "more": "More",
-        "moreWays": "More ways",
         "palettePlaceholder": "Search or run a command",
         "settingsTitle": "Settings",
         "settingsSearch": "Search",
@@ -243,13 +218,7 @@
         "settingsResetAll": "Reset every setting to its default?",
         "settingsResetAllDetail": "Every setting in every section goes back to its default.",
         "settingsResetConfirm": "Reset",
-        "cancel": "Cancel",
-        "loading": "Loading",
-        "refused": "The server refused this read",
-        "missing": "Nothing is there",
-        "unreachable": "The server is not answering",
-        "partRefused": "Part of this page could not be read",
-        "retry": "Try again"
+        "cancel": "Cancel"
     },
     "appText": {
         "places": "The app's places are the rail's groups (parts/rail); the palette repeats them.",
@@ -278,7 +247,7 @@
             "renderer": "sokkel-ui-egui",
             "what": "still to build",
             "spec": "This spec.",
-            "today": "As of sokkel-ui-egui 267236c: Shell lays out the Rail, the TopBar and the StatusLine (each with its own spec and drift) with the rail's foot cell level with the status line, PageHeader and PageState, SettingsDialog with appearance settings and setting rows, Dialog, Select and the tooltip, DropdownMenu, and CommandPalette on Mod+K. Working apps run on it (examples/runs, examples/tasks), with settings over the page on Mod+comma and from the rail. Not yet: the drawer below 768, the panel and its toggle, the banner, and settings as a route: egui has no URL, so the dialog is open state the app holds. The page's scroll gutter is 11, where the spec proposes 10."
+            "today": "As of sokkel-ui-egui 267236c: Shell lays out the Rail, the TopBar and the StatusLine (each with its own spec and drift) with the rail's foot cell level with the status line, PageHeader and PageState (each with its own spec and drift), SettingsDialog with appearance settings and setting rows, Dialog, Select and the tooltip, DropdownMenu, and CommandPalette on Mod+K. Working apps run on it (examples/runs, examples/tasks), with settings over the page on Mod+comma and from the rail. Not yet: the drawer below 768, the panel and its toggle, the banner, Section (parts/section), and settings as a route: egui has no URL, so the dialog is open state the app holds. The page's scroll gutter is 11, where the spec proposes 10."
         }
     ]
 }

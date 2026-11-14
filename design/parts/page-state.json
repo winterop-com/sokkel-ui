@@ -1,0 +1,251 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "page-state",
+    "kind": "part",
+    "status": "draft",
+    "summary": "The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and the content. A failure is headed by what the server answered, with its diagnostic and the problems it named under the heading and Try again; a failed read of secondary data is a warning about part of the page. Drawn in a box of its own, or unframed inside a panel.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/PageState.tsx",
+            "packages/core/src/components/ProseText.tsx",
+            "packages/core/src/components/ui/button.tsx"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/page.rs (PageState, PageStateTone, PageStateWords)",
+            "examples/storybook/src/stories/page.rs (Patterns/Page state)"
+        ]
+    },
+    "anatomy": {
+        "frame": "The row a state is drawn in. By default a box of its own on the card's ground that keeps its height in a column; unframed, the same row with no box and a panel's padding, for a state inside a panel (a table's, a section's body).",
+        "spinner": "Loading: a turning ring before the word.",
+        "loadingWord": "Loading: words.loading, announced politely.",
+        "mark": "A failed read: an alert mark at the row's start, level with the heading's first line; a triangle in the warning tone.",
+        "heading": "A failed read's heading, by what the server answered: words.unreachable when no answer came, words.missing for a 404 (an absence, not a refusal), words.partRefused in the warning tone, else words.refused. A plain line, or the page's h1 or a part's h2 (headingLevel). Announced as an alert, politely in the warning tone.",
+        "diagnostic": "The server's own words under the heading, or a sentence the app wrote in their place.",
+        "code": "A backticked part of a written diagnostic or problem: in the code face on a muted chip.",
+        "problems": "Each failure a refusal named, as a problem document's errors, in a bulleted list under the diagnostic.",
+        "retry": "With onRetry: Try again, an outline button with a turning arrow, under the diagnostic.",
+        "message": "Empty: the one line the app gives (emptyMessage), in the frame.",
+        "emptyContent": "Empty with more than a sentence: the app's own empty state (emptyRender), such as a way to make the first one, drawn in the frame's place as given.",
+        "content": "The read came back with something: the content, drawn as given; the state draws nothing of its own."
+    },
+    "options": {
+        "loading": {"type": "boolean", "does": "The read is on its way."},
+        "error": {
+            "type": "node",
+            "does": "What the server said when it refused, or a sentence the app wrote in its place; written as text, its backticked parts are in the code face."
+        },
+        "problems": {
+            "type": "rows",
+            "does": "Each failure a refusal named, listed under the diagnostic, such as a problem document's errors."
+        },
+        "status": {
+            "type": "text",
+            "does": "How the read came back: an HTTP status, or unreachable when no answer came. It picks the heading."
+        },
+        "empty": {"type": "boolean", "default": false, "does": "The read came back with nothing."},
+        "emptyMessage": {"type": "node", "does": "The one line an empty read states."},
+        "emptyRender": {
+            "type": "node",
+            "does": "An empty state that is more than a sentence, drawn in place of the frame."
+        },
+        "onRetry": {"type": "callback", "does": "Reads again after a failure, from Try again under the diagnostic."},
+        "tone": {
+            "values": ["critical", "warning"],
+            "default": "critical",
+            "does": "critical: the page's own read failed. warning: a read of secondary data the page stands without, said in the warning tone, headed as a part of the page that could not be read."
+        },
+        "headingLevel": {
+            "values": ["h1", "h2", "p"],
+            "default": "p",
+            "does": "What a failure's heading is: h1 where the state stands in for a whole page (a detail page whose record failed to load), so the page still has its heading; h2 for a part under the page's own; a plain line otherwise."
+        },
+        "frame": {
+            "type": "boolean",
+            "default": true,
+            "does": "Draws the state in a box of its own; false drops the box, for a state that sits in a panel already."
+        },
+        "children": {"type": "node", "does": "The content, drawn when the read came back with something."}
+    },
+    "sizes": {
+        "frame": {
+            "padX": 16,
+            "padY": 24,
+            "gap": 12,
+            "radius": "radius-surface",
+            "note": "Framed. Its pieces set at the top; loading centers them."
+        },
+        "unframed": {"padX": "density.panel-pad", "padY": 12, "gap": 12, "note": "As in a panel."},
+        "spinner": {"icon": 16},
+        "mark": {"icon": 16, "note": "layout.markTop down from the row's top, level with the heading's first line."},
+        "lines": {"gap": 4, "note": "The heading, the diagnostic and the list of problems."},
+        "column": {"gap": 12, "note": "Between those lines and Try again."},
+        "code": {"padX": 4, "radius": "radius-sm"},
+        "retry": {"height": "density.control-sm", "note": "parts/button at sm, outline, with its icon."}
+    },
+    "layout": {
+        "markTop": {
+            "value": 2,
+            "note": "The mark's top below the row's: its center at 10, level with the heading's first line."
+        },
+        "problemsInset": {
+            "value": 16,
+            "note": "The list's start pad: its discs hang in it, so a wrapped line starts under its own text."
+        }
+    },
+    "states": {
+        "rest": {
+            "means": "The read came back with something: the content is drawn, and the state draws nothing.",
+            "reached": "not loading, no error, not empty"
+        },
+        "loading": {"means": "The read is on its way: a spinner and words.loading.", "reached": "loading"},
+        "failed": {
+            "means": "The read failed: the mark, the heading by what the server answered, the diagnostic and the problems under it, and Try again with onRetry.",
+            "reached": "an error while not loading"
+        },
+        "empty": {
+            "means": "The read came back with nothing: one line, or the app's own empty state. Never drawn while loading.",
+            "reached": "empty, with no error, while not loading"
+        },
+        "warning": {
+            "means": "A failed read of secondary data the page stands without: the warning's wash, edge and mark, headed as a part of the page that could not be read.",
+            "reached": "tone warning, with an error"
+        },
+        "unframed": {
+            "means": "No box of its own: the row padded as a panel's, for a state inside a panel.",
+            "reached": "frame false"
+        }
+    },
+    "pieces": {
+        "frame": {
+            "rest": {"note": "Not drawn: the content stands in its place."},
+            "loading": {
+                "ground": "card",
+                "edge": "border-strong",
+                "ink": "muted-foreground",
+                "radius": "radius-surface",
+                "text": "text.body"
+            },
+            "failed": {"ground": "card", "edge": "border-strong", "radius": "radius-surface", "text": "text.body"},
+            "empty": {
+                "ground": "card",
+                "edge": "border-strong",
+                "ink": "muted-foreground",
+                "radius": "radius-surface",
+                "text": "text.body"
+            },
+            "failed+warning": {"ground": "warning/8", "edge": "warning/35"},
+            "unframed": {"ground": "none", "edge": "none"},
+            "failed+warning+unframed": {
+                "ground": "warning/8",
+                "note": "The warning's wash stays without the box, with no edge (open questions)."
+            }
+        },
+        "spinner": {
+            "rest": {"note": "Drawn only while loading."},
+            "loading": {"ink": "muted-foreground", "note": "It turns, and keeps turning when motion is reduced."}
+        },
+        "mark": {
+            "rest": {"note": "Drawn only for a failed read."},
+            "failed": {"ink": "destructive", "note": "A circled alert."},
+            "failed+warning": {"ink": "warning-ink", "note": "A triangle."}
+        },
+        "heading": {
+            "rest": {"note": "Drawn only for a failed read."},
+            "failed": {
+                "ink": "inherit",
+                "text": "text.action",
+                "note": "The ink around the state: foreground on the page, and on a card or a panel."
+            }
+        },
+        "diagnostic": {
+            "rest": {"note": "Drawn only for a failed read."},
+            "failed": {"ink": "muted-foreground", "text": "text.help", "note": "It breaks a long word."}
+        },
+        "code": {
+            "rest": {"note": "Drawn only in a failed read's words."},
+            "failed": {"ground": "muted", "radius": "radius-sm", "note": "In the code face."}
+        },
+        "problems": {
+            "rest": {"note": "Drawn only for a failed read that names them."},
+            "failed": {
+                "ink": "muted-foreground",
+                "text": "text.help",
+                "note": "A disc before each, the list padded 16 at its start."
+            }
+        },
+        "retry": {
+            "rest": {"note": "Drawn only for a failed read, with onRetry."},
+            "failed": {"note": "parts/button, outline at sm."}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches Try again.", "when": "failed, with onRetry"},
+        {"keys": ["Enter", "Space"], "does": "Reads again.", "when": "Try again has focus"}
+    ],
+    "words": {
+        "loading": "Loading",
+        "refused": "The server refused this read",
+        "missing": "Nothing is there",
+        "unreachable": "The server is not answering",
+        "partRefused": "Part of this page could not be read",
+        "retry": "Try again"
+    },
+    "appText": {
+        "error": "What the server said, or the app's sentence in its place.",
+        "problems": "Each failure the refusal named.",
+        "empty": "The one line an empty read states, or the app's own empty state."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Loading is role=status; a failure is role=alert, or role=status in the warning tone.",
+            "pageStateHeading picks the heading from status and tone; DataTable says its own failed read with it too, as an unframed PageState under its heads (parts/table).",
+            "A string diagnostic or problem is drawn by ProseText, its backticked parts as code.",
+            "The spinner is animate-spin, which motion.css leaves turning when motion is reduced.",
+            "emptyRender and children are drawn as given, with no frame."
+        ],
+        "sokkel-ui-egui": [
+            "The app picks the state by its constructor (loading, refused, missing, unreachable, empty) rather than by an HTTP status; the headings are the same.",
+            "show returns true when Try again was pressed; retry(true) draws it.",
+            "An empty state with more than a sentence is the app's own drawing in the state's place, such as Empty; the content is the app's own drawing too."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "unframed warning",
+            "spec": "Without its box, a warning keeps the warning/8 wash, with no edge.",
+            "today": "As of dfb6079 (page.rs unchanged since b73200b): no ground and no edge."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "problems",
+            "spec": "A bulleted list padded 16 at its start, its lines with nothing between them, a wrapped line starting under its own text.",
+            "today": "Each problem a label of its own after a bullet and two spaces, 4 apart; a wrapped line runs under the bullet."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "code in the diagnostic",
+            "spec": "Backticked parts in the code face on a muted chip, radius-sm, padded 4 across.",
+            "today": "Plain text, the backticks shown."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "retry icon",
+            "spec": "Try again with a turning arrow before the word.",
+            "today": "The word alone."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "mark's place",
+            "spec": "2 below the row's top, its center at 10.",
+            "today": "Centered in a 22 tall slot, its center at 11."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of dfb6079, PageState draws loading, refused, missing, not answering, a part refused and empty, framed or not, in both tones, with the diagnostic, the problems and Try again, and words as fields. Not yet: headingLevel (the heading as the page's h1 or a part's h2 for AccessKit), and the announcements (polite while loading and for a warning, an alert for a failure)."
+        }
+    ]
+}

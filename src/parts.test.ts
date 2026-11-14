@@ -12,10 +12,11 @@ import { FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
-import { PAGE_HEADER_WORDS } from '@winterop-com/sokkel-ui/PageHeader'
-import { PAGE_STATE_WORDS } from '@winterop-com/sokkel-ui/PageState'
+import { PageHeader, PAGE_HEADER_WORDS, type PageHeaderProps } from '@winterop-com/sokkel-ui/PageHeader'
+import { PageState, PAGE_STATE_WORDS, type PageStateProps } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Rail, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
+import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SETTINGS_DIALOG_WORDS } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { Shell, SHELL_WORDS, type ShellProps } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine, type StatusLineProps } from '@winterop-com/sokkel-ui/StatusLine'
@@ -120,6 +121,8 @@ const STYLES = readdirSync(join(CORE, 'styles'))
     .map((name) => readFileSync(join(CORE, 'styles', name), 'utf8'))
     .join('\n')
 const COLORS = new Set([...STYLES.matchAll(/--color-([a-z0-9-]+):/g)].map((match) => match[1]))
+/** Colors set as plain custom properties, with no class of their own: read where a part paints with `var()`, such as a gradient's dots. */
+const RAW_COLORS = new Set([...STYLES.matchAll(/^\s+--([a-z0-9-]+): #[0-9a-f]{3,8};/gm)].map((match) => match[1]))
 const SPACING = new Set([...STYLES.matchAll(/--spacing-([a-z0-9-]+):/g)].map((match) => match[1]))
 /** Each text size and role: its size, line height and weight as tokens.css writes them. */
 const TEXT = new Map<string, { size: string; leading?: string; weight?: string; tracking?: string }>()
@@ -277,7 +280,9 @@ function color(value: string): string | undefined {
     const oklab = /^\[color-mix\(in_oklab,var\(--([a-z0-9-]+)\)_(\d+)%,var\(--([a-z0-9-]+)\)\)\]$/.exec(value)
     if (oklab !== null) return `mix-oklab(${oklab[1]} ${oklab[2]}%, ${oklab[3]})`
     const token = /^([a-z][a-z0-9-]*)(\/\d+)?$/.exec(value)
-    return token !== null && COLORS.has(token[1]) ? value : undefined
+    if (token !== null && COLORS.has(token[1])) return value
+    const raw = /^\(--([a-z0-9-]+)\)$/.exec(value)
+    return raw !== null && RAW_COLORS.has(raw[1]) ? raw[1] : undefined
 }
 
 const prefixed =
@@ -349,9 +354,11 @@ const READ = {
     minWidth: lengthOf('min-w-'),
     padX: lengthOf('px-'),
     padY: lengthOf('py-'),
+    pad: lengthOf('p-'),
     padStart: lengthOf('pl-'),
     padEnd: lengthOf('pr-'),
     gap: lengthOf('gap-'),
+    gapX: lengthOf('gap-x-'),
     square: lengthOf('size-'),
 } satisfies Record<string, Reader>
 
@@ -552,6 +559,8 @@ const SOURCES_FOR_TYPES = [
     source('components/Field.tsx'),
     source('components/Rail.tsx'),
     source('components/StatusLine.tsx'),
+    source('components/Section.tsx'),
+    source('components/PageState.tsx'),
 ]
 
 /** The string values a prop takes, read from its declaration (or the type it names) in a source. */
@@ -1575,6 +1584,295 @@ const STATUS_LINE_ADAPTER: Adapter = {
     keys: {},
 }
 
+// Page header
+
+const PAGE_HEADER = source('components/PageHeader.tsx')
+const RUN = createElement('button', { type: 'button' }, 'Run')
+const header = (props: Partial<PageHeaderProps> = {}) =>
+    draw(PageHeader, {
+        title: 'Nightly export',
+        code: 'nightly-export',
+        count: '5 jobs',
+        description: "Exports the day's orders from harbor to the archive.",
+        meta: 'Owned by grace',
+        trail: [{ label: 'Jobs', href: '#/jobs' }],
+        onBack: () => undefined,
+        actions: RUN,
+        ...props,
+    })
+/** The drawings most checks read, each made once: every line of the title block, and the same with an aside. */
+const HEADERS = once(() => ({ full: header(), aside: header({ aside: 'L' }) }))
+const headerRow = (elements: El[]) => elements.find((element) => classesOf(element).includes('justify-between'))
+const titleBlock = (elements: El[]) => {
+    const row = headerRow(elements)
+    return row === undefined ? undefined : elements.find((element) => element.parent === row)
+}
+const backButton = (elements: El[]) =>
+    elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === PAGE_HEADER_WORDS.back)
+const crumbLink = (elements: El[]) => elements.find((element) => element.tag === 'a' && element.parent?.tag === 'li')
+const headerTitle = (elements: El[]) => elements.find((element) => element.tag === 'h1')
+const headerCode = (elements: El[]) => elements.find((element) => element.tag === 'p' && element.attrs.title === 'nightly-export')
+const headerDescription = (elements: El[]) => elements.find((element) => classesOf(element).includes('max-w-prose'))
+const headerMeta = (elements: El[]) => byText(elements, 'div', 'Owned by grace')
+
+const PAGE_HEADER_ADAPTER: Adapter = {
+    wordObjects: { PAGE_HEADER_WORDS },
+    complete: ['PAGE_HEADER_WORDS'],
+    words: {
+        back: 'PAGE_HEADER_WORDS.back',
+        trail: 'PAGE_HEADER_WORDS.trail',
+        more: 'PAGE_HEADER_WORDS.more',
+        moreWays: 'PAGE_HEADER_WORDS.moreWays',
+    },
+    options: {},
+    size: (size) => {
+        const { full, aside } = HEADERS()
+        const drawn: Record<string, El | undefined> = {
+            header: headerRow(full),
+            titleRow: headerTitle(full)?.parent,
+            back: backButton(full),
+            aside: titleBlock(aside),
+            trail: full.find((element) => element.tag === 'ol'),
+            chevron: full.find((element) => element.tag === 'svg' && element.parent?.tag === 'li'),
+            meta: headerMeta(full),
+            actions: full.find((element) => element.attrs['data-slot'] === 'page-header-actions'),
+        }
+        // The back button sizes its icon from its own classes, as every button does; the chevron has a size of its own.
+        return pieceWhere(drawn[size])
+    },
+    paint: (_, name, state) => {
+        const { full } = HEADERS()
+        const drawn: Record<string, El | undefined> = {
+            title: headerTitle(full),
+            count: full.find((element) => classesOf(element).includes('tabular-nums')),
+            code: headerCode(full),
+            description: headerDescription(full),
+            meta: headerMeta(full),
+            crumb: crumbLink(full),
+            chevron: full.find((element) => element.tag === 'svg' && element.parent?.tag === 'li'),
+            back: backButton(full),
+        }
+        return name in drawn ? at(drawn[name], state) : undefined
+    },
+    effect: () => skip('the page header states no effects'),
+    keys: {
+        Tab: () => {
+            const elements = header()
+            const order = [backButton(elements), crumbLink(elements), byText(elements, 'button', 'Run')]
+            const places = order.map((element) => (element === undefined ? -1 : elements.indexOf(element)))
+            const reached =
+                order.every(focusable) && places.every((place, index) => place >= 0 && (index === 0 || place > places[index - 1]))
+            return reached ? true : `drawn in another order, or out of the tab order: ${places.join(', ')}`
+        },
+        'Enter, Space (the back button has focus)': () =>
+            backButton(header())?.attrs.type === 'button' ? true : 'the back button is not a native button',
+    },
+    more: () => {
+        const { full } = HEADERS()
+        // The container sizes the header's queries name are Tailwind's own.
+        const containers = readFileSync(join(ROOT, 'node_modules', 'tailwindcss', 'theme.css'), 'utf8')
+        const lg = /--container-lg: ([\d.]+)rem;/.exec(containers)?.[1]
+        return layoutChecks('page-header', {
+            rowGap: () => lengthOn(headerRow(full), lengthOf('gap-y-')),
+            descriptionTop: () => lengthOn(headerDescription(full), lengthOf('mt-')),
+            metaTop: () => lengthOn(headerMeta(full), lengthOf('mt-')),
+            metaRowGap: () => lengthOn(headerMeta(full), lengthOf('gap-y-')),
+            fillFrom: () => (/@lg\/page-header:flex-nowrap/.test(PAGE_HEADER) && lg !== undefined ? String(Number(lg) * 16) : undefined),
+            actionsMin: () => numberIn(PAGE_HEADER, /flex-\[1_1_(\d+)rem\] items-center justify-end/, 'rem'),
+            titleMin: () => numberIn(PAGE_HEADER, /@lg\/page-header:min-w-(\d+)/, 'step'),
+            describedTitleBasis: () => numberIn(PAGE_HEADER, /'flex-\[1_1_(\d+)rem\]'/, 'rem'),
+        })
+    },
+}
+
+// Section
+
+const SECTION = source('components/Section.tsx')
+const section = (props: Partial<SectionProps> = {}) => draw(Section, { title: 'Steps', children: 'fetch, transform, validate', ...props })
+/** The drawings the checks read, each made once. */
+const SECTIONS = once(() => ({
+    boxed: section({ meta: '5', actions: RUN }),
+    described: section({ description: 'What runs, in order' }),
+    critical: section({ tone: 'critical' }),
+    graph: section({ tone: 'graph' }),
+    flat: section({ variant: 'flat', meta: '5' }),
+    flatCritical: section({ variant: 'flat', tone: 'critical' }),
+}))
+const sectionBox = (elements: El[]) => elements.find((element) => element.tag === 'section')
+const sectionHead = (elements: El[]) => elements.find((element) => element.tag === 'header')
+const sectionTitle = (elements: El[]) => elements.find((element) => element.tag === 'h2')
+const sectionBody = (elements: El[]) => elements.find((element) => element.tag === 'div' && element.parent?.tag === 'section')
+
+const SECTION_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: { variant: propValues(SECTION, 'SectionProps', 'variant'), tone: propValues(SECTION, 'SectionProps', 'tone') },
+    size: (size) => {
+        const { boxed, described, critical, flat } = SECTIONS()
+        const drawn: Record<string, El | undefined> = {
+            head: sectionHead(boxed),
+            describedHead: sectionHead(described),
+            flatHead: sectionHead(flat),
+            titleLine: sectionTitle(boxed)?.parent?.parent,
+            mark: critical.find((element) => element.tag === 'svg'),
+            actions: boxed.find((element) => classesOf(element).includes('ml-auto')),
+            body: sectionBody(boxed),
+        }
+        return pieceWhere(drawn[size])
+    },
+    paint: (_, name, state) => {
+        const { boxed, described, critical, graph, flat, flatCritical } = SECTIONS()
+        const toned = state === 'toneCritical'
+        switch (name) {
+            case 'box':
+                return at(sectionBox(toned ? critical : boxed))
+            case 'head':
+                return at(sectionHead(boxed))
+            case 'flatHead':
+                return at(sectionHead(toned ? flatCritical : flat))
+            case 'mark':
+                return at(critical.find((element) => element.tag === 'svg'))
+            case 'title':
+                return at(sectionTitle(boxed))
+            case 'flatTitle':
+                return at(sectionTitle(flat))
+            case 'meta':
+                return at(byText(boxed, 'span', '5'))
+            case 'description':
+                return at(byText(described, 'p', 'What runs, in order'))
+            case 'body': {
+                const body = sectionBody(graph)
+                if (body === undefined) return undefined
+                // The dots are a gradient of a color the classes name with var(): read as the mark's ink.
+                const dot = /radial-gradient\(circle,var\(--([a-z0-9-]+)\)/.exec(classesOf(body))?.[1]
+                const where = at(body)
+                return where === undefined ? undefined : { ...where, mark: dot === undefined ? undefined : `text-(--${dot})` }
+            }
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the section states no effects'),
+    keys: {},
+    more: () => {
+        const { boxed, critical, flat } = SECTIONS()
+        const title = sectionTitle(boxed)
+        return layoutChecks('section', {
+            flatGap: () => lengthOn(sectionBox(flat), READ.gap),
+            titleMetaGap: () => lengthOn(title?.parent, READ.gapX),
+            titleBasis: () => lengthOn(title?.parent?.parent, lengthOf('basis-')),
+            metaBasis: () => lengthOn(title, lengthOf('basis-')),
+            criticalRule: () => /(?:^|\s)border-t-(\d+)(?:\s|$)/.exec(classesOf(sectionBox(critical)))?.[1],
+            graphGrid: () => numberIn(SECTION, /bg-\[length:(\d+)px_\d+px\]/),
+            graphDot: () => numberIn(SECTION, /var\(--panel-dot\)_(\d+)px/),
+        })
+    },
+}
+
+// Page state
+
+const PAGE_STATE = source('components/PageState.tsx')
+const pageState = (props: Partial<PageStateProps> = {}) => draw(PageState, { loading: false, children: 'content', ...props })
+const REFUSAL: Partial<PageStateProps> = {
+    status: 403,
+    error: 'The token for `api` may read `orders` but not `invoices`.',
+    problems: ['`owner` is not a field of a run'],
+    onRetry: () => undefined,
+}
+/** The drawing a state (or states joined by +) takes: unframed alone is drawn as an unframed empty read. */
+function stateDrawn(state: string): El[] {
+    const on = new Set(state.split('+'))
+    const frame = on.has('unframed') ? { frame: false } : {}
+    if (on.has('loading')) return pageState({ loading: true, ...frame })
+    if (on.has('failed')) return pageState({ ...REFUSAL, ...(on.has('warning') ? { tone: 'warning' as const } : {}), ...frame })
+    return pageState({ empty: true, emptyMessage: 'No runs in the last 24 hours.', ...frame })
+}
+const stateFrame = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'page-state')
+/** The lines under a failed read's heading, announced together. */
+const stateLines = (elements: El[]) => elements.find((element) => element.attrs.role === 'alert' || element.attrs.role === 'status')
+const retryButton = (elements: El[]) => elements.find((element) => element.tag === 'button' && element.text === PAGE_STATE_WORDS.retry)
+
+const PAGE_STATE_ADAPTER: Adapter = {
+    wordObjects: { PAGE_STATE_WORDS },
+    complete: ['PAGE_STATE_WORDS'],
+    words: {
+        loading: 'PAGE_STATE_WORDS.loading',
+        refused: 'PAGE_STATE_WORDS.refused',
+        missing: 'PAGE_STATE_WORDS.missing',
+        unreachable: 'PAGE_STATE_WORDS.unreachable',
+        partRefused: 'PAGE_STATE_WORDS.partRefused',
+        retry: 'PAGE_STATE_WORDS.retry',
+    },
+    options: {
+        tone: propValues(PAGE_STATE, 'PageStateProps', 'tone'),
+        headingLevel: propValues(PAGE_STATE, 'PageStateProps', 'headingLevel'),
+    },
+    size: (size) => {
+        const loading = stateDrawn('loading')
+        const failed = stateDrawn('failed')
+        const drawn: Record<string, El | undefined> = {
+            frame: stateFrame(loading),
+            unframed: stateFrame(stateDrawn('failed+unframed')),
+            spinner: loading.find((element) => element.tag === 'svg'),
+            mark: failed.find((element) => element.tag === 'svg' && element.parent === stateFrame(failed)),
+            lines: stateLines(failed),
+            column: stateLines(failed)?.parent,
+            code: failed.find((element) => element.tag === 'code'),
+            retry: retryButton(failed),
+        }
+        return pieceWhere(drawn[size])
+    },
+    paint: (_, name, state) => {
+        const elements = stateDrawn(state)
+        const frame = stateFrame(elements)
+        switch (name) {
+            case 'frame':
+                return at(frame)
+            case 'spinner':
+                return at(elements.find((element) => element.tag === 'svg'))
+            case 'mark':
+                return at(elements.find((element) => element.tag === 'svg' && element.parent === frame))
+            case 'heading': {
+                // The heading takes its size from the frame around it and its weight from its own class.
+                const heading = elements.find((element) => element.parent !== undefined && element.parent === stateLines(elements))
+                return heading === undefined || frame === undefined
+                    ? undefined
+                    : { layers: [classesOf(frame), classesOf(heading)], on: [], around: ancestors(heading) }
+            }
+            case 'diagnostic':
+                return at(elements.find((element) => element.tag === 'div' && element.parent === stateLines(elements)))
+            case 'code':
+                return at(elements.find((element) => element.tag === 'code'))
+            case 'problems':
+                return at(elements.find((element) => element.attrs['data-slot'] === 'page-state-problems'))
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the page state states no effects'),
+    keys: {
+        'Tab (failed, with onRetry)': () => (focusable(retryButton(stateDrawn('failed'))) ? true : 'Try again is out of the tab order'),
+        'Enter, Space (Try again has focus)': () =>
+            retryButton(stateDrawn('failed'))?.attrs.type === 'button' ? true : 'Try again is not a native button',
+    },
+    more: () => {
+        const failed = stateDrawn('failed')
+        return layoutChecks('page-state', {
+            markTop: () =>
+                lengthOn(
+                    failed.find((element) => element.tag === 'svg' && element.parent === stateFrame(failed)),
+                    lengthOf('mt-'),
+                ),
+            problemsInset: () =>
+                lengthOn(
+                    failed.find((element) => element.attrs['data-slot'] === 'page-state-problems'),
+                    READ.padStart,
+                ),
+        })
+    },
+}
+
 // Shell
 
 const SHELL = source('components/Shell.tsx')
@@ -1586,14 +1884,8 @@ const withPanel = (open: boolean) => {
 }
 
 const SHELL_ADAPTER: Adapter = {
-    wordObjects: {
-        SHELL_WORDS,
-        PAGE_HEADER_WORDS,
-        COMMAND_PALETTE_WORDS,
-        SETTINGS_DIALOG_WORDS,
-        PAGE_STATE_WORDS,
-    },
-    complete: ['SHELL_WORDS', 'PAGE_HEADER_WORDS', 'PAGE_STATE_WORDS'],
+    wordObjects: { SHELL_WORDS, COMMAND_PALETTE_WORDS, SETTINGS_DIALOG_WORDS },
+    complete: ['SHELL_WORDS'],
     words: {
         menu: 'SHELL_WORDS.menu',
         close: 'SHELL_WORDS.close',
@@ -1602,10 +1894,7 @@ const SHELL_ADAPTER: Adapter = {
         panelTabs: 'SHELL_WORDS.panelTabs',
         openPalette: 'SHELL_WORDS.openPalette',
         openShortcuts: 'SHELL_WORDS.openShortcuts',
-        trail: 'PAGE_HEADER_WORDS.trail',
-        back: ['PAGE_HEADER_WORDS.back', 'SETTINGS_DIALOG_WORDS.back'],
-        more: 'PAGE_HEADER_WORDS.more',
-        moreWays: 'PAGE_HEADER_WORDS.moreWays',
+        back: 'SETTINGS_DIALOG_WORDS.back',
         palettePlaceholder: 'COMMAND_PALETTE_WORDS.placeholder',
         settingsTitle: 'SETTINGS_DIALOG_WORDS.title',
         settingsSearch: 'SETTINGS_DIALOG_WORDS.search',
@@ -1627,18 +1916,12 @@ const SHELL_ADAPTER: Adapter = {
         settingsResetAllDetail: 'SETTINGS_DIALOG_WORDS.resetAllDetail',
         settingsResetConfirm: 'SETTINGS_DIALOG_WORDS.resetConfirm',
         cancel: 'SETTINGS_DIALOG_WORDS.cancel',
-        loading: 'PAGE_STATE_WORDS.loading',
-        refused: 'PAGE_STATE_WORDS.refused',
-        missing: 'PAGE_STATE_WORDS.missing',
-        unreachable: 'PAGE_STATE_WORDS.unreachable',
-        partRefused: 'PAGE_STATE_WORDS.partRefused',
-        retry: 'PAGE_STATE_WORDS.retry',
     },
     options: { railMode: propValues(SHELL, 'ShellProps', 'railMode') },
     size: (size, key) => {
         if (size !== 'panelToggle')
             return skip(
-                "the shell's own regions (page, page header, page states, dialogs, drawer) get specs of their own as egui needs them",
+                "the shell's own regions (the page, the dialogs, the drawer, the scroll bar) get specs of their own as egui needs them",
             )
         const { elements, toggle } = withPanel(false)
         return key === 'icon' ? pieceWhere(iconOf(elements, toggle)) : pieceWhere(toggle)
@@ -1646,7 +1929,7 @@ const SHELL_ADAPTER: Adapter = {
     paint: (_, name, state) => {
         if (name !== 'panelToggle')
             return skip(
-                "the shell's own regions (page, page header, page states, dialogs, drawer) get specs of their own as egui needs them",
+                "the shell's own regions (the page, the dialogs, the drawer, the scroll bar) get specs of their own as egui needs them",
             )
         return at(withPanel(state === 'panelOpen').toggle, state)
     },
@@ -1694,6 +1977,9 @@ const ADAPTERS: Record<string, Adapter> = {
     rail: RAIL_ADAPTER,
     'top-bar': TOP_BAR_ADAPTER,
     'status-line': STATUS_LINE_ADAPTER,
+    'page-header': PAGE_HEADER_ADAPTER,
+    section: SECTION_ADAPTER,
+    'page-state': PAGE_STATE_ADAPTER,
     shell: SHELL_ADAPTER,
 }
 
@@ -1826,12 +2112,17 @@ function sizeChecks(spec: Spec, adapter: Adapter): Check[] {
             else if (key === 'height')
                 found = resolve(where.layers, where.on, READ.height) ?? resolve(where.layers, where.on, READ.minHeight)
             else if (key === 'padX') {
+                // Across: px, else the same pl and pr, else a pad all round.
                 found =
                     resolve(where.layers, where.on, READ.padX) ??
                     (resolve(where.layers, where.on, READ.padStart) === resolve(where.layers, where.on, READ.padEnd)
                         ? resolve(where.layers, where.on, READ.padStart)
-                        : undefined)
-            } else {
+                        : undefined) ??
+                    resolve(where.layers, where.on, READ.pad)
+            } else if (key === 'padY') found = resolve(where.layers, where.on, READ.padY) ?? resolve(where.layers, where.on, READ.pad)
+            // A gap across: gap, else gap-x where the row's gap down differs.
+            else if (key === 'gap') found = resolve(where.layers, where.on, READ.gap) ?? resolve(where.layers, where.on, READ.gapX)
+            else {
                 const read = SIZE_READERS[key]
                 if (read === undefined) {
                     checks.push(check(`sizes.${size}.${key}`, wanted, 'a length parts.test cannot read'))

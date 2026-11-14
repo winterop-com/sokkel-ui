@@ -1,0 +1,268 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "page-header",
+    "kind": "part",
+    "status": "draft",
+    "summary": "A page's head: its title (the name, else the code) with a count beside it, the code, a description and a line of facts under it, an optional back button and picture before it, and the page's actions at the row's end with the primary one last. The actions stay on the title's row while there is room and wrap under it otherwise; actions given as items fold into More instead.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/PageHeader.tsx",
+            "packages/core/src/components/Toolbar.tsx",
+            "packages/core/src/components/IconButton.tsx",
+            "packages/core/src/components/ItemHeading.tsx",
+            "packages/core/src/components/Link.tsx",
+            "packages/core/src/components/shell-context.ts"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/page.rs (PageHeader)",
+            "examples/storybook/src/stories/page.rs (Patterns/Page header)"
+        ]
+    },
+    "anatomy": {
+        "header": "The page's head: a row that wraps, the title block at its start and the actions at its end, level with the title block's foot. Its own box decides how it lays out, never the window's width.",
+        "titleBlock": "The title and what is known about it, one line under another: the trail, the title with its count, the code, the description and the meta. Beside a back button or an aside it is a grid that starts every line where the title starts.",
+        "back": "With onBack: a ghost icon button with a back chevron, level with the title, before every other line.",
+        "aside": "A picture before the title block, centered on it down the side of every line, such as an avatar, a project's mark or an album's artwork; after the back button where there is one.",
+        "trail": "The places above the page, small over the title, the furthest first, named by words.trail. Drawn only outside a Shell or without trailInTop: in the frame the trail lives in the top bar.",
+        "crumb": "One place of the trail: a link back up with href, else plain words; a code crumb is in the code face.",
+        "chevron": "After each crumb, the last one too: the trail ends at the place above the page.",
+        "title": "The page's h1: its name, else its code, in the heading face. It wraps; a code standing as the title, or singleLine, keeps it to one line, cut short with the whole of it on hover.",
+        "count": "A short count beside the title on its baseline, such as how many rows are loaded.",
+        "code": "The addressable code under the title, in the code face, cut short with the whole of it on hover; not drawn when the code stands as the title.",
+        "description": "A sentence under the title saying what the page holds, at most a reading measure (65ch) wide.",
+        "meta": "A line of small facts under the description, such as who owns the thing and when it runs; it wraps.",
+        "actions": "The page's actions at the row's end, the primary one last: the lead, then the items, More and the primary, then the actions. They stay on the title's row while the header has room for both, and wrap under the title, then onto lines of their own, when it does not.",
+        "lead": "A part at the start of the actions that is not a verb, such as a run's status chip; it never folds into More.",
+        "items": "Actions that give way: outline buttons before the primary that move, from the last, into More as the header narrows, measured on the header itself, so the title keeps its width and the row stays one line.",
+        "primary": "The primary action given as an item: filled, after the items, never folding; its related ways under a chevron.",
+        "more": "The icon button that holds the items the row has no room for, named by words.more; an item's related ways are named by words.moreWays."
+    },
+    "options": {
+        "title": {
+            "type": "node",
+            "does": "The page's title: its text, or a part drawn in its place (an inline edit set as a title)."
+        },
+        "code": {
+            "type": "text",
+            "does": "The addressable code, shown under the title, or as the title when there is no name or the name is the code."
+        },
+        "count": {"type": "node", "does": "A short count beside the title."},
+        "description": {"type": "node", "does": "A sentence under the title: what the page holds."},
+        "meta": {"type": "node", "does": "Small facts under the description, such as a byline."},
+        "aside": {"type": "node", "does": "A picture before the title block and centered on it."},
+        "lead": {
+            "type": "node",
+            "does": "A part at the start of the actions, before every verb and never folded into More."
+        },
+        "actions": {"type": "node", "does": "Buttons at the row's end, the primary one last."},
+        "items": {
+            "type": "rows",
+            "does": "Actions before the primary and actions that fold, from the last, into More when the header has no room for them: [{ id, label, face?, icon?, onSelect, disabled?, reason?, destructive?, more?, moreLabel?, variant?, pressed? }], drawn as outline buttons.",
+            "sokkel-ui": "items (ToolbarItem)"
+        },
+        "primary": {
+            "type": "node",
+            "does": "The primary action as one item, as items takes them: drawn filled after the items, never folding.",
+            "sokkel-ui": "primary (ToolbarItem)"
+        },
+        "wordsOnly": {
+            "type": "boolean",
+            "default": false,
+            "does": "Draws the items and the primary by their words alone, their icons kept for More."
+        },
+        "actionsFill": {
+            "type": "boolean",
+            "default": false,
+            "does": "The actions take the room the title leaves rather than their own width, for one part in actions that measures itself and folds what does not fit. Set by items or primary."
+        },
+        "trail": {
+            "type": "rows",
+            "does": "[{ label, href?, code? }]: the places above this page, the furthest first. Drawn over the title outside a Shell; with trailInTop inside one, stated for the top bar instead."
+        },
+        "trailInTop": {
+            "type": "boolean",
+            "default": false,
+            "does": "Inside a Shell, states the trail for the top bar (ending at the place above this page) rather than drawing it; outside one the trail is drawn here."
+        },
+        "onBack": {"type": "callback", "does": "Draws a back button before the title and calls this on a press."},
+        "singleLine": {
+            "type": "boolean",
+            "default": false,
+            "does": "Keeps the title to one line, cut short with the whole of it on hover, rather than wrapping; a code standing as the title is one line unless the app says otherwise."
+        },
+        "inShell": {
+            "type": "boolean",
+            "default": false,
+            "does": "Drawn inside a Shell: with trailInTop the trail goes to the top bar and the header draws none.",
+            "context": "ShellTrailAsk from Shell (useShellTrail)"
+        }
+    },
+    "sizes": {
+        "header": {
+            "gap": 16,
+            "note": "Across, between the title block and the actions; layout.rowGap down when the actions wrap under the title."
+        },
+        "titleRow": {"gap": 8, "note": "The title and its count, on one baseline."},
+        "back": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "icon": 16,
+            "radius": "radius-control",
+            "radiusMax": 12,
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "IconButton at icon-sm, ghost (parts/button). 8 before the title block's lines; a finger square below 768."
+        },
+        "aside": {"gap": 12, "note": "Between the aside (and the back button beside it) and the title block's lines."},
+        "trail": {"gap": 4, "text": "text.help", "note": "Crumbs and chevrons 4 apart."},
+        "chevron": {"icon": 12},
+        "meta": {"gap": 12, "note": "Its facts 12 apart; layout.metaRowGap between lines when they wrap."},
+        "actions": {"gap": 8}
+    },
+    "layout": {
+        "rowGap": {"value": 12, "note": "Between the title block and the actions wrapped under it."},
+        "descriptionTop": {
+            "value": 4,
+            "note": "Above the description. The code stands right under the title, with nothing between."
+        },
+        "metaTop": {"value": 6, "note": "Above the meta."},
+        "metaRowGap": 4,
+        "fillFrom": {
+            "value": 512,
+            "note": "With actions that fill (items, primary or actionsFill): from 512 of the header's own box the row stays one line, the title taking its own width up to 60 percent of the row, cut short or wrapped past that, and the actions the rest, folding what does not fit."
+        },
+        "actionsMin": {
+            "value": 128,
+            "note": "Actions that fill keep at least this beside the title (room for More and the primary) before they wrap under it."
+        },
+        "titleMin": {
+            "value": 128,
+            "note": "A title alone (no description or meta) beside actions that do not fill: in a header narrower than 512 it takes its own width, so a short one keeps its actions beside it on a phone; from 512 it takes the room they leave, at least this, wrapping there rather than pushing them under it."
+        },
+        "describedTitleBasis": {
+            "value": 256,
+            "note": "A title with a description or meta takes a fair share of the row: it asks for this before the actions wrap under it."
+        }
+    },
+    "states": {
+        "rest": {"means": "The header drawn, nothing over its controls."},
+        "hover": {
+            "means": "The pointer over the back button, a crumb that is a link, or an action.",
+            "reached": "pointer over"
+        },
+        "focus": {
+            "means": "Keyboard focus on the back button, a crumb or an action.",
+            "reached": "Tab",
+            "on": "keyboard",
+            "sokkel-ui": "The back button is a Button: a 2px ring outline 2 off (focus-visible). A crumb's link takes the browser's outline, in ring/50 (base.css)."
+        },
+        "wrapped": {
+            "means": "The actions stand under the title: the header has no room for both on one row. A group wider than the header wraps its own buttons too.",
+            "reached": "the header's own width"
+        },
+        "folded": {
+            "means": "Items the row has no room for stand in More, from the last; the lead and the primary stay.",
+            "reached": "the header's own width, with items"
+        },
+        "codeTitle": {
+            "means": "The code stands as the title: in the code face, on one line, cut short with the whole of it on hover; no code under it.",
+            "reached": "code with no title, or a title that is the code"
+        },
+        "trailInTop": {
+            "means": "Inside a Shell with trailInTop: the trail is stated for the top bar, ending at the place above this page, and the header draws none.",
+            "reached": "trailInTop in a Shell"
+        }
+    },
+    "pieces": {
+        "title": {
+            "rest": {
+                "ink": "page-title-ink|foreground",
+                "text": "text.page-title",
+                "note": "In typeface-heading; it wraps with balanced lines and breaks a long word."
+            },
+            "codeTitle": {"note": "In the code face, on one line, cut short with an ellipsis."}
+        },
+        "count": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "Tabular figures."}},
+        "code": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face, on one line."}},
+        "description": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
+        "meta": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "crumb": {
+            "rest": {
+                "ink": "muted-foreground",
+                "note": "In the trail's text.help; cut short when the trail runs out of room."
+            },
+            "hover": {"ink": "foreground", "note": "A crumb that is a link."}
+        },
+        "chevron": {"rest": {"ink": "faint"}},
+        "back": {
+            "rest": {
+                "ink": "muted-foreground",
+                "radius": "radius-control",
+                "note": "A ghost icon button (parts/button)."
+            },
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}
+        },
+        "more": {"rest": {"note": "An outline icon button at icon-sm (parts/button)."}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the back button, each crumb that is a link, then the actions in their order: the lead's controls, the items in the row, More, the primary, the actions."
+        },
+        {"keys": ["Enter", "Space"], "does": "Calls onBack.", "when": "the back button has focus"}
+    ],
+    "words": {"back": "Back", "trail": "Where you are", "more": "More", "moreWays": "More ways"},
+    "appText": {
+        "title": "The page's title, its code, count, description and meta.",
+        "trail": "Every crumb's label.",
+        "actions": "Every action and item, which follow their context: on Jobs the button is New, not New job; an item's face may be shorter than its label, which names it."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The header is a size container (@container/page-header): it lays out by its own width, 512 (@lg) for actions that fill, never by the window's.",
+            "Items fold into More by measuring their widths on the header itself (Toolbar, a ResizeObserver); More is Base UI's menu, each entry with the item's icon, its reason under it when shut, and its related ways.",
+            "The title is the page's h1, so Shell's routeKey moves focus to it after a route change.",
+            "A crumb is a Link, drawn as the app's LinkProvider says.",
+            "trailInTop states the trail with useShellTrail(trail, { ends: 'ancestor' }) while the header is mounted inside a Shell.",
+            "A cut-short title or code says the whole of it in the title attribute, on hover.",
+            "The back button's name shows in its tooltip."
+        ],
+        "sokkel-ui-egui": [
+            "PageHeader::show(ui, actions) lays the actions out from the row's end, right to left, so the app adds the primary one first.",
+            "The width the header lays out by is the available rect's, as for every part that fills its container."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "lines under the title",
+            "spec": "The code right under the title, the description 4 under what is above it, the meta 6.",
+            "today": "As of dfb6079 (page.rs unchanged since b73200b): every line 4 apart (item_spacing.y), the code included."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "count's line",
+            "spec": "On the title's baseline, 8 after it.",
+            "today": "8 after the title, centered on its line (ui.horizontal)."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "description width",
+            "spec": "At most a reading measure, 65ch of its own text.",
+            "today": "At most 640."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "actions that wrap",
+            "spec": "The actions stay on the title's row while there is room and wrap under it, 12 down, when there is not.",
+            "today": "Laid out once from the row's end beside the title block; they never go under the title."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of dfb6079, PageHeader draws the title in text.page-title and page-title-ink (else foreground), a count in text.help, the code in the code face, a description in text.body, and actions from the row's end. Not yet: the back button, the trail, the aside, the meta, the lead, items folding into More with the primary and wordsOnly, actionsFill, the code standing as the title (code face, one line, cut short), singleLine, and words (back, trail, more, moreWays)."
+        }
+    ]
+}

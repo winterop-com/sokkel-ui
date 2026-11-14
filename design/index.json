@@ -34,7 +34,10 @@
         {"id": "table", "file": "parts/table.json", "status": "draft"},
         {"id": "rail", "file": "parts/rail.json", "status": "draft"},
         {"id": "top-bar", "file": "parts/top-bar.json", "status": "draft"},
-        {"id": "status-line", "file": "parts/status-line.json", "status": "draft"}
+        {"id": "status-line", "file": "parts/status-line.json", "status": "draft"},
+        {"id": "page-header", "file": "parts/page-header.json", "status": "draft"},
+        {"id": "section", "file": "parts/section.json", "status": "draft"},
+        {"id": "page-state", "file": "parts/page-state.json", "status": "draft"}
     ],
     "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "draft"}],
     "principles": "principles.md",
