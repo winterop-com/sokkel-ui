@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.28.0** is the latest release (2026-11-14): every sokkel-design open question decided and
+- **0.28.1** is the latest release (2026-11-14): a shut button's reason shows on a tap; no
+  palette search flicker; finger-tall field triggers below md; the top bar's finger squares draw
+  their focus outline inside; sokkel-design's contract at 0.28.1.
+- **0.28.0** (2026-11-14): every sokkel-design open question decided and
   drawn: one popup look and one tooltip, sheets below 768 with no blur, one highlight for every list
   of choices, a busy palette or dialog that holds and lets go after `busy-release` with a signal;
   table heads by keys, one focus look in the frame, a status line that draws its strip, no trail in
