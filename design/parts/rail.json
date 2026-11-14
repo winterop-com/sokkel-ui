@@ -522,12 +522,6 @@
         },
         {
             "renderer": "sokkel-ui-egui",
-            "what": "untitled group's top",
-            "spec": "A group without a title at the top of the places keeps 4 above its first entry, room for the entry's focus look.",
-            "today": "As of d1b3b24: its first entry stands right under the head."
-        },
-        {
-            "renderer": "sokkel-ui-egui",
             "what": "collapsed entry tooltip",
             "spec": "A collapsed entry's name shows in the library's one tooltip (parts/tooltip), 8 away.",
             "today": "As of 267236c: egui's own on_hover_text (frame.rs:202), not the library's tooltip."
