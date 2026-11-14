@@ -15,12 +15,25 @@ import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
 import { PageHeader, PAGE_HEADER_WORDS, type PageHeaderProps } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState, PAGE_STATE_WORDS, type PageStateProps } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    type SelectTriggerProps,
+} from '@winterop-com/sokkel-ui/primitives/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Rail, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
+import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
 import { SETTINGS_DIALOG_WORDS } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { Shell, SHELL_WORDS, type ShellProps } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine, type StatusLineProps } from '@winterop-com/sokkel-ui/StatusLine'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
+import { ThemePicker, type ThemePickerProps } from '@winterop-com/sokkel-ui/ThemePicker'
 import { TopBar, TOP_BAR_WORDS, type TopBarProps } from '@winterop-com/sokkel-ui/TopBar'
 
 /**
@@ -335,7 +348,7 @@ const READ = {
     underline: (name: string) => (name === 'underline' ? 'true' : name === 'no-underline' ? 'false' : undefined),
     radius: (name: string) => {
         if (name.startsWith('rounded-[min(var(--control-radius),')) return 'radius-control'
-        const match = /^rounded-(control|surface|xs|sm|md|lg|xl|none|full)$/.exec(name)
+        const match = /^rounded-(control|surface|mini|xs|sm|md|lg|xl|none|full)$/.exec(name)
         return match === null ? undefined : `radius-${match[1]}`
     },
     radiusMax: (name: string) => /^rounded-\[min\(var\(--control-radius\),(\d+)px\)\]$/.exec(name)?.[1],
@@ -563,9 +576,11 @@ const SOURCES_FOR_TYPES = [
     source('components/PageState.tsx'),
 ]
 
-/** The string values a prop takes, read from its declaration (or the type it names) in a source. */
+/** The string values a prop takes, read from its declaration (or the type it names) in a source: an interface, or a type that adds to another. */
 function propValues(text: string, props: string, prop: string): string[] {
-    const body = text.slice(text.indexOf(`export interface ${props}`))
+    const start = [`export interface ${props}`, `export type ${props} =`].map((head) => text.indexOf(head)).find((at) => at >= 0)
+    if (start === undefined) return []
+    const body = text.slice(start)
     const declared = new RegExp(`\\n\\s+${prop}\\?: ([^\\n]+)`).exec(body)?.[1] ?? ''
     const named = /^([A-Z]\w*)$/.exec(declared.trim())?.[1]
     const type =
@@ -1873,6 +1888,387 @@ const PAGE_STATE_ADAPTER: Adapter = {
     },
 }
 
+// What the overlays share: Base UI's positions, and what a source says of a prop's default
+
+/** Base UI's sides and alignments, which the popups' side and align take as they are. */
+const ANCHORING = readFileSync(
+    join(ROOT, 'packages', 'core', 'node_modules', '@base-ui', 'react', 'internals', 'useAnchorPositioning.d.ts'),
+    'utf8',
+)
+const anchorValues = (type: 'Side' | 'Align') =>
+    [...(new RegExp(`export type ${type} = ([^\\n]+)`).exec(ANCHORING)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1])
+/** The values a popup's props take from Base UI's positioner, when the popup passes that prop on. */
+const positionValues = (text: string, props: string, prop: 'side' | 'align') =>
+    new RegExp(`export type ${props} =[^\\n]*\\n[^\\n]*Pick<[^>]*'${prop}'`).test(text)
+        ? anchorValues(prop === 'side' ? 'Side' : 'Align')
+        : []
+/** The default a function's destructured prop takes, as its source writes it: the first one after the anchor. */
+const defaultIn = (text: string, anchor: string, prop: string) =>
+    new RegExp(`\\b${prop} = '?([\\w-]+)'?,`).exec(text.slice(Math.max(0, text.indexOf(anchor))))?.[1]
+/** A focus put back on the trigger after a keyboard close, which the popup's source asks of Base UI. */
+const focusBack = (text: string) =>
+    /finalFocus=\{returnFocusOnKeyboard\}/.test(text) ? true : 'no finalFocus={returnFocusOnKeyboard}: focus is not put back on the trigger'
+const BASE_UI = (part: string, does: string) => skip(`Base UI's ${part} ${does} in a browser; the server draws its popup closed`)
+
+// Select
+
+const SELECT = source('components/ui/select.tsx')
+const SELECT_FIELD = source('components/SelectField.tsx')
+const RUN_STATES = [
+    { value: 'succeeded', label: 'succeeded' },
+    { value: 'failed', label: 'failed' },
+]
+/** A bare select as the server draws it: its trigger, and a hidden input; the list is a portal it leaves out. */
+const select = (trigger: Partial<SelectTriggerProps> = {}, root: { disabled?: boolean } = {}) =>
+    draw(
+        Select as ComponentType<object>,
+        { items: RUN_STATES, defaultValue: 'failed', ...root },
+        createElement(SelectTrigger, { 'aria-label': 'Run state', ...trigger }, createElement(SelectValue, { placeholder: 'Any state' })),
+        createElement(SelectContent, null, createElement(SelectItem, { value: 'failed' }, 'failed')),
+    )
+const selectTrigger = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'select-trigger')
+/** A field whose options lead with icons: the trigger draws the chosen one's lead as the list does. */
+const selectField = (props: Partial<SelectFieldProps> = {}) =>
+    draw(SelectField, {
+        id: 'runs-on',
+        label: 'Runs on',
+        options: [
+            { value: 'api', label: 'api', icon: createElement(Server) },
+            { value: 'worker', label: 'worker', icon: createElement(Workflow) },
+        ],
+        defaultValue: 'worker',
+        ...props,
+    })
+const optionLead = (elements: El[]) =>
+    elements.find(
+        (element) => element.tag === 'span' && 'aria-hidden' in element.attrs && classesOf(element).includes('text-muted-foreground'),
+    )
+/** A theme picker whose themes wear swatches, one of them none: its theme select draws the chosen one's swatch in the trigger. */
+const themePicker = (theme: string) =>
+    draw(ThemePicker, {
+        value: { theme, scheme: 'light', density: 'regular', corners: 'theme', typeface: 'theme' },
+        onChange: () => undefined,
+        themes: [
+            { value: 'tidevann', label: 'Tidevann', swatch: true },
+            { value: 'plain', label: 'Plain' },
+        ],
+    } satisfies ThemePickerProps)
+const swatchOf = (elements: El[]) =>
+    elements.find((element) => element.tag === 'span' && 'aria-hidden' in element.attrs && classesOf(element).includes('w-7'))
+/** The list's parts, which open in a portal no server drawing reaches: their classes are read from the source. */
+const SELECT_LIST = {
+    list: literalAfter(SELECT, 'data-slot="select-content"', 'className={cn('),
+    row: literalAfter(SELECT, 'data-slot="select-item"', 'className={cn('),
+    label: literalAfter(SELECT, '<SelectPrimitive.ItemText className={cn('),
+    detailEnd: literalAfter(SELECT, '!below && <span className='),
+    detailBelow: literalAfter(SELECT, 'data-slot="select-item-lines"', '<div className='),
+    check: literalAfter(SELECT, '<SelectPrimitive.ItemIndicator', 'className='),
+    group: literalAfter(SELECT, 'data-slot="select-group"', 'cn('),
+    groupLabel: literalAfter(SELECT, 'data-slot="select-label"', 'cn('),
+    separator: literalAfter(SELECT, 'data-slot="select-separator"', 'cn('),
+    scrollArrow: literalAfter(SELECT, 'data-slot="select-scroll-up-button"', 'cn('),
+}
+/** The variants a trigger's state turns on. */
+const SELECT_ON: Record<string, string[]> = {
+    rest: [],
+    placeholder: ['data-placeholder'],
+    hover: ['hover'],
+    focus: ['focus-visible'],
+    open: ['data-popup-open'],
+    invalid: ['aria-invalid'],
+    'invalid+focus': ['aria-invalid', 'focus-visible'],
+}
+/** What a highlighted row turns on for itself and, past its own ink, for every element inside it. */
+const HIGHLIGHTED = ['focus', '**', 'not-data-[variant=destructive]']
+const rowOn = (state: string) => (state === 'highlighted' ? HIGHLIGHTED : state === 'disabled' ? ['data-disabled'] : [])
+
+const SELECT_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {
+        variant: propValues(SELECT, 'SelectTriggerProps', 'variant'),
+        size: propValues(SELECT, 'SelectTriggerProps', 'size'),
+        detailPlacement: propValues(SELECT_FIELD, 'SelectFieldProps', 'detailPlacement'),
+    },
+    size: (size) => {
+        if (size === 'default' || size === 'sm') {
+            const trigger = selectTrigger(select(size === 'sm' ? { size: 'sm' } : {}))
+            return trigger === undefined
+                ? undefined
+                : { layers: [classesOf(trigger)], on: [`data-[size=${size}]`], around: ancestors(trigger) }
+        }
+        if (size === 'lead') {
+            const lead = optionLead(selectField())
+            return lead === undefined ? undefined : { layers: [classesOf(lead)], on: ['[&_svg]'] }
+        }
+        if (size === 'swatch') return pieceWhere(swatchOf(themePicker('tidevann')))
+        const read: Record<string, string> = {
+            row: SELECT_LIST.row,
+            detail: SELECT_LIST.detailEnd,
+            check: SELECT_LIST.check,
+            group: SELECT_LIST.group,
+            groupLabel: SELECT_LIST.groupLabel,
+            scrollArrow: SELECT_LIST.scrollArrow,
+        }
+        return size in read ? { layers: [read[size]], on: [] } : undefined
+    },
+    paint: (group, name, state) => {
+        if (group === 'variants') {
+            const on = SELECT_ON[state]
+            if (on === undefined) return skip(`no way to reach ${state} on a trigger`)
+            const trigger = selectTrigger(select({ variant: name as SelectTriggerProps['variant'] }))
+            return trigger === undefined ? undefined : { layers: [classesOf(trigger)], on, around: ancestors(trigger) }
+        }
+        switch (name) {
+            case 'chevron':
+                return at(select().find((element) => element.tag === 'svg'))
+            case 'lead': {
+                const lead = optionLead(selectField())
+                return lead === undefined ? undefined : { layers: [SELECT_LIST.row, classesOf(lead)], on: rowOn(state) }
+            }
+            case 'swatch':
+                return at(swatchOf(themePicker(state === 'noTheme' ? 'plain' : 'tidevann')))
+            case 'detail':
+                return { layers: [SELECT_LIST.row, SELECT_LIST.detailEnd], on: rowOn(state) }
+            case 'list':
+            case 'row':
+            case 'groupLabel':
+            case 'separator':
+            case 'scrollArrow':
+                return { layers: [SELECT_LIST[name]], on: rowOn(state) }
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => {
+        if (state !== 'disabled') return skip(`no effect of ${state} on a trigger`)
+        const trigger = selectTrigger(select({}, { disabled: true }))
+        return trigger === undefined
+            ? undefined
+            : { layers: [classesOf(trigger)], on: ['disabled'], around: ancestors(trigger), focusable: focusable(trigger) }
+    },
+    keys: {
+        Tab: () =>
+            focusable(selectTrigger(select())) && !focusable(selectTrigger(select({}, { disabled: true })))
+                ? true
+                : 'the trigger is out of the tab order, or a disabled one in it',
+        'Enter, Space, ArrowDown, ArrowUp (the trigger has focus)': () => {
+            const trigger = selectTrigger(select())
+            return trigger?.tag === 'button' && trigger.attrs.role === 'combobox' && trigger.attrs['aria-haspopup'] === 'listbox'
+                ? true
+                : "the trigger is not Base UI's combobox button"
+        },
+        'a character (the trigger has focus and the list is closed)': BASE_UI('select', 'chooses by typing on its closed trigger'),
+        'ArrowDown, ArrowUp (the list is open)': BASE_UI('select', 'moves the highlight'),
+        'Home, End (the list is open)': BASE_UI('select', 'moves the highlight to the ends'),
+        'a character (the list is open)': BASE_UI('select', 'moves the highlight by typing'),
+        'Enter, Space (a row is highlighted)': () => focusBack(SELECT),
+        'Escape (the list is open)': () => focusBack(SELECT),
+    },
+    more: () => {
+        const trigger = selectTrigger(select())
+        const quiet = selectTrigger(select({ variant: 'quiet' }))
+        const swatch = swatchOf(themePicker('tidevann'))
+        const on = (classes: string, read: Reader) => resolve([classes], [], read)
+        return [
+            check('options.variant.default', 'field', defaultIn(SELECT, 'function SelectTrigger(', 'variant')),
+            check('options.size.default', 'default', defaultIn(SELECT, 'function SelectTrigger(', 'size')),
+            check('options.alignItemWithTrigger.default', 'true', defaultIn(SELECT, 'function SelectContent(', 'alignItemWithTrigger')),
+            check('options.detailPlacement.default', 'end', defaultIn(SELECT_FIELD, 'export function SelectField(', 'detailPlacement')),
+            ...layoutChecks('select', {
+                triggerPadStart: () => lengthOn(trigger, READ.padStart),
+                triggerPadEnd: () => lengthOn(trigger, READ.padEnd),
+                quietPadStart: () => lengthOn(quiet, READ.padStart),
+                quietPadEnd: () => lengthOn(quiet, READ.padEnd),
+                listGap: () => numberIn(SELECT, /function SelectContent[\s\S]*?sideOffset = (\d+),/),
+                listMinWidth: () => numberIn(SELECT_LIST.list, /w-\(--anchor-width\) min-w-(\d+) /, 'step'),
+                listInset: () => on(SELECT_LIST.list, READ.pad) ?? on(SELECT_LIST.list, READ.padX) ?? '0',
+                rowPadStart: () => on(SELECT_LIST.row, READ.padStart),
+                rowPadEnd: () => on(SELECT_LIST.row, READ.padEnd),
+                checkEnd: () => on(SELECT_LIST.check, lengthOf('right-')),
+                leadGap: () => on(SELECT_LIST.label, READ.gap),
+                detailGap: () => on(SELECT_LIST.detailEnd, READ.padStart),
+                separatorGap: () => on(SELECT_LIST.separator, lengthOf('my-')),
+                swatchGap: () => lengthOn(swatch?.parent, READ.gap),
+                swatchDot: () =>
+                    lengthOn(
+                        themePicker('tidevann').find(
+                            (element) => element.parent !== undefined && classesOf(element.parent).includes('w-7'),
+                        ),
+                        READ.square,
+                    ),
+                listEase: () => numberIn(SELECT_LIST.list, /duration-(\d+)/),
+            }),
+        ]
+    },
+}
+
+// Tooltip
+
+const TOOLTIP = source('components/ui/tooltip.tsx')
+/** The box and its arrow open in a portal no server drawing reaches: their classes are read from the source. */
+const TOOLTIP_BOX = literalAfter(TOOLTIP, 'data-slot="tooltip-content"', 'className={cn(')
+const TOOLTIP_ARROW = literalAfter(TOOLTIP, '<TooltipPrimitive.Arrow className=')
+const tooltipTrigger = () =>
+    draw(
+        TooltipProvider,
+        {},
+        createElement(
+            Tooltip,
+            null,
+            createElement(TooltipTrigger, null, 'Run'),
+            createElement(TooltipContent, null, 'Run import-orders now'),
+        ),
+    ).find((element) => element.attrs['data-slot'] === 'tooltip-trigger')
+const keyCap = () => draw(Kbd, { children: 'P' })[0]
+/** A key cap inside the box: the box's slot it takes its look from. */
+const IN_TOOLTIP = ['in-data-[slot=tooltip-content]']
+
+const TOOLTIP_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {
+        side: positionValues(TOOLTIP, 'TooltipContentProps', 'side'),
+        align: positionValues(TOOLTIP, 'TooltipContentProps', 'align'),
+    },
+    size: (size) => {
+        if (size === 'box') return { layers: [TOOLTIP_BOX], on: [] }
+        if (size === 'arrow') return { layers: [TOOLTIP_ARROW], on: [] }
+        if (size === 'keys') return pieceWhere(keyCap())
+        if (size === 'trigger') return pieceWhere(tooltipTrigger())
+        return undefined
+    },
+    paint: (_, name) => {
+        if (name === 'box') return { layers: [TOOLTIP_BOX], on: [] }
+        if (name === 'arrow') return { layers: [TOOLTIP_ARROW], on: [] }
+        if (name === 'keys') return pieceWhere(keyCap(), IN_TOOLTIP)
+        return undefined
+    },
+    effect: () => skip('the tooltip states no effects'),
+    keys: {
+        'Tab (focus reaches the trigger)': skip("Base UI's tooltip opens on focus-visible in a browser; nothing on the server shows it"),
+        'Escape (the box is shown)': skip("Base UI's tooltip closes on Escape in a browser; the server draws it closed"),
+    },
+    more: () => {
+        const containers = readFileSync(join(ROOT, 'node_modules', 'tailwindcss', 'theme.css'), 'utf8')
+        const xs = /--container-xs: ([\d.]+)rem;/.exec(containers)?.[1]
+        const delays = readFileSync(
+            join(ROOT, 'packages', 'core', 'node_modules', '@base-ui', 'react', 'tooltip', 'utils', 'constants.mjs'),
+            'utf8',
+        )
+        return [
+            check('options.side.default', 'top', defaultIn(TOOLTIP, 'function TooltipContent(', 'side')),
+            check('options.align.default', 'center', defaultIn(TOOLTIP, 'function TooltipContent(', 'align')),
+            check('options.sideOffset.default', '4', defaultIn(TOOLTIP, 'function TooltipContent(', 'sideOffset')),
+            check('options.delay.default', '600', numberIn(delays, /OPEN_DELAY = (\d+);/)),
+            ...layoutChecks('tooltip', {
+                maxWidth: () => (/(?:^|\s)max-w-xs(?:\s|$)/.test(TOOLTIP_BOX) && xs !== undefined ? String(Number(xs) * 16) : undefined),
+                gap: () => defaultIn(TOOLTIP, 'function TooltipContent(', 'sideOffset'),
+                keysPadEnd: () => resolve([TOOLTIP_BOX], ['has-data-[slot=kbd]'], READ.padEnd),
+                // A tooltip outside the library's provider waits Base UI's delay; inside it, none.
+                openDelay: () =>
+                    /function TooltipProvider\(\{ delay = 0,/.test(TOOLTIP)
+                        ? numberIn(delays, /OPEN_DELAY = (\d+);/)
+                        : 'a provider with a delay of its own',
+            }),
+        ]
+    },
+}
+
+// Dropdown menu
+
+const DROPDOWN = source('components/ui/dropdown-menu.tsx')
+const DEFERRED_MENU = source('components/ui/deferred-menu.tsx')
+/** The menu opens in a portal, and its parts load after the page is drawn: its classes are read from the source. */
+const MENU = {
+    popup: [literalAfter(DROPDOWN, 'data-slot="dropdown-menu-content"', 'className={cn(')],
+    item: [literalAfter(DROPDOWN, 'const ROW_FINGER ='), literalAfter(DROPDOWN, 'function DropdownMenuItem(', 'ROW_FINGER,')],
+    checkItem: [literalAfter(DROPDOWN, 'const ROW_FINGER ='), literalAfter(DROPDOWN, 'function DropdownMenuCheckboxItem(', 'ROW_FINGER,')],
+    subTrigger: [literalAfter(DROPDOWN, 'const ROW_FINGER ='), literalAfter(DROPDOWN, 'function DropdownMenuSubTrigger(', 'ROW_FINGER,')],
+    check: [literalAfter(DROPDOWN, 'function DropdownMenuCheckboxItem(', '<span', 'className=')],
+    label: [literalAfter(DROPDOWN, 'data-slot="dropdown-menu-label"', 'cn(')],
+    separator: [literalAfter(DROPDOWN, 'data-slot="dropdown-menu-separator"', 'cn(')],
+    shortcut: [literalAfter(DROPDOWN, 'data-slot="dropdown-menu-shortcut"', 'cn(')],
+    submenu: [literalAfter(DROPDOWN, 'data-slot="dropdown-menu-sub-content"', 'cn(')],
+}
+const GUTTER = literalAfter(DROPDOWN, 'const GUTTER =')
+/** The menu's trigger as the server draws it: the stand-in until Base UI's menu has loaded. */
+const menuTrigger = () =>
+    draw(
+        DropdownMenu,
+        {},
+        createElement(DropdownMenuTrigger, null, 'Actions'),
+        createElement(DropdownMenuContent, null, createElement(DropdownMenuItem, null, 'Run')),
+    ).find((element) => element.attrs['data-slot'] === 'dropdown-menu-trigger')
+/** The variants a row's state turns on; a row that is not destructive says so. */
+const MENU_ON: Record<string, string[]> = {
+    rest: ['not-data-[variant=destructive]'],
+    highlighted: ['focus', 'not-data-[variant=destructive]', 'group-focus/dropdown-menu-item'],
+    destructive: ['data-[variant=destructive]', '*', '[svg]'],
+    'destructive+highlighted': ['data-[variant=destructive]', 'focus'],
+    disabled: ['data-disabled', 'not-data-[variant=destructive]'],
+    subOpen: ['data-popup-open', 'data-open'],
+}
+
+const DROPDOWN_MENU_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {
+        align: positionValues(DROPDOWN, 'DropdownMenuContentProps', 'align'),
+        side: positionValues(DROPDOWN, 'DropdownMenuContentProps', 'side'),
+        variant: propValues(DROPDOWN, 'DropdownMenuItemProps', 'variant'),
+    },
+    size: (size) => {
+        if (size === 'trigger') return pieceWhere(menuTrigger())
+        return size in MENU ? { layers: MENU[size as keyof typeof MENU], on: [] } : undefined
+    },
+    paint: (_, name, state) => {
+        const on = MENU_ON[state]
+        if (on === undefined) return skip(`no way to reach ${state} on a menu`)
+        if (!(name in MENU)) return undefined
+        const layers = MENU[name as keyof typeof MENU]
+        return { layers, on, mark: name === 'item' ? layers[1] : undefined }
+    },
+    effect: () => skip('the menu states no effects'),
+    keys: {
+        Tab: () => (focusable(menuTrigger()) ? true : 'the trigger is out of the tab order'),
+        'ArrowDown, ArrowUp, Enter, Space (the trigger has focus)': () =>
+            menuTrigger()?.tag === 'button' && /const opens = event\.key === 'ArrowDown' \|\| event\.key === 'ArrowUp'/.test(DEFERRED_MENU)
+                ? true
+                : 'the trigger is not a native button, or the stand-in does not open on the arrows',
+        'ArrowDown, ArrowUp (the menu is open)': BASE_UI('menu', 'moves the highlight, wrapping at the ends'),
+        'Home, End (the menu is open)': BASE_UI('menu', 'moves the highlight to the ends'),
+        'a character (the menu is open)': BASE_UI('menu', 'moves the highlight by typing'),
+        'Enter, Space (a row is highlighted)': BASE_UI('menu', 'does the highlighted row'),
+        'ArrowRight (a submenu row is highlighted)': BASE_UI('menu', 'opens a submenu'),
+        'ArrowLeft (in a submenu)': BASE_UI('menu', 'closes a submenu'),
+        'Escape (the menu is open)': () => focusBack(DROPDOWN),
+    },
+    more: () => {
+        const on = (classes: string, read: Reader) => resolve([classes], [], read)
+        return [
+            check('options.align.default', 'start', defaultIn(DROPDOWN, 'function DropdownMenuContent(', 'align')),
+            check('options.side.default', 'bottom', defaultIn(DROPDOWN, 'function DropdownMenuContent(', 'side')),
+            check('options.variant.default', 'default', defaultIn(DROPDOWN, 'function DropdownMenuItem(', 'variant')),
+            ...layoutChecks('dropdown-menu', {
+                gap: () => defaultIn(DROPDOWN, 'function DropdownMenuContent(', 'sideOffset'),
+                minWidth: () => numberIn(MENU.popup[0], /min-w-\[max\(var\(--anchor-width\),--spacing\((\d+)\)\)\]/, 'step'),
+                windowRoom: () => numberIn(MENU.popup[0], /max-w-\[calc\(100vw-(\d+)rem\)\]/, 'rem'),
+                gutter: () => numberIn(GUTTER, /\*\*:data-menu-row:pl-(\d+)$/, 'step'),
+                checkStart: () => on(MENU.check[0], lengthOf('left-')),
+                checkItemPadEnd: () => on(MENU.checkItem[1], READ.padEnd),
+                separatorGap: () => on(MENU.separator[0], lengthOf('my-')),
+                submenuMinWidth: () => on(MENU.submenu[0], lengthOf('min-w-')),
+                submenuGap: () => defaultIn(DROPDOWN, 'function DropdownMenuSubContent(', 'sideOffset'),
+                openEase: () => numberIn(MENU.popup[0], /duration-(\d+)/),
+            }),
+        ]
+    },
+}
+
 // Shell
 
 const SHELL = source('components/Shell.tsx')
@@ -1980,6 +2376,9 @@ const ADAPTERS: Record<string, Adapter> = {
     'page-header': PAGE_HEADER_ADAPTER,
     section: SECTION_ADAPTER,
     'page-state': PAGE_STATE_ADAPTER,
+    select: SELECT_ADAPTER,
+    'dropdown-menu': DROPDOWN_MENU_ADAPTER,
+    tooltip: TOOLTIP_ADAPTER,
     shell: SHELL_ADAPTER,
 }
 

@@ -1,0 +1,311 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "dropdown-menu",
+    "kind": "part",
+    "status": "draft",
+    "summary": "A menu of actions opened from a trigger: rows with an icon, a label and the keys that do the same, groups under labels, separators, check and radio rows with their marks in a gutter at the start, rows that open a submenu beside them, and destructive rows in the destructive ink. As wide as its widest row; every row a finger tall on a phone.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ui/dropdown-menu.tsx",
+            "packages/core/src/components/ui/deferred-menu.tsx",
+            "packages/core/src/components/ui/menu-engine.ts",
+            "packages/core/src/lib/finger.ts",
+            "packages/core/src/lib/focus.ts"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/menu.rs (DropdownMenu, MenuItem, action_row)",
+            "examples/storybook/src/stories/menus.rs (Primitives/Menus/Dropdown menu)"
+        ]
+    },
+    "anatomy": {
+        "trigger": "The control that opens the menu, most often a button or an icon button. Below 768 it takes a finger's hit area, centered on it, and keeps its drawn size.",
+        "popup": "The box under the trigger, 4 away, its start level with the trigger's (align start), padded 4: as wide as its widest row, at least the trigger and 128, at most the window less 32. A menu taller than the room scrolls.",
+        "item": "An action: its icon, its label, and at its end the keys that do the same.",
+        "checkItem": "A row that turns something on or off, or picks one of a group: its check in the gutter at its start while it is on.",
+        "check": "The mark of a check row that is on or of the chosen radio row, 6 from the row's start.",
+        "gutter": "While a menu holds a check or radio row, every other row, label and submenu row steps in 28, so every row's words start at one edge.",
+        "label": "A group's name over its rows, small and muted.",
+        "separator": "A rule between groups, across the menu's full width.",
+        "shortcut": "The keys that do the same at a row's end, small, spaced wide and muted.",
+        "subTrigger": "A row that opens a submenu: a chevron at its end; washed while its submenu is open.",
+        "submenu": "A popup beside its row, at the row's end, its first row level with it; at least 96 wide."
+    },
+    "options": {
+        "align": {
+            "values": ["start", "center", "end"],
+            "default": "start",
+            "does": "Where along the trigger the menu lines up: start, or end for a menu at a row's end.",
+            "sokkel-ui": "DropdownMenuContent align"
+        },
+        "side": {
+            "values": ["top", "bottom", "left", "right", "inline-start", "inline-end"],
+            "default": "bottom",
+            "does": "Which side of the trigger the menu opens on; it moves to the other side when there is no room.",
+            "sokkel-ui": "DropdownMenuContent side"
+        },
+        "items": {
+            "type": "rows",
+            "does": "The rows in order: actions { label, icon?, shortcut?, variant?, disabled?, inset?, onSelect }, labels, separators, check rows { label, checked }, radio groups { value } of radio rows, and submenu rows with their own rows.",
+            "sokkel-ui": "DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem, DropdownMenuRadioGroup with DropdownMenuRadioItem, DropdownMenuShortcut, DropdownMenuSub with DropdownMenuSubTrigger and DropdownMenuSubContent"
+        },
+        "variant": {
+            "values": ["default", "destructive"],
+            "default": "default",
+            "does": "An action's look: destructive draws it, and its icon, in the destructive ink.",
+            "sokkel-ui": "DropdownMenuItem variant"
+        },
+        "inset": {
+            "type": "boolean",
+            "default": false,
+            "does": "Steps a row or a label in 28, as the gutter does, for a menu that lines its words up by hand."
+        },
+        "inGutter": {
+            "type": "boolean",
+            "default": false,
+            "does": "The menu holds a check or radio row: every plain row, label and submenu row steps in 28.",
+            "context": "has-[[role=menuitemcheckbox],[role=menuitemradio]] on the popup, reaching every data-menu-row"
+        },
+        "open": {
+            "type": "boolean",
+            "default": false,
+            "does": "Open from the start, as a story shows it.",
+            "sokkel-ui": "open, defaultOpen, onOpenChange"
+        }
+    },
+    "sizes": {
+        "trigger": {"phoneHitArea": "spacing-finger"},
+        "popup": {"padX": 4, "padY": 4, "radius": "radius-surface"},
+        "item": {
+            "padX": 6,
+            "padY": 4,
+            "gap": 6,
+            "icon": 16,
+            "text": "text.body",
+            "radius": "radius-md",
+            "phoneMinHeight": "spacing-finger",
+            "note": "30 tall at every density: 4 over and under a 22 line. A finger tall below 768."
+        },
+        "checkItem": {
+            "padY": 4,
+            "gap": 6,
+            "icon": 16,
+            "text": "text.body",
+            "radius": "radius-md",
+            "phoneMinHeight": "spacing-finger",
+            "note": "Pads 28 at its start, where its check stands, and 6 at its end (layout)."
+        },
+        "subTrigger": {
+            "padX": 6,
+            "padY": 4,
+            "gap": 6,
+            "icon": 16,
+            "text": "text.body",
+            "radius": "radius-md",
+            "phoneMinHeight": "spacing-finger",
+            "note": "Its chevron 16 at its end."
+        },
+        "check": {"height": 16, "width": 16},
+        "label": {"padX": 6, "padY": 4, "text": "text.badge"},
+        "separator": {"height": 1},
+        "shortcut": {"text": "text.help", "note": "Tracked 0.1em (tracking-widest), which no text role has."}
+    },
+    "layout": {
+        "gap": {"value": 4, "note": "Between the trigger and the menu."},
+        "minWidth": {"value": 128, "note": "Or the trigger's width, when it is wider."},
+        "windowRoom": {"value": 32, "note": "The menu is at most the window's width less this."},
+        "gutter": {
+            "value": 28,
+            "note": "A check or radio row's start pad, and every row's while the menu holds one (inGutter), or with inset."
+        },
+        "checkStart": 6,
+        "checkItemPadEnd": 6,
+        "separatorGap": {
+            "value": 4,
+            "note": "Above and below a separator, which runs across the menu's pad to its edges."
+        },
+        "submenuMinWidth": 96,
+        "submenuGap": {
+            "value": 0,
+            "note": "A submenu stands right at its row's end, 3 above it so its first row is level."
+        },
+        "openEase": {
+            "value": 100,
+            "note": "ms the menu fades and zooms in over, as far as motion allows; no motion token yet."
+        }
+    },
+    "states": {
+        "rest": {"means": "A row with nothing over it."},
+        "open": {
+            "means": "The menu is shown.",
+            "reached": "a press on the trigger, ArrowDown or ArrowUp on it, Enter or Space on it, or open",
+            "sokkel-ui": "data-popup-open on the trigger"
+        },
+        "highlighted": {
+            "means": "A row under the pointer, or reached by the arrows or by typing.",
+            "reached": "pointer over a row, the arrows, Home, End, a character",
+            "sokkel-ui": "focus: Base UI moves the focus to the highlighted row"
+        },
+        "destructive": {
+            "means": "A row that destroys something, in the destructive ink.",
+            "reached": "variant destructive",
+            "sokkel-ui": "data-variant=destructive"
+        },
+        "checked": {
+            "means": "A check row that is on, or the chosen radio row: its check shows.",
+            "reached": "checked, or the radio group's value",
+            "sokkel-ui": "data-checked, CheckboxItemIndicator, RadioItemIndicator"
+        },
+        "subOpen": {
+            "means": "A submenu row whose submenu is open.",
+            "reached": "a press or the pointer on the row, Enter, Space or ArrowRight on it",
+            "sokkel-ui": "data-popup-open, data-open"
+        },
+        "disabled": {
+            "means": "A row shown that cannot be chosen.",
+            "reached": "disabled",
+            "sokkel-ui": "data-disabled: no pointer events"
+        }
+    },
+    "pieces": {
+        "popup": {
+            "rest": {
+                "ground": "popover",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "ring": {"color": "foreground/10", "width": 1},
+                "note": "The 1px ring is its edge, outside the box. Under it Tailwind's shadow-md, two layers black at 10 percent (0 4 6 -1, 0 2 4 -2), and shadow-lg under a submenu (0 10 15 -3, 0 4 6 -4); no elevation token."
+            }
+        },
+        "item": {
+            "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body", "note": "Its icon in the row's ink."},
+            "highlighted": {
+                "ground": "accent",
+                "ink": "accent-foreground",
+                "note": "Its icon and its keys in accent-foreground too."
+            },
+            "destructive": {"ink": "destructive", "mark": "destructive"},
+            "destructive+highlighted": {
+                "ground": "destructive/10",
+                "ink": "destructive",
+                "dark": {"ground": "destructive/20"}
+            },
+            "disabled": {"opacity": 0.5}
+        },
+        "checkItem": {
+            "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body"},
+            "highlighted": {"ground": "accent", "ink": "accent-foreground"},
+            "disabled": {"opacity": 0.5}
+        },
+        "subTrigger": {
+            "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body"},
+            "highlighted": {"ground": "accent", "ink": "accent-foreground"},
+            "subOpen": {"ground": "accent", "ink": "accent-foreground"}
+        },
+        "check": {"rest": {"note": "Drawn only on a check row that is on or the chosen radio row, in the row's ink."}},
+        "label": {"rest": {"ink": "muted-foreground", "text": "text.badge"}},
+        "separator": {"rest": {"ground": "border", "note": "1 tall."}},
+        "shortcut": {
+            "rest": {"ink": "muted-foreground", "text": "text.help"},
+            "highlighted": {"ink": "accent-foreground"}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the trigger."},
+        {
+            "keys": ["ArrowDown", "ArrowUp", "Enter", "Space"],
+            "does": "Opens the menu with its first row highlighted (its last on ArrowUp).",
+            "when": "the trigger has focus"
+        },
+        {
+            "keys": ["ArrowDown", "ArrowUp"],
+            "does": "Moves the highlight a row, wrapping at the ends.",
+            "when": "the menu is open"
+        },
+        {
+            "keys": ["Home", "End"],
+            "does": "Moves the highlight to the first or the last row.",
+            "when": "the menu is open"
+        },
+        {
+            "keys": ["a character"],
+            "does": "Moves the highlight to the next row whose label starts with what was typed.",
+            "when": "the menu is open"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Does the highlighted row's action and closes the menu; a check row turns over and a radio row is chosen, the menu staying open; a submenu row opens its submenu.",
+            "when": "a row is highlighted"
+        },
+        {
+            "keys": ["ArrowRight"],
+            "does": "Opens the submenu, its first row highlighted.",
+            "when": "a submenu row is highlighted"
+        },
+        {"keys": ["ArrowLeft"], "does": "Closes the submenu, the highlight back on its row.", "when": "in a submenu"},
+        {"keys": ["Escape"], "does": "Closes the menu, focus back on the trigger.", "when": "the menu is open"}
+    ],
+    "words": {},
+    "appText": {
+        "rows": "Every row's label, the keys a shortcut shows, every group's label, and the trigger's name (an icon trigger's aria-label)."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Base UI's Menu, fetched after the page is drawn (deferred-menu, menu-engine): until it is here the trigger is a stand-in that looks and reads the same, and a press, ArrowDown or ArrowUp on it opens the menu once it arrives.",
+            "The menu is a portal on z-50, and moves to the other side of the trigger when there is no room.",
+            "A submenu also opens under a resting pointer.",
+            "Focus goes back to the trigger after a keyboard close and nowhere after a pointer close (returnFocusOnKeyboard).",
+            "Check and radio rows keep the menu open (Base UI's closeOnClick is off for them); an action closes it.",
+            "AccountMenu and NavBar give their menus a border-strong edge and elevation-pop over this popup's look (an open question).",
+            "The trigger takes the finger hit area (FINGER_HIT) unless its render element places itself or draws its own ::after (takesFinger)."
+        ],
+        "sokkel-ui-egui": [
+            "DropdownMenu::new(&items).show(&trigger) returns the index of the action pressed this frame; a MenuItem is an Action, a Label or a Separator.",
+            "egui's Popup::menu, closing on a click outside; end() lines the menu's end up with the trigger's.",
+            "MenuItem's tint, hint, id and keywords serve the command palette and the board: an icon in a color of its own, a muted word at the row's end."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "width",
+            "spec": "As wide as its widest row, at least the trigger and 128, at most the window less 32.",
+            "today": "As of 26b411f (menu.rs unchanged since 5dd7c34): at least 220 too (width's default), with no most."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "popup edge and shadow",
+            "spec": "A 1px foreground/10 ring outside the box; Tailwind's shadow-md, two layers black at 10 percent.",
+            "today": "A 1px foreground/10 stroke inside the box; one shadow 0 4 blur 12, black at 24 (90 in dark)."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "icon ink",
+            "spec": "An icon in its row's ink: popover-foreground, accent-foreground highlighted, destructive in a destructive row.",
+            "today": "muted-foreground unless the row is lit, destructive or tinted."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "keys at a row's end",
+            "spec": "text.help tracked 0.1em, in accent-foreground in a highlighted row.",
+            "today": "text.help with 1 of extra letter spacing, muted-foreground in every row."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "destructive highlight in dark",
+            "spec": "destructive/10 in light, destructive/20 in dark.",
+            "today": "destructive/10 in both schemes."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "story path",
+            "spec": "Specimens pair by sokkel-ui's path, Primitives/Menus/DropdownMenu.",
+            "today": "The egui story is at Primitives/Menus/Dropdown menu."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 26b411f, DropdownMenu draws actions 30 tall, 6 in, with a 16 icon and 22 to the label, keys or a hint at the end, labels in text.badge, separators, destructive and disabled rows, the accent highlight under the pointer, and start or end alignment. Not yet: check and radio rows, the gutter, inset, submenus, side, finger-tall rows below 768, the trigger's finger hit area, and the keys (opening from the keyboard, the arrows wrapping, Home, End, typing, Enter, Space, ArrowRight, ArrowLeft, Escape)."
+        }
+    ]
+}

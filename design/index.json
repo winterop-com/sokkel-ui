@@ -37,7 +37,10 @@
         {"id": "status-line", "file": "parts/status-line.json", "status": "draft"},
         {"id": "page-header", "file": "parts/page-header.json", "status": "draft"},
         {"id": "section", "file": "parts/section.json", "status": "draft"},
-        {"id": "page-state", "file": "parts/page-state.json", "status": "draft"}
+        {"id": "page-state", "file": "parts/page-state.json", "status": "draft"},
+        {"id": "select", "file": "parts/select.json", "status": "draft"},
+        {"id": "dropdown-menu", "file": "parts/dropdown-menu.json", "status": "draft"},
+        {"id": "tooltip", "file": "parts/tooltip.json", "status": "draft"}
     ],
     "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "draft"}],
     "principles": "principles.md",
