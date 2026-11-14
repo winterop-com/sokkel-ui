@@ -525,7 +525,7 @@ export function Shell({
                         aria-expanded={drawer}
                         className={cn(
                             // As the rail's collapse control: the hover's ground and ink, and the button's own focus look.
-                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid max-md:size-finger',
+                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid max-md:size-finger max-md:focus-visible:outline-offset-focus-inset',
                             !railHidden && 'md:hidden',
                         )}
                         onClick={() => setDrawer(true)}

@@ -4,7 +4,7 @@ import { extendTailwindMerge } from 'tailwind-merge'
 /**
  * Tailwind's merge, told the text sizes and type roles the tokens add, so a size such as `text-page` is not taken
  * for a color and dropped beside `text-muted-foreground`, and the spacings they add, so a later `min-w-*`
- * overrides `min-w-finger`. So too the focus and invalid rings' widths and offset (`outline-focus` is a width
+ * overrides `min-w-finger`. So too the focus and invalid rings' widths and offsets (`outline-offset-focus-inset` draws it inside) (`outline-focus` is a width
  * beside `outline-ring`, a color), the disabled opacity, the layers, and the motion's durations and curve.
  */
 const merge = extendTailwindMerge({
@@ -12,7 +12,7 @@ const merge = extendTailwindMerge({
         theme: { spacing: ['finger'] },
         classGroups: {
             'outline-w': [{ outline: ['focus'] }],
-            'outline-offset': [{ 'outline-offset': ['focus'] }],
+            'outline-offset': [{ 'outline-offset': ['focus', 'focus-inset'] }],
             'ring-w': [{ ring: ['focus', 'invalid'] }],
             opacity: [{ opacity: ['disabled'] }],
             z: [{ z: ['drawer', 'dialog', 'popover', 'toast'] }],

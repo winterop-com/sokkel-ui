@@ -391,7 +391,10 @@ const READ = {
         return /^(?:ring|outline)-(\d+)$/.exec(name)?.[1]
     },
     ringOffset: (name: string) =>
-        /^(?:ring|outline)-offset-focus$/.test(name) ? 'focus-ring-offset' : /^(?:ring|outline)-offset-(\d+)$/.exec(name)?.[1],
+        /^(?:ring|outline)-offset-focus(?:-inset)?$/.test(name) ? 'focus-ring-offset' : /^(?:ring|outline)-offset-(\d+)$/.exec(name)?.[1],
+    /** Whether an outline is drawn inside the box (`outline-offset-focus-inset`, its offset inward) or outside it. */
+    ringInset: (name: string) =>
+        /^(?:ring|outline)-offset-focus-inset$/.test(name) ? 'all' : /^(?:ring|outline)-offset-/.test(name) ? 'outside' : undefined,
     opacity: (name: string) => {
         if (name === 'opacity-disabled') return 'disabled-opacity'
         const match = /^opacity-(\d+)$/.exec(name)
@@ -505,8 +508,10 @@ function ringChecks(key: string, ring: Ring, where: Where): Check[] {
         { ...check(`${key}.color`, ring.color, light), same: sameColor(ring.color, light) },
         check(`${key}.width`, String(ring.width), resolve(where.layers, where.on, READ.ringWidth)),
     ]
-    if (ring.offset !== undefined)
+    if (ring.offset !== undefined) {
         checks.push(check(`${key}.offset`, String(ring.offset), resolve(where.layers, where.on, READ.ringOffset)))
+        checks.push(check(`${key}.inset`, ring.inset ?? 'outside', resolve(where.layers, where.on, READ.ringInset)))
+    }
     if (ring.dark !== undefined || dark !== light) {
         const wanted = ring.dark?.color ?? ring.color
         checks.push({ ...check(`${key}.color (dark)`, wanted, dark), same: sameColor(wanted, dark) })
