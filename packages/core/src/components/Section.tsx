@@ -40,7 +40,8 @@ export interface SectionProps {
  * A titled part of a page.
  *
  * `boxed`, the default, is a bordered surface whose head is a bar of its own, its title set like a table's
- * column heads but in the text color, so every box's head reads alike. `flat` is a heading
+ * column heads but in the text color and in its own case, so every box's head reads alike and a title
+ * can be a name, such as a job's. A count beside the title is drawn as a page header's count is. `flat` is a heading
  * over a rule with the content on the page's own ground, for the rare page that wants it. Either takes actions at the right end of its
  * heading, a count or a fact beside the title, and a `description` under it saying what the part holds.
  * The box's line and ground are a framed DataTable's and a card's, and its head is as tall as a listing's

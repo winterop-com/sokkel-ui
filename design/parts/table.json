@@ -54,7 +54,10 @@
             "default": false,
             "does": "A chevron at each row's end: a press leaves the list for the row's own page."
         },
-        "sort": {"type": "text", "does": "{ column, direction }. A sortable head goes up, down, then back to as given."},
+        "sort": {
+            "type": "text",
+            "does": "{ column, direction }. A sortable head goes up, down, then back to as given: by a press, or by Enter or Space in the head row."
+        },
         "groupBy": {"type": "text", "does": "Gathers rows under group heads by a field or a key made from the row."},
         "childRows": {
             "type": "callback",
@@ -200,7 +203,7 @@
         },
         "sorted": {
             "means": "A column sorts the rows: its head in the full ink with an arrow up or down.",
-            "reached": "a press on a sortable head, or sort"
+            "reached": "a press on a sortable head, Enter or Space on it in the head row, or sort"
         },
         "selected": {
             "means": "A row's box is ticked; the bar says how many.",
@@ -210,6 +213,10 @@
         "active": {
             "means": "The row the arrows move from, marked while the table has keyboard focus.",
             "reached": "arrows, a press"
+        },
+        "headActive": {
+            "means": "The keys are in the head row: the sortable head they chose has the keyboard focus, and the active row's mark waits.",
+            "reached": "ArrowUp from the first row"
         },
         "stacked": {
             "means": "Rows drawn as cards, the table's own box being narrower than stackBelow and its columns.",
@@ -240,7 +247,11 @@
                 "note": "text.head reads table-head-size, table-head-weight and table-head-tracking; the case is table-head-transform."
             },
             "hover": {"ink": "foreground", "note": "A sortable head under the pointer."},
-            "sorted": {"ink": "foreground"}
+            "sorted": {"ink": "foreground"},
+            "headActive+focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"},
+                "note": "The chosen head's name, as a focused button: the button's own focus look, one head at a time."
+            }
         },
         "row": {
             "rest": {
@@ -291,9 +302,25 @@
     "keyboard": [
         {
             "keys": ["Tab"],
-            "does": "Moves focus onto the table, one stop; the active row is marked. Head buttons and row boxes are not separate stops."
+            "does": "Moves focus onto the table, one stop; the active row is marked. The head row and the row boxes are reached by keys, never as stops of their own."
         },
         {"keys": ["ArrowDown", "ArrowUp"], "does": "Moves the active row one row (one line of cards in the grid)."},
+        {
+            "keys": ["ArrowUp"],
+            "does": "From the first row, enters the head row on the sorted column's head, else on the first sortable head.",
+            "when": "the table view, a sortable head drawn"
+        },
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "Chooses the sortable head before or after, stopping at the first and the last.",
+            "when": "in the head row"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Turns the chosen head's order: ascending, descending, then as given.",
+            "when": "in the head row"
+        },
+        {"keys": ["ArrowDown"], "does": "Goes back to the rows, on the first row.", "when": "in the head row"},
         {"keys": ["PageDown", "PageUp"], "does": "Moves the active row by a view's worth."},
         {"keys": ["Home", "End"], "does": "To the first or last row."},
         {
@@ -440,6 +467,7 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "A CSS grid per row; the head and the first column are sticky.",
+            "In the head row the focus is on the chosen head's sort button, which is no tab stop of its own (tabindex -1), so its own focus look marks it and assistive technology reads its name and order; Down, Tab back or a press on the table gives the focus back to the table.",
             "Content columns are measured in the DOM and again once fonts load.",
             "Base UI's checkbox and the menus load after first paint; the boxes are drawn the same until then.",
             "Numbers in words are formatted for en-US until a locale arrives (roadmap)."
@@ -449,7 +477,7 @@
             "Only the rows in view: ScrollArea::show_rows at density.row.",
             "Content columns measured from laid-out galleys; nothing to wait for.",
             "The table's own box is the width egui gives it (available width), which is what stackBelow asks for: no container query needed.",
-            "One focus stop: the table keeps the active row in its own state and paints the inset mark itself."
+            "One focus stop: the table keeps the active row, and the head chosen in the head row, in its own state and paints their marks itself."
         ]
     },
     "drift": [
@@ -457,7 +485,7 @@
             "renderer": "sokkel-ui-egui",
             "what": "the parts not built yet",
             "spec": "This spec.",
-            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-ui-egui 38693ff). Has: rows at density.row, drawing only those in view; heads in table-head-* that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); words as fields. Not yet: grouping, trees, detail rows, the stacked cards below 576, row actions and menus, paging, cell editing, row reorder, its own loading and failed states (it is wrapped in PageState), keyboard row navigation."
+            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-ui-egui 38693ff). Has: rows at density.row, drawing only those in view; heads in table-head-* that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); words as fields. Not yet: grouping, trees, detail rows, the stacked cards below 576, row actions and menus, paging, cell editing, row reorder, its own loading and failed states (it is wrapped in PageState), keyboard row navigation, and the head row by keys."
         },
         {
             "renderer": "sokkel-ui",

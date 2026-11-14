@@ -13,7 +13,7 @@ import {
     type CommandPaletteProps,
     type PaletteCommand,
 } from '@winterop-com/sokkel-ui/CommandPalette'
-import { DataTable, DATA_TABLE_WORDS, type DataColumn, type DataTableProps } from '@winterop-com/sokkel-ui/DataTable'
+import { DataTable, DATA_TABLE_WORDS, headEntered, headStep, type DataColumn, type DataTableProps } from '@winterop-com/sokkel-ui/DataTable'
 import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
 import { FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -963,7 +963,8 @@ const TABLE_ADAPTER: Adapter = {
             const head = elements.find((element) => element.attrs.role === 'row' && element.attrs['aria-rowindex'] === '1')
             const sorter = elements.find((element) => element.tag === 'button' && element.parent?.attrs.role === 'columnheader')
             if (head === undefined) return undefined
-            const on = state === 'hover' ? ['hover'] : []
+            // The head the keys chose takes the focus on its sorter, which wears the button's focus look.
+            const on = state === 'hover' ? ['hover'] : state === 'headActive+focus' ? ['focus-visible'] : []
             return { layers: [classesOf(head), ...(state === 'rest' ? [] : [classesOf(sorter)])], on, around: ancestors(head) }
         }
         if (name === 'groupHead') {
@@ -1020,6 +1021,30 @@ const TABLE_ADAPTER: Adapter = {
                 ? true
                 : 'the handle misses a key'
         },
+        'ArrowUp (the table view, a sortable head drawn)': () =>
+            headEntered(['name', 'state'], 'state') === 'state' &&
+            headEntered(['name', 'state'], undefined) === 'name' &&
+            /ArrowUp: \(\) => \{[\s\S]*?activeIndex <= 0 && showHeads \? headEntered\(sortHeads, sort\?\.column\)/.test(DATA_TABLE)
+                ? true
+                : 'Up from the first row does not enter the head row on the sorted head, else the first',
+        'ArrowLeft, ArrowRight (in the head row)': () => {
+            const left = headStep(['name', 'state', 'took'], 'state', 'ArrowLeft')
+            const right = headStep(['name', 'state', 'took'], 'took', 'ArrowRight')
+            return JSON.stringify([left, right]) === JSON.stringify([{ head: 'name' }, { head: 'took' }])
+                ? true
+                : `the arrows choose ${JSON.stringify([left, right])}`
+        },
+        'Enter, Space (in the head row)': () =>
+            JSON.stringify(['Enter', ' '].map((key) => headStep(['name', 'state'], 'state', key))) ===
+                JSON.stringify([{ sort: 'state' }, { sort: 'state' }]) &&
+            /if \(keyHead !== undefined\) \{[\s\S]*?nextSort\(column\)/.test(DATA_TABLE)
+                ? true
+                : "Enter or Space in the head row does not turn the head's order",
+        'ArrowDown (in the head row)': () =>
+            headStep(['name', 'state'], 'state', 'ArrowDown') === 'rows' &&
+            /step === 'rows'\) \{\s+setHeadAt\(undefined\)\s+moveTo\(0\)/.test(DATA_TABLE)
+                ? true
+                : 'Down in the head row does not go back to the first row',
         'Enter, F2, a character (editing)': () => {
             const editing = source('components/table-editing.tsx')
             // A typed character opening the editor is a press a browser makes; Enter and F2 are read here.
@@ -1188,6 +1213,9 @@ const railMark = (elements: El[]) =>
     elements.find((element) => element.tag === 'span' && classesOf(element).includes('size-8') && classesOf(element).includes('bg-primary'))
 const collapseControl = (elements: El[]) =>
     elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === RAIL_WORDS.collapse)
+/** A collapsed rail's mark, the control that expands it. */
+const expandControl = (elements: El[]) =>
+    elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === RAIL_WORDS.expand)
 const groupTitle = (elements: El[]) => byText(elements, 'p', 'Operate')
 const railEdge = (elements: El[]) => elements.find((element) => element.attrs.role === 'separator')
 const stripEntry = (elements: El[], label: string) =>
@@ -1246,8 +1274,10 @@ const RAIL_ADAPTER: Adapter = {
                     expanded.find((element) => element.tag === 'aside'),
                     state,
                 )
+            case 'head':
+                return at(railHead(expanded), state)
             case 'mark':
-                return at(railMark(expanded), state)
+                return at(state === 'focus' ? expandControl(collapsed) : railMark(expanded), state)
             case 'name':
                 return at(byText(expanded, 'span', 'Tidevann'), state)
             case 'home':
@@ -1409,6 +1439,11 @@ const RAIL_ADAPTER: Adapter = {
                     const line = /h-\(--text-xs--line-height\) w-full items-center/.test(RAIL) ? TEXT.get('xs')?.leading : undefined
                     return line === undefined ? undefined : String(Number(/^([\d.]+)rem$/.exec(line)?.[1]) * 16)
                 },
+                untitledTop: () =>
+                    lengthOn(
+                        rail({ groups: DESCRIBED }).find((element) => element.tag === 'nav'),
+                        lengthOf('pt-'),
+                    ),
                 placesBottom: () =>
                     lengthOn(
                         expanded.find((element) => element.attrs['data-rail-places'] !== undefined),
@@ -1609,8 +1644,7 @@ const STATUS_LINE_ADAPTER: Adapter = {
     size: (size) => {
         const line = statusLine({ live: true })
         const drawn: Record<string, El | undefined> = {
-            strip: shell({ foot: createElement(StatusLine, { note: 'Ready' }) }).find((element) => element.tag === 'footer'),
-            line: line[0],
+            strip: line[0],
             note: line.find((element) => element.parent === line[0] && element.tag === 'span'),
             liveDot: line.find((element) => classesOf(element).includes('bg-current') && classesOf(element).includes('relative')),
             facts: line.find((element) => classesOf(element).includes('max-w-[70%]')),
@@ -1622,7 +1656,7 @@ const STATUS_LINE_ADAPTER: Adapter = {
         const line = statusLine()
         switch (name) {
             case 'strip':
-                return at(shell({ foot: createElement(StatusLine, { note: 'Ready' }) }).find((element) => element.tag === 'footer'))
+                return at(line[0])
             case 'note': {
                 const toned = statusLine({ tone: STATUS_TONES[state] })
                 return at(toned.find((element) => element.parent === toned[0] && element.tag === 'span'))

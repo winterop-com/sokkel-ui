@@ -797,6 +797,33 @@ export function rangeKeys<T>(flat: readonly FlatRow<T>[], from: string, to: stri
     return flat.slice(start, end + 1).map((entry) => entry.key)
 }
 
+/**
+ * The head Up from the first row lands on: the head of the column the rows are sorted by, else the
+ * first sortable head; none where no head sorts.
+ */
+export function headEntered(heads: readonly string[], sorted: string | undefined): string | undefined {
+    if (heads.length === 0) return undefined
+    return sorted !== undefined && heads.includes(sorted) ? sorted : heads[0]
+}
+
+/** What a key does in the head row: the head chosen next, the chosen head's order turned, the rows again, or nothing. */
+export type HeadStep = { head: string } | { sort: string } | 'rows' | 'stay'
+
+/**
+ * A key pressed in a table's head row, where the arrows choose among the sortable heads: Left and
+ * Right the head before or after (stopping at the first and the last), Enter or Space turns the
+ * chosen head's order, Down goes back to the rows, and the rows' other keys stay in the head row.
+ * A key the rows do not bind is left to the browser (undefined).
+ */
+export function headStep(heads: readonly string[], at: string, key: string): HeadStep | undefined {
+    const index = heads.indexOf(at)
+    if (key === 'ArrowLeft') return { head: heads[Math.max(0, index - 1)] ?? at }
+    if (key === 'ArrowRight') return { head: heads[Math.min(heads.length - 1, index + 1)] ?? at }
+    if (key === 'Enter' || key === ' ') return { sort: at }
+    if (key === 'ArrowDown') return 'rows'
+    return ['ArrowUp', 'PageUp', 'PageDown', 'Home', 'End'].includes(key) ? 'stay' : undefined
+}
+
 /** What decides whether a table asks for more rows. */
 export interface MoreAsked {
     /** More rows exist than are given. */
@@ -1245,7 +1272,9 @@ export interface DataTableProps<T> {
  * children opens and closes, children sort among themselves, and choosing a row chooses its
  * whole branch. With `hasChildren` and `loadChildren`, a branch's children load when it first
  * opens, a spinner in its control until they come. Arrow keys move through the rows, Space
- * selects, Enter opens, and Right and Left open and close a branch.
+ * selects, Enter opens, and Right and Left open and close a branch. The table is one tab stop: Up
+ * from the first row enters the head row, where Left and Right choose a sortable head, Enter or
+ * Space turns its order (up, down, then as given) and Down goes back to the rows.
  *
  * With `detail`, a row opens into a free-form detail of its own, drawn under it across the width
  * of the table, such as a record's fields with their documentation: not more rows of the same shape,
@@ -1689,6 +1718,8 @@ export function DataTable<T>({
 
     const [active, setActive] = useState<string | undefined>(undefined)
     const anchor = useRef<string | undefined>(undefined)
+    // The sortable head the arrows chose in the head row, while the keys are there rather than in the rows.
+    const [headAt, setHeadAt] = useState<string | undefined>(undefined)
 
     // `content` columns not dragged: drawn at `max-content` while their cells are measured, then at the widest.
     const contentColumns = gridView ? [] : shown.filter((column) => column.width === 'content' && widths[column.id] === undefined)
@@ -1941,6 +1972,10 @@ export function DataTable<T>({
         else if (at + lineHeight > box.scrollTop + box.clientHeight) box.scrollTop = at + lineHeight - box.clientHeight
     }
     const activeIndex = active === undefined ? -1 : flat.findIndex((entry) => entry.key === active)
+    // The heads the keys sort by, and the one chosen while the keys are in the head row, where the active row's mark waits.
+    const sortHeads = shown.filter((column) => column.sortValue !== undefined).map((column) => column.id)
+    const keyHead = headAt !== undefined && !gridView && columnHeads && sortHeads.includes(headAt) ? headAt : undefined
+    const marked = keyHead === undefined ? active : undefined
 
     // Editable cells, given `editing`: the active cell, the open editor, and each cell's draft while it is open,
     // saving or refused. The editing itself is the app's `editing`, so a table that edits nothing carries none of it.
@@ -1954,7 +1989,7 @@ export function DataTable<T>({
             : {
                   shown,
                   flat,
-                  active,
+                  active: marked,
                   setActive,
                   activeColumn,
                   setActiveColumn,
@@ -1982,9 +2017,33 @@ export function DataTable<T>({
     /** Whether a press on a row does anything. */
     const pressable = onOpen !== undefined || detail !== undefined
 
+    /** Moves the focus to a sortable head's button, which marks it with its own focus look, scrolled into view sideways. */
+    const toHead = (id: string) => {
+        setHeadAt(id)
+        const button = heads.current.get(id)?.current?.querySelector('button')
+        button?.focus({ preventScroll: true })
+        button?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    }
+
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         // A row's grip keeps its keys: Space or Enter picks the row up, the arrows carry it, Space drops it.
         if (!event.altKey && event.target instanceof Element && event.target.closest('[data-row-grip]') !== null) return
+        // In the head row the arrows choose a sortable head and Enter or Space turns its order, until Down goes back to the rows.
+        if (keyHead !== undefined) {
+            const step = event.altKey || event.ctrlKey || event.metaKey ? undefined : headStep(sortHeads, keyHead, event.key)
+            if (step === undefined) return
+            event.preventDefault()
+            if (step === 'rows') {
+                setHeadAt(undefined)
+                moveTo(0)
+                gridBox.current?.focus({ preventScroll: true })
+            } else if (typeof step === 'object' && 'head' in step) toHead(step.head)
+            else if (typeof step === 'object') {
+                const column = shown.find((one) => one.id === step.sort)
+                if (column !== undefined) nextSort(column)
+            }
+            return
+        }
         const page = Math.max(1, Math.floor(view.height / lineHeight) - 1) * perLine
         const entry = flat[activeIndex]
         if (ordering && event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
@@ -1995,7 +2054,12 @@ export function DataTable<T>({
         if (edits !== undefined && editing?.keyDown(edits, event, entry) === true) return
         const moves: Record<string, () => void> = {
             ArrowDown: () => moveTo(activeIndex + perLine),
-            ArrowUp: () => moveTo(Math.max(0, activeIndex - perLine)),
+            ArrowUp: () => {
+                // Up from the first row enters the head row, on the sorted column's head or else the first that sorts.
+                const entered = activeIndex <= 0 && showHeads ? headEntered(sortHeads, sort?.column) : undefined
+                if (entered === undefined) moveTo(Math.max(0, activeIndex - perLine))
+                else toHead(entered)
+            },
             PageDown: () => moveTo(activeIndex + page),
             PageUp: () => moveTo(Math.max(0, activeIndex - page)),
             Home: () => moveTo(0),
@@ -2029,6 +2093,7 @@ export function DataTable<T>({
         // A press on a control in a cell, such as a switch or a link, is the control's alone.
         const control = event.target instanceof Element ? event.target.closest(CELL_CONTROL) : null
         if (control !== null && control !== event.currentTarget && event.currentTarget.contains(control)) return
+        setHeadAt(undefined)
         setActive(entry.key)
         if (selectable && event.shiftKey) toggle(entry, true)
         else if (selectable && (event.metaKey || event.ctrlKey)) toggle(entry, false)
@@ -2636,7 +2701,7 @@ export function DataTable<T>({
                 data-dragging={dragged}
                 role="row"
                 aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
-                data-active={entry.key === active || undefined}
+                data-active={entry.key === marked || undefined}
                 onClick={(event) => press(entry, event)}
                 className={cn(
                     'group/card relative min-w-0 overflow-hidden rounded-surface [&>*:first-child]:h-full',
@@ -2912,7 +2977,9 @@ export function DataTable<T>({
                                 document.activeElement.blur()
                         }
                     }}
-                    onFocus={() => {
+                    onFocus={(event) => {
+                        // The table itself taking the focus, from Tab or a press, leaves the head row for the rows.
+                        if (event.target === event.currentTarget) setHeadAt(undefined)
                         if (active === undefined && flat.length > 0 && !failed)
                             setActive(flat[Math.min(first + OVERSCAN, flat.length - 1)]?.key ?? flat[0].key)
                         if (edits !== undefined) editing?.focus(edits)
@@ -3034,10 +3101,12 @@ export function DataTable<T>({
                                                 <button
                                                     type="button"
                                                     tabIndex={-1}
+                                                    // Focused from the head row's keys, or by a press, the keys go on from this head.
+                                                    onFocus={() => setHeadAt(column.id)}
                                                     onClick={() => nextSort(column)}
                                                     className={cn(
                                                         // A button keeps its own case unless told, so the head's case reaches the sortable ones.
-                                                        'flex min-w-0 items-center gap-1 rounded-sm [text-transform:inherit] outline-none hover:text-foreground',
+                                                        'flex min-w-0 items-center gap-1 rounded-sm [text-transform:inherit] outline-none hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
                                                         column.align === 'end' && 'flex-row-reverse',
                                                         sorted !== undefined && 'text-foreground',
                                                     )}
@@ -3181,7 +3250,7 @@ export function DataTable<T>({
                                                 aria-expanded={entry.branch ? entry.open : undefined}
                                                 aria-level={tree ? entry.depth + 1 : undefined}
                                                 data-row={entry.key}
-                                                data-active={entry.key === active || undefined}
+                                                data-active={entry.key === marked || undefined}
                                                 onClick={(event) => press(entry, event)}
                                                 className={cn(
                                                     'flex flex-col gap-1 px-(--density-panel-pad) text-sm',
@@ -3329,7 +3398,7 @@ export function DataTable<T>({
                                                 aria-level={tree ? entry.depth + 1 : undefined}
                                                 aria-busy={entry.waiting || undefined}
                                                 data-row={entry.key}
-                                                data-active={entry.key === active || undefined}
+                                                data-active={entry.key === marked || undefined}
                                                 onClick={(event) => press(entry, event)}
                                                 className={cn(
                                                     'group/row grid cursor-default items-center border-b border-border text-sm',

@@ -28,6 +28,12 @@ test("the search's results stay closed when the palette gives focus back to the 
     await expect(results).toBeVisible()
 })
 
+/** A key pressed as a person would, a frame apart: dnd-kit listens for the keys that carry a held row only from the task after the one that picked it up. */
+const press = async (page: Page, key: string) => {
+    await page.keyboard.press(key)
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))))
+}
+
 test('a table row is picked up from its grip with Space, carried by the arrows and dropped with Space, or put back with Escape', async ({
     page,
 }) => {
@@ -37,14 +43,9 @@ test('a table row is picked up from its grip with Space, carried by the arrows a
     await expect(grips).toHaveCount(5)
     const first = (await order())[0] ?? ''
     await page.getByRole('button', { name: first }).focus()
-    await page.keyboard.press('Space')
-    await page.keyboard.press('ArrowDown')
-    await page.keyboard.press('ArrowDown')
-    await page.keyboard.press('Space')
+    for (const key of ['Space', 'ArrowDown', 'ArrowDown', 'Space']) await press(page, key)
     await expect.poll(async () => (await order()).indexOf(first)).toBe(2)
     await page.getByRole('button', { name: first }).focus()
-    await page.keyboard.press('Enter')
-    await page.keyboard.press('ArrowUp')
-    await page.keyboard.press('Escape')
+    for (const key of ['Enter', 'ArrowUp', 'Escape']) await press(page, key)
     await expect.poll(async () => (await order()).indexOf(first)).toBe(2)
 })

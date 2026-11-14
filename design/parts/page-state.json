@@ -16,7 +16,7 @@
         ]
     },
     "anatomy": {
-        "frame": "The row a state is drawn in. By default a box of its own on the card's ground that keeps its height in a column; unframed, the same row with no box and a panel's padding, for a state inside a panel (a table's, a section's body).",
+        "frame": "The row a state is drawn in. By default a box of its own on the card's ground that keeps its height in a column; unframed, the same row with no box, no ground and no edge in any tone, and a panel's padding, for a state inside a panel (a table's, a section's body).",
         "spinner": "Loading: a turning ring before the word.",
         "loadingWord": "Loading: words.loading, announced politely.",
         "mark": "A failed read: an alert mark at the row's start, level with the heading's first line; a triangle in the warning tone.",
@@ -108,11 +108,11 @@
             "reached": "empty, with no error, while not loading"
         },
         "warning": {
-            "means": "A failed read of secondary data the page stands without: the warning's wash, edge and mark, headed as a part of the page that could not be read.",
+            "means": "A failed read of secondary data the page stands without: the warning's mark, and in a box its wash and edge, headed as a part of the page that could not be read.",
             "reached": "tone warning, with an error"
         },
         "unframed": {
-            "means": "No box of its own: the row padded as a panel's, for a state inside a panel.",
+            "means": "No box of its own, and no ground or edge in any tone: the row padded as a panel's, for a state inside a panel.",
             "reached": "frame false"
         }
     },
@@ -137,8 +137,9 @@
             "failed+warning": {"ground": "warning/8", "edge": "warning/35"},
             "unframed": {"ground": "none", "edge": "none"},
             "failed+warning+unframed": {
-                "ground": "warning/8",
-                "note": "The warning's wash stays without the box, with no edge (open questions)."
+                "ground": "none",
+                "edge": "none",
+                "note": "Unframed means no ground and no edge in every tone: the mark and the heading say the warning."
             }
         },
         "spinner": {
@@ -211,12 +212,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-ui-egui",
-            "what": "unframed warning",
-            "spec": "Without its box, a warning keeps the warning/8 wash, with no edge.",
-            "today": "As of dfb6079 (page.rs unchanged since b73200b): no ground and no edge."
-        },
         {
             "renderer": "sokkel-ui-egui",
             "what": "problems",

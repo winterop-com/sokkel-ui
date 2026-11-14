@@ -20,7 +20,7 @@ export interface PaneHeaderProps {
     as?: 'h1' | 'h2' | 'h3' | 'p'
     /** The heading's id, for what it names to point at with `aria-labelledby`. */
     headingId?: string
-    /** A count or a short fact beside the title, drawn quieter than it. */
+    /** A count or a short fact beside the title, drawn quieter than it, as a page header's count is: the body face, tabular figures. */
     meta?: ReactNode
     /** A sentence under the title: what the pane holds. */
     description?: ReactNode
@@ -93,7 +93,9 @@ export function PaneHeader({
                             <Heading id={headingId} className={cn('max-w-max min-w-0 grow basis-24', TITLE[large ? 'large' : variant])}>
                                 {title}
                             </Heading>
-                            {meta !== undefined && <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">{meta}</span>}
+                            {meta !== undefined && (
+                                <span className="min-w-0 truncate text-help text-muted-foreground tabular-nums">{meta}</span>
+                            )}
                         </div>
                     )}
                     {described && <p className="text-help text-pretty text-muted-foreground">{description}</p>}

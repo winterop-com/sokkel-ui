@@ -370,7 +370,10 @@ export function Rail({
             type="button"
             aria-label={words.expand}
             title={words.expand}
-            className="group/mark relative mx-auto flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
+            className={cn(
+                'group/mark relative mx-auto flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground',
+                FOCUS,
+            )}
             onClick={() => setCollapsed(false)}
         >
             {mark !== undefined && <span className="group-hover/mark:opacity-0">{mark}</span>}
@@ -415,7 +418,7 @@ export function Rail({
                                 : renderLink(
                                       { id: 'home', label: name, href: markHref },
                                       head,
-                                      'flex min-w-0 items-center gap-2 rounded-md pe-1.5 outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
+                                      cn('flex min-w-0 items-center gap-2 rounded-md pe-1.5', FOCUS),
                                   )}
                             {/* In the drawer it closes the drawer; in the frame it narrows the rail. */}
                             {(drawer !== undefined || collapsible) && (
@@ -465,8 +468,13 @@ export function Rail({
                               }
                     }
                 >
-                    {groups.map((group) => (
-                        <nav key={group.id} aria-label={group.title ?? name} className="flex flex-col gap-1 px-2">
+                    {groups.map((group, index) => (
+                        <nav
+                            key={group.id}
+                            aria-label={group.title ?? name}
+                            // A group without a title at the top keeps room above its first entry for the entry's focus look.
+                            className={cn('flex flex-col gap-1 px-2', index === 0 && group.title === undefined && 'pt-1')}
+                        >
                             {group.title !== undefined &&
                                 (collapsed ? (
                                     <div className="flex items-center px-2 pt-4 pb-1.5" aria-hidden>
@@ -554,9 +562,15 @@ function Droppable({ entry, children }: { entry: RailEntry; children: ReactEleme
     )
 }
 
+/** The button's own focus look (`ui/button`), which every control of the rail wears: a ring outline 2 off, on keyboard focus. */
+const FOCUS =
+    'outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid'
+
 /** The control at the end of the expanded rail's head: collapse, or close in the shell's drawer. */
-const HEAD_BUTTON =
-    'ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid'
+const HEAD_BUTTON = cn(
+    'ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground',
+    FOCUS,
+)
 
 /** Covers the rail's edge along its head, where the window's buttons straddle it, in the rail's own ground. */
 const UNDRAWN_EDGE = 'relative after:absolute after:inset-y-0 after:-right-px after:w-px after:bg-sidebar'
@@ -645,6 +659,7 @@ function Corner({ entry, unread, dot = 'top-1 right-1' }: { entry: RailEntry; un
 function iconClass(active: boolean, extra?: string): string {
     return cn(
         'relative mx-auto flex h-(--density-row) w-9 items-center justify-center rounded-md',
+        FOCUS,
         active
             ? 'bg-sidebar-accent text-sidebar-accent-foreground'
             : cn('text-muted-foreground hover:bg-hover hover:text-foreground', extra),
@@ -658,6 +673,7 @@ function iconClass(active: boolean, extra?: string): string {
 function rowClass(state: 'active' | 'holding' | 'idle', inset: 'none' | 'icon' | 'text' = 'none', described = false): string {
     return cn(
         'flex w-full gap-3 rounded-l-sm rounded-r-md border-l-2 pr-3 text-left text-sm',
+        FOCUS,
         described ? 'min-h-(--density-row) items-start py-1.5 max-md:min-h-finger' : 'h-(--density-row) items-center max-md:h-finger',
         inset === 'none' ? 'pl-2.5' : inset === 'icon' ? 'pl-9.5' : 'pl-5.5',
         state === 'active'
@@ -735,6 +751,7 @@ function RailParent({ entry, open, onOpen, unread }: { entry: RailEntry; open: b
                         aria-controls={id}
                         className={cn(
                             'absolute right-1 flex size-7 items-center justify-center rounded-md hover:bg-hover',
+                            FOCUS,
                             described ? 'top-1' : 'inset-y-0 my-auto',
                         )}
                         onClick={toggle}
@@ -865,11 +882,7 @@ function Strip({
     )
     const tile =
         face !== false && markHref !== undefined
-            ? renderLink(
-                  { id: 'home', label: name, href: markHref },
-                  face,
-                  'rounded-md outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
-              )
+            ? renderLink({ id: 'home', label: name, href: markHref }, face, cn('rounded-md', FOCUS))
             : face
     return (
         <aside
@@ -921,7 +934,8 @@ function Strip({
 
 function stripClass(active: boolean): string {
     return cn(
-        'group/entry flex flex-col items-center gap-0.5 rounded-md outline-none focus-visible:ring-focus focus-visible:ring-ring/50',
+        'group/entry flex flex-col items-center gap-0.5 rounded-md',
+        FOCUS,
         active ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
     )
 }

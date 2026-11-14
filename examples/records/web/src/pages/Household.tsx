@@ -69,7 +69,6 @@ export function Household({ id }: { id: string }) {
                 title={home?.identifier ?? 'Household'}
                 code={home?.id}
                 trail={sectionTrail('Households', '/people')}
-                trailInTop
                 meta={
                     home === undefined ? undefined : (
                         <>

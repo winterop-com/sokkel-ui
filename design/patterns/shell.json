@@ -13,17 +13,17 @@
     },
     "anatomy": {
         "rail": "The app's places at the window's start: the rail (parts/rail). Below 768 it leaves the frame for the drawer.",
-        "topBar": "Over the content: the top bar (parts/top-bar), as tall as the rail's head, so the two read as one strip across the window.",
+        "topBar": "Over the content: the top bar (parts/top-bar), as tall as the rail's head, so the two read as one strip across the window. Its rule ends at the rail's edge: the rail's head draws none, in the frame or in the drawer.",
         "banner": "Between the top bar and the content, not scrolling: a state that holds, such as the server not answering.",
         "content": "The one scroller. A thin track (contentScrollbar) that keeps its room whether or not it scrolls.",
         "contentScrollbar": "The content's scroll bar: a solid track whose room is kept.",
         "shellHead": "A page header and tabs held above the scroller while the content scrolls.",
-        "pageHeader": "The page's head (parts/page-header): its title, what is known about it, and its actions. Held above the scroller with ShellHead. No trail: the trail is in the top bar.",
+        "pageHeader": "The page's head (parts/page-header): its title, what is known about it, and its actions. Held above the scroller with ShellHead. No trail: in the frame the page header states its trail for the top bar (trailInTop, its default there).",
         "page": "The page's content at the page inset, its sections (parts/section) a page gap apart.",
         "pageState": "What the page's read landed in, in the content's place: loading, failed, empty, or the content (parts/page-state).",
         "panel": "An optional side panel: a right column, a sheet, or tabs in a strip at the foot.",
         "panelToggle": "A side panel's toggle in the window's top-right corner: over the top bar's end while the panel is closed or a sheet, in the panel header's corner while it is a column and open.",
-        "foot": "The status line (parts/status-line), one row of fixed height, level with the rail's foot cell so the account and the status read as one bar.",
+        "foot": "The status line (parts/status-line), one row of fixed height, level with the rail's foot cell so the account and the status read as one bar. It draws the strip itself; the shell gives it the room and draws no strip of its own.",
         "palette": "The command palette over the page on Mod+K (parts/command-palette): places, the screen's commands and the app's search.",
         "settings": "The settings dialog over the page it was opened from, on its own route (parts/settings-dialog).",
         "dialog": "Every dialog over the page, the settings and shortcuts dialogs among them (parts/dialog).",
@@ -201,7 +201,8 @@
             "useOverlayRoute (hooks/use-overlay-route) draws #/settings over the page it was opened from: it reads the app's route and goes back through the history and the hash, or through the app's own back and replace with a client router.",
             "useOverlay makes the page inert under an overlay; useScrollMemory keeps each page's scroll; the safe-area insets pad the frame.",
             "In a desktop shell (Electron, Tauri) the top strip is the window's title bar.",
-            "Shell's routeKey moves focus to the new page's first visible h1 after a route change, waiting up to 3000 ms while the page loads and until the reader presses a key or the pointer."
+            "Shell's routeKey moves focus to the new page's first visible h1 after a route change, waiting up to 3000 ms while the page loads and until the reader presses a key or the pointer.",
+            "Every control of the frame (the rail's entries, its mark, home link and head control, the top bar's menu button, crumbs and palette's button, the panel toggle, the account control) wears the button's own focus look: a 2px ring outline 2 off, on keyboard focus only."
         ],
         "sokkel-ui-egui": [
             "The window's width is the available rect; the page inset picks wide or narrow by the content rect, since a cqi clamp is CSS-only.",

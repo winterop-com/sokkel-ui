@@ -30,6 +30,7 @@ export { overSearch } from '../lib/shortcuts'
 import type { CommandPaletteWords, PaletteFilter, PaletteFoot, PaletteGroup, PaletteSearch } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
 import { PanelTabStrip, type PanelStrip, type PanelTabs } from './panel-strip'
+import { STATUS_STRIP } from './StatusLine'
 import {
     ShellDesktop,
     ShellDrawer,
@@ -189,15 +190,17 @@ export function awaitHeading(area: HTMLElement, before?: HeadingMarks, wait = 30
  * The app's frame: the rail on the left, a thin top bar over the content, the content as the one
  * thing that scrolls, and an optional foot strip.
  *
- * The top bar and the rail's head are the same height and share one rule, so the shell reads as
- * one strip across the window. With a `foot` (a `StatusLine`), the rail's foot cell (the
- * `AccountMenu`) sits in the window's bottom-left corner level with the foot strip, so the account
- * and the status read as one bar across the window's foot, under the rail, the content and the panel.
+ * The top bar and the rail's head are the same height, so the shell reads as one strip across the
+ * window; the rule under the top bar ends at the rail's edge, as the rail's head draws none, in the
+ * frame and in the drawer. With a `foot`, a `StatusLine`, which draws the foot strip itself in the
+ * room the shell gives it, the rail's foot cell (the `AccountMenu`) sits in the window's bottom-left
+ * corner level with the strip, so the account and the status read as one bar across the window's
+ * foot, under the rail, the content and the panel.
  *
  * A `bottom` strip docks between the content and the foot, across the whole window under the rail
  * and the panel, for what belongs to the whole app rather than one screen, such as a player. The
- * rail's foot cell stays at the window's bottom edge under it, beside the foot strip, which is
- * drawn empty when there is no `foot` and the rail has a foot.
+ * rail's foot cell stays at the window's bottom edge under it, beside the foot strip, a status
+ * line's empty strip when there is no `foot` and the rail has a foot.
  *
  * A `banner`, such as a `Banner` saying the server is not answering, stands between the top bar and
  * the content: it does not scroll with the content and covers none of it.
@@ -497,15 +500,9 @@ export function Shell({
             </div>
         </div>
     )
+    // The foot's room; the status line in it draws the strip.
     const strip = foot !== undefined && (
-        <footer
-            className={cn(
-                'flex h-shell-foot shrink-0 items-center gap-3 border-t border-page-foot-line bg-page-foot-ground px-3 text-xs text-page-foot-ink',
-                docked && 'col-start-2 row-start-3 peer-empty:col-span-full',
-            )}
-        >
-            {foot}
-        </footer>
+        <footer className={cn('flex min-w-0 shrink-0', docked && 'col-start-2 row-start-3 peer-empty:col-span-full')}>{foot}</footer>
     )
     const content = (
         <div className="flex min-w-0 flex-1 flex-col">
@@ -527,7 +524,8 @@ export function Shell({
                         title={words.menu}
                         aria-expanded={drawer}
                         className={cn(
-                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground hover:bg-hover max-md:size-finger',
+                            // As the rail's collapse control: the hover's ground and ink, and the button's own focus look.
+                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid max-md:size-finger',
                             !railHidden && 'md:hidden',
                         )}
                         onClick={() => setDrawer(true)}
@@ -706,10 +704,8 @@ export function Shell({
             {strip !== false ? (
                 strip
             ) : (
-                <div
-                    aria-hidden
-                    className="col-start-2 row-start-3 hidden h-shell-foot border-t border-page-foot-line bg-page-foot-ground md:block md:peer-empty:hidden"
-                />
+                // With no foot, a status line's empty strip stands beside the rail's foot cell, so the cell has its bar.
+                <div aria-hidden className={cn(STATUS_STRIP, 'col-start-2 row-start-3 hidden md:flex md:peer-empty:hidden')} />
             )}
             {tabStrip(true)}
         </div>,

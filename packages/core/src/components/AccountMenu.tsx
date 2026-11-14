@@ -141,7 +141,7 @@ export function AccountMenu({
         >
             <Menu.Trigger
                 aria-label={words.account}
-                className="@container mx-1.5 my-1 flex h-[calc(100%-0.5rem)] w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-md pr-1.5 pl-2.5 text-sm outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring/50 data-popup-open:bg-hover"
+                className="@container mx-1.5 my-1 flex h-[calc(100%-0.5rem)] w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-md pr-1.5 pl-2.5 text-sm outline-none hover:bg-hover focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid data-popup-open:bg-hover"
             >
                 {avatar('size-6')}
                 {!collapsed && (

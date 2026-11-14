@@ -9,11 +9,11 @@
         "engines": [],
         "start": 194.0,
         "lazy": 79.6,
-        "css": 22.6
+        "css": 22.7
     },
     "dashboard": {
         "engines": ["echarts", "dnd-kit"],
-        "start": 205.8,
+        "start": 206.2,
         "lazy": 470.5,
         "css": 52.2,
         "first": {

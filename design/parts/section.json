@@ -16,9 +16,9 @@
         "head": "The boxed variant's head bar across the box's top, on the section heads' ground over their rule: the mark, the title with its meta, the description under them, and the actions at its end. At least as tall as a listing's head row; it grows to hold a description.",
         "flatHead": "The flat variant's heading line over a rule, on the page's own ground, with no inset of its own: the same pieces as the boxed head.",
         "mark": "With tone critical: a warning mark before the title.",
-        "title": "The section's heading, an h2 cut short on one line. In the boxed head it is set like a table's column heads, in the text color; the section is labelled by it.",
+        "title": "The section's heading, an h2 cut short on one line. In the boxed head it is set like a table's column heads in the text color, but in its own case, so it can hold a name such as a job's; the section is labelled by it.",
         "flatTitle": "The flat head's title, set as a section title.",
-        "meta": "A count or a short fact beside the title, in the code face, quieter than it; it drops under the title when both do not fit, cut short past that.",
+        "meta": "A count or a short fact beside the title, 8 after it, quieter than it, drawn as a page header's count is (parts/page-header); it drops under the title when both do not fit, cut short past that.",
         "description": "A sentence under the title saying what the section holds; the head grows to hold it.",
         "actions": "Controls at the head's end. They go under the title when they would leave it less than its room, and wrap from the end when wider than the head.",
         "body": "The section's content: padded in the box unless flush; on the page's ground under the flat head, a section gap below it. With fill the box takes the height it is given and the body scrolls within it."
@@ -132,11 +132,17 @@
             "rest": {
                 "ink": "section-head-ink",
                 "text": "text.head",
-                "note": "In typeface-heading; the table head's size, weight and tracking, but not its case."
+                "note": "In typeface-heading; the table head's size, weight and tracking, never its case (table-head-transform): the title keeps its own."
             }
         },
         "flatTitle": {"rest": {"ink": "section-head-ink", "text": "text.section-title", "note": "In typeface-heading."}},
-        "meta": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face."}},
+        "meta": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.help",
+                "note": "In the body face with tabular figures, as a page header's count. The code face is for codes."
+            }
+        },
         "description": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
         "body": {
             "rest": {"note": "On the box's ground, or under a flat head on the page's."},

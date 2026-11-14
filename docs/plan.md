@@ -221,8 +221,12 @@ option lists a picker offers (`THEMES`, made from the tokens by `scripts/build-t
 
 Every app has the same frame: `Shell` with a `Rail` of its places, the command palette on ⌘K or
 Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local` until the app has
-sign-in, and a `StatusLine` as the shell's `foot`, which the account sits level with as one bar
-across the window's bottom edge.
+sign-in, and a `StatusLine` as the shell's `foot`, which draws the foot strip itself in the room the
+shell gives it and which the account sits level with as one bar across the window's bottom edge.
+Every control of the frame (the rail's entries, mark, home link and collapse control, the top bar's
+menu button, crumbs and palette's button, the panel toggle, the account) wears the button's own
+focus look on keyboard focus, a ring outline two pixels off, and the top bar's menu button looks
+like the rail's collapse control.
 
 The rail's mark and name lead home (`markHref`); collapsed, the mark expands
 it, and so does its edge, pulled outward (the rail following the pointer and keeping the width it is
@@ -252,7 +256,9 @@ such as a run page whose trail ends at the run, draws the top bar with `ShellTop
 mounted, in place of `Shell`'s `top`, the latest screen's winning; the shell's own is back once none
 draws one. A screen that knows only its trail states it with `useShellTrail(trail, { ends })`, and
 the `TopBar` in `Shell`'s `top` draws it in place of its own, keeping its search, palette button and
-actions. A screen's head that stays in view while its content scrolls, its `PageHeader` and tabs,
+actions. A `PageHeader` inside the shell states its `trail` the same way rather than drawing it
+(`trailInTop`, the default there), so a page never draws a second trail; outside a shell it draws
+the trail over its title. A screen's head that stays in view while its content scrolls, its `PageHeader` and tabs,
 goes in `ShellHead`, held above the shell's scroller in the page's inset over a rule (`inset={false}`
 for a head that draws its own edges), the content still the one scroller `useScrollMemory` follows.
 That scroller's bar is `--scrollbar-width` (10px) on a solid track that keeps its room whether or
@@ -695,7 +701,9 @@ the density's one row height, so 50k rows sort, scroll and select at once; rows 
 their cells are an option for short listings. It sorts from its heads, selects with a bulk bar or
 picks one row for a list beside its detail, hides columns, resizes them from their heads' edges as
 panels resize, pins its first column and its row menu, opens child rows of any depth (loaded when
-a branch first opens, if the app wants), and moves by the keyboard. It pages in the browser or
+a branch first opens, if the app wants), and moves by the keyboard as one tab stop, sorting from
+there too: Up from the first row enters the head row, where Left and Right choose a sortable head,
+Enter or Space turns its order and Down goes back to the rows. It pages in the browser or
 from a server, loads more as its end comes near, and shows the same rows as a grid of cards (an
 album view) that keeps the selection, menus and sort. A short listing drops the bar above its
 head and may carry a foot line. Rows gather under group heads by a field or a key made from the row

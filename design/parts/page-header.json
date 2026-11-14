@@ -23,11 +23,11 @@
         "titleBlock": "The title and what is known about it, one line under another: the trail, the title with its count, the code, the description and the meta. Beside a back button or an aside it is a grid that starts every line where the title starts.",
         "back": "With onBack: a ghost icon button with a back chevron, level with the title, before every other line.",
         "aside": "A picture before the title block, centered on it down the side of every line, such as an avatar, a project's mark or an album's artwork; after the back button where there is one.",
-        "trail": "The places above the page, small over the title, the furthest first, named by words.trail. Drawn only outside a Shell or without trailInTop: in the frame the trail lives in the top bar.",
+        "trail": "The places above the page, small over the title, the furthest first, named by words.trail. Drawn only outside a Shell, or inside one with trailInTop false: in the frame the trail lives in the top bar.",
         "crumb": "One place of the trail: a link back up with href, else plain words; a code crumb is in the code face.",
         "chevron": "After each crumb, the last one too: the trail ends at the place above the page.",
         "title": "The page's h1: its name, else its code, in the heading face. It wraps; a code standing as the title, or singleLine, keeps it to one line, cut short with the whole of it on hover.",
-        "count": "A short count beside the title on its baseline, such as how many rows are loaded.",
+        "count": "A short count beside the title on its baseline, 8 after it, such as how many rows are loaded; a count beside a section's title looks the same (parts/section).",
         "code": "The addressable code under the title, in the code face, cut short with the whole of it on hover; not drawn when the code stands as the title.",
         "description": "A sentence under the title saying what the page holds, at most a reading measure (65ch) wide.",
         "meta": "A line of small facts under the description, such as who owns the thing and when it runs; it wraps.",
@@ -77,12 +77,12 @@
         },
         "trail": {
             "type": "rows",
-            "does": "[{ label, href?, code? }]: the places above this page, the furthest first. Drawn over the title outside a Shell; with trailInTop inside one, stated for the top bar instead."
+            "does": "[{ label, href?, code? }]: the places above this page, the furthest first. Drawn over the title outside a Shell; inside one it is stated for the top bar instead (trailInTop)."
         },
         "trailInTop": {
             "type": "boolean",
-            "default": false,
-            "does": "Inside a Shell, states the trail for the top bar (ending at the place above this page) rather than drawing it; outside one the trail is drawn here."
+            "default": true,
+            "does": "Inside a Shell, states the trail for the top bar (ending at the place above this page) rather than drawing it, so a page in the frame never draws a second trail; false draws it in the header inside a Shell too. Outside a Shell the trail is always drawn here."
         },
         "onBack": {"type": "callback", "does": "Draws a back button before the title and calls this on a press."},
         "singleLine": {
@@ -93,7 +93,7 @@
         "inShell": {
             "type": "boolean",
             "default": false,
-            "does": "Drawn inside a Shell: with trailInTop the trail goes to the top bar and the header draws none.",
+            "does": "Drawn inside a Shell: the trail goes to the top bar and the header draws none, unless trailInTop is false.",
             "context": "ShellTrailAsk from Shell (useShellTrail)"
         }
     },
@@ -169,8 +169,8 @@
             "reached": "code with no title, or a title that is the code"
         },
         "trailInTop": {
-            "means": "Inside a Shell with trailInTop: the trail is stated for the top bar, ending at the place above this page, and the header draws none.",
-            "reached": "trailInTop in a Shell"
+            "means": "Inside a Shell: the trail is stated for the top bar, ending at the place above this page, and the header draws none.",
+            "reached": "a Shell, unless trailInTop is false"
         }
     },
     "pieces": {
@@ -182,7 +182,13 @@
             },
             "codeTitle": {"note": "In the code face, on one line, cut short with an ellipsis."}
         },
-        "count": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "Tabular figures."}},
+        "count": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.help",
+                "note": "In the body face with tabular figures, 8 after the title: a count beside a title looks the same in every head (parts/section). The code face is for codes."
+            }
+        },
         "code": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face, on one line."}},
         "description": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
         "meta": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
@@ -224,7 +230,7 @@
             "Items fold into More by measuring their widths on the header itself (Toolbar, a ResizeObserver); More is Base UI's menu, each entry with the item's icon, its reason under it when shut, and its related ways.",
             "The title is the page's h1, so Shell's routeKey moves focus to it after a route change.",
             "A crumb is a Link, drawn as the app's LinkProvider says.",
-            "trailInTop states the trail with useShellTrail(trail, { ends: 'ancestor' }) while the header is mounted inside a Shell.",
+            "Inside a Shell, unless trailInTop is false, the header states its trail with useShellTrail(trail, { ends: 'ancestor' }) while it is mounted.",
             "A cut-short title or code says the whole of it in the title attribute, on hover.",
             "The back button's name shows in its tooltip."
         ],
