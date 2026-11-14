@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.26.1** is the latest release (2026-11-14): a table of growing rows asks for more only near its
+- **0.27.0** is the latest release (2026-11-14): Select, DropdownMenu, Tooltip, Dialog,
+  SettingsDialog and CommandPalette checked against their sokkel-design specs; a dialog's blocked
+  confirm says why on focus, its corner close's name a word (`DIALOG_SHELL_WORDS.close`); select
+  rows and settings sections a finger tall on a phone; tag chips no longer widen a stacked table.
+- **0.26.1** (2026-11-14): a table of growing rows asks for more only near its
   end; a dense ListRow's detail on a second line on a phone; palette `metaTone`.
 - **0.26.0** (2026-11-13): sokkel-ui checked against the sokkel-design specs
   (`design/`, `parts.test.ts`); one invalid look for every control; a pressable dense ListRow, the
