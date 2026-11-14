@@ -153,7 +153,7 @@ export function PageState({
                 )}
                 <div className="flex min-w-0 flex-col gap-3">
                     <div role={warning ? 'status' : 'alert'} className="flex min-w-0 flex-col gap-1">
-                        <Heading className="font-medium">{pageStateHeading(status, words, tone)}</Heading>
+                        <Heading className="font-medium text-foreground">{pageStateHeading(status, words, tone)}</Heading>
                         <div className="text-xs break-words text-muted-foreground">
                             {typeof error === 'string' ? <ProseText text={error} /> : error}
                         </div>

@@ -48,6 +48,7 @@ function SelectTrigger({ className, size = 'default', variant = 'field', widest,
             className={cn(
                 "flex w-fit items-center justify-between gap-1.5 rounded-control border border-input bg-field py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-disabled data-placeholder:text-muted-foreground data-[size=default]:h-(--density-control) data-[size=sm]:h-(--density-control-sm) data-[size=sm]:rounded-[min(var(--control-radius),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 max-md:min-h-finger dark:hover:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 INVALID_EDGE,
+                variant !== 'quiet' && 'text-foreground',
                 variant === 'quiet' &&
                     'border-transparent bg-transparent pr-1.5 pl-2 font-medium hover:bg-hover focus-visible:border-transparent data-popup-open:bg-hover dark:hover:bg-hover',
                 className,
@@ -148,7 +149,7 @@ function SelectItem({ className, children, detail, detailPlacement = 'end', ...p
         <SelectPrimitive.Item
             data-slot="select-item"
             className={cn(
-                "relative flex min-h-(--density-control) w-full cursor-default items-center gap-1.5 rounded-md py-0.5 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground max-md:min-h-finger data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+                "relative flex min-h-(--density-control) w-full cursor-default items-center gap-1.5 rounded-md py-0.5 pr-8 pl-1.5 text-sm text-popover-foreground outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground max-md:min-h-finger data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
                 className,
             )}
             {...props}

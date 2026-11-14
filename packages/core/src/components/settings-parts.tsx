@@ -160,7 +160,7 @@ export function SettingsNavList({ groups, shown, onChoose, ground }: SettingsNav
                             'flex items-center gap-2.5 rounded-md px-2 text-left text-sm transition-colors outline-none focus-visible:outline-focus focus-visible:outline-ring',
                             dialog
                                 ? [
-                                      'max-md:min-h-finger md:py-1.5',
+                                      'text-popover-foreground max-md:min-h-finger md:py-1.5',
                                       chosen
                                           ? 'md:bg-secondary md:font-medium md:text-foreground'
                                           : 'md:text-muted-foreground md:hover:bg-hover md:hover:text-foreground',

@@ -81,7 +81,7 @@
             "rest": {"note": "Not drawn."},
             "live": {
                 "ground": "inherit",
-                "note": "Round, in the note's ink; a second dot of the same size at half opacity pulses out from it (animate-ping), still when motion is reduced."
+                "note": "Round, in the ink of the note it stands in (inherit: page-foot-ink, or the tone's info, warning or destructive); a second dot of the same size at half opacity pulses out from it (animate-ping), still when motion is reduced."
             }
         },
         "facts": {"rest": {"ink": "page-foot-ink"}},

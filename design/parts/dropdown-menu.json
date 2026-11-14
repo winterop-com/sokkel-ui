@@ -178,7 +178,12 @@
             }
         },
         "item": {
-            "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body", "note": "Its icon in the row's ink."},
+            "rest": {
+                "ink": "popover-foreground",
+                "radius": "radius-md",
+                "text": "text.body",
+                "note": "Its icon in the row's ink."
+            },
             "highlighted": {
                 "ground": "accent",
                 "ink": "accent-foreground",
@@ -193,12 +198,12 @@
             "disabled": {"opacity": "disabled-opacity"}
         },
         "checkItem": {
-            "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body"},
+            "rest": {"ink": "popover-foreground", "radius": "radius-md", "text": "text.body"},
             "highlighted": {"ground": "accent", "ink": "accent-foreground"},
             "disabled": {"opacity": "disabled-opacity"}
         },
         "subTrigger": {
-            "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body"},
+            "rest": {"ink": "popover-foreground", "radius": "radius-md", "text": "text.body"},
             "highlighted": {"ground": "accent", "ink": "accent-foreground"},
             "subOpen": {"ground": "accent", "ink": "accent-foreground"}
         },

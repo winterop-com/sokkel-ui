@@ -217,7 +217,7 @@
             "hover": {"ground": "hover", "ink": "foreground"},
             "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}},
             "shown": {"ground": "secondary", "ink": "foreground", "text": "text.action"},
-            "phoneList": {"ground": "none", "ink": "inherit", "note": "The box's ink, none marked."}
+            "phoneList": {"ground": "none", "ink": "popover-foreground", "note": "The box's ink, none marked."}
         },
         "chevron": {"rest": {"note": "Drawn only on a phone."}, "phoneList": {"ink": "faint"}},
         "heading": {"rest": {"text": "text.detail-title"}},

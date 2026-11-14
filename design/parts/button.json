@@ -230,7 +230,8 @@
                 "ground": "background",
                 "edge": "border",
                 "ink": "inherit",
-                "dark": {"ground": "input/30", "edge": "input"}
+                "dark": {"ground": "input/30", "edge": "input"},
+                "note": "The ink of what it stands on (inherit): foreground on the page, popover-foreground in a popup, sidebar-foreground on the rail."
             },
             "hover": {"ground": "hover", "ink": "foreground"},
             "open": {"ground": "hover", "ink": "foreground"}
@@ -241,7 +242,12 @@
             "open": {"ground": "secondary", "ink": "secondary-foreground"}
         },
         "ghost": {
-            "rest": {"ground": "none", "edge": "none", "ink": "inherit"},
+            "rest": {
+                "ground": "none",
+                "edge": "none",
+                "ink": "inherit",
+                "note": "The ink of what it stands on (inherit): foreground on the page, popover-foreground in a popup, sidebar-foreground on the rail."
+            },
             "hover": {"ground": "hover", "ink": "foreground"},
             "open": {"ground": "hover", "ink": "foreground"}
         },

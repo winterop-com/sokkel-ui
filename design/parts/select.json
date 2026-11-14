@@ -233,7 +233,7 @@
             "rest": {
                 "ground": "field",
                 "edge": "input",
-                "ink": "inherit",
+                "ink": "foreground",
                 "radius": "radius-control",
                 "text": "text.body"
             },
@@ -251,7 +251,8 @@
                 "ink": "inherit",
                 "radius": "radius-control",
                 "text": "text.action",
-                "weight": 500
+                "weight": 500,
+                "note": "The ink of what it stands on (inherit): foreground on the page, popover-foreground in a popup, sidebar-foreground on the rail."
             },
             "placeholder": {"ink": "muted-foreground"},
             "hover": {"ground": "hover"},
@@ -273,7 +274,7 @@
             }
         },
         "row": {
-            "rest": {"ink": "inherit", "radius": "radius-md", "text": "text.body"},
+            "rest": {"ink": "popover-foreground", "radius": "radius-md", "text": "text.body"},
             "highlighted": {
                 "ground": "accent",
                 "ink": "accent-foreground",
