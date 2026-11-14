@@ -35,7 +35,7 @@ function ProgressRing({ value, label = 'Progress', className }: ProgressRingProp
                 strokeLinecap="round"
                 strokeDasharray={around}
                 strokeDashoffset={around * (1 - share)}
-                className="stroke-primary transition-[stroke-dashoffset] duration-200 motion-reduce:transition-none"
+                className="stroke-primary transition-[stroke-dashoffset] duration-base motion-reduce:transition-none"
             />
         </svg>
     )

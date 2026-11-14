@@ -133,7 +133,7 @@ export function TimeRangePicker({
                                         setOpen(false)
                                     }}
                                     className={cn(
-                                        'flex h-8 w-full items-center rounded-md px-2 text-left text-sm outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
+                                        'flex h-8 w-full items-center rounded-md px-2 text-left text-sm outline-none hover:bg-hover focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid',
                                         chosen && 'bg-secondary font-medium',
                                     )}
                                 >
@@ -165,7 +165,7 @@ export function TimeRangePicker({
                         <Button
                             size="sm"
                             aria-disabled={draft?.from === undefined || draft.to === undefined || undefined}
-                            className={cn((draft?.from === undefined || draft.to === undefined) && 'cursor-not-allowed opacity-50')}
+                            className={cn((draft?.from === undefined || draft.to === undefined) && 'cursor-not-allowed opacity-disabled')}
                             onClick={() => {
                                 if (draft?.from === undefined || draft.to === undefined) return
                                 onChange({ from: draft.from, to: draft.to })

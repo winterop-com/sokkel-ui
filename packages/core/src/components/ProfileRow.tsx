@@ -44,7 +44,7 @@ export function ProfileRow({ name, detail, image, color, href, size = 'md', acti
                         'group/profile flex min-w-0 items-center',
                         large ? 'gap-4' : 'gap-3',
                         href !== undefined &&
-                            'rounded-mini outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                            'rounded-mini outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring',
                     )}
                 >
                     <PersonAvatar name={name} image={image} color={color} size={large ? 'xl' : 'lg'} />

@@ -306,7 +306,7 @@ function PaletteChip({
                 type="button"
                 title={words.add(widget.label)}
                 onClick={onAdd}
-                className="flex h-8 cursor-grab touch-manipulation items-center gap-1.5 rounded-control border border-border-strong bg-card px-2.5 text-sm outline-none select-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid active:cursor-grabbing [&_svg]:size-4 [&_svg]:text-muted-foreground"
+                className="flex h-8 cursor-grab touch-manipulation items-center gap-1.5 rounded-control border border-border-strong bg-card px-2.5 text-sm outline-none select-none hover:bg-hover focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid active:cursor-grabbing [&_svg]:size-4 [&_svg]:text-muted-foreground"
             >
                 {widget.icon}
                 {widget.label}

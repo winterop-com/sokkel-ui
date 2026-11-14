@@ -55,7 +55,7 @@ function Node({ name, value, depth, open, limit, words }: NodeProps) {
                 type="button"
                 aria-expanded={expanded}
                 onClick={() => setExpanded(!expanded)}
-                className="flex items-center rounded-sm text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex items-center rounded-sm text-left outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring"
             >
                 <ChevronRight
                     className={cn('size-3.5 shrink-0 text-muted-foreground transition-transform', expanded && 'rotate-90')}
@@ -90,7 +90,7 @@ function Node({ name, value, depth, open, limit, words }: NodeProps) {
                             <button
                                 type="button"
                                 onClick={() => setShown(shown + limit)}
-                                className="ml-4 rounded-sm text-left text-primary-ink outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                                className="ml-4 rounded-sm text-left text-primary-ink outline-none hover:underline focus-visible:ring-focus focus-visible:ring-ring"
                             >
                                 {words.more(step)}
                             </button>

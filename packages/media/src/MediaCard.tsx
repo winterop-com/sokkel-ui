@@ -122,7 +122,7 @@ export function MediaCard({
                         <Cover
                             {...(href !== undefined ? { href } : { type: 'button' as const, onClick: onSelect })}
                             title={title}
-                            className="absolute inset-0 z-0 rounded-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring focus-visible:outline-solid"
+                            className="absolute inset-0 z-0 rounded-surface outline-none focus-visible:outline-focus focus-visible:outline-offset-4 focus-visible:outline-ring focus-visible:outline-solid"
                         >
                             <span className="sr-only">{title}</span>
                         </Cover>
@@ -163,7 +163,7 @@ export function MediaCard({
                                 aria-label={`${words.play}: ${title}`}
                                 title={words.play}
                                 className={cn(
-                                    'pointer-events-auto absolute z-10 flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-pop transition-opacity outline-none group-focus-within/media:opacity-100 group-hover/media:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                                    'pointer-events-auto absolute z-10 flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-pop transition-opacity outline-none group-focus-within/media:opacity-100 group-hover/media:opacity-100 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
                                     shape === 'square' ? 'right-2 bottom-2' : 'top-1/2 left-1/2 -translate-1/2',
                                 )}
                             >
@@ -202,7 +202,7 @@ export function MediaCard({
                                     <DropdownMenuTrigger
                                         aria-label={`${words.menu}: ${title}`}
                                         title={words.menu}
-                                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                                     >
                                         <MoreHorizontal className="size-4" aria-hidden />
                                     </DropdownMenuTrigger>

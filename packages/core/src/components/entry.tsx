@@ -9,7 +9,7 @@ import { Input } from './ui/input'
 
 /** A small button inside a typed field's frame: the picker, a clear, a step. */
 export const FRAME_BUTTON =
-    'flex size-(--density-control-xs) shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-hover'
+    'flex size-(--density-control-xs) shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-disabled data-popup-open:bg-hover'
 
 /** What a typed field holds: the value it stands for, and the text in its input. */
 export interface Entry<V> {
@@ -285,7 +285,7 @@ export function TypedField<V extends string | number>({
             }}
             className={cn(
                 'flex h-(--density-control) w-full min-w-0 cursor-text items-center gap-1 rounded-control border border-input bg-field px-2.5 text-base transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring md:text-sm',
-                disabled === true && 'cursor-not-allowed bg-input/50 opacity-50',
+                disabled === true && 'cursor-not-allowed bg-input/50 opacity-disabled',
                 tone !== null && ISSUE_WITHIN_EDGE[tone],
                 buttons !== false && 'pr-1',
                 bare && className,

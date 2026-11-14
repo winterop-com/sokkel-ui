@@ -56,7 +56,7 @@ export function LoadingBar({ value = null, label = 'Loading', tone = 'primary', 
                 className={cn(
                     'absolute inset-y-0 left-0 rounded-full',
                     FILL[tone],
-                    known ? 'transition-[width] duration-300 ease-out' : 'w-2/5 animate-[loading-slide_1.4s_ease-in-out_infinite]',
+                    known ? 'transition-[width] duration-300 ease-motion' : 'w-2/5 animate-[loading-slide_1.4s_ease-in-out_infinite]',
                 )}
                 style={known ? { width: `${Math.max(0, Math.min(100, value))}%` } : undefined}
             />
@@ -99,7 +99,7 @@ export function PageProgress({ loading, value = null, delay = 200, fixed = false
     return (
         <div
             className={cn(
-                'pointer-events-none inset-x-0 top-0 z-50 transition-opacity duration-300',
+                'pointer-events-none inset-x-0 top-0 z-dialog transition-opacity duration-300',
                 fixed ? 'fixed' : 'absolute',
                 finishing && 'opacity-0',
             )}
@@ -129,7 +129,7 @@ export function LoadingOverlay({ loading, delay = 300, label = 'Loading', classN
             {/* A column that fills the element, so content set to grow fills an element stretched taller than it, as a panel in a row is. */}
             <div
                 className={cn(
-                    'flex min-h-0 flex-1 flex-col transition-opacity duration-200',
+                    'flex min-h-0 flex-1 flex-col transition-opacity duration-base',
                     long && 'pointer-events-none opacity-50 select-none',
                 )}
             >

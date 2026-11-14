@@ -71,7 +71,7 @@ export interface TopBarWords {
 
 /** A crumb that leads back up: quiet until the pointer is over it, and the button's own focus look on keyboard focus. */
 const CRUMB_LINK =
-    'rounded-sm text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid'
+    'rounded-sm text-muted-foreground outline-none hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid'
 
 /** The top bar's own words in English; a bar with words of its own starts from these. */
 export const TOP_BAR_WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palette', trail: 'Where you are' }
@@ -160,7 +160,7 @@ export function TopBar({
                     aria-label={field === undefined ? words.search : words.palette}
                     title={field === undefined ? undefined : words.palette}
                     className={cn(
-                        'flex h-(--density-control) shrink-0 items-center gap-2 rounded-control border border-border bg-field px-2.5 text-sm text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid max-md:size-finger max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0',
+                        'flex h-(--density-control) shrink-0 items-center gap-2 rounded-control border border-border bg-field px-2.5 text-sm text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid max-md:size-finger max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0',
                         field === undefined ? 'md:w-56' : 'md:px-2',
                     )}
                 >

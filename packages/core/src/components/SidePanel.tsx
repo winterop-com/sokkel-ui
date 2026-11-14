@@ -175,7 +175,7 @@ export function SidePanel({
                                         id={tabId(tab.id)}
                                         aria-controls={panelId}
                                         className={cn(
-                                            'h-7 shrink-0 rounded-md px-2.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                                            'h-7 shrink-0 rounded-md px-2.5 text-sm outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
                                             tab.id === current?.id
                                                 ? 'bg-secondary font-medium text-foreground'
                                                 : 'text-muted-foreground hover:bg-hover hover:text-foreground',

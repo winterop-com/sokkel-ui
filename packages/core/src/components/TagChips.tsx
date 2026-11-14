@@ -21,7 +21,7 @@ const WORDS: TagChipsWords = {
 }
 
 const RING =
-    'rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid'
+    'rounded-chip outline-none focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid'
 
 /**
  * How many chips of these widths fit a room, the gap between each two, with room kept for the

@@ -1,22 +1,24 @@
 {
-    "$description": "The sokkel-design contract: its version, the foundations every part refers to, and every part and pattern. Draft for judging the format.",
-    "contract": "0.1.0",
+    "$description": "The sokkel-design contract: its version, which moves in lockstep with sokkel-ui before 1.0, the foundations every part refers to, and every part and pattern with its status. A stable part is drawn by both renderers from its spec and compared side by side; a draft one is not yet. CHANGELOG.md says what each version changed.",
+    "version": "0.28.0",
     "tokens": {
-        "source": "tokens/tokens.json",
+        "source": "sokkel-ui: packages/core/tokens/tokens.json, at the commit sokkel-ui.json pins",
+        "pin": "sokkel-ui.json",
         "resolved": "tokens/tokens.resolved.json",
-        "today": {
-            "source": "sokkel-ui: packages/core/tokens/tokens.json",
-            "resolved": "sokkel-ui-egui: crates/core/tokens/tokens.resolved.json"
-        },
         "cssOnly": ["scrollbar", "density.page-inset"]
     },
     "units": "Lengths in px: 1rem = 16px = 1 egui point at scale 1.",
     "breakpoints": {
         "md": {
+            "token": "breakpoint-md",
             "px": 768,
             "means": "Below it a window is a phone or a foldable: finger-sized targets, the rail as a drawer, dialogs as full-screen sheets."
         },
-        "lg": {"px": 1024, "means": "From it the shell's side panel is a column; below it the panel is a sheet."}
+        "lg": {
+            "token": "breakpoint-lg",
+            "px": 1024,
+            "means": "From it the shell's side panel is a column; below it the panel is a sheet."
+        }
     },
     "finger": "spacing-finger",
     "checkWidths": {
@@ -29,23 +31,24 @@
     "themes": {"base": "tidevann", "specimens": ["tidevann", "paper", "contrast"]},
     "densities": ["regular", "compact"],
     "parts": [
-        {"id": "button", "file": "parts/button.json", "status": "draft"},
+        {"id": "button", "file": "parts/button.json", "status": "stable"},
         {"id": "text-field", "file": "parts/text-field.json", "status": "draft"},
-        {"id": "table", "file": "parts/table.json", "status": "draft"},
-        {"id": "rail", "file": "parts/rail.json", "status": "draft"},
-        {"id": "top-bar", "file": "parts/top-bar.json", "status": "draft"},
-        {"id": "status-line", "file": "parts/status-line.json", "status": "draft"},
-        {"id": "page-header", "file": "parts/page-header.json", "status": "draft"},
+        {"id": "table", "file": "parts/table.json", "status": "stable"},
+        {"id": "rail", "file": "parts/rail.json", "status": "stable"},
+        {"id": "top-bar", "file": "parts/top-bar.json", "status": "stable"},
+        {"id": "status-line", "file": "parts/status-line.json", "status": "stable"},
+        {"id": "page-header", "file": "parts/page-header.json", "status": "stable"},
         {"id": "section", "file": "parts/section.json", "status": "draft"},
-        {"id": "page-state", "file": "parts/page-state.json", "status": "draft"},
-        {"id": "select", "file": "parts/select.json", "status": "draft"},
-        {"id": "dropdown-menu", "file": "parts/dropdown-menu.json", "status": "draft"},
-        {"id": "tooltip", "file": "parts/tooltip.json", "status": "draft"},
-        {"id": "dialog", "file": "parts/dialog.json", "status": "draft"},
-        {"id": "settings-dialog", "file": "parts/settings-dialog.json", "status": "draft"},
-        {"id": "command-palette", "file": "parts/command-palette.json", "status": "draft"}
+        {"id": "page-state", "file": "parts/page-state.json", "status": "stable"},
+        {"id": "select", "file": "parts/select.json", "status": "stable"},
+        {"id": "dropdown-menu", "file": "parts/dropdown-menu.json", "status": "stable"},
+        {"id": "tooltip", "file": "parts/tooltip.json", "status": "stable"},
+        {"id": "dialog", "file": "parts/dialog.json", "status": "stable"},
+        {"id": "settings-dialog", "file": "parts/settings-dialog.json", "status": "stable"},
+        {"id": "command-palette", "file": "parts/command-palette.json", "status": "stable"}
     ],
-    "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "draft"}],
+    "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "stable"}],
     "principles": "principles.md",
-    "specimens": "specimens.json"
+    "specimens": "specimens.json",
+    "changelog": "CHANGELOG.md"
 }

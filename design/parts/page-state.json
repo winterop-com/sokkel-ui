@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "page-state",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and the content. A failure is headed by what the server answered, with its diagnostic and the problems it named under the heading and Try again; a failed read of secondary data is a warning about part of the page. Drawn in a box of its own, or unframed inside a panel.",
     "sources": {
         "sokkel-ui": [

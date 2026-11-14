@@ -54,7 +54,7 @@ export function DashboardRow({
             className={cn('group/row flex flex-col gap-1.5', className)}
         >
             <div className="flex h-7 items-center gap-2">
-                <CollapsibleTrigger className="flex min-w-0 items-center gap-1 rounded-md pr-1.5 text-sm font-medium outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid">
+                <CollapsibleTrigger className="flex min-w-0 items-center gap-1 rounded-md pr-1.5 text-sm font-medium outline-none hover:text-foreground focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid">
                     <ChevronDown
                         className="size-4 text-muted-foreground transition-transform group-data-closed/row:-rotate-90"
                         aria-hidden

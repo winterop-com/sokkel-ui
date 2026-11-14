@@ -207,7 +207,7 @@ export function NetworkGraph({
                     measured: { width: spot.width, height: spot.height },
                     selected: node.id === selected,
                     className:
-                        'rounded-node outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
+                        'rounded-node outline-none focus-visible:outline-focus focus-visible:outline-offset-4 focus-visible:outline-ring',
                     data: {
                         label: node.label,
                         size: dotSize(degree.get(node.id) ?? 0),

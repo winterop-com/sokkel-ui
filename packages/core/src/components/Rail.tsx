@@ -397,7 +397,7 @@ export function Rail({
                 data-collapsed={collapsed || undefined}
                 style={collapsed ? undefined : { width: held.style }}
                 className={cn(
-                    'flex h-full shrink-0 flex-col border-r border-border-strong bg-sidebar text-sidebar-foreground transition-[width] duration-200',
+                    'flex h-full shrink-0 flex-col border-r border-border-strong bg-sidebar text-sidebar-foreground transition-[width] duration-base',
                     collapsed && 'w-[calc(3.5rem+1px)]',
                 )}
             >
@@ -563,7 +563,8 @@ function Droppable({ entry, children }: { entry: RailEntry; children: ReactEleme
 }
 
 /** The button's own focus look (`ui/button`), which every control of the rail wears: a ring outline 2 off, on keyboard focus. */
-const FOCUS = 'outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid'
+const FOCUS =
+    'outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid'
 
 /** The control at the end of the expanded rail's head: collapse, or close in the shell's drawer. */
 const HEAD_BUTTON = cn(

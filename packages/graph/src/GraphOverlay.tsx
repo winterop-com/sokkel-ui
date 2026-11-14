@@ -341,7 +341,7 @@ export function GraphNotice({ tone = 'info', onClose, children, words: given }: 
                         aria-label={words.close}
                         title={words.close}
                         onClick={onClose}
-                        className="flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                        className="flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-ring"
                     >
                         <X className="size-3.5" aria-hidden />
                     </button>

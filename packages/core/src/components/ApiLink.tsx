@@ -56,7 +56,7 @@ export function ApiLink({ method = 'GET', path, href, copyValue, open = false, c
                 title={path}
                 className={cn(
                     CHIP,
-                    'pr-2 text-foreground outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-ring',
+                    'pr-2 text-foreground outline-none hover:bg-hover focus-visible:outline-focus focus-visible:outline-ring',
                     className,
                 )}
             >
@@ -82,7 +82,7 @@ export function ApiLink({ method = 'GET', path, href, copyValue, open = false, c
                     title={path}
                     className={cn(
                         PATH,
-                        'inline-flex items-center gap-0.5 rounded-mini underline-offset-2 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-ring',
+                        'inline-flex items-center gap-0.5 rounded-mini underline-offset-2 outline-none hover:underline focus-visible:outline-focus focus-visible:outline-ring',
                     )}
                 >
                     <span className="truncate">{path}</span>

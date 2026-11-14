@@ -384,7 +384,7 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
             data-selected={selected}
             title={hint}
             className={cn(
-                'relative flex h-full w-full flex-col justify-center gap-0.5 overflow-hidden border border-node-line bg-node px-2.5 text-left text-foreground shadow-node transition-[border-color,box-shadow] duration-100 hover:border-muted-foreground',
+                'relative flex h-full w-full flex-col justify-center gap-0.5 overflow-hidden border border-node-line bg-node px-2.5 text-left text-foreground shadow-node transition-[border-color,box-shadow] duration-fast hover:border-muted-foreground',
                 data.shape === 'round' ? 'rounded-[calc(var(--radius-node)*3)] px-3.5' : 'rounded-node',
                 data.source === true && SOURCE,
                 run !== undefined && BOX[run],

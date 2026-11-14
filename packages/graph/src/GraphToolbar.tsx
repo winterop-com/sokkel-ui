@@ -43,7 +43,7 @@ export const GRAPH_TOOLBAR_WORDS: GraphToolbarWords = {
 }
 
 const BUTTON =
-    'flex size-7 shrink-0 items-center justify-center rounded-chip text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
+    'flex size-7 shrink-0 items-center justify-center rounded-chip text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:-outline-offset-focus focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
 
 export interface GraphToolbarButtonProps extends Omit<ComponentProps<'button'>, 'children' | 'title'> {
     /** What the button does: its accessible name, and its tooltip without `tooltip`. */
@@ -170,7 +170,7 @@ export function GraphToolbar({
                     type="button"
                     onClick={onIssues}
                     data-slot="graph-issues"
-                    className="flex h-7 shrink-0 items-center gap-1.5 rounded-chip px-1.5 text-xs font-medium text-critical-ink outline-none hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    className="flex h-7 shrink-0 items-center gap-1.5 rounded-chip px-1.5 text-xs font-medium text-critical-ink outline-none hover:bg-hover focus-visible:outline-focus focus-visible:-outline-offset-focus focus-visible:outline-ring"
                 >
                     <CircleAlert className="size-3.5" aria-hidden />
                     {words.issues(issues)}

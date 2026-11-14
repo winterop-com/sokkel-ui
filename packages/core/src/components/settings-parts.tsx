@@ -157,7 +157,7 @@ export function SettingsNavList({ groups, shown, onChoose, ground }: SettingsNav
                         type="button"
                         aria-current={chosen ? 'page' : undefined}
                         className={cn(
-                            'flex items-center gap-2.5 rounded-md px-2 text-left text-sm transition-colors outline-none focus-visible:outline-2 focus-visible:outline-ring',
+                            'flex items-center gap-2.5 rounded-md px-2 text-left text-sm transition-colors outline-none focus-visible:outline-focus focus-visible:outline-ring',
                             dialog
                                 ? [
                                       'max-md:min-h-finger sm:py-1.5',

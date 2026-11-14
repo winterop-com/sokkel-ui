@@ -393,7 +393,7 @@ export function FileField({
                                 aria-label={words.dismiss(one.file.name)}
                                 title={words.dismiss(one.file.name)}
                                 onClick={() => setRefused(refused.filter((other) => other !== one))}
-                                className="-my-0.5 flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                                className="-my-0.5 flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring/50"
                             >
                                 <X aria-hidden className="size-3.5" />
                             </button>

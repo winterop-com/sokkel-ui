@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "sokkel-design/paints.schema.json",
     "title": "The resolved paints",
-    "description": "The `paints` section of tokens.resolved.json: every paint the part and pattern specs name, resolved by the resolver for every theme and scheme into plain colors, so no renderer mixes colors. Keyed by theme, then scheme, then `<part>.<variant>.<state>.<piece>`: variant is `base` for a part without variants, piece is `container` for a variant's own paint, and state is a stateKey (`hover`, `invalid+focus`). Each paint is complete: rest, the part-wide piece, the variant, each joined state in order, the joined key, the dark layers in dark, and the state's effect ring, already laid over each other. Only rest and the states a spec paints are present; a renderer asked for another state takes rest. Colors do not vary by density, so density is not a key; lengths per density stay where they are in the resolved file.",
+    "description": "The `paints` section of tokens.resolved.json: every paint the part and pattern specs name, resolved by the resolver for every theme and scheme into plain colors, so no renderer mixes colors. Keyed by theme, then scheme, then `<part>.<variant>.<state>.<piece>`: variant is `base` for a part without variants, piece is `container` for a variant's own paint, and state is a stateKey (`hover`, `invalid+focus`). Each paint is complete, laid in order: rest, each state the key joins, then the joined key; in each step the part-wide piece, then the variant's or piece's own paint, each with its dark layer in dark, then the state's effect ring. A ring with an offset is an `outline`, drawn outside the box and stacking with a `ring`; every other ring replaces the ring before it. Only rest and the states a spec paints are present; a renderer asked for another state takes rest. Colors do not vary by density, so density is not a key; lengths per density stay where they are in the resolved file.",
     "type": "object",
     "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$", "$comment": "A theme."},
     "additionalProperties": {
@@ -33,15 +33,12 @@
                 "mark": {"$ref": "#/$defs/color"},
                 "placeholder": {"$ref": "#/$defs/color"},
                 "ring": {
-                    "type": "object",
-                    "required": ["color", "width"],
-                    "additionalProperties": false,
-                    "properties": {
-                        "color": {"$ref": "#/$defs/color"},
-                        "width": {"type": "number"},
-                        "offset": {"type": "number"},
-                        "inset": {"enum": ["start", "all"]}
-                    }
+                    "$ref": "#/$defs/ring",
+                    "description": "A ring drawn round the box (a box-shadow ring in CSS); a later one replaces it."
+                },
+                "outline": {
+                    "$ref": "#/$defs/ring",
+                    "description": "A ring drawn its offset outside the box (an outline in CSS), as keyboard focus is; it stacks with `ring`."
                 },
                 "opacity": {"type": "number"},
                 "overlay": {
@@ -51,8 +48,19 @@
                 "source": {
                     "type": "object",
                     "additionalProperties": {"type": "string"},
-                    "description": "Each color's authoring expression (`primary/80`, `mix(secondary, foreground 5%)`), kept so verify-colors can draw the same expression in Chromium and compare."
+                    "description": "Each field's authoring expression (`primary/80`, `mix(secondary, foreground 5%)`), the ring's and the outline's color under `ring` and `outline`, kept so verify-colors can draw the same expression in Chromium and compare."
                 }
+            }
+        },
+        "ring": {
+            "type": "object",
+            "required": ["color", "width"],
+            "additionalProperties": false,
+            "properties": {
+                "color": {"$ref": "#/$defs/color"},
+                "width": {"type": "number"},
+                "offset": {"type": "number"},
+                "inset": {"enum": ["start", "all"]}
             }
         }
     }

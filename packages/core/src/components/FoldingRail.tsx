@@ -103,7 +103,7 @@ export function FoldingRail({
                     aria-label={`${words.unfold} ${title}`}
                     aria-expanded={false}
                     onClick={() => fold(false)}
-                    className="flex min-h-10 flex-1 items-center gap-2 px-3 text-sm font-medium text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid @3xl:flex-col @3xl:px-0 @3xl:py-2"
+                    className="flex min-h-10 flex-1 items-center gap-2 px-3 text-sm font-medium text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:-outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid @3xl:flex-col @3xl:px-0 @3xl:py-2"
                 >
                     <Unfold className="size-4 shrink-0" aria-hidden />
                     <span className="truncate @3xl:[writing-mode:vertical-rl]">{title}</span>

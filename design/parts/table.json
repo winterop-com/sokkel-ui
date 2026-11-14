@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "table",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "The one table: every listing and table, five rows or fifty thousand, flat, grouped or a tree. Rows at the density's row height, drawing only those in view; heads that sort and resize; selection with a bar; one row picked for a detail beside it; rows stacked as cards when its own box is narrow.",
     "sources": {
         "sokkel-ui": [
@@ -249,7 +249,7 @@
             "hover": {"ink": "foreground", "note": "A sortable head under the pointer."},
             "sorted": {"ink": "foreground"},
             "headActive+focus": {
-                "ring": {"color": "ring", "width": 2, "offset": 2},
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"},
                 "note": "The chosen head's name, as a focused button: the button's own focus look, one head at a time."
             }
         },
@@ -276,7 +276,7 @@
             "hover": {"ground": "hover"},
             "selected": {"ring": {"color": "primary", "width": 2}},
             "opened": {"ring": {"color": "ring/60", "width": 2}},
-            "active+focus": {"ring": {"color": "ring", "width": 2}},
+            "active+focus": {"ring": {"color": "ring", "width": "focus-ring-width"}},
             "toneCritical": {"ground": "mix-oklab(critical 8%, card)"},
             "toneWarning": {"ground": "mix-oklab(warning 10%, card)"}
         },
@@ -401,6 +401,61 @@
         "missing": "Nothing is there",
         "unreachable": "The server is not answering",
         "retry": "Try again"
+    },
+    "samples": {
+        "rows": [
+            {"with": {"count": 0}, "says": "0 rows"},
+            {"with": {"count": 1}, "says": "1 row"},
+            {"with": {"count": 1200}, "says": "1,200 rows"}
+        ],
+        "loaded": [
+            {"with": {"count": 0}, "says": "0 loaded"},
+            {"with": {"count": 1}, "says": "1 loaded"},
+            {"with": {"count": 1200}, "says": "1,200 loaded"}
+        ],
+        "range": [
+            {"with": {"from": 0, "to": 0, "total": 0}, "says": "0–0 of 0"},
+            {"with": {"from": 1, "to": 1, "total": 1}, "says": "1–1 of 1"},
+            {"with": {"from": 51, "to": 100, "total": 1200}, "says": "51–100 of 1,200"}
+        ],
+        "page": [
+            {"with": {"page": 1, "pages": 1}, "says": "Page 1 of 1"},
+            {"with": {"page": 2, "pages": 5}, "says": "Page 2 of 5"},
+            {"with": {"page": 12, "pages": 1200}, "says": "Page 12 of 1,200"}
+        ],
+        "selected": [
+            {"with": {"count": 0}, "says": "0 selected"},
+            {"with": {"count": 1}, "says": "1 selected"},
+            {"with": {"count": 1200}, "says": "1,200 selected"}
+        ],
+        "selectEvery": [
+            {"with": {"count": 0}, "says": "Select all 0"},
+            {"with": {"count": 1}, "says": "Select all 1"},
+            {"with": {"count": 1200}, "says": "Select all 1,200"}
+        ],
+        "allSelected": [
+            {"with": {"count": 0}, "says": "All 0 selected"},
+            {"with": {"count": 1}, "says": "All 1 selected"},
+            {"with": {"count": 1200}, "says": "All 1,200 selected"}
+        ],
+        "loadMoreCount": [
+            {"with": {"count": 0}, "says": "Load 0 more"},
+            {"with": {"count": 1}, "says": "Load 1 more"},
+            {"with": {"count": 1200}, "says": "Load 1,200 more"}
+        ],
+        "resize": [{"with": {"column": "Name"}, "says": "Resize Name"}],
+        "moveUp": [{"with": {"column": "Name"}, "says": "Move Name up"}],
+        "moveDown": [{"with": {"column": "Name"}, "says": "Move Name down"}],
+        "groupCount": [
+            {"with": {"count": 0}, "says": "0"},
+            {"with": {"count": 1}, "says": "1"},
+            {"with": {"count": 1200}, "says": "1,200"}
+        ],
+        "moveRow": [{"with": {"row": "nightly-export"}, "says": "Move nightly-export"}],
+        "rowMoved": [
+            {"with": {"row": "nightly-export", "place": 1, "count": 1}, "says": "nightly-export moved to 1 of 1"},
+            {"with": {"row": "nightly-export", "place": 2, "count": 1200}, "says": "nightly-export moved to 2 of 1,200"}
+        ]
     },
     "appText": {
         "header": "Every column's name, used in its head, the columns menu, a stacked line and its resize handle.",

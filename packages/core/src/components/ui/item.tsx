@@ -31,7 +31,7 @@ function ItemSeparator({ className, ...props }: ItemSeparatorProps) {
 }
 
 const itemVariants = cva(
-    'group/item flex w-full flex-wrap items-center rounded-lg border text-sm transition-colors duration-100 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid [a]:transition-colors [a]:hover:bg-hover',
+    'group/item flex w-full flex-wrap items-center rounded-lg border text-sm transition-colors duration-fast outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid [a]:transition-colors [a]:hover:bg-hover',
     {
         variants: {
             variant: {

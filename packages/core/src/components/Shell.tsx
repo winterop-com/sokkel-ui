@@ -478,7 +478,7 @@ export function Shell({
             title={open ? words.hidePanel : words.showPanel}
             data-window-no-drag
             className={cn(
-                'absolute top-[calc(env(safe-area-inset-top)+(var(--spacing-shell-top)-var(--density-control))/2)] right-[calc(env(safe-area-inset-right)+0.5rem)] z-50 flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                'absolute top-[calc(env(safe-area-inset-top)+(var(--spacing-shell-top)-var(--density-control))/2)] right-[calc(env(safe-area-inset-right)+0.5rem)] z-dialog flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
                 open && 'text-foreground',
             )}
             onClick={() => setOpen(!open)}
@@ -487,7 +487,7 @@ export function Shell({
         </button>
     )
     const drawn = drawer && (
-        <div ref={drawerRef} className={cn('fixed inset-0 z-40 outline-none', !railHidden && 'md:hidden')}>
+        <div ref={drawerRef} className={cn('fixed inset-0 z-drawer outline-none', !railHidden && 'md:hidden')}>
             <button type="button" aria-label={words.close} className="absolute inset-0 bg-scrim" onClick={closeDrawer} />
             <div
                 data-overlay
@@ -525,7 +525,7 @@ export function Shell({
                         aria-expanded={drawer}
                         className={cn(
                             // As the rail's collapse control: the hover's ground and ink, and the button's own focus look.
-                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid max-md:size-finger',
+                            'flex size-(--density-control) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid max-md:size-finger',
                             !railHidden && 'md:hidden',
                         )}
                         onClick={() => setDrawer(true)}
@@ -542,9 +542,9 @@ export function Shell({
                 {/* A screen's `ShellHead` draws into this box, held above the scroller, while it is mounted. */}
                 <div
                     ref={setHeadTarget}
-                    className="@container shrink-0 scroller-thin overflow-hidden border-border empty:hidden has-[>[data-shell-head-rule]]:border-b"
+                    className="@container scroller-thin shrink-0 overflow-hidden border-border empty:hidden has-[>[data-shell-head-rule]]:border-b"
                 />
-                <main className="@container relative min-h-0 flex-1 scroller-thin overflow-y-auto" ref={setMain}>
+                <main className="@container relative scroller-thin min-h-0 flex-1 overflow-y-auto" ref={setMain}>
                     <Fragment key={contentKey}>{children}</Fragment>
                 </main>
             </div>
@@ -559,7 +559,7 @@ export function Shell({
                     inert={!open}
                     aria-hidden={!open || undefined}
                     className={cn(
-                        'grid min-h-0 transition-[grid-template-columns] duration-200 ease-out',
+                        'grid min-h-0 transition-[grid-template-columns] duration-base ease-motion',
                         open ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
                     )}
                 >
@@ -574,7 +574,7 @@ export function Shell({
                     inert={!open}
                     aria-hidden={!open || undefined}
                     className={cn(
-                        'fixed inset-0 z-40 outline-none',
+                        'fixed inset-0 z-drawer outline-none',
                         // The sheet rises from the strip, which stays in reach under it.
                         stripping && 'bottom-[calc(var(--spacing-shell-tabs)+env(safe-area-inset-bottom))] overflow-hidden',
                         !open && 'pointer-events-none',
@@ -584,13 +584,13 @@ export function Shell({
                         type="button"
                         aria-label={words.hidePanel}
                         tabIndex={open ? undefined : -1}
-                        className={cn('absolute inset-0 bg-scrim transition-opacity duration-200', open ? 'opacity-100' : 'opacity-0')}
+                        className={cn('absolute inset-0 bg-scrim transition-opacity duration-base', open ? 'opacity-100' : 'opacity-0')}
                         onClick={() => setOpen(false)}
                     />
                     <div
                         data-overlay
                         className={cn(
-                            'absolute flex bg-sidebar pr-[env(safe-area-inset-right)] shadow-pop transition-transform duration-200 ease-out',
+                            'absolute flex bg-sidebar pr-[env(safe-area-inset-right)] shadow-pop transition-transform duration-base ease-motion',
                             stripping
                                 ? 'inset-x-0 top-[calc(env(safe-area-inset-top)+var(--spacing-shell-top))] bottom-0 overflow-hidden rounded-t-surface pl-[env(safe-area-inset-left)]'
                                 : 'inset-y-0 right-0 max-w-[calc(100vw-3rem)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] [&>*]:max-w-full',

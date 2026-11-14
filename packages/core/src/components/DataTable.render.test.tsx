@@ -149,7 +149,7 @@ describe('a table sorted by keys from its head row', () => {
 
     it('marks the head the keys move to with the button’s own focus look', () => {
         expect(html).toMatch(
-            /<button type="button" tabindex="-1" class="[^"]*focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"/,
+            /<button type="button" tabindex="-1" class="[^"]*focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"/,
         )
     })
 })

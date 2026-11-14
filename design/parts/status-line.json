@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "status-line",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "The foot strip across the window's bottom edge: a short note at its start in its tone, short facts at its end, on one row of fixed height that never grows. Level with the rail's foot cell, so the account and the status read as one bar.",
     "sources": {
         "sokkel-ui": [

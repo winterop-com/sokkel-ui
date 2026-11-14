@@ -351,7 +351,7 @@ export function ChatMessage({
                                 aria-label={`${reaction.label}, ${String(reaction.count)}`}
                                 onClick={() => onReact?.(reaction.id)}
                                 className={cn(
-                                    'flex h-6 items-center gap-1 rounded-control border px-1.5 text-sm leading-none outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-3.5',
+                                    'flex h-6 items-center gap-1 rounded-control border px-1.5 text-sm leading-none outline-none focus-visible:ring-focus focus-visible:ring-ring/50 [&_svg]:size-3.5',
                                     reaction.mine === true
                                         ? 'border-primary/60 bg-primary/12 text-primary-ink'
                                         : 'border-transparent bg-muted text-muted-foreground hover:border-border-strong',
@@ -369,7 +369,7 @@ export function ChatMessage({
                                             type="button"
                                             aria-label={words.react}
                                             onClick={onAddReaction}
-                                            className="flex h-6 items-center rounded-control border border-transparent bg-muted px-1.5 text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                                            className="flex h-6 items-center rounded-control border border-transparent bg-muted px-1.5 text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring/50"
                                         />
                                     }
                                 >
@@ -384,7 +384,7 @@ export function ChatMessage({
                     <button
                         type="button"
                         onClick={onOpenThread}
-                        className="group/thread mt-1 -ml-1 flex w-fit max-w-full items-center gap-2 rounded-md border border-transparent py-0.5 pr-1 pl-1 text-xs outline-none hover:border-border hover:bg-background focus-visible:ring-2 focus-visible:ring-ring/50 sm:w-full sm:max-w-md"
+                        className="group/thread mt-1 -ml-1 flex w-fit max-w-full items-center gap-2 rounded-md border border-transparent py-0.5 pr-1 pl-1 text-xs outline-none hover:border-border hover:bg-background focus-visible:ring-focus focus-visible:ring-ring/50 sm:w-full sm:max-w-md"
                     >
                         <span className="flex shrink-0 gap-0.5">
                             {thread.people.slice(0, 3).map((person, index) => (

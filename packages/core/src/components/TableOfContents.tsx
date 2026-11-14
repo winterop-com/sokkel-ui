@@ -121,7 +121,7 @@ export function TableOfContents({ entries, active, onJump, className, words: giv
                                 }}
                                 style={{ paddingLeft: `calc(${entry.level - top} * 0.75rem + 0.75rem)` }}
                                 className={cn(
-                                    '-ml-px flex items-center gap-2 border-l-2 py-1 pr-2 leading-snug outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                                    '-ml-px flex items-center gap-2 border-l-2 py-1 pr-2 leading-snug outline-none focus-visible:ring-focus focus-visible:ring-ring',
                                     on
                                         ? 'border-primary font-medium text-foreground'
                                         : 'border-transparent text-muted-foreground hover:border-border-strong hover:text-foreground',

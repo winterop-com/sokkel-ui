@@ -55,7 +55,7 @@ export function Dot({ kind, color, status, outline = false, size = 'lg', label, 
     const word = typeof say === 'string' ? say : say === true ? (label ?? (status === undefined ? undefined : look.label)) : undefined
     const name = word === undefined ? (label ?? (typeof tip === 'string' ? tip : undefined)) : undefined
     const ring =
-        focusable && 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid'
+        focusable && 'focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid'
     const tabIndex = focusable ? 0 : undefined
     // Both forms are a box one line of text tall with the disc centered in it, so a bare dot and one
     // with its word line up in any row, and a box an app grows (a tooltip trigger on a phone) grows

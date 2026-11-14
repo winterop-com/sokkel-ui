@@ -176,7 +176,7 @@ function Room({
             aria-label={deck.words.nowPlaying}
             data-slot="media-fullscreen"
             data-layout={layout}
-            className="dark fixed inset-0 z-50 scheme-dark outline-none"
+            className="dark fixed inset-0 z-dialog scheme-dark outline-none"
         >
             <div data-theme-scope={theme} className="relative flex size-full flex-col overflow-hidden bg-background text-foreground">
                 {layout === 'rows' && <RowsView {...view} width={box.width} />}

@@ -126,7 +126,7 @@ export function IssueMarks({ list, scroller: given, label = 'Issues in this form
                             title={`${entry.label}: ${entry.issue.text}`}
                             onClick={entry.onGo}
                             className={cn(
-                                'absolute inset-x-0.5 h-2 -translate-y-1/2 rounded-sm outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ring/60',
+                                'absolute inset-x-0.5 h-2 -translate-y-1/2 rounded-sm outline-none hover:brightness-110 focus-visible:ring-focus focus-visible:ring-ring/60',
                                 TONE[entry.issue.tone],
                             )}
                             style={{ top: `${String(at * 100)}%` }}

@@ -128,7 +128,7 @@ export function CapabilityPicker({
                             disabled={!on && left === 0}
                             onClick={() => toggle(capability.id)}
                             className={cn(
-                                'inline-flex h-(--density-control-xs) items-center gap-1.5 rounded-control border px-2.5 text-xs transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:cursor-not-allowed disabled:opacity-40',
+                                'inline-flex h-(--density-control-xs) items-center gap-1.5 rounded-control border px-2.5 text-xs transition-colors outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid disabled:cursor-not-allowed disabled:opacity-40',
                                 on
                                     ? 'border-primary/40 bg-accent text-foreground'
                                     : 'border-border-strong text-muted-foreground hover:bg-hover hover:text-foreground',
@@ -143,7 +143,7 @@ export function CapabilityPicker({
                     <button
                         type="button"
                         onClick={() => setChosen(new Set())}
-                        className="ml-auto inline-flex h-(--density-control-xs) items-center gap-1 rounded-sm px-1 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid"
+                        className="ml-auto inline-flex h-(--density-control-xs) items-center gap-1 rounded-sm px-1 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid"
                     >
                         <X className="size-3.5" aria-hidden />
                         {words.clear}

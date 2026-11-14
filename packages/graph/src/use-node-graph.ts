@@ -139,7 +139,7 @@ export function useNodeGraph(
                     selectable: item.selectable ?? true,
                     focusable: item.selectable ?? true,
                     className:
-                        'group/node rounded-node outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
+                        'group/node rounded-node outline-none focus-visible:outline-focus focus-visible:outline-offset-4 focus-visible:outline-ring',
                     data: item.data,
                 },
             ]

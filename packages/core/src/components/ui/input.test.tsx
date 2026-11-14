@@ -16,8 +16,10 @@ describe('Input', () => {
         for (const html of [renderToStaticMarkup(<Input aria-invalid />), renderToStaticMarkup(<Textarea aria-invalid />)]) {
             const own = classes(html)
             expect(own).toContain('aria-invalid:border-critical/80')
-            expect(own).toContain('aria-invalid:focus-visible:ring-3')
-            expect(own.filter((name) => name.includes('invalid') && /:ring-[1-9]/.test(name) && !name.includes('focus'))).toEqual([])
+            expect(own).toContain('aria-invalid:focus-visible:ring-invalid')
+            expect(
+                own.filter((name) => name.includes('invalid') && /:ring-(?:[1-9]|invalid\b|focus\b)/.test(name) && !name.includes('focus')),
+            ).toEqual([])
         }
     })
 })

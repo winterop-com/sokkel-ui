@@ -82,7 +82,7 @@ function StepPress({
             onClick={onPress}
             className={cn(
                 className,
-                '-mx-1 rounded-md px-1 py-0.5 text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50',
+                '-mx-1 rounded-md px-1 py-0.5 text-left outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring/50',
             )}
         >
             {children}

@@ -229,7 +229,7 @@ export function CronField({
                                 type="button"
                                 onClick={() => onChange(preset.value)}
                                 aria-pressed={preset.value === value}
-                                className="rounded-chip border border-border px-2 py-0.5 text-xs text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/50 aria-pressed:bg-primary/10 aria-pressed:text-foreground"
+                                className="rounded-chip border border-border px-2 py-0.5 text-xs text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring/50 aria-pressed:border-primary/50 aria-pressed:bg-primary/10 aria-pressed:text-foreground"
                             >
                                 {preset.label}
                             </button>

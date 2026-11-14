@@ -239,7 +239,7 @@ export function TreeSelect({
                                 setOpen(false)
                             }}
                             className={cn(
-                                'flex h-8 w-full items-center gap-1.5 rounded-md pr-2 pl-1 text-left text-sm text-muted-foreground outline-none select-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                'flex h-8 w-full items-center gap-1.5 rounded-md pr-2 pl-1 text-left text-sm text-muted-foreground outline-none select-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring focus-visible:ring-inset',
                                 value.length === 0 && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
                             )}
                         >

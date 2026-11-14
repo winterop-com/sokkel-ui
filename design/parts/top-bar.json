@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "top-bar",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "The thin bar over the content: a search field at its start, the trail to the current screen, the button that opens the command palette, and the screen's actions at its end. On a phone the trail keeps its last crumb and the palette's button is an icon.",
     "sources": {
         "sokkel-ui": [
@@ -140,7 +140,7 @@
             "note": "The bar's start pad in a desktop window where no rail head leaves the room."
         },
         "phoneBelow": {
-            "value": 768,
+            "value": "breakpoint-md",
             "note": "The md breakpoint: below it the last crumb alone, the palette as an icon, the search field gone."
         }
     },
@@ -168,7 +168,7 @@
         "menu": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md"},
             "hover": {"ground": "hover", "ink": "foreground"},
-            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
         },
         "mark": {"rest": {"ground": "primary", "ink": "primary-foreground", "radius": "radius-md"}},
         "crumb": {
@@ -178,7 +178,7 @@
                 "radius": "radius-sm"
             },
             "hover": {"ink": "foreground", "note": "A crumb that is a link."},
-            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}, "note": "A crumb that is a link."},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}, "note": "A crumb that is a link."},
             "current": {"ink": "foreground", "weight": 500}
         },
         "chevron": {"rest": {"ink": "faint"}},
@@ -186,7 +186,7 @@
         "palette": {
             "rest": {"ground": "field", "edge": "border", "ink": "muted-foreground", "radius": "radius-control"},
             "hover": {"edge": "border-strong", "ink": "foreground"},
-            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
             "phone": {"ground": "none", "edge": "none"}
         },
         "keys": {

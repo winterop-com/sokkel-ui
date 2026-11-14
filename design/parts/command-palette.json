@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "command-palette",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "One search over everything an app can do, over the page on Mod+K: a dialog box a third of the way down the window with the search at its top, the commands in groups under their titles (each row its icon, its label, a quiet hint or code after it, and at its end a summary, its kind or the keys that run it), the app's own search results under them, and an optional strip at its foot. Choosing a row runs it and closes the palette. A command whose onSelect answers a promise keeps the palette open and its row busy until it settles: fulfilled, the palette closes; rejected, it stays and says why under the rows.",
     "sources": {
         "sokkel-ui": [
@@ -182,7 +182,7 @@
         "disabled": {
             "means": "A command that cannot run now: listed, passed over by the arrows, never run, its reason in its hint's place.",
             "reached": "disabled",
-            "effect": {"piece": "row", "opacity": 0.5}
+            "effect": {"piece": "row", "opacity": "disabled-opacity"}
         },
         "empty": {
             "means": "No command matches and the app's search is not waiting or failed: words.empty.",
@@ -228,7 +228,7 @@
         "row": {
             "rest": {"ink": "foreground", "radius": "radius-lg", "text": "text.body"},
             "active": {"ground": "muted", "ink": "foreground"},
-            "disabled": {"opacity": 0.5}
+            "disabled": {"opacity": "disabled-opacity"}
         },
         "icon": {"rest": {"ink": "muted-foreground"}, "active": {"ink": "foreground"}},
         "hint": {
@@ -310,6 +310,10 @@
         "searchFailed": "The search did not answer.",
         "retry": "Retry",
         "seeAll": "See all results for “{query}”"
+    },
+    "samples": {
+        "searchFailed": [{"with": {"reason": "The search timed out"}, "says": "The search did not answer."}],
+        "seeAll": [{"with": {"query": "harbor"}, "says": "See all results for “harbor”"}]
     },
     "appText": {
         "commands": "Every group's title, verb and kind, and every command's label, hint, code, meta, detail, keywords, verb, kind and reason when disabled.",

@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "page-header",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "A page's head: its title (the name, else the code) with a count beside it, the code, a description and a line of facts under it, an optional back button and picture before it, and the page's actions at the row's end with the primary one last. The actions stay on the title's row while there is room and wrap under it otherwise; actions given as items fold into More instead.",
     "sources": {
         "sokkel-ui": [
@@ -176,7 +176,7 @@
     "pieces": {
         "title": {
             "rest": {
-                "ink": "page-title-ink|foreground",
+                "ink": "page-title-ink",
                 "text": "text.page-title",
                 "note": "In typeface-heading; it wraps with balanced lines and breaks a long word."
             },
@@ -207,7 +207,7 @@
                 "note": "A ghost icon button (parts/button)."
             },
             "hover": {"ground": "hover", "ink": "foreground"},
-            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
         },
         "more": {"rest": {"note": "An outline icon button at icon-sm (parts/button)."}}
     },

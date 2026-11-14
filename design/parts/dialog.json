@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "dialog",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "A box over the page that asks or shows one thing: a title and an optional line under it, a body that scrolls when it is taller than the window allows, and a footer with Cancel and the one confirming verb at its end. The page under it is shaded and out of reach. ConfirmDialog is this dialog at its narrowest (sm, 384) and sized to its content on a phone: its title is the question, its line the detail, its confirm the answer. Below 640 any other dialog is a full-screen sheet.",
     "sources": {
         "sokkel-ui": [
@@ -135,8 +135,8 @@
             "note": "Below this window width a sheet dialog fills the screen. The shell's other phone rules start at 768 (open questions)."
         },
         "openEase": {
-            "value": 100,
-            "note": "ms the box fades and zooms in from 95 percent, and the backdrop fades, as far as motion allows. No motion token yet."
+            "value": "motion-fast",
+            "note": "How long the box fades and zooms in from 95 percent, and the backdrop fades, as far as motion allows."
         }
     },
     "states": {
@@ -149,7 +149,7 @@
         "shut": {
             "means": "The confirm cannot be pressed now: it stays focusable at half opacity, its reason in the library's tooltip on hover and on keyboard focus (principle 13), and a press does nothing.",
             "reached": "confirm.why",
-            "effect": {"piece": "confirm", "opacity": 0.5, "focusable": true, "cursor": "not-allowed"},
+            "effect": {"piece": "confirm", "opacity": "disabled-opacity", "focusable": true, "cursor": "not-allowed"},
             "sokkel-ui": "Button reason"
         },
         "busy": {
@@ -227,10 +227,10 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "Base UI's Dialog: a portal on z-50 over the page, which it makes inert; focus is held inside, and goes back to what opened it on close (finalFocus).",
+            "Base UI's Dialog: a portal on layer-dialog over the page, which it makes inert; focus is held inside, and goes back to what opened it on close (finalFocus).",
             "The backdrop also blurs what is under it, 4px (backdrop-blur-xs), where the browser supports a backdrop filter. egui cannot blur and only dims; the blur is web-only and in no paint a renderer must match.",
             "Opening focuses the first field in the body (an input, a text area or a select that takes focus), else the box; a dialog drawn open from its first render moves focus to that field once its body is drawn.",
-            "The box fades and zooms in from 95 percent over 100 ms, the backdrop fading with it, as far as motion allows.",
+            "The box fades and zooms in from 95 percent over motion-fast (100 ms), the backdrop fading with it, as far as motion allows.",
             "The verbs' row wraps in reverse with each verb growing, so the confirm stands on top once they take a line each."
         ],
         "sokkel-ui-egui": [

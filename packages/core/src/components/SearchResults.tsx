@@ -176,7 +176,7 @@ export function SearchResults({
                                             <li key={result.id} className="flex min-w-0 items-center gap-1 rounded-md hover:bg-hover">
                                                 <button
                                                     type="button"
-                                                    className="flex min-w-0 flex-1 items-center rounded-md px-2 py-2 text-left text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                                                    className="flex min-w-0 flex-1 items-center rounded-md px-2 py-2 text-left text-sm outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                                                     onClick={() => onOpen(result, group)}
                                                 >
                                                     <SearchResultBody result={result} query={trimmed} size="md" />

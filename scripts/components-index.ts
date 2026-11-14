@@ -113,6 +113,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             'what the shortcuts dialog lists, kept apart from the registry so only the dialog carries it; its types are exported by `ShortcutsDialog` and `Shell`',
         'lib/table': "the head text every table shares, a layout constant, and the columns' order, which `lib/list-views` exports",
         'lib/theme-list': 'the theme list `lib/appearance` exports as `THEMES`',
+        'lib/breakpoints': 'the breakpoints in px that tokens.json defines, which `MOBILE_QUERY` reads',
         'lib/uploads': 'the store behind `useUploads`, which exports its types',
         'lib/utils': '`cn` under the name the primitives import it by; an app uses `lib/cn`',
     },

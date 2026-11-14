@@ -194,7 +194,7 @@ function RowBody({
                             aria-label={starred ? words.unstar : words.star}
                             title={starred ? words.unstar : words.star}
                             className={cn(
-                                'flex size-4 items-center justify-center rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                                'flex size-4 items-center justify-center rounded-sm outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring',
                                 starred ? 'text-warning' : 'text-faint hover:text-foreground',
                             )}
                             onClick={() => onStarredChange(!starred)}
@@ -207,7 +207,7 @@ function RowBody({
             <button
                 type="button"
                 aria-current={open || undefined}
-                className="flex min-w-0 flex-1 flex-col gap-0.5 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="flex min-w-0 flex-1 flex-col gap-0.5 text-left outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring"
                 onClick={onOpen}
             >
                 <span className="flex min-w-0 items-center gap-2">

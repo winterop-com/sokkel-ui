@@ -148,7 +148,7 @@ function CardFace({
                 <button
                     type="button"
                     aria-pressed={selected}
-                    className="absolute inset-0 z-0 cursor-[inherit] rounded-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                    className="absolute inset-0 z-0 cursor-[inherit] rounded-surface outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                     onClick={onSelect}
                 >
                     <span className="sr-only">{code ?? (typeof title === 'string' ? title : id)}</span>
@@ -177,7 +177,7 @@ function CardFace({
                             <DropdownMenuTrigger
                                 aria-label={words.menu}
                                 title={words.menu}
-                                className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid data-popup-open:bg-hover md:opacity-0 md:group-hover/card:opacity-100 md:focus-visible:opacity-100 md:data-popup-open:opacity-100"
+                                className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid data-popup-open:bg-hover md:opacity-0 md:group-hover/card:opacity-100 md:focus-visible:opacity-100 md:data-popup-open:opacity-100"
                             >
                                 <MoreHorizontal className="size-4" aria-hidden />
                             </DropdownMenuTrigger>

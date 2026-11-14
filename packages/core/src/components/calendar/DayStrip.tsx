@@ -46,7 +46,7 @@ export function DayStrip({ days, value, today, onValueChange, className, words: 
                         aria-pressed={isChosen}
                         aria-label={words.day(day)}
                         onClick={() => onValueChange(day)}
-                        className="flex flex-col items-center gap-1 rounded-control py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="flex flex-col items-center gap-1 rounded-control py-1 text-xs outline-none focus-visible:ring-focus focus-visible:ring-ring/50"
                     >
                         <span className={cn('text-muted-foreground', isToday && 'text-primary-ink')}>{words.weekday(day)}</span>
                         <span

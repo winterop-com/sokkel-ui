@@ -52,7 +52,7 @@ export function EventPopover<E extends CalendarEvent>({
     trigger,
 }: EventPopoverProps<E>) {
     const face = cn(
-        'outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid',
+        'outline-none focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid',
         className,
     )
     if (detail === undefined) {

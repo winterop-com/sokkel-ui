@@ -491,7 +491,7 @@ export function ImageLightbox({
         <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Trigger
                 aria-label={words.open}
-                className="cursor-zoom-in rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="cursor-zoom-in rounded-md outline-none focus-visible:ring-focus focus-visible:ring-ring"
             >
                 {boxes === undefined ? (
                     <img src={src} alt={alt} className={cn('rounded-md', className)} />
@@ -500,8 +500,8 @@ export function ImageLightbox({
                 )}
             </Dialog.Trigger>
             <Dialog.Portal>
-                <Dialog.Backdrop className="fixed inset-0 z-50 bg-shade/85 backdrop-blur-sm" />
-                <Dialog.Popup initialFocus={room} className="fixed inset-0 z-50 outline-none">
+                <Dialog.Backdrop className="fixed inset-0 z-dialog bg-shade/85 backdrop-blur-sm" />
+                <Dialog.Popup initialFocus={room} className="fixed inset-0 z-dialog outline-none">
                     <Viewer
                         images={shown}
                         start={images === undefined ? 0 : index}

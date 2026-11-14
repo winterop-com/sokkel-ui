@@ -142,7 +142,7 @@ export function LogView({
                     }
                 }}
                 className={cn(
-                    'min-h-0 flex-1 overflow-auto bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-2 focus-visible:ring-ring',
+                    'min-h-0 flex-1 overflow-auto bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-focus focus-visible:ring-ring',
                     framed && 'rounded-surface',
                     wrap && '@container',
                 )}
@@ -226,7 +226,7 @@ export function LogView({
                 <button
                     type="button"
                     onClick={toEnd}
-                    className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-terminal-bar px-3 py-1 font-sans text-xs text-terminal-foreground shadow-md outline-none hover:bg-terminal-muted/30 focus-visible:ring-2 focus-visible:ring-ring"
+                    className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-terminal-bar px-3 py-1 font-sans text-xs text-terminal-foreground shadow-md outline-none hover:bg-terminal-muted/30 focus-visible:ring-focus focus-visible:ring-ring"
                 >
                     <ArrowDown className="size-3.5" aria-hidden />
                     {words.jump}

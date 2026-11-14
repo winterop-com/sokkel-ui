@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "button",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "summary": "A button: words, an icon and words, or an icon alone named by its label. A button that cannot act says why; a busy one keeps its place and its focus.",
     "sources": {
         "sokkel-ui": ["packages/core/src/components/ui/button.tsx", "packages/core/src/components/IconButton.tsx"],
@@ -165,7 +165,10 @@
         }
     },
     "layout": {
-        "phoneBelow": {"value": 768, "note": "The md breakpoint: below it phoneMinHeight and phoneMinWidth apply."},
+        "phoneBelow": {
+            "value": "breakpoint-md",
+            "note": "The md breakpoint: below it phoneMinHeight and phoneMinWidth apply."
+        },
         "spinner": {"value": 16, "note": "At the icon size of the button's size: 12 for xs and icon-xs, 14 for sm."},
         "linkUnderlineOffset": 4,
         "controlHeights": {
@@ -180,8 +183,8 @@
             "means": "Keyboard focus.",
             "reached": "Tab",
             "on": "keyboard",
-            "effect": {"ring": {"color": "ring", "width": 2, "offset": 2}},
-            "sokkel-ui": "focus-visible:outline-2 outline-offset-2 outline-ring"
+            "effect": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
+            "sokkel-ui": "focus-visible:outline-focus outline-offset-focus outline-ring"
         },
         "pressed": {
             "means": "The pointer is down on it.",
@@ -193,7 +196,7 @@
         "disabled": {
             "means": "Cannot be pressed now.",
             "reached": "reason or disabled",
-            "effect": {"opacity": 0.5, "presses": false, "cursor": "not-allowed"},
+            "effect": {"opacity": "disabled-opacity", "presses": false, "cursor": "not-allowed"},
             "sokkel-ui": "With reason: focusable, tooltip on hover and focus. With disabled alone: out of the tab order."
         },
         "invalid": {
@@ -205,7 +208,7 @@
             "means": "An invalid button with keyboard focus: the focus outline and a 3px ring. The ring shows only with focus, never at rest.",
             "reached": "Tab onto an invalid button",
             "on": "keyboard",
-            "sokkel-ui": "aria-invalid:focus-visible: a 3px ring critical/20, dark critical/40 (the shared issue edge)"
+            "sokkel-ui": "aria-invalid:focus-visible: the invalid ring, ring-invalid and ring-invalid-ring (the shared issue edge)"
         },
         "busy": {
             "means": "A press started work that is under way.",
@@ -278,7 +281,7 @@
         "container": {
             "rest": {"radius": "radius-control", "note": "Over every variant: what is the same whatever the variant."},
             "invalid": {"edge": "critical/80"},
-            "invalid+focus": {"ring": {"color": "critical/20", "width": 3, "dark": {"color": "critical/40"}}}
+            "invalid+focus": {"ring": {"color": "invalid-ring", "width": "invalid-ring-width"}}
         }
     },
     "keyboard": [
@@ -306,7 +309,7 @@
         ],
         "sokkel-ui-egui": [
             "Reads paints (button.<variant>.<state>.container) and never mixes colors.",
-            "A busy spinner is painted and asks for a repaint each frame; with motion reduced it should stand still (no motion token yet).",
+            "A busy spinner is painted and asks for a repaint each frame; with motion reduced it should stand still.",
             "A busy or reasoned button keeps its focus with Sense::focusable_noninteractive; a disabled tooltip is on_disabled_hover_text."
         ]
     },

@@ -175,9 +175,26 @@ the lines that hold them (`Toolbar`, `TopBar`'s palette button, a field group's 
 beside a field beside a select stands level at either density. Below `md` a control keeps its
 finger minimum; an `xs` button keeps its drawn size there and takes a finger's hit area instead.
 
+The tokens the design contract names for every renderer, beyond the colors and lengths, are in
+`tokens.json` too (`$contract` lists them), each with a utility the components use rather than a
+literal: keyboard focus is a `--focus-ring-width` outline `--focus-ring-offset` outside the part
+(`outline-focus outline-offset-focus`, or `ring-focus`); a refused value's ring with focus is
+`--invalid-ring` (critical at 20 percent, 40 in dark), `--invalid-ring-width` wide (`ring-invalid
+ring-invalid-ring`); a part that cannot be used is drawn at `--disabled-opacity`
+(`opacity-disabled`); motion is `--motion-fast` (popups and dialogs) or `--motion-base` (the
+rail, the drawer, a sheet) on `--motion-ease` (`duration-fast`, `duration-base`, `ease-motion`),
+all stilled when motion is reduced; the drawer, dialogs, popups and toasts stand on
+`--layer-drawer`, `--layer-dialog`, `--layer-popover` and `--layer-toast`, in that order, so a popup
+opened in a dialog shows over it (`z-drawer`, `z-dialog`, `z-popover`, `z-toast`); and the
+breakpoints `md` and `lg` are `breakpoint-md` and `breakpoint-lg` (768 and 1024), which
+`MOBILE_QUERY` reads too. An elevation is written as its layers, each an x, y, blur and spread in px
+and a color, which the build writes as a box-shadow; `--elevation-dialog` is `--elevation-pop`
+until a theme sets its own. `src/rules.test.ts` fails a hand-set focus ring, disabled opacity,
+`z-40` or `z-50`, or a 100 or 200 ms duration.
+
 Beyond its colors a theme can give the frame's parts a look of their own, through tokens the parts
 read (`$parts` in `tokens.json` lists them): the heading face, a section head's ground, rule and
-ink and a page title's ink; a table's head (ground, rule, ink, case) and its zebra; a wash over the
+ink and a page title's ink (each ink `foreground` unless a theme sets one); a table's head (ground, rule, ink, case) and its zebra; a wash over the
 editor's and a code block's ground and over their gutter; the scroll area's thumb and track, which
 the browser's own scroll bars take where `--scrollbar` names them; the shell's foot strip; and the
 palette's insets. Each defaults to what the part drew before, so a theme that sets none looks as
@@ -244,8 +261,9 @@ actions. A `PageHeader` inside the shell states its `trail` the same way rather 
 the trail over its title. A screen's head that stays in view while its content scrolls, its `PageHeader` and tabs,
 goes in `ShellHead`, held above the shell's scroller in the page's inset over a rule (`inset={false}`
 for a head that draws its own edges), the content still the one scroller `useScrollMemory` follows.
-That scroller's track is thin and keeps its room whether or not the content scrolls
-(`scroller-thin`), and the head keeps the same room, so both end at one right edge.
+That scroller's bar is `--scrollbar-width` (10px) on a solid track that keeps its room whether or
+not the content scrolls (`scroller-thin`), and the head keeps the same room, so both end at one
+right edge.
 `useMedia(query, initial)` and `useIsMobile()` (`MOBILE_QUERY`) answer as a part first draws in a
 browser, so a phone never draws the wide layout first; `initial` is the server's answer.
 
