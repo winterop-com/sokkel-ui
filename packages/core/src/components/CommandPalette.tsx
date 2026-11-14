@@ -1,5 +1,5 @@
 import { ArrowRight, SearchIcon, type LucideIcon } from 'lucide-react'
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { letsGo, useBusyRelease } from '../hooks/use-busy-release'
 import { useSearch } from '../hooks/use-search'
@@ -88,9 +88,22 @@ export interface PaletteCommand {
     /**
      * Runs the command. A promise keeps the palette open, the row busy, until it settles: once it
      * is fulfilled the palette closes, and a rejection keeps it open with why in a line over its
-     * foot, so a choice the app refuses is said where it was made.
+     * foot, so a choice the app refuses is said where it was made. The palette hands it a signal
+     * it aborts when it lets the command go before it settles (`PaletteRun`); an app running the
+     * command itself may leave it out.
      */
-    onSelect: () => void | Promise<unknown>
+    onSelect: (run?: PaletteRun) => void | Promise<unknown>
+}
+
+/** What a palette command is handed when it runs. */
+export interface PaletteRun {
+    /**
+     * Aborted when the palette lets the command go before its promise settles: Stop waiting, or
+     * Escape once it has run `busyRelease`, or the palette closing or going away. The palette
+     * stops nothing itself, so a command that can stop its work listens here, and since the
+     * palette has closed by then, the app says how the work ended (a toast).
+     */
+    signal: AbortSignal
 }
 
 /** The status inks a command's second line or hint can take. */
@@ -332,6 +345,12 @@ export function CommandPalette({
     useLayoutEffect(() => {
         opening.current += 1
     }, [open])
+    // A command the palette lets go of before it settles is told so through the signal it was handed.
+    const letGo = useRef<(() => void) | undefined>(undefined)
+    useEffect(() => {
+        if (!open) letGo.current?.()
+    }, [open])
+    useEffect(() => () => letGo.current?.(), [])
     // A running command holds the palette open: Escape, a press outside, its Close and Mod+K leave it
     // be, until it has run `busyRelease`, when Stop waiting, Escape and the Close let it go.
     const released = useBusyRelease(busy !== undefined, busyRelease)
@@ -361,7 +380,7 @@ export function CommandPalette({
         if (busy !== undefined) return
         setRefusal(undefined)
         const at = opening.current
-        runCommand(command.onSelect, {
+        letGo.current = runCommand(command.onSelect, {
             done: () => onOpenChange(false),
             busy: (pending) => setBusy(pending ? rowValue(command) : undefined),
             refused: (reason) => setRefusal(reason ?? words.refused),

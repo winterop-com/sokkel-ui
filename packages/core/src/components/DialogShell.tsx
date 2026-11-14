@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
 
-import { letsGo, useBusyRelease } from '../hooks/use-busy-release'
+import { closing, useBusyRelease } from '../hooks/use-busy-release'
 import { BUSY_RELEASE } from '../lib/durations'
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
@@ -41,6 +41,12 @@ export interface DialogConfirm {
     busy?: boolean
     busyLabel?: string
     destructive?: boolean
+    /**
+     * Called when the reader lets a busy confirm go: Escape or Stop waiting, once it has run the
+     * dialog's `busyRelease`. The dialog stops nothing itself, so stop the work here if it can be
+     * stopped, and since the dialog has closed by then, say how the work ended elsewhere (a toast).
+     */
+    onStopWaiting?: () => void
 }
 
 export interface DialogShellWords {
@@ -189,7 +195,9 @@ export function DialogShell({
         <Dialog
             open={open}
             onOpenChange={(next, details) => {
-                if (!next && (!dismissible || !letsGo(busy, released, details.reason))) return
+                const asked = closing(busy, released, details.reason)
+                if (!next && (!dismissible || asked === 'held')) return
+                if (!next && asked === 'let go') confirm?.onStopWaiting?.()
                 onOpenChange(next)
             }}
             disablePointerDismissal={!closeOnOutsidePress}

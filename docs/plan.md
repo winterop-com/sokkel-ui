@@ -205,8 +205,11 @@ neither, the settings dialog a list of sections to go into; a `ConfirmDialog` st
 backdrop blurs what is under it, so every renderer draws the same one. Work under way holds its
 overlay: a palette whose command runs, or a dialog whose confirm is busy, ignores Escape, a press
 outside and its close, until the work has run `busy-release` (5 seconds, a token, and `busyRelease`
-on the part); then Stop waiting, Escape and the close let it go, nothing cancelled and the work's
-answer unheard.
+on the part); then Stop waiting, Escape and the close let it go and the work's answer goes unheard.
+The overlay stops nothing itself, so it tells the app it let go: a palette command's `onSelect` is
+handed a `signal` the palette aborts then, and a dialog's busy confirm calls `onStopWaiting`. An app
+stops the work there if it can, and says how it ended elsewhere (a toast), since the overlay has
+closed.
 
 Beyond its colors a theme can give the frame's parts a look of their own, through tokens the parts
 read (`$parts` in `tokens.json` lists them): the heading face, a section head's ground, rule and

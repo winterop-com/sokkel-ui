@@ -56,8 +56,8 @@
             "does": "Held under the title, outside the scrolling body: a step indicator, a tab bar."
         },
         "confirm": {
-            "does": "The one verb that confirms: { label, onConfirm, why?, busy?, busyLabel?, destructive? }. why shuts it and says why; busy spins it and holds the dialog open, until it has run busyRelease; destructive draws it as one.",
-            "sokkel-ui": "DialogConfirm"
+            "does": "The one verb that confirms: { label, onConfirm, why?, busy?, busyLabel?, destructive?, onStopWaiting? }. why shuts it and says why; busy spins it and holds the dialog open, until it has run busyRelease; destructive draws it as one. onStopWaiting is called when the reader lets a busy confirm go (Escape or Stop waiting once released): the dialog stops nothing itself, so the app stops the work there if it can and says how it ended elsewhere.",
+            "sokkel-ui": "DialogConfirm, onStopWaiting"
         },
         "back": {"type": "callback", "does": "Draws Back before the confirm, for a dialog of steps."},
         "actions": {
@@ -172,7 +172,7 @@
             "sokkel-ui": "aria-busy on the box; Button busy on the confirm"
         },
         "released": {
-            "means": "The confirm has been busy for busy-release: Cancel says words.stopWaiting and Escape closes the dialog again, the backdrop still held and the confirm busy until the work settles; nothing is cancelled. A dialog that cannot be dismissed stays held.",
+            "means": "The confirm has been busy for busy-release: Cancel says words.stopWaiting and Escape closes the dialog again, the backdrop still held and the confirm busy until the work settles; letting it go calls onStopWaiting. A dialog that cannot be dismissed stays held.",
             "reached": "confirm.busy past busy-release, in a dismissible dialog"
         },
         "held": {

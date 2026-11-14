@@ -1,6 +1,6 @@
 import { Monitor, Moon, Palette, Rows3, Sun } from 'lucide-react'
 
-import type { PaletteCommand, PaletteGroup } from '../components/CommandPalette'
+import type { PaletteCommand, PaletteGroup, PaletteRun } from '../components/CommandPalette'
 import type { RailEntry, RailGroup } from '../components/Rail'
 import { THEMES, type Scheme, type ThemeOption, type ThemeSettings } from './appearance'
 
@@ -28,33 +28,46 @@ export interface CommandRun {
 /**
  * Runs a palette command as the palette does: done at once when it answers nothing, or once the
  * promise it answers is fulfilled; refused when it throws or its promise is rejected, the palette
- * staying open to say why. A run the palette no longer waits on settles unheard.
+ * staying open to say why. A run the palette no longer waits on settles unheard. The command is
+ * handed a signal, and the answer lets the run go: it aborts that signal while the command's
+ * promise is pending, and does nothing once it has settled or for a command that answered nothing.
  */
-export function runCommand(onSelect: () => unknown, run: CommandRun): void {
+export function runCommand(onSelect: (run: PaletteRun) => unknown, run: CommandRun): () => void {
+    const controller = new AbortController()
+    let pending = false
+    const letGo = () => {
+        if (!pending) return
+        pending = false
+        controller.abort()
+    }
     let answer: unknown
     try {
-        answer = onSelect()
+        answer = onSelect({ signal: controller.signal })
     } catch (reason) {
         run.refused(refusalOf(reason))
-        return
+        return letGo
     }
     if (typeof (answer as PromiseLike<unknown> | null)?.then !== 'function') {
         run.done()
-        return
+        return letGo
     }
+    pending = true
     run.busy(true)
     ;(answer as PromiseLike<unknown>).then(
         () => {
+            pending = false
             if (!run.current()) return
             run.busy(false)
             run.done()
         },
         (reason: unknown) => {
+            pending = false
             if (!run.current()) return
             run.busy(false)
             run.refused(refusalOf(reason))
         },
     )
+    return letGo
 }
 
 /** Why a command was refused, in the words it was refused with: an error's message or a string; undefined for none. */

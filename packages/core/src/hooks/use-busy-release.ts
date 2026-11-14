@@ -39,6 +39,15 @@ export function letsGo(busy: boolean, released: boolean, reason: CloseReason): b
 }
 
 /**
+ * What a request to close does to a part that may be busy: `closed` with nothing running, `held`
+ * while work runs and the request is not heeded, `let go` once it is, the work left to settle.
+ */
+export function closing(busy: boolean, released: boolean, reason: CloseReason): 'closed' | 'held' | 'let go' {
+    if (!busy) return 'closed'
+    return letsGo(busy, released, reason) ? 'let go' : 'held'
+}
+
+/**
  * Whether a part busy with work has held for `wait` ms and may offer a way out: false while it is
  * not busy, and from each start of work until the wait has run.
  */

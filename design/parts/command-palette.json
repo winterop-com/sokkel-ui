@@ -40,7 +40,7 @@
         "keys": "The keys that run the command outside the palette, as key caps, a sequence's two presses with words.sequence between.",
         "twoLineRow": "A command with a detail or artwork: two lines, drawn as a search result is, a picture or its icon on a tile at its start and its meta, hint or code at its end.",
         "spinner": "While the command's promise is pending: a spinner at its row's end in the keys' place, named words.running.",
-        "stopWaiting": "Once a running command has run busy-release: words.stopWaiting, a row at the list's top, which closes the palette and lets the command go, nothing cancelled.",
+        "stopWaiting": "Once a running command has run busy-release: words.stopWaiting, a row at the list's top, which closes the palette and lets the command go, aborting the signal it was handed.",
         "refusal": "Why the last command was refused, under the list across the palette's whole width, its words inset as the rows' are: the rejection's words, else words.refused.",
         "empty": "words.empty, centered, while no command matches and the app's search is not waiting.",
         "results": "The app's search results under the commands, grouped by kind as parts of the search draw them; Searching while it waits, its failure with a Retry row, and a row to see all results at the list's foot.",
@@ -61,8 +61,8 @@
         },
         "onSelect": {
             "type": "callback",
-            "does": "Runs the command. Nothing back, or a value: the palette closes. A promise: the palette holds open, the row busy, until it settles, Escape, a press outside, its Close and Mod+K doing nothing meanwhile; once it has run busyRelease, Stop waiting, Escape and the Close let the palette go and the command's answer goes unheard. Fulfilled, it closes; rejected, it stays open and says why under the rows. A command that throws is refused the same way.",
-            "sokkel-ui": "PaletteCommand onSelect, runCommand"
+            "does": "Runs the command. Nothing back, or a value: the palette closes. A promise: the palette holds open, the row busy, until it settles, Escape, a press outside, its Close and Mod+K doing nothing meanwhile; once it has run busyRelease, Stop waiting, Escape and the Close let the palette go and the command's answer goes unheard. The command is handed a signal that is aborted when the palette lets it go before it settles (Stop waiting, a released Escape or Close, or the palette closing or going away), so it can stop its work, and the app says how the work ended elsewhere since the palette has closed; it is never aborted once the command has settled. Fulfilled, it closes; rejected, it stays open and says why under the rows. A command that throws is refused the same way.",
+            "sokkel-ui": "PaletteCommand onSelect, PaletteRun signal, runCommand"
         },
         "meta": {"type": "text", "does": "A quiet summary at the row's end.", "sokkel-ui": "PaletteCommand meta"},
         "metaTone": {
