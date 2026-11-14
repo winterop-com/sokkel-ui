@@ -824,6 +824,88 @@ export function asksForMore({ hasMore, busy, byButton, nearEnd, seeking, reach }
     return (!byButton && nearEnd) || (seeking !== undefined && reach < seeking - 1)
 }
 
+/** What the rows' scroller shows: how far down it is scrolled, how tall and wide its view is, and how tall all it scrolls is. */
+export interface ScrollView {
+    top: number
+    height: number
+    width: number
+    full: number
+}
+
+/** A scroller's view as it stands now. */
+export function viewOf(box: HTMLElement): ScrollView {
+    return { top: box.scrollTop, height: box.clientHeight, width: box.clientWidth, full: box.scrollHeight }
+}
+
+/** What a table knows of its rows that decides, with a view, whether it asks for more. */
+export interface MoreRows {
+    hasMore: boolean
+    /** Rows are on their way, or the last read failed. */
+    busy: boolean
+    /** The reader asks for more by the Load more button. */
+    byButton: boolean
+    /** How far down the rows reach where each is one line tall; undefined where they are drawn whole and their end is measured. */
+    end?: number
+    /** How near the end, in pixels, counts as near. */
+    margin: number
+    /** How far down the place the table was left at lies, while it is on its way there. */
+    seeking?: number
+}
+
+/**
+ * Whether a table asks for more rows with its view at `at`: near the end of what has loaded, or
+ * while the place it was left at lies past where those rows can scroll. A table that draws its rows
+ * whole ends where its scroller measures; one of fixed rows ends at their count times their height.
+ */
+export function asksAt(at: ScrollView, { hasMore, busy, byButton, end = at.full, margin, seeking }: MoreRows): boolean {
+    const arrived = seeking !== undefined && (!hasMore || at.top >= seeking - 1)
+    return asksForMore({
+        hasMore,
+        busy,
+        byButton,
+        nearEnd: at.top + at.height >= end - margin,
+        seeking: arrived ? undefined : seeking,
+        reach: Math.max(0, end - at.height),
+    })
+}
+
+/**
+ * Whether a table that asked for more still does once the rows it asked with are on the page. A
+ * table that draws its rows whole ends where its scroller measures, and rows just drawn move that
+ * end before its view hears of it, so the scroller is measured again: `onView` hears the view as it
+ * stands where it no longer asks, and a loader that answers at once is not asked again until the
+ * reader nears the new end. A table of fixed rows knows its end and keeps the answer it drew with.
+ */
+export function stillAsks(box: HTMLElement | null, rows: MoreRows, onView: (view: ScrollView) => void): boolean {
+    if (rows.end !== undefined || box === null) return true
+    const now = viewOf(box)
+    if (asksAt(now, rows)) return true
+    onView(now)
+    return false
+}
+
+/**
+ * Watches what a scroller holds for changes to how tall it is that no scroll reports: rows coming,
+ * a row growing to its content, a placeholder or a button coming or going. Calls `onChange` after
+ * each; returns what stops it.
+ */
+export function watchContent(box: HTMLElement, onChange: () => void): () => void {
+    if (typeof ResizeObserver === 'undefined') return () => undefined
+    // Each box is watched from when it comes; watching one starts with its size, so a box coming or going is heard too.
+    const sized = new ResizeObserver(onChange)
+    const follow = () => {
+        sized.disconnect()
+        for (const child of Array.from(box.children)) sized.observe(child)
+    }
+    follow()
+    const changed = new MutationObserver(follow)
+    changed.observe(box, { childList: true })
+    return () => {
+        sized.disconnect()
+        changed.disconnect()
+    }
+}
+
 /** A value its owner may hold, or the table holds itself when the owner passes none. */
 function useHeld<V>(value: V | undefined, initial: V, onChange?: (value: V) => void): [V, (value: V) => void] {
     const [own, setOwn] = useState(initial)
@@ -1503,7 +1585,7 @@ export function DataTable<T>({
     const [stackWidth, setStackWidth] = useState(typeof stackBelow === 'number' ? stackBelow : 576)
     const [rowHeight, setRowHeight] = useState(40)
     const [cardBox, setCardBox] = useState({ width: 192, height: 256 })
-    const [view, setView] = useState({ top: 0, height: 800, width: 1200, full: 0 })
+    const [view, setView] = useState<ScrollView>({ top: 0, height: 800, width: 1200, full: 0 })
     // The width of the rows' scroll bar, which the head beside it leaves free.
     const [gutter, setGutter] = useState(0)
     useLayoutEffect(() => {
@@ -1516,7 +1598,7 @@ export function DataTable<T>({
             setCardBox({ width: measureCard.offsetWidth || 192, height: measureCard.offsetHeight || 256 })
             setColumnsWidth(widthProbe.current?.offsetWidth || 768)
             if (stackProbe.current !== null) setStackWidth(stackProbe.current.offsetWidth)
-            setView({ top: box.scrollTop, height: box.clientHeight, width: box.clientWidth, full: box.scrollHeight })
+            setView(viewOf(box))
             setGutter(box.offsetWidth - box.clientWidth)
         }
         update()
@@ -1562,7 +1644,6 @@ export function DataTable<T>({
     // Nearing the end of what has loaded asks for more, and so does a first load too short to fill the view.
     // Details are drawn under their rows at their own heights, so a table with them draws every row.
     const detailed = detail !== undefined && !chosenGrid
-    const nearEnd = view.top + view.height >= ((auto && !gridView) || detailed ? view.full : lines * lineHeight) - lineHeight * over
     const moreByButton = loadMore === 'button'
 
     // Rows that grow are all drawn, as their heights are not known before they are.
@@ -1571,6 +1652,16 @@ export function DataTable<T>({
     // Grouped cards are drawn group by group, every one of them.
     const every = (auto && !gridView) || listed || (gridView && groupHeads !== undefined)
     const whole = every || detailed
+    // Rows drawn whole end where the scroller measures, and rows coming or growing move that end with
+    // no scroll to say so: what it holds is watched, so the view hears of it.
+    useLayoutEffect(() => {
+        const box = scroller.current
+        if (!whole || box === null) return undefined
+        return watchContent(box, () => {
+            const full = box.scrollHeight
+            setView((before) => (before.full === full ? before : { ...before, full }))
+        })
+    }, [whole])
 
     // A place kept under `scrollKey` past the rows loaded asks for more until they reach it.
     const [seeking, setSeeking] = useState<number | undefined>(undefined)
@@ -1578,17 +1669,18 @@ export function DataTable<T>({
     useEffect(() => {
         if (arrived) setSeeking(undefined)
     }, [arrived])
-    const reach = Math.max(0, (whole ? view.full : lines * lineHeight) - view.height)
-    const asks = asksForMore({
+    const moreRows: MoreRows = {
         hasMore,
         busy: loading || failed,
         byButton: moreByButton,
-        nearEnd,
-        seeking: arrived ? undefined : seeking,
-        reach,
-    })
+        end: whole ? undefined : lines * lineHeight,
+        margin: lineHeight * over,
+        seeking,
+    }
+    const asks = asksAt(view, moreRows)
+    // Rows drawn whole are measured again before asking, as the view may not have heard of the rows just drawn.
     useEffect(() => {
-        if (asks) onLoadMore?.()
+        if (asks && stillAsks(scroller.current, moreRows, setView)) onLoadMore?.()
     }, [asks, onLoadMore])
     const firstLine = whole ? 0 : Math.max(0, Math.floor(view.top / lineHeight) - over)
     const lastLine = whole ? lines : Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
@@ -2994,12 +3086,7 @@ export function DataTable<T>({
                         ref={setScroller}
                         onScroll={(event) => {
                             if (headBox.current !== null) headBox.current.scrollLeft = event.currentTarget.scrollLeft
-                            setView({
-                                top: event.currentTarget.scrollTop,
-                                height: event.currentTarget.clientHeight,
-                                width: event.currentTarget.clientWidth,
-                                full: event.currentTarget.scrollHeight,
-                            })
+                            setView(viewOf(event.currentTarget))
                         }}
                         className="relative min-h-0 flex-1 overflow-auto"
                     >

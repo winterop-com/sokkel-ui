@@ -70,6 +70,8 @@ export interface SearchResultBodyProps {
     second?: ReactNode
     /** Sets the line under the title in a status ink in place of the muted one. */
     detailTone?: SearchDetailTone
+    /** Sets the quiet fact at the end in a status ink in place of the faint one. */
+    metaTone?: SearchDetailTone
     /** Sets the title in the code face, for a result named by a code. */
     mono?: boolean
     /** Lets the title and the line under it wrap onto more lines rather than end in an ellipsis. */
@@ -88,6 +90,7 @@ export function SearchResultBody({
     size = 'sm',
     second,
     detailTone,
+    metaTone,
     mono = false,
     wrap = false,
     className,
@@ -145,7 +148,9 @@ export function SearchResultBody({
                     )
                 )}
             </span>
-            {result.meta !== undefined && <span className="shrink-0 text-xs text-faint">{result.meta}</span>}
+            {result.meta !== undefined && (
+                <span className={cn('shrink-0 text-xs', metaTone === undefined ? 'text-faint' : DETAIL_INK[metaTone])}>{result.meta}</span>
+            )}
         </span>
     )
 }

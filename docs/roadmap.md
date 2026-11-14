@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.26.0** is the latest release (2026-11-13): sokkel-ui checked against the sokkel-design specs
+- **0.26.1** is the latest release (2026-11-14): a table of growing rows asks for more only near its
+  end; a dense ListRow's detail on a second line on a phone; palette `metaTone`.
+- **0.26.0** (2026-11-13): sokkel-ui checked against the sokkel-design specs
   (`design/`, `parts.test.ts`); one invalid look for every control; a pressable dense ListRow, the
   drawer button and a small Segmented at finger height on a phone; DataTable `scrollKey` and
   stacked placeholders; palette `meta` and awaited commands; chart legends loaded per kind.

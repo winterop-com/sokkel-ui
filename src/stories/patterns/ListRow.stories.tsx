@@ -188,6 +188,47 @@ export const Dense: StoryObj = {
     },
 }
 
+const HOSTS = [
+    { name: 'worker-harbor-01.eu-north.example.org', service: 'worker', status: 'running', note: '3 runs in flight' },
+    { name: 'scheduler-juniper-02.ap-southeast.example.org', service: 'scheduler', status: 'failed', note: 'missed 2 ticks' },
+    { name: 'api-larkspur-03.us-east.example.org', service: 'api', status: 'succeeded', note: 'p95 120 ms' },
+]
+
+/**
+ * Dense rows whose titles are long codes: each host in the code face with its note and its service.
+ * From `md` the note stands beside the host on one line; on a phone it takes a line of its own under
+ * the host, so a long host never hides it, and each row that presses stands a finger tall.
+ */
+export const DenseLongTitles: StoryObj = {
+    name: 'Dense long titles',
+    render: function Render() {
+        const [open, setOpen] = useState('scheduler-juniper-02.ap-southeast.example.org')
+        return (
+            <Card className="max-w-md">
+                <CardHeader>
+                    <CardTitle>Hosts</CardTitle>
+                </CardHeader>
+                <ListRows label="Hosts" flush inset="card">
+                    {HOSTS.map((host) => (
+                        <ListRow
+                            key={host.name}
+                            dense
+                            mono
+                            icon={<Dot status={host.status} size="md" />}
+                            title={host.name}
+                            detail={host.note}
+                            aside={host.service}
+                            tooltip={host.name}
+                            current={host.name === open}
+                            onPress={() => setOpen(host.name)}
+                        />
+                    ))}
+                </ListRows>
+            </Card>
+        )
+    },
+}
+
 /** Rows that are links, each to its run's page, with the project as a chip at the end. */
 export const Links: StoryObj = {
     render: () => (
