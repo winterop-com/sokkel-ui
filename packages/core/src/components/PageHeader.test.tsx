@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
@@ -106,12 +107,13 @@ describe('a page header', () => {
         expect(html).toMatch(/col-start-2 row-span-3"><span>mark/)
     })
 
-    it('draws its trail, or inside a shell leaves it to the top bar when told', () => {
+    it('draws its trail outside a shell, and inside one leaves it to the top bar unless told to draw it', () => {
         const trail = [{ label: 'Jobs', href: '#/jobs' }]
-        const header = <PageHeader title="nightly-export" trail={trail} trailInTop />
+        const header = <PageHeader title="nightly-export" trail={trail} />
+        const inShell = (drawn: ReactNode) => renderToStaticMarkup(<ShellTrailAsk value={() => () => undefined}>{drawn}</ShellTrailAsk>)
         expect(renderToStaticMarkup(header)).toContain('aria-label="Where you are"')
-        const inShell = renderToStaticMarkup(<ShellTrailAsk value={() => () => undefined}>{header}</ShellTrailAsk>)
-        expect(inShell).not.toContain('aria-label="Where you are"')
-        expect(inShell).toContain('nightly-export')
+        expect(inShell(header)).not.toContain('aria-label="Where you are"')
+        expect(inShell(header)).toContain('nightly-export')
+        expect(inShell(<PageHeader title="nightly-export" trail={trail} trailInTop={false} />)).toContain('aria-label="Where you are"')
     })
 })

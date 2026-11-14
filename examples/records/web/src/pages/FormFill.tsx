@@ -84,7 +84,7 @@ export function FormFill({ formId, householdId, keepPlace }: { formId: string; h
     if (form === undefined)
         return (
             <Page>
-                <PageHeader title="No such form" trail={sectionTrail('Forms', '/forms')} trailInTop />
+                <PageHeader title="No such form" trail={sectionTrail('Forms', '/forms')} />
                 <PageState
                     loading={false}
                     status={404}
@@ -254,7 +254,6 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
                     title={form.title}
                     code={form.id}
                     trail={sectionTrail('Forms', '/forms')}
-                    trailInTop
                     description={form.description}
                     meta={
                         <>

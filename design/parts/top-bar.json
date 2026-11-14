@@ -21,7 +21,7 @@
     },
     "anatomy": {
         "bar": "The strip over the content, as tall as the rail's head: the sidebar ground and a rule under it. Shell's header draws it around the top bar, and AppBar for a screen drawn without the shell.",
-        "menu": "The button at the bar's start that opens the rail as the shell's drawer: below 768, or at every width while the rail is hidden. The shell's, named by its words.menu.",
+        "menu": "The button at the bar's start that opens the rail as the shell's drawer: below 768, or at every width while the rail is hidden. The shell's, named by its words.menu; it looks like the rail's collapse control.",
         "mark": "The app's mark on a small tile before the rest, for a screen without the rail that carries it.",
         "search": "The app's search field at the bar's start, before the trail, so it stays in one place from screen to screen; / focuses it. Below 768 it gives way to the palette's button.",
         "trail": "The crumbs to the current screen, after the search field, taking the room left; named by words.trail.",
@@ -30,7 +30,7 @@
         "backChevron": "Below 768, with the trail ending at an ancestor: a chevron pointing back before the last crumb, which is the way back.",
         "palette": "The button that opens the command palette. With no search field: field-like, 224 wide, a magnifier, the word Search and the keys. Beside a search field: the keys alone when bound, else the magnifier. Below 768: an icon, a finger square, with no edge or ground.",
         "keys": "The keys that open the palette, drawn only when bound: in a key cap with no search field, as plain small code text beside one.",
-        "actions": "The screen's actions at the bar's end, after the palette's button."
+        "actions": "The screen's actions at the bar's end, after the palette's button: the bar's order is the search, the trail, the palette's button, then the actions."
     },
     "options": {
         "trail": {
@@ -96,7 +96,7 @@
         },
         "content": {
             "gap": 12,
-            "note": "The top bar's own row: the mark, the search field, the trail, the palette's button and the actions, 12 apart."
+            "note": "The top bar's own row, in this order: the mark, the search field, the trail, the palette's button and the screen's actions, 12 apart; the actions 6 apart among themselves."
         },
         "menu": {
             "height": "density.control",
@@ -151,10 +151,10 @@
             "reached": "pointer over"
         },
         "focus": {
-            "means": "Keyboard focus on the palette's button or a crumb.",
+            "means": "Keyboard focus on the menu button, a crumb that is a link or the palette's button.",
             "reached": "Tab",
             "on": "keyboard",
-            "sokkel-ui": "The palette's button: focus-visible:border-ring ring-1. A crumb's link and the menu button take the browser's outline, in ring/50 (base.css)."
+            "sokkel-ui": "Every control of the bar (the menu button, a crumb's link, the palette's button) draws the button's own focus look: a 2px ring outline 2 off (focus-visible)."
         },
         "current": {
             "means": "The current screen's crumb, the last when the trail ends at the current screen.",
@@ -165,14 +165,20 @@
     },
     "pieces": {
         "bar": {"rest": {"ground": "sidebar", "rule": "border-strong"}},
-        "menu": {"rest": {"ink": "muted-foreground", "radius": "radius-md"}, "hover": {"ground": "hover"}},
+        "menu": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}
+        },
         "mark": {"rest": {"ground": "primary", "ink": "primary-foreground", "radius": "radius-md"}},
         "crumb": {
             "rest": {
                 "ink": "muted-foreground",
-                "note": "In the trail's text.body; cut short with an ellipsis when the trail runs out of room."
+                "note": "In the trail's text.body; cut short with an ellipsis when the trail runs out of room.",
+                "radius": "radius-sm"
             },
             "hover": {"ink": "foreground", "note": "A crumb that is a link."},
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}, "note": "A crumb that is a link."},
             "current": {"ink": "foreground", "weight": 500}
         },
         "chevron": {"rest": {"ink": "faint"}},
@@ -180,7 +186,7 @@
         "palette": {
             "rest": {"ground": "field", "edge": "border", "ink": "muted-foreground", "radius": "radius-control"},
             "hover": {"edge": "border-strong", "ink": "foreground"},
-            "focus": {"edge": "ring", "ring": {"color": "ring", "width": 1}},
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}},
             "phone": {"ground": "none", "edge": "none"}
         },
         "keys": {
@@ -242,7 +248,7 @@
         {
             "renderer": "sokkel-ui-egui",
             "what": "palette focus",
-            "spec": "On keyboard focus only: the edge in ring and a 1px ring.",
+            "spec": "On keyboard focus only: a 2px ring outline 2 off, as every control of the frame.",
             "today": "The shared focus_ring: 2 wide, 2 off the box, on any focus."
         },
         {
