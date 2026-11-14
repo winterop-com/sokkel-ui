@@ -12,7 +12,7 @@ import {
     UserIcon,
     XIcon,
 } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Chip, type ChipTone } from '@winterop-com/sokkel-ui/Chip'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
@@ -1270,6 +1270,47 @@ function LoadByButton() {
 
 /** Loading more by a button after the last row (`loadMore="button"`), for a list whose reader decides when to see more. */
 export const LoadMoreButton: StoryObj = { name: 'Load more button', render: () => <LoadByButton /> }
+
+const GROWN_RUNS = makeRuns(1000)
+
+/** Runs fifty at a time from a loader that answers at once, in rows as tall as their content. */
+function LoadGrown() {
+    const [count, setCount] = useState(50)
+    const [loading, setLoading] = useState(false)
+    const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+    useEffect(() => () => clearTimeout(timer.current), [])
+    const more = useCallback(() => {
+        setLoading(true)
+        clearTimeout(timer.current)
+        timer.current = setTimeout(() => {
+            setCount((now) => Math.min(GROWN_RUNS.length, now + 50))
+            setLoading(false)
+        })
+    }, [])
+    return (
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                variant="list"
+                rowHeight="auto"
+                columns={COLUMNS.slice(0, 5)}
+                rows={GROWN_RUNS.slice(0, count)}
+                rowKey={(run) => run.id}
+                hasMore={count < GROWN_RUNS.length}
+                loading={loading}
+                onLoadMore={more}
+                foot={`${String(count)} of ${String(GROWN_RUNS.length)}`}
+            />
+        </Stack>
+    )
+}
+
+/**
+ * Rows as tall as their content (`rowHeight="auto"`) loading fifty more each time the end comes
+ * near, from a loader that answers at once: the table measures where its rows end as they arrive,
+ * so it opens on the first page and asks for the next only once the reader scrolls near the end.
+ */
+export const LoadMoreGrown: StoryObj = { parameters: { frame: 'none' }, name: 'Load more grown', render: () => <LoadGrown /> }
 
 /**
  * The first rows still on their way: placeholder rows fill the table under its heads, the table's one

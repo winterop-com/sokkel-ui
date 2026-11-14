@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { holdScroll } from '../lib/scroll-memory'
 import {
+    asksAt,
     asksForMore,
     branchKeys,
     columnLeast,
@@ -22,9 +23,13 @@ import {
     stackDefault,
     stackLabels,
     stacksAt,
+    stillAsks,
     treeBranchKeys,
+    viewOf,
+    watchContent,
     watchFonts,
     widestOf,
+    type MoreRows,
 } from './DataTable'
 
 describe('widenTrack', () => {
@@ -461,5 +466,167 @@ describe('a table back at the place it was left', () => {
         expect(asksForMore({ ...asked, seeking: 3000 })).toBe(true)
         expect(asksForMore({ ...asked, seeking: 3000, busy: true })).toBe(false)
         expect(asksForMore({ ...asked, seeking: 1400 })).toBe(false)
+    })
+})
+
+describe('a table as tall as its rows, asking for more', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    /**
+     * A table's scroller 600px tall over rows 40px tall in one box of rows, with the watches on it,
+     * and a loader that answers at once with fifty more rows: the rows' box grows and every watch
+     * hears of it, as the browser tells them once the rows are drawn.
+     */
+    function scroller(rows: number) {
+        const heard: (() => void)[] = []
+        const watches: Set<unknown>[] = []
+        vi.stubGlobal(
+            'ResizeObserver',
+            class {
+                watching = new Set<unknown>()
+                constructor(callback: () => void) {
+                    heard.push(callback)
+                    watches.push(this.watching)
+                }
+                observe(element: unknown) {
+                    this.watching.add(element)
+                }
+                unobserve(element: unknown) {
+                    this.watching.delete(element)
+                }
+                disconnect() {
+                    this.watching.clear()
+                }
+            },
+        )
+        /** Every box a size watch is on. */
+        const observed = () => watches.flatMap((watching) => Array.from(watching))
+        vi.stubGlobal(
+            'MutationObserver',
+            class {
+                constructor(callback: () => void) {
+                    heard.push(callback)
+                }
+                observe() {}
+                disconnect() {}
+            },
+        )
+        const box = {
+            rows,
+            top: 0,
+            clientHeight: 600,
+            clientWidth: 800,
+            children: [{ rows: true }] as unknown[],
+            get scrollHeight() {
+                return box.rows * 40
+            },
+            get scrollTop() {
+                return box.top
+            },
+            set scrollTop(value: number) {
+                box.top = Math.max(0, Math.min(value, box.scrollHeight - box.clientHeight))
+            },
+            scrollLeft: 0,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+        }
+        const load = () => {
+            box.rows += 50
+            for (const hear of heard) hear()
+        }
+        return { box, area: box as unknown as HTMLElement, load, heard, observed }
+    }
+
+    const more = (rows: number, seeking?: number): MoreRows => ({
+        hasMore: rows < 1000,
+        busy: false,
+        byButton: false,
+        margin: 40 * 8,
+        seeking,
+    })
+
+    /**
+     * Draws the table until it stops asking, as it does on a loader that answers at once: each time
+     * it asks with the view it was drawn with, the rows just loaded already on the page, and calls
+     * the loader if it still asks. Without `measured` it asks with that view alone. Counts the calls.
+     */
+    function draw(table: ReturnType<typeof scroller>, drawnWith: ReturnType<typeof viewOf>, seeking?: number, measured = true) {
+        let view = drawnWith
+        let calls = 0
+        while (calls < 100) {
+            const rows = more(table.box.rows, seeking)
+            if (!asksAt(view, rows)) break
+            if (measured && !stillAsks(table.area, rows, (now) => (view = now))) break
+            calls += 1
+            table.load()
+        }
+        return calls
+    }
+
+    /** A table first drawn while its first page was on its way, the page since loaded, and the view it was drawn with. */
+    function opened() {
+        const table = scroller(0)
+        const view = viewOf(table.area)
+        table.load()
+        return { table, view }
+    }
+
+    it('asks no more on open once a loader that answers at once fills the view, until the reader nears the end', () => {
+        // The view it was drawn with puts the end at the top, so that view alone asks page after page with no scrolling.
+        const alone = opened()
+        expect(draw(alone.table, alone.view, undefined, false)).toBe(19)
+        const { table, view } = opened()
+        expect(draw(table, view)).toBe(0)
+        expect(table.box.rows).toBe(50)
+        // Scrolled to the end, it asks once for the next page, then no more.
+        table.box.scrollTop = 1400
+        expect(draw(table, viewOf(table.area))).toBe(1)
+        expect(table.box.rows).toBe(100)
+    })
+
+    it('asks for the pages that reach the place it was left at and stops there, though its view has not heard', () => {
+        const table = scroller(50)
+        const drawnWith = viewOf(table.area)
+        holdScroll(table.area, { top: 6000, left: 0 })
+        // 6000px down takes 6600px of rows, 165 of them: three pages after the first.
+        expect(draw(table, drawnWith, 6000)).toBe(3)
+        expect(table.box.top).toBe(6000)
+        // With the view it was drawn with alone, the place never seems in reach and every page loads.
+        const alone = scroller(50)
+        holdScroll(alone.area, { top: 6000, left: 0 })
+        expect(draw(alone, viewOf(alone.area), 6000, false)).toBe(19)
+    })
+
+    it('leaves a table of fixed rows to the end it counts', () => {
+        const table = scroller(50)
+        // A view that has not measured its rows: a table of fixed rows counts its end, 50 rows of 40px.
+        const unmeasured = { top: 0, height: 600, width: 800, full: 0 }
+        const fixed: MoreRows = { ...more(50), end: 50 * 40 }
+        expect(asksAt(unmeasured, fixed)).toBe(false)
+        expect(asksAt({ ...unmeasured, top: 1400 }, fixed)).toBe(true)
+        let heard = false
+        expect(stillAsks(table.area, fixed, () => (heard = true))).toBe(true)
+        expect(heard).toBe(false)
+    })
+
+    it('hears the rows grow and the boxes it holds come and go, until stopped', () => {
+        const table = scroller(50)
+        let changes = 0
+        const stop = watchContent(table.area, () => (changes += 1))
+        expect(table.observed()).toEqual(table.box.children)
+        table.load()
+        expect(changes).toBeGreaterThan(0)
+        // A placeholder drawn under the rows is watched too, and let go once it goes.
+        const placeholder = { placeholder: true }
+        table.box.children.push(placeholder)
+        table.load()
+        expect(table.observed()).toEqual([...table.box.children])
+        table.box.children.pop()
+        table.load()
+        expect(table.observed()).toEqual(table.box.children)
+        stop()
+        expect(table.observed()).toEqual([])
     })
 })

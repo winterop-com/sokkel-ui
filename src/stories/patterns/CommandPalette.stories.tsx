@@ -345,6 +345,15 @@ const SUMMARIES: PaletteGroup[] = [
             { id: 'sync-inventory', label: 'sync-inventory', mono: true, icon: Workflow, meta: '38s · 01:30', onSelect: () => undefined },
             { id: 'rebuild-index', label: 'rebuild-index', mono: true, icon: Workflow, meta: '12m 05s · 03:15', onSelect: () => undefined },
             { id: 'send-digest', label: 'send-digest', mono: true, icon: Workflow, meta: 'not run yet', onSelect: () => undefined },
+            {
+                id: 'import-orders',
+                label: 'import-orders',
+                mono: true,
+                icon: Workflow,
+                meta: 'no upload step',
+                metaTone: 'critical',
+                onSelect: () => undefined,
+            },
         ],
     },
     {
@@ -360,7 +369,8 @@ const SUMMARIES: PaletteGroup[] = [
 /**
  * A summary at each row's end (`meta`): how long a job last ran and when, how many jobs a project
  * holds. Quiet and in the code face, it stands to the right on one line and folds under the label
- * on a phone, so a fact need not become a second line.
+ * on a phone, so a fact need not become a second line. One saying something is missing is drawn in
+ * the critical ink (`metaTone`).
  */
 export const Summaries: StoryObj = { render: () => <Palette initial groups={SUMMARIES} /> }
 

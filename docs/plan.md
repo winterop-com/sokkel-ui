@@ -271,7 +271,8 @@ its own by each group's `rank`, a screen's first at equal rank, groups of one ti
 that draws its own palette holds a registry with `useCommandRegistry`. A palette row with a `detail`
 or `artwork` (an image's address or a node, round for a person) is two lines tall, drawn as a search
 result is, and the palette's search results take `artwork` too; a one-line row's `meta` is a quiet
-summary in the code face at its end, folding under the label on a phone. A command whose `onSelect`
+summary in the code face at its end, folding under the label on a phone, and `metaTone` sets it in
+a status ink, so a summary saying something is missing reads critical. A command whose `onSelect`
 answers a promise keeps the palette open, its row busy, until it settles: fulfilled, the palette
 closes; rejected, it stays and says why in a `ProblemLine` under the rows, so a refusal is said
 where the choice was made. The palette matches by letters in
@@ -650,7 +651,9 @@ wrapping line, and a `DescriptionListGroup` holds lists split around a form or a
 term column, each one-column side list a subgrid of its tracks. `ListRow` takes a `tooltip` and
 `wrap`, and `ListRows flush` sets its rows square at a panel's own inset with hairlines between,
 or at a card's wider one with `inset="card"`. A `dense` row is one shorter line, its detail beside
-its title, a `mono` title a code, and its `icon` may hold a dot and a mark side by side.
+its title, a `mono` title a code, and its `icon` may hold a dot and a mark side by side. Below `md`
+a dense row's detail goes under its title, so a long code never hides it; a dense row that presses
+stands a finger tall there, which holds both lines.
 `LoadingBar tone="current"` is a thin line, known or not, in the ink around it.
 
 `SignIn` is every app's door: a brand pane, dark in every scheme on `--brand-ground`, with art over
@@ -717,7 +720,11 @@ is left out of the column's measure, so a description under a code takes the col
 column gives it (the track inside its padding, or the value's part of a stacked line), measured from
 one drawn cell a column by one observer for the table once a cell reads it, so its chips fold to that room. A stacked line's name is as
 wide as the table's widest, at most 12rem, and one still cut short says the whole of it on hover. More rows load as the end comes near, or with `loadMore="button"`
-from a Load more button that says how many come next, for a list whose reader decides. A titled
+from a Load more button that says how many come next, for a list whose reader decides. A table that
+draws its rows whole (`rowHeight="auto"`, details, a narrow list) finds its end by measuring: it
+watches what its scroller holds and measures again before it asks, so rows from a loader that
+answers at once are not taken for the end, and a return to a kept place stops asking once the place
+is in reach. A titled
 listing with a count is a boxed `Section` with the count in its head around a `DataTable` with
 `framed={false}`, the section's head as tall as the list's head row. `QuickAdd` is the
 field at a list's top that adds a row on Enter, holding the text with a spinner while the app's
