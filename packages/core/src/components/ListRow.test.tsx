@@ -59,11 +59,28 @@ describe('ListRow', () => {
         expect(card).not.toContain('--density-panel-pad')
     })
 
-    it('draws a dense row on one line, its code title in the code face', () => {
+    /** The classes of the box that holds a row's title and detail. */
+    const linesClasses = (html: string) => (/<span class="([^"]*)"><span data-slot="list-row-title"/.exec(html)?.[1] ?? '').split(/\s+/)
+
+    it('draws a dense row on one line from md, its code title in the code face', () => {
         const html = renderToStaticMarkup(<ListRow dense mono title="scheduler" detail="missed 2 ticks" icon={<i />} />)
         expect(html).toContain('py-1')
-        expect(html).not.toContain('flex-col')
+        expect(linesClasses(html)).toEqual(expect.arrayContaining(['md:flex-row', 'md:items-baseline', 'md:gap-2']))
         expect(html).toMatch(/data-slot="list-row-title" class="[^"]*font-mono/)
+    })
+
+    it('puts a dense row’s detail under its title below md, so a long title leaves it room', () => {
+        const long = 'scheduler-juniper-02.eu-north.example.org'
+        const lines = linesClasses(
+            renderToStaticMarkup(<ListRow dense mono title={long} detail="missed 2 ticks" onPress={() => undefined} />),
+        )
+        // Stacked unless wide, side by side only from md, so a phone gives each its own line.
+        expect(lines).toContain('flex-col')
+        expect(lines.filter((name) => /^(items-baseline|gap-2|flex-row)$/.test(name))).toEqual([])
+        // A row that is not dense keeps its two lines at every width.
+        const regular = linesClasses(renderToStaticMarkup(<ListRow title={long} detail="missed 2 ticks" />))
+        expect(regular).toContain('flex-col')
+        expect(regular.some((name) => name.startsWith('md:'))).toBe(false)
     })
 
     it('stands a dense row that presses a finger tall below md, and leaves a plain one dense', () => {

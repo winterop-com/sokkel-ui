@@ -40,6 +40,8 @@ export interface PaletteCommand {
      * On a phone it folds under the label; a two-line row draws it at its end in the hint's place.
      */
     meta?: string
+    /** Sets `meta` in a status ink in place of the quiet one: a summary saying something is missing, critical. */
+    metaTone?: PaletteTone
     /** Sets the label in the code face, for a command named by a code rather than words. */
     mono?: boolean
     /**
@@ -243,7 +245,8 @@ export interface CommandPaletteProps {
  * until the promise settles, closing once it is fulfilled and saying why under the rows when it is
  * rejected (`words.refused` where the refusal has no words of its own). A row's `meta` is a quiet
  * summary in the code face at its end, folding under the label on a phone, so a fact such as a
- * count or a time need not become a second line. A row with a `detail` or `artwork` is two lines tall, a picture or its icon
+ * count or a time need not become a second line; its `metaTone` sets it in a status ink, so a summary
+ * saying something is missing reads critical. A row with a `detail` or `artwork` is two lines tall, a picture or its icon
  * on a tile at its start and its hint or code at its end, as a record found by a search is; the
  * second line may be a node, and a row's `tone` sets it, or a one-line row's hint, in a status ink,
  * so the palette serves as a standalone chooser whose rows say their state. The
@@ -429,6 +432,7 @@ export function CommandPalette({
                                                     query=""
                                                     second={typeof command.detail === 'string' ? undefined : command.detail}
                                                     detailTone={command.tone}
+                                                    metaTone={metaToneOf(command)}
                                                     mono={command.mono}
                                                     wrap={wrap}
                                                 />
@@ -441,7 +445,14 @@ export function CommandPalette({
                                                         // The summary stands at the row's end, and under the label on a phone.
                                                         <span className="flex min-w-0 flex-1 items-baseline gap-x-3 max-sm:flex-col max-sm:items-stretch">
                                                             {label}
-                                                            <span className="min-w-0 shrink-0 truncate font-mono text-xs text-muted-foreground tabular-nums max-sm:shrink">
+                                                            <span
+                                                                className={cn(
+                                                                    'min-w-0 shrink-0 truncate font-mono text-xs tabular-nums max-sm:shrink',
+                                                                    command.metaTone === undefined
+                                                                        ? 'text-muted-foreground'
+                                                                        : TONE_INK[command.metaTone],
+                                                                )}
+                                                            >
                                                                 {command.meta}
                                                             </span>
                                                         </span>
@@ -605,6 +616,11 @@ function findBy(command: PaletteCommand): string[] | undefined {
 /** A command's quiet words after its label: why it cannot run now, or its hint. */
 function hintOf(command: PaletteCommand): string | undefined {
     return typeof command.disabled === 'string' ? command.disabled : command.hint
+}
+
+/** The ink of a two-line row's quiet fact at its end: the `metaTone` where that fact is its `meta`. */
+function metaToneOf(command: PaletteCommand): PaletteTone | undefined {
+    return typeof command.disabled === 'string' || command.meta === undefined ? undefined : command.metaTone
 }
 
 /** A two-line command as the row a search result is drawn as, its hint or code the quiet fact at the end. */
