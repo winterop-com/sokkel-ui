@@ -154,9 +154,9 @@
         "heading": {
             "rest": {"note": "Drawn only for a failed read."},
             "failed": {
-                "ink": "inherit",
+                "ink": "foreground",
                 "text": "text.action",
-                "note": "The ink around the state: foreground on the page, and on a card or a panel."
+                "note": "The page's ink, on the page and on a card or a panel alike."
             }
         },
         "diagnostic": {

@@ -129,7 +129,7 @@ export function Field({
             style={lined ? { gridRow: 'span 4', gridTemplateRows: 'subgrid', rowGap: 0, paddingBottom: rows } : undefined}
         >
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <Label htmlFor={id} className={cn(mono && 'font-mono')} onClick={() => focusUnlabelable(id)}>
+                <Label htmlFor={id} className={cn('text-foreground', mono && 'font-mono')} onClick={() => focusUnlabelable(id)}>
                     {label}
                     {required === true && requiredMark === 'star' && (
                         <>

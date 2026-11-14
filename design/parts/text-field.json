@@ -172,7 +172,7 @@
         }
     },
     "pieces": {
-        "label": {"rest": {"ink": "inherit", "text": "text.label"}},
+        "label": {"rest": {"ink": "foreground", "text": "text.label"}},
         "requiredStar": {"rest": {"ink": "critical-ink"}},
         "requiredWord": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
         "hint": {"rest": {"ink": "faint", "text": "text.help", "note": "keyHint: the code face in muted-foreground."}},
