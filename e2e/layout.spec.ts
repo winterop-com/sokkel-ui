@@ -35,12 +35,20 @@ function emptyScroll(): string[] {
         const shown = box.clientWidth
         if (shown === 0 || box.scrollWidth <= shown + 1 || !box.checkVisibility()) continue
         const start = box.getBoundingClientRect().left + box.clientLeft - box.scrollLeft
+        const shows = (element: Element) => element.checkVisibility({ opacityProperty: true, visibilityProperty: true })
         let reach = 0
         for (const inner of box.querySelectorAll('*')) {
             const rect = inner.getBoundingClientRect()
-            if (rect.width === 0 || rect.height === 0) continue
-            if (!inner.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue
+            if (rect.width === 0 || rect.height === 0 || !shows(inner)) continue
             reach = Math.max(reach, rect.right - start)
+        }
+        // Text reaches as far as its lines run, which its element's box can stop short of (a log's long lines in a pre).
+        const texts = document.createTreeWalker(box, NodeFilter.SHOW_TEXT)
+        const range = document.createRange()
+        for (let text = texts.nextNode(); text !== null; text = texts.nextNode()) {
+            if (text.parentElement === null || (text.textContent ?? '').trim() === '' || !shows(text.parentElement)) continue
+            range.selectNodeContents(text)
+            reach = Math.max(reach, range.getBoundingClientRect().right - start)
         }
         if (box.scrollWidth > Math.max(reach + parseFloat(style.paddingRight), shown) + 8) {
             const slot = box.dataset.slot === undefined ? '' : `[data-slot=${box.dataset.slot}]`
