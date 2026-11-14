@@ -40,7 +40,10 @@
         {"id": "page-state", "file": "parts/page-state.json", "status": "draft"},
         {"id": "select", "file": "parts/select.json", "status": "draft"},
         {"id": "dropdown-menu", "file": "parts/dropdown-menu.json", "status": "draft"},
-        {"id": "tooltip", "file": "parts/tooltip.json", "status": "draft"}
+        {"id": "tooltip", "file": "parts/tooltip.json", "status": "draft"},
+        {"id": "dialog", "file": "parts/dialog.json", "status": "draft"},
+        {"id": "settings-dialog", "file": "parts/settings-dialog.json", "status": "draft"},
+        {"id": "command-palette", "file": "parts/command-palette.json", "status": "draft"}
     ],
     "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "draft"}],
     "principles": "principles.md",

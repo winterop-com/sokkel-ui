@@ -1,0 +1,361 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "settings-dialog",
+    "kind": "part",
+    "status": "draft",
+    "summary": "An app's preferences as one large dialog over the page it was opened from, on its own route (principle 9): a head with the title and a close; the sections in a column under their group titles, with a search over every setting at its top; the shown section's rows beside it, scrolling on their own; and a footer with Reset to defaults for the shown section, a note that changes are kept as they are made, and Done. Below 640 it fills the screen, and the column is a list to go into.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/SettingsDialog.tsx",
+            "packages/core/src/components/settings-parts.tsx",
+            "packages/core/src/components/SettingRow.tsx",
+            "packages/core/src/components/SearchField.tsx",
+            "packages/core/src/components/DialogShell.tsx",
+            "packages/core/src/components/ui/dialog.tsx",
+            "packages/core/src/hooks/use-overlay-route.ts"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/settings.rs (SettingsDialog, SettingsSection, SettingsWords, SettingsOutcome, setting_row, setting_row_found_by)",
+            "examples/storybook/src/stories/settings.rs (Patterns/Settings dialog)"
+        ]
+    },
+    "anatomy": {
+        "box": "The dialog's box (parts/dialog) with no padding of its own: 896 wide and 704 tall, at most the window less 32 across and 64 down. The page under it is shaded by the dialog's backdrop.",
+        "head": "48 tall across the box under a rule: the title at its start, the close at its end; on a phone in a section, Back before the title.",
+        "title": "words.title, in the heading face.",
+        "close": "An icon-sm ghost button at the head's end, named words.close; it closes the dialog.",
+        "back": "On a phone in a section: an icon button before the title, named words.back, back to the list of sections.",
+        "column": "The navigation, 224 wide at the box's start under a rule at its end, scrolling on its own: the search, then each group's sections under its title, 16 apart. Named words.title.",
+        "search": "A search field over every setting: words.search as its placeholder, named words.searchLabel, cleared by words.clear. It narrows the column to the sections with a match and the pane to the matching rows.",
+        "groupTitle": "A group's title over its sections, small and muted; a group may have none.",
+        "entry": "A section in the column: its optional icon and its label, cut short. The shown one is marked; on a phone each is a finger tall with a chevron at its end, and none is marked.",
+        "chevron": "On a phone, at an entry's end: a chevron, faint.",
+        "pane": "The shown section, scrolling on its own: its heading, its lead, its rows and its foot; words.noMatch when the search leaves nothing.",
+        "heading": "The shown section's heading, or its label.",
+        "lead": "A section's own line above its rows: what the whole section is for.",
+        "row": "One setting (SettingRow): its title, what it does under it, and its control at the row's end while the row is at least 512 wide, else under its words; a note under both. Rows are ruled apart.",
+        "rowTitle": "A setting's title.",
+        "rowDescription": "What a setting does, under its title.",
+        "rowNote": "A line under a setting on the muted ground: what it needs, or what it changes elsewhere.",
+        "rowRule": "The rule between two rows; none over the first or under the last.",
+        "foot": "A section's own line under its rows: a refusal, where else these settings apply.",
+        "noMatch": "words.noMatch, muted, in the pane (and in the column on a phone) when the search leaves no setting.",
+        "footer": "Under the column and the pane, outside their scroll: the band of parts/dialog's footer, on the muted wash under a rule. Reset to defaults at its start, the note, and Done at its end.",
+        "reset": "Reset to defaults (words.reset), a ghost button at the footer's start. It asks once more, a ConfirmDialog (parts/dialog), before it resets the shown section, or every setting with resetScope all. Left out while the shown section says reset: false.",
+        "saved": "The footer's note: words.saved, or the app's own (footer), announced as a status.",
+        "done": "Done (words.done), a default button at the footer's end, which closes the dialog."
+    },
+    "options": {
+        "open": {
+            "type": "boolean",
+            "does": "Shown over the page: on #/settings, drawn by the shell's route.",
+            "sokkel-ui": "open, onOpenChange (useOverlayRoute)"
+        },
+        "groups": {
+            "type": "rows",
+            "does": "The sections under their group titles: [{ id, title?, sections: [{ id, label, icon?, heading?, lead?, foot?, settings: [{ id, title, description?, note?, control, layout?, keywords? }], reset? }] }]. Data, the same on every target.",
+            "sokkel-ui": "SettingsDialog groups (SettingsGroup, SettingsSection, Setting)"
+        },
+        "active": {
+            "type": "text",
+            "does": "The shown section's id; the first section with a match is shown while the search leaves the chosen one none.",
+            "sokkel-ui": "active, onActiveChange"
+        },
+        "search": {"type": "text", "does": "What the search holds.", "sokkel-ui": "search, onSearchChange"},
+        "phoneStart": {
+            "values": ["list", "section"],
+            "default": "list",
+            "does": "Which view a phone opens on: the list of sections, or the shown section."
+        },
+        "footer": {"type": "node", "does": "The footer's note in place of words.saved: when the settings last synced."},
+        "onReset": {
+            "type": "callback",
+            "does": "Adds Reset to defaults, which asks once more and then gets the shown section's id, or nothing when resetScope is all."
+        },
+        "resetScope": {
+            "values": ["section", "all"],
+            "default": "section",
+            "does": "What Reset to defaults puts back: the shown section (principle 9), or every setting, which shows on a phone's list too."
+        },
+        "sectionReset": {
+            "type": "boolean",
+            "default": true,
+            "does": "A section's reset: false leaves Reset to defaults out while it is shown, for a section with nothing to put back (an account, sample data). Only a section reset reads it.",
+            "sokkel-ui": "SettingsSection reset"
+        },
+        "layout": {
+            "values": ["auto", "trailing", "below"],
+            "default": "auto",
+            "does": "Where a setting's control sits: trailing in a column at the row's end, level with the title, for a switch or a small button; below under the description, for a wide control; auto trailing while the row is at least 512 wide, else below.",
+            "sokkel-ui": "Setting layout (SettingRowLayout)"
+        },
+        "keywords": {
+            "type": "rows",
+            "does": "More words a setting is found by, never drawn: logout for Sign out, dark for the scheme.",
+            "sokkel-ui": "Setting keywords"
+        }
+    },
+    "sizes": {
+        "box": {
+            "width": 896,
+            "height": 704,
+            "radius": "radius-surface",
+            "note": "parts/dialog's box with no padding; at most the window less 32 across and 64 down (layout)."
+        },
+        "head": {"height": 48, "padX": 16, "gap": 4, "note": "On a phone it pads 8 at its start."},
+        "title": {"text": "text.detail-title"},
+        "close": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "radius": "radius-control",
+            "radiusMax": 12,
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "parts/button, ghost, at icon-sm; a 16 icon."
+        },
+        "column": {
+            "width": 224,
+            "padX": 12,
+            "padY": 12,
+            "gap": 16,
+            "note": "The whole width on a phone. The search is a control tall (parts/text-field)."
+        },
+        "groupTitle": {"padX": 8, "text": "text.badge", "note": "4 under it (layout)."},
+        "entry": {
+            "padX": 8,
+            "padY": 6,
+            "gap": 10,
+            "icon": 16,
+            "text": "text.body",
+            "radius": "radius-md",
+            "phoneMinHeight": "spacing-finger",
+            "note": "34 tall from 640: 6 over and under a 22 line; 2 apart (layout). A finger tall on a phone."
+        },
+        "pane": {"padX": 32, "padY": 20, "note": "16 across on a phone."},
+        "heading": {"text": "text.detail-title", "note": "4 under it (layout)."},
+        "row": {"padY": 16, "gap": 32, "note": "gap: between the words and a trailing control."},
+        "rowTitle": {"text": "text.action"},
+        "rowDescription": {"text": "text.body"},
+        "rowNote": {"padX": 10, "padY": 6, "radius": "radius-control", "text": "text.help"},
+        "footer": {
+            "padX": 16,
+            "padY": 16,
+            "gap": 8,
+            "note": "65 tall at regular: 16, Done's density.control, 16, and its 1px rule; 61 at compact."
+        },
+        "saved": {"text": "text.help"}
+    },
+    "layout": {
+        "windowRoom": {"value": 32, "note": "The box is at most the window less this wide."},
+        "heightRoom": {"value": 64, "note": "The box is at most the window less this tall."},
+        "groupTitleBelow": {"value": 4, "note": "Under a group's title, before its first entry's 2."},
+        "entryGap": {"value": 2, "note": "Between a group's title and its entries, and between entries."},
+        "headingBelow": {"value": 4, "note": "Under the section's heading, over its first row's 16."},
+        "descriptionTop": {"value": 2, "note": "Between a setting's title and its description."},
+        "noteTop": {"value": 8, "note": "Over a setting's note."},
+        "controlTop": {"value": 12, "note": "Over a control placed under its words."},
+        "trailingFrom": {
+            "value": 512,
+            "note": "The row's own width from which auto places its control at the end (a container query)."
+        },
+        "phoneBelow": {"value": 640, "note": "Below this window width the dialog fills the screen."},
+        "phoneHeadStart": {"value": 8, "note": "The head's start pad on a phone."},
+        "sectionsBetween": {"value": 16, "note": "Between the search and the first group, and between groups."}
+    },
+    "routes": {
+        "settings": "#/settings: the dialog over the page it was opened from (principle 9). Back, Done, the close or Escape returns to that page; a link opening the app on #/settings draws the app's home under it."
+    },
+    "states": {
+        "rest": {"means": "Open over the page on the shown section."},
+        "searching": {
+            "means": "The search holds words: the column keeps the sections with a setting that holds every word in its title, description, keywords, or its section's label or heading; the pane shows the shown section's matching rows, or the first section left.",
+            "reached": "words in the search"
+        },
+        "hover": {"means": "The pointer over an entry.", "reached": "pointer over"},
+        "focus": {"means": "Keyboard focus on an entry.", "reached": "Tab", "on": "keyboard"},
+        "shown": {
+            "means": "The entry of the section in the pane.",
+            "reached": "active, or the first section a search leaves",
+            "sokkel-ui": "aria-current=page"
+        },
+        "noReset": {
+            "means": "The shown section says reset: false: the footer leaves Reset to defaults out and keeps the note and Done.",
+            "reached": "a section with reset false, under a section reset"
+        },
+        "confirming": {
+            "means": "Reset to defaults was pressed: a ConfirmDialog asks words.resetSection (or words.resetAll) with words.resetSectionDetail under it, words.resetConfirm as a destructive answer and words.cancel; the settings dialog is shaded under it (parts/dialog, nested).",
+            "reached": "Reset to defaults"
+        },
+        "phoneList": {
+            "means": "Below 640, on the list: the column fills the screen, each entry a finger tall with a chevron, none marked; a section reset is left out.",
+            "reached": "a window below 640, phoneStart list, or Back"
+        },
+        "phoneSection": {
+            "means": "Below 640, in a section: the pane fills the screen, with Back in the head.",
+            "reached": "a window below 640, phoneStart section, or an entry chosen"
+        }
+    },
+    "pieces": {
+        "box": {
+            "rest": {
+                "ground": "popover",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "ring": {"color": "foreground/10", "width": 1},
+                "note": "parts/dialog's box: its ring is its edge, outside the box, and no shadow."
+            }
+        },
+        "head": {"rest": {"rule": "border", "note": "The rule along its foot."}},
+        "title": {"rest": {"text": "text.detail-title", "note": "In the heading face, the box's ink."}},
+        "column": {"rest": {"rule": "border", "note": "The rule along its end, from 640; no ground of its own."}},
+        "groupTitle": {"rest": {"ink": "muted-foreground", "text": "text.badge"}},
+        "entry": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md", "text": "text.body"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "focus": {"ring": {"color": "ring", "width": 2}},
+            "shown": {"ground": "secondary", "ink": "foreground", "text": "text.action"},
+            "phoneList": {"ground": "none", "ink": "inherit", "note": "The box's ink, none marked."}
+        },
+        "chevron": {"rest": {"note": "Drawn only on a phone."}, "phoneList": {"ink": "faint"}},
+        "heading": {"rest": {"text": "text.detail-title"}},
+        "lead": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
+        "rowTitle": {"rest": {"text": "text.action", "note": "The box's ink."}},
+        "rowDescription": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
+        "rowNote": {
+            "rest": {"ground": "muted", "ink": "muted-foreground", "radius": "radius-control", "text": "text.help"}
+        },
+        "rowRule": {"rest": {"rule": "border"}},
+        "noMatch": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
+        "footer": {
+            "rest": {
+                "ground": "muted/50",
+                "rule": "border",
+                "note": "parts/dialog's footer band; its rule along its top."
+            }
+        },
+        "saved": {"rest": {"ink": "muted-foreground", "text": "text.help"}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Moves from the search through the entries, the pane and the footer, held inside the dialog."
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Shows that section; on a phone, goes into it.",
+            "when": "an entry has focus"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the dialog: on #/settings, back to the page it was opened from.",
+            "when": "no layer is open over it"
+        }
+    ],
+    "words": {
+        "title": "Settings",
+        "search": "Search",
+        "searchLabel": "Search the settings",
+        "clear": "Clear the search",
+        "noMatch": "No setting matches the search.",
+        "saved": "Changes are saved as you make them",
+        "done": "Done",
+        "reset": "Reset to defaults",
+        "resetSection": "Reset {section} to its defaults?",
+        "resetSectionDetail": "Every setting in {section} goes back to its default.",
+        "resetAll": "Reset every setting to its default?",
+        "resetAllDetail": "Every setting in every section goes back to its default.",
+        "resetConfirm": "Reset",
+        "cancel": "Cancel",
+        "close": "Close",
+        "back": "Back"
+    },
+    "appText": {
+        "groups": "Every group's title, every section's label, heading, lead and foot, and every setting's title, description, note and keywords.",
+        "footer": "The footer's own note, in place of words.saved."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The app holds open, active and search; useOverlayRoute (hooks/use-overlay-route) draws the dialog on #/settings over the page it was opened from, and closing goes back through the history.",
+            "Base UI's Dialog through the dialog primitives, with the dialog's box and footer; the backdrop blurs on the web only (parts/dialog).",
+            "From 640 the search takes focus on opening; on a phone the view in sight does, so no keyboard rises.",
+            "The pane is keyed by the shown section, so a new section starts at its top.",
+            "A row's auto layout is a container query on the row (@lg, 32rem).",
+            "On a phone the footer pads its foot by the home indicator's inset (env(safe-area-inset-bottom)).",
+            "SettingsNavList draws the same sections beside a settings page on the rail's ground (ground sidebar), the shown one in the rail's accent; that page is not this part."
+        ],
+        "sokkel-ui-egui": [
+            "SettingsDialog::new(id, sections, &mut active).words(..).show(ctx, rows) returns SettingsOutcome { close, reset }; rows draws a section's rows with setting_row or setting_row_found_by.",
+            "Settings is open state the app holds, not a route: egui has no URL, and Back is the app's back stack.",
+            "The dialog holds its search itself and clears it on closing.",
+            "theme_settings draws the appearance rows every app shares."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "column ground",
+            "spec": "No ground of its own: the popover's.",
+            "today": "As of 26b411f (settings.rs unchanged since bee2a97): muted at 30 percent."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "edge and shadow",
+            "spec": "parts/dialog's: a 1px foreground/10 ring outside the box, no shadow.",
+            "today": "A 1px foreground/10 stroke inside the box, and a shadow 0 14 blur 44, black at 18 percent (47 in dark)."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "height",
+            "spec": "704, at most the window less 64.",
+            "today": "704, at most the window less 96."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "search",
+            "spec": "The column keeps only the sections with a match, the shown one marked; the pane shows the shown section's matching rows, or the first section left.",
+            "today": "The column keeps every section, none marked; the pane lists every section's matching rows under their headings."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "group titles",
+            "spec": "16 under the search or the last entry, 20 tall, then 4 and 2 to the first entry.",
+            "today": "12 under the search, 14 under the last entry, 20 tall, then 10 to the first entry: the title 4 higher and later groups 2 lower."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "entry hover and focus",
+            "spec": "Under the pointer the hover ground and the foreground ink; with keyboard focus a 2px ring.",
+            "today": "The hover ground with the ink left muted; no focus ring."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "rows",
+            "spec": "The control at the end while the row is 512 wide, else under the words; a note under both; a rule between rows, none under the last.",
+            "today": "The control always at the end, 32 from the words; no note; a rule under every row, the last too."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "reset",
+            "spec": "Asks once more (a ConfirmDialog with words.resetSection, words.resetSectionDetail, words.resetConfirm and words.cancel) before it resets the shown section.",
+            "today": "SettingsOutcome.reset at once; an app that asks draws its own ConfirmDialog."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "words",
+            "spec": "noMatch \"No setting matches the search.\", and searchLabel, clear, resetSection, resetSectionDetail, resetAll, resetAllDetail, resetConfirm, cancel and back.",
+            "today": "no_match \"No setting matches\"; the other words are missing."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "story path",
+            "spec": "Specimens pair by sokkel-ui's Apps/Settings.",
+            "today": "The egui story is at Patterns/Settings dialog."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 26b411f, SettingsDialog draws the box at 896 by 704, the head (48, the title, a 28 close 16 from the end), the column (224, padded 12, the search, group titles, entries 34 tall and 2 apart with the shown one on secondary at text.action), the pane padded 32 by 20 with the section's title and its rows (16 down, title text.action, description text.body muted), and the footer (65, muted/50 under a rule, Reset to defaults while the section has reset, words.saved, Done); reset false and the search over every setting's words and keywords. Not yet: the phone (the full-screen sheet below 640, the list and the section with Back, phoneStart), resetScope all, the app's own footer note, a section's heading, lead and foot, the nested shade under the reset's question, Enter and Space on an entry, and the route."
+        }
+    ]
+}

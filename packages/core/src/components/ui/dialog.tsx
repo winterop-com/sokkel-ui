@@ -48,9 +48,11 @@ function DialogOverlay({ className, ...props }: DialogOverlayProps) {
 
 export type DialogContentProps = DialogPrimitive.Popup.Props & {
     showCloseButton?: boolean
+    /** The corner close's name. */
+    closeLabel?: string
 }
 
-function DialogContent({ className, children, showCloseButton = true, ...props }: DialogContentProps) {
+function DialogContent({ className, children, showCloseButton = true, closeLabel = 'Close', ...props }: DialogContentProps) {
     return (
         <DialogPortal>
             <DialogOverlay />
@@ -69,7 +71,7 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
                         render={<Button variant="ghost" className="absolute top-2 right-2" size="icon-sm" />}
                     >
                         <XIcon />
-                        <span className="sr-only">Close</span>
+                        <span className="sr-only">{closeLabel}</span>
                     </DialogPrimitive.Close>
                 )}
             </DialogPrimitive.Popup>

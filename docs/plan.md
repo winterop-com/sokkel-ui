@@ -794,6 +794,9 @@ nothing to confirm, one thing to read such as a run's log, closes from the corne
 a press outside from closing a half-written form while Cancel, the close and Escape still close it,
 apart from `dismissible={false}`, which holds all of them. Opening focuses the first field in the
 body, or `initialFocus`, a ref to the element to focus instead. `ConfirmDialog` takes the same two.
+A confirm that cannot be pressed now (`why`) is the button's own `reason`: it stays focusable and
+says why on hover and on keyboard focus; a busy one is a busy button. The corner close's name is a
+word with the others (`DIALOG_SHELL_WORDS`).
 
 `SettingsDialog` holds an app's preferences: its sections in a navigation with a search over every
 setting (its title, description and `keywords`, which are never drawn, and its section's name, so a

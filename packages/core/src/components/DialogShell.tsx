@@ -2,7 +2,6 @@ import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
 
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
-import { Spinner } from './ui/spinner'
 import { cn } from '../lib/cn'
 
 const WIDTHS = {
@@ -17,7 +16,7 @@ const WIDTHS = {
 export interface DialogConfirm {
     label: string
     onConfirm: () => void
-    /** Why it cannot be pressed now; the button stays focusable and says so on hover. */
+    /** Why it cannot be pressed now; the button stays focusable and says so on hover and on focus. */
     why?: string
     /** Working: the verb spins, and nothing closes the dialog until it is done. */
     busy?: boolean
@@ -28,9 +27,12 @@ export interface DialogConfirm {
 export interface DialogShellWords {
     cancel: string
     back: string
+    /** The corner close's name. */
+    close: string
 }
 
-const WORDS: DialogShellWords = { cancel: 'Cancel', back: 'Back' }
+/** A dialog's own words in English; a dialog with words of its own starts from these. */
+export const DIALOG_SHELL_WORDS: DialogShellWords = { cancel: 'Cancel', back: 'Back', close: 'Close' }
 
 /** Dims a dialog while another is open on top of it. */
 export const NESTED =
@@ -135,9 +137,8 @@ export function DialogShell({
     words: given,
 }: DialogShellProps) {
     const parts = shellParts({ confirm, actions, footer, dismissible })
-    const words = { ...WORDS, ...given }
+    const words = { ...DIALOG_SHELL_WORDS, ...given }
     const busy = confirm?.busy === true
-    const shut = confirm?.why !== undefined || busy
     const held = busy || !dismissible
     const body = useRef<HTMLDivElement>(null)
     const verb = useRef<HTMLButtonElement>(null)
@@ -163,6 +164,7 @@ export function DialogShell({
         >
             <DialogContent
                 showCloseButton={parts.close}
+                closeLabel={words.close}
                 initialFocus={first ?? (() => body.current?.querySelector<HTMLElement>(FIELD) ?? true)}
                 finalFocus={finalFocus}
                 aria-busy={busy || undefined}
@@ -212,16 +214,10 @@ export function DialogShell({
                                 <Button
                                     ref={verb}
                                     variant={confirm.destructive === true ? 'destructive' : 'default'}
-                                    aria-disabled={shut || undefined}
-                                    title={confirm.why}
-                                    className={cn(
-                                        shut && 'cursor-not-allowed',
-                                        confirm.why !== undefined && 'opacity-50',
-                                        busy && 'cursor-progress',
-                                    )}
-                                    onClick={shut ? undefined : confirm.onConfirm}
+                                    reason={confirm.why}
+                                    busy={busy}
+                                    onClick={confirm.onConfirm}
                                 >
-                                    {busy && <Spinner aria-hidden role={undefined} aria-label={undefined} />}
                                     {busy ? (confirm.busyLabel ?? confirm.label) : confirm.label}
                                 </Button>
                             )}
