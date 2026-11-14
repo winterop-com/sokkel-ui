@@ -11,6 +11,8 @@ import {
     flattenRows,
     groupLines,
     groupRows,
+    headEntered,
+    headStep,
     isGroupHead,
     movedColumn,
     orderColumns,
@@ -204,6 +206,35 @@ describe('branchKeys and rangeKeys', () => {
         const flat = flattenRows({ rows: tree, rowKey: key, childRows: kids, expanded: new Set(['b']), order: (level) => level })
         expect(rangeKeys(flat, 'b1', 'b')).toEqual(['b', 'b2', 'b1'])
         expect(rangeKeys(flat, 'b2', 'c')).toEqual(['b2', 'b1', 'a', 'c'])
+    })
+})
+
+describe('sorting by keys in the head row', () => {
+    const heads = ['job', 'state', 'took']
+
+    it('enters on the sorted column’s head, else on the first sortable head, and on none where no head sorts', () => {
+        expect(headEntered(heads, 'took')).toBe('took')
+        expect(headEntered(heads, undefined)).toBe('job')
+        expect(headEntered(heads, 'owner')).toBe('job')
+        expect(headEntered([], undefined)).toBeUndefined()
+    })
+
+    it('chooses the head before or after with Left and Right, stopping at the first and the last', () => {
+        expect(headStep(heads, 'state', 'ArrowLeft')).toEqual({ head: 'job' })
+        expect(headStep(heads, 'state', 'ArrowRight')).toEqual({ head: 'took' })
+        expect(headStep(heads, 'job', 'ArrowLeft')).toEqual({ head: 'job' })
+        expect(headStep(heads, 'took', 'ArrowRight')).toEqual({ head: 'took' })
+    })
+
+    it('turns the chosen head’s order with Enter or Space, and goes back to the rows with Down', () => {
+        expect(headStep(heads, 'state', 'Enter')).toEqual({ sort: 'state' })
+        expect(headStep(heads, 'state', ' ')).toEqual({ sort: 'state' })
+        expect(headStep(heads, 'state', 'ArrowDown')).toBe('rows')
+    })
+
+    it('keeps the rows’ other keys in the head row and leaves the rest, Tab among them, to the browser', () => {
+        for (const key of ['ArrowUp', 'PageUp', 'PageDown', 'Home', 'End']) expect(headStep(heads, 'state', key)).toBe('stay')
+        for (const key of ['Tab', 'Escape', 'a']) expect(headStep(heads, 'state', key)).toBeUndefined()
     })
 })
 

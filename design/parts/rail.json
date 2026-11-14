@@ -22,7 +22,7 @@
     },
     "anatomy": {
         "frame": "The rail's column, the window's full height: the sidebar ground and a 1px edge at its end.",
-        "head": "As tall as the top bar, so the top bar's rule ends level with it; it draws no rule of its own. Expanded: the mark and the name (a link home with markHref), and at its end the collapse control, or in the shell's drawer the control that closes the drawer. Collapsed: the mark alone, which is the control that expands the rail.",
+        "head": "As tall as the top bar, so the top bar's rule ends level with it; it draws no rule of its own, in the frame or in the drawer. Expanded: the mark and the name (a link home with markHref), and at its end the collapse control, or in the shell's drawer the control that closes the drawer. Collapsed: the mark alone, which is the control that expands the rail.",
         "mark": "The app's mark on a square tile. Collapsed, under the pointer the expand icon shows in the mark's place.",
         "name": "The app's name beside the mark, cut short with an ellipsis.",
         "home": "The mark and the name as one link to the app's home, given markHref.",
@@ -191,6 +191,10 @@
             "value": 20,
             "note": "The title's line (text.badge); a collapsed rail centers its 1px rule in it."
         },
+        "untitledTop": {
+            "value": 4,
+            "note": "Above the first entry of a group without a title at the top of the places: room inside the scroller for the entry's focus look."
+        },
         "placesBottom": {"value": 12, "note": "Under the last group, inside the scroller."},
         "entryCornerStart": {
             "value": "radius-sm",
@@ -243,7 +247,7 @@
             "means": "Keyboard focus on the home link, a head control, an entry or the edge.",
             "reached": "Tab",
             "on": "keyboard",
-            "sokkel-ui": "focus-visible: the head's controls and the strip's entries draw their own ring; an expanded entry and an icon entry take the browser's outline, in ring/50 (base.css)."
+            "sokkel-ui": "focus-visible: every control of the rail (the home link, the head's control, the collapsed mark, an expanded, icon or strip entry, a parent's chevron button) draws the button's own focus look, a 2px ring outline 2 off; the edge shows its line."
         },
         "active": {
             "means": "The entry of the place shown; a parent folded over the active entry wears it too.",
@@ -281,7 +285,19 @@
                 "note": "The edge is at the end only, 1px."
             }
         },
-        "mark": {"rest": {"ground": "primary", "ink": "primary-foreground", "radius": "radius-md"}},
+        "head": {
+            "rest": {
+                "rule": "none",
+                "note": "No rule under it, in the frame or in the drawer: the top bar's rule ends at the rail's edge."
+            }
+        },
+        "mark": {
+            "rest": {"ground": "primary", "ink": "primary-foreground", "radius": "radius-md"},
+            "focus": {
+                "ring": {"color": "ring", "width": 2, "offset": 2},
+                "note": "Collapsed, the mark is the control that expands the rail."
+            }
+        },
         "name": {
             "rest": {
                 "ink": "sidebar-foreground",
@@ -289,7 +305,7 @@
                 "note": "Tracked -0.025em (tracking-tight)."
             }
         },
-        "home": {"rest": {"radius": "radius-md"}, "focus": {"ring": {"color": "ring/50", "width": 2}}},
+        "home": {"rest": {"radius": "radius-md"}, "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}},
         "collapse": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md"},
             "hover": {"ground": "hover", "ink": "foreground"},
@@ -310,6 +326,7 @@
                 "note": "The edge is the 2 wide bar inside the row's start, drawn only when active."
             },
             "hover": {"ground": "hover", "ink": "foreground"},
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}},
             "active": {
                 "ground": "sidebar-accent",
                 "edge": "sidebar-primary",
@@ -347,10 +364,15 @@
             }
         },
         "chevron": {"rest": {"ink": "muted-foreground", "note": "16; turned 90 degrees while open."}},
-        "chevronButton": {"rest": {"radius": "radius-md"}, "hover": {"ground": "hover"}},
+        "chevronButton": {
+            "rest": {"radius": "radius-md"},
+            "hover": {"ground": "hover"},
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}
+        },
         "iconEntry": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md"},
             "hover": {"ground": "hover", "ink": "foreground"},
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}},
             "active": {"ground": "sidebar-accent", "ink": "sidebar-accent-foreground"},
             "open": {"ground": "hover", "note": "A parent while its flyout is open."}
         },
@@ -382,7 +404,7 @@
             "rest": {"ink": "muted-foreground"},
             "hover": {"ink": "foreground"},
             "active": {"ink": "foreground", "weight": 500},
-            "focus": {"ring": {"color": "ring/50", "width": 2}}
+            "focus": {"ring": {"color": "ring", "width": 2, "offset": 2}}
         },
         "stripTile": {
             "rest": {"radius": "radius-md"},
@@ -446,7 +468,6 @@
         "sokkel-ui": [
             "Each entry's link and the home link are Link, drawn as the app's LinkProvider says, so a middle click opens a tab; the active entry says aria-current=page.",
             "The collapsed rail's tooltips and the flyouts are Base UI's; a flyout opened from the keyboard focuses its first entry.",
-            "An expanded or icon entry has no ring of its own: it takes the browser's focus outline, in ring/50 from base.css.",
             "The width eases over 200 ms (transition-[width]) as far as the document's motion allows.",
             "Reordering loads the drag engine only inside RailDrops; a press that does not move still follows the link, and a finger holds a moment before it drags.",
             "A body stays mounted while hidden, so a tree's open levels and its scroll come back as left.",
@@ -487,8 +508,14 @@
         {
             "renderer": "sokkel-ui-egui",
             "what": "keyboard focus",
-            "spec": "Entries take keyboard focus and show it.",
+            "spec": "Entries take keyboard focus and show it in the button's focus look: a 2px ring outline 2 off, on keyboard focus only.",
             "today": "An entry senses clicks but paints no focus."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "untitled group's top",
+            "spec": "A group without a title at the top of the places keeps 4 above its first entry, room for the entry's focus look.",
+            "today": "As of d1b3b24: its first entry stands right under the head."
         },
         {
             "renderer": "sokkel-ui-egui",

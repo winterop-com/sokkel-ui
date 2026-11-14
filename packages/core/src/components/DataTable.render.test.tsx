@@ -130,6 +130,30 @@ describe('a column with a head, a centered cell and a fill', () => {
     })
 })
 
+describe('a table sorted by keys from its head row', () => {
+    const html = renderToStaticMarkup(
+        <DataTable
+            columns={[
+                { id: 'job', header: 'Job', width: '1fr', cell: (row: { id: string }) => row.id, sortValue: (row) => row.id },
+                { id: 'state', header: 'State', width: '8rem', cell: () => 'queued' },
+            ]}
+            rows={[{ id: 'nightly-export' }, { id: 'sync-inventory' }]}
+            rowKey={(row) => row.id}
+        />,
+    )
+
+    it('keeps the rows and heads one tab stop: the grid takes the focus and its sortable heads do not', () => {
+        expect(html).toMatch(/role="grid"[^>]*tabindex="0"/)
+        expect(html).toMatch(/<button type="button" tabindex="-1"[^>]*><span class="truncate" title="Job">Job<\/span>/)
+    })
+
+    it('marks the head the keys move to with the button’s own focus look', () => {
+        expect(html).toMatch(
+            /<button type="button" tabindex="-1" class="[^"]*focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"/,
+        )
+    })
+})
+
 interface Account {
     id: string
     tokens: string[]

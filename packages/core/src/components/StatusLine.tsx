@@ -13,6 +13,13 @@ const TONE: Record<StatusTone, string> = {
     error: 'text-destructive',
 }
 
+/**
+ * The foot strip a status line draws: the shell's foot height on the foot's ground under its rule,
+ * padded 12 across. The shell stands it empty beside the rail's foot cell when it has no foot.
+ */
+export const STATUS_STRIP =
+    'flex h-shell-foot w-full min-w-0 shrink-0 items-center gap-3 border-t border-page-foot-line bg-page-foot-ground px-3 text-xs text-page-foot-ink'
+
 export interface StatusLineProps {
     note?: ReactNode
     tone?: StatusTone
@@ -23,13 +30,15 @@ export interface StatusLineProps {
 }
 
 /**
- * What the shell's foot strip says for the screen: a short note at the left and identifiers at the
- * right, on one row of fixed height. It holds short facts, never a sentence, so it never grows; where
- * the row is too narrow, the note is cut short first, and the facts, kept to most of the row, after it.
+ * The shell's foot strip, saying what the screen is doing: a short note at the left and identifiers
+ * at the right, on one row of fixed height. It draws the strip itself, the shell's foot height on
+ * the foot's ground under its rule, so the shell only gives it its room and a strip drawn alone looks
+ * the same. It holds short facts, never a sentence, so it never grows; where the row is too narrow,
+ * the note is cut short first, and the facts, kept to most of the row, after it.
  */
 export function StatusLine({ note, tone = 'quiet', live = false, children }: StatusLineProps) {
     return (
-        <div className="flex h-full min-w-0 flex-1 items-center gap-3 text-xs">
+        <div className={STATUS_STRIP}>
             {note !== undefined && (
                 <span className={cn('flex min-w-0 items-center gap-2', TONE[tone])}>
                     {live && (

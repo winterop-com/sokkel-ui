@@ -16,7 +16,7 @@
         ]
     },
     "anatomy": {
-        "strip": "The foot strip: the foot's ground and a rule above it, across the window under the content and the panel, beside the rail's foot cell. Shell's footer draws it around the status line.",
+        "strip": "The foot strip, drawn by the status line itself: the foot's ground and a rule above it, across the window under the content and the panel, beside the rail's foot cell. The shell gives it the room and draws no strip of its own.",
         "note": "A short note at the start, in its tone's ink, on one line; cut short first when the row runs out of room.",
         "liveDot": "With live: a dot before the note in the note's ink, a second dot pulsing out from it.",
         "facts": "The facts at the end, each a status item, kept to most of the row and cut short after the note.",
@@ -42,11 +42,12 @@
         }
     },
     "sizes": {
-        "strip": {"height": "spacing-shell-foot", "padX": 12, "gap": 12, "text": "text.help"},
-        "line": {
+        "strip": {
+            "height": "spacing-shell-foot",
+            "padX": 12,
             "gap": 12,
             "text": "text.help",
-            "note": "The note, the room between, and the facts; one row the strip's height."
+            "note": "One row the strip's height: the note, the room between and the facts, 12 apart."
         },
         "note": {"gap": 8, "note": "Between the live dot and the words."},
         "liveDot": {"height": 8, "width": 8},
@@ -98,7 +99,7 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "Shell's footer draws the strip (its ground, rule, height, pad and ink); StatusLine draws the note and the facts inside it. A shell with a bottom strip and a rail foot but no foot draws the strip empty, so the foot cell has a bar to stand beside.",
+            "StatusLine draws the strip (its ground, rule, height, pad and ink) and the note and the facts in it; Shell's footer only gives it its room in the frame. A shell with a bottom strip and a rail foot but no foot draws an empty StatusLine, so the foot cell has a bar to stand beside.",
             "The live dot's pulse is animate-ping; motion.css stills it when motion is reduced."
         ],
         "sokkel-ui-egui": [

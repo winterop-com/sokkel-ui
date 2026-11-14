@@ -50,7 +50,8 @@ export function pageStateHeading(
 
 /**
  * The frame the three states share: a box that keeps its height inside a flex column, or, unframed,
- * the same row with no edge or ground of its own and a panel's padding, for a state inside a panel.
+ * the same row with no edge or ground of its own in any tone and a panel's padding, for a state
+ * inside a panel.
  */
 function Frame({ children, framed, className }: { children: ReactNode; framed: boolean; className?: string }) {
     return (
@@ -93,8 +94,8 @@ export interface PageStateProps {
      */
     headingLevel?: PageStateHeadingLevel
     /**
-     * Draws the state in its own box (the default). `false` drops the box, for a state that sits in
-     * a panel already: a table's `empty`, a section's body.
+     * Draws the state in its own box (the default). `false` drops the box, with no ground or edge in
+     * any tone, for a state that sits in a panel already: a table's `empty`, a section's body.
      */
     frame?: boolean
     words?: Partial<PageStateWords>
@@ -144,7 +145,7 @@ export function PageState({
     if (error !== undefined && error !== null && error !== false) {
         const warning = tone === 'warning'
         return (
-            <Frame framed={frame} className={cn(warning && 'border-warning/35 bg-warning/8')}>
+            <Frame framed={frame} className={cn(warning && frame && 'border-warning/35 bg-warning/8')}>
                 {warning ? (
                     <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
                 ) : (

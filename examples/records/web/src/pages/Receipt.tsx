@@ -278,7 +278,6 @@ export function ReceiptPage({ code }: { code: string }) {
                 title={form?.title ?? 'Response'}
                 code={code}
                 trail={sectionTrail('Responses', '/responses')}
-                trailInTop
                 meta={
                     receipt === undefined || form === undefined ? undefined : (
                         <>

@@ -61,8 +61,10 @@ export interface PageHeaderProps {
     /** The places above this page, the furthest first. */
     trail?: readonly Crumb[]
     /**
-     * Inside a `Shell`, states `trail` for the top bar (`useShellTrail`, ending at the place above
-     * this page) rather than drawing it, as the trail lives in the top bar; outside one it is drawn here.
+     * Inside a `Shell` (the default there), states `trail` for the top bar (`useShellTrail`, ending
+     * at the place above this page) rather than drawing it, as the trail lives in the top bar, so a
+     * page never draws a second one; `false` draws it here inside a shell too. Outside one it is
+     * always drawn here.
      */
     trailInTop?: boolean
     /** Draws a back button before the title. */
@@ -95,8 +97,9 @@ const ROWS = ['row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-
  *
  * A page reached from another can say where it sits: `trail` draws the places above it small over
  * the title, nearest last, each a link back up, and `onBack` draws a back button level with the
- * title, the rest of the header lined up after it. With `trailInTop`, inside a `Shell` the trail
- * goes to the shell's top bar instead, and the header draws none.
+ * title, the rest of the header lined up after it. Inside a `Shell` the trail goes to the shell's
+ * top bar instead and the header draws none (`trailInTop`, the default there), as the trail lives in
+ * the top bar.
  *
  * A long title wraps; `singleLine` keeps it to one line, cut short with the whole of it on hover,
  * as a code standing as the title is by default.
@@ -115,7 +118,7 @@ export function PageHeader({
     wordsOnly,
     actionsFill,
     trail,
-    trailInTop = false,
+    trailInTop = true,
     onBack,
     singleLine,
     words,
@@ -206,7 +209,7 @@ export function PageHeader({
                         >
                             {identity.heading}
                         </h1>
-                        {count !== undefined && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{count}</span>}
+                        {count !== undefined && <span className="shrink-0 text-help text-muted-foreground tabular-nums">{count}</span>}
                     </div>
                     {showCode && (
                         <p title={code} className={cn('truncate font-mono text-xs text-muted-foreground', column)}>
