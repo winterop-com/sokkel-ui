@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.27.0** is the latest release (2026-11-14): Select, DropdownMenu, Tooltip, Dialog,
+- **0.28.0** is the latest release (2026-11-14): every sokkel-design open question decided and
+  drawn: one popup look and one tooltip, sheets below 768 with no blur, one highlight for every list
+  of choices, a busy palette or dialog that holds and lets go after `busy-release` with a signal;
+  table heads by keys, one focus look in the frame, a status line that draws its strip, no trail in
+  a page header inside a Shell; the contract's tokens; sokkel-design's contract at the same version.
+- **0.27.0** (2026-11-14): Select, DropdownMenu, Tooltip, Dialog,
   SettingsDialog and CommandPalette checked against their sokkel-design specs; a dialog's blocked
   confirm says why on focus, its corner close's name a word (`DIALOG_SHELL_WORDS.close`); select
   rows and settings sections a finger tall on a phone; tag chips no longer widen a stacked table.
