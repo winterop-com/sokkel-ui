@@ -1,0 +1,280 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "dialog",
+    "kind": "part",
+    "status": "draft",
+    "summary": "A box over the page that asks or shows one thing: a title and an optional line under it, a body that scrolls when it is taller than the window allows, and a footer with Cancel and the one confirming verb at its end. The page under it is shaded and out of reach. ConfirmDialog is this dialog at its narrowest (sm, 384) and sized to its content on a phone: its title is the question, its line the detail, its confirm the answer. Below 640 any other dialog is a full-screen sheet.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/DialogShell.tsx",
+            "packages/core/src/components/ui/dialog.tsx",
+            "packages/core/src/components/ui/button.tsx",
+            "packages/core/src/components/ui/spinner.tsx"
+        ],
+        "sokkel-ui-egui": [
+            "crates/core/src/widgets/overlay.rs (Dialog, ConfirmDialog, ConfirmAnswer)",
+            "examples/storybook/src/stories/overlays.rs (Primitives/Overlays/Dialog)"
+        ]
+    },
+    "anatomy": {
+        "backdrop": "The shade over the page while the dialog is open. A press on it closes the dialog unless the dialog is held (dismissible false, or busy) or closeOnOutsidePress is false. The web also blurs what is under it: that is renderer-specific, and no renderer has to match it.",
+        "box": "The dialog, centered in the window on the popover ground with a 1px ring as its edge, padded 16, its pieces 16 apart. As wide as its width allows, at most the window less 32, and at most the window less 64 tall.",
+        "header": "The title and the line under it, 8 apart. It keeps 32 at its end for the corner close while one is drawn.",
+        "title": "What the dialog is for, in the heading face; a ConfirmDialog's question.",
+        "description": "One line under the title on what the dialog does; a ConfirmDialog's detail.",
+        "close": "The corner close: an icon-sm ghost button 8 in from the box's top and end, named words.close. Drawn only in a dialog with nothing to confirm that can be dismissed.",
+        "headerBar": "What the app holds under the title, outside the scrolling body: a step indicator, a tab bar (header).",
+        "body": "The app's content. It scrolls when the box would be taller than the window allows, its scroll bar at the box's edge; its children 16 apart. Opening focuses its first field.",
+        "status": "Held between the body and the footer, outside the scroll: why the server refused the last answer (a problem line), or a status line.",
+        "footer": "A band across the box's foot on the muted wash, under a rule, its lower corners the box's: the app's note at its start, the form's issue count, then the verbs at its end.",
+        "note": "The footer's note at its start, small and muted (footer).",
+        "verbs": "Cancel (ghost), Back (outline) with back, the app's actions, then the confirm. In one row at the footer's end while they fit; once they do not, each takes the whole width on a line of its own, the confirm on top.",
+        "confirm": "The one confirming verb (parts/button): default, or destructive. With a reason (why) it is shut but stays focusable, at half opacity, the reason in the library's tooltip; busy, a spinner stands before its busy label.",
+        "nestedShade": "A shade over the whole box while another dialog is open over it."
+    },
+    "options": {
+        "open": {"type": "boolean", "does": "Shown over the page.", "sokkel-ui": "open, onOpenChange"},
+        "width": {
+            "values": ["sm", "md", "lg", "xl", "full"],
+            "default": "md",
+            "does": "How wide from 640 up: sm 384, md 512, lg 672, xl 896, or full, the window less 32 across and down, for a workbench such as a tester beside its input. ConfirmDialog is always sm.",
+            "sokkel-ui": "DialogShell width"
+        },
+        "phone": {
+            "values": ["sheet", "fit"],
+            "default": "sheet",
+            "does": "Below 640: sheet fills the screen with square corners and holds the footer to its foot, clear of the home indicator, for a form; fit stays a box sized to its content inside the window's margins, for a short question. ConfirmDialog is always fit.",
+            "sokkel-ui": "DialogShell phone"
+        },
+        "title": {"type": "node", "does": "The dialog's title; a ConfirmDialog's question (\"Delete import-orders?\")."},
+        "description": {
+            "type": "node",
+            "does": "One line under the title on what the dialog does; a ConfirmDialog's detail."
+        },
+        "header": {
+            "type": "node",
+            "does": "Held under the title, outside the scrolling body: a step indicator, a tab bar."
+        },
+        "confirm": {
+            "does": "The one verb that confirms: { label, onConfirm, why?, busy?, busyLabel?, destructive? }. why shuts it and says why; busy spins it and holds the dialog open; destructive draws it as one.",
+            "sokkel-ui": "DialogConfirm"
+        },
+        "back": {"type": "callback", "does": "Draws Back before the confirm, for a dialog of steps."},
+        "actions": {
+            "type": "node",
+            "does": "More verbs between Cancel and the confirm: a second way to finish. Without a confirm they are the footer's only verbs (Copy, Download), with no Cancel, the corner close closing."
+        },
+        "dismissible": {
+            "type": "boolean",
+            "default": true,
+            "does": "false: no Cancel and no corner close, and Escape and the backdrop leave the dialog open."
+        },
+        "closeOnOutsidePress": {
+            "type": "boolean",
+            "default": true,
+            "does": "false: a press outside leaves the dialog open, while Cancel, the close and Escape still close it."
+        },
+        "initialFocus": {
+            "does": "What takes focus on opening, in place of the first field in the body; confirm focuses the confirming verb, so Enter confirms a dialog with nothing to fill."
+        },
+        "finalFocus": {"does": "Where focus goes on closing: what opened the dialog unless given, nowhere when false."},
+        "status": {
+            "type": "node",
+            "does": "Held between the body and the footer, outside the scroll: a refusal, a status line."
+        },
+        "footer": {"type": "node", "does": "A note at the footer's start: a secondary link, a line of help."},
+        "count": {"type": "node", "does": "The form's issue count, just before the verbs it stops (parts/text-field)."},
+        "children": {"type": "node", "does": "The body."}
+    },
+    "sizes": {
+        "box": {
+            "padX": 16,
+            "padY": 16,
+            "gap": 16,
+            "radius": "radius-surface",
+            "text": "text.body",
+            "note": "Its width by the width option; at most the window less 32 wide and 64 short of its height (layout)."
+        },
+        "sm": {"width": 384, "note": "ConfirmDialog's width."},
+        "md": {"width": 512, "note": "The default."},
+        "lg": {"width": 672},
+        "xl": {"width": 896},
+        "full": {"note": "The window less 32 across and down, as tall as that too."},
+        "header": {"gap": 8},
+        "title": {"text": "text.detail-title"},
+        "description": {"text": "text.body"},
+        "close": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "radius": "radius-control",
+            "radiusMax": 12,
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "parts/button, ghost, at icon-sm; a 16 icon."
+        },
+        "body": {"gap": 16},
+        "footer": {
+            "padX": 16,
+            "padY": 16,
+            "gap": 8,
+            "note": "65 tall at regular with a default verb: 16, the verb's density.control, 16, and its 1px rule; 61 at compact."
+        },
+        "note": {"text": "text.help"},
+        "verbs": {"gap": 8}
+    },
+    "layout": {
+        "windowRoom": {"value": 32, "note": "The box is at most the window less this wide."},
+        "heightRoom": {
+            "value": 64,
+            "note": "The box is at most the window less this tall; the body scrolls in what is left."
+        },
+        "closeInset": {"value": 8, "note": "The corner close from the box's top and end."},
+        "closeRoom": {"value": 32, "note": "The header's end pad while the corner close is drawn."},
+        "phoneBelow": {
+            "value": 640,
+            "note": "Below this window width a sheet dialog fills the screen. The shell's other phone rules start at 768 (open questions)."
+        },
+        "openEase": {
+            "value": 100,
+            "note": "ms the box fades and zooms in from 95 percent, and the backdrop fades, as far as motion allows. No motion token yet."
+        }
+    },
+    "states": {
+        "rest": {"means": "Open over the page, the page under it shaded and out of reach."},
+        "nested": {
+            "means": "Another dialog is open over this one: a shade over the whole box.",
+            "reached": "a dialog opened from inside it, such as a confirm for one of its rows",
+            "sokkel-ui": "data-nested-dialog-open (NESTED)"
+        },
+        "shut": {
+            "means": "The confirm cannot be pressed now: it stays focusable at half opacity, its reason in the library's tooltip on hover and on keyboard focus (principle 13), and a press does nothing.",
+            "reached": "confirm.why",
+            "effect": {"piece": "confirm", "opacity": 0.5, "focusable": true, "cursor": "not-allowed"},
+            "sokkel-ui": "Button reason"
+        },
+        "busy": {
+            "means": "The confirm is working: a spinner before its busy label, Cancel and Back disabled, and Escape and the backdrop doing nothing until it is done.",
+            "reached": "confirm.busy",
+            "effect": {"piece": "confirm", "opacity": 1, "focusable": true, "cursor": "progress"},
+            "sokkel-ui": "aria-busy on the box; Button busy on the confirm"
+        },
+        "held": {
+            "means": "Cannot be dismissed: no Cancel and no corner close, and Escape and the backdrop leave it open.",
+            "reached": "dismissible false"
+        },
+        "phone": {
+            "means": "Below 640, phone sheet: the box fills the screen with square corners, and the footer stands at its foot, padded by the home indicator's inset.",
+            "reached": "a window below 640"
+        }
+    },
+    "pieces": {
+        "backdrop": {
+            "rest": {
+                "ground": "shade/10",
+                "note": "Only the dim: the web's blur under it is renderer-specific and in no paint."
+            }
+        },
+        "box": {
+            "rest": {
+                "ground": "popover",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "ring": {"color": "foreground/10", "width": 1},
+                "text": "text.body",
+                "note": "The ring is its edge, outside the box. No shadow."
+            },
+            "phone": {"note": "Square corners."}
+        },
+        "nestedShade": {
+            "rest": {"note": "Not drawn."},
+            "nested": {"ground": "shade/40", "note": "Over the whole box, in its corners."}
+        },
+        "title": {"rest": {"text": "text.detail-title", "note": "In the heading face, the box's ink."}},
+        "description": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
+        "footer": {
+            "rest": {
+                "ground": "muted/50",
+                "rule": "border",
+                "note": "The rule along its top; its lower corners the box's."
+            },
+            "phone": {"note": "Square corners."}
+        },
+        "note": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "confirm": {"rest": {"note": "parts/button: default, or destructive with confirm.destructive."}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Moves through the dialog's controls, held inside it; the page under it is out of reach."
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the dialog, focus back on what opened it.",
+            "when": "dismissible, and not busy"
+        },
+        {
+            "keys": ["Enter"],
+            "does": "Confirms.",
+            "when": "the confirm has focus (initialFocus confirm opens on it), not shut or busy"
+        }
+    ],
+    "words": {"cancel": "Cancel", "back": "Back", "close": "Close"},
+    "appText": {
+        "title": "The dialog's title, or a ConfirmDialog's question.",
+        "description": "The line under it, or a ConfirmDialog's detail.",
+        "confirm": "The confirming verb's label and busy label, and why it is shut.",
+        "body": "Everything in the body, the status and the footer's note."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Base UI's Dialog: a portal on z-50 over the page, which it makes inert; focus is held inside, and goes back to what opened it on close (finalFocus).",
+            "The backdrop also blurs what is under it, 4px (backdrop-blur-xs), where the browser supports a backdrop filter. egui cannot blur and only dims; the blur is web-only and in no paint a renderer must match.",
+            "Opening focuses the first field in the body (an input, a text area or a select that takes focus), else the box; a dialog drawn open from its first render moves focus to that field once its body is drawn.",
+            "The box fades and zooms in from 95 percent over 100 ms, the backdrop fading with it, as far as motion allows.",
+            "The verbs' row wraps in reverse with each verb growing, so the confirm stands on top once they take a line each."
+        ],
+        "sokkel-ui-egui": [
+            "Dialog::new(id, title).description(..).width(..).show(ctx, body, footer) returns true when it asks to close; the footer's verbs are laid out from the end, so the app adds the confirm first.",
+            "egui's Modal blocks the page under it; its backdrop is the dim alone.",
+            "ConfirmDialog::new(id, question, confirm).detail(..).destructive(..).busy(label).cancel(word).show(ctx) answers Confirm or Cancel; busy disables Cancel and ignores Escape and the shade."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "width",
+            "spec": "md (512) by default, sm, lg, xl and full by name; at most the window less 32.",
+            "today": "As of 26b411f (overlay.rs unchanged since bee2a97): 384 unless set with width(), not held to the window."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "edge and shadow",
+            "spec": "A 1px foreground/10 ring outside the box, and no shadow.",
+            "today": "A 1px foreground/10 stroke inside the box, and a shadow 0 14 blur 44, black at 18 percent (47 in dark)."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "footer height",
+            "spec": "16 over and under the verbs, under a 1px rule: 65 at regular, 61 at compact.",
+            "today": "64 at every density, its rule inside it."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "verbs",
+            "spec": "Cancel, Back, the actions and the confirm placed by the dialog from its options, one row while they fit, else a line each with the confirm on top.",
+            "today": "The app's footer closure, laid out from the end in one row."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "story path",
+            "spec": "Specimens pair by sokkel-ui's Patterns/Dialogs.",
+            "today": "The egui story is at Primitives/Overlays/Dialog."
+        },
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 26b411f, Dialog draws the box padded 16, the title and description 8 apart, the body 16 under them and a footer band on muted/50 under a rule, over a shade/10 backdrop; ConfirmDialog draws the question, the detail, Cancel and a default or destructive answer, busy. Not yet: the corner close, the header bar, status, the footer's note and count, a shut confirm with its reason, back, actions, the nested shade, the phone sheet below 640 and fit, initial and final focus, a body that scrolls inside the window, dismissible false and closeOnOutsidePress."
+        }
+    ]
+}

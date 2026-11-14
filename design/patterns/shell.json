@@ -5,13 +5,7 @@
     "status": "draft",
     "summary": "The frame every sokkel app has, on every target: the rail of places on the left, a thin top bar with the trail, search and palette, the page with its header as the one thing that scrolls, the settings dialog on its own route over the page, the status foot, and the states a page's read lands in.",
     "sources": {
-        "sokkel-ui": [
-            "packages/core/src/components/Shell.tsx",
-            "packages/core/src/components/SettingsDialog.tsx",
-            "packages/core/src/components/settings-parts.tsx",
-            "packages/core/src/components/ui/dialog.tsx",
-            "packages/core/src/hooks/use-overlay-route.ts"
-        ],
+        "sokkel-ui": ["packages/core/src/components/Shell.tsx", "packages/core/src/hooks/use-overlay-route.ts"],
         "sokkel-ui-egui": [
             "crates/core/src/widgets/frame.rs (Shell; Rail, TopBar and StatusLine have their own specs, as PageHeader and PageState in page.rs do)",
             "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
@@ -30,9 +24,9 @@
         "panel": "An optional side panel: a right column, a sheet, or tabs in a strip at the foot.",
         "panelToggle": "A side panel's toggle in the window's top-right corner: over the top bar's end while the panel is closed or a sheet, in the panel header's corner while it is a column and open.",
         "foot": "The status line (parts/status-line), one row of fixed height, level with the rail's foot cell so the account and the status read as one bar.",
-        "palette": "The command palette over the page: places, the screen's commands and the app's search, on Mod+K.",
-        "settings": "The settings dialog over the page it was opened from, on its own route: sections in a navigation with a search over every setting, the chosen section's rows, a footer saying changes are kept, with Done and Reset to defaults.",
-        "dialog": "The frame of the settings and shortcuts dialogs over the page.",
+        "palette": "The command palette over the page on Mod+K (parts/command-palette): places, the screen's commands and the app's search.",
+        "settings": "The settings dialog over the page it was opened from, on its own route (parts/settings-dialog).",
+        "dialog": "Every dialog over the page, the settings and shortcuts dialogs among them (parts/dialog).",
         "shortcuts": "The keyboard shortcuts dialog, on ?.",
         "drawer": "Below 768 the rail as a drawer from the top bar's menu button, drawn expanded, with the account."
     },
@@ -106,7 +100,7 @@
                 "A press outside the drawer, a link, Escape or a change of route closes it.",
                 "The top bar keeps only its last crumb, and its search field gives way to the palette's button, an icon a finger square (parts/top-bar, state phone).",
                 "The side panel is a sheet from the right; with panelStrip its tabs stand in a strip at the foot, each a finger tall, raising the panel as a sheet.",
-                "Dialogs fill the screen. Settings opens on its list of sections; a section shows its rows with a back button, and the footer stays clear of the home indicator.",
+                "Below 640 dialogs fill the screen (parts/dialog), and settings opens on its list of sections; a section shows its rows with a back button, and the footer stays clear of the home indicator (parts/settings-dialog). Between 640 and 768 they stay boxes (open questions).",
                 "Menu, command and combobox rows and tabs are a finger tall; the account menu leaves out Keyboard shortcuts.",
                 "The frame keeps clear of the notch and home indicator by the safe-area insets."
             ]
@@ -165,15 +159,6 @@
                 "note": "elevation-pop under it and the scrim over the page; it slides in (200 ms in sokkel-ui, no motion token yet)."
             }
         },
-        "dialog": {
-            "rest": {"note": "Not drawn."},
-            "settingsOpen": {
-                "ground": "popover",
-                "ink": "popover-foreground",
-                "radius": "radius-surface",
-                "note": "A foreground/10 hairline round it, over shade/10; its footer on muted/50 under a rule."
-            }
-        },
         "contentScrollbar": {
             "rest": {"ground": "scroll-track", "mark": "scroll-thumb", "note": "The track's ground and the thumb."}
         }
@@ -202,28 +187,12 @@
         "hidePanel": "Hide the panel",
         "panelTabs": "Panel",
         "openPalette": "Open the command palette",
-        "openShortcuts": "Show the keyboard shortcuts",
-        "back": "Back",
-        "palettePlaceholder": "Search or run a command",
-        "settingsTitle": "Settings",
-        "settingsSearch": "Search",
-        "settingsSearchLabel": "Search the settings",
-        "settingsClear": "Clear the search",
-        "settingsNoMatch": "No setting matches the search.",
-        "settingsSaved": "Changes are saved as you make them",
-        "settingsDone": "Done",
-        "settingsReset": "Reset to defaults",
-        "settingsResetSection": "Reset {section} to its defaults?",
-        "settingsResetSectionDetail": "Every setting in {section} goes back to its default.",
-        "settingsResetAll": "Reset every setting to its default?",
-        "settingsResetAllDetail": "Every setting in every section goes back to its default.",
-        "settingsResetConfirm": "Reset",
-        "cancel": "Cancel"
+        "openShortcuts": "Show the keyboard shortcuts"
     },
     "appText": {
         "places": "The app's places are the rail's groups (parts/rail); the palette repeats them.",
         "pageTitle": "Each page's title; the actions follow their context: on Runs the button is New, not New run.",
-        "settings": "Every section's and setting's title, description and keywords."
+        "settings": "Every section's and setting's title, description and keywords (parts/settings-dialog)."
     },
     "rendererSpecific": {
         "sokkel-ui": [

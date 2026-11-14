@@ -144,6 +144,14 @@ export interface PaletteSearchWords {
     seeAll: (query: string) => string
 }
 
+/** The palette search's own words in English; a search with words of its own starts from these. */
+export const PALETTE_SEARCH_WORDS: PaletteSearchWords = {
+    searching: 'Searching',
+    failed: () => 'The search did not answer.',
+    retry: 'Retry',
+    seeAll: (query) => `See all results for “${query}”`,
+}
+
 /**
  * How the palette matches its commands to what is typed. `fuzzy` finds a command by the letters
  * typed in their order, best match first. `terms` wants every word typed in the command's label,
@@ -327,7 +335,7 @@ export function CommandPalette({
     const found = answer.groups.filter((group) => group.results.length > 0)
     // An earlier query's results stay while the next answer comes, dimmed and passed over.
     const stale = answer.state === 'loading'
-    const said = search?.words
+    const said = { ...PALETTE_SEARCH_WORDS, ...search?.words }
     const trimmed = query.trim()
     // The row to the full results page stays in sight under the scrolling rows.
     const seeAll = search?.onSeeAll !== undefined && trimmed !== ''
@@ -512,11 +520,11 @@ export function CommandPalette({
                     {((found.length === 0 && stale) || answer.state === 'failed') && (
                         <div role="status" className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
                             {answer.state === 'failed' ? (
-                                (said?.failed?.(answer.reason) ?? 'The search did not answer.')
+                                said.failed(answer.reason)
                             ) : (
                                 <>
                                     <Spinner className="text-faint" />
-                                    {said?.searching ?? 'Searching'}
+                                    {said.searching}
                                 </>
                             )}
                         </div>
@@ -524,7 +532,7 @@ export function CommandPalette({
                     {answer.state === 'failed' && (
                         <CommandItem className={ROW} value="search retry" forceMount onSelect={answer.retry}>
                             <SearchIcon className="text-muted-foreground" aria-hidden />
-                            {said?.retry ?? 'Retry'}
+                            {said.retry}
                         </CommandItem>
                     )}
                     {seeAll && (
@@ -540,9 +548,7 @@ export function CommandPalette({
                                 search.onSeeAll?.(trimmed)
                             }}
                         >
-                            <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                                {said?.seeAll?.(trimmed) ?? `See all results for “${trimmed}”`}
-                            </span>
+                            <span className="min-w-0 flex-1 truncate text-muted-foreground">{said.seeAll(trimmed)}</span>
                             <ArrowRight className="text-muted-foreground" aria-hidden />
                         </CommandItem>
                     )}

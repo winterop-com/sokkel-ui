@@ -4,10 +4,17 @@ import { join } from 'node:path'
 import { CalendarClock, Folder, Play, Server, Workflow } from 'lucide-react'
 import { createElement, type ComponentType, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { COMMAND_PALETTE_WORDS } from '@winterop-com/sokkel-ui/CommandPalette'
+import {
+    COMMAND_PALETTE_WORDS,
+    CommandPalette,
+    PALETTE_SEARCH_WORDS,
+    type CommandPaletteProps,
+    type PaletteCommand,
+} from '@winterop-com/sokkel-ui/CommandPalette'
 import { DataTable, DATA_TABLE_WORDS, type DataColumn, type DataTableProps } from '@winterop-com/sokkel-ui/DataTable'
+import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
 import { FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
@@ -15,6 +22,7 @@ import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
 import { PageHeader, PAGE_HEADER_WORDS, type PageHeaderProps } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState, PAGE_STATE_WORDS, type PageStateProps } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { DialogFooter, DialogHeader } from '@winterop-com/sokkel-ui/primitives/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
 import {
@@ -29,6 +37,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@winte
 import { Rail, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
+import { ProblemLine } from '@winterop-com/sokkel-ui/ProseText'
+import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
 import { SETTINGS_DIALOG_WORDS } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { Shell, SHELL_WORDS, type ShellProps } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine, type StatusLineProps } from '@winterop-com/sokkel-ui/StatusLine'
@@ -56,6 +66,17 @@ import { TopBar, TOP_BAR_WORDS, type TopBarProps } from '@winterop-com/sokkel-ui
  * pin moves past the change. Anything else that differs fails. What cannot be read without a
  * browser is said beside each part, with the reason, rather than passed in silence.
  */
+
+// The palette's dialog opens in a portal, which a server drawing leaves out: its box is drawn in place, with the classes the palette gives it.
+vi.mock('@winterop-com/sokkel-ui/primitives/command', async (original) => {
+    const module = await original<typeof import('@winterop-com/sokkel-ui/primitives/command')>()
+    const react = await import('react')
+    return {
+        ...module,
+        CommandDialog: ({ children, className }: { children: ReactNode; className?: string }) =>
+            react.createElement('div', { 'data-slot': 'dialog-content', className }, children),
+    }
+})
 
 const ROOT = join(__dirname, '..')
 const CORE = join(ROOT, 'packages', 'core', 'src')
@@ -330,7 +351,9 @@ const lengthOf =
 const READ = {
     ground: prefixed('bg-'),
     edge: prefixed('border-'),
-    rule: prefixed('border-b-', 'border-t-', 'border-'),
+    rule: prefixed('border-b-', 'border-t-', 'border-', 'divide-'),
+    /** A rule drawn with no color class of its own: its width alone. */
+    ruleWidth: (name: string) => (/^(?:border|border-[tblrxy]|divide-[xy])$/.test(name) ? '1' : undefined),
     ink: prefixed('text-'),
     ringColor: (name: string) =>
         prefixed('ring-', 'outline-')(name) ?? /^shadow-\[inset_\d+px_0_0_var\(--([a-z0-9-]+)\)\]$/.exec(name)?.[1],
@@ -435,8 +458,13 @@ function sameColor(spec: string, found: string | undefined): boolean {
 
 const COLOR_KEYS = ['ground', 'edge', 'rule', 'ink', 'placeholder'] as const
 
+/** The color base.css gives every border that names none of its own. */
+const BORDER = /\*\s*\{\s*@apply border-([a-z-]+)\s/.exec(STYLES)?.[1]
+
 function colorFound(key: (typeof COLOR_KEYS)[number], where: Where, on: string[]): string | undefined {
     if (key === 'ink') return inkOf(where, on)
+    if (key === 'rule')
+        return resolve(where.layers, on, READ.rule) ?? (resolve(where.layers, on, READ.ruleWidth) === undefined ? undefined : BORDER)
     if (key === 'placeholder') return resolve(where.layers, [...on, 'placeholder'], READ.ink)
     return resolve(where.layers, on, READ[key])
 }
@@ -515,6 +543,8 @@ const FILL: Record<string, string | number> = {
     column: 'Name',
     row: 'nightly-export',
     section: 'General',
+    query: 'harbor',
+    reason: 'The search timed out',
 }
 const filled = (template: string, values: Record<string, string | number>) =>
     template.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? FILL[name]))
@@ -574,6 +604,8 @@ const SOURCES_FOR_TYPES = [
     source('components/StatusLine.tsx'),
     source('components/Section.tsx'),
     source('components/PageState.tsx'),
+    source('components/SettingRow.tsx'),
+    source('components/CommandPalette.tsx'),
 ]
 
 /** The string values a prop takes, read from its declaration (or the type it names) in a source: an interface, or a type that adds to another. */
@@ -2269,6 +2301,584 @@ const DROPDOWN_MENU_ADAPTER: Adapter = {
     },
 }
 
+// What the dialogs share: Tailwind's sizes the classes name, and the dialog's box
+
+const TAILWIND = readFileSync(join(ROOT, 'node_modules', 'tailwindcss', 'theme.css'), 'utf8')
+/** A Tailwind container or breakpoint size, in px. */
+const tailwind = (kind: 'container' | 'breakpoint', name: string) => {
+    const rem = new RegExp(`--${kind}-${name}: ([\\d.]+)rem;`).exec(TAILWIND)?.[1]
+    return rem === undefined ? undefined : String(Number(rem) * 16)
+}
+/** The width a `sm:max-w-<size>` class holds from 640 up, in px. */
+const widthFrom = (classes: string | undefined) => {
+    const size = /(?:^|\s)sm:max-w-(\w+)(?:\s|$)/.exec(classes ?? '')?.[1]
+    return size === undefined ? undefined : tailwind('container', size)
+}
+/** The window width below which a class list's `max-sm` variants hold, in px. */
+const belowSm = (classes: string) => (/(?:^|\s)max-sm:/.test(classes) ? tailwind('breakpoint', 'sm') : undefined)
+
+const DIALOG = source('components/ui/dialog.tsx')
+const DIALOG_SHELL = source('components/DialogShell.tsx')
+/** The dialog opens in a portal, which a server drawing leaves out: its classes are read from the sources. */
+const DIALOG_PARTS = {
+    backdrop: literalAfter(DIALOG, 'data-slot="dialog-overlay"', 'className={cn('),
+    box: literalAfter(DIALOG, 'data-slot="dialog-content"', 'className={cn('),
+    close: literalAfter(DIALOG, 'render={<Button variant="ghost" className='),
+    title: literalAfter(DIALOG, 'data-slot="dialog-title"', 'cn('),
+    description: literalAfter(DIALOG, 'data-slot="dialog-description"', 'cn('),
+    shellBox: literalAfter(DIALOG_SHELL, '<DialogContent', 'className={cn('),
+    sheet: literalAfter(DIALOG_SHELL, '<DialogContent', "phone === 'sheet' &&"),
+    body: literalAfter(DIALOG_SHELL, '<div ref={body} className='),
+    footer: literalAfter(DIALOG_SHELL, '<DialogFooter', 'cn('),
+    note: literalAfter(DIALOG_SHELL, '{footer !== undefined && <div className='),
+    verbs: literalAfter(DIALOG_SHELL, '{/* As wide as', '<div className='),
+    nested: literalAfter(DIALOG_SHELL, 'export const NESTED ='),
+}
+/** The widths a dialog takes by name, and the classes each is drawn with. */
+const DIALOG_WIDTHS = Object.fromEntries(
+    [...(/const WIDTHS = \{([\s\S]*?)\} as const/.exec(DIALOG_SHELL)?.[1] ?? '').matchAll(/\n\s+(\w+): '([^']+)'/g)].map((match) => [
+        match[1],
+        match[2],
+    ]),
+)
+/** The footer band as the primitive draws it, outside any dialog. */
+const footerBand = () => classesOf(draw(DialogFooter, {}, 'Done')[0])
+/** The corner close: a ghost button at icon-sm, placed in the box's corner. */
+const cornerClose = () => {
+    const drawn = button({ variant: 'ghost', size: 'icon-sm' })
+    return { layers: [classesOf(firstButton(drawn)), DIALOG_PARTS.close], on: [] as string[] }
+}
+/** The confirm a dialog draws with a reason or busy, as the dialog hands them to its button. */
+const confirmWhere = (state: 'shut' | 'busy') => {
+    const handed = state === 'shut' ? /reason=\{confirm\.why\}/.test(DIALOG_SHELL) : /busy=\{busy\}/.test(DIALOG_SHELL)
+    if (!handed) return undefined
+    return buttonWhere(button(state === 'shut' ? { reason: 'The name is unchanged.' } : { busy: true }), 'disabled')
+}
+
+const DIALOG_ADAPTER: Adapter = {
+    wordObjects: { DIALOG_SHELL_WORDS },
+    complete: ['DIALOG_SHELL_WORDS'],
+    words: { cancel: 'DIALOG_SHELL_WORDS.cancel', back: 'DIALOG_SHELL_WORDS.back', close: 'DIALOG_SHELL_WORDS.close' },
+    options: {
+        width: Object.keys(DIALOG_WIDTHS),
+        phone: propValues(DIALOG_SHELL, 'DialogShellProps', 'phone'),
+    },
+    size: (size, key) => {
+        if (['sm', 'md', 'lg', 'xl', 'full'].includes(size)) return skip('read in more: the width a name holds from 640 up')
+        const read: Record<string, Where | undefined> = {
+            box: { layers: [DIALOG_PARTS.box, DIALOG_PARTS.shellBox], on: [] },
+            header: pieceWhere(draw(DialogHeader, {}, 'Rename')[0]),
+            title: { layers: [DIALOG_PARTS.title], on: [] },
+            description: { layers: [DIALOG_PARTS.description], on: [] },
+            close: cornerClose(),
+            body: { layers: [DIALOG_PARTS.body], on: [] },
+            footer: { layers: [footerBand(), DIALOG_PARTS.footer], on: [] },
+            note: { layers: [DIALOG_PARTS.note], on: [] },
+            verbs: { layers: [DIALOG_PARTS.verbs], on: [] },
+        }
+        // The close's icon is the button's own, sized by its classes as every button's is.
+        if (size === 'close' && key === 'icon') return { ...cornerClose(), on: [] }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        switch (name) {
+            case 'backdrop':
+                return { layers: [DIALOG_PARTS.backdrop], on: [] }
+            case 'box':
+                return { layers: [DIALOG_PARTS.box, DIALOG_PARTS.shellBox], on: state === 'phone' ? ['max-sm'] : [] }
+            case 'nestedShade':
+                return { layers: [DIALOG_PARTS.nested], on: state === 'nested' ? ['data-nested-dialog-open', 'after'] : [] }
+            case 'title':
+                return { layers: [DIALOG_PARTS.title], on: [] }
+            case 'description':
+                return { layers: [DIALOG_PARTS.description], on: [] }
+            case 'footer':
+                return { layers: [footerBand(), DIALOG_PARTS.footer], on: [] }
+            case 'note':
+                return { layers: [DIALOG_PARTS.note], on: [] }
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => {
+        if (state === 'shut' || state === 'busy') return confirmWhere(state)
+        return skip(`no effect of ${state} on the confirm`)
+    },
+    keys: {
+        Tab: BASE_UI('dialog', 'holds focus inside'),
+        'Escape (dismissible, and not busy)': () =>
+            /const held = busy \|\| !dismissible/.test(DIALOG_SHELL) && /if \(!next && held\) return/.test(DIALOG_SHELL)
+                ? true
+                : 'Escape is not held while the dialog is busy or cannot be dismissed',
+        'Enter (the confirm has focus (initialFocus confirm opens on it), not shut or busy)': () =>
+            firstButton(button())?.tag === 'button' && /initialFocus === 'confirm' \? verb/.test(DIALOG_SHELL)
+                ? true
+                : 'the confirm is not a native button, or initialFocus confirm does not focus it',
+    },
+    more: () => {
+        const close = cornerClose().layers[1]
+        const inset = (side: 'top' | 'right') => resolve([close], [], lengthOf(`${side}-`))
+        return [
+            ...['sm', 'md', 'lg', 'xl'].map((size) =>
+                check(`sizes.${size}.width`, String(SPECS.get('dialog')?.sizes?.[size]?.width), widthFrom(DIALOG_WIDTHS[size])),
+            ),
+            check('options.width.default', 'md', defaultIn(DIALOG_SHELL, 'export function DialogShell(', 'width')),
+            check('options.phone.default', 'sheet', defaultIn(DIALOG_SHELL, 'export function DialogShell(', 'phone')),
+            check('options.dismissible.default', 'true', defaultIn(DIALOG_SHELL, 'export function DialogShell(', 'dismissible')),
+            check(
+                'options.closeOnOutsidePress.default',
+                'true',
+                defaultIn(DIALOG_SHELL, 'export function DialogShell(', 'closeOnOutsidePress'),
+            ),
+            // ConfirmDialog is the dialog at sm, sized to its content on a phone.
+            check(
+                'options.width (ConfirmDialog)',
+                'sm, phone fit',
+                /export function ConfirmDialog[\s\S]*?width="sm"\s+phone="fit"/.test(DIALOG_SHELL) ? 'sm, phone fit' : undefined,
+            ),
+            check(
+                'words.close (the corner close)',
+                'words.close',
+                /closeLabel=\{words\.close\}/.test(DIALOG_SHELL) ? 'words.close' : undefined,
+            ),
+            ...layoutChecks('dialog', {
+                windowRoom: () => numberIn(DIALOG_PARTS.box, /max-w-\[calc\(100%-(\d+)rem\)\]/, 'rem'),
+                heightRoom: () => numberIn(DIALOG_PARTS.shellBox, /max-h-\[calc\(100svh-(\d+)rem\)\]/, 'rem'),
+                closeInset: () =>
+                    inset('top') === inset('right') ? inset('top') : `${String(inset('top'))} down, ${String(inset('right'))} in`,
+                closeRoom: () => numberIn(DIALOG_SHELL, /parts\.close \? 'pr-(\d+)'/, 'step'),
+                phoneBelow: () => belowSm(DIALOG_PARTS.sheet),
+                openEase: () => numberIn(DIALOG_PARTS.box, /duration-(\d+)/),
+            }),
+        ]
+    },
+}
+
+// Settings dialog
+
+const SETTINGS = source('components/SettingsDialog.tsx')
+const SETTINGS_PARTS = source('components/settings-parts.tsx')
+const SETTING_ROW = source('components/SettingRow.tsx')
+/** The settings dialog opens in a portal, and its navigation is a private module: its classes are read from the sources. */
+const SETTINGS_LOOK = {
+    box: literalAfter(SETTINGS, '<DialogContent', 'className={cn('),
+    sheet: literalAfter(SETTINGS, '<DialogContent', 'NESTED,'),
+    head: literalAfter(SETTINGS, '<div className='),
+    column: literalAfter(SETTINGS, '<nav', 'cn('),
+    pane: literalAfter(SETTINGS, 'ref={pane}', 'cn('),
+    heading: literalAfter(SETTINGS, '<h2 className='),
+    noMatch: literalAfter(SETTINGS, 'shown === undefined ? (', '<p className='),
+    footer: literalAfter(SETTINGS, '<DialogFooter className='),
+    saved: literalAfter(SETTINGS, '<div role="status" className='),
+    group: literalAfter(SETTINGS_PARTS, '<div key={group.id} className='),
+    groupTitle: literalAfter(SETTINGS_PARTS, '{group.title !== undefined && <div className='),
+    entry: literalAfter(SETTINGS_PARTS, '<button', 'cn('),
+    entryInDialog: literalAfter(SETTINGS_PARTS, '<button', '? ['),
+    entryShown: literalAfter(SETTINGS_PARTS, '<button', '? [', 'chosen', '? '),
+    entryRest: literalAfter(SETTINGS_PARTS, '<button', '? [', 'chosen', '? ', ': '),
+    entryIcon: literalAfter(SETTINGS_PARTS, '<Icon className='),
+    chevron: literalAfter(SETTINGS_PARTS, '<ChevronRight className='),
+    lead: literalAfter(SETTINGS_PARTS, '{section.lead !== undefined && <div className='),
+    rows: literalAfter(SETTINGS_PARTS, 'const rows = (', '<div className='),
+}
+const SETTINGS_BOX = [DIALOG_PARTS.box, SETTINGS_LOOK.box]
+/** An entry in the dialog's column: from 640 (`sm`) it is marked and hovered; below it, a finger-tall row of the list. */
+const entryWhere = (state: string): Where => {
+    const shown = state === 'shown'
+    const layers = [SETTINGS_LOOK.entry, SETTINGS_LOOK.entryInDialog, shown ? SETTINGS_LOOK.entryShown : SETTINGS_LOOK.entryRest]
+    const on: Record<string, string[]> = { hover: ['sm', 'hover'], focus: ['sm', 'focus-visible'], phoneList: [] }
+    return { layers, on: on[state] ?? ['sm'] }
+}
+/** A setting's row, with a note: the row, the grid that places its control, its title, description and note. */
+const SETTING = once(() => {
+    const elements = draw(SettingRow, {
+        title: 'Theme',
+        description: 'The colors of surfaces',
+        note: 'Applies on this device',
+        control: 'x',
+    })
+    const row = elements.find((element) => element.attrs['data-slot'] === 'setting-row')
+    return {
+        row,
+        grid: elements.find((element) => element.parent === row),
+        title: byText(elements, 'div', 'Theme'),
+        description: byText(elements, 'div', 'The colors of surfaces'),
+        note: byText(elements, 'div', 'Applies on this device'),
+    }
+})
+
+const SETTINGS_DIALOG_ADAPTER: Adapter = {
+    wordObjects: { SETTINGS_DIALOG_WORDS },
+    complete: ['SETTINGS_DIALOG_WORDS'],
+    words: {
+        title: 'SETTINGS_DIALOG_WORDS.title',
+        search: 'SETTINGS_DIALOG_WORDS.search',
+        searchLabel: 'SETTINGS_DIALOG_WORDS.searchLabel',
+        clear: 'SETTINGS_DIALOG_WORDS.clear',
+        noMatch: 'SETTINGS_DIALOG_WORDS.noMatch',
+        saved: 'SETTINGS_DIALOG_WORDS.saved',
+        done: 'SETTINGS_DIALOG_WORDS.done',
+        reset: 'SETTINGS_DIALOG_WORDS.reset',
+        resetSection: ['SETTINGS_DIALOG_WORDS.resetSection', (said: (section: string) => string, fill) => said(String(fill.section))],
+        resetSectionDetail: [
+            'SETTINGS_DIALOG_WORDS.resetSectionDetail',
+            (said: (section: string) => string, fill) => said(String(fill.section)),
+        ],
+        resetAll: 'SETTINGS_DIALOG_WORDS.resetAll',
+        resetAllDetail: 'SETTINGS_DIALOG_WORDS.resetAllDetail',
+        resetConfirm: 'SETTINGS_DIALOG_WORDS.resetConfirm',
+        cancel: 'SETTINGS_DIALOG_WORDS.cancel',
+        close: 'SETTINGS_DIALOG_WORDS.close',
+        back: 'SETTINGS_DIALOG_WORDS.back',
+    },
+    options: {
+        phoneStart: propValues(SETTINGS, 'SettingsDialogProps', 'phoneStart'),
+        resetScope: propValues(SETTINGS, 'SettingsDialogProps', 'resetScope'),
+        layout: propValues(SETTING_ROW, 'SettingRowProps', 'layout'),
+    },
+    size: (size, key) => {
+        const setting = SETTING()
+        if (size === 'box' && (key === 'width' || key === 'height')) return skip('read in more: its width from 640 up and its height clamp')
+        if (size === 'entry' && key === 'icon') return { layers: [SETTINGS_LOOK.entryIcon], on: [] }
+        const read: Record<string, Where | undefined> = {
+            box: { layers: SETTINGS_BOX, on: [] },
+            head: { layers: [SETTINGS_LOOK.head], on: [] },
+            title: { layers: [DIALOG_PARTS.title], on: [] },
+            close: /<DialogClose render=\{<Button variant="ghost" size="icon-sm"/.test(SETTINGS) ? cornerClose() : undefined,
+            column: { layers: [SETTINGS_LOOK.column], on: ['sm'] },
+            groupTitle: { layers: [SETTINGS_LOOK.groupTitle], on: [] },
+            entry: entryWhere('rest'),
+            pane: { layers: [SETTINGS_LOOK.pane], on: ['sm'] },
+            heading: { layers: [SETTINGS_LOOK.heading], on: [] },
+            row: pieceWhere(key === 'gap' ? setting.grid : setting.row),
+            rowTitle: pieceWhere(setting.title),
+            rowDescription: pieceWhere(setting.description),
+            rowNote: pieceWhere(setting.note),
+            footer: { layers: [footerBand(), SETTINGS_LOOK.footer], on: [] },
+            saved: { layers: [SETTINGS_LOOK.saved], on: [] },
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const setting = SETTING()
+        switch (name) {
+            case 'box':
+                return { layers: SETTINGS_BOX, on: [] }
+            case 'head':
+                return { layers: [SETTINGS_LOOK.head], on: [] }
+            case 'title':
+                return { layers: [DIALOG_PARTS.title], on: [] }
+            case 'column':
+                return { layers: [SETTINGS_LOOK.column], on: ['sm'] }
+            case 'groupTitle':
+                return { layers: [SETTINGS_LOOK.groupTitle], on: [] }
+            case 'entry':
+                return entryWhere(state)
+            case 'chevron':
+                return { layers: [SETTINGS_LOOK.chevron], on: [] }
+            case 'heading':
+                return { layers: [SETTINGS_LOOK.heading], on: [] }
+            case 'lead':
+                return { layers: [SETTINGS_LOOK.lead], on: [] }
+            case 'rowTitle':
+                return pieceWhere(setting.title)
+            case 'rowDescription':
+                return pieceWhere(setting.description)
+            case 'rowNote':
+                return pieceWhere(setting.note)
+            case 'rowRule':
+                return { layers: [SETTINGS_LOOK.rows], on: [] }
+            case 'noMatch':
+                return { layers: [SETTINGS_LOOK.noMatch], on: [] }
+            case 'footer':
+                return { layers: [footerBand(), SETTINGS_LOOK.footer], on: [] }
+            case 'saved':
+                return { layers: [SETTINGS_LOOK.saved], on: [] }
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the settings dialog states no effects'),
+    keys: {
+        Tab: BASE_UI('dialog', 'holds focus inside'),
+        'Enter, Space (an entry has focus)': () =>
+            /<button\s+key=\{section\.id\}\s+type="button"/.test(SETTINGS_PARTS) &&
+            /onClick=\{\(\) => onChoose\(section\.id\)\}/.test(SETTINGS_PARTS)
+                ? true
+                : 'an entry is not a native button that chooses its section',
+        'Escape (no layer is open over it)': BASE_UI('dialog', 'closes on Escape'),
+    },
+    more: () => {
+        const setting = SETTING()
+        const route = SPECS.get('settings-dialog')?.routes?.settings ?? ''
+        return [
+            check('sizes.box.width', '896', widthFrom(SETTINGS_LOOK.box)),
+            check('sizes.box.height', '704', numberIn(SETTINGS_LOOK.box, /h-\[min\((\d+)rem,/, 'rem')),
+            check('options.phoneStart.default', 'list', defaultIn(SETTINGS, 'export function SettingsDialog(', 'phoneStart')),
+            check('options.resetScope.default', 'section', defaultIn(SETTINGS, 'export function SettingsDialog(', 'resetScope')),
+            check('options.layout.default', 'auto', defaultIn(SETTING_ROW, 'export function SettingRow(', 'layout')),
+            check(
+                'states.noReset',
+                'no Reset to defaults for a section with reset false',
+                /if \(!all && \(section === undefined \|\| section\.reset === false\)\) return null/.test(SETTINGS_PARTS)
+                    ? 'no Reset to defaults for a section with reset false'
+                    : undefined,
+            ),
+            check(
+                'states.confirming',
+                'a ConfirmDialog with a destructive resetConfirm',
+                /<ConfirmDialog[\s\S]*?label: say\.resetConfirm,\s+destructive: true/.test(SETTINGS_PARTS)
+                    ? 'a ConfirmDialog with a destructive resetConfirm'
+                    : undefined,
+            ),
+            check('routes.settings', route, route.startsWith('#/settings') && typeof useOverlayRoute === 'function' ? route : undefined),
+            ...layoutChecks('settings-dialog', {
+                windowRoom: () => numberIn(DIALOG_PARTS.box, /max-w-\[calc\(100%-(\d+)rem\)\]/, 'rem'),
+                heightRoom: () => numberIn(SETTINGS_LOOK.box, /calc\(100svh-(\d+)rem\)/, 'rem'),
+                groupTitleBelow: () => resolve([SETTINGS_LOOK.groupTitle], [], lengthOf('pb-')),
+                entryGap: () => resolve([SETTINGS_LOOK.group], [], READ.gap),
+                headingBelow: () => resolve([SETTINGS_LOOK.heading], [], lengthOf('pb-')),
+                descriptionTop: () => lengthOn(setting.description, lengthOf('mt-')),
+                noteTop: () => lengthOn(setting.note, lengthOf('mt-')),
+                controlTop: () => numberIn(SETTING_ROW, /layout !== 'trailing' && 'mt-(\d+)'/, 'step'),
+                trailingFrom: () => (/@lg:grid-cols-/.test(SETTING_ROW) ? tailwind('container', 'lg') : undefined),
+                phoneBelow: () => belowSm(SETTINGS_LOOK.sheet),
+                phoneHeadStart: () => resolve([SETTINGS_LOOK.head], ['max-sm'], READ.padStart),
+                sectionsBetween: () => resolve([SETTINGS_LOOK.column], [], READ.gap),
+            }),
+        ]
+    },
+}
+
+// Command palette
+
+const PALETTE = source('components/CommandPalette.tsx')
+const COMMAND = source('components/ui/command.tsx')
+const onSelect = () => undefined
+/** One group of commands, the second a group of one: each piece a row draws, and a disabled row. */
+const PALETTE_GROUPS: CommandPaletteProps['groups'] = [
+    {
+        title: 'Go to',
+        commands: [
+            { id: 'runs', label: 'Runs', icon: Play, hint: 'every run', keys: ['G', 'R'], onSelect },
+            { id: 'nightly-export', label: 'nightly-export', icon: Workflow, code: 'job_01', meta: '4m 12s', onSelect },
+            { id: 'send-digest', label: 'send-digest', icon: Workflow, disabled: 'Paused by ada', onSelect },
+        ],
+    },
+    { title: 'Create', commands: [{ id: 'new-job', label: 'New job', kind: 'Form', keys: ['N'], onSelect }] },
+]
+const palette = (props: Partial<CommandPaletteProps> = {}) =>
+    draw(CommandPalette, { open: true, onOpenChange: () => undefined, groups: PALETTE_GROUPS, ...props })
+/** The palette open on one command, as the server draws it. */
+const paletteWith = (command: Omit<PaletteCommand, 'id' | 'onSelect'>) =>
+    palette({ groups: [{ title: 'Jobs', commands: [{ id: 'job', onSelect, ...command }] }] })
+const PALETTES = once(() => ({
+    full: palette({ description: 'Choose a run', foot: { name: 'Tidevann' } }),
+    empty: palette({ groups: [] }),
+}))
+const bySlot = (elements: El[], slot: string) => elements.find((element) => element.attrs['data-slot'] === slot)
+const paletteRow = (elements: El[], label: string) =>
+    elements.find((element) => element.attrs['data-slot'] === 'command-item' && element.text.startsWith(label))
+/** A span by its text: the row's hint, code or meta. */
+const spanOf = (elements: El[], text: string) => byText(elements, 'span', text)
+/** The palette's box: the dialog's, the palette's dialog, the box the mock draws, and the command root inside it. */
+const paletteBox = (elements: El[]) => [
+    DIALOG_PARTS.box,
+    literalAfter(COMMAND, '<DialogContent', 'className={cn('),
+    classesOf(bySlot(elements, 'dialog-content')),
+    classesOf(bySlot(elements, 'command')),
+]
+/** A row is always in the palette's dialog. */
+const IN_DIALOG = ['in-data-[slot=dialog-content]']
+const PALETTE_ON: Record<string, string[]> = {
+    rest: IN_DIALOG,
+    active: [...IN_DIALOG, 'data-selected', '*', '[svg]'],
+    disabled: [...IN_DIALOG, 'data-[disabled=true]'],
+}
+/** A group title takes its look from its group's classes for the heading cmdk draws. */
+const GROUP_TITLE = ['**', '[[cmdk-group-heading]]']
+const TONE_STATES = new Set(['critical', 'warning', 'good', 'info'])
+/** The palette's tones, read through the type it takes them from. */
+const paletteTones = () =>
+    /export type PaletteTone = SearchDetailTone/.test(PALETTE)
+        ? [...(/export type SearchDetailTone = ([^\n]+)/.exec(source('components/Search.tsx'))?.[1] ?? '').matchAll(/'([^']+)'/g)].map(
+              (match) => match[1],
+          )
+        : []
+/** What the palette draws while a command runs, and once one is refused: read from the source, as no server drawing runs one. */
+const RUNNING = [
+    literalAfter(COMMAND, 'data-slot="command-shortcut"', 'cn('),
+    literalAfter(PALETTE, '{running ? (', '<CommandShortcut className='),
+]
+const refusal = once(() =>
+    draw(ProblemLine, { className: literalAfter(PALETTE, '<ProblemLine className='), children: 'Only an owner can rerun' }),
+)
+
+const COMMAND_PALETTE_ADAPTER: Adapter = {
+    wordObjects: { COMMAND_PALETTE_WORDS, PALETTE_SEARCH_WORDS },
+    complete: ['COMMAND_PALETTE_WORDS', 'PALETTE_SEARCH_WORDS'],
+    words: {
+        placeholder: 'COMMAND_PALETTE_WORDS.placeholder',
+        empty: 'COMMAND_PALETTE_WORDS.empty',
+        title: 'COMMAND_PALETTE_WORDS.title',
+        close: 'COMMAND_PALETTE_WORDS.close',
+        open: 'COMMAND_PALETTE_WORDS.open',
+        palette: 'COMMAND_PALETTE_WORDS.palette',
+        sequence: 'COMMAND_PALETTE_WORDS.sequence',
+        running: 'COMMAND_PALETTE_WORDS.running',
+        refused: 'COMMAND_PALETTE_WORDS.refused',
+        searching: 'PALETTE_SEARCH_WORDS.searching',
+        searchFailed: ['PALETTE_SEARCH_WORDS.failed', (said: (reason: string) => string, fill) => said(String(fill.reason))],
+        retry: 'PALETTE_SEARCH_WORDS.retry',
+        seeAll: ['PALETTE_SEARCH_WORDS.seeAll', (said: (query: string) => string, fill) => said(String(fill.query))],
+    },
+    options: {
+        metaTone: paletteTones(),
+        tone: /\btone\?: PaletteTone/.test(PALETTE) ? paletteTones() : [],
+        filter: propValues(PALETTE, 'CommandPaletteProps', 'filter'),
+        width: propValues(PALETTE, 'CommandPaletteProps', 'width'),
+    },
+    size: (size, key) => {
+        const { full, empty } = PALETTES()
+        if ((size === 'box' || size === 'md' || size === 'lg') && key === 'width')
+            return skip('read in more: the width a name holds from 640 up')
+        const searchIcon = full.find((element) => element.tag === 'svg' && classesOf(element).includes('lucide-search'))
+        const runs = paletteRow(full, 'Runs')
+        const read: Record<string, Where | undefined> = {
+            box: { layers: paletteBox(full), on: [] },
+            search:
+                key === 'icon'
+                    ? pieceWhere(searchIcon)
+                    : { layers: [classesOf(bySlot(full, 'input-group')), classesOf(bySlot(full, 'command-input'))], on: [] },
+            group: pieceWhere(bySlot(full, 'command-group')),
+            groupTitle: { layers: [classesOf(bySlot(full, 'command-group'))], on: GROUP_TITLE },
+            row: runs === undefined ? undefined : { layers: [classesOf(runs)], on: IN_DIALOG },
+            hint: pieceWhere(spanOf(full, 'every run')),
+            code: pieceWhere(spanOf(full, 'job_01')),
+            meta: pieceWhere(spanOf(full, '4m 12s')),
+            keys: pieceWhere(full.find((element) => element.parent?.attrs['data-slot'] === 'command-shortcut' && element.tag === 'span')),
+            spinner: /<Spinner aria-label=\{words\.running\} \/>/.test(PALETTE)
+                ? { layers: [literalAfter(source('components/ui/spinner.tsx'), 'className={cn(')], on: [] }
+                : undefined,
+            refusal: key === 'icon' ? pieceWhere(iconOf(refusal(), refusal()[0])) : pieceWhere(refusal()[0]),
+            empty: pieceWhere(bySlot(empty, 'command-empty')),
+            foot: pieceWhere(byText(full, 'span', 'Tidevann')?.parent),
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const { full, empty } = PALETTES()
+        const toned = TONE_STATES.has(state) ? (state as PaletteCommand['tone']) : undefined
+        switch (name) {
+            case 'box':
+                return { layers: paletteBox(full), on: [] }
+            case 'description':
+                return pieceWhere(byText(full, 'p', 'Choose a run'))
+            case 'search':
+                return { layers: [classesOf(bySlot(full, 'input-group')), classesOf(bySlot(full, 'command-input'))], on: [] }
+            case 'searchIcon':
+                return pieceWhere(full.find((element) => element.tag === 'svg' && classesOf(element).includes('lucide-search')))
+            case 'groupTitle':
+                return { layers: [classesOf(bySlot(full, 'command-group'))], on: GROUP_TITLE }
+            case 'separator':
+                return pieceWhere(bySlot(full, 'command-separator'))
+            case 'row': {
+                const row = paletteRow(full, state === 'disabled' ? 'send-digest' : 'Runs')
+                return row === undefined
+                    ? undefined
+                    : { layers: [classesOf(row)], on: PALETTE_ON[state] ?? IN_DIALOG, around: ancestors(row) }
+            }
+            case 'icon': {
+                const row = paletteRow(full, 'Runs')
+                const icon = iconOf(full, row)
+                return row === undefined || icon === undefined
+                    ? undefined
+                    : { layers: [classesOf(row), classesOf(icon)], on: PALETTE_ON[state] ?? IN_DIALOG, around: ancestors(icon) }
+            }
+            case 'hint':
+                return pieceWhere(spanOf(paletteWith({ label: 'Runs', hint: 'every run', tone: toned }), 'every run'))
+            case 'code':
+                return pieceWhere(spanOf(full, 'job_01'))
+            case 'meta':
+                return pieceWhere(
+                    spanOf(paletteWith({ label: 'import-orders', meta: 'no upload step', metaTone: toned }), 'no upload step'),
+                )
+            case 'kind':
+                return pieceWhere(spanOf(full, 'Form'))
+            case 'keys':
+                return pieceWhere(bySlot(full, 'kbd'))
+            case 'spinner':
+                return { layers: RUNNING, on: [] }
+            case 'refusal':
+                return pieceWhere(refusal()[0])
+            case 'empty':
+                return pieceWhere(bySlot(empty, 'command-empty'))
+            case 'foot':
+                return pieceWhere(byText(full, 'span', 'Tidevann')?.parent)
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => {
+        if (state !== 'disabled') return skip(`no effect of ${state} on a row`)
+        const row = paletteRow(PALETTES().full, 'send-digest')
+        return row === undefined ? undefined : { layers: [classesOf(row)], on: PALETTE_ON.disabled }
+    },
+    keys: {
+        'Mod+K': () =>
+            /key, mod: true, alsoCtrl: true, inFields: true/.test(source('hooks/use-palette-shortcut.ts'))
+                ? true
+                : 'usePaletteShortcut does not bind Mod+K, Ctrl+K on a Mac and from a field',
+        'a character (the palette is open)': () =>
+            bySlot(PALETTES().full, 'command-input')?.tag === 'input' ? true : "the search is not cmdk's input",
+        'ArrowDown, ArrowUp (the palette is open)': () =>
+            /\bloop\b/.test(PALETTE) || /\bloop\b/.test(COMMAND) ? 'the palette loops at its ends' : true,
+        'Ctrl+N, Ctrl+J, Ctrl+P, Ctrl+K (the palette is open)': () =>
+            /vimBindings/.test(PALETTE) || /vimBindings/.test(COMMAND) ? "cmdk's own keys are set" : true,
+        'Home, End (the palette is open)': skip('cmdk moves the active row to the ends in a browser; the server draws none active'),
+        'Enter (a row is active and no command is running)': () =>
+            /if \(busy !== undefined\) return/.test(PALETTE) ? true : 'a choice made while a command runs is not ignored',
+        'Escape (the palette is open)': BASE_UI('dialog', 'closes on Escape'),
+    },
+    more: () => {
+        const { full } = PALETTES()
+        const meta = spanOf(full, '4m 12s')
+        return [
+            check('sizes.box.width', '384', widthFrom(classesOf(bySlot(full, 'dialog-content')))),
+            check('sizes.md.width', '512', widthFrom(classesOf(bySlot(palette({ width: 'md' }), 'dialog-content')))),
+            check('sizes.lg.width', '672', widthFrom(classesOf(bySlot(palette({ width: 'lg' }), 'dialog-content')))),
+            check('options.filter.default', 'fuzzy', defaultIn(PALETTE, 'export function CommandPalette(', 'filter')),
+            check('options.width.default', 'sm', defaultIn(PALETTE, 'export function CommandPalette(', 'width')),
+            check('options.wrap.default', 'false', defaultIn(PALETTE, 'export function CommandPalette(', 'wrap')),
+            check(
+                'states.busy',
+                'the palette open, the row busy, until the promise settles',
+                /busy: \(pending\) => setBusy\(pending \? rowValue\(command\) : undefined\)/.test(PALETTE) &&
+                    /aria-busy=\{running \|\| undefined\}/.test(PALETTE)
+                    ? 'the palette open, the row busy, until the promise settles'
+                    : undefined,
+            ),
+            check(
+                'states.refused',
+                "the rejection's words, else words.refused, under the rows",
+                /refused: \(reason\) => setRefusal\(reason \?\? words\.refused\)/.test(PALETTE)
+                    ? "the rejection's words, else words.refused, under the rows"
+                    : undefined,
+            ),
+            ...layoutChecks('command-palette', {
+                listMaxHeight: () => numberIn(classesOf(bySlot(full, 'command-list')), /max-h-\[min\((\d+)rem,/, 'rem'),
+                listBottom: () => lengthOn(bySlot(full, 'command-list'), lengthOf('pb-')),
+                searchInset: () => lengthOn(bySlot(full, 'command-input-wrapper'), READ.pad),
+                labelGap: () => lengthOn(spanOf(full, 'every run')?.parent, READ.gapX),
+                metaGap: () => lengthOn(meta?.parent, READ.gapX),
+                kindGap: () => lengthOn(spanOf(full, 'Form')?.parent, READ.gap),
+                metaFoldBelow: () => belowSm(classesOf(meta?.parent)),
+                widthFrom: () => (/sm:max-w-/.test(classesOf(bySlot(full, 'dialog-content'))) ? tailwind('breakpoint', 'sm') : undefined),
+            }),
+        ]
+    },
+}
+
 // Shell
 
 const SHELL = source('components/Shell.tsx')
@@ -2280,7 +2890,7 @@ const withPanel = (open: boolean) => {
 }
 
 const SHELL_ADAPTER: Adapter = {
-    wordObjects: { SHELL_WORDS, COMMAND_PALETTE_WORDS, SETTINGS_DIALOG_WORDS },
+    wordObjects: { SHELL_WORDS },
     complete: ['SHELL_WORDS'],
     words: {
         menu: 'SHELL_WORDS.menu',
@@ -2290,34 +2900,12 @@ const SHELL_ADAPTER: Adapter = {
         panelTabs: 'SHELL_WORDS.panelTabs',
         openPalette: 'SHELL_WORDS.openPalette',
         openShortcuts: 'SHELL_WORDS.openShortcuts',
-        back: 'SETTINGS_DIALOG_WORDS.back',
-        palettePlaceholder: 'COMMAND_PALETTE_WORDS.placeholder',
-        settingsTitle: 'SETTINGS_DIALOG_WORDS.title',
-        settingsSearch: 'SETTINGS_DIALOG_WORDS.search',
-        settingsSearchLabel: 'SETTINGS_DIALOG_WORDS.searchLabel',
-        settingsClear: 'SETTINGS_DIALOG_WORDS.clear',
-        settingsNoMatch: 'SETTINGS_DIALOG_WORDS.noMatch',
-        settingsSaved: 'SETTINGS_DIALOG_WORDS.saved',
-        settingsDone: 'SETTINGS_DIALOG_WORDS.done',
-        settingsReset: 'SETTINGS_DIALOG_WORDS.reset',
-        settingsResetSection: [
-            'SETTINGS_DIALOG_WORDS.resetSection',
-            (said: (section: string) => string, fill) => said(String(fill.section)),
-        ],
-        settingsResetSectionDetail: [
-            'SETTINGS_DIALOG_WORDS.resetSectionDetail',
-            (said: (section: string) => string, fill) => said(String(fill.section)),
-        ],
-        settingsResetAll: 'SETTINGS_DIALOG_WORDS.resetAll',
-        settingsResetAllDetail: 'SETTINGS_DIALOG_WORDS.resetAllDetail',
-        settingsResetConfirm: 'SETTINGS_DIALOG_WORDS.resetConfirm',
-        cancel: 'SETTINGS_DIALOG_WORDS.cancel',
     },
     options: { railMode: propValues(SHELL, 'ShellProps', 'railMode') },
     size: (size, key) => {
         if (size !== 'panelToggle')
             return skip(
-                "the shell's own regions (the page, the dialogs, the drawer, the scroll bar) get specs of their own as egui needs them",
+                "the shell's own regions (the page, the drawer, the scroll bar) get specs of their own as egui needs them; its dialogs, settings and palette have theirs",
             )
         const { elements, toggle } = withPanel(false)
         return key === 'icon' ? pieceWhere(iconOf(elements, toggle)) : pieceWhere(toggle)
@@ -2325,7 +2913,7 @@ const SHELL_ADAPTER: Adapter = {
     paint: (_, name, state) => {
         if (name !== 'panelToggle')
             return skip(
-                "the shell's own regions (the page, the dialogs, the drawer, the scroll bar) get specs of their own as egui needs them",
+                "the shell's own regions (the page, the drawer, the scroll bar) get specs of their own as egui needs them; its dialogs, settings and palette have theirs",
             )
         return at(withPanel(state === 'panelOpen').toggle, state)
     },
@@ -2379,6 +2967,9 @@ const ADAPTERS: Record<string, Adapter> = {
     select: SELECT_ADAPTER,
     'dropdown-menu': DROPDOWN_MENU_ADAPTER,
     tooltip: TOOLTIP_ADAPTER,
+    dialog: DIALOG_ADAPTER,
+    'settings-dialog': SETTINGS_DIALOG_ADAPTER,
+    'command-palette': COMMAND_PALETTE_ADAPTER,
     shell: SHELL_ADAPTER,
 }
 
@@ -2519,8 +3110,12 @@ function sizeChecks(spec: Spec, adapter: Adapter): Check[] {
                         : undefined) ??
                     resolve(where.layers, where.on, READ.pad)
             } else if (key === 'padY') found = resolve(where.layers, where.on, READ.padY) ?? resolve(where.layers, where.on, READ.pad)
-            // A gap across: gap, else gap-x where the row's gap down differs.
-            else if (key === 'gap') found = resolve(where.layers, where.on, READ.gap) ?? resolve(where.layers, where.on, READ.gapX)
+            // A gap across: gap, else gap-x where the row's gap down differs, else the space between children.
+            else if (key === 'gap')
+                found =
+                    resolve(where.layers, where.on, READ.gap) ??
+                    resolve(where.layers, where.on, READ.gapX) ??
+                    resolve(where.layers, where.on, lengthOf('space-y-', 'space-x-'))
             else {
                 const read = SIZE_READERS[key]
                 if (read === undefined) {
