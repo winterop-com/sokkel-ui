@@ -3,7 +3,7 @@
     "id": "tooltip",
     "kind": "part",
     "status": "stable",
-    "summary": "A short line about a control, in a small inverted box beside it with an arrow toward it: shown once the pointer rests on the control or while it has keyboard focus, and gone when both leave. It names an icon button, says why a control is off (a button's reason), and can add the key that does the same.",
+    "summary": "The library's one tooltip: a short line about a control, in a small inverted box beside it with an arrow toward it, shown once the pointer has rested on the control for 500 ms or at once while it has keyboard focus, and gone when both leave. It names an icon button, says why a control is off (a button's reason), names a collapsed rail's entries, and can add the key that does the same.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/ui/tooltip.tsx",
@@ -37,9 +37,9 @@
         "sideOffset": {"type": "length", "default": 4, "does": "How far the box stands from the trigger."},
         "delay": {
             "type": "number",
-            "default": 600,
+            "default": 500,
             "does": "ms the pointer rests on the trigger before the box shows; keyboard focus shows it at once.",
-            "sokkel-ui": "Base UI's 600 by default; TooltipProvider delay, 0 unless set, for the tooltips inside it"
+            "sokkel-ui": "TooltipTrigger delay, TOOLTIP_DELAY (500) by default with or without a provider; TooltipProvider delay, 500 unless set, for the tooltips inside it"
         },
         "open": {
             "type": "boolean",
@@ -76,8 +76,8 @@
         "gap": {"value": 4, "note": "Between the trigger and the box."},
         "keysPadEnd": {"value": 6, "note": "The box's end pad when it holds keys."},
         "openDelay": {
-            "value": 600,
-            "note": "ms before the box shows under a resting pointer: Base UI's own, for a tooltip outside a TooltipProvider; 0 inside sokkel-ui's TooltipProvider, whose tooltips share one delay group."
+            "value": 500,
+            "note": "ms before the box shows under a resting pointer: the primitive's own default, so it holds with or without a provider; a provider's tooltips share one delay group, a neighbor showing at once after one has shown."
         }
     },
     "states": {
@@ -124,11 +124,11 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "Base UI's Tooltip: the box is a portal on layer-popover, shown on hover and on focus-visible, and it moves to the other side of the trigger when there is no room.",
-            "Outside a TooltipProvider a tooltip waits Base UI's 600 ms; sokkel-ui's TooltipProvider sets 0, and its tooltips share one delay group.",
+            "TooltipTrigger waits TOOLTIP_DELAY (500 ms) by default, or its provider's delay; Base UI's own 600 is never used. A TooltipProvider's tooltips share one delay group.",
             "TooltipTrigger adds the finger hit area (FINGER_HIT) unless its render element places itself or draws its own ::after (takesFinger).",
             "The box fades and zooms in from the trigger's side.",
-            "A Button's reason and an IconButton's name show in this tooltip.",
-            "The rail's collapsed entries and SwitchField's reason draw a box of their own on the popover ground, without an arrow (parts/rail)."
+            "A Button's reason and an IconButton's name show in this tooltip; a Button's reason is also its description (aria-describedby), from a copy always in the page (parts/button).",
+            "The rail's collapsed entries (parts/rail) and SwitchField's help mark show in this tooltip too; no part draws a tooltip of its own."
         ],
         "sokkel-ui-egui": [
             "tooltip(response, text) shows it under a resting pointer or with keyboard focus; tooltip_shown(response, text) shows it whatever the pointer does.",
@@ -142,12 +142,6 @@
             "what": "side",
             "spec": "Above the trigger by default, 4 away, centered; side and align as options.",
             "today": "As of 26b411f (overlay.rs unchanged since bee2a97): always under the trigger (RectAlign::BOTTOM), 4 away."
-        },
-        {
-            "renderer": "sokkel-ui-egui",
-            "what": "delay",
-            "spec": "600 ms under a resting pointer, 0 inside a provider; keyboard focus shows it at once.",
-            "today": "0.5 s (TOOLTIP_DELAY); keyboard focus shows it at once."
         },
         {
             "renderer": "sokkel-ui-egui",

@@ -1,7 +1,7 @@
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
 
-import { Children, isValidElement, type ReactNode } from 'react'
+import { Children, isValidElement, useId, type ReactNode } from 'react'
 
 import { FINGER_HIT, takesFinger } from '../../lib/finger'
 import { INVALID_EDGE } from '../../lib/issue-edge'
@@ -72,7 +72,9 @@ export type ButtonProps = ButtonPrimitive.Props &
 
 /**
  * A button. `reason` disables it and says why: the reason shows on hover and on focus, and the
- * button stays in the tab order so a keyboard reaches the reason too. `busy` says the work a press
+ * button stays in the tab order so a keyboard reaches the reason too. The reason is also the
+ * button's description (`aria-describedby`), read from a copy kept beside it, so a screen reader
+ * says it whether or not the tooltip is open. `busy` says the work a press
  * started is under way: a spinner takes the place of a leading icon (an icon-only button's icon), or
  * comes before the label, the label stays, and the button is shut, `aria-busy` and `aria-disabled`,
  * keeping its focus and its look while it ignores presses. `destructiveHover` gives any variant the
@@ -92,6 +94,8 @@ function Button({
     ...props
 }: ButtonProps) {
     const held = reason !== undefined && reason !== null && reason !== false
+    const reasonId = useId()
+    const describedBy = held ? [props['aria-describedby'], reasonId].filter(Boolean).join(' ') : props['aria-describedby']
     const parts = busy ? Children.toArray(children) : []
     // The spinner stands in for a leading icon: an element before the label, or an icon-only button's icon.
     const lead = isValidElement(parts[0]) && (parts.length > 1 || size?.startsWith('icon') === true)
@@ -105,6 +109,7 @@ function Button({
             focusableWhenDisabled={held || busy || focusableWhenDisabled}
             aria-busy={busy || undefined}
             {...props}
+            aria-describedby={describedBy}
         >
             {busy ? (
                 <>
@@ -118,10 +123,17 @@ function Button({
     )
     if (!held) return button
     return (
-        <Tooltip>
-            <TooltipTrigger render={button} />
-            <TooltipContent side={reasonSide}>{reason}</TooltipContent>
-        </Tooltip>
+        <>
+            <Tooltip>
+                <TooltipTrigger render={button} />
+                <TooltipContent side={reasonSide}>{reason}</TooltipContent>
+            </Tooltip>
+            {/* The reason unseen and always drawn, for the description to point at; hidden from reading on its own, so a
+                screen reader says it once, as the description, which is read from the element it names even when hidden. */}
+            <span id={reasonId} aria-hidden className="sr-only">
+                {reason}
+            </span>
+        </>
     )
 }
 

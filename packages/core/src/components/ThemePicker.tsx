@@ -7,6 +7,7 @@ import type { Setting } from './settings-parts'
 import { SchemeChoice } from './SchemeChoice'
 import { Segmented } from './Segmented'
 import { ThemeCards } from './ThemeCards'
+import { ThemeSwatch } from './theme-swatch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
 export type { ThemeOption, ThemeSettings } from '../lib/appearance'
@@ -349,26 +350,9 @@ function Choice({
 function OptionLabel({ option, swatches }: { option: ThemeOption; swatches: boolean }) {
     return (
         <span className="flex min-w-0 items-center gap-2">
-            {swatches && <Swatch theme={option.swatch === true ? option.value : null} />}
+            {swatches && <ThemeSwatch theme={option.swatch === true ? option.value : null} />}
             <span className="truncate">{option.label}</span>
             {option.note !== undefined && <span className="truncate text-xs text-muted-foreground">{option.note}</span>}
-        </span>
-    )
-}
-
-/** A theme's background with its text and accent on it, drawn in that theme whatever the page wears. */
-function Swatch({ theme }: { theme: string | null }) {
-    if (theme === null)
-        return <span aria-hidden className="h-4 w-7 shrink-0 rounded-[calc(var(--radius)*0.5)] border border-dashed border-border-strong" />
-    return (
-        <span
-            aria-hidden
-            data-theme-scope={theme}
-            className="flex h-4 w-7 shrink-0 items-center justify-center gap-0.5 rounded-[calc(var(--radius)*0.5)] border border-border bg-background"
-        >
-            <span className="size-1.5 rounded-full bg-foreground" />
-            <span className="size-1.5 rounded-full bg-primary" />
-            <span className="size-1.5 rounded-full bg-chart-3" />
         </span>
     )
 }

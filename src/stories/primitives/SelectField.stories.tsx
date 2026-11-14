@@ -111,6 +111,30 @@ export const Icons: StoryObj = {
     ),
 }
 
+/**
+ * Options led by a theme's swatch (`swatch`), drawn in that theme as the theme picker draws it, 8
+ * before the label in the list and in the select; the option with no theme of its own, here the
+ * workspace's, leads with an empty dashed box so the labels line up.
+ */
+export const Swatches: StoryObj = {
+    render: () => (
+        <Stack gap="lg" className="max-w-md">
+            <SelectField
+                id="swatch-theme"
+                label="Theme for harbor"
+                options={[
+                    { value: 'workspace', label: 'As the workspace' },
+                    { value: 'tidevann', label: 'Tidevann', swatch: 'tidevann' },
+                    { value: 'paper', label: 'Paper', swatch: 'paper' },
+                    { value: 'contrast', label: 'Contrast', swatch: 'contrast' },
+                    { value: 'steel', label: 'Steel', swatch: 'steel' },
+                ]}
+                defaultValue="paper"
+            />
+        </Stack>
+    ),
+}
+
 const ROLES = [
     { value: 'viewer', label: 'Viewer', detail: 'Reads runs and their logs.' },
     { value: 'operator', label: 'Operator', detail: 'Starts, retries and cancels runs.' },

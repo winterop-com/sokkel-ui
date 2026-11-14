@@ -3,6 +3,7 @@ import { Menu } from '@base-ui/react/menu'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { POPUP } from '../lib/popup'
 import { Link } from './Link'
 
 /** One place the navbar leads to. */
@@ -44,7 +45,7 @@ export function NavBar({ mark, name, links, end, className, words: given }: NavB
     return (
         <header className={cn('flex h-shell-top shrink-0 items-stretch gap-4 border-b border-border-strong bg-sidebar px-3', className)}>
             <div className="flex min-w-0 items-center gap-2">
-                <Menu.Root>
+                <Menu.Root loopFocus={false}>
                     <Menu.Trigger
                         aria-label={words.menu}
                         className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-hover md:hidden"
@@ -53,10 +54,7 @@ export function NavBar({ mark, name, links, end, className, words: given }: NavB
                     </Menu.Trigger>
                     <Menu.Portal>
                         <Menu.Positioner side="bottom" align="start" sideOffset={6}>
-                            <Menu.Popup
-                                data-slot="dropdown-menu-content"
-                                className="w-56 rounded-surface border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop"
-                            >
+                            <Menu.Popup data-slot="dropdown-menu-content" className={cn(POPUP, 'w-56 p-1')}>
                                 {links.map((link) => (
                                     <Menu.Item
                                         key={link.id}
@@ -65,7 +63,7 @@ export function NavBar({ mark, name, links, end, className, words: given }: NavB
                                                 href={link.href}
                                                 aria-current={link.active === true ? 'page' : undefined}
                                                 className={cn(
-                                                    'flex h-9 items-center rounded-md px-2 text-sm outline-none data-highlighted:bg-hover',
+                                                    'flex h-(--density-control) items-center rounded-md px-2 text-sm outline-none data-highlighted:bg-accent data-highlighted:text-accent-foreground max-md:h-finger',
                                                     link.active === true && 'font-medium text-primary-ink',
                                                 )}
                                             />

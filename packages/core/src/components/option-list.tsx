@@ -111,7 +111,7 @@ export function OptionList({
                         <Combobox.Item
                             key={item}
                             value={item}
-                            className="group/option relative flex min-h-8 w-full cursor-default items-center gap-2 rounded-md px-2 py-1 text-sm outline-none select-none data-highlighted:bg-hover pointer-coarse:min-h-finger"
+                            className="group/option relative flex min-h-(--density-control) w-full cursor-default items-center gap-2 rounded-md px-2 py-0.5 text-sm outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground pointer-coarse:min-h-finger"
                         >
                             {multiple && (
                                 <span
@@ -125,7 +125,9 @@ export function OptionList({
                                 {row(item)}
                             </span>
                             {option?.detail !== undefined && (
-                                <span className="shrink-0 text-xs text-muted-foreground">{option.detail}</span>
+                                <span className="shrink-0 text-xs text-muted-foreground group-data-highlighted/option:text-accent-foreground">
+                                    {option.detail}
+                                </span>
                             )}
                             {!multiple && marks === 'check' && (
                                 <Combobox.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">

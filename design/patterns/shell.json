@@ -100,8 +100,8 @@
                 "A press outside the drawer, a link, Escape or a change of route closes it.",
                 "The top bar keeps only its last crumb, and its search field gives way to the palette's button, an icon a finger square (parts/top-bar, state phone).",
                 "The side panel is a sheet from the right; with panelStrip its tabs stand in a strip at the foot, each a finger tall, raising the panel as a sheet.",
-                "Below 640 dialogs fill the screen (parts/dialog), and settings opens on its list of sections; a section shows its rows with a back button, and the footer stays clear of the home indicator (parts/settings-dialog). Between 640 and 768 they stay boxes (open questions).",
-                "Menu, command and combobox rows and tabs are a finger tall; the account menu leaves out Keyboard shortcuts.",
+                "Dialogs fill the screen as sheets, with no edge or shadow (parts/dialog), and settings opens on its list of sections; a section shows its rows with a back button, and the footer stays clear of the home indicator (parts/settings-dialog). A ConfirmDialog stays a box sized to its words.",
+                "Menu, select, command and combobox rows and tabs are a finger tall; the account menu leaves out Keyboard shortcuts.",
                 "The frame keeps clear of the notch and home indicator by the safe-area insets."
             ]
         },
@@ -166,7 +166,7 @@
     "keyboard": [
         {
             "keys": ["Mod+K"],
-            "does": "Opens the command palette; a second press closes it. On a Mac Ctrl+K opens it too.",
+            "does": "Opens the command palette; a second press closes it, unless a command is running (parts/command-palette). On a Mac Ctrl+K opens it too.",
             "when": "nothing but the top bar's search results stands over the page"
         },
         {"keys": ["?"], "does": "Opens the keyboard shortcuts dialog."},

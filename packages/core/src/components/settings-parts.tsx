@@ -160,10 +160,10 @@ export function SettingsNavList({ groups, shown, onChoose, ground }: SettingsNav
                             'flex items-center gap-2.5 rounded-md px-2 text-left text-sm transition-colors outline-none focus-visible:outline-focus focus-visible:outline-ring',
                             dialog
                                 ? [
-                                      'max-md:min-h-finger sm:py-1.5',
+                                      'max-md:min-h-finger md:py-1.5',
                                       chosen
-                                          ? 'sm:bg-secondary sm:font-medium sm:text-foreground'
-                                          : 'sm:text-muted-foreground sm:hover:bg-hover sm:hover:text-foreground',
+                                          ? 'md:bg-secondary md:font-medium md:text-foreground'
+                                          : 'md:text-muted-foreground md:hover:bg-hover md:hover:text-foreground',
                                   ]
                                 : [
                                       'py-1.5',
@@ -176,7 +176,7 @@ export function SettingsNavList({ groups, shown, onChoose, ground }: SettingsNav
                     >
                         {Icon !== undefined && <Icon className="size-4 shrink-0" aria-hidden />}
                         <span className="min-w-0 flex-1 truncate">{section.label}</span>
-                        {dialog && <ChevronRight className="size-4 shrink-0 text-faint sm:hidden" aria-hidden />}
+                        {dialog && <ChevronRight className="size-4 shrink-0 text-faint md:hidden" aria-hidden />}
                     </button>
                 )
             })}

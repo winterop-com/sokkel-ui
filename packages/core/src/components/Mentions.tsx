@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type RefObject } from 'react'
 
 import { cn } from '../lib/cn'
+import { POPUP } from '../lib/popup'
 import { handleOf, insertMention, matchPeople, mentionQuery, mentionsIn, type MentionPerson } from '../lib/mentions'
 import { PersonAvatar } from './PersonAvatar'
 import { Spinner } from './ui/spinner'
@@ -249,9 +250,10 @@ export function useMentions({
             } else if (found.length === 0) {
                 return false
             } else if (event.key === 'ArrowDown') {
-                setActive((current) => (current + 1) % found.length)
+                // The arrows stop at the first and last people, as every list of choices does.
+                setActive((current) => Math.min(current + 1, found.length - 1))
             } else if (event.key === 'ArrowUp') {
-                setActive((current) => (current - 1 + found.length) % found.length)
+                setActive((current) => Math.max(current - 1, 0))
             } else if (event.key === 'Enter' || event.key === 'Tab') {
                 pick(found[Math.min(active, found.length - 1)])
             } else {
@@ -321,7 +323,7 @@ export function MentionList({ id, people, active, searching, style, words, onAct
             data-slot="mention-list"
             style={style}
             onPointerDown={(event) => event.preventDefault()}
-            className="absolute z-30 max-h-64 overflow-y-auto rounded-surface bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
+            className={cn(POPUP, 'absolute z-30 max-h-64 overflow-y-auto p-1')}
         >
             {people.length === 0 ? (
                 <div role="status" className="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground">
@@ -339,16 +341,22 @@ export function MentionList({ id, people, active, searching, style, words, onAct
                         onPointerMove={() => onActiveChange(index)}
                         onClick={() => onPick(person)}
                         className={cn(
-                            'flex min-w-0 cursor-default items-center gap-2 rounded-md px-1.5 py-1 text-sm select-none',
+                            'group/mention flex min-w-0 cursor-default items-center gap-2 rounded-md px-1.5 py-1 text-sm select-none',
                             index === active && 'bg-accent text-accent-foreground',
                         )}
                     >
                         <PersonAvatar name={person.name} image={person.image} size="sm" />
                         <span className="flex min-w-0 flex-1 flex-col">
                             <span className="truncate">{person.name}</span>
-                            {person.detail !== undefined && <span className="truncate text-xs text-muted-foreground">{person.detail}</span>}
+                            {person.detail !== undefined && (
+                                <span className="truncate text-xs text-muted-foreground group-data-active/mention:text-accent-foreground">
+                                    {person.detail}
+                                </span>
+                            )}
                         </span>
-                        <span className="shrink-0 font-mono text-xs text-muted-foreground">@{handleOf(person)}</span>
+                        <span className="shrink-0 font-mono text-xs text-muted-foreground group-data-active/mention:text-accent-foreground">
+                            @{handleOf(person)}
+                        </span>
                     </div>
                 ))
             )}

@@ -206,9 +206,10 @@
         "issuePopover": {
             "rest": {
                 "ground": "popover",
+                "edge": "border-strong",
                 "ink": "popover-foreground",
                 "radius": "radius-surface",
-                "note": "Each issue: its icon in the tone's ink, its text 15/20 at 500, its detail in text.help, its actions as underlined text.help links."
+                "note": "Every popup's look: a 1px border-strong edge and elevation-pop under it. Each issue: its icon in the tone's ink, its text 15/20 at 500, its detail in text.help, its actions as underlined text.help links."
             }
         },
         "help": {"rest": {"ink": "muted-foreground", "text": "text.help"}},

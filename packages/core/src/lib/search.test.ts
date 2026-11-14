@@ -76,11 +76,11 @@ describe('queryRanges', () => {
 })
 
 describe('searchKey', () => {
-    it('moves down and up, wrapping at the ends', () => {
+    it('moves down and up, stopping at the ends', () => {
         expect(searchKey('ArrowDown', -1, 3, true)).toEqual({ type: 'move', index: 0 })
         expect(searchKey('ArrowDown', 0, 3, true)).toEqual({ type: 'move', index: 1 })
-        expect(searchKey('ArrowDown', 2, 3, true)).toEqual({ type: 'move', index: 0 })
-        expect(searchKey('ArrowUp', 0, 3, true)).toEqual({ type: 'move', index: 2 })
+        expect(searchKey('ArrowDown', 2, 3, true)).toEqual({ type: 'move', index: 2 })
+        expect(searchKey('ArrowUp', 0, 3, true)).toEqual({ type: 'move', index: 0 })
         expect(searchKey('ArrowUp', -1, 3, true)).toEqual({ type: 'move', index: 2 })
         expect(searchKey('ArrowUp', 2, 3, true)).toEqual({ type: 'move', index: 1 })
     })

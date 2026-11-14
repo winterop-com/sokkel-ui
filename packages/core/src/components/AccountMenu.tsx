@@ -5,6 +5,7 @@ import { useContext } from 'react'
 import { ShortcutRegistry, useShortcuts } from '../hooks/use-shortcuts'
 import type { Scheme } from '../lib/appearance'
 import { cn } from '../lib/cn'
+import { POPUP } from '../lib/popup'
 import { RailCollapsed, ShellDrawer, ShellShortcuts } from './shell-context'
 import { menu as Menu } from './ui/deferred-menu'
 
@@ -134,6 +135,7 @@ export function AccountMenu({
     return (
         <Menu.Root
             defaultOpen={defaultOpen}
+            loopFocus={false}
             // A row chosen in the shell's drawer closes the drawer too, so what it opens is not drawn under it.
             onOpenChange={(open, details) => {
                 if (!open && details.reason === 'item-press') drawer?.close()
@@ -158,10 +160,7 @@ export function AccountMenu({
             </Menu.Trigger>
             <Menu.Portal>
                 <Menu.Positioner className="isolate z-popover outline-none" side="top" align="start" sideOffset={4} alignOffset={4}>
-                    <Menu.Popup
-                        data-slot="dropdown-menu-content"
-                        className="w-64 rounded-surface border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop"
-                    >
+                    <Menu.Popup data-slot="dropdown-menu-content" className={cn(POPUP, 'w-64 p-1')}>
                         <div className="flex items-center gap-2.5 px-2 py-2">
                             {avatar('size-8')}
                             <div className="min-w-0">
@@ -225,7 +224,7 @@ export function AccountMenu({
 
 /** A row of the menu: a finger's height on a phone, its icon, its words and the keys that do the same. */
 const ITEM =
-    'flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm outline-none data-highlighted:bg-accent data-highlighted:text-accent-foreground max-md:h-finger'
+    'flex h-(--density-control) cursor-default items-center gap-2.5 rounded-md px-2 text-sm outline-none data-highlighted:bg-accent data-highlighted:text-accent-foreground max-md:h-finger'
 
 function Row({
     icon: Icon,

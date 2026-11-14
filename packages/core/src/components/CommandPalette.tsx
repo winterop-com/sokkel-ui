@@ -1,8 +1,11 @@
 import { ArrowRight, SearchIcon, type LucideIcon } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
+import { letsGo, useBusyRelease } from '../hooks/use-busy-release'
 import { useSearch } from '../hooks/use-search'
+import { useShortcuts } from '../hooks/use-shortcuts'
 import { activeRow, filterCommands, mergeCommands, runCommand, termScore } from '../lib/commands'
+import { BUSY_RELEASE } from '../lib/durations'
 import { keyLabels } from '../lib/keys'
 import { cn } from '../lib/utils'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
@@ -179,6 +182,8 @@ export interface CommandPaletteWords {
     running: string
     /** Said where a command was refused with no words of its own. */
     refused: string
+    /** The row that closes the palette once a command has run past `busyRelease`, letting it settle on its own. */
+    stopWaiting: string
 }
 
 /** The palette's own words in English; a palette with words of its own starts from these. */
@@ -192,6 +197,7 @@ export const COMMAND_PALETTE_WORDS: CommandPaletteWords = {
     sequence: 'then',
     running: 'Running',
     refused: 'The command did not run.',
+    stopWaiting: 'Stop waiting',
 }
 
 /** The strip along the palette's foot: the app's mark and name at its start, the keys at its end. */
@@ -210,10 +216,13 @@ const GROUP = '**:[[cmdk-group-heading]]:px-(--palette-row-inset-x)'
 /** A row's room at its ends and over and under its text, from the palette's row tokens. */
 const ROW = 'px-(--palette-row-inset-x) py-(--palette-row-inset-y)'
 
-/** How wide the palette is from `sm` up, as a dialog's widths are: `sm` by default. */
+/** A row's quiet words take the highlight's ink while it is the active row, as every list of choices does. */
+const QUIET = 'text-muted-foreground group-data-selected/command-item:text-accent-foreground'
+
+/** How wide the palette is from `md` up, as a dialog's widths are: `sm` by default. */
 export type PaletteWidth = 'sm' | 'md' | 'lg'
 
-const WIDTH: Record<PaletteWidth, string> = { sm: 'sm:max-w-sm', md: 'sm:max-w-lg', lg: 'sm:max-w-2xl' }
+const WIDTH: Record<PaletteWidth, string> = { sm: 'md:max-w-sm', md: 'md:max-w-lg', lg: 'md:max-w-2xl' }
 
 export interface CommandPaletteProps {
     open: boolean
@@ -231,7 +240,7 @@ export interface CommandPaletteProps {
      * shows its Close button there instead.
      */
     foot?: PaletteFoot
-    /** How wide it is from `sm` up: `sm` by default, `md` or `lg` for a chooser whose rows say more. */
+    /** How wide it is from `md` up: `sm` by default, `md` or `lg` for a chooser whose rows say more. */
     width?: PaletteWidth
     /**
      * A line over the search saying what is being chosen, for a palette that stands as a chooser;
@@ -240,6 +249,11 @@ export interface CommandPaletteProps {
     description?: string
     /** Lets each row's label, hint and code wrap onto more lines rather than end in an ellipsis. */
     wrap?: boolean
+    /**
+     * How long, in ms, a running command holds the palette before a Stop waiting row appears and
+     * Escape lets the palette go again: the `busy-release` token's 5000 by default.
+     */
+    busyRelease?: number
     /** Classes for the dialog's box. */
     className?: string
     words?: Partial<CommandPaletteWords>
@@ -251,7 +265,11 @@ export interface CommandPaletteProps {
  * the word `sequence` between them as the shortcuts dialog draws them. Choosing a row runs it and
  * closes the palette; a command whose `onSelect` answers a promise keeps it open, its row busy,
  * until the promise settles, closing once it is fulfilled and saying why under the rows when it is
- * rejected (`words.refused` where the refusal has no words of its own). A row's `meta` is a quiet
+ * rejected (`words.refused` where the refusal has no words of its own). While it runs nothing closes
+ * the palette, neither Escape, a press outside, its Close nor Mod+K, and another choice is ignored;
+ * once it has run `busyRelease` (5 seconds) a Stop waiting row appears, and it, Escape and the Close
+ * let the palette go, the command left to settle on its own, its answer, a refusal included, unsaid.
+ * Mod+K closes an open palette, as it opens a closed one in a `Shell` or with `usePaletteShortcut`. A row's `meta` is a quiet
  * summary in the code face at its end, folding under the label on a phone, so a fact such as a
  * count or a time need not become a second line; its `metaTone` sets it in a status ink, so a summary
  * saying something is missing reads critical. A row with a `detail` or `artwork` is two lines tall, a picture or its icon
@@ -286,6 +304,7 @@ export function CommandPalette({
     width = 'sm',
     description,
     wrap = false,
+    busyRelease = BUSY_RELEASE,
     className,
     words: given,
 }: CommandPaletteProps) {
@@ -313,6 +332,30 @@ export function CommandPalette({
     useLayoutEffect(() => {
         opening.current += 1
     }, [open])
+    // A running command holds the palette open: Escape, a press outside, its Close and Mod+K leave it
+    // be, until it has run `busyRelease`, when Stop waiting, Escape and the Close let it go.
+    const released = useBusyRelease(busy !== undefined, busyRelease)
+    const close = (next: boolean, details?: { reason: string }) => {
+        if (!next && !letsGo(busy !== undefined, released, details?.reason)) return
+        onOpenChange(next)
+    }
+    // Closing lets a running command go: nothing is cancelled, and its answer is not heard (`current`).
+    const stopWaiting = () => onOpenChange(false)
+    useShortcuts(
+        [
+            {
+                id: 'palette-close',
+                key: 'k',
+                mod: true,
+                alsoCtrl: true,
+                inFields: true,
+                inDialogs: true,
+                disabled: !open,
+                run: () => close(false),
+            },
+        ],
+        [open, busy, released, onOpenChange],
+    )
     /** Runs a command: the palette closes at once, or once the promise it returns is fulfilled. */
     const run = (command: PaletteCommand) => {
         if (busy !== undefined) return
@@ -363,7 +406,7 @@ export function CommandPalette({
     return (
         <CommandDialog
             open={open}
-            onOpenChange={onOpenChange}
+            onOpenChange={close}
             title={words.title}
             description={description ?? words.placeholder}
             className={cn(WIDTH[width], className)}
@@ -376,6 +419,11 @@ export function CommandPalette({
                 )}
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={ask} />
                 <CommandList ref={list} className={cn('max-h-[min(24rem,60svh)]', seeAll ? 'scroll-pb-12' : 'scroll-fade-b pb-1.5')}>
+                    {released && (
+                        <CommandItem className={ROW} value="stop-waiting" forceMount onSelect={stopWaiting}>
+                            <span className={cn('min-w-0 flex-1 truncate', QUIET)}>{words.stopWaiting}</span>
+                        </CommandItem>
+                    )}
                     {found.length === 0 && (answer.state === 'idle' || answer.state === 'done') && (
                         <CommandEmpty>{words.empty}</CommandEmpty>
                     )}
@@ -406,19 +454,14 @@ export function CommandPalette({
                                                     className={cn(
                                                         'min-w-0 shrink-[4] text-xs',
                                                         !wrap && 'truncate',
-                                                        command.tone === undefined ? 'text-muted-foreground' : TONE_INK[command.tone],
+                                                        command.tone === undefined ? QUIET : TONE_INK[command.tone],
                                                     )}
                                                 >
                                                     {hint}
                                                 </span>
                                             )}
                                             {command.code !== undefined && (
-                                                <span
-                                                    className={cn(
-                                                        'min-w-0 shrink-[2] font-mono text-xs text-muted-foreground',
-                                                        !wrap && 'truncate',
-                                                    )}
-                                                >
+                                                <span className={cn('min-w-0 shrink-[2] font-mono text-xs', QUIET, !wrap && 'truncate')}>
                                                     {command.code}
                                                 </span>
                                             )}
@@ -456,9 +499,7 @@ export function CommandPalette({
                                                             <span
                                                                 className={cn(
                                                                     'min-w-0 shrink-0 truncate font-mono text-xs tabular-nums max-sm:shrink',
-                                                                    command.metaTone === undefined
-                                                                        ? 'text-muted-foreground'
-                                                                        : TONE_INK[command.metaTone],
+                                                                    command.metaTone === undefined ? QUIET : TONE_INK[command.metaTone],
                                                                 )}
                                                             >
                                                                 {command.meta}
@@ -474,7 +515,11 @@ export function CommandPalette({
                                             ) : (
                                                 (kind !== undefined || command.keys !== undefined) && (
                                                     <CommandShortcut className="flex shrink-0 items-center gap-2">
-                                                        {kind !== undefined && <span className="text-faint">{kind}</span>}
+                                                        {kind !== undefined && (
+                                                            <span className="text-faint group-data-selected/command-item:text-accent-foreground">
+                                                                {kind}
+                                                            </span>
+                                                        )}
                                                         {command.keys !== undefined && (
                                                             <span className="flex items-center gap-1.5">
                                                                 <Keys keys={command.keys} />
@@ -507,6 +552,7 @@ export function CommandPalette({
                                             forceMount
                                             disabled={stale}
                                             onSelect={() => {
+                                                if (busy !== undefined) return
                                                 onOpenChange(false)
                                                 search.onOpen(result, group)
                                             }}
@@ -544,11 +590,12 @@ export function CommandPalette({
                             value="search see-all"
                             forceMount
                             onSelect={() => {
+                                if (busy !== undefined) return
                                 onOpenChange(false)
                                 search.onSeeAll?.(trimmed)
                             }}
                         >
-                            <span className="min-w-0 flex-1 truncate text-muted-foreground">{said.seeAll(trimmed)}</span>
+                            <span className={cn('min-w-0 flex-1 truncate', QUIET)}>{said.seeAll(trimmed)}</span>
                             <ArrowRight className="text-muted-foreground" aria-hidden />
                         </CommandItem>
                     )}
@@ -561,7 +608,12 @@ export function CommandPalette({
                 )}
                 {foot === undefined ? (
                     <div className="hidden justify-end border-t border-border p-1.5 pointer-coarse:flex">
-                        <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={busy !== undefined && !released}
+                            onClick={() => close(false, { reason: 'close-press' })}
+                        >
                             {words.close}
                         </Button>
                     </div>
@@ -581,7 +633,8 @@ export function CommandPalette({
                             variant="ghost"
                             size="sm"
                             className="ml-auto hidden pointer-coarse:flex"
-                            onClick={() => onOpenChange(false)}
+                            disabled={busy !== undefined && !released}
+                            onClick={() => close(false, { reason: 'close-press' })}
                         >
                             {words.close}
                         </Button>

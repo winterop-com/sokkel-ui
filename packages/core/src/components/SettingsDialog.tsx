@@ -2,7 +2,7 @@ import { ChevronLeft, XIcon } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { NESTED } from './DialogShell'
+import { NESTED, SHEET } from './DialogShell'
 import { IconButton } from './IconButton'
 import { SearchField } from './SearchField'
 import {
@@ -64,9 +64,9 @@ export interface SettingsDialogProps {
  * the app's own `footer`) and ends with Done, which closes the dialog. `onReset` adds Reset to
  * defaults at its start, for the shown section or for every setting, asked once more before it runs.
  *
- * On a phone the dialog fills the screen and the navigation is a list to go into: choosing a
- * section shows its rows, and a back button returns to the list. `phoneStart` says which of the
- * two a phone opens on. The footer stays at the foot of the screen, clear of the home indicator,
+ * Below `md` (768), on a phone or a foldable, the dialog fills the screen and the navigation is a
+ * list to go into: choosing a section shows its rows, and a back button returns to the list.
+ * `phoneStart` says which of the two it opens on. The footer stays at the foot of the screen, clear of the home indicator,
  * and a section's reset shows only inside the section.
  */
 export function SettingsDialog({
@@ -97,22 +97,18 @@ export function SettingsDialog({
                 showCloseButton={false}
                 initialFocus={() => {
                     // A wide screen starts in the search; a phone starts on the pane in view, so no keyboard rises.
-                    if (window.matchMedia('(min-width: 40rem)').matches) return nav.current?.querySelector('input') ?? true
+                    if (window.matchMedia('(min-width: 48rem)').matches) return nav.current?.querySelector('input') ?? true
                     return (phoneView === 'section' ? pane.current : nav.current) ?? true
                 }}
-                className={cn(
-                    'flex h-[min(44rem,calc(100svh-4rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl',
-                    NESTED,
-                    'max-sm:top-0 max-sm:left-0 max-sm:h-svh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none',
-                )}
+                className={cn('flex h-[min(44rem,calc(100svh-4rem))] flex-col gap-0 overflow-hidden p-0 md:max-w-4xl', NESTED, SHEET)}
             >
-                <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-4 max-sm:pl-2">
+                <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-4 max-md:pl-2">
                     {inSection && (
-                        <IconButton label={say.back} className="sm:hidden" onClick={() => setPhoneView('list')}>
+                        <IconButton label={say.back} className="md:hidden" onClick={() => setPhoneView('list')}>
                             <ChevronLeft aria-hidden />
                         </IconButton>
                     )}
-                    <DialogTitle className={cn('flex-1', !inSection && 'max-sm:pl-2')}>{say.title}</DialogTitle>
+                    <DialogTitle className={cn('flex-1', !inSection && 'max-md:pl-2')}>{say.title}</DialogTitle>
                     <DialogClose render={<Button variant="ghost" size="icon-sm" aria-label={say.close} title={say.close} />}>
                         <XIcon aria-hidden />
                     </DialogClose>
@@ -123,8 +119,8 @@ export function SettingsDialog({
                         tabIndex={-1}
                         aria-label={say.title}
                         className={cn(
-                            'flex w-full flex-col gap-4 overflow-y-auto p-3 outline-none sm:w-56 sm:shrink-0 sm:border-r sm:border-border',
-                            inSection && 'max-sm:hidden',
+                            'flex w-full flex-col gap-4 overflow-y-auto p-3 outline-none md:w-56 md:shrink-0 md:border-r md:border-border',
+                            inSection && 'max-md:hidden',
                         )}
                     >
                         <SearchField
@@ -144,13 +140,13 @@ export function SettingsDialog({
                                 setPhoneView('section')
                             }}
                         />
-                        {visible.length === 0 && <p className="px-2 text-sm text-muted-foreground sm:hidden">{say.noMatch}</p>}
+                        {visible.length === 0 && <p className="px-2 text-sm text-muted-foreground md:hidden">{say.noMatch}</p>}
                     </nav>
                     <div
                         key={shown?.id}
                         ref={pane}
                         tabIndex={-1}
-                        className={cn('min-w-0 flex-1 overflow-y-auto px-4 py-5 outline-none sm:px-8', !inSection && 'max-sm:hidden')}
+                        className={cn('min-w-0 flex-1 overflow-y-auto px-4 py-5 outline-none md:px-8', !inSection && 'max-md:hidden')}
                     >
                         {shown === undefined ? (
                             <p className="text-sm text-muted-foreground">{say.noMatch}</p>
@@ -162,14 +158,14 @@ export function SettingsDialog({
                         )}
                     </div>
                 </div>
-                <DialogFooter className="m-0 shrink-0 flex-nowrap max-sm:rounded-none max-sm:pb-[calc(--spacing(4)+env(safe-area-inset-bottom))]">
+                <DialogFooter className="m-0 shrink-0 flex-nowrap max-md:rounded-none max-md:pb-[calc(--spacing(4)+env(safe-area-inset-bottom))]">
                     {onReset !== undefined && (
                         <SettingsReset
                             onReset={onReset}
                             all={all}
                             section={shown}
                             say={say}
-                            className={cn(!all && !inSection && 'max-sm:hidden')}
+                            className={cn(!all && !inSection && 'max-md:hidden')}
                         />
                     )}
                     <div role="status" className="min-w-0 flex-1 text-xs text-muted-foreground">

@@ -1,19 +1,19 @@
 {
     "forms": {
         "engines": [],
-        "start": 194.0,
-        "lazy": 79.6,
+        "start": 194.4,
+        "lazy": 79.8,
         "css": 52
     },
     "forms-lean": {
         "engines": [],
-        "start": 194.0,
-        "lazy": 79.6,
+        "start": 194.4,
+        "lazy": 79.8,
         "css": 22.7
     },
     "dashboard": {
         "engines": ["echarts", "dnd-kit"],
-        "start": 206.2,
+        "start": 206.4,
         "lazy": 470.5,
         "css": 52.2,
         "first": {
@@ -35,7 +35,7 @@
     "music": {
         "engines": [],
         "start": 174,
-        "lazy": 45.7,
+        "lazy": 46.0,
         "css": 53.1
     }
 }

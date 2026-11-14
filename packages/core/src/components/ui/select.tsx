@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Select as SelectPrimitive } from '@base-ui/react/select'
 
 import { INVALID_EDGE } from '../../lib/issue-edge'
+import { POPUP } from '../../lib/popup'
 import { cn } from '../../lib/utils'
 import { returnFocusOnKeyboard } from '../../lib/focus'
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from 'lucide-react'
@@ -13,7 +14,7 @@ const Select = SelectPrimitive.Root
 export type SelectGroupProps = SelectPrimitive.Group.Props
 
 function SelectGroup({ className, ...props }: SelectGroupProps) {
-    return <SelectPrimitive.Group data-slot="select-group" className={cn('scroll-my-1 p-1', className)} {...props} />
+    return <SelectPrimitive.Group data-slot="select-group" className={cn('scroll-my-1', className)} {...props} />
 }
 
 export type SelectValueProps = SelectPrimitive.Value.Props
@@ -45,7 +46,7 @@ function SelectTrigger({ className, size = 'default', variant = 'field', widest,
             data-size={size}
             data-variant={variant}
             className={cn(
-                "flex w-fit items-center justify-between gap-1.5 rounded-control border border-input bg-field py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-disabled data-placeholder:text-muted-foreground data-[size=default]:h-(--density-control) data-[size=sm]:h-(--density-control-sm) data-[size=sm]:rounded-[min(var(--control-radius),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 max-md:min-h-finger dark:hover:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                "flex w-fit items-center justify-between gap-1.5 rounded-control border border-input bg-field py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-disabled data-placeholder:text-muted-foreground data-[size=default]:h-(--density-control) data-[size=sm]:h-(--density-control-sm) data-[size=sm]:rounded-[min(var(--control-radius),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 max-md:min-h-finger dark:hover:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 INVALID_EDGE,
                 variant === 'quiet' &&
                     'border-transparent bg-transparent pr-1.5 pl-2 font-medium hover:bg-hover focus-visible:border-transparent data-popup-open:bg-hover dark:hover:bg-hover',
@@ -59,7 +60,7 @@ function SelectTrigger({ className, size = 'default', variant = 'field', widest,
                 // The value and every label share one cell, the labels unseen and flat, so the cell is as wide as the widest.
                 <span
                     data-slot="select-sizer"
-                    className="grid min-w-0 flex-1 *:col-start-1 *:row-start-1 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5"
+                    className="grid min-w-0 flex-1 *:col-start-1 *:row-start-1 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2"
                 >
                     {children}
                     {widest.map((label, index) => (
@@ -101,7 +102,8 @@ function SelectContent({
                     data-slot="select-content"
                     data-align-trigger={alignItemWithTrigger}
                     className={cn(
-                        'relative isolate z-popover max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-surface bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-fast data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+                        POPUP,
+                        'relative isolate z-popover max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto p-1 duration-fast data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
                         className,
                     )}
                     finalFocus={returnFocusOnKeyboard}
@@ -146,7 +148,7 @@ function SelectItem({ className, children, detail, detailPlacement = 'end', ...p
         <SelectPrimitive.Item
             data-slot="select-item"
             className={cn(
-                "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground max-md:min-h-finger data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+                "relative flex min-h-(--density-control) w-full cursor-default items-center gap-1.5 rounded-md py-0.5 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground max-md:min-h-finger data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
                 className,
             )}
             {...props}

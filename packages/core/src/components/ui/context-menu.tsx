@@ -3,6 +3,7 @@
 import * as React from 'react'
 import type { ContextMenu as BaseContextMenu } from '@base-ui/react/context-menu'
 import { cn } from '../../lib/cn'
+import { POPUP } from '../../lib/popup'
 import { contextMenu as ContextMenuPrimitive } from './deferred-menu'
 import { ChevronRightIcon, CheckIcon } from 'lucide-react'
 
@@ -13,8 +14,8 @@ export type ContextMenuProps = BaseContextMenu.Root.Props
  * the first one is drawn, the trigger drawn until then by a stand-in that keeps the browser's menu
  * away, a right click on it opening the menu at its point once it is here.
  */
-function ContextMenu({ ...props }: ContextMenuProps) {
-    return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />
+function ContextMenu({ loopFocus = false, ...props }: ContextMenuProps) {
+    return <ContextMenuPrimitive.Root data-slot="context-menu" loopFocus={loopFocus} {...props} />
 }
 
 export type ContextMenuPortalProps = BaseContextMenu.Portal.Props
@@ -52,7 +53,8 @@ function ContextMenuContent({
                 <ContextMenuPrimitive.Popup
                     data-slot="context-menu-content"
                     className={cn(
-                        'z-popover max-h-(--available-height) w-max max-w-[calc(100vw-2rem)] min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-surface bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-fast outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+                        POPUP,
+                        'z-popover max-h-(--available-height) w-max max-w-[calc(100vw-2rem)] min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto p-1 duration-fast outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
                         GUTTER,
                         className,
                     )}
@@ -69,8 +71,8 @@ function ContextMenuContent({
  */
 const GUTTER = 'has-[[role=menuitemcheckbox],[role=menuitemradio]]:**:data-menu-row:pl-7'
 
-/** Every row a finger tall below `md`. */
-const ROW_FINGER = 'max-md:min-h-finger'
+/** Every row a control tall, at the density's height, and a finger tall below `md`. */
+const ROW_HEIGHT = 'min-h-(--density-control) max-md:min-h-finger'
 
 export type ContextMenuGroupProps = BaseContextMenu.Group.Props
 
@@ -107,8 +109,8 @@ function ContextMenuItem({ className, inset, variant = 'default', ...props }: Co
             data-inset={inset || undefined}
             data-variant={variant}
             className={cn(
-                ROW_FINGER,
-                "group/context-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
+                ROW_HEIGHT,
+                "group/context-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-0.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
                 className,
             )}
             {...props}
@@ -118,8 +120,8 @@ function ContextMenuItem({ className, inset, variant = 'default', ...props }: Co
 
 export type ContextMenuSubProps = BaseContextMenu.SubmenuRoot.Props
 
-function ContextMenuSub({ ...props }: ContextMenuSubProps) {
-    return <ContextMenuPrimitive.SubmenuRoot data-slot="context-menu-sub" {...props} />
+function ContextMenuSub({ loopFocus = false, ...props }: ContextMenuSubProps) {
+    return <ContextMenuPrimitive.SubmenuRoot data-slot="context-menu-sub" loopFocus={loopFocus} {...props} />
 }
 
 export type ContextMenuSubTriggerProps = BaseContextMenu.SubmenuTrigger.Props & {
@@ -133,8 +135,8 @@ function ContextMenuSubTrigger({ className, inset, children, ...props }: Context
             data-menu-row=""
             data-inset={inset || undefined}
             className={cn(
-                ROW_FINGER,
-                "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                ROW_HEIGHT,
+                "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-0.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             {...props}
@@ -148,7 +150,7 @@ function ContextMenuSubTrigger({ className, inset, children, ...props }: Context
 export type ContextMenuSubContentProps = React.ComponentProps<typeof ContextMenuContent>
 
 function ContextMenuSubContent({ ...props }: ContextMenuSubContentProps) {
-    return <ContextMenuContent data-slot="context-menu-sub-content" className="shadow-lg" side="right" {...props} />
+    return <ContextMenuContent data-slot="context-menu-sub-content" side="right" {...props} />
 }
 
 export type ContextMenuCheckboxItemProps = BaseContextMenu.CheckboxItem.Props & {
@@ -161,8 +163,8 @@ function ContextMenuCheckboxItem({ className, children, checked, inset, ...props
             data-slot="context-menu-checkbox-item"
             data-inset={inset || undefined}
             className={cn(
-                ROW_FINGER,
-                "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                ROW_HEIGHT,
+                "relative flex cursor-default items-center gap-1.5 rounded-md py-0.5 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             checked={checked}
@@ -194,8 +196,8 @@ function ContextMenuRadioItem({ className, children, inset, ...props }: ContextM
             data-slot="context-menu-radio-item"
             data-inset={inset || undefined}
             className={cn(
-                ROW_FINGER,
-                "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                ROW_HEIGHT,
+                "relative flex cursor-default items-center gap-1.5 rounded-md py-0.5 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             {...props}
