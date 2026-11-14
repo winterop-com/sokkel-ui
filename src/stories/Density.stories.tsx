@@ -143,6 +143,7 @@ function Level({ level }: { level: 'regular' | 'compact' }) {
  * line stands level at either density and compact draws every control one step smaller.
  */
 export const Controls: StoryObj = {
+    parameters: { frame: 'padded' },
     render: () => (
         <TooltipProvider>
             <Columns count={2} min="xl" gap="3xl" align="start">

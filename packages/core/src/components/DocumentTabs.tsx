@@ -159,7 +159,8 @@ export function DocumentTabs({ tabs, active, onActiveChange, onClose, end, class
                     )
                 })}
             </div>
-            {end !== undefined && <div className="flex shrink-0 items-center gap-1 px-1.5">{end}</div>}
+            {/* Below md the end keeps room for its controls' finger hit areas, so none reaches past the window. */}
+            {end !== undefined && <div className="flex shrink-0 items-center gap-1 px-1.5 max-md:pe-2.5">{end}</div>}
         </div>
     )
 }
