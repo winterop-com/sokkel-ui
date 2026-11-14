@@ -171,6 +171,10 @@
         "cardLine": 20,
         "cardPrimaryLine": 22,
         "cardFactsLine": 24,
+        "cardEditLine": {
+            "value": 36,
+            "note": "A stacked card's line that holds a field to edit in, and a compact card's title or facts once they edit; below 768 a finger and 4 (48), as its field stands a finger tall there. The cards are placed by the height the line is drawn at."
+        },
         "stackLabelMax": {
             "value": 192,
             "note": "A stacked line's name is as wide as the widest, at most 12rem; one cut short says it all on hover."
@@ -186,7 +190,7 @@
         },
         "stackedEditField": {
             "value": "density.control",
-            "note": "A stacked card's edit field, and its open editor at the same size so the card does not move: control (32 / 28)."
+            "note": "A stacked card's edit field, and its open editor at the same size so the card does not move: control (32 / 28), and at least a finger tall below 768."
         },
         "groupHeadPadY": 6,
         "emptyPadY": 12,

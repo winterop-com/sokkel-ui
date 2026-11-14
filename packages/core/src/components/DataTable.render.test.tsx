@@ -2,7 +2,9 @@ import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { DataTable, TableCellFill, useTableCell } from './DataTable'
+import { STACK_EDIT_HEIGHT } from '../lib/table'
+import { DataTable, TableCellFill, useTableCell, type DataColumn } from './DataTable'
+import { tableEditing } from './table-editing'
 import { Checkbox } from './ui/checkbox'
 
 describe('a cell that reads its table', () => {
@@ -446,3 +448,42 @@ describe('rows on their way while the rows stack', () => {
         expect(html).not.toMatch(/data-slot="skeleton" class="[^"]*rounded-surface/)
     })
 })
+
+describe('a stacked card that edits', () => {
+    type Job = { id: string; job: string; schedule: string; owner: string }
+    const columns: DataColumn<Job>[] = [
+        { id: 'job', header: 'Job', width: '1fr', cell: (job) => job.job },
+        {
+            id: 'schedule',
+            header: 'Schedule',
+            width: '9rem',
+            cell: (job) => job.schedule,
+            edit: { editor: 'text', value: (job) => job.schedule, save: () => undefined },
+        },
+        { id: 'owner', header: 'Owner', width: '7rem', cell: (job) => job.owner },
+    ]
+    const html = renderToStaticMarkup(
+        <DataTable
+            minWidth="auto"
+            stackBelow={2000}
+            columns={columns}
+            rows={[{ id: 'a', job: 'nightly-export', schedule: '0 2 * * *', owner: 'ada' }]}
+            rowKey={(job) => job.id}
+            editing={tableEditing}
+        />,
+    )
+
+    it('draws its edit line at the height the table measures the cards by, a finger and 4 below md', () => {
+        const line = new RegExp(`<div data-column="schedule" class="[^"]*${escaped(STACK_EDIT_HEIGHT)}[^"]*"`)
+        expect(html).toMatch(line)
+        expect(html).toMatch(new RegExp(`<div class="${escaped(STACK_EDIT_HEIGHT)} w-px"></div>`))
+        expect(STACK_EDIT_HEIGHT).toContain('max-md:h-[calc(var(--spacing-finger)+--spacing(1))]')
+    })
+
+    it('draws the field to press a finger tall below md, as its editor stands', () => {
+        expect(html).toMatch(/<span role="button"[^>]*aria-label="Schedule"[^>]*class="[^"]*max-md:min-h-finger/)
+    })
+})
+
+/** A class list as a pattern that matches it as written. */
+const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

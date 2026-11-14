@@ -1,7 +1,21 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AsyncSelect, NO_ANSWER, filterLocal, nearEnd, offersCreate, pageOf, wantsMore, withPage, type AsyncAnswer } from './AsyncSelect'
+import { releaser } from '../hooks/use-busy-release'
+import { WAIT_SHOWN } from '../lib/durations'
+import {
+    AsyncSelect,
+    NO_ANSWER,
+    filterLocal,
+    nearEnd,
+    noteOf,
+    offersCreate,
+    pageOf,
+    waitsForFirst,
+    wantsMore,
+    withPage,
+    type AsyncAnswer,
+} from './AsyncSelect'
 
 const key = (item: string) => item
 
@@ -141,5 +155,112 @@ describe('a list held here', () => {
             />,
         )
         expect(html).toContain('Sync inventory')
+    })
+})
+
+/** The jobs a loader over Tidevann's jobs finds for a query: those whose name holds it. */
+const JOB_NAMES = ['nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest', 'import-orders']
+const jobsFor = (query: string) => JOB_NAMES.filter((job) => job.includes(query))
+
+/**
+ * A list opened over a loader that answers `answerIn` ms after each read, each query read after the
+ * pause in typing (`debounce`): its answer held as `AsyncSelect` holds it, a newer query dropping a
+ * read in flight; its wait timed as `useBusyRelease` times it (`releaser` over `wait-shown`); and
+ * each change of the line under the list kept, with when it was drawn.
+ */
+function opened(answerIn: number, found: (query: string) => string[] = jobsFor, debounce = 250) {
+    let answer: AsyncAnswer<string> = NO_ANSWER
+    let waiting = false
+    let slow = false
+    let pause: ReturnType<typeof setTimeout> | undefined
+    let read: ReturnType<typeof setTimeout> | undefined
+    const start = Date.now()
+    const drawn: { note: ReturnType<typeof noteOf>; at: number }[] = []
+    const draw = () => {
+        const now = waitsForFirst(answer, false)
+        if (now !== waiting) {
+            waiting = now
+            timing.busy(now)
+        }
+        const note = noteOf(answer, { short: false, empty: answer.items.length === 0, creating: null, slow: waiting && slow })
+        if (drawn.at(-1)?.note !== note) drawn.push({ note, at: Date.now() - start })
+    }
+    const timing = releaser(WAIT_SHOWN, (released) => {
+        if (released === slow) return
+        slow = released
+        draw()
+    })
+    const type = (query: string) => {
+        clearTimeout(pause)
+        clearTimeout(read)
+        pause = setTimeout(() => {
+            answer = { ...answer, loading: 'first', failed: null }
+            draw()
+            read = setTimeout(() => {
+                answer = withPage(answer, { items: found(query) }, 'first', key)
+                draw()
+            }, answerIn)
+        }, debounce)
+        draw()
+    }
+    type('')
+    return { drawn, type, notes: () => drawn.map((drawing) => drawing.note) }
+}
+
+describe("the list's wait", () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('waits for nothing on a query too short to ask, and says what to type', () => {
+        expect(waitsForFirst(NO_ANSWER, true)).toBe(false)
+        expect(noteOf(NO_ANSWER, { short: true, empty: true, creating: null, slow: true })).toBe('typeMore')
+    })
+
+    it('never says Searching for an answer that comes within wait-shown, the line keeping its room unseen until then', () => {
+        const list = opened(40)
+        vi.advanceTimersByTime(1000)
+        expect(list.drawn).toEqual([
+            { note: 'waiting', at: 0 },
+            { note: null, at: 290 },
+        ])
+        const none = opened(40, () => [])
+        vi.advanceTimersByTime(1000)
+        expect(none.notes()).toEqual(['waiting', 'empty'])
+    })
+
+    it('says Searching once the list has gone wait-shown without an answer, the pause in typing counted, and not before', () => {
+        const list = opened(1000)
+        vi.advanceTimersByTime(WAIT_SHOWN - 1)
+        expect(list.notes()).toEqual(['waiting'])
+        vi.advanceTimersByTime(1)
+        expect(list.drawn.at(-1)).toEqual({ note: 'searching', at: WAIT_SHOWN })
+        vi.advanceTimersByTime(1000)
+        expect(list.drawn.at(-1)).toEqual({ note: null, at: 1250 })
+    })
+
+    it('keeps saying nothing matches through a quick wait for the next query', () => {
+        const list = opened(40, () => [])
+        vi.advanceTimersByTime(1000)
+        list.type('zz')
+        vi.advanceTimersByTime(1000)
+        expect(list.notes()).toEqual(['waiting', 'empty'])
+    })
+
+    it('says Searching once a read has run wait-shown, counted from the first read across keys typed meanwhile', () => {
+        const list = opened(1000, () => [])
+        vi.advanceTimersByTime(2000)
+        expect(list.notes()).toEqual(['waiting', 'searching', 'empty'])
+        // The next read starts after the pause, at 2250; a key typed while it runs, at 2350, reads again at 2600.
+        list.type('zz')
+        vi.advanceTimersByTime(350)
+        list.type('zzz')
+        vi.advanceTimersByTime(WAIT_SHOWN - 101)
+        expect(list.drawn.at(-1)?.note).toBe('empty')
+        vi.advanceTimersByTime(1)
+        expect(list.drawn.at(-1)).toEqual({ note: 'searching', at: 2250 + WAIT_SHOWN })
     })
 })
