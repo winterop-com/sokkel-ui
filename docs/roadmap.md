@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.28.1** is the latest release (2026-11-14): a shut button's reason shows on a tap; no
+- **0.28.2** is the latest release (2026-11-15): a stacked card's edit line and popup search
+  fields a finger tall below md; AsyncSelect's Searching only once a read is slow; parts that
+  always stand on one surface name their ink; sokkel-design's contract at 0.28.2.
+- **0.28.1** (2026-11-14): a shut button's reason shows on a tap; no
   palette search flicker; finger-tall field triggers below md; the top bar's finger squares draw
   their focus outline inside; sokkel-design's contract at 0.28.1.
 - **0.28.0** (2026-11-14): every sokkel-design open question decided and
