@@ -214,6 +214,32 @@ describe('every row on every server page', () => {
     })
 })
 
+describe('a press on a row', () => {
+    it('opens it, unless it ends a drag that selected its words', async () => {
+        const opened = vi.fn()
+        const at = await mount(
+            <div style={{ height: 400, overflow: 'auto' }}>
+                <DataTable columns={columns} rows={jobs} rowKey={(job) => job.id} onOpen={(job) => opened(job.id)} />
+            </div>,
+        )
+        const row = at.querySelector<HTMLElement>('[data-row="sync-inventory"]')
+        if (row === null) throw new Error('no row')
+        const walker = document.createTreeWalker(row, NodeFilter.SHOW_TEXT)
+        let text = walker.nextNode()
+        while (text !== null && text.textContent !== 'sync-inventory') text = walker.nextNode()
+        if (text === null) throw new Error('no words')
+        const range = document.createRange()
+        range.setStart(text, 0)
+        range.setEnd(text, 4)
+        document.getSelection()?.addRange(range)
+        await act(async () => row.click())
+        expect(opened).not.toHaveBeenCalled()
+        document.getSelection()?.removeAllRanges()
+        await act(async () => row.click())
+        expect(opened).toHaveBeenCalledWith('sync-inventory')
+    })
+})
+
 describe('stacked cards with a free title', () => {
     it('are drawn every one at the height their title needs', async () => {
         // A box 300 wide, narrower than the columns, stacks the rows.

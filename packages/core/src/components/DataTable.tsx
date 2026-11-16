@@ -2359,6 +2359,9 @@ export function DataTable<T>({
         // A press on a control in a cell, such as a switch or a link, is the control's alone.
         const control = event.target instanceof Element ? event.target.closest(CELL_CONTROL) : null
         if (control !== null && control !== event.currentTarget && event.currentTarget.contains(control)) return
+        // A press that ends a drag over the row's words selects them, and leaves the row as it is.
+        const dragged = window.getSelection()
+        if (dragged !== null && !dragged.isCollapsed && event.currentTarget.contains(dragged.anchorNode)) return
         setHeadAt(undefined)
         setActive(entry.key)
         if (selectable && event.shiftKey) toggle(entry, true)
