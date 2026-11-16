@@ -31,6 +31,7 @@ import { getEventCoordinates } from '@dnd-kit/utilities'
 import {
     createContext,
     useContext,
+    useEffect,
     useMemo,
     useRef,
     useState,
@@ -332,6 +333,7 @@ export interface DragDropHandlers {
 
 export interface DragDropProps extends DragDropHandlers {
     children: ReactNode
+    /** What a drag says to a screen reader; inside another `DragDrop`, that one's words are said instead. */
     words?: Partial<DragDropWords>
 }
 
@@ -339,7 +341,7 @@ export interface DragDropProps extends DragDropHandlers {
  * Where things are dragged and dropped. Every part that drags draws one around itself, and one an
  * app draws around several parts makes them one: a row of a list can then be dropped onto a folder
  * of a tree beside it, each part hearing the drags through `useDragDrop`. Inside another
- * `DragDrop` it adds its handlers to that one.
+ * `DragDrop` it adds its handlers to that one, and the outer one's `words` are said.
  *
  * A mouse drags once it moves a few pixels; a finger holds still a moment first, so a swipe still
  * scrolls; a keyboard picks up with Space or Enter on a grip, moves with the arrows and drops with
@@ -385,6 +387,13 @@ function DragDropRoot({
 }) {
     const words = useMemo(() => ({ ...DRAG_DROP_WORDS, ...given }), [given])
     const dragging = useRef(false)
+    // Gone mid-drag, it hands the page its own cursor back.
+    useEffect(
+        () => () => {
+            if (dragging.current) document.body.style.cursor = ''
+        },
+        [],
+    )
     const scope = useMemo<DragScope>(() => ({ dragging, words }), [words])
     const [active, setActive] = useState<DragData | null>(null)
     const still = useReducedMotion()
