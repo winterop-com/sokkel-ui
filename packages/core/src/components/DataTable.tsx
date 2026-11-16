@@ -1916,8 +1916,10 @@ export function DataTable<T>({
     // Rows that grow are all drawn, as their heights are not known before they are.
     // A narrow list is a plain list of rows as tall as their lines.
     const listed = list && stacked
+    // A stacked card with a free title is as tall as its title needs, so every card is drawn at its own height.
+    const freeTitle = stacked && stackParts.title?.stackTitle === 'free'
     // Grouped cards are drawn group by group, every one of them.
-    const every = (auto && !gridView) || listed || (gridView && groupHeads !== undefined)
+    const every = (auto && !gridView) || listed || freeTitle || (gridView && groupHeads !== undefined)
     const whole = every || detailed
     // Rows drawn whole end where the scroller measures, and rows coming or growing move that end with
     // no scroll to say so: what it holds is watched, so the view hears of it.
@@ -3021,7 +3023,7 @@ export function DataTable<T>({
                     dragged === true && 'opacity-40',
                     typeof passedClass === 'string' && passedClass,
                 )}
-                style={{ height: cardPixels }}
+                style={freeTitle ? { minHeight: cardPixels } : { height: cardPixels }}
             >
                 {stacked ? stackedCard(grip) : card?.(entry.row)}
                 {stacked && rowAt?.key === entry.key && <RowLine part={rowAt.part} inside />}

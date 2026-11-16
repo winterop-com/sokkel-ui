@@ -184,3 +184,30 @@ describe('loading more without `loading`', () => {
         expect(asked).toHaveBeenCalledTimes(1)
     })
 })
+
+describe('stacked cards with a free title', () => {
+    it('are drawn every one at the height their title needs', async () => {
+        // A box 300 wide, narrower than the columns, stacks the rows.
+        const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
+        Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 300 })
+        try {
+            const rows = Array.from({ length: 60 }, (_, index) => ({ id: `run-${String(index)}`, name: `run ${String(index)}` }))
+            const free: DataColumn<Job>[] = [
+                { id: 'name', header: 'Name', width: '1fr', stack: 'primary', stackTitle: 'free', cell: (job) => job.name },
+                { id: 'id', header: 'Id', width: '12rem', stack: 'line', cell: (job) => job.id },
+            ]
+            const at = await mount(
+                <div style={{ height: 400, overflow: 'auto' }}>
+                    <DataTable columns={free} rows={rows} rowKey={(job) => job.id} />
+                </div>,
+            )
+            const cards = [...at.querySelectorAll<HTMLElement>('[data-row]')]
+            expect(cards.length).toBe(60)
+            expect(cards[0].className).toContain('group/card')
+            expect(cards[0].style.height).toBe('')
+            expect(cards[0].style.minHeight).not.toBe('')
+        } finally {
+            if (width !== undefined) Object.defineProperty(HTMLElement.prototype, 'clientWidth', width)
+        }
+    })
+})
