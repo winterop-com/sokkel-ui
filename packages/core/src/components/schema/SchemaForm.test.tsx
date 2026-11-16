@@ -537,7 +537,8 @@ describe('sealed secrets in a list', () => {
         renderToStaticMarkup(<Hooks />)
         return state
     }
-    const sealedAt = (state: SchemaFormState | undefined) => [0, 1, 2].map((index) => state?.sealed(['hooks', index, 'token']) !== undefined)
+    const sealedAt = (state: SchemaFormState | undefined) =>
+        [0, 1, 2].map((index) => state?.sealed(['hooks', index, 'token']) !== undefined)
 
     it('move with their items when one is removed', () => {
         const state = after((form) => form.removeItem(['hooks'], 0))

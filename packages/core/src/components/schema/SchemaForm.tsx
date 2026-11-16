@@ -570,7 +570,8 @@ export function useSchemaForm(
             setHeld(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: text })),
         touch: (path) => {
             const at = pointer(path)
-            if (given(valueAt(value, path)) || draftAt(at) !== undefined || unread.has(at)) setTouched((current) => new Set(current).add(at))
+            if (given(valueAt(value, path)) || draftAt(at) !== undefined || unread.has(at))
+                setTouched((current) => new Set(current).add(at))
         },
         shown: (path) => shownAt(pointer(path)),
         count,
@@ -1320,13 +1321,7 @@ function Property({
                 {items.map((_, index) => (
                     <div key={keys[index]} className="flex min-w-0 items-center gap-1.5">
                         <div className="min-w-0 flex-1">
-                            <Control
-                                form={form}
-                                path={[...path, index]}
-                                at={itemSchema}
-                                label={`${label} ${String(index + 1)}`}
-                                empty=""
-                            />
+                            <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} empty="" />
                         </div>
                         {moves(index)}
                         {!locked && (

@@ -54,6 +54,15 @@ export function objectOf(rows: readonly MapRow[], blank?: unknown): Record<strin
     return out
 }
 
+/** What a row holds before it is given a value: '' for text, its default or false for a switch, else nothing. */
+function blankOf(item: JsonSchema): unknown {
+    if (item.anyOf !== undefined || item.oneOf !== undefined) return undefined
+    const main = types(item).main[0]
+    if (main === 'string') return ''
+    if (main === 'boolean' && item.enum === undefined) return item.default === true
+    return undefined
+}
+
 export interface MapFieldProps {
     form: SchemaFormState
     path: Path
@@ -70,10 +79,7 @@ export interface MapFieldProps {
 /** A map's rows, each a key and a value, with Add in its head and Remove on each row. */
 export function MapField({ form, path, at, label, readOnly, head, control }: MapFieldProps) {
     const item = typeof at.additionalProperties === 'object' ? fieldSchema(at.additionalProperties, form.schema) : {}
-    const plain = item.anyOf === undefined && item.oneOf === undefined
-    const main = types(item).main[0]
-    // A row of text left empty holds '', a row of a switch left as drawn holds its default, else false.
-    const blank = !plain ? undefined : main === 'string' ? '' : main === 'boolean' && item.enum === undefined ? item.default === true : undefined
+    const blank = blankOf(item)
     const current = valueAt(form.value, path)
     const [rows, setRows] = useState(() => rowsOf(current))
     const [seen, setSeen] = useState(current)
