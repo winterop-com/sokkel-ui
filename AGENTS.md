@@ -165,6 +165,8 @@ and ask before acting.
 - Never wait on CI. A PR is merged as soon as the fast gates pass locally; neither its own CI run nor
   main's is waited for, and a failure on main is fixed forward. A release does not wait for main's
   CI either: `release.yaml` runs the gates itself before it publishes.
+- A change that breaks or adds something an app uses notes it in `docs/unreleased.md`, in the same
+  PR. A release copies that file into its notes and empties it.
 - Before 1.0 a release with a breaking change moves the minor version (0.11.0 to 0.12.0); one
   without moves the patch.
 - No tags and no releases unless the owner asks for one. A release is a PR that moves the version
