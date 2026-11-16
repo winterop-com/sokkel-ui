@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { AspectRatio } from '@winterop-com/sokkel-ui/primitives/aspect-ratio'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
+import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
 
 const meta: Meta = { title: 'Primitives/Display/AspectRatio', parameters: { frame: 'column' } }
 export default meta
@@ -31,21 +33,22 @@ export const Variants: StoryObj = {
     ),
 }
 
-const DAILY_ORDERS = [42, 55, 38, 61, 70, 48, 52, 66, 74, 59, 63, 80, 71, 68]
+const DAILY_ORDERS = [42, 55, 38, 61, 70, 48, 52, 66, 74, 59, 63, 80, 71, 68].map((orders, at) => ({
+    day: `10-${String(at + 1).padStart(2, '0')}`,
+    orders,
+}))
 
-/** A file's preview held at its ratio, above its caption. */
+/** A file's preview, a chart of its rows, held at its ratio above its caption. */
 export const FilePreview: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-xl">
             <p className="text-sm font-medium">
                 Preview of <span className="font-mono">orders-2026-10.csv</span>
             </p>
-            <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg border bg-card">
-                <Row gap="2xs" align="end" className="absolute inset-0 p-4">
-                    {DAILY_ORDERS.map((count, day) => (
-                        <div key={day} className="flex-1 rounded-sm bg-primary/70" style={{ height: `${count}%` }} />
-                    ))}
-                </Row>
+            <AspectRatio ratio={16 / 9}>
+                <Surface pad className="absolute inset-0">
+                    <Chart kind="bar" label="Orders a day" rows={DAILY_ORDERS} x="day" y="orders" />
+                </Surface>
             </AspectRatio>
             <p className="text-xs text-muted-foreground">Orders a day, 2026-10-01 to 2026-10-14.</p>
         </Stack>

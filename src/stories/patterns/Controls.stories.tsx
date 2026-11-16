@@ -8,6 +8,7 @@ import { Segmented, type Segment, type SegmentedVariant } from '@winterop-com/so
 import { Card, CardContent, CardHeader, CardTitle } from '@winterop-com/sokkel-ui/primitives/card'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /** The small controls a settings row or a code line carries: a segmented choice and a copy button. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -274,7 +275,7 @@ function CopyLines() {
     ]
     return (
         <Ground>
-            <div className="overflow-hidden rounded-surface border border-border-strong bg-card">
+            <Surface>
                 {lines.map((line) => (
                     <Row key={line.label} gap="md" className="border-b border-border px-3 py-1.5 last:border-b-0">
                         <span className="w-20 shrink-0 text-xs text-muted-foreground">{line.label}</span>
@@ -282,7 +283,7 @@ function CopyLines() {
                         <CopyButton value={line.value} />
                     </Row>
                 ))}
-            </div>
+            </Surface>
             <Row gap="md">
                 <CopyButton value="xs" size="icon-xs" />
                 <CopyButton value="sm" size="icon-sm" />

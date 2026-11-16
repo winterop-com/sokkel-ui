@@ -20,6 +20,7 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Menus/DropdownMenu', parameters: { frame: 'padded' } }
 export default meta
@@ -84,47 +85,49 @@ function Variants() {
 
 function JobActions() {
     return (
-        <Row gap="md" justify="between" wrap className="max-w-xl rounded-lg border px-4 py-3">
-            <Stack gap="none">
-                <span className="font-medium">Import orders</span>
-                <span className="font-mono text-xs text-muted-foreground">import-orders</span>
-            </Stack>
-            <DropdownMenu defaultOpen>
-                <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Job actions" />}>
-                    <Ellipsis />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                    <DropdownMenuItem>
-                        <Play />
-                        Run now
-                        <DropdownMenuShortcut>R</DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <Pencil />
-                        Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <Copy />
-                        Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                            <History />
-                            Recent runs
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
-                            <DropdownMenuItem>01a1a5c6, succeeded</DropdownMenuItem>
-                            <DropdownMenuItem>01a1a5c2, failed</DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">
-                        <Trash2 />
-                        Delete
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </Row>
+        <Surface className="max-w-xl">
+            <Row gap="md" justify="between" wrap className="px-4 py-3">
+                <Stack gap="none">
+                    <span className="font-medium">Import orders</span>
+                    <span className="font-mono text-xs text-muted-foreground">import-orders</span>
+                </Stack>
+                <DropdownMenu defaultOpen>
+                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Job actions" />}>
+                        <Ellipsis />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem>
+                            <Play />
+                            Run now
+                            <DropdownMenuShortcut>R</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <Pencil />
+                            Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <Copy />
+                            Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <History />
+                                Recent runs
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem>01a1a5c6, succeeded</DropdownMenuItem>
+                                <DropdownMenuItem>01a1a5c2, failed</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem variant="destructive">
+                            <Trash2 />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </Row>
+        </Surface>
     )
 }
 

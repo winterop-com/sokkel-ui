@@ -21,6 +21,7 @@ import { useState, type ReactNode } from 'react'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
 import { DetailSheet } from '@winterop-com/sokkel-ui/DetailSheet'
+import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
 import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { SortableGrid } from '@winterop-com/sokkel-ui/Sortable'
@@ -705,7 +706,7 @@ function regionColumns(counts: Record<string, number>): DataColumn<string>[] {
             width: 'minmax(8rem,1fr)',
             cell: (id) => (
                 <Row as="span" className="min-w-0">
-                    <span className="size-2.5 shrink-0 rounded-mini" style={{ background: colorOf(visitScale, counts[id]) ?? undefined }} />
+                    <Dot color={colorOf(visitScale, counts[id]) ?? undefined} />
                     <span className="truncate">{regionName[id]}</span>
                 </Row>
             ),
@@ -855,8 +856,8 @@ function RegionsMap() {
                 }
             />
             <Row gap="inspector" align="stretch" stackBelow="xl" className="min-h-0 flex-1">
-                <Stack className="min-h-[28rem] flex-1">
-                    <MapView label={`Visits by region, ${label}`} className="min-h-[22rem] flex-1">
+                <Stack className="flex-1">
+                    <MapView label={`Visits by region, ${label}`} className="flex-1">
                         <BoundaryLayer
                             id="regions"
                             data={regions}
