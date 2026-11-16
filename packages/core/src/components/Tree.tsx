@@ -6,6 +6,7 @@ import {
     useMemo,
     useRef,
     useState,
+    type CSSProperties,
     type PointerEvent as ReactPointerEvent,
     type ReactNode,
     type TouchEvent as ReactTouchEvent,
@@ -54,6 +55,9 @@ export type TreeLoad =
 export type TreeLoads = ReadonlyMap<string, TreeLoad>
 
 const NO_LOADS: TreeLoads = new Map()
+// Defaults kept the same from render to render, so what is worked out from them is kept too.
+const NO_IDS: readonly string[] = []
+const NO_TRAILS: readonly TreeTrail[] = []
 
 /**
  * A visible row: the node, how deep it is, and its parent. A row with a `status` stands under its
@@ -571,14 +575,14 @@ export interface TreeProps {
 export function Tree({
     nodes,
     selection = 'single',
-    selected = [],
+    selected = NO_IDS,
     onSelect,
     query = '',
-    defaultExpanded = [],
+    defaultExpanded = NO_IDS,
     loadChildren,
     childrenVersion,
     search,
-    trails = [],
+    trails = NO_TRAILS,
     actions,
     onMove,
     canMove,
@@ -675,6 +679,8 @@ export function Tree({
     }
 
     const [focus, setFocus] = useState<string | null>(null)
+    // Whether a row holds the DOM focus, which keeps it drawn while scrolled out of the drawn rows.
+    const [focused, setFocused] = useState(false)
     const list = useRef<HTMLUListElement>(null)
     const chosen = new Set(selected)
     const holding = useMemo(() => {
@@ -721,7 +727,12 @@ export function Tree({
     const first = virtual ? Math.max(0, Math.floor(view.start / rowHeight) - OVERSCAN) : 0
     const last = virtual ? Math.min(rows.length, Math.ceil((view.start + view.height) / rowHeight) + OVERSCAN) : rows.length
     const shown = virtual ? rows.slice(first, Math.max(first, last)) : rows
-    const tabbed = tabStop(shown, current)
+    // The focused row scrolled out of the drawn rows stays drawn at its place, so the focus stays on it.
+    const kept = virtual && focused && current !== undefined && !shown.includes(current) ? current : undefined
+    const tabbed = kept ?? tabStop(shown, current)
+    // The kept row stays in the rows' order, before or after those drawn, so it is never moved and never loses the focus.
+    const keptAt = kept === undefined ? -1 : rows.indexOf(kept)
+    const drawnRows = kept === undefined ? shown : keptAt < first ? [kept, ...shown] : [...shown, kept]
 
     /** Scrolls the nearest scrolling box until the row at `index` is in view. */
     const bringIntoView = useCallback(
@@ -770,26 +781,33 @@ export function Tree({
         if (top < start || top + tall > start + height) box.scrollTop += top - start - (height - tall) / 2
     }, [reveal, remote, rows, rowHeight])
 
-    // A choice that changes from outside opens the levels above it and is scrolled to.
+    // The first choice, and one that changes from outside, opens the levels above it and is scrolled
+    // to, once the tree holds the node: a choice not loaded yet is opened to when it arrives.
     const choice = selection === 'single' ? (selected[0] ?? null) : null
-    const lastChoice = useRef(choice)
+    const lastChoice = useRef<string | null>(null)
     useEffect(() => {
         if (choice === lastChoice.current) return
-        lastChoice.current = choice
-        if (choice === null) return
+        if (choice === null) {
+            lastChoice.current = null
+            return
+        }
         const above = treeAncestors(nodes, choice, loads)
         if (above === null) return
+        lastChoice.current = choice
         setOpen((now) => (above.every((id) => now.has(id)) ? now : new Set([...now, ...above])))
         setReveal(choice)
     }, [choice, nodes, loads])
 
-    const toggle = (id: string, to?: boolean) =>
+    // A level that did not load, once closed, forgets the refusal and asks again when opened.
+    const toggle = (id: string, to?: boolean) => {
+        if (!(to ?? !open.has(id)) && loads.get(id)?.state === 'failed') retry(id)
         setOpen((now) => {
             const next = new Set(now)
             if (to ?? !next.has(id)) next.add(id)
             else next.delete(id)
             return next
         })
+    }
     const [dropAt, setDropAt] = useState<TreeDropAt | undefined>(undefined)
     const show = useCallback(
         (at: TreeDropAt | undefined) => setDropAt((now) => (now?.id === at?.id && now?.part === at?.part ? now : at)),
@@ -861,6 +879,179 @@ export function Tree({
           ? 'empty'
           : null
 
+    /** A row as drawn: a status row under a level still loading or refused, or a node; `place` sets it apart, at its place. */
+    const rowFor = (row: TreeRow, place?: CSSProperties) => {
+        const indent = { paddingLeft: `calc(${row.level - 1} * 1rem + 0.25rem)` }
+        if (row.status !== undefined) {
+            return (
+                <li
+                    key={`${row.node.id}:status`}
+                    role="none"
+                    style={indent}
+                    className="flex h-8 shrink-0 items-center gap-1.5 pr-2 text-muted-foreground select-none"
+                >
+                    {row.status === 'loading' ? (
+                        <>
+                            <span className="flex size-5 shrink-0 items-center justify-center">
+                                <Spinner className="size-3.5" aria-label={words.loading} />
+                            </span>
+                            <span className="truncate">{words.loading}</span>
+                        </>
+                    ) : (
+                        <>
+                            <span className="size-5 shrink-0" aria-hidden />
+                            <span className="min-w-0 flex-1 truncate text-critical">{words.failed}</span>
+                            <button
+                                type="button"
+                                onClick={() => retry(row.node.id)}
+                                className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
+                            >
+                                <RotateCw className="size-3.5" aria-hidden />
+                                {words.retry}
+                            </button>
+                        </>
+                    )}
+                </li>
+            )
+        }
+        const branch = row.trail === undefined && isBranch(row.node, loads)
+        const expanded = matches !== null || open.has(row.node.id)
+        const isChosen = chosen.has(row.node.id)
+        const shut = unavailable?.(row.node)
+        const menu = actions?.(row.node)
+        const Icon = branch && expanded ? (row.node.openIcon ?? row.node.icon) : row.node.icon
+        const movable = onMove !== undefined && row.trail === undefined
+        const at = dropAt?.id === row.node.id ? dropAt.part : undefined
+        const draw = (dragProps: TreeRowDragProps = {}) => (
+            <li
+                key={row.node.id}
+                {...dragProps}
+                data-id={row.node.id}
+                data-drop={at}
+                role="treeitem"
+                aria-level={row.level}
+                aria-expanded={branch ? expanded : undefined}
+                aria-selected={selection === 'none' ? undefined : isChosen}
+                aria-disabled={shut !== undefined || undefined}
+                tabIndex={row === tabbed ? 0 : -1}
+                onFocus={() => {
+                    setFocus(row.node.id)
+                    setFocused(true)
+                }}
+                onBlur={() => setFocused(false)}
+                onClick={() => choose(row)}
+                style={place === undefined ? indent : { ...indent, ...place }}
+                className={cn(
+                    'group/row relative flex h-8 shrink-0 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring focus-visible:ring-inset',
+                    selection === 'single' && isChosen && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
+                    at === 'inside' && 'ring-2 ring-ring ring-inset',
+                    dragProps['data-dragging'] === true && 'opacity-40',
+                    menu !== undefined && 'pr-1',
+                    shut !== undefined && !isChosen && 'text-muted-foreground',
+                )}
+            >
+                {(at === 'before' || at === 'after') && (
+                    <span
+                        aria-hidden
+                        style={{ left: indent.paddingLeft }}
+                        className={cn(
+                            'pointer-events-none absolute right-0 h-0.5 rounded-full bg-primary',
+                            at === 'before' ? '-top-px' : '-bottom-px',
+                        )}
+                    />
+                )}
+                {branch ? (
+                    <button
+                        type="button"
+                        tabIndex={-1}
+                        aria-hidden
+                        onClick={(event) => {
+                            event.stopPropagation()
+                            if (matches === null) toggle(row.node.id)
+                        }}
+                        className="flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
+                    >
+                        <ChevronRight className={cn('size-3.5 transition-transform', expanded && 'rotate-90')} />
+                    </button>
+                ) : (
+                    <span className="size-5 shrink-0" aria-hidden />
+                )}
+                {Icon !== undefined && <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
+                {selection === 'multiple' && (
+                    <Checkbox
+                        checked={isChosen}
+                        indeterminate={!isChosen && holding.has(row.node.id)}
+                        disabled={shut !== undefined && !isChosen}
+                        tabIndex={-1}
+                        aria-hidden
+                        className="pointer-events-none"
+                    />
+                )}
+                {row.trail === undefined ? (
+                    <span className="min-w-0 flex-1 truncate">
+                        <Marked text={row.node.label} query={needle} />
+                    </span>
+                ) : (
+                    <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
+                        <span className="max-w-2/3 shrink-0 truncate">
+                            <Marked text={row.node.label} query={needle} />
+                        </span>
+                        <span className="min-w-0 truncate text-xs text-muted-foreground">
+                            {row.trail.ancestors.map((ancestor) => ancestor.label).join(' / ')}
+                        </span>
+                    </span>
+                )}
+                {shut !== undefined && (
+                    <span title={shut} className="max-w-1/2 min-w-0 shrink truncate text-xs text-muted-foreground">
+                        {shut}
+                    </span>
+                )}
+                {row.node.meta !== undefined && (
+                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{row.node.meta}</span>
+                )}
+                {menu !== undefined && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            render={
+                                <Button
+                                    variant="ghost"
+                                    size="icon-xs"
+                                    tabIndex={-1}
+                                    data-no-drag
+                                    aria-label={words.actions}
+                                    className="shrink-0 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100"
+                                />
+                            }
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            <Ellipsis aria-hidden />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <MenuItems actions={menu} kind="dropdown" />
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+            </li>
+        )
+        const item =
+            drag === undefined || row.trail !== undefined ? (
+                draw()
+            ) : (
+                <drag.TreeDragRow key={row.node.id} row={row} movable={movable}>
+                    {draw}
+                </drag.TreeDragRow>
+            )
+        if (menu === undefined) return item
+        return (
+            <ContextMenu key={row.node.id}>
+                <ContextMenuTrigger render={item} />
+                <ContextMenuContent className="w-48">
+                    <MenuItems actions={menu} kind="context" />
+                </ContextMenuContent>
+            </ContextMenu>
+        )
+    }
+
     const tree = (root?: (element: HTMLElement | null) => void) => (
         <>
             <ul
@@ -873,7 +1064,12 @@ export function Tree({
                 aria-multiselectable={selection === 'multiple' || undefined}
                 aria-busy={(remote && found?.state === 'loading') || undefined}
                 data-drop={dropAt?.id === null ? '' : undefined}
-                className={cn('flex flex-col text-sm', dropAt?.id === null && 'rounded-md ring-2 ring-ring ring-inset', className)}
+                className={cn(
+                    'flex flex-col text-sm',
+                    virtual && 'relative',
+                    dropAt?.id === null && 'rounded-md ring-2 ring-ring ring-inset',
+                    className,
+                )}
                 style={virtual ? { height: rows.length * rowHeight, paddingTop: first * rowHeight } : undefined}
                 onKeyDown={(event) => {
                     if (current === undefined || !(event.target as HTMLElement).matches('[role="treeitem"]')) return
@@ -904,172 +1100,9 @@ export function Tree({
                     event.preventDefault()
                 }}
             >
-                {shown.map((row) => {
-                    const indent = { paddingLeft: `calc(${row.level - 1} * 1rem + 0.25rem)` }
-                    if (row.status !== undefined) {
-                        return (
-                            <li
-                                key={`${row.node.id}:status`}
-                                role="none"
-                                style={indent}
-                                className="flex h-8 shrink-0 items-center gap-1.5 pr-2 text-muted-foreground select-none"
-                            >
-                                {row.status === 'loading' ? (
-                                    <>
-                                        <span className="flex size-5 shrink-0 items-center justify-center">
-                                            <Spinner className="size-3.5" aria-label={words.loading} />
-                                        </span>
-                                        <span className="truncate">{words.loading}</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="size-5 shrink-0" aria-hidden />
-                                        <span className="min-w-0 flex-1 truncate text-critical">{words.failed}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => retry(row.node.id)}
-                                            className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
-                                        >
-                                            <RotateCw className="size-3.5" aria-hidden />
-                                            {words.retry}
-                                        </button>
-                                    </>
-                                )}
-                            </li>
-                        )
-                    }
-                    const branch = row.trail === undefined && isBranch(row.node, loads)
-                    const expanded = matches !== null || open.has(row.node.id)
-                    const isChosen = chosen.has(row.node.id)
-                    const shut = unavailable?.(row.node)
-                    const menu = actions?.(row.node)
-                    const Icon = branch && expanded ? (row.node.openIcon ?? row.node.icon) : row.node.icon
-                    const movable = onMove !== undefined && row.trail === undefined
-                    const at = dropAt?.id === row.node.id ? dropAt.part : undefined
-                    const draw = (dragProps: TreeRowDragProps = {}) => (
-                        <li
-                            key={row.node.id}
-                            {...dragProps}
-                            data-id={row.node.id}
-                            data-drop={at}
-                            role="treeitem"
-                            aria-level={row.level}
-                            aria-expanded={branch ? expanded : undefined}
-                            aria-selected={selection === 'none' ? undefined : isChosen}
-                            aria-disabled={shut !== undefined || undefined}
-                            tabIndex={row === tabbed ? 0 : -1}
-                            onFocus={() => setFocus(row.node.id)}
-                            onClick={() => choose(row)}
-                            style={indent}
-                            className={cn(
-                                'group/row relative flex h-8 shrink-0 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring focus-visible:ring-inset',
-                                selection === 'single' && isChosen && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
-                                at === 'inside' && 'ring-2 ring-ring ring-inset',
-                                dragProps['data-dragging'] === true && 'opacity-40',
-                                menu !== undefined && 'pr-1',
-                                shut !== undefined && !isChosen && 'text-muted-foreground',
-                            )}
-                        >
-                            {(at === 'before' || at === 'after') && (
-                                <span
-                                    aria-hidden
-                                    style={{ left: indent.paddingLeft }}
-                                    className={cn(
-                                        'pointer-events-none absolute right-0 h-0.5 rounded-full bg-primary',
-                                        at === 'before' ? '-top-px' : '-bottom-px',
-                                    )}
-                                />
-                            )}
-                            {branch ? (
-                                <button
-                                    type="button"
-                                    tabIndex={-1}
-                                    aria-hidden
-                                    onClick={(event) => {
-                                        event.stopPropagation()
-                                        if (matches === null) toggle(row.node.id)
-                                    }}
-                                    className="flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
-                                >
-                                    <ChevronRight className={cn('size-3.5 transition-transform', expanded && 'rotate-90')} />
-                                </button>
-                            ) : (
-                                <span className="size-5 shrink-0" aria-hidden />
-                            )}
-                            {Icon !== undefined && <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
-                            {selection === 'multiple' && (
-                                <Checkbox
-                                    checked={isChosen}
-                                    indeterminate={!isChosen && holding.has(row.node.id)}
-                                    disabled={shut !== undefined && !isChosen}
-                                    tabIndex={-1}
-                                    aria-hidden
-                                    className="pointer-events-none"
-                                />
-                            )}
-                            {row.trail === undefined ? (
-                                <span className="min-w-0 flex-1 truncate">
-                                    <Marked text={row.node.label} query={needle} />
-                                </span>
-                            ) : (
-                                <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
-                                    <span className="max-w-2/3 shrink-0 truncate">
-                                        <Marked text={row.node.label} query={needle} />
-                                    </span>
-                                    <span className="min-w-0 truncate text-xs text-muted-foreground">
-                                        {row.trail.ancestors.map((ancestor) => ancestor.label).join(' / ')}
-                                    </span>
-                                </span>
-                            )}
-                            {shut !== undefined && (
-                                <span title={shut} className="max-w-1/2 min-w-0 shrink truncate text-xs text-muted-foreground">
-                                    {shut}
-                                </span>
-                            )}
-                            {row.node.meta !== undefined && (
-                                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{row.node.meta}</span>
-                            )}
-                            {menu !== undefined && (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger
-                                        render={
-                                            <Button
-                                                variant="ghost"
-                                                size="icon-xs"
-                                                tabIndex={-1}
-                                                aria-label={words.actions}
-                                                className="shrink-0 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100"
-                                            />
-                                        }
-                                        onClick={(event) => event.stopPropagation()}
-                                    >
-                                        <Ellipsis aria-hidden />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-48">
-                                        <MenuItems actions={menu} kind="dropdown" />
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            )}
-                        </li>
-                    )
-                    const item =
-                        drag === undefined || row.trail !== undefined ? (
-                            draw()
-                        ) : (
-                            <drag.TreeDragRow key={row.node.id} row={row} movable={movable}>
-                                {draw}
-                            </drag.TreeDragRow>
-                        )
-                    if (menu === undefined) return item
-                    return (
-                        <ContextMenu key={row.node.id}>
-                            <ContextMenuTrigger render={item} />
-                            <ContextMenuContent className="w-48">
-                                <MenuItems actions={menu} kind="context" />
-                            </ContextMenuContent>
-                        </ContextMenu>
-                    )
-                })}
+                {drawnRows.map((row) =>
+                    row === kept ? rowFor(row, { position: 'absolute', top: keptAt * rowHeight, left: 0, right: 0 }) : rowFor(row),
+                )}
             </ul>
             {note === 'searchFailed' ? (
                 <div className="flex min-h-9 items-center gap-2 px-2 py-2 text-sm text-muted-foreground">

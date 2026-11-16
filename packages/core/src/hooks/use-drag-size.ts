@@ -60,6 +60,7 @@ export function useDragSize(
             const release = () => {
                 document.removeEventListener('pointermove', track)
                 document.removeEventListener('pointerup', release)
+                document.removeEventListener('pointercancel', release)
                 if (!awake) return
                 if (frame !== null) cancelAnimationFrame(frame)
                 document.body.style.removeProperty('cursor')
@@ -70,6 +71,8 @@ export function useDragSize(
             if (awake) wake()
             document.addEventListener('pointermove', track)
             document.addEventListener('pointerup', release)
+            // A drag the browser takes over, such as a touch turned into a scroll, ends where it stood.
+            document.addEventListener('pointercancel', release)
         },
         [axis, size, grows, set, clamp, element, follow, expand],
     )
