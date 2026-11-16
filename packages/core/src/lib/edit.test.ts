@@ -149,6 +149,9 @@ describe('the keys in an editor', () => {
 
     it('lets an input method finish composing before Enter saves', () => {
         expect(editKey({ key: 'Enter', isComposing: true }, 'text', true)).toBeUndefined()
+        // Safari sends the committing Enter after the composition ends, marked only by its key code.
+        expect(editKey({ key: 'Enter', keyCode: 229 }, 'text', true)).toBeUndefined()
+        expect(editKey({ key: 'Enter', nativeEvent: { isComposing: true } }, 'text', false)).toBeUndefined()
     })
 
     it('opens a cell at rest on a typed character, never on Space or a chord', () => {

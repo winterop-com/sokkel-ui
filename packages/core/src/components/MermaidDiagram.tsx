@@ -9,11 +9,26 @@ import { useWindowedPane, WindowedPane, WindowedPaneButton } from './WindowedPan
 
 let count = 0
 
-/** A key that changes whenever the document's scheme, theme or inline token overrides change. */
+/**
+ * The look a diagram is drawn in, from the root's class, its theme and its inline style: only the
+ * style's custom properties (`--*`) count, so a scroll lock writing `overflow` or a padding there
+ * leaves it alone.
+ */
+export function lookKey(className: string, theme: string | null, style: string | null): string {
+    const tokens = (style ?? '')
+        .split(';')
+        .map((declaration) => declaration.trim())
+        .filter((declaration) => declaration.startsWith('--'))
+        .join(';')
+    return `${className}|${theme ?? ''}|${tokens}`
+}
+
+/** A key that changes whenever the document's scheme, theme or inline token overrides change; empty outside a page. */
 function useLook(): string {
     const read = () => {
+        if (typeof document === 'undefined') return ''
         const root = document.documentElement
-        return `${root.className}|${root.getAttribute('data-theme') ?? ''}|${root.getAttribute('style') ?? ''}`
+        return lookKey(root.className, root.getAttribute('data-theme'), root.getAttribute('style'))
     }
     const [look, setLook] = useState(read)
     useEffect(() => {
@@ -118,6 +133,9 @@ export interface MermaidDiagramWords {
     close: string
     /** Said in the diagram's place while it is open in the window. */
     away: string
+    /** The copy button's label, and its label for a moment after a press. */
+    copy: string
+    copied: string
 }
 
 export const MERMAID_DIAGRAM_WORDS: MermaidDiagramWords = {
@@ -127,6 +145,8 @@ export const MERMAID_DIAGRAM_WORDS: MermaidDiagramWords = {
     expand: 'Expand',
     close: 'Close',
     away: 'Shown in a window.',
+    copy: 'Copy',
+    copied: 'Copied',
 }
 
 export interface MermaidDiagramProps {
@@ -238,7 +258,12 @@ function Diagram({
                         {source ? words.diagram : words.source}
                     </button>
                 )}
-                <CopyButton value={code} size="icon-xs" className="bg-background ring-1 ring-foreground/10" />
+                <CopyButton
+                    value={code}
+                    words={{ copy: words.copy, copied: words.copied }}
+                    size="icon-xs"
+                    className="bg-background ring-1 ring-foreground/10"
+                />
                 {!streaming && <WindowedPaneButton className="bg-background ring-1 ring-foreground/10" />}
             </div>
             {failed && <p className="px-3 pt-3 text-xs text-muted-foreground">{words.failed}</p>}
