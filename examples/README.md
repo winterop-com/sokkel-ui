@@ -134,7 +134,8 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
   `examples/shared` as a source.
 - **What they share:** `examples/shared/` is the local package `tidevann-shared`, installed the same
   way: `tidevann-shared/backend` (typed collections kept in localStorage under the example's own
-  prefix, which `configureDemo({ app })` in its `main.tsx` names, answering promises after a short
+  prefix, which `configureDemo({ app })` in its `main.tsx` names before the example's own modules
+  load through `await import`, answering promises after a short
   delay as a server would; `useStored` keys take the same prefix, and `storageKey` gives it to any
   other key the example keeps), `tidevann-shared/frame` (`useFrame`: the look, the window, the
   route, the themes the example carries and the palette's shared groups, Reset demo data among them,
@@ -174,7 +175,8 @@ Copy an example's folder, rename it, and change its name in `web/index.html`, th
 `package.json` files, `example.json`, `electron/src/main.ts`'s title, and `tauri/src-tauri/Cargo.toml`
 and `tauri.conf.json` (`productName`, `identifier`, the window's title). In `web/src/main.tsx`,
 `configureDemo({ app })` takes the new folder's name, which keeps its data apart from every other
-example's; the backend refuses to read or write until it is called, and its collections need no
+example's; the backend refuses to read or write until it is called, so `main.tsx` imports the
+example's own modules after it with `await import`, never with a static import, and its collections need no
 prefix of their own. Give its `Makefile` a port of its own. The root Makefile, the workflows and the
 examples site pick it up by its folder; without an `example.json`, the index takes its name and line
 from the comment that heads its `Makefile`.

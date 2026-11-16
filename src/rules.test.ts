@@ -409,6 +409,27 @@ describe('the workflows', () => {
     })
 })
 
+describe('the examples', () => {
+    it('name themselves before their own modules load', () => {
+        const wrong = readdirSync(join(ROOT, 'examples'))
+            .filter((name) => existsSync(join(ROOT, 'examples', name, 'web/src/main.tsx')))
+            .flatMap((name) => {
+                const main = text(join(ROOT, 'examples', name, 'web/src/main.tsx'))
+                const named = main.indexOf(`configureDemo({ app: '${name}'`)
+                const loaded = main.indexOf('await import(')
+                const problems = [
+                    ...[...main.matchAll(/^import\s+[^'"]*\bfrom\s+['"](\.[^'"]*)['"]/gm)].map(
+                        ([, path]) => `imports ${path ?? ''} statically; load it with await import after configureDemo`,
+                    ),
+                    ...(named === -1 ? [`does not call configureDemo({ app: '${name}' })`] : []),
+                    ...(loaded !== -1 && loaded < named ? ['loads its own modules before configureDemo'] : []),
+                ]
+                return problems.map((problem) => `examples/${name}/web/src/main.tsx ${problem}`)
+            })
+        expect(wrong, wrong.join('\n')).toEqual([])
+    })
+})
+
 describe('the components', () => {
     it('export the type of their props as `<Component>Props`, beside them', () => {
         const missing: string[] = []

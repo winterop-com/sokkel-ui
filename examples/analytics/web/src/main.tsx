@@ -5,9 +5,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { configureDemo } from 'tidevann-shared/backend'
 
-import { App } from './App'
-
 configureDemo({ app: 'analytics', version: 2 })
+// The example's own modules load once it is named, since one may read the backend as it loads.
+const { App } = await import('./App')
 
 const root = document.getElementById('root')
 if (root === null) throw new Error('No #root element in index.html')

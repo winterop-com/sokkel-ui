@@ -7,10 +7,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { configureDemo, onReset } from 'tidevann-shared/backend'
 
-import { App } from './App'
-import { drafts } from './editing'
-
 configureDemo({ app: 'fhir' })
+// The example's own modules load once it is named, since one may read the backend as it loads.
+const [{ App }, { drafts }] = await Promise.all([import('./App'), import('./editing')])
 // Unsaved edits go with the demo data.
 onReset(() => drafts.set({}))
 registerPlugins([fhir])
