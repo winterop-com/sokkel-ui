@@ -6,6 +6,7 @@
 
 import type { IssueWords } from '../components/IssueMark'
 import { composing, type ComposingPress } from './keys'
+import { readNumber } from './numbers'
 
 /** Which control edits a value: a line of text, several lines, a number, a date, a time of day, or one of a list. */
 export type EditorKind = 'text' | 'multiline' | 'number' | 'date' | 'time' | 'select'
@@ -60,11 +61,9 @@ export function draftOf(value: EditValue | undefined): string {
  * nothing is typed, undefined when the text is not a number.
  */
 export function parseNumber(text: string): number | null | undefined {
-    const plain = text.trim().replaceAll(/[\s,_]/g, '')
+    const plain = text.trim().replaceAll(',', '')
     if (plain === '') return null
-    if (!/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(plain)) return undefined
-    const value = Number(plain)
-    return Number.isFinite(value) ? value : undefined
+    return readNumber(plain) ?? undefined
 }
 
 /** The value a draft stands for, or why it cannot be one. A date's or a time's draft is what its field read, or empty. */

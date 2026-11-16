@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { JsonSchema } from './read'
 import { registerSchemaFormats } from './formats'
 import { fieldSchema, pointer } from './issues'
-import { validate } from './validate'
+import { heldSchemas, validate } from './validate'
 
 const JOB: JsonSchema = {
     type: 'object',
@@ -83,6 +83,19 @@ describe('validate', () => {
         expect(issues({ code: 'a', endpoint: 'https://a.example.org', retries: 1, legacy: true, steps: [{ run: 'x' }] })).toEqual([
             { at: '/legacy', kind: 'deprecated', tone: 'warning', fix: undefined },
         ])
+    })
+})
+
+describe('compiled schemas', () => {
+    it('compiles an equal schema built afresh once, and releases the ones checked longest ago', () => {
+        const before = heldSchemas()
+        for (let round = 0; round < 20; round += 1)
+            validate({ type: 'object', properties: { code: { type: 'string', maxLength: 99 } } }, {})
+        expect(heldSchemas()).toBe(before + 1)
+        for (let size = 0; size < 200; size += 1)
+            expect(validate({ type: 'string', maxLength: size }, 'nightly-export')).toHaveLength(size < 14 ? 1 : 0)
+        expect(heldSchemas()).toBeLessThanOrEqual(64)
+        expect(validate({ type: 'string', maxLength: 3 }, 'nightly-export')).toHaveLength(1)
     })
 })
 

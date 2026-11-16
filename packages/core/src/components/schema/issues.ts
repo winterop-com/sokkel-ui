@@ -4,6 +4,7 @@
  * draws before `validate`, which carries ajv, has loaded.
  */
 import { resolve, type JsonSchema } from './read'
+import { NUMBER_PATTERN } from '../../lib/numbers'
 
 /** Where a value sits in a document: the keys and indexes from the root down. */
 export type Path = readonly (string | number)[]
@@ -100,7 +101,7 @@ export function readScalar(text: string, allowed: readonly string[]): unknown {
     const trimmed = text.trim()
     if (trimmed === '') return undefined
     if (allowed.includes('integer') && /^[+-]?\d+$/.test(trimmed)) return Number(trimmed)
-    if (allowed.includes('number') && /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(trimmed)) return Number(trimmed)
+    if (allowed.includes('number') && NUMBER_PATTERN.test(trimmed)) return Number(trimmed)
     if (allowed.includes('boolean') && (trimmed === 'true' || trimmed === 'false')) return trimmed === 'true'
     return text
 }

@@ -28,6 +28,11 @@ export interface ReadDocument {
     spans: Map<string, Span>
     /** Where the text stops being the language, when it does. */
     broken?: { from: number; to: number }
+    /**
+     * Each document of a YAML stream that holds more than one, the first included, with where its
+     * values are written. `value` and `spans` are the first document's.
+     */
+    documents?: { value: unknown; spans: Map<string, Span> }[]
 }
 
 /** The words a schema check says, so an app can translate them. */
@@ -180,8 +185,21 @@ function yamlBlock(state: EditorState, node: SyntaxNode): string {
     return `${joined.replace(/\n+$/, '')}\n`
 }
 
-/** A YAML tree read into a value. */
-function readYaml(state: EditorState, node: SyntaxNode | null, path: Path, spans: Map<string, Span>, key?: Span['key']): unknown {
+/** The values a YAML document's anchors name, by name, as they are read in order. */
+type Anchors = Map<string, unknown>
+
+/** Whether a mapping's pair is a merge key, `<<`, whose mappings fill the keys it does not set itself. */
+const isMerge = (state: EditorState, name: SyntaxNode) => name.firstChild?.name === 'Literal' && text(state, name).trim() === '<<'
+
+/** A YAML tree read into a value, an alias as the value its anchor names. */
+function readYaml(
+    state: EditorState,
+    node: SyntaxNode | null,
+    path: Path,
+    spans: Map<string, Span>,
+    anchors: Anchors,
+    key?: Span['key'],
+): unknown {
     if (node === null) {
         // A key with nothing after it holds null, written where its key is.
         if (key !== undefined) spans.set(pointer(path), { from: key.from, to: key.to, key, path })
@@ -189,23 +207,35 @@ function readYaml(state: EditorState, node: SyntaxNode | null, path: Path, spans
     }
     if (node.name === 'Tagged' || node.name === 'Anchored') {
         const inner = children(node).find((child) => !['Tag', 'Anchor'].includes(child.name)) ?? null
-        return readYaml(state, inner, path, spans, key)
+        const value = readYaml(state, inner, path, spans, anchors, key)
+        const anchor = node.getChild('Anchor')
+        if (anchor !== null) anchors.set(text(state, anchor).slice(1), value)
+        return value
     }
     spans.set(pointer(path), { from: node.from, to: node.to, key, path })
     switch (node.name) {
         case 'BlockMapping':
         case 'FlowMapping': {
             const out: Record<string, unknown> = {}
+            const merged: Record<string, unknown>[] = []
             for (const pair of children(node).filter((child) => child.name === 'Pair')) {
                 const name = pair.getChild('Key')
                 const value = children(pair).find((child) => !['Key', ':', 'Comment'].includes(child.name)) ?? null
                 if (name === null) continue
+                if (isMerge(state, name)) {
+                    const from = readYaml(state, value, path, new Map(), anchors)
+                    for (const one of Array.isArray(from) ? from : [from])
+                        if (one !== null && typeof one === 'object' && !Array.isArray(one)) merged.push(one as Record<string, unknown>)
+                    continue
+                }
                 const scalar = name.firstChild
                 const label =
                     scalar?.name === 'QuotedLiteral' ? yamlQuoted(text(state, scalar)) : text(state, name).trim().replace(/\s+/g, ' ')
-                out[label] = readYaml(state, value, [...path, label], spans, { from: name.from, to: name.to })
+                out[label] = readYaml(state, value, [...path, label], spans, anchors, { from: name.from, to: name.to })
             }
-            return out
+            if (merged.length === 0) return out
+            // The mapping's own keys win, then the merged mappings in the order they are listed.
+            return Object.assign({}, ...[...merged].reverse(), out) as Record<string, unknown>
         }
         case 'BlockSequence':
         case 'FlowSequence':
@@ -213,8 +243,10 @@ function readYaml(state: EditorState, node: SyntaxNode | null, path: Path, spans
                 .filter((child) => child.name === 'Item')
                 .map((item, index) => {
                     const value = children(item).find((child) => child.name !== 'Comment') ?? null
-                    return readYaml(state, value ?? item, [...path, index], spans)
+                    return readYaml(state, value ?? item, [...path, index], spans, anchors)
                 })
+        case 'Alias':
+            return anchors.get(text(state, node).slice(1)) ?? null
         case 'Item':
             return null
         case 'Literal':
@@ -228,11 +260,23 @@ function readYaml(state: EditorState, node: SyntaxNode | null, path: Path, spans
     }
 }
 
+/** Documents already read, by their text and language: a text is never changed, only replaced. */
+const readings = new WeakMap<EditorState['doc'], Partial<Record<SchemaLanguage, ReadDocument>>>()
+
 /**
  * A JSON or YAML document read into a value, with where each value is written. Null when the
- * document is too large to parse in the time given.
+ * document is too large to parse in the time given. A text is read once per language, so the marks
+ * and the check of one edit share one reading.
  */
 export function readDocument(state: EditorState, language: SchemaLanguage, timeout = 400): ReadDocument | null {
+    const known = readings.get(state.doc)?.[language]
+    if (known !== undefined) return known
+    const read = readTree(state, language, timeout)
+    if (read !== null) readings.set(state.doc, { ...readings.get(state.doc), [language]: read })
+    return read
+}
+
+function readTree(state: EditorState, language: SchemaLanguage, timeout: number): ReadDocument | null {
     const tree = ensureSyntaxTree(state, state.doc.length, timeout)
     if (tree === null) return null
     const spans = new Map<string, Span>()
@@ -242,12 +286,17 @@ export function readDocument(state: EditorState, language: SchemaLanguage, timeo
         const root = children(tree.topNode)[0] ?? null
         return { value: root === null ? undefined : readJson(state, root, [], spans), spans, broken }
     }
-    const document = tree.topNode.getChild('Document')
-    const root =
-        document === null
-            ? null
-            : (children(document).find((child) => !['DirectiveEnd', 'DocEnd', 'Comment', 'Directive'].includes(child.name)) ?? null)
-    return { value: root === null ? null : readYaml(state, root, [], spans), spans, broken }
+    const documents = tree.topNode.getChildren('Document').map((document, index) => {
+        const root = children(document).find((child) => !['DirectiveEnd', 'DocEnd', 'Comment', 'Directive'].includes(child.name)) ?? null
+        const own = index === 0 ? spans : new Map<string, Span>()
+        return { value: root === null ? null : readYaml(state, root, [], own, new Map()), spans: own }
+    })
+    return {
+        value: documents[0]?.value ?? null,
+        spans,
+        broken,
+        ...(documents.length > 1 ? { documents } : {}),
+    }
 }
 
 /** Where an issue sits: the value it names when that is one line, else its key, else the first line of the nearest value written above it. */
@@ -283,12 +332,40 @@ export function schemaDiagnostics(
     const read = readDocument(state, language)
     if (read === null) return []
     if (read.broken !== undefined) return [{ ...read.broken, severity: 'error', message: words.syntax(language) }]
-    return withoutDeferred(check(schema, read.value), read.value, deferred).map((issue) => ({
-        ...place(issue, read.spans, state),
-        severity: issue.tone === 'critical' ? 'error' : 'warning',
-        message: words.say(issue),
-        path: issue.kind === 'additional' ? [...issue.path, issue.property] : issue.path,
-    }))
+    // Each document of a stream is checked against the schema on its own.
+    return (read.documents ?? [read]).flatMap(({ value, spans }) =>
+        withoutDeferred(check(schema, value), value, deferred).map((issue) => ({
+            ...place(issue, spans, state),
+            severity: issue.tone === 'critical' ? ('error' as const) : ('warning' as const),
+            message: words.say(issue),
+            path: issue.kind === 'additional' ? [...issue.path, issue.property] : issue.path,
+        })),
+    )
+}
+
+/**
+ * What the schema check shows while its checker may not be there: what `check` finds once it has
+ * loaded; before that, where the text stops being the language, if it does, else one error at the
+ * start that the schema cannot be checked when the checker failed to load (`failed` saying why),
+ * so the check fails closed; and undefined while it loads, nothing being known yet.
+ */
+export function schemaProblems(
+    state: EditorState,
+    language: SchemaLanguage,
+    schema: JsonSchema,
+    check: typeof validate | undefined,
+    failed: string | null,
+    words: CodeSchemaWords = SCHEMA_WORDS,
+    deferred?: DeferredValue,
+): PathDiagnostic[] | undefined {
+    if (check !== undefined) return schemaDiagnostics(state, language, schema, check, words, deferred)
+    if (state.doc.length === 0) return []
+    const broken = readDocument(state, language)?.broken
+    if (broken !== undefined) return [{ ...broken, severity: 'error', message: words.syntax(language) }]
+    if (failed === null) return undefined
+    const first = state.doc.line(1)
+    const issue: SchemaIssue = { kind: 'unchecked', reason: failed, path: [], tone: 'critical' }
+    return [{ from: first.from, to: first.to, severity: 'error', message: words.say(issue), path: [] }]
 }
 
 /** A diagnostic with the path of the value it is about, when a schema check found it. */

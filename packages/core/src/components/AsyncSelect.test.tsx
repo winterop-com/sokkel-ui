@@ -6,6 +6,7 @@ import { WAIT_SHOWN } from '../lib/durations'
 import {
     AsyncSelect,
     NO_ANSWER,
+    createGate,
     filterLocal,
     nearEnd,
     noteOf,
@@ -13,11 +14,42 @@ import {
     pageOf,
     waitsForFirst,
     wantsMore,
+    withCreated,
     withPage,
     type AsyncAnswer,
 } from './AsyncSelect'
 
 const key = (item: string) => item
+
+describe('making an option', () => {
+    it('makes one at a time, so a second press while one is made does nothing', () => {
+        const gate = createGate()
+        const ticket = gate.start()
+        expect(ticket).not.toBeNull()
+        expect(gate.start()).toBeNull()
+        expect(gate.finish(ticket ?? -1)).toBe(true)
+        expect(gate.start()).not.toBeNull()
+    })
+
+    it('says a value was picked while the option was made, so it does not replace the pick', () => {
+        const gate = createGate()
+        const ticket = gate.start() ?? -1
+        gate.pick()
+        expect(gate.finish(ticket)).toBe(false)
+    })
+
+    it('frees the gate when making fails', () => {
+        const gate = createGate()
+        gate.start()
+        gate.fail()
+        expect(gate.start()).not.toBeNull()
+    })
+
+    it('adds the made option to the values chosen now, once', () => {
+        expect(withCreated(['a', 'b'], 'new', key)).toEqual(['a', 'b', 'new'])
+        expect(withCreated(['a', 'new'], 'new', key)).toEqual(['a', 'new'])
+    })
+})
 
 describe('paging', () => {
     it('reads a plain list as the one and last page', () => {
