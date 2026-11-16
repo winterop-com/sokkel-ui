@@ -203,6 +203,30 @@ export interface DataSort {
 /** The controls a cell may hold whose press is their own, never the row's open. */
 const CELL_CONTROL = 'button, a[href], input, select, textarea, label, [role="switch"], [role="checkbox"], [role="combobox"]'
 
+/** Controls that take typed keys: every key pressed in one is the control's. */
+const TYPES_INTO =
+    'input, select, textarea, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="searchbox"], [role="spinbutton"]'
+
+/**
+ * Whether a key pressed on `target` is the table's to act on: one pressed on the grid itself, or on
+ * the sortable head the keys are on (`head`). A key from outside the grid in the page, as from a
+ * menu drawn in a portal, is never the table's; one in a control that types is the control's; Space
+ * and Enter on another control in the table, a checkbox, a button or a link, are the control's, and
+ * its other keys move the table.
+ */
+export function keyForTable<E extends { closest(selector: string): unknown; contains(other: E): boolean }>(
+    grid: E,
+    target: E,
+    key: string,
+    head: E | null,
+): boolean {
+    if (target === grid) return true
+    if (!grid.contains(target)) return false
+    if (head?.contains(target) === true) return true
+    if (target.closest(TYPES_INTO) !== null) return false
+    return target.closest(CELL_CONTROL) === null || (key !== ' ' && key !== 'Enter')
+}
+
 /**
  * The words a data table says, in English unless an app passes its own. What a refused cell's mark
  * says before its message, and the heading and Try again of a failed read, are the mark's and
@@ -2004,7 +2028,12 @@ export function DataTable<T>({
     const [activeColumn, setActiveColumn] = useState<string | undefined>(undefined)
     const [cellEdits, setCellEdits] = useState(NO_EDITS)
     const [openCell, setOpenCell] = useState<OpenCell | undefined>(undefined)
-    const held = useRef({ opening: undefined as OpenCell | undefined, attempts: 0, refocus: false })
+    const held = useRef({
+        opening: undefined as OpenCell | undefined,
+        attempts: 0,
+        refocus: false,
+        revealed: undefined as string | undefined,
+    })
     const edits: TableEditingContext<T> | undefined =
         editing === undefined || !shown.some((column) => column.edit !== undefined)
             ? undefined
@@ -2020,6 +2049,10 @@ export function DataTable<T>({
                   open: openCell,
                   setOpen: setOpenCell,
                   held,
+                  drawn: (key) =>
+                      (gridView ? flat.slice(first, last) : drawn.slice(first, last)).some(
+                          (line) => !isGroupHead(line) && line.key === key,
+                      ),
                   moveTo,
                   grid: gridView,
                   step: gridView ? perLine : 1,
@@ -2048,6 +2081,9 @@ export function DataTable<T>({
     }
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        // Keys pressed in the table's controls, and in what they draw elsewhere in the page, are theirs.
+        const head = keyHead === undefined ? null : (heads.current.get(keyHead)?.current ?? null)
+        if (!(event.target instanceof Element) || !keyForTable<Element>(event.currentTarget, event.target, event.key, head)) return
         // A row's grip keeps its keys: Space or Enter picks the row up, the arrows carry it, Space drops it.
         if (!event.altKey && event.target instanceof Element && event.target.closest('[data-row-grip]') !== null) return
         // In the head row the arrows choose a sortable head and Enter or Space turns its order, until Down goes back to the rows.

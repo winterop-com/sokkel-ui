@@ -14,6 +14,7 @@ import {
     headEntered,
     headStep,
     isGroupHead,
+    keyForTable,
     movedColumn,
     orderColumns,
     outgrown,
@@ -236,6 +237,68 @@ describe('sorting by keys in the head row', () => {
     it('keeps the rows’ other keys in the head row and leaves the rest, Tab among them, to the browser', () => {
         for (const key of ['ArrowUp', 'PageUp', 'PageDown', 'Home', 'End']) expect(headStep(heads, 'state', key)).toBe('stay')
         for (const key of ['Tab', 'Escape', 'a']) expect(headStep(heads, 'state', key)).toBeUndefined()
+    })
+})
+
+describe('keys pressed in a table’s controls', () => {
+    /** An element as the keys read it: a tag, attributes and a parent, matched by tags and attributes alone. */
+    class Fake {
+        constructor(
+            readonly tag: string,
+            readonly attrs: Record<string, string> = {},
+            readonly parent: Fake | null = null,
+        ) {}
+        matches(selector: string): boolean {
+            return selector.split(',').some((part) => {
+                const [, tag, attrs = ''] = /^\s*(\w+)?((?:\[[^\]]+\])*)/.exec(part) ?? []
+                if (tag !== undefined && tag !== this.tag) return false
+                return [...attrs.matchAll(/\[([\w-]+)(?:="([^"]*)")?\]/g)].every(
+                    ([, name, value]) => name in this.attrs && (value === undefined || this.attrs[name] === value),
+                )
+            })
+        }
+        closest(selector: string): Fake | null {
+            return this.matches(selector) ? this : (this.parent?.closest(selector) ?? null)
+        }
+        contains(other: Fake): boolean {
+            return other === this || (other.parent !== null && this.contains(other.parent))
+        }
+    }
+    const grid = new Fake('div', { role: 'grid' })
+    const row = new Fake('div', { role: 'row' }, grid)
+    const cell = new Fake('div', { role: 'gridcell' }, row)
+    const input = new Fake('input', {}, cell)
+    const link = new Fake('a', { href: '/runs/7' }, cell)
+    const box = new Fake('span', { role: 'checkbox' }, cell)
+    const head = new Fake('div', { role: 'columnheader' }, grid)
+    const sort = new Fake('button', {}, head)
+    const menuItem = new Fake('div', { role: 'menuitem' }, new Fake('div', { role: 'menu' }))
+
+    it('takes every key pressed on the grid itself', () => {
+        for (const key of [' ', 'Enter', 'Home', 'ArrowDown', 'a']) expect(keyForTable(grid, grid, key, null)).toBe(true)
+    })
+
+    it('leaves every key to a control that types, Space and Home among them', () => {
+        for (const key of [' ', 'Enter', 'Home', 'End', 'ArrowDown', 'a']) expect(keyForTable(grid, input, key, null)).toBe(false)
+    })
+
+    it('leaves Space and Enter to a link or a checkbox, and moves the table on their other keys', () => {
+        for (const control of [link, box]) {
+            expect(keyForTable(grid, control, ' ', null)).toBe(false)
+            expect(keyForTable(grid, control, 'Enter', null)).toBe(false)
+            expect(keyForTable(grid, control, 'ArrowDown', null)).toBe(true)
+        }
+    })
+
+    it('leaves a key from a menu drawn outside the grid to the menu', () => {
+        for (const key of ['Enter', 'PageDown', ' ']) expect(keyForTable(grid, menuItem, key, null)).toBe(false)
+    })
+
+    it('takes Enter and Space on the sortable head the keys are on, and only on that one', () => {
+        expect(keyForTable(grid, sort, 'Enter', head)).toBe(true)
+        expect(keyForTable(grid, sort, ' ', head)).toBe(true)
+        expect(keyForTable(grid, sort, 'Enter', null)).toBe(false)
+        expect(keyForTable(grid, input, ' ', head)).toBe(false)
     })
 })
 
