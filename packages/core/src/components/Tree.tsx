@@ -44,8 +44,11 @@ export interface TreeTrail {
     ancestors: readonly TreeNode[]
 }
 
-/** How far a lazy node's children have come: asked for, here, or refused. */
-export type TreeLoad = { state: 'loading' } | { state: 'done'; children: readonly TreeNode[] } | { state: 'failed' }
+/** How far a lazy node's children have come: asked for, here, or refused; once ended, with the `childrenVersion` asked at. */
+export type TreeLoad =
+    | { state: 'loading' }
+    | { state: 'done'; children: readonly TreeNode[]; version?: string | number }
+    | { state: 'failed'; version?: string | number }
 
 /** The children each lazy node has loaded so far, by its id. */
 export type TreeLoads = ReadonlyMap<string, TreeLoad>
@@ -96,6 +99,33 @@ export function childrenOf(node: TreeNode, loads: TreeLoads = NO_LOADS): readonl
     if (node.children !== undefined) return node.children
     const load = loads.get(node.id)
     return load?.state === 'done' ? load.children : undefined
+}
+
+/**
+ * The lazy nodes among `rows` whose load has ended at a version of their children other than the
+ * one `versionOf` says now, so their children are out of date and load again.
+ */
+export function staleLoads(
+    rows: readonly TreeRow[],
+    loads: TreeLoads,
+    versionOf: (node: TreeNode) => string | number | undefined,
+): string[] {
+    const stale: string[] = []
+    for (const row of rows) {
+        if (row.status !== undefined || row.trail !== undefined) continue
+        const load = loads.get(row.node.id)
+        if (load !== undefined && load.state !== 'loading' && load.version !== versionOf(row.node)) stale.push(row.node.id)
+    }
+    return stale
+}
+
+/**
+ * The row that takes the tree's one tab stop: the current row while it is drawn, and the first row
+ * drawn while it is not, such as a long tree scrolled past it, so Tab still reaches the tree.
+ */
+export function tabStop(shown: readonly TreeRow[], current: TreeRow | undefined): TreeRow | undefined {
+    if (current !== undefined && shown.includes(current)) return current
+    return shown.find((row) => row.status === undefined)
 }
 
 /** Whether a node opens: it has children, or is marked as having some not loaded yet. */
@@ -453,6 +483,12 @@ export interface TreeProps {
     defaultExpanded?: readonly string[]
     /** Brings the children of a node marked `hasChildren`; a rejection shows a row to try again. */
     loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>
+    /**
+     * Which version of a node's children the tree holds, such as a count or the time they last
+     * changed: once it is another, the children `loadChildren` brought are dropped and load again,
+     * so a move, a rename or a delete among them is drawn.
+     */
+    childrenVersion?: (node: TreeNode) => string | number | undefined
     /** Answers a query over the whole hierarchy with each match and its ancestors; without it the query searches the loaded nodes. */
     search?: (query: string) => Promise<readonly TreeTrail[]>
     /** Where chosen nodes not loaded yet sit, so the parents above them show that they hold a choice. */
@@ -540,6 +576,7 @@ export function Tree({
     query = '',
     defaultExpanded = [],
     loadChildren,
+    childrenVersion,
     search,
     trails = [],
     actions,
@@ -559,9 +596,11 @@ export function Tree({
     const [loads, setLoads] = useState<Map<string, TreeLoad>>(() => new Map())
     const asked = useRef(new Set<string>())
     const loader = useRef(loadChildren)
+    const versioner = useRef(childrenVersion)
     const searcher = useRef(search)
     useEffect(() => {
         loader.current = loadChildren
+        versioner.current = childrenVersion
         searcher.current = search
     })
 
@@ -606,13 +645,26 @@ export function Tree({
             if (row.status !== 'loading' || asked.current.has(row.node.id)) continue
             const node = row.node
             asked.current.add(node.id)
+            const version = versioner.current?.(node)
             setLoads((now) => new Map(now).set(node.id, { state: 'loading' }))
             load(node).then(
-                (children) => setLoads((now) => new Map(now).set(node.id, { state: 'done', children })),
-                () => setLoads((now) => new Map(now).set(node.id, { state: 'failed' })),
+                (children) => setLoads((now) => new Map(now).set(node.id, { state: 'done', children, version })),
+                () => setLoads((now) => new Map(now).set(node.id, { state: 'failed', version })),
             )
         }
     }, [rows])
+    // Children loaded at a version the node has since moved on from are dropped, and load again.
+    useEffect(() => {
+        if (childrenVersion === undefined) return
+        const stale = staleLoads(rows, loads, childrenVersion)
+        if (stale.length === 0) return
+        for (const id of stale) asked.current.delete(id)
+        setLoads((now) => {
+            const next = new Map(now)
+            for (const id of stale) next.delete(id)
+            return next
+        })
+    }, [rows, loads, childrenVersion])
     const retry = (id: string) => {
         asked.current.delete(id)
         setLoads((now) => {
@@ -669,6 +721,7 @@ export function Tree({
     const first = virtual ? Math.max(0, Math.floor(view.start / rowHeight) - OVERSCAN) : 0
     const last = virtual ? Math.min(rows.length, Math.ceil((view.start + view.height) / rowHeight) + OVERSCAN) : rows.length
     const shown = virtual ? rows.slice(first, Math.max(first, last)) : rows
+    const tabbed = tabStop(shown, current)
 
     /** Scrolls the nearest scrolling box until the row at `index` is in view. */
     const bringIntoView = useCallback(
@@ -904,7 +957,7 @@ export function Tree({
                             aria-expanded={branch ? expanded : undefined}
                             aria-selected={selection === 'none' ? undefined : isChosen}
                             aria-disabled={shut !== undefined || undefined}
-                            tabIndex={row === current ? 0 : -1}
+                            tabIndex={row === tabbed ? 0 : -1}
                             onFocus={() => setFocus(row.node.id)}
                             onClick={() => choose(row)}
                             style={indent}

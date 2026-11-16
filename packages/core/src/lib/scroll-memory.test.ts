@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { holdScroll, keepScroll, recallScroll, rememberScroll } from './scroll-memory'
+import { followScroll, holdScroll, keepScroll, recallScroll, rememberScroll } from './scroll-memory'
 
 /** A session storage held in a map. */
 function storage() {
@@ -150,5 +150,39 @@ describe('holding a place while the page loads', () => {
         late.box.content = 3000
         change()
         expect(late.box.top).toBe(0)
+    })
+})
+
+describe('following a scroller as what it shows comes and goes', () => {
+    const page = () => vi.stubGlobal('window', { addEventListener: () => undefined, removeEventListener: () => undefined })
+
+    it('starts the rows a search brings at the top, not at the place left before it', () => {
+        page()
+        const { box, area, listeners } = scroller(20_000)
+        let stop = followScroll(area, 'found-runs', { ready: true, shown: false })
+        box.scrollTop = 4000
+        listeners.get('scroll')?.()
+        expect(recallScroll('found-runs')).toEqual({ top: 4000, left: 0 })
+        stop()
+        // The rows are dropped while the search loads, and the browser holds the emptied scroller at the top.
+        box.content = 600
+        box.scrollTop = box.top
+        stop = followScroll(area, 'found-runs', { ready: false, shown: true })
+        expect(recallScroll('found-runs')).toEqual({ top: 0, left: 0 })
+        stop()
+        box.content = 12_000
+        followScroll(area, 'found-runs', { ready: true, shown: true })()
+        expect(box.top).toBe(0)
+    })
+
+    it('notes nothing before it first shows anything, so a return still finds its place', () => {
+        page()
+        rememberScroll('kept-runs', { top: 4000, left: 0 })
+        const { box, area } = scroller(600)
+        followScroll(area, 'kept-runs', { ready: false, shown: false })()
+        expect(recallScroll('kept-runs')).toEqual({ top: 4000, left: 0 })
+        box.content = 20_000
+        followScroll(area, 'kept-runs', { ready: true, shown: false })()
+        expect(box.top).toBe(4000)
     })
 })

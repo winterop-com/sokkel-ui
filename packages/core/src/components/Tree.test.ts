@@ -5,6 +5,8 @@ import {
     dropPart,
     isBranch,
     moveTreeNode,
+    staleLoads,
+    tabStop,
     treeAncestors,
     treeHolding,
     treeKeyTarget,
@@ -215,5 +217,42 @@ describe('moving a node', () => {
         ])
         expect(ids(moveTreeNode(NODES, 'harbor', { into: null, index: 0 }))[0]).toEqual(['harbor', ['reports']])
         expect(ids(NODES)[1]).toEqual(['harbor', ['reports']])
+    })
+})
+
+describe('a long tree’s tab stop', () => {
+    const rows = visibleRows(NODES, new Set(['larkspur', 'exports']), null)
+
+    test('stays on the current row while it is drawn', () => {
+        expect(tabStop(rows.slice(1, 4), rows[2])?.node.id).toBe('orders')
+    })
+
+    test('moves to the first row drawn once the current one is scrolled out, so Tab still reaches the tree', () => {
+        expect(tabStop(rows.slice(2, 4), rows[0])?.node.id).toBe('orders')
+        expect(tabStop(rows.slice(2, 4), undefined)?.node.id).toBe('orders')
+        expect(tabStop([], rows[0])).toBeUndefined()
+    })
+})
+
+describe('children loaded at a version since moved on', () => {
+    const lazy: TreeNode[] = [
+        { id: 'juniper', label: 'Juniper', hasChildren: true },
+        { id: 'larkspur', label: 'Larkspur', hasChildren: true },
+    ]
+    const loads = new Map<string, TreeLoad>([
+        ['juniper', { state: 'done', children: [{ id: 'fetch', label: 'fetch' }], version: 2 }],
+        ['larkspur', { state: 'failed', version: 1 }],
+    ])
+
+    test('drops the loads of nodes whose version moved on, and keeps the rest', () => {
+        const rows = visibleRows(lazy, new Set(['juniper']), null, loads)
+        expect(staleLoads(rows, loads, () => 2)).toEqual(['larkspur'])
+        expect(staleLoads(rows, loads, (node) => (node.id === 'juniper' ? 3 : 1))).toEqual(['juniper'])
+        expect(staleLoads(rows, loads, (node) => (node.id === 'juniper' ? 2 : 1))).toEqual([])
+    })
+
+    test('leaves a load still on its way', () => {
+        const waiting = new Map<string, TreeLoad>([['juniper', { state: 'loading' }]])
+        expect(staleLoads(visibleRows(lazy, new Set(), null, waiting), waiting, () => 9)).toEqual([])
     })
 })
