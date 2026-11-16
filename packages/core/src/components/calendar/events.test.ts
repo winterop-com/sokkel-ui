@@ -1,6 +1,6 @@
-import { describe, expect, test } from 'vitest'
+import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
-import { eventsOn, layoutDay, layoutSpans, weekOf, type CalendarEvent } from './events'
+import { eventsOn, gridMinute, layoutDay, layoutSpans, weekOf, type CalendarEvent } from './events'
 
 const at = (day: number, hour: number, minute = 0) => new Date(2026, 10, day, hour, minute)
 
@@ -75,5 +75,35 @@ describe('all-day events', () => {
         ]
         expect(eventsOn(events, at(5, 0)).map((event) => event.id)).toEqual(['away', 'standup'])
         expect(eventsOn(events, at(6, 0)).map((event) => event.id)).toEqual(['away'])
+    })
+})
+
+/** Runs the tests of a describe block in Europe/Oslo, whose clocks change on 2026-03-29 and 2026-10-25. */
+function inOslo() {
+    let zone: string | undefined
+    beforeAll(() => {
+        zone = process.env.TZ
+        process.env.TZ = 'Europe/Oslo'
+    })
+    afterAll(() => {
+        if (zone === undefined) delete process.env.TZ
+        else process.env.TZ = zone
+    })
+}
+
+describe('a day the clocks change', () => {
+    inOslo()
+
+    test('places an event by the wall clock', () => {
+        for (const [month, day] of [
+            [2, 29],
+            [9, 25],
+        ]) {
+            const start = new Date(2026, month, day, 10)
+            const event = timed('standup', start, new Date(2026, month, day, 11))
+            const [placed] = layoutDay([event], new Date(2026, month, day))
+            expect([placed.from, placed.to], `${month + 1}-${day}`).toEqual([600, 660])
+            expect(gridMinute(start)).toBe(600)
+        }
     })
 })

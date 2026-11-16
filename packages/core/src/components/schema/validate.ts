@@ -49,9 +49,17 @@ interface Compiled {
     key: string
 }
 
+/** How many schemas ajv holds compiled at once; the one checked longest ago is released past it. */
+const HELD = 64
+/** What the key of each schema compiled here starts with. */
+const KEY = 'urn:sokkel-ui:schema:'
+
 let ajv = checker({})
 let formatsVersion = 0
-let compiled = new WeakMap<JsonSchema, Compiled | Error>()
+/** Each schema object's text, so an equal schema built afresh finds the one compiled from it. */
+let texts = new WeakMap<JsonSchema, string>()
+/** The compiled schemas by their text, the one checked last at the end. */
+let compiled = new Map<string, Compiled | Error>()
 let keys = 0
 
 /** Starts a fresh ajv when the registered formats have changed, so every schema compiles again with them. */
@@ -60,7 +68,25 @@ function current(): void {
     if (version === formatsVersion) return
     formatsVersion = version
     ajv = checker(formats)
-    compiled = new WeakMap()
+    texts = new WeakMap()
+    compiled = new Map()
+}
+
+/** How many schemas the checker holds compiled now. */
+export function heldSchemas(): number {
+    return compiled.size
+}
+
+/** Keeps a compiled schema as the one checked last, releasing from ajv the one checked longest ago past `HELD`. */
+function hold(text: string, made: Compiled | Error): Compiled | Error {
+    compiled.delete(text)
+    compiled.set(text, made)
+    for (const [old, gone] of compiled) {
+        if (compiled.size <= HELD) break
+        compiled.delete(old)
+        if (!(gone instanceof Error) && gone.key.startsWith(KEY)) ajv.removeSchema(gone.key)
+    }
+    return made
 }
 
 declare const process: { env: { NODE_ENV?: string } }
@@ -88,31 +114,40 @@ function warnOfGeneratedCode(): void {
 /** The schema compiled to a check, or why it could not be: a broken schema, or a page whose policy forbids generated code. */
 function compile(schema: JsonSchema): Compiled | Error {
     current()
-    const known = compiled.get(schema)
-    if (known !== undefined) return known
+    let text = texts.get(schema)
+    if (text === undefined) {
+        try {
+            text = JSON.stringify(schema)
+        } catch {
+            // A schema that cannot be written out is known by itself alone.
+            keys += 1
+            text = `${KEY}unwritten:${keys}`
+        }
+        texts.set(schema, text)
+    }
+    const known = compiled.get(text)
+    if (known !== undefined) return hold(text, known)
     const { $schema: _dialect, $id: id, ...body } = schema
     // A schema that is only the address of a dialect ajv carries, such as JSON Schema 2020-12, is that dialect's meta-schema.
     const carried = typeof id === 'string' && Object.keys(body).length === 0 ? ajv.getSchema(id) : undefined
     if (carried !== undefined) {
-        const known: Compiled = { check: carried, body: carried.schema as JsonSchema, key: id as string }
-        compiled.set(schema, known)
-        return known
+        return hold(text, { check: carried, body: carried.schema as JsonSchema, key: id as string })
     }
     let check: Compiled | Error
+    keys += 1
+    const key = `${KEY}${keys}`
     try {
         warnOfGeneratedCode()
-        keys += 1
-        const key = `urn:sokkel-ui:schema:${keys}`
         ajv.addSchema(body, key)
         const made = ajv.getSchema(key)
         if (made === undefined) throw new Error('The schema could not be compiled.')
         check = { check: made, body, key }
     } catch (error) {
         check = error instanceof Error ? error : new Error(String(error))
+        ajv.removeSchema(key)
         console.error('The schema could not be compiled, so no value passes it:', check)
     }
-    compiled.set(schema, check)
-    return check
+    return hold(text, check)
 }
 
 /** A JSON Pointer read back into a path, indexes as numbers. */

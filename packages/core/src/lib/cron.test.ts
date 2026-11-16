@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { describeCron, nextRuns, parseCron, zoneOffset, zonedTime } from './cron'
+import { describeCron, knownZone, nextRuns, parseCron, zoneOffset, zonedTime } from './cron'
 
 const FROM = new Date('2026-11-05T10:17:00Z')
 const iso = (dates: Date[]) => dates.map((date) => date.toISOString().slice(0, 16))
@@ -117,11 +117,32 @@ describe('nextRuns in a zone', () => {
 
     it('runs a time the clock passes twice in autumn once, at its first pass', () => {
         expect(iso(nextRuns('30 2 * * *', new Date('2027-10-30T12:00:00Z'), 2, OSLO))).toEqual(['2027-10-31T00:30', '2027-11-01T01:30'])
+        expect(iso(nextRuns('0 2,3 * * *', new Date('2027-10-30T23:30:00Z'), 2, OSLO))).toEqual(['2027-10-31T00:00', '2027-10-31T02:00'])
+    })
+
+    it('runs a wildcard minute or hour on both passes of the repeated hour', () => {
         expect(iso(nextRuns('0 * * * *', new Date('2027-10-30T23:30:00Z'), 3, OSLO))).toEqual([
             '2027-10-31T00:00',
+            '2027-10-31T01:00',
             '2027-10-31T02:00',
-            '2027-10-31T03:00',
         ])
+        expect(iso(nextRuns('*/15 * * * *', new Date('2026-10-24T23:55:00Z'), 9, OSLO))).toEqual([
+            '2026-10-25T00:00',
+            '2026-10-25T00:15',
+            '2026-10-25T00:30',
+            '2026-10-25T00:45',
+            '2026-10-25T01:00',
+            '2026-10-25T01:15',
+            '2026-10-25T01:30',
+            '2026-10-25T01:45',
+            '2026-10-25T02:00',
+        ])
+    })
+
+    it('gives no runs in a zone the runtime does not know', () => {
+        expect(nextRuns('0 2 * * *', FROM, 5, 'Europe/Nowhere')).toEqual([])
+        expect(knownZone('Europe/Nowhere')).toBe(false)
+        expect(knownZone('Europe/Oslo')).toBe(true)
     })
 
     it('takes UTC as no zone', () => {

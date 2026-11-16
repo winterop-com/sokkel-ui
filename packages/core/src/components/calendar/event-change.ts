@@ -1,4 +1,4 @@
-import { addDays, addMinutes, differenceInCalendarDays, differenceInMinutes, startOfDay } from 'date-fns'
+import { addDays, addMinutes, differenceInCalendarDays, differenceInMinutes } from 'date-fns'
 
 import type { CalendarEvent } from './events'
 
@@ -22,9 +22,13 @@ export function movedBy<E extends CalendarEvent>(event: E, days: number, minutes
     return { event, start: addMinutes(addDays(event.start, days), minutes), end: addMinutes(addDays(event.end, days), minutes) }
 }
 
-/** The event moved to start on `day` at `minute` past its midnight, keeping its length. */
+/**
+ * The event moved to start on `day` at grid minute `minute` (the wall clock's, so 600 is 10:00 on a
+ * day the clocks change too), keeping its length.
+ */
 export function movedTo<E extends CalendarEvent>(event: E, day: Date, minute: number): CalendarEventChange<E> {
-    const start = addMinutes(startOfDay(day), minute)
+    const start = new Date(day)
+    start.setHours(0, minute, 0, 0)
     return { event, start, end: addMinutes(start, differenceInMinutes(event.end, event.start)) }
 }
 
