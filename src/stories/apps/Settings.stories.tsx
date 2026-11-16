@@ -577,6 +577,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
 const meta: Meta = { title: 'Apps/Settings' }
 export default meta
 
+/** An app framed by a navbar along the top, its settings page in boxed sections, the gear opening the preferences dialog. */
 export const WithNavBar: StoryObj = { name: 'Navbar', render: () => <SettingsApp /> }
 
 /**

@@ -61,5 +61,7 @@ function StepMenu({ open }: { open?: boolean }) {
     )
 }
 
+/** The area a right-click opens the menu over, closed. */
 export const Trigger: StoryObj = { render: () => <StepMenu /> }
+/** The menu open over a step: its actions, a disabled one and a submenu. */
 export const Opened: StoryObj = { render: () => <StepMenu open /> }

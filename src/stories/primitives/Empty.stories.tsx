@@ -12,6 +12,7 @@ function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** An empty state led by an icon, by the default media, and with no border and a title alone. */
 export const Variants: StoryObj = {
     render: () => (
         <Columns>
@@ -51,6 +52,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** An empty folder that says how files get there, with Upload a file. */
 export const NoFiles: StoryObj = {
     render: () => (
         <Empty className="border">

@@ -20,6 +20,7 @@ function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** The alert in its default and destructive variants, and with a title alone and no icon. */
 export const Variants: StoryObj = {
     render: () => (
         <Ground>
@@ -49,6 +50,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A destructive alert for a failed run, with Retry as its action. */
 export const WithAction: StoryObj = {
     render: () => (
         <Ground>

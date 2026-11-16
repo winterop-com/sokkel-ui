@@ -28,6 +28,7 @@ export const Playground: StoryObj<{ label: string; checked: boolean; indetermina
     ),
 }
 
+/** The checkbox unchecked, checked, indeterminate and with a label beside it. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="2xl" align="stretch" wrap>
@@ -50,6 +51,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The checkbox disabled and invalid, each unchecked and checked. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="2xl" align="stretch" wrap>
@@ -113,4 +115,5 @@ function AlertEvents() {
     )
 }
 
+/** A list of alert events with an All row above that turns indeterminate when only some are checked. */
 export const AlertRules: StoryObj = { render: () => <AlertEvents /> }

@@ -3133,7 +3133,7 @@ export function DataTable<T>({
                                                 onClick={() => setShownView(one)}
                                                 className={cn(
                                                     'text-muted-foreground',
-                                                    shownView === one && 'bg-background text-foreground shadow-xs hover:bg-background',
+                                                    shownView === one && 'bg-background text-foreground shadow-surface hover:bg-background',
                                                 )}
                                             >
                                                 {one === 'table' ? <TableIcon /> : <LayoutGridIcon />}

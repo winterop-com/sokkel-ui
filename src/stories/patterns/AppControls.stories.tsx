@@ -133,9 +133,13 @@ function Gallery({ open }: { open?: number }) {
 const meta: Meta = { title: 'Patterns/App controls', parameters: { frame: 'padded' } }
 export default meta
 
+/** The light and dark toggle at the end of a top bar. */
 export const Theme: StoryObj = { name: 'Theme toggle', render: () => <Toggle /> }
+/** The shortcuts dialog open, its keys grouped by where they work, a two-key sequence among them. */
 export const Keys: StoryObj = { name: 'Shortcuts dialog', render: () => <Shortcuts /> }
+/** A chart as a thumbnail in the text, closed; pressing it opens it large. */
 export const Image: StoryObj = { name: 'Image lightbox', render: () => <Lightbox open={false} /> }
+/** The same chart opened large over the page. */
 export const ImageOpen: StoryObj = { name: 'Image lightbox, open', render: () => <Lightbox open /> }
 /** An image with boxes over it, numbered and tagged, small and full screen alike. */
 export const ImageBoxes: StoryObj = { name: 'Image lightbox, boxes', render: () => <BoxedLightbox open={false} /> }

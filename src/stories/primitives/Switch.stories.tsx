@@ -16,6 +16,7 @@ export const Playground: StoryObj<{ checked: boolean; size: 'sm' | 'default'; di
     render: (args) => <Switch aria-label="Weekly digest" checked={args.checked} size={args.size} disabled={args.disabled} />,
 }
 
+/** Off and on, at the default and the small size. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="2xl" align="end" wrap>
@@ -35,6 +36,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Disabled off and on, invalid, and read only. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="2xl" align="end" wrap>
@@ -60,6 +62,7 @@ const SCHEDULES = [
     { code: 'backfill', detail: 'Cron 0 4 * * 0, last run 2026-10-25 04:00', on: false },
 ]
 
+/** A job's schedules and webhooks, each a switch beside its label and description. */
 export const JobSchedules: StoryObj = {
     render: () => (
         <Stack className="max-w-lg">

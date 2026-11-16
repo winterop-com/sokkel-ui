@@ -249,14 +249,19 @@ function Static({ children }: { children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Layout/Sidebar', parameters: { frame: 'padded' } }
 export default meta
 
+/** The sidebar framing a page: workspace, search, navigation and account beside a job's runs, folding off the canvas. */
 export const AppFrame: StoryObj = { parameters: { frame: 'none' }, render: () => <Frame /> }
 
+/** The same frame with the sidebar floating as a rounded panel off the window's edge. */
 export const Floating: StoryObj = { parameters: { frame: 'none' }, render: () => <Frame variant="floating" /> }
 
+/** The same frame with the page inset as a rounded card beside the sidebar. */
 export const Inset: StoryObj = { parameters: { frame: 'none' }, render: () => <Frame variant="inset" /> }
 
+/** The frame closed to a strip of icons, the search hidden until the sidebar opens again. */
 export const CollapsedToIcons: StoryObj = { parameters: { frame: 'none' }, render: () => <Frame collapsible="icon" defaultOpen={false} /> }
 
+/** Static sidebars side by side: menu button sizes and variants, and the disabled and loading states. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap className="mx-auto max-w-[1100px]">

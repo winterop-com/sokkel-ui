@@ -69,6 +69,9 @@ function Listening() {
 const meta: Meta = { title: 'Primitives/Media/Audio', parameters: { frame: 'padded' } }
 export default meta
 
+/** A recording's waveform drawn from levels, and a static one drawn from a seed. */
 export const Waveforms_: StoryObj = { name: 'Waveforms', render: () => <Waveforms /> }
+/** A voice note: pause, a scrubber over its waveform that seeks, and its time. */
 export const Scrubber: StoryObj = { name: 'Voice note', render: () => <VoiceNote /> }
+/** The level bars a voice input draws while it listens, beside a microphone mark. */
 export const Bars: StoryObj = { name: 'Listening', render: () => <Listening /> }

@@ -1,8 +1,42 @@
 # Third-party notices
 
-This package carries code derived from the projects below, under the license reproduced here.
-Its dependencies are installed by the package manager rather than redistributed with it, so they
-are not listed.
+This package carries code derived from the projects below, under the license reproduced here, and
+the map data and imagery listed under "Map data and imagery". Its dependencies are installed by the
+package manager rather than redistributed with it, so they are not listed.
+
+## Map data and imagery
+
+- `packages/maps/src/previews/light.jpg`, `dark.jpg` and `streets.jpg`, shipped in the maps
+  package, are pictures of the Light, Dark and Streets basemaps as OpenFreeMap
+  (https://openfreemap.org) serves them, from its Positron, Dark and Liberty styles. Map data ©
+  OpenStreetMap contributors, available under the Open Database License 1.0
+  (https://opendatacommons.org/licenses/odbl/1-0/, https://www.openstreetmap.org/copyright). Vector
+  tiles in the OpenMapTiles schema, © OpenMapTiles (https://openmaptiles.org). The Positron style
+  comes from OpenMapTiles and CARTO, and the Liberty style from OSM Liberty, each under the
+  licenses its project states.
+- `packages/maps/src/previews/satellite.jpg`, shipped in the maps package, is a picture of NASA's
+  Blue Marble: Next Generation mosaic as NASA GIBS serves it
+  (https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api).
+  NASA imagery is not subject to copyright in the United States; credit: NASA Earth Observatory.
+- `e2e/tiles/`, in the repository only and shipped in no package, holds responses recorded from
+  `tiles.openfreemap.org` and `gibs.earthdata.nasa.gov`, which the browser suites serve in place of
+  the network:
+    - OpenStreetMap vector tiles (`planet/`), © OpenStreetMap contributors under the Open Database
+      License 1.0, in the OpenMapTiles schema, © OpenMapTiles;
+    - OpenFreeMap's style documents (`styles/positron.json`, `dark.json`, `liberty.json`) and
+      sprites (`sprites/`), under the licenses of the styles named above;
+    - Noto Sans glyphs (`fonts/`), Copyright 2022 The Noto Project Authors
+      (https://github.com/notofonts/latin-greek-cyrillic), under the SIL Open Font License 1.1
+      reproduced below;
+    - Natural Earth shaded relief (`natural_earth/`), public domain (https://www.naturalearthdata.com);
+    - NASA Blue Marble: Next Generation tiles from NASA GIBS, as for `satellite.jpg` above.
+
+## Media fixtures
+
+- `src/stories/media/fixtures/clip.webm` and the HTTP live stream in
+  `src/stories/media/fixtures/stream/` (`stream.m3u8`, `init.mp4` and `part0.m4s` to `part3.m4s`),
+  in the repository only, are a silent 96 second color gradient generated with FFmpeg (VP9 in WebM,
+  and H.264 in fragmented MP4 segments) for the stories. They hold no third-party footage or sound.
 
 ## MIT
 

@@ -13,6 +13,7 @@ const RATIOS = [
     ['21 / 9', 21 / 9],
 ] as const
 
+/** Boxes held at 16 / 9, 4 / 3, 1 / 1 and 21 / 9 as their width changes. */
 export const Variants: StoryObj = {
     render: () => (
         <Columns count={4}>
@@ -32,6 +33,7 @@ export const Variants: StoryObj = {
 
 const DAILY_ORDERS = [42, 55, 38, 61, 70, 48, 52, 66, 74, 59, 63, 80, 71, 68]
 
+/** A file's preview held at its ratio, above its caption. */
 export const FilePreview: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-xl">

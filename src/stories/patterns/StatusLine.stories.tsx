@@ -35,4 +35,5 @@ function Lines() {
 const meta: Meta = { title: 'Patterns/Status line' }
 export default meta
 
+/** The foot strip in each tone: live with a running run, plain, a warning, an error with its retry, and items alone. */
 export const Tones: StoryObj = { render: () => <Lines /> }

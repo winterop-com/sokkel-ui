@@ -96,6 +96,7 @@ function Column({ turns, position }: { turns: typeof TURNS; position: 'start' | 
 const meta: Meta = { title: 'Primitives/Chat/MessageScroller', parameters: { frame: 'column' } }
 export default meta
 
+/** A conversation that opens at its end, and one that opens at its start. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -111,6 +112,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** An empty conversation with its prompt, and one too short to scroll. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>

@@ -196,6 +196,7 @@ steps:
 const meta: Meta = { title: 'Patterns/Chat', parameters: { frame: 'padded' } }
 export default meta
 
+/** An answer drawn as Markdown: strong words, inline code, lists, a table and a code block. */
 export const MarkdownAnswer: StoryObj = { name: 'Markdown', render: () => <Answer /> }
 
 /**
@@ -208,6 +209,9 @@ export const Streaming: StoryObj = { render: () => <Streamed /> }
  * `$$`, `\[…\]` and a `math` fence, a formula KaTeX cannot read, and dollars that stay prices.
  */
 export const MathAnswer: StoryObj = { name: 'Math', render: () => <MathReply /> }
+/** The tool calls behind an answer, each with its name, arguments and result. */
 export const Tools: StoryObj = { name: 'Tool calls', render: () => <Calls /> }
+/** A tool call held for approval, with Approve and Deny, beside one that was denied. */
 export const Held: StoryObj = { name: 'Confirm card', render: () => <Confirm /> }
+/** A YAML file with line numbers and two lines highlighted, a flowchart, and a flowchart cut off mid-way. */
 export const Blocks: StoryObj = { name: 'Code and diagrams', render: () => <CodeAndDiagram /> }

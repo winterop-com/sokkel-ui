@@ -19,7 +19,7 @@ jobs:
                   registry-url: https://npm.pkg.github.com
                   scope: '@winterop-com'
             # Bun from npm rather than GitHub's release downloads, which fail when GitHub's are down.
-            - run: npm install -g bun --registry https://registry.npmjs.org
+            - run: npm install -g "bun@$(cat .bun-version)" --registry https://registry.npmjs.org
             - run: bun install --frozen-lockfile
             # The packages ship together, so every one of them carries the tag's version.
             - name: The tag names the version in every package.json

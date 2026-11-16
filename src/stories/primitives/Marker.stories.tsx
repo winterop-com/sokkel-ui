@@ -15,6 +15,7 @@ function Caption({ children }: { children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Chat/Marker', parameters: { frame: 'column' } }
 export default meta
 
+/** A marker in each look (plain, separator, border), with an icon, and with a link. */
 export const Variants: StoryObj = {
     render: () => (
         <Stack gap="xl" className="max-w-2xl">
@@ -50,6 +51,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Markers between messages: a date as a separator and a schedule paused as an event in the conversation. */
 export const Timeline: StoryObj = {
     render: () => (
         <Stack gap="lg" className="max-w-2xl">

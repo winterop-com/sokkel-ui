@@ -14,6 +14,17 @@ import { ADDONS, exportedComponents, exportProblems, importPath, manifestOf, PAC
 
 const ROOT = join(__dirname, '..')
 
+/** A file's text, read once and shared by every test that reads it. */
+const TEXTS = new Map<string, string>()
+function text(path: string): string {
+    let found = TEXTS.get(path)
+    if (found === undefined) {
+        found = readFileSync(path, 'utf8')
+        TEXTS.set(path, found)
+    }
+    return found
+}
+
 function files(dir: string): string[] {
     return readdirSync(dir).flatMap((name) => {
         const path = join(dir, name)
@@ -83,6 +94,12 @@ const RULES: Rule[] = [
         in: ALL,
     },
     {
+        name: 'a Tailwind shadow instead of an elevation token',
+        // shadow-surface, shadow-node, shadow-pop and shadow-dialog read the elevation tokens, which a theme sets.
+        pattern: /(?<![\w-])shadow-(?:2xs|xs|sm|md|lg|xl|2xl)(?![\w-])/,
+        in: ALL,
+    },
+    {
         name: 'an invalid look in the destructive color instead of the issue edge',
         // A refused value wears the critical tints of `lib/issue-edge`, so a bare primitive and a field agree.
         pattern: /invalid[^\s"'`]*:(?:border|ring)-destructive/,
@@ -99,7 +116,16 @@ const RULES: Rule[] = [
             'src/stories/fixtures/portraits.ts': 'portraits drawn as SVG data',
         },
     },
-    { name: 'a selector reaching into a component from a story', pattern: /\[&[_>]/, in: STORIES },
+    {
+        name: 'a selector reaching into a component from a story',
+        // An arbitrary child or descendant variant, a state read off a parent or a sibling, or a child or descendant star.
+        pattern: /\[&[_>]|(?<![\w-])(?:[\w-]+:)*(?:group|peer)-(?:data|aria|has)-\[|(?<![\w-])(?:has|in|not)-\[|(?<=[\s"'`])\*{1,2}:[a-z]/,
+        in: STORIES,
+        except: {
+            'src/stories/primitives/Sidebar.stories.tsx':
+                "the Sidebar primitive's own stories show its collapsed state's variant, its API for a part",
+        },
+    },
     { name: 'an arbitrary value in a story', pattern: /\b(rounded|text|leading|tracking|font)-\[/, in: STORIES },
     {
         name: 'a raw table in a story instead of DataTable',
@@ -125,9 +151,10 @@ const RULES: Rule[] = [
     {
         name: 'raw layout in a story instead of the layout components',
         // A container drawn by hand: flex or grid, its direction, wrapping, tracks or gaps. A cell's own
-        // size (flex-1, shrink-0, a width) is not a layout and stays allowed.
+        // size (flex-1, shrink-0, a width) is not a layout and stays allowed. Any string in the braces is
+        // read, so a class in cn(), after a condition or in either side of a ternary is caught.
         pattern:
-            /className=\{?(?:cn\((?:[^"'`(),]+,\s*)*)?["'`][^"'`]*(?<![\w-])(?:[\w-]+:)*(?:flex|inline-flex|grid|inline-grid|flex-col(?:-reverse)?|flex-row(?:-reverse)?|flex-wrap|grid-cols-[^\s"'`]+|grid-rows-[^\s"'`]+|gap-[^\s"'`]+|space-[xy]-[^\s"'`]+)(?=[\s"'`])/,
+            /className=(?:\{(?:[^"'`{}]|["'`][^"'`]*["'`])*?)?["'`][^"'`]*(?<![\w-])(?:[\w-]+:)*(?:flex|inline-flex|grid|inline-grid|flex-col(?:-reverse)?|flex-row(?:-reverse)?|flex-wrap|grid-cols-[^\s"'`]+|grid-rows-[^\s"'`]+|gap-[^\s"'`]+|space-[xy]-[^\s"'`]+)(?=[\s"'`])/,
         in: STORIES,
     },
     {
@@ -160,7 +187,7 @@ const RULES: Rule[] = [
 const COMPONENTS = Object.values(SOURCES)
     .flat()
     .filter((path) => path.endsWith('.tsx') && !/\/packages\/core\/src\/(hooks|lib)\//.test(path))
-    .filter((path) => /export (function|const) [A-Z]/.test(readFileSync(path, 'utf8')))
+    .filter((path) => /export (function|const) [A-Z]/.test(text(path)))
 
 /** A package's `exports` map, by the package's folder name. */
 const EXPORTS = Object.fromEntries(PACKAGES.map((name) => [name, manifestOf(name as PackageDir).exports]))
@@ -235,7 +262,7 @@ describe('the packages', () => {
         for (const name of PACKAGES) {
             const own = join(ROOT, 'packages', name)
             for (const path of SOURCES[name]) {
-                for (const match of readFileSync(path, 'utf8').matchAll(/(?:from|import)\s*\(?\s*'(\.{1,2}\/[^'?]*)/g)) {
+                for (const match of text(path).matchAll(/(?:from|import)\s*\(?\s*'(\.{1,2}\/[^'?]*)/g)) {
                     if (relative(own, resolve(dirname(path), match[1])).startsWith('..')) found.push(`${relative(ROOT, path)}: ${match[1]}`)
                 }
             }
@@ -273,14 +300,13 @@ describe('the exports maps', () => {
     it('export every package path the packages, stories, examples, tools and docs import', { timeout: 30_000 }, () => {
         const unexported: string[] = []
         for (const path of IMPORTERS) {
-            const text = readFileSync(path, 'utf8')
-            for (const match of text.matchAll(/(?:from|import|mock)\s*\(?\s*['"](@winterop-com\/sokkel-ui[^'"]*)['"]/g)) {
+            for (const match of text(path).matchAll(/(?:from|import|mock)\s*\(?\s*['"](@winterop-com\/sokkel-ui[^'"]*)['"]/g)) {
                 if (exported(match[1]) === undefined) unexported.push(`${relative(ROOT, path)}: ${match[1]}`)
             }
         }
         // A path a doc names in code, quotes or backticks; a placeholder such as `<name>` or `*`, or a folder, names no one module.
         for (const path of DOCS) {
-            for (const match of readFileSync(path, 'utf8').matchAll(/[`'"](@winterop-com\/sokkel-ui(?:-[a-z]+)?\/[^`'"\s]+)[`'"]/g)) {
+            for (const match of text(path).matchAll(/[`'"](@winterop-com\/sokkel-ui(?:-[a-z]+)?\/[^`'"\s]+)[`'"]/g)) {
                 if (/[<*{$]|\/$/.test(match[1])) continue
                 if (exported(match[1]) === undefined) unexported.push(`${relative(ROOT, path)}: ${match[1]}`)
             }
@@ -289,12 +315,106 @@ describe('the exports maps', () => {
     })
 })
 
+/** The packages a module imports at run time, statically or by a dynamic `import()`; type-only imports leave nothing in a build. */
+function runtimeImports(source: string): string[] {
+    const found: string[] = []
+    for (const match of source.matchAll(/^(?:import|export)\s+([^'";]*?)\s*from\s*['"]([^'"]+)['"]/gm)) {
+        const clause = match[1].trim()
+        if (/^type\b/.test(clause)) continue
+        const named = /\{([^}]*)\}/.exec(clause)
+        if (
+            named !== null &&
+            clause
+                .replace(/\{[^}]*\}/, '')
+                .replaceAll(',', '')
+                .trim() === ''
+        ) {
+            const names = named[1]
+                .split(',')
+                .map((part) => part.trim())
+                .filter((part) => part !== '')
+            if (names.length > 0 && names.every((name) => name.startsWith('type '))) continue
+        }
+        found.push(match[2])
+    }
+    for (const match of source.matchAll(/^import\s+['"]([^'"]+)['"]/gm)) found.push(match[1])
+    for (const match of source.matchAll(/(?<!typeof\s*)\bimport\(\s*['"]([^'"]+)['"]\s*\)/g)) found.push(match[1])
+    return found.map((spec) => spec.replace(/\?.*$/, ''))
+}
+
+describe('the optional peers', () => {
+    it("are named in the README's table for every core module that reaches one", () => {
+        const manifest = JSON.parse(text(join(ROOT, 'packages/core/package.json'))) as { peerDependenciesMeta?: Record<string, unknown> }
+        const optional = Object.keys(manifest.peerDependenciesMeta ?? {})
+        const source = (from: string, spec: string) =>
+            ['.ts', '.tsx', '/index.ts', '/index.tsx'].map((ext) => resolve(dirname(from), spec) + ext).find((path) => existsSync(path))
+        const reached = new Map<string, ReadonlySet<string>>()
+        // Every optional peer a module's imports reach, through the core's own modules; a bundler resolves a lazy import too.
+        const peersOf = (path: string, seen: Set<string>): Set<string> => {
+            const peers = new Set<string>()
+            if (seen.has(path)) return peers
+            seen.add(path)
+            for (const spec of runtimeImports(text(path))) {
+                if (spec.startsWith('.')) {
+                    const next = source(path, spec)
+                    if (next !== undefined) for (const peer of peersOf(next, seen)) peers.add(peer)
+                    continue
+                }
+                const peer = optional.find((name) => spec === name || spec.startsWith(`${name}/`))
+                if (peer !== undefined) peers.add(peer)
+            }
+            return peers
+        }
+        for (const [key, target] of Object.entries(EXPORTS[CORE])) {
+            const built = typeof target === 'string' ? target : target.import
+            const module = /^\.\/dist\/(.+)\.js$/.exec(built ?? '')?.[1]
+            if (module === undefined || key.includes('*')) continue
+            const path = source(join(ROOT, 'packages/core/src/x'), `./${module}`)
+            if (path !== undefined) reached.set(key.slice(2), peersOf(path, new Set()))
+        }
+        // The table's rows: the modules in the first cell, the packages to install in the second.
+        const rows = text(join(ROOT, 'README.md'))
+            .split('\n')
+            .filter((line) => line.startsWith('| `'))
+            .map((line) => line.split('|').slice(1, 3))
+            .map(([uses, installs]) => ({
+                uses: [...uses.matchAll(/`([^`]+)`/g)].map((match) => match[1]),
+                installs: new Set([...installs.matchAll(/`([^`]+)`/g)].map((match) => match[1])),
+            }))
+        const names = (module: string, name: string) => name === module || (name.endsWith('/*') && module.startsWith(name.slice(0, -1)))
+        const unlisted: string[] = []
+        for (const [module, peers] of reached) {
+            const listed = rows.filter((row) => row.uses.some((name) => names(module, name)))
+            for (const peer of peers) if (!listed.some((row) => row.installs.has(peer))) unlisted.push(`${module}: ${peer}`)
+        }
+        expect(reached.get('CodeEditor')?.has('@codemirror/view')).toBe(true)
+        expect(unlisted, unlisted.join('\n')).toEqual([])
+    })
+})
+
+describe('the workflows', () => {
+    it('install the one Bun version .bun-version names', () => {
+        const scripts = [
+            ...readdirSync(join(ROOT, '.github/workflows')).map((name) => join(ROOT, '.github/workflows', name)),
+            ...readdirSync(join(ROOT, 'scripts')).map((name) => join(ROOT, 'scripts', name)),
+        ].filter((path) => /\.(ya?ml|sh)$/.test(path))
+        const unpinned = scripts.flatMap((path) =>
+            text(path)
+                .split('\n')
+                .filter((line) => /install -g (["']?)bun\b/.test(line) && !/bun@(\$\(cat \.bun-version\)|\$\{bun\})/.test(line))
+                .map((line) => `${relative(ROOT, path)}: ${line.trim()}`),
+        )
+        expect(text(join(ROOT, '.bun-version')).trim()).toMatch(/^\d+\.\d+\.\d+$/)
+        expect(unpinned, unpinned.join('\n')).toEqual([])
+    })
+})
+
 describe('the components', () => {
     it('export the type of their props as `<Component>Props`, beside them', () => {
         const missing: string[] = []
         for (const path of Object.values(SOURCES).flat()) {
             if (!path.endsWith('.tsx')) continue
-            const source = readFileSync(path, 'utf8')
+            const source = text(path)
             for (const { name } of exportedComponents(source)) {
                 const takesNone = new RegExp(`(?:function ${name}\\s*(?:<[^>]*>)?\\(\\s*\\)|const ${name}\\s*=\\s*\\(\\s*\\)\\s*=>)`).test(
                     source,
@@ -310,15 +430,36 @@ describe('the components', () => {
 })
 
 describe('the stories', () => {
+    it('say what each one shows in a doc comment above its export', () => {
+        const bare: string[] = []
+        for (const path of files(join(ROOT, 'src/stories')).filter((file) => file.endsWith('.stories.tsx'))) {
+            const lines = text(path).split('\n')
+            lines.forEach((line, index) => {
+                const name = /^export const (\w+)\b/.exec(line)?.[1]
+                if (name === undefined) return
+                let above = index - 1
+                while (above >= 0 && lines[above].trim().startsWith('//')) above -= 1
+                if (above < 0 || !lines[above].trim().endsWith('*/')) bare.push(`${relative(ROOT, path)}:${String(index + 1)}: ${name}`)
+            })
+        }
+        expect(bare, bare.join('\n')).toEqual([])
+    })
+
     it('show every component, itself or through the component it is a part of', () => {
-        const stories = files(join(ROOT, 'src/stories'))
-            .map((path) => readFileSync(path, 'utf8'))
-            .join('\n')
+        // Every package path a story names in quotes, and every module name a component file imports by its last segment.
+        const named = new Set(
+            files(join(ROOT, 'src/stories')).flatMap((path) =>
+                [...text(path).matchAll(/'(@winterop-com\/[^']*)'/g)].map((match) => match[1]),
+            ),
+        )
+        const imports = new Map(
+            COMPONENTS.map((path) => [path, new Set([...text(path).matchAll(/\/([^/']*)'/g)].map((match) => match[1]))]),
+        )
         const unseen = COMPONENTS.filter((path) => {
             const module = specifier(path)
-            if (stories.includes(`'${module}'`)) return false
+            if (named.has(module)) return false
             const name = module.split('/').pop() ?? module
-            return !COMPONENTS.some((other) => other !== path && readFileSync(other, 'utf8').includes(`/${name}'`))
+            return !COMPONENTS.some((other) => other !== path && imports.get(other)?.has(name) === true)
         }).map((path) => relative(ROOT, path))
         expect(unseen, unseen.join('\n')).toEqual([])
     })
@@ -326,13 +467,11 @@ describe('the stories', () => {
 
 describe('the chart stories', () => {
     it('name every chart kind, so a search of the catalog for it finds it', () => {
-        const kinds = [...readFileSync(join(ROOT, 'packages/charts/src/kinds/index.ts'), 'utf8').matchAll(/^\s+(\w+): \{ build/gm)].map(
-            (match) => match[1],
-        )
+        const kinds = [...text(join(ROOT, 'packages/charts/src/kinds/index.ts')).matchAll(/^\s+(\w+): \{ build/gm)].map((match) => match[1])
         expect(kinds.length).toBeGreaterThan(10)
         // What the sidebar search reads: each section's title and each story's name, written as one word.
         const names = files(join(ROOT, 'src/stories/charts'))
-            .map((path) => readFileSync(path, 'utf8'))
+            .map((path) => text(path))
             .flatMap((text) => [
                 ...[...text.matchAll(/title: '([^']+)'/g)].map((match) => match[1]),
                 ...[...text.matchAll(/^\s+name: '([^']+)'/gm)].map((match) => match[1]),
@@ -351,7 +490,7 @@ describe('the library rules', () => {
             for (const path of rule.in) {
                 const file = relative(ROOT, path)
                 if (rule.except?.[file] !== undefined) continue
-                readFileSync(path, 'utf8')
+                text(path)
                     .split('\n')
                     .forEach((line, index) => {
                         if (rule.skipLine?.(line) === true) return

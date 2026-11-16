@@ -61,7 +61,11 @@ const RUNNING: Shown[] = [
     { id: 'running', show: (id) => toast.loading('Running import-orders', { ...forever, id, description: 'Step 3 of 5, validate.' }) },
 ]
 
+/** A toast of each kind, spread out: plain, success, info, warning and error, each with a description. */
 export const Variants: StoryObj = { render: () => <Toasts toasts={KINDS} expand /> }
+/** The same toasts stacked in the corner, as they gather when several arrive. */
 export const Stacked: StoryObj = { render: () => <Toasts toasts={KINDS} /> }
+/** A failed run's toast with a View run action. */
 export const WithAction: StoryObj = { render: () => <Toasts toasts={FAILED} /> }
+/** A toast with a spinner for a run still in progress, saying the step it is at. */
 export const Loading: StoryObj = { render: () => <Toasts toasts={RUNNING} /> }

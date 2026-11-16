@@ -18,6 +18,7 @@ function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** Every page link with the current one marked and an ellipsis, and Previous and Next alone with words of its own. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -68,6 +69,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The first page, with Previous shut, and a single page. */
 export const States: StoryObj = {
     render: () => (
         <>
@@ -108,6 +110,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** Paging through a job's runs. */
 export const RunHistory: StoryObj = {
     render: () => (
         <Row gap="md" justify="between" wrap className="rounded-lg border px-3 py-2">

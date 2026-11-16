@@ -29,6 +29,7 @@ function Step({ open, disabled }: { open?: boolean; disabled?: boolean }) {
 const meta: Meta = { title: 'Primitives/Layout/Collapsible', parameters: { frame: 'column' } }
 export default meta
 
+/** A step's region closed, open and disabled. */
 export const States: StoryObj = {
     render: () => (
         <>
@@ -73,6 +74,7 @@ function JobSteps() {
     )
 }
 
+/** A job's steps, each opening to show what it was given, one open at a time. */
 export const Steps: StoryObj = {
     render: () => (
         <Stack gap="sm">

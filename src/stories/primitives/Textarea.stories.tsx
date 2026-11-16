@@ -10,6 +10,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Inputs/Textarea', parameters: { frame: 'column' } }
 export default meta
 
+/** Empty, filled, and in the monospaced face. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -29,6 +30,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Disabled, invalid and read only. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -62,6 +64,7 @@ export const Bare: StoryObj = {
     ),
 }
 
+/** A note on a run, with its label and a Save button. */
 export const RunNote: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-lg">

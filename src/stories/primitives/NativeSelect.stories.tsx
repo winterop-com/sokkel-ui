@@ -19,6 +19,7 @@ function States3(props: React.ComponentProps<typeof NativeSelect>) {
 const meta: Meta = { title: 'Primitives/Inputs/NativeSelect', parameters: { frame: 'column' } }
 export default meta
 
+/** The default and small sizes, a placeholder, and options in groups. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="end" wrap>
@@ -46,6 +47,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Disabled and invalid. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="end" wrap>
@@ -59,6 +61,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** How many runs a page shows, chosen under a table's count. */
 export const RunsPerPage: StoryObj = {
     render: () => (
         <>

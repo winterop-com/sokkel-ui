@@ -10,6 +10,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Actions/ButtonGroup', parameters: { frame: 'column' } }
 export default meta
 
+/** Buttons joined across and down, with a separator, around a text, around an input, and groups side by side. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -76,6 +77,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A group with one button disabled, and one with every button disabled. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -105,6 +107,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** A running run's Pause and Cancel joined as one group beside what the run is doing. */
 export const RunControls: StoryObj = {
     render: () => (
         <Row gap="md" justify="between" wrap className="rounded-lg border border-border p-4">

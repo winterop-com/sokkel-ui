@@ -37,6 +37,7 @@ const MENU = (
     </>
 )
 
+/** Album cards in a grid: cover, title, artist and year, a play button, a menu, and the first album playing. */
 export const Albums: StoryObj = {
     name: 'Albums',
     render: () => (
@@ -65,6 +66,7 @@ const EPISODES: { title: string; length: number; watched?: number; cover: Artwor
     { title: 'Evening Tide', length: 1650, cover: { motif: 'bands', from: 'coral', to: 'violet' } },
 ]
 
+/** Wide episode cards in a grid: a length badge, how much has been watched, and one playing. */
 export const Videos: StoryObj = {
     name: 'Videos',
     render: () => (
@@ -118,6 +120,7 @@ export const Rows: StoryObj = {
     ),
 }
 
+/** Album cards in a narrow grid with small covers, each a link with its title and artist. */
 export const Compact: StoryObj = {
     name: 'Narrow covers',
     render: () => (

@@ -106,7 +106,7 @@ export function BasemapSwitcher({ basemaps, value, onValueChange, words: given, 
                         size="icon-sm"
                         aria-label={label}
                         title={label}
-                        className={cn('bg-card text-foreground shadow-xs hover:bg-hover dark:bg-card', className)}
+                        className={cn('bg-card text-foreground shadow-surface hover:bg-hover dark:bg-card', className)}
                     />
                 }
             >

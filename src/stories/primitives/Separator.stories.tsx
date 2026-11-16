@@ -11,6 +11,7 @@ function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** Horizontal between sections, and vertical between items in a row. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -34,6 +35,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A job's header, and a row of its facts with lines between them. */
 export const JobHeader: StoryObj = {
     render: () => (
         <Stack className="max-w-xl">

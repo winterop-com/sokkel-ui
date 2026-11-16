@@ -7,6 +7,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Display/Skeleton', parameters: { frame: 'column' } }
 export default meta
 
+/** A line, a short line, a circle and a rectangle. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="end" wrap>
@@ -26,6 +27,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A table of runs while it loads, its head drawn and its rows as lines. */
 export const LoadingRuns: StoryObj = {
     render: () => (
         <Stack gap="none" className="max-w-3xl rounded-lg border">

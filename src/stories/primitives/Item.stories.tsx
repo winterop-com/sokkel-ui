@@ -25,6 +25,7 @@ function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** The item in each variant and each size. */
 export const Variants: StoryObj = {
     render: () => (
         <Stack gap="xl" className="max-w-xl">
@@ -64,6 +65,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** An item drawn as a link, with a header above its content and a footer under it. */
 export const WithHeaderAndFooter: StoryObj = {
     name: 'Header and footer',
     render: () => (
@@ -100,6 +102,7 @@ const JOBS = [
     { code: 'send-digest', name: 'Weekly digest', last: 'cancelled', when: '2026-11-03 08:00' },
 ] as const
 
+/** Jobs as a flush list of linked items, each with an icon, its name or code, and a separator between. */
 export const JobList: StoryObj = {
     render: () => (
         <ItemGroup flush className="max-w-2xl">

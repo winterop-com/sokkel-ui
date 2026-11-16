@@ -74,6 +74,9 @@ function ProductNav({ open }: { open?: string }) {
     )
 }
 
+/** The menu bar with its two menus closed and a plain link. */
 export const Closed: StoryObj = { render: () => <ProductNav /> }
+/** The Build menu open. */
 export const BuildOpen: StoryObj = { render: () => <ProductNav open="build" /> }
+/** The Operate menu open. */
 export const OperateOpen: StoryObj = { render: () => <ProductNav open="operate" /> }

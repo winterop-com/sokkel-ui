@@ -242,6 +242,7 @@ function Prose() {
 const meta: Meta = { title: 'Patterns/States', parameters: { frame: 'padded' } }
 export default meta
 
+/** Every state a page's read lands in: loading, refused with the server's words, refused with a retry, missing, unreachable and empty. */
 export const Read: StoryObj = { name: 'Page state', render: () => <ReadStates /> }
 
 /**
@@ -262,6 +263,7 @@ export const Secondary: StoryObj = { name: 'Secondary read', render: () => <Seco
  * edge, and `problems` lists each failure the refusal named.
  */
 export const InATable: StoryObj = { name: 'In a table', render: () => <InTable /> }
+/** Sections that unfold, one open from the start, each with a note beside its heading, and one held open while a filter is typed. */
 export const Unfold: StoryObj = { name: 'Unfoldable', render: () => <Unfolding /> }
 /**
  * A run's steps as a list of mixed rows, held from outside (`open`, `onOpenChange`) so Open all
@@ -269,4 +271,5 @@ export const Unfold: StoryObj = { name: 'Unfoldable', render: () => <Unfolding /
  * row is static, with no chevron and no button, its name lined up with the rest.
  */
 export const Steps: StoryObj = { name: 'Unfoldable steps', render: () => <StepList /> }
+/** A server's words with code in backticks drawn as code, and an unmatched backtick drawn as written. */
 export const Text: StoryObj = { name: 'Prose text', render: () => <Prose /> }

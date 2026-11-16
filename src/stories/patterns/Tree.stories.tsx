@@ -324,11 +324,14 @@ function Large() {
 const meta: Meta = { title: 'Patterns/Tree', parameters: { frame: 'padded' } }
 export default meta
 
+/** A tree of places choosing one, choosing several, and filtered by a search. */
 export const Trees_: StoryObj = { name: 'Tree', render: () => <Trees /> }
+/** A tree select in a form: one city, and several places an office also serves. */
 export const Select: StoryObj = {
     name: 'Tree select',
     render: () => <Picker />,
 }
+/** The tree select for one city open, its list unfolded at the chosen city. */
 export const SelectOpen: StoryObj = {
     name: 'Tree select, open',
     render: () => <Picker open="one" />,

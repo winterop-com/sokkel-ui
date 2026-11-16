@@ -97,6 +97,7 @@ export const ScheduleServerSyntax: StoryObj = { name: 'Server syntax', render: (
 
 /** A saved schedule shown with no input: the expression, its reading and its next runs. */
 export const ScheduleReadOnly: StoryObj = { name: 'Schedule read only', render: () => <small.ScheduleReadOnly /> }
+/** A paused schedule: its expression still read in words, and no runs listed. */
 export const SchedulePaused: StoryObj = { name: 'Schedule paused', render: () => <small.SchedulePaused /> }
 
 /** The same change made to many jobs, every field starting at Leave as is. */
@@ -124,6 +125,7 @@ export const Wizard: StoryObj = { render: () => <flows.NewJobWizard /> }
 /** `width="full"`: a tester filling the window but a margin, an editor beside what it gives; `finalFocus={false}` leaves focus where it lands on close. */
 export const Workbench: StoryObj = { render: () => <small.Workbench /> }
 
+/** Release notes longer than the window, scrolling inside the dialog between its fixed head and foot. */
 export const LongContent: StoryObj = { name: 'Long content', render: () => <small.ReleaseNotes /> }
 
 /** A side sheet for editing details in place, with the save bar at its foot. */

@@ -38,6 +38,7 @@ function JobCard({ job }: { job: (typeof JOBS)[number] }) {
 const meta: Meta = { title: 'Primitives/Layout/Carousel', parameters: { frame: 'column' } }
 export default meta
 
+/** Sideways, one slide at a time, and up and down. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -73,6 +74,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The jobs run most recently, as cards to page through. */
 export const RecentJobs: StoryObj = {
     render: () => (
         <Stack className="px-12">

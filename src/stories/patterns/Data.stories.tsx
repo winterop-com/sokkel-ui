@@ -419,6 +419,7 @@ function LongJson() {
 const meta: Meta = { title: 'Patterns/Data', parameters: { frame: 'padded' } }
 export default meta
 
+/** A run's facts as a description list in two columns, with a missing value and a wide code, and the same kind of facts in a line. */
 export const Description: StoryObj = { name: 'Description list', render: () => <Facts /> }
 /** Terms in a column as wide as the longest of them, in one column and in two, a wide note under its term. */
 export const AutoTerms: StoryObj = { name: 'Auto terms', render: () => <Aligned /> }
@@ -428,6 +429,7 @@ export const SharedTerms: StoryObj = { name: 'Shared terms', render: () => <Spli
 export const Wide: StoryObj = { name: 'Wide values', render: () => <WideValues /> }
 /** The small size in a narrow inspector: values at the size of help text, tighter gaps, groups with counts. */
 export const Dense: StoryObj = { name: 'Dense', render: () => <DenseFacts /> }
+/** Four stats on a card, each with its change against yesterday, a note and a sparkline of the last 14 days. */
 export const Stats: StoryObj = { name: 'Stats', render: () => <Numbers /> }
 /**
  * Runs by state as tiles, each leading to the runs it counts. Queued is the one that asks for work:
@@ -453,6 +455,7 @@ export const Tiles: StoryObj = {
         </Columns>
     ),
 }
+/** A run's steps as a timeline in their tones, the last one still running, and a job's history of changes. */
 export const Timelines: StoryObj = { name: 'Timeline', render: () => <Events /> }
 /**
  * A run's log twice: scrolling sideways, then wrapped with "rows" marked. On a phone the wrapped
@@ -470,6 +473,7 @@ export const LogSources: StoryObj = { name: 'Log sources', render: () => <Source
 export const LogFields: StoryObj = { name: 'Log fields', render: () => <LogView lines={ITEM_LOG} onSource={() => undefined} /> }
 /** A log with no lines: its own words first, then the app's `empty`, a run still waiting for a worker. */
 export const EmptyLog: StoryObj = { name: 'Empty log', render: () => <EmptyLogs /> }
+/** A failed run's payload as a JSON tree: values, a null, nested steps and labels. */
 export const Tree: StoryObj = { name: 'JSON tree', render: () => <Json /> }
 /** A list of 240 runs, opened: the first 100 drawn and a step under them that shows 100 more. */
 export const LongTree: StoryObj = { name: 'Long JSON', render: () => <LongJson /> }

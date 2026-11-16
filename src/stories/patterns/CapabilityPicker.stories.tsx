@@ -122,10 +122,14 @@ function Picker({ query, chosen }: { query?: string; chosen?: string[] }) {
     )
 }
 
+/** Every block in the catalog under its group, with no search and no capability chosen. */
 export const Catalog: StoryObj = { name: 'Catalog', render: () => <Picker /> }
 
+/** The catalog narrowed to the blocks that need the network and secrets capabilities. */
 export const Filtered: StoryObj = { name: 'Filtered', render: () => <Picker chosen={['network', 'secrets']} /> }
 
+/** The catalog narrowed by a search for rows. */
 export const Searching: StoryObj = { name: 'Searching', render: () => <Picker query="rows" /> }
 
+/** A search and a capability that leave no block, and the empty state that says so. */
 export const NothingLeft: StoryObj = { name: 'Nothing left', render: () => <Picker query="ferry" chosen={['writes']} /> }

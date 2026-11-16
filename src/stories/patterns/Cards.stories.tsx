@@ -191,9 +191,16 @@ function Media() {
 const meta: Meta = { title: 'Patterns/Cards', parameters: { frame: 'padded' } }
 export default meta
 
+/**
+ * Cards with their content alone: a title and code, a description, a status, facts and a menu, and
+ * a card with no name of its own that shows its code.
+ */
 export const Plain_: StoryObj = { name: 'Plain', render: () => <Plain /> }
 /** Cards led by an icon on a tile, saying what kind of thing each is; each leads to its app. */
 export const Icon_: StoryObj = { name: 'With icon', render: () => <Icons /> }
+/** Cards that each lead to a job's page, with its status, schedule, last run and a menu. */
 export const Linked_: StoryObj = { name: 'Interactive', render: () => <Linked /> }
+/** Cards to choose one plan from, the chosen one marked. */
 export const Choose_: StoryObj = { name: 'Selectable', render: () => <Choose /> }
+/** Cards with album artwork on top, each leading to its album. */
 export const Media_: StoryObj = { name: 'With media', render: () => <Media /> }

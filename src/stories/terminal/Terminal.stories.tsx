@@ -118,6 +118,9 @@ function Live() {
 const meta: Meta = { title: 'Terminal/Terminal' }
 export default meta
 
+/** A finished session: commands with their colored output, cleared by Clear. */
 export const Session_: StoryObj = { name: 'Session', render: () => <Session /> }
+/** Output caught mid-stream: a progress bar redrawn by carriage returns, and the cursor after it. */
 export const Midway_: StoryObj = { name: 'Streaming', render: () => <Midway /> }
+/** A run followed live, its steps printed one after another until it ends; Clear starts it again. */
 export const Live_: StoryObj = { name: 'Live', tags: ['no-screenshot'], render: () => <Live /> }

@@ -9,6 +9,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Display/Spinner', parameters: { frame: 'column' } }
 export default meta
 
+/** The spinner at each size, muted, and in the running ink. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="end" wrap>
@@ -31,6 +32,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The spinner in a disabled button, in a badge and beside text. */
 export const InContext: StoryObj = {
     render: () => (
         <Row gap="lg" wrap>

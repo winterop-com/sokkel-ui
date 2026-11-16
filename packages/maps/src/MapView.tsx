@@ -294,7 +294,7 @@ function ControlButton({
                         variant="outline"
                         size="icon-sm"
                         aria-label={label}
-                        className="bg-card text-foreground shadow-xs hover:bg-hover dark:bg-card"
+                        className="bg-card text-foreground shadow-surface hover:bg-hover dark:bg-card"
                         onClick={onClick}
                     />
                 }
@@ -770,7 +770,7 @@ export function MapView({
                         {corner === 'top-right' && supported && shown !== null && (
                             <>
                                 {(shown.zoom || shown.fit) && (
-                                    <ButtonGroup orientation="vertical" className="rounded-control shadow-xs">
+                                    <ButtonGroup orientation="vertical" className="rounded-control shadow-surface">
                                         {shown.zoom && (
                                             <>
                                                 <ControlButton
