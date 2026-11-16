@@ -1,6 +1,6 @@
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Slider } from '@winterop-com/sokkel-ui/primitives/slider'
@@ -46,7 +46,15 @@ export function PeriodSlider({ label, periods, value, onValueChange, interval = 
     )
     const last = periods.length - 1
     const [playing, setPlaying] = useState(false)
-    const step = (to: number) => onValueChange(periods[Math.min(Math.max(to, 0), last)].id)
+    const step = (to: number) => {
+        const period = periods[Math.min(Math.max(to, 0), last)]
+        if (period !== undefined) onValueChange(period.id)
+    }
+    // The latest periods and handler, so a parent that renders between steps does not start the wait again.
+    const latest = useRef({ periods, onValueChange })
+    useEffect(() => {
+        latest.current = { periods, onValueChange }
+    })
 
     useEffect(() => {
         if (!playing) return
@@ -54,9 +62,12 @@ export function PeriodSlider({ label, periods, value, onValueChange, interval = 
             setPlaying(false)
             return
         }
-        const timer = setTimeout(() => onValueChange(periods[index + 1].id), interval)
+        const timer = setTimeout(() => {
+            const period = latest.current.periods[index + 1]
+            if (period !== undefined) latest.current.onValueChange(period.id)
+        }, interval)
         return () => clearTimeout(timer)
-    }, [playing, index, last, interval, periods, onValueChange])
+    }, [playing, index, last, interval])
 
     return (
         <div
@@ -67,6 +78,7 @@ export function PeriodSlider({ label, periods, value, onValueChange, interval = 
         >
             <IconButton
                 label={playing ? said.pause : said.play}
+                disabled={periods.length < 2}
                 onClick={() => {
                     if (!playing && index >= last) step(0)
                     setPlaying(!playing)

@@ -174,16 +174,26 @@ const CORNER_CLASS: Record<MapCorner, string> = {
 /** The margin a fit leaves around the data, beyond whatever the overlays in the corners take. */
 const FIT_MARGIN = 24
 
+/** Whether the page wears the dark scheme; false on a server, where there is no document. */
 function isDark(): boolean {
-    return document.documentElement.classList.contains('dark')
+    return typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
 }
 
+let webgl: boolean | undefined
+
+/** Whether the browser draws WebGL2, probed once for every map and its context let go; true on a server, so it renders the map's box. */
 function webglAvailable(): boolean {
-    try {
-        return document.createElement('canvas').getContext('webgl2') !== null
-    } catch {
-        return false
+    if (typeof document === 'undefined') return true
+    if (webgl === undefined) {
+        try {
+            const context = document.createElement('canvas').getContext('webgl2')
+            webgl = context !== null
+            context?.getExtension('WEBGL_lose_context')?.loseContext()
+        } catch {
+            webgl = false
+        }
     }
+    return webgl
 }
 
 type Engine = typeof import('./engine')
@@ -437,10 +447,16 @@ export function MapView({
         [cornerRef],
     )
 
+    // Bounds and a camera written inline are new objects each render; the fit follows what they hold.
+    const boundsKey = bounds === undefined ? '' : bounds.join(' ')
+    const [heldBounds, setHeldBounds] = useState({ key: boundsKey, bounds })
+    if (heldBounds.key !== boundsKey) setHeldBounds({ key: boundsKey, bounds })
+    const shownBounds = heldBounds.key === boundsKey ? heldBounds.bounds : bounds
+    const fixed = camera !== undefined
     const fitTarget = useCallback((): Bounds | null => {
-        if (bounds !== undefined) return bounds
+        if (shownBounds !== undefined) return shownBounds
         return unionBounds([...entries.current.values()].map((entry) => entry.bounds))
-    }, [bounds])
+    }, [shownBounds])
 
     const fit = useCallback(
         (animate: boolean) => {
@@ -681,10 +697,9 @@ export function MapView({
 
     // Runs after every layer's own effects, so the fit sees what they registered. New bounds are a
     // new subject, eased to whether or not the reader has moved the map since the last.
-    const boundsKey = bounds === undefined ? '' : bounds.join(' ')
     useEffect(() => {
         if (map === null || !ready) return
-        if (camera === undefined) {
+        if (!fixed) {
             if (framedOn.current !== null && framedOn.current !== boundsKey) {
                 moved.current = false
                 fit(true)
@@ -693,16 +708,16 @@ export function MapView({
         }
         armed.current = true
         map.triggerRepaint()
-    }, [map, ready, layerVersion, camera, fit, boundsKey])
+    }, [map, ready, layerVersion, fixed, fit, boundsKey])
 
     useEffect(() => {
         if (corners === null) return
         const observer = new ResizeObserver(() => {
-            if (!moved.current && camera === undefined) fitNow.current(false)
+            if (!moved.current && !fixed) fitNow.current(false)
         })
         for (const corner of CORNERS) observer.observe(corners[corner])
         return () => observer.disconnect()
-    }, [corners, camera])
+    }, [corners, fixed])
 
     useEffect(() => {
         const update = () => setFullscreen(scope !== null && fullscreenElement() === scope)

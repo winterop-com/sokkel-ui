@@ -1,7 +1,7 @@
 import { distinct, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
 import { tickWriter } from './axes'
-import { written, colorOf, type ChartBuilder, type ChartSpec } from './spec'
+import { written, colorOf, wordsOf, type ChartBuilder, type ChartSpec } from './spec'
 
 /** The fields a parallel chart draws an axis for, in order. */
 function axesOf(spec: ChartSpec): string[] {
@@ -28,7 +28,7 @@ export const parallel: ChartBuilder = (spec, look) => {
     const labels = fields.map((field, index) =>
         kinds[index] ? [] : spec.order === undefined ? distinct(spec.rows, field).sort() : distinct(spec.rows, field, spec.order),
     )
-    const groups = spec.series === undefined ? ['All'] : distinct(spec.rows, spec.series, spec.seriesOrder)
+    const groups = spec.series === undefined ? [wordsOf(spec).all] : distinct(spec.rows, spec.series, spec.seriesOrder)
     const text = { color: look.muted, fontFamily: look.font, fontSize: look.size.label }
     const tickText = { ...text, textBorderColor: look.card, textBorderWidth: 3 }
     const valueOf = (value: unknown, index: number) => (kinds[index] ? numberOf(value) : labelOf(value))

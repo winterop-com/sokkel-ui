@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 import type { LegendItem } from '../ChartLegend'
 import type { ChartSpec } from '../kinds'
 import { SERIES_ORDER } from '../look'
@@ -51,6 +53,19 @@ export const CATEGORY = 'category'
 export const SERIES = 'series'
 /** The field of a panel's rows each figure is in. */
 export const FIGURE = 'value'
+
+/** What a panel's data view heads its columns: the categories, the series and the figures. */
+export interface PanelWords {
+    category: string
+    series: string
+    value: string
+}
+
+/** The names a panel's spec gives its fields, from its words over the English defaults. */
+export function usePanelFields(words?: Partial<PanelWords>): Record<string, string> {
+    const { category = 'Category', series = 'Series', value = 'Value' } = words ?? {}
+    return useMemo(() => ({ [CATEGORY]: category, [SERIES]: series, [FIGURE]: value }), [category, series, value])
+}
 
 /**
  * A panel's series as the rows and fields a `Chart` reads: a row per category and series, the

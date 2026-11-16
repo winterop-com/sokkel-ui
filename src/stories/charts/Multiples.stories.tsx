@@ -41,7 +41,7 @@ function Multiple({
 }) {
     const legend = useMemo(() => chartLegend(kind, spec), [kind, spec])
     return (
-        <ChartFrame title={title} subtitle={subtitle} legend={legend} fit exportable={false}>
+        <ChartFrame title={title} subtitle={subtitle} legend={legend} fit>
             {(state) => (
                 <ChartGrid
                     kind={kind}
@@ -143,7 +143,7 @@ export const Rings: StoryObj = {
 export const Ordered: StoryObj = {
     render: () => (
         <Ground title="Runs, October" columns={1}>
-            <ChartFrame title="Runs" subtitle="per weekday, larkspur first" legend={STATE_LEGEND} fit exportable={false}>
+            <ChartFrame title="Runs" subtitle="per weekday, larkspur first" legend={STATE_LEGEND} fit>
                 {(state) => (
                     <ChartGrid
                         kind="bar"

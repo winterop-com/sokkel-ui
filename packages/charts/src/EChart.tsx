@@ -267,16 +267,20 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
             await ensure(composed as Record<string, unknown>)
             const el = element.current
             if (!live || el === null) return
+            // Reading the drawn option copies it whole, so it is read only where a zoom may be kept, and
+            // before the chart is made again below, so the reader's zoom outlives that.
+            const zoomed = drawnOption.current !== null && (composed as { dataZoom?: unknown }).dataZoom !== undefined
+            const zooms = zoomed
+                ? ((chart.current?.getOption() as { dataZoom?: { start?: number; end?: number }[] } | undefined)?.dataZoom ?? [])
+                : []
             // A chart made before a part it draws loaded lacks that part's layout, so it is made again.
             if (partsLoaded() !== made.current && themed.current !== null) {
                 chart.current?.dispose()
                 chart.current = init(el, chartTheme(themed.current), { renderer: 'canvas' })
                 made.current = partsLoaded()
-                drawnOption.current = null
             }
             const instance = chart.current
             if (instance === null) return
-            const zooms = (instance.getOption() as { dataZoom?: { start?: number; end?: number }[] } | undefined)?.dataZoom ?? []
             instance.setOption(keepZoom(drawnOption.current, composed, zooms), { notMerge: true })
             drawnOption.current = resolved
             setSettled(true)
@@ -286,15 +290,16 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
         }
     }, [ready, resolved, hidden, animate, short, room])
 
+    // Dispatched again once each option is drawn, as drawing one lets the last highlight go.
     useEffect(() => {
         const instance = chart.current
-        if (!ready || instance === null || resolved === null) return
+        if (!ready || !settled || instance === null || resolved === null) return
         instance.dispatchAction({ type: 'downplay' })
         if (hovered === null || hidden.has(hovered)) return
         // A legend entry names a series, or else an item of the first one: a slice, a band, a branch, a node.
         const named = seriesOf(resolved).some((series) => series.name === hovered)
         instance.dispatchAction(named ? { type: 'highlight', seriesName: hovered } : { type: 'highlight', seriesIndex: 0, name: hovered })
-    }, [ready, resolved, hovered, hidden])
+    }, [ready, settled, resolved, hovered, hidden])
 
     useImperativeHandle(handle, () => {
         const render = async (renderer: 'svg' | 'canvas', decor: ExportDecor) => {
@@ -303,7 +308,9 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
             const box = element.current?.getBoundingClientRect()
             const width = Math.max(320, Math.round(box?.width ?? 640))
             const base = Math.max(200, Math.round(box?.height ?? 320))
-            const { option: decorated, extra } = decorate(compose(resolved, hidden, false), decor, look, base)
+            // Fitted to the image's own size, as the chart on the page is to its box.
+            const fitted = compose(resolved, hidden, false, base < SHORT, { width, height: base })
+            const { option: decorated, extra } = decorate(fitted, decor, look, base)
             // The title drawn into the image, and the SVG renderer, load only for an export.
             await Promise.all([ensure(decorated as Record<string, unknown>), renderer === 'svg' ? ensureSvg() : undefined])
             const height = base + extra

@@ -51,7 +51,8 @@ box a size. Its colors, typefaces and sizes come from the theme it sits in: the 
 `data-theme-scope` around it, and it is drawn again when either changes.
 
 **In a frame.** `ChartFrame` puts a title, a subtitle, an Export menu (SVG and PNG), an expand
-button and a legend around a chart. Expanding opens the chart and its legend near full screen
+button and a legend around a chart. Export is offered while a `Chart` inside can draw an image, so a
+frame around a `ChartGrid` has none. Expanding opens the chart and its legend near full screen
 through core's `WindowedPane`, as every expandable pane opens. `chartLegend`
 (`@winterop-com/sokkel-ui-charts/chart-legend`) gives the frame the legend for the same kind and
 spec, which the frame lists once that kind's legend has loaded, and the frame's state goes to the

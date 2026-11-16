@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { shareOn } from '../stats'
 import { valueWriter } from './series'
 import { thresholdColor, tokenVar, type Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 
@@ -92,7 +93,7 @@ export function BarGauge({
                 <ul className="flex flex-col gap-1.5 py-1">
                     {bars.map((bar) => {
                         const tone = tokenVar(thresholdColor(bar.value, thresholds) ?? color)
-                        const share = bar.value === null ? 0 : Math.min(1, Math.max(0, (bar.value - min) / (max - min)))
+                        const share = bar.value === null ? 0 : shareOn(bar.value, min, max)
                         return (
                             <li
                                 key={bar.name}

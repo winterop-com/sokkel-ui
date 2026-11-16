@@ -1,6 +1,6 @@
 import { aggregate, aggregateAt, numberOf } from '../data'
 import { SERIES_ORDER, type ChartLook } from '../look'
-import { stepAt } from '../stats'
+import { shareOn, stepAt } from '../stats'
 import { tickWriter } from './axes'
 import { written, fieldsOf, type ChartBuilder, type ChartSpec, type ChartStep, type GaugeDial } from './spec'
 
@@ -71,7 +71,7 @@ function dial(
     const geometry = GEOMETRY[shape]
     const band = steps.map((step, index) => {
         const next = steps[index + 1]?.value
-        const end = next === undefined ? 1 : Math.min(1, Math.max(0, (next - min) / (max - min)))
+        const end = next === undefined ? 1 : shareOn(next, min, max)
         return [end, look.token(step.color)] as [number, string]
     })
     const arc = {

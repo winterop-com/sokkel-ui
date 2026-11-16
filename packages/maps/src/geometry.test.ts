@@ -271,6 +271,13 @@ describe('splitting geometry by kind', () => {
 describe('anchoring a popup', () => {
     const feature = (geometry: Geometry): Feature => ({ type: 'Feature', properties: {}, geometry })
 
+    test('has no anchor for a geometry with no positions', () => {
+        expect(anchorOf(feature({ type: 'MultiPolygon', coordinates: [] }))).toBeNull()
+        expect(anchorOf(feature({ type: 'Polygon', coordinates: [] }))).toBeNull()
+        expect(anchorOf(feature({ type: 'LineString', coordinates: [] }))).toBeNull()
+        expect(anchorOf(feature({ type: 'MultiLineString', coordinates: [[]] }))).toBeNull()
+    })
+
     test('points halfway along a line, on the line', () => {
         expect(anchorOf(feature(RIVER))).toEqual([-11.0, 9.0])
         const [lng, lat] = anchorOf(

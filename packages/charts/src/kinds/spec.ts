@@ -276,6 +276,10 @@ export interface ChartWords {
     ofFirst: string
     target: string
     observed: string
+    /** The one group a scatter or a parallel chart draws without `series`. */
+    all: string
+    /** Between the ends of a range in a tooltip, `10 to 90`. */
+    to: string
 }
 
 const WORDS: ChartWords = {
@@ -293,6 +297,8 @@ const WORDS: ChartWords = {
     ofFirst: 'of first',
     target: 'Target',
     observed: 'Observed',
+    all: 'All',
+    to: 'to',
 }
 
 /** The spec's words over the English defaults. */

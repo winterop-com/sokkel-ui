@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { tokenAlpha, tokenColor } from './look'
+import { tokenAlpha, tokenColor, withAlpha } from './look'
 
 describe('a color token with an alpha', () => {
     it('reads the percent after the slash', () => {
@@ -12,5 +12,12 @@ describe('a color token with an alpha', () => {
     it('is written as CSS through the token', () => {
         expect(tokenColor('chart-2')).toBe('var(--chart-2)')
         expect(tokenColor('muted-foreground/45')).toBe('color-mix(in oklab, var(--muted-foreground) 45%, transparent)')
+    })
+})
+
+describe('withAlpha', () => {
+    it('adds an alpha to a solid color, and multiplies one a color already has', () => {
+        expect(withAlpha('#336699', 0.5)).toBe('#33669980')
+        expect(withAlpha('#33669980', 0.5)).toBe('#33669940')
     })
 })

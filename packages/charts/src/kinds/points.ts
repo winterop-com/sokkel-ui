@@ -1,7 +1,7 @@
 import { distinct, extent, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
 import { tickWriter, valueLabels } from './axes'
-import { written, colorOf, type ChartBuilder } from './spec'
+import { written, colorOf, wordsOf, type ChartBuilder } from './spec'
 
 /**
  * One point per row, `x` against `y`, both numbers; `series` colors the points by a field's label
@@ -12,7 +12,7 @@ export const scatter: ChartBuilder = (spec, look) => {
     const x = spec.x
     const y = typeof spec.y === 'string' ? spec.y : spec.y?.[0]
     if (x === undefined || y === undefined) throw new Error('A scatter chart needs x and y fields.')
-    const groups = spec.series === undefined ? ['All'] : distinct(spec.rows, spec.series, spec.seriesOrder)
+    const groups = spec.series === undefined ? [wordsOf(spec).all] : distinct(spec.rows, spec.series, spec.seriesOrder)
     const sizes = spec.value === undefined ? [] : spec.rows.map((row) => numberOf(row[spec.value as string]) ?? 0)
     const biggest = Math.max(1, extent(sizes)?.[1] ?? 1)
     const named = (field: string) => spec.fieldNames?.[field] ?? field
@@ -46,7 +46,7 @@ export const scatter: ChartBuilder = (spec, look) => {
             // Points keep the theme's size unless a field sizes them; an option set to undefined would override it.
             ...(spec.value === undefined
                 ? {}
-                : { symbolSize: (point: [number, number, number]) => 6 + 18 * Math.sqrt((point[2] ?? 0) / biggest) }),
+                : { symbolSize: (point: [number, number, number]) => 6 + 18 * Math.sqrt(Math.max(0, point[2] ?? 0) / biggest) }),
             data: spec.rows
                 .filter((row) => spec.series === undefined || labelOf(row[spec.series]) === name)
                 .map((row) =>

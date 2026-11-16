@@ -6,7 +6,7 @@ import type { LegendStat } from '../ChartLegend'
 import { Chart } from '../Chart'
 import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { legendItems, panelFormat, seriesSpec, valueWriter, type PanelSeries } from './series'
+import { legendItems, panelFormat, seriesSpec, valueWriter, type PanelSeries, usePanelFields, type PanelWords } from './series'
 import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 
 /** How a time series is drawn: lines alone, lines over a fading area, or lines over a solid area. */
@@ -45,7 +45,8 @@ export interface TimeSeriesPanelProps extends ChartFrameViewProps {
     /** Whether the panel is in its window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
     expanded?: boolean
     onExpandedChange?: (expanded: boolean) => void
-    words?: Partial<ChartFrameWords>
+    /** The frame's words, and the heads of its data view's columns. */
+    words?: Partial<ChartFrameWords & PanelWords>
     className?: string
 }
 
@@ -90,9 +91,11 @@ export function TimeSeriesPanel({
     onViewChange,
     className,
 }: TimeSeriesPanelProps) {
+    const fieldNames = usePanelFields(words)
     const spec = useMemo<ChartSpec>(
         () => ({
             ...seriesSpec(x, series),
+            fieldNames,
             ...panelFormat(unit, decimals, format),
             // Stacked areas are filled evenly, so each band reads against the one under it.
             fill: stacked === true && fill === 'gradient' ? 'solid' : fill,
@@ -102,7 +105,7 @@ export function TimeSeriesPanel({
             max,
             labelEvery,
         }),
-        [x, series, unit, decimals, format, fill, stacked, thresholds, min, max, labelEvery],
+        [x, series, fieldNames, unit, decimals, format, fill, stacked, thresholds, min, max, labelEvery],
     )
     const kind = step === true ? 'step' : fill === 'none' ? 'line' : 'area'
     const items = useMemo(() => legendItems(series), [series])

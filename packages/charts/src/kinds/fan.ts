@@ -1,7 +1,7 @@
 import { tooltipMarkup, type ChartLook, type TooltipRow } from '../look'
 import { edgeAxis, markRoom, markSeries, valueLabels } from './axes'
 import { fanShape, partNames, type Fan } from './legend-fan'
-import { written, categoryText, colorOf, type ChartBuilder, type ChartSpec } from './spec'
+import { written, categoryText, colorOf, wordsOf, type ChartBuilder, type ChartSpec } from './spec'
 
 /** A band's opacity: deeper inward, where it also lies over the bands outside it. */
 const bandOpacity = (index: number, count: number) => 0.12 + (0.1 * index) / Math.max(1, count - 1)
@@ -115,7 +115,7 @@ export function fanTooltip(
             const low = band.low[index]
             const high = band.high[index]
             if (!shown(names.band(band.label)) || low === null || high === null) continue
-            rows.push({ label: band.label, value: `${written(bare, low)} to ${written(spec, high)}` })
+            rows.push({ label: band.label, value: `${written(bare, low)} ${wordsOf(spec).to} ${written(spec, high)}` })
         }
         if (truth !== null && truth !== undefined && shown(names.observed))
             rows.push({ label: names.observed, value: written(spec, truth), color: several ? undefined : look.foreground })

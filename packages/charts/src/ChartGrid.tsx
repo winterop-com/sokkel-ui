@@ -1,14 +1,15 @@
-import { useMemo, type ComponentProps } from 'react'
+import { useMemo, type ComponentProps, type Ref } from 'react'
 import type { EChartsCoreOption } from 'echarts/core'
 
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { useSpec } from './Chart'
 import { distinct, labelOf } from './data'
-import { EChart } from './EChart'
+import { EChart, type ChartHandle } from './EChart'
 import { useFrameData } from './frame-data'
 import type { ChartKind, ChartSpec } from './kinds'
 import { SERIES_ORDER, type ChartLook } from './look'
 import { buildShared } from './scales'
+import { readsHidden } from './kinds/load'
 import { useBuilder } from './use-builder'
 
 export type ChartGridProps = ChartSpec & {
@@ -25,6 +26,10 @@ export type ChartGridProps = ChartSpec & {
     narrowest?: ComponentProps<typeof Columns>['min']
     hidden?: ReadonlySet<string>
     hovered?: string | null
+    /** A frame's export handle, left empty: a grid draws no one image, so its frame offers no Export. */
+    handle?: Ref<ChartHandle | null>
+    /** Whether a frame draws the grid in its expanded window, as its state says; the grid draws the same either way. */
+    windowed?: boolean
     /** Each chart's size. */
     chartClassName?: string
     className?: string
@@ -48,6 +53,8 @@ export function ChartGrid({
     narrowest = 'md',
     hidden,
     hovered,
+    handle: _handle,
+    windowed: _windowed,
     chartClassName = 'h-40',
     className,
     ...spec
@@ -72,6 +79,7 @@ export function ChartGrid({
             }))
     }, [kept, facet, facetOrder])
     const build = useBuilder(kind)
+    const reads = readsHidden(kind) ? hidden : undefined
     const options = useMemo(() => {
         if (build === undefined) return panels.map(() => null)
         let built: { key: string; options: EChartsCoreOption[] } | null = null
@@ -84,13 +92,13 @@ export function ChartGrid({
                         panels.map((panel) => panel.spec),
                         build,
                         look,
-                        hidden,
+                        reads,
                     ),
                 }
             return built.options
         }
         return panels.map((_, index) => (look: ChartLook) => all(look)[index])
-    }, [kind, build, panels, hidden])
+    }, [kind, build, panels, reads])
     return (
         <Columns count={columns} min={narrowest} gap="md" className={className}>
             {panels.map((panel, index) => (
