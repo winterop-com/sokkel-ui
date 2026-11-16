@@ -263,7 +263,7 @@ function draw(widget: Widget, state: LiveState, { prefs, onConfigure }: WidgetCo
             const service = options.service ?? 'api'
             return (
                 <DashboardPanel title={title} subtitle="following" flush>
-                    <LogView lines={state.logs[service]} follow framed={false} className="h-72 min-h-0 flex-1" />
+                    <LogView lines={state.logs[service]} follow framed={false} className="h-72 min-h-0 grow" />
                 </DashboardPanel>
             )
         }
