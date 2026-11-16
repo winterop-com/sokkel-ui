@@ -72,8 +72,76 @@ Media (#610):
 - `hlsSource` reloads the playlist after a playlist load failure, and only fatal errors reach
   `onError`.
 
+Removed (#620):
+
+- `FieldError`/`FieldErrorProps` (`primitives/field`) and `NavigationMenuIndicator`
+  (`primitives/navigation-menu`) are gone.
+- Eight unused tokens are gone: `binding-ink`, `brand-foreground`, `critical-wash`, `panel-line`,
+  `terminal-node`, `terminal-node-edge`, `terminal-graph-edge`, `terminal-graph-faint`, with their
+  `color-*` utilities.
+
+Peers (#624):
+
+- The core's `katex` peer is `^0.18.2` (was `^0.16.47`; advisory GHSA-238p-pmpm-9mq7).
+  `rehype-katex` and `remark-math` still ask for 0.16, so an app adds
+  `"overrides": { "katex": "^0.18.2" }` to its `package.json`.
+- `tailwindcss` `^4.3.4` is a required peer of the core.
+
+Composers and chat (#621):
+
+- On a touch screen, Enter in `Composer` and `MessageComposer` breaks the line and only the send
+  button sends. Desktop keeps Enter to send.
+- `Composer`'s `accept` filters dropped and pasted files too, and a drop is refused with no
+  `onAttach` or while disabled.
+- `ChatMessage`, `AssistantReply` and `TrackList` rows are memoized: pass stable `words`, `onPlay`
+  and `actions` to skip redraws.
+- `useOverlayRoute`'s `open` is false as soon as `close()` is called.
+- `SidebarProvider` keeps no `sidebar_state` cookie, and its Mod+B goes through the shortcut
+  registry (quiet in fields and under dialogs).
+- A plugin language named like a built-in `CodeEditor` language replaces it.
+- The highlighter gives each line at most one second; the rest is drawn plain.
+
+Forms, cron and the API playground (#622):
+
+- `parseCron` and `nextRuns` require both day fields to match when both are given and one starts
+  with `*`, as cron does (`0 0 */2 * 1` is odd days that are Mondays). `Cron` gains `bothDays`.
+- `parseCron` and `describeCron` give null for a step past a field's largest value (`*/90`).
+- `CronWords`, `SchemaFormWords` and `PeriodPickerWords` gain entries; partial words still work.
+- `requestTarget` always starts with `/`.
+- A schema pattern with a repeat inside a repeat (`^(a+)+$`) is checked only on text up to a short
+  cap; longer text is left to the server.
+
+Charts and maps (#623):
+
+- `MapLegendWords` gains `all`, `below`, `above` and `noData`; `classLabels(scale, words?)`.
+- The dashboard panels' data view heads its columns Category, Series and Value.
+- `ChartFrame` shows Export only while a `Chart` inside has registered its handle, so a frame around
+  a `ChartGrid` has none.
+- `asShares` with negative figures gives shares of the summed sizes; `binsFor` makes at most 1000
+  bins.
+
+Tables, trees and drag and drop (#625):
+
+- `DataTable` keeps a branch whose children fail to load open, with a Try again line, as `Tree`
+  does. `TableLine` gains `RefusedLine`: check `isRowLine` where code read lines as head or row.
+- A tree `DataTable` with client paging pages top-level rows.
+- `Tree` opens down to its first choice when first drawn.
+- `formatSize` moves up a unit rather than say `1000 KB`, and says `10 KB`, not `10.0 KB`.
+- `BoardItem` and `SortableItem` run the app's own key and pointer handlers before the drag's.
+
 ## New
 
+- `NotFound`, the page for an address no page answers; `lib/download` (`download`,
+  `fileName`); `useUnsavedChanges`'s `overlays` and `hashRouteHead` (#626).
+- `DataTable`'s `allPagesSelected`; `joinHandlers` in `DragDrop` (#625).
+- `Composer`'s `onRefuse`; `SidebarProvider`'s `shortcut` and `shortcutLabel`; `ScrollingWaveform`'s
+  `active` and `seed` (#621).
+- `readPointer`, `requestAddress`, `PeriodLabelWords`, words on the period functions,
+  `SchemaIssueCount`'s `words`, and `parseAnsi`'s `rest` (#622).
+- `ChartWords` `all` and `to`; `PanelWords` and `usePanelFields`; `windowed` on `Chart` and
+  `ChartGrid`; `scope` on `useHistoryKeys` and `useGraphHistory` (#623).
+- Graph edge bends follow `--radius`; `edgePath` takes the bend; switch sizes are tokens (#620).
+- `hls.js` is an optional peer at `^1.7.3`, no longer an exact version (#624).
 - `ErrorBoundary` (`@winterop-com/sokkel-ui/ErrorBoundary`): draws a failed page with Try again,
   cleared by `resetKey` or an address change. `Shell` wraps its page in one (`errorWords`,
   `onPageError`) (#616).

@@ -20,7 +20,15 @@ interface Entry {
 
 const INDEX = 'storybook-static/index.json'
 
-const WIDTHS = { 'foldable folded': 344, 'phone narrow': 360, 'phone wide': 430, 'foldable open': 690, tablet: 768, 'tablet wide': 1024 }
+const WIDTHS = {
+    'foldable folded': 344,
+    'phone narrow': 360,
+    phone: 390,
+    'phone wide': 430,
+    'foldable open': 690,
+    tablet: 768,
+    'tablet wide': 1024,
+}
 
 /**
  * The scroll areas in the page that scroll sideways further than anything visible in them reaches,
