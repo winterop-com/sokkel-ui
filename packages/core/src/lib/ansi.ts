@@ -28,6 +28,9 @@ export interface AnsiSegment {
 // CSI sequences (ESC [ … final byte), OSC sequences (ESC ] … BEL or ESC \), and two-byte escapes.
 // oxlint-disable-next-line no-control-regex
 const ESCAPE = /\u001b(?:\[([0-9;:?]*)([@-~])|\][^\u0007\u001b]*(?:\u0007|\u001b\\)?|[@-Z\\-_])/g
+// An escape cut off at the end of a piece: a lone ESC, or a CSI still waiting for its final byte.
+// oxlint-disable-next-line no-control-regex
+const UNFINISHED = /\u001b(?:\[[0-9;:?]*)?$/
 
 /** The color an extended color code (38 or 48) names, and how many parameters it took. */
 function extended(codes: number[], at: number): { color?: AnsiColor; used: number } {
@@ -86,9 +89,13 @@ function same(a: AnsiStyle, b: AnsiStyle): boolean {
 /**
  * The runs of `text`, each in the style its escapes set, and the style in force at its end, which a
  * caller passes back as `start` to carry on where the text left off, as output arriving in pieces
- * does. Runs in the same style are joined; empty ones are dropped.
+ * does. Runs in the same style are joined; empty ones are dropped. An escape the text ends in the
+ * middle of is not drawn: it comes back as `rest`, for the caller to put before the next piece.
  */
-export function parseAnsi(text: string, start: AnsiStyle = {}): { segments: AnsiSegment[]; style: AnsiStyle } {
+export function parseAnsi(whole: string, start: AnsiStyle = {}): { segments: AnsiSegment[]; style: AnsiStyle; rest: string } {
+    const cut = UNFINISHED.exec(whole)
+    const rest = cut === null ? '' : cut[0]
+    const text = cut === null ? whole : whole.slice(0, cut.index)
     const segments: AnsiSegment[] = []
     let style = start
     let from = 0
@@ -104,7 +111,7 @@ export function parseAnsi(text: string, start: AnsiStyle = {}): { segments: Ansi
         if (match[2] === 'm' && !(match[1] ?? '').startsWith('?')) style = applySgr(style, match[1] ?? '')
     }
     push(text.slice(from))
-    return { segments, style }
+    return { segments, style, rest }
 }
 
 /** The text without its escapes. */
