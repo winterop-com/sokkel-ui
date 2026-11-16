@@ -206,26 +206,3 @@ export function fileName(title: string): string {
         .replace(/^-+|-+$/g, '')
     return slug === '' ? 'chart' : slug
 }
-
-/** Saves a file to the reader's computer, as the browser's download does. */
-export function download(name: string, content: Blob | string, type = 'text/plain'): void {
-    const blob = typeof content === 'string' ? new Blob([content], { type }) : content
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = name
-    document.body.append(link)
-    link.click()
-    link.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-/** Saves a data URL, such as a chart's PNG, as a file. */
-export function downloadUrl(name: string, url: string): void {
-    const link = document.createElement('a')
-    link.href = url
-    link.download = name
-    document.body.append(link)
-    link.click()
-    link.remove()
-}

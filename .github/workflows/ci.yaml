@@ -11,7 +11,8 @@ on:
     pull_request:
 
 # One run per branch at a time: a newer push, or the run a retake starts, cancels the run it
-# replaces. Runs on main never cancel one another, so every merge is checked.
+# replaces, which would only fail on the baselines the retake is about to change. Runs on main
+# never cancel one another, so every merge is checked.
 concurrency:
     group: ci-${{ (github.head_ref || github.ref_name) == 'main' && github.run_id || (github.head_ref || github.ref_name) }}
     cancel-in-progress: true
@@ -56,7 +57,7 @@ jobs:
             - run: bun run typecheck
             - run: bun run test
             - run: bun run build
-            # A forms page, a dashboard and a map page built against the package, each within its budget.
+            # The size apps (forms, forms-lean, dashboard, map and music) built against the packages, each within its budget.
             - run: bun run size
             - run: bun run build-storybook
 

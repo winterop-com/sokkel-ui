@@ -1,3 +1,4 @@
+import { NotFound } from '@winterop-com/sokkel-ui/NotFound'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
@@ -7,7 +8,7 @@ import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import type { SearchGroup, SearchSource } from '@winterop-com/sokkel-ui/lib/search'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
-import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
+import { Toaster } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
@@ -34,7 +35,7 @@ import {
     Users,
 } from 'lucide-react'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { useFrame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
@@ -162,6 +163,7 @@ export function App() {
     const settingsRoute = useOverlayRoute(frame.route, 'settings')
     const route = settingsRoute.route
     const place = PLACES_BY_ROUTE[route[0] ?? ''] ?? 'overview'
+    const missing = PLACES_BY_ROUTE[route[0] ?? ''] === undefined
     const { rows: all } = useCollection(receipts)
     const { rows: homes } = useCollection(households)
     const waiting = all?.filter((receipt) => receipt.state === 'received').length ?? 0
@@ -183,12 +185,16 @@ export function App() {
         forwardAll().then(
             ({ taken, refused }) =>
                 taken + refused === 0
-                    ? toast('Nothing waits to be sent on')
-                    : toast.success(`${String(taken + refused)} sent on to the register`, {
+                    ? toast.add({ title: 'Nothing waits to be sent on' })
+                    : toast.add({
+                          type: 'success',
+                          title: `${String(taken + refused)} sent on to the register`,
                           description: refused === 0 ? 'The register took them all.' : `${String(refused)} refused; each receipt says why.`,
                       }),
             (failure: unknown) =>
-                toast.error('Nothing was sent on', {
+                toast.add({
+                    type: 'error',
+                    title: 'Nothing was sent on',
                     description: failure instanceof Error ? failure.message : String(failure),
                 }),
         )
@@ -312,7 +318,7 @@ export function App() {
                             id: 'answers',
                             title: 'The server answers',
                             description:
-                                'Turn it off to see the app with a server that does not answer: the banner, the top bar and every page say so.',
+                                'Turn it off to see the app with a server that does not answer: the banner and the top bar say so, pages keep what they read before, and nothing can be filed, sent on, changed or asked of the API.',
                             keywords: ['offline', 'outage'],
                             control: (
                                 <Switch
@@ -338,7 +344,7 @@ export function App() {
         },
     ]
 
-    const trail: Crumb[] = [{ label: 'juniper', href: '#/', code: true }, { label: TITLES[place] ?? '' }]
+    const trail: Crumb[] = [{ label: 'juniper', href: '#/', code: true }, { label: missing ? 'Not found' : (TITLES[place] ?? '') }]
 
     let page: ReactNode
     const [first, second, third, fourth] = route
@@ -362,7 +368,11 @@ export function App() {
     else if (first === 'playground') page = <Playground />
     else if (first === 'server') page = <Server />
     else if (first === 'health') page = <Health />
+    else if (missing) page = <NotFound />
     else page = <Overview serverState={server.state} />
+    // A new page mounts afresh; choosing a place on the map or a state to list keeps the page.
+    const contentKey =
+        first === 'places' || (first === 'responses' && (second === undefined || second === 'in')) ? first : route.slice(0, 2).join('/')
 
     return (
         <TooltipProvider>
@@ -382,7 +392,7 @@ export function App() {
                         shortcuts={SHORTCUTS}
                         desktop={frame.desktop}
                         route={route.join('/')}
-                        contentKey={route.slice(0, 2).join('/')}
+                        contentKey={contentKey}
                         banner={
                             down ? (
                                 <Banner
@@ -466,7 +476,7 @@ export function App() {
                             if (at === 'forms') setKeepPlace(true)
                         }}
                     />
-                    <Toaster position="bottom-right" />
+                    <Toaster />
                 </FootContext.Provider>
             </StatusProvider>
             {frame.dialogs}

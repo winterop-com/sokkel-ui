@@ -12,6 +12,9 @@ import {
     MenubarRadioItem,
     MenubarSeparator,
     MenubarShortcut,
+    MenubarSub,
+    MenubarSubContent,
+    MenubarSubTrigger,
     MenubarTrigger,
 } from '@winterop-com/sokkel-ui/primitives/menubar'
 
@@ -33,6 +36,14 @@ function EditorMenubar({ open }: { open?: 'job' | 'view' }) {
                         <MenubarShortcut>V</MenubarShortcut>
                     </MenubarItem>
                     <MenubarItem disabled>Publish</MenubarItem>
+                    <MenubarSub>
+                        <MenubarSubTrigger>Run on</MenubarSubTrigger>
+                        <MenubarSubContent>
+                            <MenubarItem>api</MenubarItem>
+                            <MenubarItem>worker</MenubarItem>
+                            <MenubarItem>scheduler</MenubarItem>
+                        </MenubarSubContent>
+                    </MenubarSub>
                     <MenubarSeparator />
                     <MenubarItem variant="destructive">Delete import-orders</MenubarItem>
                 </MenubarContent>
@@ -65,7 +76,7 @@ function EditorMenubar({ open }: { open?: 'job' | 'view' }) {
 
 /** A menubar of three menus, every menu closed. */
 export const Closed: StoryObj = { render: () => <EditorMenubar /> }
-/** The Job menu open: actions with their keys, a disabled one and a destructive one. */
+/** The Job menu open: actions with their keys, a disabled one, a submenu and a destructive one. */
 export const JobOpen: StoryObj = { render: () => <EditorMenubar open="job" /> }
 /** The View menu open: checks and a radio group under a label. */
 export const ViewOpen: StoryObj = { render: () => <EditorMenubar open="view" /> }

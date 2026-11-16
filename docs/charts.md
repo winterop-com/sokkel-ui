@@ -330,7 +330,7 @@ series in the legend drops its panel.
    private, reached through the registry: name it in `PRIVATE` in `scripts/components-index.ts`
    beside the other kinds.
 3. **The engine.** A chart type or component outside the base set joins the `SERIES` or
-   `COMPONENTS` map in `engine.ts`, so it loads on first use. Never add it to the base `PARTS`.
+   `COMPONENTS` map in `engine.ts`, so it loads on first use. Never add it to the base set, the `use([...])` call in `init`.
 4. **Tests.** The kind's spec in `kinds/kinds.test.ts`, so it is drawn and its legend listed, and a
    test for each piece of shaping.
 5. **Stories.** In `src/stories/charts/`, drawn with `Framed` from `Ground.tsx` from the Tidevann

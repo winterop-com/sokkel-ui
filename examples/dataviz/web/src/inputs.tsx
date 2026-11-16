@@ -1,18 +1,14 @@
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
+import type { SelectFieldOption } from '@winterop-com/sokkel-ui/SelectField'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
-import type { ReactNode } from 'react'
 
 import { PALETTES, THEME_TOKENS } from './model'
 
-export interface Option {
-    value: string
-    label: string
-    /** Drawn before the label in the list and the trigger. */
-    lead?: ReactNode
-}
+/** An option of a select: its value, its label, and an `icon` drawn before the label. */
+export type Option = SelectFieldOption
 
-/** A choice from a list, for a `Field` around it to label by `id`. */
+/** A choice from a list with no label of its own, for a setting's row, whose title names it; a labeled one is a `SelectField`. */
 export function SelectInput({
     id,
     value,
@@ -29,11 +25,11 @@ export function SelectInput({
     disabled?: boolean
 }) {
     const lead = (option: Option | undefined) =>
-        option?.lead === undefined ? (
+        option?.icon === undefined ? (
             option?.label
         ) : (
             <Row gap="sm" align="center" className="min-w-0">
-                {option.lead}
+                {option.icon}
                 <span className="truncate">{option.label}</span>
             </Row>
         )
@@ -69,7 +65,7 @@ export function paletteOptions(withDefault: { label: string; tokens: readonly st
     return [
         ...(withDefault === undefined
             ? []
-            : [{ value: 'default', label: withDefault.label, lead: <Swatches tokens={withDefault.tokens} /> }]),
-        ...PALETTES.map((palette) => ({ value: palette.id, label: palette.label, lead: <Swatches tokens={palette.tokens} /> })),
+            : [{ value: 'default', label: withDefault.label, icon: <Swatches tokens={withDefault.tokens} /> }]),
+        ...PALETTES.map((palette) => ({ value: palette.id, label: palette.label, icon: <Swatches tokens={palette.tokens} /> })),
     ]
 }

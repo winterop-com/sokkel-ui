@@ -15,7 +15,7 @@ import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { BookmarkPlus, BookOpen, ChevronLeft, ChevronRight, Search as SearchIcon, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useMemo, useState } from 'react'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
@@ -154,7 +154,19 @@ export function SearchPage() {
     const searches = held ?? savedRows?.find((row) => row.id === ME)?.searches ?? []
     const keep = (next: readonly SavedSearch[]) => {
         setHeld(next)
-        return keepSearches(next).finally(() => setHeld(null))
+        return keepSearches(next)
+            .then(
+                () => true,
+                (failure: unknown) => {
+                    toast.add({
+                        type: 'error',
+                        title: 'Saved searches not kept',
+                        description: failure instanceof Error ? failure.message : String(failure),
+                    })
+                    return false
+                },
+            )
+            .finally(() => setHeld(null))
     }
     const already = searches.find((one) => one.query === query.replace(/\n/g, '').trim())
     const result = useMemo(() => (rows === undefined ? undefined : search(rows, ran, prefs.pageSize)), [rows, ran, prefs.pageSize])
@@ -272,7 +284,7 @@ export function SearchPage() {
                                     aria-label="Next page"
                                     onClick={() => page((result?.offset ?? 0) + (result?.count ?? 0))}
                                     reason={
-                                        result === undefined || result.offset + result.count >= result.total
+                                        result === undefined || result.count === 0 || result.offset + result.count >= result.total
                                             ? 'This is the last page.'
                                             : undefined
                                     }
@@ -368,8 +380,8 @@ export function SearchPage() {
                                         inline: true,
                                         destructive: true,
                                         onSelect: () =>
-                                            void keep(searches.filter((other) => other.id !== one.id)).then(() =>
-                                                toast(`${one.label} removed from Saved`),
+                                            void keep(searches.filter((other) => other.id !== one.id)).then(
+                                                (kept) => kept && toast.add({ title: `${one.label} removed from Saved` }),
                                             ),
                                     },
                                 ]}
@@ -389,8 +401,8 @@ export function SearchPage() {
                                     rows={TYPE_NAMES.includes(type) ? [...paramsOf(type), ...RESULT_PARAMS] : []}
                                     rowKey={(param) => param.name}
                                     onOpen={(param) => {
-                                        const joiner = query.includes('?') ? '&' : '?'
-                                        setQuery(`${query.replace(/[?&]$/, '')}${joiner}${param.name}=`)
+                                        const base = query.replace(/[?&]$/, '')
+                                        setQuery(`${base}${base.includes('?') ? '&' : '?'}${param.name}=`)
                                     }}
                                     empty="Name a resource type to see its parameters."
                                 />
@@ -405,9 +417,10 @@ export function SearchPage() {
                 query={query}
                 onSave={(label) =>
                     keep([...searches, { id: `saved-${Date.now().toString(36)}`, label, query: query.replace(/\n/g, '').trim() }]).then(
-                        () => {
+                        (kept) => {
+                            if (!kept) return
                             setSide('saved')
-                            toast.success(`Saved as ${label}`)
+                            toast.add({ type: 'success', title: `Saved as ${label}` })
                         },
                     )
                 }

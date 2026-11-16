@@ -72,32 +72,46 @@ export function Rename() {
     )
 }
 
-/** Opens already working, as a press of Stop all would leave it; it finishes after a while, and nothing closes it before. */
+/**
+ * Opens already working, as a press of Stop all would leave it, and stays working: after the
+ * dialog's busy release, Stop waiting lets it go. Stop all opens it again, and a press of the
+ * confirm then finishes after a moment.
+ */
 export function Busy() {
     const [open, setOpen] = useState(true)
     const [busy, setBusy] = useState(true)
-    const [first, setFirst] = useState(true)
+    const [pressed, setPressed] = useState(false)
     useEffect(() => {
-        if (!busy) return
-        const timer = setTimeout(
-            () => {
-                setBusy(false)
-                setFirst(false)
-                setOpen(false)
-            },
-            first ? 15_000 : 2500,
-        )
+        if (!busy || !pressed) return
+        const timer = setTimeout(() => {
+            setBusy(false)
+            setPressed(false)
+            setOpen(false)
+        }, 2500)
         return () => clearTimeout(timer)
-    }, [busy, first])
+    }, [busy, pressed])
+    const reopen = () => {
+        setBusy(false)
+        setOpen(true)
+    }
     return (
-        <Behind action="Stop all runs" onAction={() => setOpen(true)}>
+        <Behind action="Stop all runs" onAction={reopen}>
             <DialogShell
                 open={open}
                 onOpenChange={setOpen}
                 width="sm"
                 title="Stop every run of import-orders?"
                 description="3 runs are going and 5 are queued. Each stops after the step it is on."
-                confirm={{ label: 'Stop 8 runs', busyLabel: 'Stopping 8 runs', destructive: true, busy, onConfirm: () => setBusy(true) }}
+                confirm={{
+                    label: 'Stop 8 runs',
+                    busyLabel: 'Stopping 8 runs',
+                    destructive: true,
+                    busy,
+                    onConfirm: () => {
+                        setBusy(true)
+                        setPressed(true)
+                    },
+                }}
             />
         </Behind>
     )

@@ -1,5 +1,6 @@
 /** What every page reads: the world, the person's preferences, the view the address names, money as they read it, and the live stream. */
 
+import type { FilterField } from '@winterop-com/sokkel-ui/FilterBar'
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
@@ -26,6 +27,10 @@ export interface AppState {
     me: Person
     /** Dollars written in the person's currency; `short` writes `$571K`. */
     money: (dollars: number, short?: boolean) => string
+    /** What a dollar is in the person's currency. */
+    rate: number
+    /** Pauses the live stream, or resumes it at the pace it had. */
+    toggleStream: () => void
     stream: StreamState
 }
 
@@ -86,6 +91,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             href: (path, extra) => hrefOf(view, path, extra),
             me: 'ada',
             money: (dollars, compact = false) => (compact ? short : full).format(dollars * rate),
+            rate,
+            toggleStream: () =>
+                void setPrefs(prefs.pace === 'off' ? { pace: prefs.resume ?? 'fast' } : { pace: 'off', resume: prefs.pace }),
             stream,
         }
     }, [world, error, prefs, view, settingsOpen, stream])
@@ -103,4 +111,14 @@ export function useLoaded(): AppState & { world: World } {
     const state = useApp()
     if (state.world === undefined) throw new Error('useLoaded is used before the world has loaded')
     return state as AppState & { world: World }
+}
+
+/** Filter fields with the money one, `id`, read and named in the person's currency. */
+export function useMoneyFields<T>(fields: readonly FilterField<T>[], id: string, dollars: (row: T) => number): FilterField<T>[] {
+    const { prefs } = useApp()
+    const rate = RATES[prefs.currency]
+    return useMemo(
+        () => fields.map((field) => (field.id === id ? { ...field, unit: prefs.currency, value: (row: T) => dollars(row) * rate } : field)),
+        [fields, id, dollars, rate, prefs.currency],
+    )
 }

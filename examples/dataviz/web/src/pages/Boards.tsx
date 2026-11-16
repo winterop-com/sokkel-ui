@@ -7,7 +7,7 @@ import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { PencilLine, Plus, Presentation, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { boards as boardStore, preferences } from '../backend'
@@ -31,7 +31,7 @@ export function useDeleteBoard() {
                     const gone = deleting
                     setDeleting(null)
                     void boardStore.remove(gone.id).then(() => {
-                        toast.success(`${gone.name} deleted`)
+                        toast.add({ type: 'success', title: `${gone.name} deleted` })
                         go('/boards')
                     })
                 },

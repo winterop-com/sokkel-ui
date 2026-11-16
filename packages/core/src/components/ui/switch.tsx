@@ -15,7 +15,7 @@ function Switch({ className, size = 'default', ...props }: SwitchProps) {
             data-slot="switch"
             data-size={size}
             className={cn(
-                'peer group/switch relative inline-flex shrink-0 items-center rounded-control border border-transparent transition-all outline-none group-has-[:focus-visible]/field-label:border-transparent group-has-[:focus-visible]/field-label:ring-0 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid data-[size=default]:h-4.5 data-[size=default]:w-8 data-[size=sm]:h-3.5 data-[size=sm]:w-6 data-checked:bg-primary data-unchecked:bg-input dark:data-unchecked:bg-input/80 data-disabled:cursor-not-allowed data-disabled:opacity-disabled',
+                'peer group/switch relative inline-flex shrink-0 items-center rounded-control border border-transparent transition-all outline-none group-has-[:focus-visible]/field-label:border-transparent group-has-[:focus-visible]/field-label:ring-0 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid data-[size=default]:h-switch-height data-[size=default]:w-switch-width data-[size=sm]:h-switch-height-sm data-[size=sm]:w-switch-width-sm data-checked:bg-primary data-unchecked:bg-input dark:data-unchecked:bg-input/80 data-disabled:cursor-not-allowed data-disabled:opacity-disabled',
                 INVALID_EDGE,
                 className,
             )}

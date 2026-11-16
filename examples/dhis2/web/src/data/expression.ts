@@ -362,7 +362,9 @@ function monthsBetween(from: number, to: number): number {
     const a = new Date(from)
     const b = new Date(to)
     let months = (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + b.getUTCMonth() - a.getUTCMonth()
-    if (b.getUTCDate() < a.getUTCDate()) months -= 1
+    // A month part way through does not count, either way: the count is cut toward zero.
+    if (months > 0 && b.getUTCDate() < a.getUTCDate()) months -= 1
+    else if (months < 0 && b.getUTCDate() > a.getUTCDate()) months += 1
     return months
 }
 
@@ -564,6 +566,7 @@ export function describe(source: string, name: (kind: ItemKind, body: string) =>
     }
     return (out + source.slice(at))
         .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '')
         .replace(/\s+/g, ' ')
         .trim()
 }

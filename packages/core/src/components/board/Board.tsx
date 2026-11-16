@@ -17,6 +17,7 @@ import {
     DragDrop,
     DragGrip,
     dragData,
+    joinHandlers,
     dragPoint,
     useDragItem,
     useDropTarget,
@@ -383,12 +384,15 @@ export function BoardItem({ id, label, preview, locked = false, as: Tag = 'div',
     const item = useDragItem({ id: `${kind}:card:${id}`, data, disabled: fixed })
     const target = useDropTarget({ id: `${kind}:at:${id}`, data, disabled: board === null || zoneScope?.locked === true })
     const { ref: grip, onKeyDown, onPointerDown, onTouchStart, ...attributes } = item.handle
+    // The card's own presses and keys run first; the drag's follow unless the card is fixed.
+    const starts = joinHandlers(props, fixed ? {} : { onKeyDown, onPointerDown, onTouchStart })
     const dragged = drag?.card === id
     const landing = drag !== null && !dragged && drag.zone === zone && drag.before === id
     return (
         <ItemContext.Provider value={fixed ? null : { handle: { ...attributes, ref: grip }, label }}>
             <Tag
                 {...props}
+                {...starts}
                 ref={(element: HTMLElement | null) => {
                     item.ref(element)
                     target.ref(element)
@@ -396,9 +400,6 @@ export function BoardItem({ id, label, preview, locked = false, as: Tag = 'div',
                 data-board-card={id}
                 data-dragging={dragged || undefined}
                 data-locked={fixed || undefined}
-                onKeyDown={fixed ? undefined : onKeyDown}
-                onPointerDown={fixed ? undefined : onPointerDown}
-                onTouchStart={fixed ? undefined : onTouchStart}
                 className={cn('relative', dragged && 'opacity-40', className)}
             >
                 {landing && <DropLine />}

@@ -229,6 +229,8 @@ export function runRules(
             }
             const said = `${one.content}${data === null ? '' : String(typeof data === 'number' ? Math.round(data * 100) / 100 : data)}`
             if (one.type === 'HIDEFIELD') {
+                // A hidden field's value is cleared, so the rules after it read it as empty.
+                current[one.field] = null
                 run.hidden.add(one.field)
                 run.effects.push({ rule: rule.id, type: one.type, field: one.field, text: 'Hidden' })
             } else if (one.type === 'ASSIGN') {

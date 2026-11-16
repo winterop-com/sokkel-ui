@@ -1,3 +1,5 @@
+import { SelectField } from '@winterop-com/sokkel-ui/SelectField'
+import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { FormBar } from '@winterop-com/sokkel-ui/FormBar'
 import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
@@ -25,13 +27,13 @@ import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useUnsavedChanges } from '@winterop-com/sokkel-ui/UnsavedChanges'
 import { ChevronDown, Download, FileImage, FileSpreadsheet, LayoutDashboard, Plus, Save, Share2 } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { boards as boardStore, charts as chartStore } from '../backend'
 import { ChartThumb, ChartView, isCharted, useShaped } from '../ChartView'
 import { BoardDialog, ShareDialog } from '../dialogs'
-import { paletteOptions, SelectInput, type Option } from '../inputs'
+import { paletteOptions, type Option } from '../inputs'
 import {
     AGGREGATES,
     BINS,
@@ -50,7 +52,7 @@ import {
     type ViewKind,
     type ViewSpec,
 } from '../model'
-import { download, downloadUrl, fileName, toCsv } from '../parse'
+import { fileName, toCsv } from '../parse'
 import { columnOf, startingSpec, suggest } from '../shape'
 import { VIEW_ICONS, VIEWS } from '../views'
 
@@ -169,7 +171,7 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
     const png = useRef<(() => Promise<string>) | null>(null)
     const dataset = datasets.find((one) => one.id === draft?.datasetId)
     const dirty = draft !== undefined && (original === undefined || JSON.stringify(draft) !== JSON.stringify(original))
-    const guard = useUnsavedChanges(dirty && !saving, { hashRoutes: true })
+    const guard = useUnsavedChanges(dirty && !saving, { hashRoutes: true, overlays: ['settings'] })
     const spec = draft?.spec
     const shaped = useShaped(dataset ?? EMPTY_DATASET, spec ?? EMPTY_SPEC)
     const title = draft === undefined || draft.name.trim() === '' ? 'Untitled chart' : draft.name.trim()
@@ -186,11 +188,11 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
         const make = png.current
         if (make === null) return
         make().then(
-            (url) => downloadUrl(`${fileName(title)}.png`, url),
-            (error: unknown) => toast.error(error instanceof Error ? error.message : String(error)),
+            (url) => download(`${fileName(title)}.png`, { href: url }),
+            (error: unknown) => toast.add({ type: 'error', title: error instanceof Error ? error.message : String(error) }),
         )
     }
-    const downloadCsv = () => download(`${fileName(title)}.csv`, toCsv(shaped.table.names, shaped.table.rows), 'text/csv')
+    const downloadCsv = () => download(`${fileName(title)}.csv`, toCsv(shaped.table.names, shaped.table.rows), 'text/csv;charset=utf-8')
     const charted = spec !== undefined && isCharted(spec.view)
     const saveReason =
         draft === undefined
@@ -209,7 +211,7 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
         const fields = { name: draft.name.trim(), datasetId: draft.datasetId, spec: draft.spec, updatedAt: now() }
         const done = (saved: SavedChart) => {
             setSaving(false)
-            toast.success(`${saved.name} saved`)
+            toast.add({ type: 'success', title: `${saved.name} saved` })
             if (chart === undefined || asNew) window.location.replace(`#/charts/${saved.id}`)
         }
         if (chart === undefined || asNew) void chartStore.create(fields, freshId('ch')).then(done, () => setSaving(false))
@@ -220,8 +222,10 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
         void boardStore
             .update(board.id, { items: [...board.items, { id: freshId('it'), chartId: chart.id, span: 'half' }], updatedAt: now() })
             .then(() =>
-                toast.success(`${chart.name} added to ${board.name}`, {
-                    action: { label: 'Open', onClick: () => go(`/boards/${board.id}`) },
+                toast.add({
+                    type: 'success',
+                    title: `${chart.name} added to ${board.name}`,
+                    actionProps: { children: 'Open', onClick: () => go(`/boards/${board.id}`) },
                 }),
             )
     }
@@ -287,7 +291,7 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
             .map((column) => ({
                 value: column.id,
                 label: `${column.name}`,
-                lead: <span className="w-14 shrink-0 text-xs text-muted-foreground">{TYPE_WORD[column.type]}</span>,
+                detail: TYPE_WORD[column.type],
             })),
     ]
     const counting = spec.aggregate === 'count'
@@ -299,25 +303,24 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
         const value = spec[slot.field] ?? ''
         const byCount = slot.field === 'y' && spec.view !== 'scatter' && counting
         return (
-            <Field
+            <SelectField
                 key={slot.field}
                 id={`slot-${slot.field}`}
                 label={slot.label}
                 hint={slot.optional === true ? 'Optional' : undefined}
                 description={byCount ? 'Count counts the rows, so no column is read.' : slot.description}
-            >
-                <SelectInput
-                    id={`slot-${slot.field}`}
-                    value={options.some((option) => option.value === value) ? value : ''}
-                    options={
-                        options.length === 0
-                            ? [{ value: '', label: `No ${slot.takes === 'along' ? '' : `${slot.takes} `}columns` }]
-                            : options
-                    }
-                    disabled={options.length === 0 || byCount}
-                    onChange={(next) => setSpec({ [slot.field]: next === '' ? undefined : next })}
-                />
-            </Field>
+                value={options.some((option) => option.value === value) ? value : ''}
+                options={options}
+                placeholder={
+                    options.length === 0
+                        ? `No ${slot.takes === 'along' ? '' : `${slot.takes} `}columns`
+                        : slot.optional === true
+                          ? 'None'
+                          : undefined
+                }
+                disabled={options.length === 0 || byCount}
+                onChange={(next) => setSpec({ [slot.field]: next === '' ? undefined : next })}
+            />
         )
     })
 
@@ -392,17 +395,17 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
                             onChange={(name) => setDraft({ ...draft, name })}
                             onEnter={() => saveReason === undefined && save(false)}
                         />
-                        <Field id="chart-dataset" label="Dataset" description="Another dataset starts the view over from its columns.">
-                            <SelectInput
-                                id="chart-dataset"
-                                value={draft.datasetId}
-                                options={datasets.map((one) => ({ value: one.id, label: one.name }))}
-                                onChange={(id) => {
-                                    const next = datasets.find((one) => one.id === id)
-                                    if (next !== undefined) setDraft({ ...draft, datasetId: id, spec: startingSpec(next, prefs) })
-                                }}
-                            />
-                        </Field>
+                        <SelectField
+                            id="chart-dataset"
+                            label="Dataset"
+                            description="Another dataset starts the view over from its columns."
+                            value={draft.datasetId}
+                            options={datasets.map((one) => ({ value: one.id, label: one.name }))}
+                            onChange={(id) => {
+                                const next = datasets.find((one) => one.id === id)
+                                if (next !== undefined) setDraft({ ...draft, datasetId: id, spec: startingSpec(next, prefs) })
+                            }}
+                        />
                     </Stack>
                 </Section>
                 <Section title="View">
@@ -479,31 +482,30 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
                                         )}
                                     />
                                 </Field>
-                                <Field id="chart-limit" label="Show" className="min-w-28">
-                                    <SelectInput
-                                        id="chart-limit"
-                                        value={String(spec.limit)}
-                                        options={LIMITS}
-                                        onChange={(limit) => setSpec({ limit: Number(limit) })}
-                                    />
-                                </Field>
+                                <SelectField
+                                    id="chart-limit"
+                                    label="Show"
+                                    className="min-w-28"
+                                    value={String(spec.limit)}
+                                    options={LIMITS}
+                                    onChange={(limit) => setSpec({ limit: Number(limit) })}
+                                />
                             </Row>
                         )}
                     </Stack>
                 </Section>
                 <Section title="Look">
                     <Stack gap="md">
-                        <Field id="chart-palette" label="Colors">
-                            <SelectInput
-                                id="chart-palette"
-                                value={spec.palette}
-                                options={paletteOptions({
-                                    label: `As in settings (${PALETTES.find((one) => one.id === prefs.palette)?.label ?? 'Theme'})`,
-                                    tokens: PALETTES.find((one) => one.id === prefs.palette)?.tokens,
-                                })}
-                                onChange={(palette) => setSpec({ palette })}
-                            />
-                        </Field>
+                        <SelectField
+                            id="chart-palette"
+                            label="Colors"
+                            value={spec.palette}
+                            options={paletteOptions({
+                                label: `As in settings (${PALETTES.find((one) => one.id === prefs.palette)?.label ?? 'Theme'})`,
+                                tokens: PALETTES.find((one) => one.id === prefs.palette)?.tokens,
+                            })}
+                            onChange={(palette) => setSpec({ palette })}
+                        />
                         {(spec.view === 'bar' || spec.view === 'area') && (
                             <SwitchField
                                 id="chart-stack"

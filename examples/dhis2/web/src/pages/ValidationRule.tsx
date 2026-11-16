@@ -15,7 +15,7 @@ import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { TreeSelect } from '@winterop-com/sokkel-ui/TreeSelect'
 import { Play, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
@@ -62,6 +62,8 @@ interface Run {
     skipped: number
     where: string
     months: string
+    /** The operator the run compared with. */
+    operator: ValidationRule['operator']
 }
 
 function Editor({ saved }: { saved: ValidationRule }) {
@@ -91,13 +93,15 @@ function Editor({ saved }: { saved: ValidationRule }) {
         setRun({
             ...result,
             where: orgUnit(unit)?.name ?? '',
+            operator: draft.operator,
             months: `${periodLabel(months[0])} to ${periodLabel(months[months.length - 1])}`,
         })
-        toast(
-            result.violations.length === 0
-                ? 'The rule holds everywhere it was tried'
-                : `${count(result.violations.length, 'violation')} found`,
-        )
+        toast.add({
+            title:
+                result.violations.length === 0
+                    ? 'The rule holds everywhere it was tried'
+                    : `${count(result.violations.length, 'violation')} found`,
+        })
     }
 
     const save = () => {
@@ -105,11 +109,11 @@ function Editor({ saved }: { saved: ValidationRule }) {
         validationRules.update(saved.id, draft).then(
             () => {
                 setBusy(false)
-                toast.success('Saved', { description: draft.name })
+                toast.add({ type: 'success', title: 'Saved', description: draft.name })
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not saved', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({ type: 'error', title: 'Not saved', description: failure instanceof Error ? failure.message : String(failure) })
             },
         )
     }
@@ -117,10 +121,15 @@ function Editor({ saved }: { saved: ValidationRule }) {
     const remove = () =>
         validationRules.remove(saved.id).then(
             () => {
-                toast(`${saved.name} deleted`)
+                toast.add({ title: `${saved.name} deleted` })
                 go('/validation-rules')
             },
-            (failure: unknown) => toast.error('Not deleted', { description: failure instanceof Error ? failure.message : String(failure) }),
+            (failure: unknown) =>
+                toast.add({
+                    type: 'error',
+                    title: 'Not deleted',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                }),
         )
 
     const columns: DataColumn<Violation>[] = [
@@ -156,7 +165,7 @@ function Editor({ saved }: { saved: ValidationRule }) {
             header: 'Must be',
             width: 'content',
             align: 'center',
-            cell: () => <span className="font-mono">{OPERATORS[draft.operator].sign}</span>,
+            cell: () => <span className="font-mono">{OPERATORS[run?.operator ?? draft.operator].sign}</span>,
         },
         {
             id: 'right',

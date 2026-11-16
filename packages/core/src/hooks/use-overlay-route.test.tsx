@@ -113,8 +113,9 @@ describe('useOverlayRoute', () => {
 
     it('opens on its route over the fallback, and closes through the replace it is given', () => {
         const replace = vi.fn()
+        // Closed as soon as `close` is called, before the route moves.
         expect(renderToStaticMarkup(<Probe route={['settings']} fallback={['runs']} replace={replace} />)).toBe(
-            '<p data-open="true">runs</p>',
+            '<p data-open="false">runs</p>',
         )
         expect(replace).toHaveBeenCalledWith(['runs'])
     })

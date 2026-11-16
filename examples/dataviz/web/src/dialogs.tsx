@@ -8,7 +8,7 @@ import { Input } from '@winterop-com/sokkel-ui/primitives/input'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 
 import { boards } from './backend'
 import { type Board, type Dataset, freshId, now, type SavedChart, type ViewSpec } from './model'
@@ -111,7 +111,7 @@ export function BoardDialog({
             void boards.update(editing.id, { name: trimmed, description: description.trim(), updatedAt: now() }).then(() => {
                 done()
                 onOpenChange(false)
-                toast.success('Board saved')
+                toast.add({ type: 'success', title: 'Board saved' })
             }, done)
             return
         }
@@ -129,7 +129,7 @@ export function BoardDialog({
             .then((made) => {
                 done()
                 onOpenChange(false)
-                toast.success(`${made.name} made`)
+                toast.add({ type: 'success', title: `${made.name} made` })
                 onMade?.(made)
             }, done)
     }
@@ -190,7 +190,10 @@ export function AddChartDialog({
             .then(() => {
                 setBusy(false)
                 close(false)
-                toast.success(`${charts.find((chart) => chart.id === chosen)?.name ?? 'The chart'} added to ${board.name}`)
+                toast.add({
+                    type: 'success',
+                    title: `${charts.find((chart) => chart.id === chosen)?.name ?? 'The chart'} added to ${board.name}`,
+                })
             })
     }
     return (

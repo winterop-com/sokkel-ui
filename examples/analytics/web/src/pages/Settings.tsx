@@ -31,7 +31,7 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
 
 /** The person's settings, kept by the backend as each is changed; the look is kept in this browser. */
 export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
-    const { prefs, setPrefs, world } = useLoaded()
+    const { prefs, setPrefs, world, money } = useLoaded()
     const { settings: look, setSettings: setLook } = frame.appearance
     const [active, setActive] = useState('general')
     const [search, setSearch] = useState('')
@@ -153,9 +153,9 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                                     onValueChange={(value) => void setPrefs({ bigOrder: Number(value) })}
                                     options={[
                                         { value: '0', label: 'Never' },
-                                        { value: '100', label: '$100' },
-                                        { value: '500', label: '$500' },
-                                        { value: '1000', label: '$1,000' },
+                                        { value: '100', label: money(100) },
+                                        { value: '500', label: money(500) },
+                                        { value: '1000', label: money(1000) },
                                     ]}
                                 />
                             ),

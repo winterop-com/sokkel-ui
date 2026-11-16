@@ -422,6 +422,10 @@
             "types": "./dist/components/PageHeader.d.ts",
             "import": "./dist/components/PageHeader.js"
         },
+        "./NotFound": {
+            "types": "./dist/components/NotFound.d.ts",
+            "import": "./dist/components/NotFound.js"
+        },
         "./PageState": {
             "types": "./dist/components/PageState.d.ts",
             "import": "./dist/components/PageState.js"
@@ -1285,6 +1289,10 @@
         "./lib/desktop": {
             "types": "./dist/lib/desktop.d.ts",
             "import": "./dist/lib/desktop.js"
+        },
+        "./lib/download": {
+            "types": "./dist/lib/download.d.ts",
+            "import": "./dist/lib/download.js"
         },
         "./lib/filters": {
             "types": "./dist/lib/filters.d.ts",

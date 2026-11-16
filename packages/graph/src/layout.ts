@@ -623,8 +623,16 @@ export function shapeSignature(shape: GraphShape, direction: GraphDirection, sty
     ].join('|')
 }
 
+/** The radius an edge's bends turn on where no theme says otherwise: the base theme's, `--radius` 4.5px. */
+export const EDGE_BEND = 6
+
+/** The bend radius for a theme's `--radius` in pixels: a third more, so a square theme draws square bends. */
+export function bendOf(radius: number): number {
+    return Math.max(0, Math.round(radius * (4 / 3) * 10) / 10)
+}
+
 /** The path an elk route is drawn along: straight runs, each bend turned on a small radius. */
-export function routedPath(points: readonly GraphPoint[], radius = 6): string {
+export function routedPath(points: readonly GraphPoint[], radius = EDGE_BEND): string {
     const first = points[0]
     const last = points[points.length - 1]
     if (first === undefined || last === undefined || points.length < 2) return ''
@@ -685,11 +693,11 @@ export function splinePath(points: readonly GraphPoint[]): string {
     return parts.join(' ')
 }
 
-/** The path a route is drawn along in a routing. */
-export function edgePath(points: readonly GraphPoint[], routing: GraphRouting = 'orthogonal'): string {
+/** The path a route is drawn along in a routing, an orthogonal route's bends turned on `bend`. */
+export function edgePath(points: readonly GraphPoint[], routing: GraphRouting = 'orthogonal', bend = EDGE_BEND): string {
     if (routing === 'splines') return splinePath(points)
     if (routing === 'polyline') return polylinePath(points)
-    return routedPath(points)
+    return routedPath(points, bend)
 }
 
 /**

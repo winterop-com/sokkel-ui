@@ -1,3 +1,4 @@
+import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
@@ -7,13 +8,13 @@ import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { Download, Save } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { charts as chartStore, datasets as datasetStore } from '../backend'
 import { ChartView, isCharted } from '../ChartView'
 import { counted, type DataRow, freshId, now, type Preferences } from '../model'
-import { downloadUrl, fileName } from '../parse'
+import { fileName } from '../parse'
 import { type SharedChart, sharedDataset, unpackChart } from '../share'
 import { downloadDataset } from './Datasets'
 
@@ -62,7 +63,7 @@ export function SharedPage({ payload, prefs }: { payload: string; prefs: Prefere
             .then(
                 (chart) => {
                     setSaving(false)
-                    toast.success(`${chart.name} and its data kept here`)
+                    toast.add({ type: 'success', title: `${chart.name} and its data kept here` })
                     go(`/charts/${chart.id}`)
                 },
                 () => setSaving(false),
@@ -89,7 +90,7 @@ export function SharedPage({ payload, prefs }: { payload: string; prefs: Prefere
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => void png.current?.().then((url) => downloadUrl(`${fileName(shared.name)}.png`, url))}
+                                onClick={() => void png.current?.().then((url) => download(`${fileName(shared.name)}.png`, { href: url }))}
                             >
                                 <Download aria-hidden />
                                 PNG

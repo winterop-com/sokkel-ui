@@ -97,11 +97,15 @@ function progress(world: World, goal: Goal) {
 
 /** Sets a goal up, or changes one: what it counts, for which segment, the target and the days it runs. */
 function GoalDialog({ goal, open, onOpenChange }: { goal: Goal | undefined; open: boolean; onOpenChange: (open: boolean) => void }) {
-    const { me, world } = useLoaded()
+    const { me, world, rate, prefs } = useLoaded()
     const today = dayOf(world.now)
+    const isMoney = (one: Metric) => one === 'mrr' || one === 'revenue'
     const [name, setName] = useState(goal?.name ?? '')
     const [metric, setMetric] = useState<Metric>(goal?.metric ?? 'mrr')
-    const [target, setTarget] = useState<number | null>(goal?.target ?? null)
+    // A money target is shown and typed in the person's currency, and kept in dollars.
+    const [target, setTarget] = useState<number | null>(
+        goal === undefined ? null : isMoney(goal.metric) ? Math.round(goal.target * rate) : goal.target,
+    )
     const [plan, setPlan] = useState<Plan | 'all'>(goal?.plan ?? 'all')
     const [region, setRegion] = useState<Region | 'all'>(goal?.region ?? 'all')
     const [start, setStart] = useState<string | null>(goal?.start ?? isoDay(today))
@@ -113,14 +117,14 @@ function GoalDialog({ goal, open, onOpenChange }: { goal: Goal | undefined; open
     const dueError = start === null || due === null ? 'A goal needs its days.' : due <= start ? 'It is due after it starts.' : null
     const now = useMemo(() => {
         const from = start ?? isoDay(today)
-        const draft: Goal = { id: '', name, metric, target: target ?? 0, plan, region, start: from, due: due ?? from, by: me }
+        const draft: Goal = { id: '', name, metric, target: 0, plan, region, start: from, due: due ?? from, by: me }
         return figures(world, draft, [Math.max(startOf(dayFrom(from)), world.now)])[0] ?? 0
-    }, [world, name, metric, target, plan, region, start, due, today, me])
+    }, [world, name, metric, plan, region, start, due, today, me])
     const submit = () => {
         setTried(true)
         if (nameError !== null || targetError !== null || dueError !== null || target === null || start === null || due === null) return
         setBusy(true)
-        const fields = { name: name.trim(), metric, target, plan, region, start, due, by: me }
+        const fields = { name: name.trim(), metric, target: isMoney(metric) ? target / rate : target, plan, region, start, due, by: me }
         const done = goal === undefined ? goals.create(fields, `goal-${Date.now().toString(36)}`) : goals.update(goal.id, fields)
         void done.then((row) => {
             setBusy(false)
@@ -132,7 +136,10 @@ function GoalDialog({ goal, open, onOpenChange }: { goal: Goal | undefined; open
             })
         })
     }
-    const money = metric === 'mrr' || metric === 'revenue'
+    const money = isMoney(metric)
+    const symbol = new Intl.NumberFormat('en-US', { style: 'currency', currency: prefs.currency })
+        .formatToParts(0)
+        .find((part) => part.type === 'currency')?.value
     return (
         <DialogShell
             open={open}
@@ -172,8 +179,8 @@ function GoalDialog({ goal, open, onOpenChange }: { goal: Goal | undefined; open
                 <NumberField
                     id="goal-target"
                     label="Target"
-                    hint={`now ${Math.round(now).toLocaleString('en-US')}`}
-                    prefix={money ? '$' : undefined}
+                    hint={`now ${Math.round(money ? now * rate : now).toLocaleString('en-US')}`}
+                    prefix={money ? symbol : undefined}
                     integer
                     min={1}
                     value={target}

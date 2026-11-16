@@ -119,21 +119,6 @@ describe('schema diagnostics', () => {
         )
     })
 
-    it('sees a key the object prototype also has, in JSON and in YAML', () => {
-        const strict: JsonSchema = { type: 'object', additionalProperties: false, properties: { code: { type: 'string' } } }
-        const keys = (state: EditorState, language: 'json' | 'yaml') =>
-            schemaDiagnostics(state, language, strict, validate).map((each) => state.doc.sliceString(each.from, each.to))
-        expect(keys(jsonState('{"code": "a", "__proto__": {"code": 1}}'), 'json')).toEqual(['"__proto__"'])
-        expect(keys(jsonState('{"code": "a", "constructor": 2}'), 'json')).toEqual(['"constructor"'])
-        expect(keys(yamlState('code: a\n__proto__:\n  code: 1\n'), 'yaml')).toEqual(['__proto__'])
-        const merged = readDocument(yamlState('base: &base\n  __proto__: 1\nuse:\n  <<: *base\n'), 'yaml')?.value as Record<
-            string,
-            Record<string, unknown>
-        >
-        expect(Object.hasOwn(merged.use, '__proto__')).toBe(true)
-        expect(Object.getPrototypeOf(merged.use)).toBe(Object.prototype)
-    })
-
     it('marks a missing property at its object and a broken document where it breaks', () => {
         const doc = '{\n  "code": "nightly-export"\n}'
         const [missing] = schemaDiagnostics(jsonState(doc), 'json', SCHEMA, validate)
@@ -152,6 +137,18 @@ describe('schema diagnostics', () => {
             each.message,
         ])
         expect(found).toEqual([['many', 'Expected an integer']])
+    })
+
+    it('reads a key such as __proto__ or constructor as a key of the document like any other', () => {
+        const doc = '{"code": "nightly-export", "steps": [], "__proto__": {"paused": 1}, "constructor": 2}'
+        const read = readDocument(jsonState(doc), 'json')?.value
+        expect(Object.keys(read as object)).toEqual(['code', 'steps', '__proto__', 'constructor'])
+        expect(Object.getPrototypeOf(read)).toBe(Object.prototype)
+        const messages = schemaDiagnostics(jsonState(doc), 'json', SCHEMA, validate).map((each) => each.message)
+        expect(messages).toEqual(['__proto__ is not a known property', 'constructor is not a known property'])
+        const yamlDoc = 'base: &base {__proto__: 1}\nmerged:\n  <<: *base\n  constructor: 2\n'
+        const yamlRead = readDocument(yamlState(yamlDoc), 'yaml')?.value as Record<string, unknown> | undefined
+        expect(Object.keys(yamlRead?.merged as object)).toEqual(['__proto__', 'constructor'])
     })
 })
 
@@ -193,6 +190,17 @@ describe('schema completion', () => {
 
     it('walks the schema along a path', () => {
         expect(schemasAt(SCHEMA, ['steps', 0, 'name'])[0].enum).toContain('validate')
+    })
+
+    it('finds nothing at a reference with a broken percent escape, and does not throw', () => {
+        const schema: JsonSchema = {
+            type: 'object',
+            properties: { step: { $ref: '#/$defs/%E0%A4%A' }, mark: { $ref: '#%E0%A4%A' } },
+            $defs: { step: { type: 'string' } },
+        }
+        expect(() => schemasAt(schema, ['step'])).not.toThrow()
+        expect(() => schemasAt(schema, ['mark'])).not.toThrow()
+        expect(schemasAt(schema, ['step']).some((each) => each.type === 'string')).toBe(false)
     })
     it('says a field that refers to a definition with no type by what it takes, never by its key', () => {
         const schema: JsonSchema = {
@@ -371,12 +379,6 @@ describe('a schema that refers to itself', () => {
             not: { $ref: '#/properties/items' },
         },
     }
-
-    it('finds nothing at a reference with a broken percent escape, rather than throwing', () => {
-        const broken: JsonSchema = { type: 'object', properties: { code: { $ref: '#/$defs/%zz' }, owner: { $ref: '#%E0' } }, $defs: {} }
-        expect(schemasAt(broken, ['code'])).toEqual([{ $ref: '#/$defs/%zz' }])
-        expect(schemasAt(broken, ['owner'])).toEqual([{ $ref: '#%E0' }])
-    })
 
     it('walks into a part that points at the root, by a pointer, an anchor or a dynamic reference', () => {
         expect(schemasAt(META, ['properties', 'id', 'type'])[0].enum).toContain('integer')

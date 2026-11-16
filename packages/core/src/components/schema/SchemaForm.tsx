@@ -14,6 +14,7 @@ import {
     worst,
     type Issue,
     type IssueAction,
+    type IssueCountWords,
     type IssueEntry,
     type IssueWords,
 } from '../IssueMark'
@@ -34,6 +35,7 @@ import {
     fieldSchema,
     given,
     pointer,
+    readPointer,
     shiftKey,
     shiftRecord,
     readScalar,
@@ -100,6 +102,10 @@ export interface SchemaFormWords extends IssueWords {
     fewer: string
     /** The words of a `writeOnly` field's `SecretField`: Set, Replace and the rest. */
     secret?: Partial<SecretFieldWords>
+    /** The name of the strip that marks where each issue sits (`IssueMarks`), said to a screen reader. */
+    marks: string
+    /** The words of `SchemaIssueCount`: how many errors and warnings, said to a screen reader. */
+    count?: Partial<IssueCountWords>
 }
 
 /**
@@ -137,6 +143,7 @@ const WORDS: SchemaFormWords = {
     repeatedKey: 'Each key only once',
     more: (count) => `${String(count)} more ${count === 1 ? 'field' : 'fields'}`,
     fewer: 'Fewer fields',
+    marks: 'Issues in this form',
     ...ISSUE_WORDS,
 }
 
@@ -151,12 +158,12 @@ export function initialValue(schema: JsonSchema, root: JsonSchema = schema, keep
     if (at.default !== undefined && (keep || (at.default !== null && typeof at.default === 'object'))) return structuredClone(at.default)
     if (at.const !== undefined) return at.const
     if (at.properties !== undefined) {
-        const out: Record<string, unknown> = {}
+        const entries: [string, unknown][] = []
         for (const [key, child] of Object.entries(at.properties)) {
             const value = initialValue(child, root, at.required?.includes(key))
-            if (value !== undefined) out[key] = value
+            if (value !== undefined) entries.push([key, value])
         }
-        return out
+        return Object.fromEntries(entries)
     }
     const main = types(at).main
     if (main[0] === 'array') return []
@@ -195,9 +202,10 @@ function setAt(value: unknown, path: Path, next: unknown): unknown {
         return copy
     }
     const copy: Record<string, unknown> = { ...(value !== null && typeof value === 'object' ? (value as Record<string, unknown>) : {}) }
-    const child = setAt(copy[head], rest, next)
+    const child = setAt(Object.hasOwn(copy, head) ? copy[head] : undefined, rest, next)
+    // Set as the object's own key, so `__proto__` or `constructor` is a key like any other.
     if (child === undefined) delete copy[head]
-    else copy[head] = child
+    else Object.defineProperty(copy, head, { value: child, enumerable: true, writable: true, configurable: true })
     return copy
 }
 
@@ -232,25 +240,27 @@ export function loadSchemaChecks(): Promise<void> {
  */
 function useChecked(schema: JsonSchema, value: unknown, deferred?: DeferredValue): readonly SchemaIssue[] | undefined {
     const [check, setCheck] = useState(loadedValidate)
-    const [failed, setFailed] = useState<string | null>(null)
+    // Why the checker failed to load, and the schema and value it failed at: a change to either tries again.
+    const [failed, setFailed] = useState<{ reason: string; schema: JsonSchema; value: unknown } | null>(null)
     useEffect(() => {
         if (check !== undefined) return
+        if (failed !== null && failed.schema === schema && failed.value === value) return
         let live = true
         loadValidate().then(
             (loaded) => {
                 if (live) setCheck(() => loaded)
             },
             (error: unknown) => {
-                if (live) setFailed(error instanceof Error ? error.message : String(error))
+                if (live) setFailed({ reason: error instanceof Error ? error.message : String(error), schema, value })
             },
         )
         return () => {
             live = false
         }
-    }, [check])
+    }, [check, failed, schema, value])
     return useMemo((): readonly SchemaIssue[] | undefined => {
         if (check !== undefined) return withoutDeferred(check(schema, emptied(value)), value, deferred)
-        if (failed !== null) return [{ kind: 'unchecked', reason: failed, path: [], tone: 'critical' }]
+        if (failed !== null) return [{ kind: 'unchecked', reason: failed.reason, path: [], tone: 'critical' }]
         return undefined
     }, [check, failed, schema, value, deferred])
 }
@@ -382,7 +392,7 @@ export function useSchemaForm(
     const [drafts, setDrafts] = useState<Record<string, { text: string; over: string | undefined }>>({})
     const draftAt = (at: string): string | undefined => {
         const draft = drafts[at]
-        return draft !== undefined && JSON.stringify(valueAt(value, parsePointer(at))) === draft.over ? draft.text : undefined
+        return draft !== undefined && JSON.stringify(valueAt(value, readPointer(at, value))) === draft.over ? draft.text : undefined
     }
     const [unread, setUnread] = useState<ReadonlySet<string>>(new Set())
     const [held, setHeld] = useState<Record<string, string>>({})
@@ -494,13 +504,13 @@ export function useSchemaForm(
     }
     // Text typed into a number or JSON field that does not parse leaves the value as it was, and says so.
     for (const at of unread) {
-        const field = schemaAt(schema, parsePointer(at))
+        const field = schemaAt(schema, readPointer(at, value))
         add(at, { tone: 'critical', ...words.say({ kind: 'type', expected: types(field).main[0], path: [], tone: 'critical' }, field) })
     }
     for (const [at, text] of Object.entries(held)) add(at, { tone: 'critical', text })
     for (const at of Object.keys(drafts)) {
         const text = draftAt(at)
-        if (text === undefined || text.trim() === '' || kindOf(schemaAt(schema, parsePointer(at)), schema) !== 'json') continue
+        if (text === undefined || text.trim() === '' || kindOf(schemaAt(schema, readPointer(at, value)), schema) !== 'json') continue
         try {
             JSON.parse(text)
         } catch {
@@ -529,7 +539,7 @@ export function useSchemaForm(
     const first = (test: (issues: Issue[]) => boolean): string | undefined => {
         const drawn = [...document.querySelectorAll(`[id^="${base}-f"]`)].map((element) => element.id)
         const rank = (at: string) => {
-            const index = drawn.indexOf(id(parsePointer(at)))
+            const index = drawn.indexOf(id(readPointer(at, value)))
             return index === -1 ? Number.MAX_SAFE_INTEGER : index
         }
         return places.filter((at) => test(pending(at))).sort((a, b) => rank(a) - rank(b))[0]
@@ -538,11 +548,10 @@ export function useSchemaForm(
     /** A field's title from its schema, or its key when the schema gives none. */
     const titleAt = (at: string): string => {
         let node: JsonSchema | undefined = schema
-        const keys = parsePointer(at)
+        const keys = readPointer(at, value)
         for (const key of keys) {
             const here: JsonSchema = resolve(node ?? {}, schema)
-            // A key of digits is an index only in a list; in an object it is a key, such as a port.
-            node = typeof key === 'number' && here.items !== undefined ? (childSchema(here, schema) ?? undefined) : here.properties?.[key]
+            node = typeof key === 'number' ? (childSchema(here, schema) ?? undefined) : here.properties?.[key]
         }
         const found = node === undefined ? undefined : resolve(node, schema).title
         return found ?? String(keys[keys.length - 1] ?? '')
@@ -627,22 +636,12 @@ export function useSchemaForm(
     }
 }
 
-function parsePointer(at: string): Path {
-    return at === ''
-        ? []
-        : at
-              .slice(1)
-              .split('/')
-              .map((part) => part.replaceAll('~1', '/').replaceAll('~0', '~'))
-              .map((part) => (/^\d+$/.test(part) ? Number(part) : part))
-}
-
 /** The schema that describes the value at a path. */
 function schemaAt(schema: JsonSchema, path: Path, root: JsonSchema = schema): JsonSchema {
     let at = fieldSchema(schema, root)
     for (const part of path) {
         const next =
-            typeof part === 'number' && at.items !== undefined
+            typeof part === 'number'
                 ? at.items
                 : (at.properties?.[part] ?? (typeof at.additionalProperties === 'object' ? at.additionalProperties : undefined))
         if (next === undefined) return {}
@@ -818,9 +817,11 @@ function Control({
     const where = pointer(path)
     const markUnread = useRef(form.setUnread)
     markUnread.current = form.setUnread
+    const pathNow = useRef(path)
+    pathNow.current = path
     useEffect(() => {
         if (!unreadable) return
-        const place = parsePointer(where)
+        const place = pathNow.current
         markUnread.current(place, true)
         return () => markUnread.current(place, false)
     }, [where, unreadable])
@@ -1456,7 +1457,7 @@ export function SchemaForm({
     const look = useMemo(() => ({ requiredMark, fallbacks, required: form.words.required }), [requiredMark, fallbacks, form.words.required])
     return (
         <div className={cn('flex min-w-0 flex-col gap-4', className)}>
-            {marks && <IssueMarks list={form.list} />}
+            {marks && <IssueMarks list={form.list} label={form.words.marks} />}
             {whole.length > 0 && (
                 <Banner tone="critical">
                     {whole.map((issue) => (
@@ -1478,9 +1479,18 @@ export function SchemaForm({
 
 export interface SchemaIssueCountProps {
     form: SchemaFormState
+    /** The count's words, over the form's own (`words.count` given to `useSchemaForm`). */
+    words?: Partial<IssueCountWords>
 }
 
 /** How many things stop the submit, for the footer beside the verb; pressing it opens the first. */
-export function SchemaIssueCount({ form }: SchemaIssueCountProps) {
-    return <IssueCount critical={form.count.critical} warning={form.count.warning} list={form.list} />
+export function SchemaIssueCount({ form, words }: SchemaIssueCountProps) {
+    return (
+        <IssueCount
+            critical={form.count.critical}
+            warning={form.count.warning}
+            list={form.list}
+            words={{ ...form.words.count, ...words }}
+        />
+    )
 }

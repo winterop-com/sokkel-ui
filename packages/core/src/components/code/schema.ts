@@ -93,6 +93,11 @@ export const SCHEMA_WORDS: CodeSchemaWords = {
 
 const text = (state: EditorState, node: SyntaxNode) => state.sliceDoc(node.from, node.to)
 
+/** Sets a key on an object as its own, so `__proto__` is a key like any other and never the object's prototype. */
+function own(out: Record<string, unknown>, key: string, value: unknown): void {
+    Object.defineProperty(out, key, { value, enumerable: true, writable: true, configurable: true })
+}
+
 function children(node: SyntaxNode): SyntaxNode[] {
     const out: SyntaxNode[] = []
     for (let child = node.firstChild; child !== null; child = child.nextSibling) out.push(child)
@@ -104,11 +109,6 @@ function firstError(node: SyntaxNode): SyntaxNode | null {
     do if (cursor.type.isError) return cursor.node
     while (cursor.next())
     return null
-}
-
-/** Sets a key as the object's own, `__proto__` included, which an assignment would take as the prototype. */
-function own(out: Record<string, unknown>, key: string, value: unknown): void {
-    Object.defineProperty(out, key, { value, enumerable: true, writable: true, configurable: true })
 }
 
 /** A JSON tree read into a value. */
@@ -527,21 +527,21 @@ function resolveLocal(root: JsonSchema, ref: string): JsonSchema | undefined {
     if (!ref.startsWith('#')) return undefined
     const rest = ref.slice(1)
     if (rest === '') return root
-    // A reference with a broken percent escape names nothing, as ajv reads it.
-    const decode = (part: string) => {
+    // A reference with a broken percent escape names nothing, as the checker reads it.
+    const decoded = (text: string): string | undefined => {
         try {
-            return decodeURIComponent(part)
+            return decodeURIComponent(text)
         } catch {
             return undefined
         }
     }
     if (!rest.startsWith('/')) {
-        const name = decode(rest)
-        return name === undefined ? undefined : anchored(root, name)
+        const anchor = decoded(rest)
+        return anchor === undefined ? undefined : anchored(root, anchor)
     }
     let node: unknown = root
     for (const raw of rest.slice(1).split('/')) {
-        const part = decode(raw)?.replaceAll('~1', '/').replaceAll('~0', '~')
+        const part = decoded(raw)?.replaceAll('~1', '/').replaceAll('~0', '~')
         if (part === undefined) return undefined
         if (typeof node !== 'object' || node === null) return undefined
         node = (node as Record<string, unknown>)[part]

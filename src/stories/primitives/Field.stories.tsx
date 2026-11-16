@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Inputs/Field', parameters: { frame: 'column' } }
 export default meta
@@ -155,77 +156,79 @@ function ServiceFormDemo() {
     const [auth, setAuth] = useState<string | null>('token')
     const codeOk = /^[a-z0-9][a-z0-9-]*$/.test(code)
     return (
-        <Stack onSubmit={(event) => event.preventDefault()} as="form" gap="xl" className="max-w-lg rounded-lg border border-border p-5">
-            <FieldSet>
-                <FieldLegend>New service</FieldLegend>
-                <FieldDescription>Jobs reach an outside system through a service.</FieldDescription>
-                <FieldGroup>
-                    <IssueField
-                        id="c-code"
-                        label="Code"
-                        help="What jobs name this service by."
-                        error={codeOk ? null : 'Use lowercase letters, digits and dashes.'}
-                    >
-                        <Input
+        <Surface pad className="max-w-lg">
+            <Stack onSubmit={(event) => event.preventDefault()} as="form" gap="xl">
+                <FieldSet>
+                    <FieldLegend>New service</FieldLegend>
+                    <FieldDescription>Jobs reach an outside system through a service.</FieldDescription>
+                    <FieldGroup>
+                        <IssueField
                             id="c-code"
-                            className="font-mono"
-                            value={code}
-                            aria-invalid={!codeOk}
-                            aria-describedby="c-code-help"
-                            onChange={(event) => setCode(event.target.value)}
-                        />
-                    </IssueField>
-                    <Field>
-                        <FieldLabel htmlFor="c-name">Name</FieldLabel>
-                        <Input id="c-name" defaultValue="Orders API" />
-                    </Field>
-                    <Field>
-                        <FieldLabel htmlFor="c-url">Base URL</FieldLabel>
-                        <Input id="c-url" type="url" defaultValue="https://api.example.org" />
-                    </Field>
-                    <Field>
-                        <FieldLabel htmlFor="c-auth">Auth kind</FieldLabel>
-                        <Select items={AUTH_KINDS} value={auth} onValueChange={setAuth}>
-                            <SelectTrigger id="c-auth" className="w-full">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {AUTH_KINDS.map((kind) => (
-                                    <SelectItem key={kind.value} value={kind.value}>
-                                        {kind.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                    <Field orientation="horizontal">
-                        <FieldContent>
-                            <FieldLabel htmlFor="c-tls">Verify TLS</FieldLabel>
-                            <FieldDescription>Refuse a server whose certificate does not check out.</FieldDescription>
-                        </FieldContent>
-                        <Switch id="c-tls" defaultChecked />
-                    </Field>
-                    <Field>
-                        <FieldLabel htmlFor="c-timeout">Timeout</FieldLabel>
-                        <InputGroup>
-                            <InputGroupInput id="c-timeout" defaultValue="30s" />
-                            <InputGroupAddon align="inline-end">
-                                <InputGroupText>per request</InputGroupText>
-                            </InputGroupAddon>
-                        </InputGroup>
-                        <FieldDescription>A duration, such as 30s or 2m.</FieldDescription>
-                    </Field>
-                </FieldGroup>
-            </FieldSet>
-            <Row align="stretch" justify="end" wrap>
-                <Button variant="outline" type="button">
-                    Test connection
-                </Button>
-                <Button type="submit" disabled={!codeOk}>
-                    Create
-                </Button>
-            </Row>
-        </Stack>
+                            label="Code"
+                            help="What jobs name this service by."
+                            error={codeOk ? null : 'Use lowercase letters, digits and dashes.'}
+                        >
+                            <Input
+                                id="c-code"
+                                className="font-mono"
+                                value={code}
+                                aria-invalid={!codeOk}
+                                aria-describedby="c-code-help"
+                                onChange={(event) => setCode(event.target.value)}
+                            />
+                        </IssueField>
+                        <Field>
+                            <FieldLabel htmlFor="c-name">Name</FieldLabel>
+                            <Input id="c-name" defaultValue="Orders API" />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="c-url">Base URL</FieldLabel>
+                            <Input id="c-url" type="url" defaultValue="https://api.example.org" />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="c-auth">Auth kind</FieldLabel>
+                            <Select items={AUTH_KINDS} value={auth} onValueChange={setAuth}>
+                                <SelectTrigger id="c-auth" className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {AUTH_KINDS.map((kind) => (
+                                        <SelectItem key={kind.value} value={kind.value}>
+                                            {kind.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                        <Field orientation="horizontal">
+                            <FieldContent>
+                                <FieldLabel htmlFor="c-tls">Verify TLS</FieldLabel>
+                                <FieldDescription>Refuse a server whose certificate does not check out.</FieldDescription>
+                            </FieldContent>
+                            <Switch id="c-tls" defaultChecked />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="c-timeout">Timeout</FieldLabel>
+                            <InputGroup>
+                                <InputGroupInput id="c-timeout" defaultValue="30s" />
+                                <InputGroupAddon align="inline-end">
+                                    <InputGroupText>per request</InputGroupText>
+                                </InputGroupAddon>
+                            </InputGroup>
+                            <FieldDescription>A duration, such as 30s or 2m.</FieldDescription>
+                        </Field>
+                    </FieldGroup>
+                </FieldSet>
+                <Row align="stretch" justify="end" wrap>
+                    <Button variant="outline" type="button">
+                        Test connection
+                    </Button>
+                    <Button type="submit" disabled={!codeOk}>
+                        Create
+                    </Button>
+                </Row>
+            </Stack>
+        </Surface>
     )
 }
 

@@ -6,6 +6,7 @@ import { ActivityList, ActivityMenu, type ActivityItem } from '@winterop-com/sok
 import { AppBar } from '@winterop-com/sokkel-ui/AppBar'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
@@ -105,21 +106,27 @@ function InTopBar({ start = ITEMS }: { start?: ActivityItem[] }) {
 }
 
 /** The bell in the top bar, open: three unread items today, three read ones from yesterday. */
-export const TopBarMenu: StoryObj = { name: 'From the top bar', render: () => <InTopBar /> }
+export const TopBarMenu: StoryObj = { name: 'Top bar', render: () => <InTopBar /> }
 
 function InPanel() {
     const activity = useItems(ITEMS)
     return (
-        <Row gap="none" align="stretch" justify="end" className="min-h-svh bg-background text-foreground">
-            <Stack as="aside" gap="none" className="h-svh w-[24rem] max-w-full border-l border-border-strong bg-sidebar">
-                <ActivityList {...activity} className="h-full" />
-            </Stack>
+        <Row gap="none" align="stretch" justify="end" className="h-svh bg-background text-foreground">
+            <SidePanel
+                tabs={[
+                    {
+                        id: 'activity',
+                        label: 'Activity',
+                        content: <ActivityList {...activity} words={{ title: 'Unread' }} className="h-full" />,
+                    },
+                ]}
+            />
         </Row>
     )
 }
 
-/** The same list as a side panel's content, where it can stay open beside the work. */
-export const InSidePanel: StoryObj = { name: 'In a side panel', render: () => <InPanel /> }
+/** The same list as a `SidePanel`'s content, where it can stay open beside the work; its head counts the unread. */
+export const InSidePanel: StoryObj = { name: 'Side panel', render: () => <InPanel /> }
 
 /** Everything read: no count on the bell, and Mark all read has nothing to do. */
 export const AllRead: StoryObj = {

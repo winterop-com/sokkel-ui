@@ -7,7 +7,7 @@ import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { tableEditing } from '@winterop-com/sokkel-ui/table-editing'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { datasets } from './backend'
@@ -119,7 +119,7 @@ export function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChan
                 (made) => {
                     setBusy(false)
                     onOpenChange(false)
-                    toast.success(`${made.name} imported, ${counted(made.rows.length, 'row')}`)
+                    toast.add({ type: 'success', title: `${made.name} imported, ${counted(made.rows.length, 'row')}` })
                     go(`/datasets/${made.id}`)
                 },
                 () => setBusy(false),

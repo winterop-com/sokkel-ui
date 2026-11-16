@@ -88,7 +88,7 @@ export const STARTERS: { value: NewJob['starter']; label: string; steps: Job['st
             { code: 'fetch', kind: 'http', needs: [] },
             { code: 'transform', kind: 'sql', needs: ['fetch'] },
             { code: 'validate', kind: 'schema', needs: ['transform'] },
-            { code: 'upload', kind: 's3', needs: ['validate'] },
+            { code: 'upload', kind: 'storage', needs: ['validate'] },
             { code: 'notify', kind: 'webhook', needs: ['upload'] },
         ],
     },

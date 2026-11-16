@@ -5,8 +5,6 @@ html[data-theme='steel'],
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: var(--card);
     --node-line: color-mix(in oklab, var(--faint) 70%, var(--border-strong));
-    --critical-wash: color-mix(in oklab, var(--destructive) 12%, var(--card));
-    --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
     --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --primary: oklch(0.48 0.075 245);
@@ -25,7 +23,6 @@ html[data-theme='steel'],
     --sidebar-border: oklch(0.82 0.035 243);
     --sidebar-ring: oklch(0.52 0.075 245);
     --brand: #3f6382;
-    --brand-foreground: #eef3f7;
     --section-head-ground: color-mix(in oklab, var(--sidebar) 70%, var(--card));
     --section-head-line: color-mix(in oklab, var(--primary) 22%, var(--border-strong));
     --section-head-ink: var(--accent-foreground);
@@ -42,8 +39,6 @@ html.dark[data-theme='steel'],
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: color-mix(in oklab, var(--foreground) 18%, var(--card));
     --node-line: color-mix(in oklab, var(--faint) 80%, var(--border-strong));
-    --critical-wash: color-mix(in oklab, var(--destructive) 16%, var(--card));
-    --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
     --brand-ground: color-mix(in oklab, var(--shade) 20%, var(--background));
     --primary: oklch(0.74 0.08 240);
@@ -62,7 +57,6 @@ html.dark[data-theme='steel'],
     --sidebar-border: oklch(0.35 0.04 245);
     --sidebar-ring: oklch(0.74 0.08 240);
     --brand: #3f6382;
-    --brand-foreground: #eef3f7;
     --section-head-ground: color-mix(in oklab, var(--sidebar) 60%, var(--card));
     --section-head-line: color-mix(in oklab, var(--primary) 20%, var(--border-strong));
     --section-head-ink: var(--accent-foreground);

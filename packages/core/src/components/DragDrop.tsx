@@ -31,6 +31,7 @@ import { getEventCoordinates } from '@dnd-kit/utilities'
 import {
     createContext,
     useContext,
+    useEffect,
     useMemo,
     useRef,
     useState,
@@ -332,6 +333,7 @@ export interface DragDropHandlers {
 
 export interface DragDropProps extends DragDropHandlers {
     children: ReactNode
+    /** What a drag says to a screen reader; inside another `DragDrop`, that one's words are said instead. */
     words?: Partial<DragDropWords>
 }
 
@@ -339,7 +341,7 @@ export interface DragDropProps extends DragDropHandlers {
  * Where things are dragged and dropped. Every part that drags draws one around itself, and one an
  * app draws around several parts makes them one: a row of a list can then be dropped onto a folder
  * of a tree beside it, each part hearing the drags through `useDragDrop`. Inside another
- * `DragDrop` it adds its handlers to that one.
+ * `DragDrop` it adds its handlers to that one, and the outer one's `words` are said.
  *
  * A mouse drags once it moves a few pixels; a finger holds still a moment first, so a swipe still
  * scrolls; a keyboard picks up with Space or Enter on a grip, moves with the arrows and drops with
@@ -385,6 +387,13 @@ function DragDropRoot({
 }) {
     const words = useMemo(() => ({ ...DRAG_DROP_WORDS, ...given }), [given])
     const dragging = useRef(false)
+    // Gone mid-drag, it hands the page its own cursor back.
+    useEffect(
+        () => () => {
+            if (dragging.current) document.body.style.cursor = ''
+        },
+        [],
+    )
     const scope = useMemo<DragScope>(() => ({ dragging, words }), [words])
     const [active, setActive] = useState<DragData | null>(null)
     const still = useReducedMotion()
@@ -533,6 +542,24 @@ export function useDropTarget({ id, data, disabled = false }: DropTargetOptions)
     const { setNodeRef, isOver, active } = useDroppable({ id, data, disabled })
     const drag = dragData(active)
     return { ref: setNodeRef, over: isOver && takes(data, drag), dragged: drag }
+}
+
+/**
+ * The handlers a drag spreads on an element, each run after the app's own of the same name, which
+ * keeps the drag's from running by `preventDefault`; the drag's alone where the app has none.
+ */
+export function joinHandlers<H extends object>(own: object, drag: H): H {
+    const joined: Record<string, unknown> = { ...(drag as Record<string, unknown>) }
+    const theirs = own as Record<string, unknown>
+    for (const [name, handler] of Object.entries(joined)) {
+        const first = theirs[name]
+        if (!/^on[A-Z]/.test(name) || typeof first !== 'function' || typeof handler !== 'function') continue
+        joined[name] = (event: { defaultPrevented: boolean }) => {
+            first(event)
+            if (!event.defaultPrevented) handler(event)
+        }
+    }
+    return joined as H
 }
 
 /** Joins a grip's own key handler before the drag's, so its arrows can move it a place at a time. */

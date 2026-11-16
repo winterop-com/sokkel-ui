@@ -5,8 +5,6 @@ html[data-theme='ember'],
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: var(--card);
     --node-line: color-mix(in oklab, var(--faint) 70%, var(--border-strong));
-    --critical-wash: color-mix(in oklab, var(--destructive) 12%, var(--card));
-    --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
     --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --background: oklch(0.988 0.004 75);
@@ -51,7 +49,6 @@ html[data-theme='ember'],
     --graph-edge: oklch(0.76 0.008 70);
     --terminal-accent: oklch(0.78 0.14 45);
     --brand: #c4471f;
-    --brand-foreground: #fdf6f2;
 }
 
 html.dark[data-theme='ember'],
@@ -59,8 +56,6 @@ html.dark[data-theme='ember'],
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: color-mix(in oklab, var(--foreground) 18%, var(--card));
     --node-line: color-mix(in oklab, var(--faint) 80%, var(--border-strong));
-    --critical-wash: color-mix(in oklab, var(--destructive) 16%, var(--card));
-    --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
     --brand-ground: color-mix(in oklab, var(--shade) 20%, var(--background));
     --background: oklch(0.165 0.006 55);
@@ -105,5 +100,4 @@ html.dark[data-theme='ember'],
     --graph-edge: oklch(0.46 0.01 55);
     --terminal-accent: oklch(0.78 0.14 45);
     --brand: #c4471f;
-    --brand-foreground: #fdf6f2;
 }

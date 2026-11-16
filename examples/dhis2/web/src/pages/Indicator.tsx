@@ -18,7 +18,7 @@ import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
 import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
 import { Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
@@ -102,11 +102,11 @@ function Editor({ saved }: { saved: Indicator }) {
         indicators.update(saved.id, draft).then(
             () => {
                 setBusy(false)
-                toast.success('Saved', { description: draft.name })
+                toast.add({ type: 'success', title: 'Saved', description: draft.name })
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not saved', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({ type: 'error', title: 'Not saved', description: failure instanceof Error ? failure.message : String(failure) })
             },
         )
     }
@@ -114,10 +114,15 @@ function Editor({ saved }: { saved: Indicator }) {
     const remove = () =>
         indicators.remove(saved.id).then(
             () => {
-                toast(`${saved.name} deleted`)
+                toast.add({ title: `${saved.name} deleted` })
                 go('/indicators')
             },
-            (failure: unknown) => toast.error('Not deleted', { description: failure instanceof Error ? failure.message : String(failure) }),
+            (failure: unknown) =>
+                toast.add({
+                    type: 'error',
+                    title: 'Not deleted',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                }),
         )
 
     type Below = (typeof below)[number]

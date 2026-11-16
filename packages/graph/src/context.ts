@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 
 import type { GraphEditing, GraphWords } from './GraphCanvas'
-import type { GraphDirection, GraphPoint } from './layout'
+import { EDGE_BEND, type GraphDirection, type GraphPoint } from './layout'
 
 /** The direction the canvas a node stands on is laid out in. */
 export const GraphDirectionContext = createContext<GraphDirection>('right')
@@ -9,6 +9,14 @@ export const GraphDirectionContext = createContext<GraphDirection>('right')
 /** Which way the graph a node stands on runs, which decides the sides its edges leave and arrive on. */
 export function useGraphDirection(): GraphDirection {
     return useContext(GraphDirectionContext)
+}
+
+/** The radius in pixels the bends of a canvas's edges turn on, from the theme's `--radius`. */
+export const GraphBendContext = createContext(EDGE_BEND)
+
+/** The radius the bends of the canvas this is drawn on turn on. */
+export function useGraphBend(): number {
+    return useContext(GraphBendContext)
 }
 
 /** Whether the canvas a node stands on is editable, which shows its ports. */

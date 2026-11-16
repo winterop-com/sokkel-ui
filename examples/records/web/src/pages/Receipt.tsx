@@ -15,7 +15,7 @@ import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { TextLink } from '@winterop-com/sokkel-ui/TextLink'
 import { FileJson, Send, Undo2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 
 import { cellOf, forward, households, receiptOf, receipts, STATE_WORDS, withdraw, type Receipt } from '../data/backend'
@@ -212,12 +212,17 @@ export function ReceiptActions({ receipt }: { receipt: Receipt }) {
         forward(receipt).then(
             (next) => {
                 setBusy(false)
-                if (next.state === 'rejected') toast.error('Refused by the register', { description: next.refusal ?? undefined })
-                else toast.success('Sent on', { description: 'The register took the record.' })
+                if (next.state === 'rejected')
+                    toast.add({ type: 'error', title: 'Refused by the register', description: next.refusal ?? undefined })
+                else toast.add({ type: 'success', title: 'Sent on', description: 'The register took the record.' })
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not sent on', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({
+                    type: 'error',
+                    title: 'Not sent on',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                })
             },
         )
     }
@@ -227,11 +232,15 @@ export function ReceiptActions({ receipt }: { receipt: Receipt }) {
             () => {
                 setBusy(false)
                 setAsking(false)
-                toast.success('Withdrawn', { description: 'The register keeps the record, no longer active.' })
+                toast.add({ type: 'success', title: 'Withdrawn', description: 'The register keeps the record, no longer active.' })
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not withdrawn', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({
+                    type: 'error',
+                    title: 'Not withdrawn',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                })
             },
         )
     }

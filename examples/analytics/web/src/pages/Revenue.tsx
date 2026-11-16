@@ -18,7 +18,7 @@ import { retryCharge, setInvoiceStatus } from '../backend'
 import { invoiceViews } from '../collections'
 import { isoDay, PLAN_NAMES, PLANS, REGION_NAMES, REGIONS, shortDay, type Invoice, type InvoiceStatus } from '../model'
 import { PlanChip, STATUSES, useSegment, useSpans, ViewBar } from '../parts'
-import { useLoaded } from '../state'
+import { useLoaded, useMoneyFields } from '../state'
 import { go, rangeName } from '../view'
 
 /** The revenue pages: the breakdowns, and the invoices behind them. */
@@ -52,6 +52,8 @@ export function Revenue({ tab }: { tab: 'breakdowns' | 'invoices' }) {
 }
 
 const ICON = 'size-4 text-muted-foreground'
+
+const amountOf = (invoice: Invoice) => invoice.amount
 
 const INVOICE_FIELDS: FilterField<Invoice>[] = [
     {
@@ -94,7 +96,6 @@ const INVOICE_FIELDS: FilterField<Invoice>[] = [
         id: 'amount',
         label: 'Amount',
         type: 'number',
-        unit: 'USD',
         operators: ['atLeast', 'atMost', 'between'],
         icon: <Banknote className={ICON} aria-hidden />,
         value: (invoice) => invoice.amount,
@@ -127,6 +128,7 @@ function Invoices() {
     const [widths, setWidths] = useState<Readonly<Record<string, number>>>({})
     const [query, setQuery] = useState('')
     const [refunding, setRefunding] = useState<Invoice | null>(null)
+    const fields = useMoneyFields(INVOICE_FIELDS, 'amount', amountOf)
 
     const apply = (state: ListViewState) => {
         setFilters(state.filters)
@@ -158,10 +160,10 @@ function Invoices() {
         [world, span, segment],
     )
     const rows = useMemo(() => {
-        const kept = filterRows(inRange, filters, INVOICE_FIELDS)
+        const kept = filterRows(inRange, filters, fields)
         const wanted = query.trim().toLowerCase()
         return wanted === '' ? kept : kept.filter((invoice) => `${invoice.id} ${invoice.name}`.toLowerCase().includes(wanted))
-    }, [inRange, filters, query])
+    }, [inRange, filters, fields, query])
 
     const pick = (id: string) => go(href('revenue/invoices', { view: id }))
     const columns: DataColumn<Invoice>[] = [
@@ -301,7 +303,7 @@ function Invoices() {
             <DataTable
                 className="min-h-0 flex-1"
                 search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
-                toolbar={<FilterBar fields={INVOICE_FIELDS} filters={filters} onFiltersChange={setFilters} />}
+                toolbar={<FilterBar fields={fields} filters={filters} onFiltersChange={setFilters} />}
                 columns={columns}
                 rows={rows}
                 rowKey={(invoice) => invoice.id}

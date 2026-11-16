@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
-import { nextWrite, sessionText, type TerminalEntry } from './session'
+import { sessionWrite, type SessionWritten, type TerminalEntry } from './session'
 import { TerminalView, type TerminalHandle } from './TerminalView'
 
 export type { TerminalEntry } from './session'
@@ -47,7 +47,8 @@ export interface TerminalProps {
  * `TerminalView`. While `streaming`, output may arrive a piece at a time: only what was added is
  * written, the view follows the newest line unless the reader has scrolled up, when a button brings
  * it back, and a cursor stands after the last character. A carriage return redraws its line, as a
- * progress bar does.
+ * progress bar does. An entry kept as the same object is not read again, so a chunk streamed into a
+ * long session costs only the entry it changed.
  */
 export function Terminal({
     entries,
@@ -61,16 +62,15 @@ export function Terminal({
     words: given,
 }: TerminalProps) {
     const view = useRef<TerminalHandle>(null)
-    const written = useRef('')
+    const written = useRef<SessionWritten | undefined>(undefined)
     const words = { ...WORDS, ...given }
     const exited = words.exited
-    const text = useMemo(() => sessionText(entries, prompt, exited), [entries, prompt, exited])
 
     // The view disposes its engine when its effects are cleaned up and makes an empty one when they
     // run again, so nothing counts as written until the text is written to the new one.
     useEffect(
         () => () => {
-            written.current = ''
+            written.current = undefined
         },
         [],
     )
@@ -78,14 +78,16 @@ export function Terminal({
     useEffect(() => {
         const handle = view.current
         if (handle === null) return
-        const { reset, data } = nextWrite(written.current, text)
-        if (reset) handle.reset()
-        if (reset || written.current === '') handle.write(streaming ? SHOW_CURSOR : HIDE_CURSOR)
-        if (data !== '') handle.write(data)
-        written.current = text
+        const before = written.current
+        const next = sessionWrite(before, entries, prompt, exited)
+        if (next.reset) handle.reset()
+        if (next.reset || before === undefined || !before.texts.some((text) => text !== ''))
+            handle.write(streaming ? SHOW_CURSOR : HIDE_CURSOR)
+        if (next.data !== '') handle.write(next.data)
+        written.current = next.written
         // The cursor is written with the text that changes it; `streaming` alone follows below.
         // oxlint-disable-next-line react/exhaustive-deps
-    }, [text])
+    }, [entries, prompt, exited])
 
     const firstStreaming = useRef(true)
     useEffect(() => {

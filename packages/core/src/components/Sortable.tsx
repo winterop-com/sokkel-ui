@@ -18,7 +18,17 @@ import {
 
 import { cn } from '../lib/cn'
 import { stepTo } from '../lib/reorder'
-import { DragDrop, DragGrip, useDragDrop, useDragging, withKeys, type DragData, type DragGripProps, type DragHandleProps } from './DragDrop'
+import {
+    DragDrop,
+    DragGrip,
+    joinHandlers,
+    useDragDrop,
+    useDragging,
+    withKeys,
+    type DragData,
+    type DragGripProps,
+    type DragHandleProps,
+} from './DragDrop'
 
 /** The words a sortable group says, each with an English default. */
 export interface SortableWords {
@@ -240,7 +250,8 @@ export function SortableItem({ id, as: Tag = 'div', handle: by = 'grip', ref, cl
         activator.current?.focus()
     })
     const own = by === 'item' ? handle : {}
-    const { ref: ownRef, ...ownProps } = own as DragHandleProps
+    const { ref: ownRef, ...dragProps } = own as DragHandleProps
+    const ownProps = joinHandlers(props, dragProps)
     const item: ItemContext = { handle, dragging: sortable.isDragging, label, words: group.words }
     return (
         <ItemContext.Provider value={item}>

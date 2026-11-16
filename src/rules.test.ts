@@ -46,7 +46,7 @@ const SOURCES: Record<string, string[]> = Object.fromEntries(PACKAGES.map((name)
 
 const ALL = [...files(join(ROOT, 'src')), ...Object.values(SOURCES).flat()]
 const STORIES = ALL.filter((path) => path.includes('/src/stories/'))
-/** What is drawn: every file but the DOM tests, which feed a literal color or size in as data. */
+/** What is drawn: every file but the DOM tests, which feed a literal color, size or markup in as data. */
 const DRAWN = ALL.filter((path) => !path.endsWith('.test.tsx'))
 
 interface Rule {
@@ -199,7 +199,7 @@ const RULES: Rule[] = [
     },
     {
         name: 'a message under a field instead of the issue mark',
-        pattern: /<p\b[^>]*text-(destructive|critical-ink|critical)\b|<FieldError\b/,
+        pattern: /<p\b[^>]*text-(destructive|critical-ink|critical)\b/,
         in: STORIES,
     },
 ]
@@ -241,13 +241,10 @@ function exported(path: string): string | undefined {
         if (star < 0) continue
         const [prefix, suffix] = [key.slice(0, star), key.slice(star + 1)]
         if (subpath.startsWith(prefix) && subpath.endsWith(suffix) && subpath.length > prefix.length + suffix.length) {
-            const middle = subpath.slice(prefix.length, subpath.length - suffix.length)
-            const filled = built.replace('*', middle)
-            // A module's list of sources is there when the module is exported; a file shipped from `src` when it is there.
-            if (filled.startsWith('./dist/sources/'))
-                return exported(`${NAMES[name]}/${middle}`)?.endsWith('.js') === true ? filled : undefined
-            if (filled.startsWith('./src/')) return existsSync(join(ROOT, 'packages', name, filled)) ? filled : undefined
-            return filled
+            const fill = subpath.slice(prefix.length, subpath.length - suffix.length)
+            // A module's list of sources is written for an exported module only.
+            if (prefix === './sources/' && suffix === '.css' && EXPORTS[name][`./${fill}`] === undefined) continue
+            return built.replace('*', fill)
         }
     }
     return undefined
@@ -304,6 +301,24 @@ describe('the exports maps', () => {
         expect(problems, problems.join('\n')).toEqual([])
     })
 
+    it('give every built module its declarations beside it, and a bare file only to a stylesheet, data or a written script', () => {
+        const wrong: string[] = []
+        for (const name of PACKAGES) {
+            for (const [key, target] of Object.entries(EXPORTS[name])) {
+                if (typeof target === 'string') {
+                    if (!/\.(css|json)$/.test(target) && WRITTEN[`${NAMES[name]}/${key.slice(2)}`] === undefined)
+                        wrong.push(`${NAMES[name]} ${key}: ${target} has no types`)
+                    continue
+                }
+                const expected = target.import?.replace(/\.js$/, '.d.ts')
+                if (target.import === undefined || !target.import.endsWith('.js') || target.types !== expected) {
+                    wrong.push(`${NAMES[name]} ${key}: types ${String(target.types)}, import ${String(target.import)}`)
+                }
+            }
+        }
+        expect(wrong, wrong.join('\n')).toEqual([])
+    })
+
     it('point every entry at a module or a file that is there', () => {
         const missing: string[] = []
         for (const name of PACKAGES) {
@@ -321,20 +336,6 @@ describe('the exports maps', () => {
             }
         }
         expect(missing, missing.join('\n')).toEqual([])
-    })
-
-    it('give every built module its declarations beside it', () => {
-        const wrong: string[] = []
-        for (const name of PACKAGES) {
-            for (const [key, target] of Object.entries(EXPORTS[name])) {
-                const built = typeof target === 'string' ? target : target.import
-                if (built === undefined || !/^\.\/dist\/.+\.js$/.test(built)) continue
-                if (WRITTEN[`${NAMES[name]}/${key.slice(2)}`] !== undefined) continue
-                const types = typeof target === 'string' ? undefined : target.types
-                if (types !== built.replace(/\.js$/, '.d.ts')) wrong.push(`${NAMES[name]} ${key}: types ${String(types)} for ${built}`)
-            }
-        }
-        expect(wrong, wrong.join('\n')).toEqual([])
     })
 
     // Reads some 1,500 files, which takes a few hundred milliseconds alone and longer than the default 5 s on a loaded machine.

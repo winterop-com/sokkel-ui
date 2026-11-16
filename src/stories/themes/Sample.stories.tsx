@@ -9,6 +9,7 @@ import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Center, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /**
  * The same small piece of Tidevann every gallery tile shows a theme with: a heading, buttons, a
@@ -83,9 +84,9 @@ function ThemeSample() {
                     <StatusChip status="cancelled" />
                 </Row>
                 <DataTable variant="list" columns={COLUMNS} rows={ROWS} rowKey={(row) => row.job} />
-                <div className="h-24 rounded-surface border border-border-strong bg-card p-2">
+                <Surface pad className="h-24">
                     <Chart kind="bar" label="Runs and failures by hour" {...BARS} />
-                </div>
+                </Surface>
             </Stack>
         </div>
     )

@@ -3,7 +3,10 @@ import type { ReactNode } from 'react'
 
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@winterop-com/sokkel-ui/primitives/resizable'
+import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /** Panels with a handle between them that drags to share the space, side by side or stacked. */
 function Caption({ children }: { children: ReactNode }) {
@@ -27,7 +30,7 @@ export const Variants: StoryObj = {
         <>
             <Stack gap="sm">
                 <Caption>horizontal</Caption>
-                <div className="h-40 rounded-lg border border-border">
+                <Surface className="h-40">
                     <ResizablePanelGroup orientation="horizontal">
                         <ResizablePanel defaultSize="40">
                             <Fill>40%</Fill>
@@ -37,11 +40,11 @@ export const Variants: StoryObj = {
                             <Fill>60%</Fill>
                         </ResizablePanel>
                     </ResizablePanelGroup>
-                </div>
+                </Surface>
             </Stack>
             <Stack gap="sm">
                 <Caption>horizontal, with a grip</Caption>
-                <div className="h-40 rounded-lg border border-border">
+                <Surface className="h-40">
                     <ResizablePanelGroup orientation="horizontal">
                         <ResizablePanel defaultSize="50">
                             <Fill>50%</Fill>
@@ -51,11 +54,11 @@ export const Variants: StoryObj = {
                             <Fill>50%</Fill>
                         </ResizablePanel>
                     </ResizablePanelGroup>
-                </div>
+                </Surface>
             </Stack>
             <Stack gap="sm">
                 <Caption>vertical, with a grip</Caption>
-                <div className="h-64 rounded-lg border border-border">
+                <Surface className="h-64">
                     <ResizablePanelGroup orientation="vertical">
                         <ResizablePanel defaultSize="30">
                             <Fill>30%</Fill>
@@ -65,11 +68,11 @@ export const Variants: StoryObj = {
                             <Fill>70%</Fill>
                         </ResizablePanel>
                     </ResizablePanelGroup>
-                </div>
+                </Surface>
             </Stack>
             <Stack gap="sm">
                 <Caption>disabled handle</Caption>
-                <div className="h-40 rounded-lg border border-border">
+                <Surface className="h-40">
                     <ResizablePanelGroup orientation="horizontal">
                         <ResizablePanel defaultSize="50">
                             <Fill>fixed</Fill>
@@ -79,34 +82,56 @@ export const Variants: StoryObj = {
                             <Fill>fixed</Fill>
                         </ResizablePanel>
                     </ResizablePanelGroup>
-                </div>
+                </Surface>
             </Stack>
         </>
     ),
 }
 
-const RUNS: [string, Status, string][] = [
-    ['01a1a5c6', 'succeeded', '1.2s'],
-    ['01a1a5c2', 'failed', '0.3s'],
-    ['01a1a5b9', 'succeeded', '1.4s'],
-    ['01a1a5b1', 'running', '-'],
+interface Run {
+    id: string
+    status: Status
+    took: string
+}
+
+const RUNS: Run[] = [
+    { id: '01a1a5c6', status: 'succeeded', took: '1.2s' },
+    { id: '01a1a5c2', status: 'failed', took: '0.3s' },
+    { id: '01a1a5b9', status: 'succeeded', took: '1.4s' },
+    { id: '01a1a5b1', status: 'running', took: '-' },
+]
+
+const COLUMNS: DataColumn<Run>[] = [
+    { id: 'id', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono">{run.id}</span> },
+    { id: 'status', header: 'Status', width: 'minmax(0,1fr)', cell: (run) => <StatusChip status={run.status} /> },
+    {
+        id: 'took',
+        header: 'Took',
+        width: '4rem',
+        align: 'end',
+        cell: (run) => <span className="text-muted-foreground tabular-nums">{run.took}</span>,
+    },
+]
+
+const LOG: LogLine[] = [
+    { at: '14:02:07', level: 'info', source: 'fetch', text: 'succeeded in 0.2s' },
+    { at: '14:02:07', level: 'error', source: 'validate', text: 'failed: 37 of 2,184 rows have an amount that is not a number' },
+    { at: '14:02:07', level: 'info', source: 'upload', text: 'skipped' },
 ]
 
 /** A list of runs beside the chosen run, which is split again into its summary and its log, each split resizable. */
 export const RunInspector: StoryObj = {
     render: () => (
-        <div className="h-[28rem] rounded-lg border border-border">
+        <Surface className="h-[28rem]">
             <ResizablePanelGroup orientation="horizontal">
                 <ResizablePanel defaultSize="35" minSize="20">
-                    <Stack as="ul" gap="none" className="p-2 text-sm">
-                        {RUNS.map(([id, status, took]) => (
-                            <Row as="li" key={id} className={`rounded-md px-2 py-1.5 ${id === '01a1a5c2' ? 'bg-muted' : ''}`}>
-                                <span className="font-mono">{id}</span>
-                                <StatusChip status={status} />
-                                <span className="ml-auto text-muted-foreground tabular-nums">{took}</span>
-                            </Row>
-                        ))}
-                    </Stack>
+                    <DataTable
+                        variant="list"
+                        columns={COLUMNS}
+                        rows={RUNS}
+                        rowKey={(run) => run.id}
+                        opened={(run) => run.id === '01a1a5c2'}
+                    />
                 </ResizablePanel>
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize="65">
@@ -121,15 +146,11 @@ export const RunInspector: StoryObj = {
                         </ResizablePanel>
                         <ResizableHandle withHandle />
                         <ResizablePanel defaultSize="45">
-                            <pre className="h-full overflow-auto p-4 font-mono text-xs text-muted-foreground">
-                                {
-                                    '14:02:07 fetch succeeded in 0.2s\n14:02:07 validate failed: 37 of 2,184 rows have an amount that is not a number\n14:02:07 upload skipped'
-                                }
-                            </pre>
+                            <LogView lines={LOG} framed={false} className="h-full" />
                         </ResizablePanel>
                     </ResizablePanelGroup>
                 </ResizablePanel>
             </ResizablePanelGroup>
-        </div>
+        </Surface>
     ),
 }

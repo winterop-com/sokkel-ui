@@ -183,16 +183,22 @@ describe('a map of scalars', () => {
         expect(rowsOf(undefined)).toEqual([])
     })
 
-    it('keeps a key the object prototype also has as a key of its own', () => {
+    it('keeps a map key that an object already has, such as constructor or __proto__', () => {
         const rows = [
-            { id: 1, key: 'constructor', value: 'grace' },
-            { id: 2, key: '__proto__', value: 'linus' },
-            { id: 3, key: 'toString', value: 'ada' },
+            { id: 1, key: 'constructor', value: 'a' },
+            { id: 2, key: '__proto__', value: 'b' },
+            { id: 3, key: 'toString', value: 'c' },
         ]
-        const value = objectOf(rows)
-        expect(Object.keys(value)).toEqual(['constructor', '__proto__', 'toString'])
-        expect(Object.getPrototypeOf(value)).toBe(Object.prototype)
-        expect(JSON.parse(JSON.stringify(value))).toEqual(JSON.parse('{"constructor": "grace", "__proto__": "linus", "toString": "ada"}'))
+        const out = objectOf(rows)
+        expect(Object.keys(out)).toEqual(['constructor', '__proto__', 'toString'])
+        expect(Object.getPrototypeOf(out)).toBe(Object.prototype)
+        expect(JSON.stringify(out)).toBe('{"constructor":"a","__proto__":"b","toString":"c"}')
+        const start = initialValue(
+            JSON.parse(
+                '{"type": "object", "required": ["__proto__"], "properties": {"__proto__": {"type": "string", "default": "x"}}}',
+            ) as JsonSchema,
+        )
+        expect(JSON.stringify(start)).toBe('{"__proto__":"x"}')
     })
 
     it('stops the submit while a field holds its own refusal, such as a key given twice', () => {

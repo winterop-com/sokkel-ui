@@ -1,3 +1,4 @@
+import { NotFound } from '@winterop-com/sokkel-ui/NotFound'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import type { PaletteCommand, PaletteGroup, PaletteSearch } from '@winterop-com/sokkel-ui/CommandPalette'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
@@ -7,8 +8,6 @@ import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
-import { Button } from '@winterop-com/sokkel-ui/primitives/button'
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import {
     Banknote,
     CalendarRange,
@@ -62,7 +61,7 @@ const LABELS: Record<PageId | 'settings' | 'missing', string> = {
 
 /** Tidevann's analytics: the rail of its pages, the palette, the page the address names, and the live stream's state at the foot. */
 export function Analytics({ frame }: { frame: Frame }) {
-    const { world, error, view, settingsOpen, href, prefs, setPrefs, setView, stream, money } = useApp()
+    const { world, error, view, settingsOpen, href, prefs, setView, stream, money, toggleStream } = useApp()
     const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from, which keeps its whole address,
     // range and segment included, to go back to.
@@ -111,7 +110,6 @@ export function Analytics({ frame }: { frame: Frame }) {
     ]
 
     const paused = prefs.pace === 'off'
-    const toggleStream = () => void setPrefs({ pace: paused ? 'fast' : 'off' })
     const saved: PaletteCommand[] = [
         ...views.map((one) => ({
             id: `view-${one.id}`,
@@ -224,18 +222,7 @@ export function Analytics({ frame }: { frame: Frame }) {
     else if (page === 'funnels') content = <Funnels id={second} />
     else if (page === 'reports') content = <Reports id={second} />
     else if (page === 'goals') content = <Goals />
-    else
-        content = (
-            <Empty>
-                <EmptyHeader>
-                    <EmptyTitle>Nothing at this address</EmptyTitle>
-                    <EmptyDescription>There is no page at #/{shown.path.join('/')}.</EmptyDescription>
-                </EmptyHeader>
-                <Button size="sm" variant="outline" onClick={() => go(href(''))}>
-                    Go to the overview
-                </Button>
-            </Empty>
-        )
+    else content = <NotFound address={`#/${shown.path.join('/')}`} homeHref={href('')} words={{ home: 'Go to the overview' }} />
     const fills = (page === 'customers' && second === undefined) || (page === 'revenue' && second === 'invoices')
     const note =
         stream === 'live'

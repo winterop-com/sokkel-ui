@@ -5,9 +5,9 @@ name: screenshots
 # scripts/baselines.sh reads and writes:
 #   - run on main, it retakes into `baselines`, which always holds a single commit;
 #   - run on any other branch, it retakes into `baselines-for/<branch>`: one commit on top of
-#     `baselines` with what the branch changed, which CI would compare that branch against. No
-#     workflow lays it onto `baselines` when the branch merges: `scripts/baselines.sh promote
-#     <branch>` does, by hand, or a retake on main after the merge.
+#     `baselines` with what the branch changed, which a branch's comparison would read. After the
+#     branch's PR merges, `scripts/baselines.sh promote <branch>` lays it onto `baselines` and
+#     deletes it; while comparison is off, no workflow runs it, so it is run by hand.
 # `stories` narrows the retake to the story ids matching a pattern, so a change to a few stories
 # retakes in minutes; empty retakes every story. Start it with `make screenshots-ci`, or
 # `make screenshots-ci STORIES='foundations-icons|apps-music'`. Once the baselines are pushed, it
