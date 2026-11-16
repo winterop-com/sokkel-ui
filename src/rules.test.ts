@@ -299,6 +299,83 @@ describe('the exports maps', () => {
     })
 })
 
+/** The packages a module imports at run time, statically or by a dynamic `import()`; type-only imports leave nothing in a build. */
+function runtimeImports(source: string): string[] {
+    const found: string[] = []
+    for (const match of source.matchAll(/^(?:import|export)\s+([^'";]*?)\s*from\s*['"]([^'"]+)['"]/gm)) {
+        const clause = match[1].trim()
+        if (/^type\b/.test(clause)) continue
+        const named = /\{([^}]*)\}/.exec(clause)
+        if (
+            named !== null &&
+            clause
+                .replace(/\{[^}]*\}/, '')
+                .replaceAll(',', '')
+                .trim() === ''
+        ) {
+            const names = named[1]
+                .split(',')
+                .map((part) => part.trim())
+                .filter((part) => part !== '')
+            if (names.length > 0 && names.every((name) => name.startsWith('type '))) continue
+        }
+        found.push(match[2])
+    }
+    for (const match of source.matchAll(/^import\s+['"]([^'"]+)['"]/gm)) found.push(match[1])
+    for (const match of source.matchAll(/(?<!typeof\s*)\bimport\(\s*['"]([^'"]+)['"]\s*\)/g)) found.push(match[1])
+    return found.map((spec) => spec.replace(/\?.*$/, ''))
+}
+
+describe('the optional peers', () => {
+    it("are named in the README's table for every core module that reaches one", () => {
+        const manifest = JSON.parse(text(join(ROOT, 'packages/core/package.json'))) as { peerDependenciesMeta?: Record<string, unknown> }
+        const optional = Object.keys(manifest.peerDependenciesMeta ?? {})
+        const source = (from: string, spec: string) =>
+            ['.ts', '.tsx', '/index.ts', '/index.tsx'].map((ext) => resolve(dirname(from), spec) + ext).find((path) => existsSync(path))
+        const reached = new Map<string, ReadonlySet<string>>()
+        // Every optional peer a module's imports reach, through the core's own modules; a bundler resolves a lazy import too.
+        const peersOf = (path: string, seen: Set<string>): Set<string> => {
+            const peers = new Set<string>()
+            if (seen.has(path)) return peers
+            seen.add(path)
+            for (const spec of runtimeImports(text(path))) {
+                if (spec.startsWith('.')) {
+                    const next = source(path, spec)
+                    if (next !== undefined) for (const peer of peersOf(next, seen)) peers.add(peer)
+                    continue
+                }
+                const peer = optional.find((name) => spec === name || spec.startsWith(`${name}/`))
+                if (peer !== undefined) peers.add(peer)
+            }
+            return peers
+        }
+        for (const [key, target] of Object.entries(EXPORTS[CORE])) {
+            const built = typeof target === 'string' ? target : target.import
+            const module = /^\.\/dist\/(.+)\.js$/.exec(built ?? '')?.[1]
+            if (module === undefined || key.includes('*')) continue
+            const path = source(join(ROOT, 'packages/core/src/x'), `./${module}`)
+            if (path !== undefined) reached.set(key.slice(2), peersOf(path, new Set()))
+        }
+        // The table's rows: the modules in the first cell, the packages to install in the second.
+        const rows = text(join(ROOT, 'README.md'))
+            .split('\n')
+            .filter((line) => line.startsWith('| `'))
+            .map((line) => line.split('|').slice(1, 3))
+            .map(([uses, installs]) => ({
+                uses: [...uses.matchAll(/`([^`]+)`/g)].map((match) => match[1]),
+                installs: new Set([...installs.matchAll(/`([^`]+)`/g)].map((match) => match[1])),
+            }))
+        const names = (module: string, name: string) => name === module || (name.endsWith('/*') && module.startsWith(name.slice(0, -1)))
+        const unlisted: string[] = []
+        for (const [module, peers] of reached) {
+            const listed = rows.filter((row) => row.uses.some((name) => names(module, name)))
+            for (const peer of peers) if (!listed.some((row) => row.installs.has(peer))) unlisted.push(`${module}: ${peer}`)
+        }
+        expect(reached.get('CodeEditor')?.has('@codemirror/view')).toBe(true)
+        expect(unlisted, unlisted.join('\n')).toEqual([])
+    })
+})
+
 describe('the workflows', () => {
     it('install the one Bun version .bun-version names', () => {
         const scripts = [
