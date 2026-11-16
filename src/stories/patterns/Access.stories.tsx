@@ -11,7 +11,9 @@ import { Stack } from '@winterop-com/sokkel-ui/Layout'
 function Ground({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
     return (
         <TooltipProvider>
-            <div className={wide ? 'flex flex-col gap-6' : 'flex max-w-lg flex-col gap-6'}>{children}</div>
+            <Stack gap="xl" className={wide ? undefined : 'max-w-lg'}>
+                {children}
+            </Stack>
         </TooltipProvider>
     )
 }

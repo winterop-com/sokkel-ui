@@ -116,7 +116,16 @@ const RULES: Rule[] = [
             'src/stories/fixtures/portraits.ts': 'portraits drawn as SVG data',
         },
     },
-    { name: 'a selector reaching into a component from a story', pattern: /\[&[_>]/, in: STORIES },
+    {
+        name: 'a selector reaching into a component from a story',
+        // An arbitrary child or descendant variant, a state read off a parent or a sibling, or a child or descendant star.
+        pattern: /\[&[_>]|(?<![\w-])(?:[\w-]+:)*(?:group|peer)-(?:data|aria|has)-\[|(?<![\w-])(?:has|in|not)-\[|(?<=[\s"'`])\*{1,2}:[a-z]/,
+        in: STORIES,
+        except: {
+            'src/stories/primitives/Sidebar.stories.tsx':
+                "the Sidebar primitive's own stories show its collapsed state's variant, its API for a part",
+        },
+    },
     { name: 'an arbitrary value in a story', pattern: /\b(rounded|text|leading|tracking|font)-\[/, in: STORIES },
     {
         name: 'a raw table in a story instead of DataTable',
@@ -142,9 +151,10 @@ const RULES: Rule[] = [
     {
         name: 'raw layout in a story instead of the layout components',
         // A container drawn by hand: flex or grid, its direction, wrapping, tracks or gaps. A cell's own
-        // size (flex-1, shrink-0, a width) is not a layout and stays allowed.
+        // size (flex-1, shrink-0, a width) is not a layout and stays allowed. Any string in the braces is
+        // read, so a class in cn(), after a condition or in either side of a ternary is caught.
         pattern:
-            /className=\{?(?:cn\((?:[^"'`(),]+,\s*)*)?["'`][^"'`]*(?<![\w-])(?:[\w-]+:)*(?:flex|inline-flex|grid|inline-grid|flex-col(?:-reverse)?|flex-row(?:-reverse)?|flex-wrap|grid-cols-[^\s"'`]+|grid-rows-[^\s"'`]+|gap-[^\s"'`]+|space-[xy]-[^\s"'`]+)(?=[\s"'`])/,
+            /className=(?:\{(?:[^"'`{}]|["'`][^"'`]*["'`])*?)?["'`][^"'`]*(?<![\w-])(?:[\w-]+:)*(?:flex|inline-flex|grid|inline-grid|flex-col(?:-reverse)?|flex-row(?:-reverse)?|flex-wrap|grid-cols-[^\s"'`]+|grid-rows-[^\s"'`]+|gap-[^\s"'`]+|space-[xy]-[^\s"'`]+)(?=[\s"'`])/,
         in: STORIES,
     },
     {

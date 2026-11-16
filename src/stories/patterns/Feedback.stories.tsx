@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import { Callout } from '@winterop-com/sokkel-ui/Callout'
 import { CheckList } from '@winterop-com/sokkel-ui/CheckList'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { ListSkeleton, Pending } from '@winterop-com/sokkel-ui/Loading'
 import { Problem, ProblemLine } from '@winterop-com/sokkel-ui/Problem'
 import { Section } from '@winterop-com/sokkel-ui/Section'
@@ -13,7 +14,9 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 function Ground({ children, pad = true }: { children: React.ReactNode; pad?: boolean }) {
     return (
         <div className={pad ? 'min-h-svh bg-background p-6 text-foreground' : 'min-h-svh bg-background text-foreground'}>
-            <div className={pad ? 'mx-auto flex max-w-4xl flex-col gap-6' : 'flex flex-col'}>{children}</div>
+            <Stack gap={pad ? 'xl' : 'none'} className={pad ? 'mx-auto max-w-4xl' : undefined}>
+                {children}
+            </Stack>
         </div>
     )
 }
