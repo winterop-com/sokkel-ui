@@ -20,7 +20,7 @@ export interface AnsiTextProps {
  * dropped. Inline it takes the text around it; `block` sets it apart in mono, keeping its spaces
  * and lines, wrapping long lines when `wrap` is set and scrolling sideways otherwise. `start` is
  * the style the text begins in, for output that arrives in pieces (`parseAnsi` returns the style
- * a piece ends in).
+ * a piece ends in, and as `rest` an escape cut off at its end, to put before the next piece).
  */
 export function AnsiText({ text, block = false, wrap = false, start, className }: AnsiTextProps) {
     const segments = useMemo(() => parseAnsi(text, start).segments, [text, start])

@@ -45,13 +45,16 @@ export function repeatedKeys(rows: readonly MapRow[]): Set<number> {
  * out; a row without a value takes `blank` (an empty string for a map of text), else is left out.
  */
 export function objectOf(rows: readonly MapRow[], blank?: unknown): Record<string, unknown> {
-    const out: Record<string, unknown> = {}
+    const seen = new Set<string>()
+    const entries: [string, unknown][] = []
     for (const row of rows) {
         const value = row.value ?? blank
-        if (row.key === '' || row.key in out || value === undefined) continue
-        out[row.key] = value
+        if (row.key === '' || seen.has(row.key) || value === undefined) continue
+        seen.add(row.key)
+        entries.push([row.key, value])
     }
-    return out
+    // Built from entries, so a key such as `constructor` or `__proto__` is a key of the map like any other.
+    return Object.fromEntries(entries)
 }
 
 /** What a row holds before it is given a value: '' for text, its default or false for a switch, else nothing. */

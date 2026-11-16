@@ -53,6 +53,16 @@ describe('parseAnsi', () => {
         expect(second.segments).toEqual([{ text: ' still', style: { color: 3 } }])
     })
 
+    it('holds back an escape a piece ends in the middle of, for the next piece to finish', () => {
+        const first = parseAnsi(`fetch ${E}3`)
+        expect(first.segments).toEqual([{ text: 'fetch ', style: {} }])
+        expect(first.rest).toBe(`${E}3`)
+        const second = parseAnsi(`${first.rest}1mfailed`, first.style)
+        expect(second.segments).toEqual([{ text: 'failed', style: { color: 1 } }])
+        expect(second.rest).toBe('')
+        expect(parseAnsi(`done${E}`).segments).toEqual([{ text: 'done', style: {} }])
+    })
+
     it('joins runs in the same style', () => {
         expect(parseAnsi(`a${E}0mb${E}31m${E}31mc`).segments).toEqual([
             { text: 'ab', style: {} },

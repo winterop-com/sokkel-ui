@@ -70,3 +70,42 @@ describe('periodIssue', () => {
         expect(periodIssue('2026-11', 'monthly')).toBe('2026-11 is not a period id. A monthly period is written like 202611.')
     })
 })
+
+describe('labels in other words', () => {
+    const MONTHS = ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember']
+    const words = {
+        monthNames: MONTHS,
+        shortMonthNames: MONTHS.map((name) => name.slice(0, 3)),
+        day: (month: string, date: number, year: number) => `${String(date)}. ${month} ${String(year)}`,
+        week: (week: number, year: number, month: string, date: number) =>
+            `Uke ${String(week)}, ${String(year)} (fra man. ${String(date)}. ${month})`,
+        month: (month: string, year: number) => `${month} ${String(year)}`,
+        months: (first: string, last: string, year: number) => `${first}–${last} ${String(year)}`,
+    }
+
+    it('labels each period in the words given', () => {
+        expect(recentPeriods('daily', '2026-11-08', 1, words)[0].label).toBe('8. november 2026')
+        expect(recentPeriods('weekly', '2026-11-08', 1, words)[0].label).toBe('Uke 45, 2026 (fra man. 2. nov)')
+        expect(periodOf('bimonthly', '2026-11-08', words)?.label).toBe('november–desember 2026')
+        expect(parsePeriod('202611', 'monthly', words)?.label).toBe('november 2026')
+    })
+
+    it('names the types in an issue by the words given', () => {
+        const types = {
+            daily: 'Daglig',
+            weekly: 'Ukentlig',
+            monthly: 'Månedlig',
+            bimonthly: 'Annenhver måned',
+            quarterly: 'Kvartalsvis',
+            sixmonthly: 'Halvårlig',
+            yearly: 'Årlig',
+        }
+        const said = periodIssue('2026Q4', 'monthly', {
+            empty: '',
+            otherType: (id, its, wanted) => `${id}: ${its}, ikke ${wanted}`,
+            notPeriod: () => '',
+            types,
+        })
+        expect(said).toBe('2026Q4: kvartalsvis, ikke månedlig')
+    })
+})

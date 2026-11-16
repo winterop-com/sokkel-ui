@@ -138,6 +138,18 @@ describe('schema diagnostics', () => {
         ])
         expect(found).toEqual([['many', 'Expected an integer']])
     })
+
+    it('reads a key such as __proto__ or constructor as a key of the document like any other', () => {
+        const doc = '{"code": "nightly-export", "steps": [], "__proto__": {"paused": 1}, "constructor": 2}'
+        const read = readDocument(jsonState(doc), 'json')?.value
+        expect(Object.keys(read as object)).toEqual(['code', 'steps', '__proto__', 'constructor'])
+        expect(Object.getPrototypeOf(read)).toBe(Object.prototype)
+        const messages = schemaDiagnostics(jsonState(doc), 'json', SCHEMA, validate).map((each) => each.message)
+        expect(messages).toEqual(['__proto__ is not a known property', 'constructor is not a known property'])
+        const yamlDoc = 'base: &base {__proto__: 1}\nmerged:\n  <<: *base\n  constructor: 2\n'
+        const yamlRead = readDocument(yamlState(yamlDoc), 'yaml')?.value as Record<string, unknown> | undefined
+        expect(Object.keys(yamlRead?.merged as object)).toEqual(['__proto__', 'constructor'])
+    })
 })
 
 describe('the schema check without its checker', () => {
@@ -178,6 +190,17 @@ describe('schema completion', () => {
 
     it('walks the schema along a path', () => {
         expect(schemasAt(SCHEMA, ['steps', 0, 'name'])[0].enum).toContain('validate')
+    })
+
+    it('finds nothing at a reference with a broken percent escape, and does not throw', () => {
+        const schema: JsonSchema = {
+            type: 'object',
+            properties: { step: { $ref: '#/$defs/%E0%A4%A' }, mark: { $ref: '#%E0%A4%A' } },
+            $defs: { step: { type: 'string' } },
+        }
+        expect(() => schemasAt(schema, ['step'])).not.toThrow()
+        expect(() => schemasAt(schema, ['mark'])).not.toThrow()
+        expect(schemasAt(schema, ['step']).some((each) => each.type === 'string')).toBe(false)
     })
     it('says a field that refers to a definition with no type by what it takes, never by its key', () => {
         const schema: JsonSchema = {

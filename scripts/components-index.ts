@@ -68,6 +68,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/schema/checks': 'what the checker loads in one fetch: `validate` and the words for its issues',
         'components/schema/issue-words': "`SchemaForm`'s words for each issue, loaded with the checker",
         'components/schema/MapField': "`SchemaForm`'s key/value table for a map of scalars",
+        'components/schema/patterns': "the checker's schema patterns, each tested only as far as it answers quickly",
         'components/drag-parts':
             'what `RailDrops` and `RepeatedDrag` hand the rail and a `RepeatedGroup` to drag with, so neither part loads the drag engine itself',
         'components/settings-parts':

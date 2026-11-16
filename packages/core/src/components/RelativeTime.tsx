@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useState, useSyncExternalStore } from 'react'
 
 import { cn } from '../lib/cn'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
@@ -96,6 +96,55 @@ export function tickFor(distance: number): number {
     return HOUR
 }
 
+/** A clock every `RelativeTime` that reads itself again as often shares: one timer however many are drawn. */
+interface Clock {
+    now: Date
+    listeners: Set<() => void>
+    timer?: ReturnType<typeof setInterval>
+}
+
+const clocks = new Map<number, Clock>()
+
+function clockFor(period: number): Clock {
+    let clock = clocks.get(period)
+    if (clock === undefined) {
+        clock = { now: new Date(), listeners: new Set() }
+        clocks.set(period, clock)
+    }
+    return clock
+}
+
+function subscribe(period: number, listener: () => void): () => void {
+    const clock = clockFor(period)
+    clock.listeners.add(listener)
+    if (clock.timer === undefined) {
+        clock.now = new Date()
+        clock.timer = setInterval(() => {
+            clock.now = new Date()
+            for (const each of clock.listeners) each()
+        }, period)
+    }
+    return () => {
+        clock.listeners.delete(listener)
+        if (clock.listeners.size > 0) return
+        clearInterval(clock.timer)
+        clock.timer = undefined
+    }
+}
+
+/** The shared clock's time for a period, ticking while anything reads it; null reads no clock. */
+function useSharedClock(period: number | null): Date | null {
+    const subscribeTo = useCallback((listener: () => void) => (period === null ? () => undefined : subscribe(period, listener)), [period])
+    const read = () => {
+        if (period === null) return null
+        const clock = clockFor(period)
+        // A clock nothing has read for a while starts from now.
+        if (clock.timer === undefined && Date.now() - clock.now.getTime() >= period) clock.now = new Date()
+        return clock.now
+    }
+    return useSyncExternalStore(subscribeTo, read, read)
+}
+
 export interface RelativeTimeWords {
     /** The word for a time within `nowWithin` of now; Intl's own ("now") when left out. */
     now?: string
@@ -136,15 +185,13 @@ export function RelativeTime({
     ...options
 }: RelativeTimeProps) {
     const when = date instanceof Date ? date : new Date(date)
-    const [clock, setClock] = useState(() => given ?? new Date())
-    const now = given ?? clock
+    // The clock it reads, shared with every other time that reads itself again as often.
+    const [period, setPeriod] = useState(() => tickFor(when.getTime() - Date.now()))
+    const clock = useSharedClock(given === undefined ? period : null)
+    const now = given ?? clock ?? new Date()
     const distance = when.getTime() - now.getTime()
-
-    useEffect(() => {
-        if (given !== undefined) return
-        const timer = setTimeout(() => setClock(new Date()), tickFor(distance))
-        return () => clearTimeout(timer)
-    }, [given, distance])
+    const wanted = tickFor(distance)
+    if (given === undefined && wanted !== period) setPeriod(wanted)
 
     // A date that cannot be read is shown as it was given, so a reader still sees what the app had.
     if (Number.isNaN(when.getTime()))

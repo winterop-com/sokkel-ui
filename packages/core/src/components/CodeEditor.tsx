@@ -180,6 +180,9 @@ export type CodeCompletionSource = (
 /** A schema a document names by its `$schema` address, found by the app; nothing when it has none. */
 export type CodeSchemaResolver = (address: string) => JsonSchema | undefined | Promise<JsonSchema | undefined>
 
+/** How long typing in a document's `$schema` address pauses before the address is resolved, in milliseconds. */
+const RESOLVE_PAUSE = 500
+
 /** The JSON Schema 2020-12 dialect, which a schema document names; the checker carries it, so a schema written in it is checked without a fetch. */
 const DRAFT_2020 = 'https://json-schema.org/draft/2020-12/schema'
 
@@ -661,7 +664,9 @@ export interface CodeEditorProps {
     /**
      * Finds the schema a document names for itself, when `schema` is not given: a top-level `$schema`
      * key, or a `# yaml-language-server: $schema=<address>` line in YAML. The editor fetches nothing;
-     * a document in the JSON Schema 2020-12 dialect is checked against it without this.
+     * a document in the JSON Schema 2020-12 dialect is checked against it without this. It is called
+     * at the start and then once typing in the address pauses. The address is whatever the document
+     * says, so it is untrusted: a resolver that fetches should fetch only from places it knows.
      */
     resolveSchema?: CodeSchemaResolver
     /** Selects a range and scrolls it into view, such as where a check failed; a new object moves there again. */
@@ -1175,21 +1180,30 @@ export function CodeEditor({
         else setAddress(namedSchema(view.current?.state.doc.toString() ?? value, language))
     }, [language])
 
-    // The schema a document names is found once per address; the 2020-12 dialect is the checker's own.
+    // The schema a document names is found once per address, and an address being typed only once
+    // typing pauses, so a resolver that fetches is not sent each character; the 2020-12 dialect is the checker's own.
+    const resolvedOnce = useRef(false)
     useEffect(() => {
+        const first = !resolvedOnce.current
+        resolvedOnce.current = true
         if (given !== undefined || address === undefined) return
         let live = true
-        const find = props.current.resolveSchema
-        Promise.resolve(find?.(address))
-            .then((found) => found ?? (address.replace(/#$/, '') === DRAFT_2020 ? { $id: DRAFT_2020 } : undefined))
-            .then(
-                (found) => {
-                    if (live) setNamed(found === undefined ? undefined : { address, schema: found })
-                },
-                () => undefined,
-            )
+        const resolve = () => {
+            const find = props.current.resolveSchema
+            Promise.resolve(find?.(address))
+                .then((found) => found ?? (address.replace(/#$/, '') === DRAFT_2020 ? { $id: DRAFT_2020 } : undefined))
+                .then(
+                    (found) => {
+                        if (live) setNamed(found === undefined ? undefined : { address, schema: found })
+                    },
+                    () => undefined,
+                )
+        }
+        const timer = first ? undefined : setTimeout(resolve, RESOLVE_PAUSE)
+        if (first) resolve()
         return () => {
             live = false
+            clearTimeout(timer)
         }
     }, [address, given === undefined])
 
