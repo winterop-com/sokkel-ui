@@ -185,6 +185,35 @@ describe('loading more without `loading`', () => {
     })
 })
 
+describe('every row on every server page', () => {
+    it('is said as selected, and no longer offered, once the app holds it so', async () => {
+        const rows = Array.from({ length: 5 }, (_, index) => ({ id: `run-${String(index)}`, name: `run ${String(index)}` }))
+        const page = new Set(rows.map((row) => row.id))
+        const table = (every: boolean) => (
+            <div style={{ height: 400, overflow: 'auto' }}>
+                <DataTable
+                    columns={columns}
+                    rows={rows}
+                    rowKey={(job) => job.id}
+                    selectable
+                    selection={page}
+                    paging="server"
+                    total={200}
+                    pageSize={5}
+                    onSelectAllPages={() => undefined}
+                    allPagesSelected={every}
+                />
+            </div>
+        )
+        const at = await mount(table(false))
+        expect(buttonNamed(at, 'Select all 200')).toBeDefined()
+        await act(async () => root?.render(table(true)))
+        await settle()
+        expect(buttonNamed(at, 'Select all 200')).toBeUndefined()
+        expect(at.textContent).toContain('All 200 selected')
+    })
+})
+
 describe('stacked cards with a free title', () => {
     it('are drawn every one at the height their title needs', async () => {
         // A box 300 wide, narrower than the columns, stacks the rows.

@@ -1364,6 +1364,12 @@ export interface DataTableProps<T> {
      */
     onSelectAllPages?: () => void
     /**
+     * With server pages, that the app holds every row on every page as selected after
+     * `onSelectAllPages`: the bar says all are selected and offers it no more. The app lets go of it
+     * once the selection changes, such as by Clear.
+     */
+    allPagesSelected?: boolean
+    /**
      * A row drawn as a card, for the grid view; given one, the bar offers table and grid. Cards keep
      * the table's selection, menus, sort, pages and loading; a tree's rows show as they are open.
      */
@@ -1625,6 +1631,7 @@ export function DataTable<T>({
     scrollKey,
     scrollerRef,
     onSelectAllPages,
+    allPagesSelected = false,
     card,
     view: viewValue,
     defaultView = 'table',
@@ -2182,10 +2189,12 @@ export function DataTable<T>({
         setSelection(next)
     }
     const everyCount = paging === 'server' ? (total ?? pageCount) : allKeys.length
+    // Every row on every page selected: the client's pages all in the selection, or the server's as the app says.
+    const everyChosen = paging === 'client' ? allChosen : paging === 'server' && allPagesSelected && selection.size > 0
     const offerEvery =
         paging !== undefined &&
         headChosen &&
-        !allChosen &&
+        !everyChosen &&
         (paging === 'client' || onSelectAllPages !== undefined) &&
         everyCount > selection.size
 
@@ -3172,8 +3181,7 @@ export function DataTable<T>({
                                         )
                                     }
                                     words={{
-                                        selected: (count) =>
-                                            paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(count),
+                                        selected: (count) => (everyChosen ? words.allSelected(everyCount) : words.selected(count)),
                                         clear: words.clear,
                                         label: words.selection,
                                     }}
