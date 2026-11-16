@@ -1,5 +1,5 @@
 import { getIndentUnit, syntaxTree } from '@codemirror/language'
-import { Prec, RangeSetBuilder } from '@codemirror/state'
+import { Prec, RangeSetBuilder, type EditorState } from '@codemirror/state'
 import { Decoration, ViewPlugin, type DecorationSet, type EditorView, type ViewUpdate } from '@codemirror/view'
 
 const OPEN = '([{'
@@ -11,16 +11,38 @@ export const BRACKET_DEPTHS = 3
 
 const depthMarks = Array.from({ length: BRACKET_DEPTHS }, (_, depth) => Decoration.mark({ class: `cm-bracket-${String(depth)}` }))
 
-/** Each bracket in view marked by its depth, counted from the start of the document over the brackets that are structure. */
-function brackets(view: EditorView): DecorationSet {
-    const { state } = view
+/** How far apart the depths kept along the document are, in characters. */
+const STEP = 4096
+
+/** The bracket depth before a place in the document, kept so a scroll counts on from the nearest one rather than from the start. */
+export interface DepthAt {
+    at: number
+    depth: number
+}
+
+/**
+ * Each bracket between `shown` and `end` marked by its depth, counted over the brackets that are
+ * structure. The count starts at the last of `kept` at or before `shown`, and `kept` gains a depth
+ * every `STEP` characters past its last, so the next scroll starts near where it lands.
+ */
+export function bracketMarks(state: EditorState, shown: number, end: number, kept: DepthAt[]): DecorationSet {
     const tree = syntaxTree(state)
-    const { from: shown, to: end } = view.viewport
-    const text = state.sliceDoc(0, end)
+    let start: DepthAt = { at: 0, depth: 0 }
+    for (const one of kept) {
+        if (one.at > shown) break
+        start = one
+    }
+    const text = state.sliceDoc(start.at, end)
     const builder = new RangeSetBuilder<Decoration>()
-    let depth = 0
-    for (let index = 0; index < text.length; index += 1) {
-        const char = text[index]
+    let depth = start.depth
+    let next = (kept[kept.length - 1]?.at ?? 0) + STEP
+    for (let offset = 0; offset < text.length; offset += 1) {
+        const index = start.at + offset
+        if (index === next) {
+            kept.push({ at: index, depth })
+            next += STEP
+        }
+        const char = text[offset]
         const opens = OPEN.includes(char)
         if (!opens && !CLOSE.includes(char)) continue
         if (TEXT.test(tree.resolveInner(index, 1).name)) continue
@@ -36,12 +58,16 @@ export const bracketColors = Prec.highest(
     ViewPlugin.fromClass(
         class {
             decorations: DecorationSet
+            // Depths along the document as it is now; an edit or a new parse starts them over.
+            kept: DepthAt[] = []
             constructor(view: EditorView) {
-                this.decorations = brackets(view)
+                this.decorations = bracketMarks(view.state, view.viewport.from, view.viewport.to, this.kept)
             }
             update(update: ViewUpdate) {
-                if (update.docChanged || update.viewportChanged || syntaxTree(update.startState) !== syntaxTree(update.state))
-                    this.decorations = brackets(update.view)
+                const reparsed = update.docChanged || syntaxTree(update.startState) !== syntaxTree(update.state)
+                if (reparsed) this.kept = []
+                if (reparsed || update.viewportChanged)
+                    this.decorations = bracketMarks(update.state, update.view.viewport.from, update.view.viewport.to, this.kept)
             }
         },
         { decorations: (plugin) => plugin.decorations },

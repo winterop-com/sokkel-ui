@@ -285,4 +285,22 @@ describe('formats', () => {
         ])
         expect(validate(schema, { at: '0 3 * * *', job: 'send-digest' })).toEqual([])
     })
+
+    it('places an issue in a map keyed by digits at its key', () => {
+        const schema: JsonSchema = {
+            type: 'object',
+            properties: { ports: { type: 'object', additionalProperties: { type: 'integer', minimum: 1 } } },
+        }
+        expect(validate(schema, { ports: { '8080': 0 } }).map((issue) => issue.path)).toEqual([['ports', '8080']])
+        expect(validate(schema, { ports: { '8080': 1 } })).toEqual([])
+    })
+
+    it('answers quickly on a pattern that repeats a repeat, and still checks a short text against it', () => {
+        const schema: JsonSchema = { type: 'object', properties: { code: { type: 'string', pattern: '^(a+)+$' } } }
+        const started = performance.now()
+        validate(schema, { code: `${'a'.repeat(40)}!` })
+        expect(performance.now() - started).toBeLessThan(500)
+        expect(validate(schema, { code: 'aaa!' }).map((issue) => issue.kind)).toEqual(['pattern'])
+        expect(validate(schema, { code: 'aaa' })).toEqual([])
+    })
 })
