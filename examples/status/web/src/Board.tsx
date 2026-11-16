@@ -1,3 +1,4 @@
+import { NotFound } from '@winterop-com/sokkel-ui/NotFound'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
@@ -83,6 +84,9 @@ export function Board({ frame }: { frame: Frame }) {
     const [first, second, third] = overlay.route
     const place: Place = PLACES.includes(first as Place) ? (first as Place) : 'overview'
     const service = place === 'services' && SERVICE_IDS.includes(second as ServiceId) ? (second as ServiceId) : undefined
+    const missing =
+        (first !== undefined && first !== '' && !PLACES.includes(first as Place)) ||
+        (place === 'services' && second !== undefined && service === undefined)
     const incident = place === 'incidents' ? rows.incidents?.find((one) => one.id === second) : undefined
 
     const open = (rows.incidents ?? []).filter((one) => one.state !== 'resolved')
@@ -199,38 +203,40 @@ export function Board({ frame }: { frame: Frame }) {
         ...frame.palette,
     ]
 
-    const trail =
-        service !== undefined
-            ? [{ label: 'Services', href: '#/services' }, { label: service }]
-            : place === 'incidents' && second !== undefined
-              ? [
-                    { label: 'Incidents', href: '#/incidents' },
-                    { label: incident?.code ?? second, code: true },
-                ]
-              : [{ label: LABELS[place] }]
+    const trail = missing
+        ? [{ label: 'Not found' }]
+        : service !== undefined
+          ? [{ label: 'Services', href: '#/services' }, { label: service }]
+          : place === 'incidents' && second !== undefined
+            ? [
+                  { label: 'Incidents', href: '#/incidents' },
+                  { label: incident?.code ?? second, code: true },
+              ]
+            : [{ label: LABELS[place] }]
 
-    const page =
-        place === 'incidents' ? (
-            second === undefined ? (
-                <Incidents me={ME} onReport={() => setReporting(true)} />
-            ) : (
-                <Incident id={second} me={ME} options={options} />
-            )
-        ) : place === 'services' ? (
-            service === undefined ? (
-                <Services />
-            ) : (
-                <Suspense fallback={<PageState loading>{null}</PageState>}>
-                    <Service id={service} day={third} me={ME} options={options} onReport={() => setReporting(true)} />
-                </Suspense>
-            )
-        ) : place === 'regions' ? (
-            <Regions />
-        ) : place === 'on-call' ? (
-            <OnCall options={options} onHandOver={() => setHandingOver(true)} />
+    const page = missing ? (
+        <NotFound />
+    ) : place === 'incidents' ? (
+        second === undefined ? (
+            <Incidents me={ME} onReport={() => setReporting(true)} />
         ) : (
-            <Overview options={options} onReport={() => setReporting(true)} />
+            <Incident id={second} me={ME} options={options} />
         )
+    ) : place === 'services' ? (
+        service === undefined ? (
+            <Services />
+        ) : (
+            <Suspense fallback={<PageState loading>{null}</PageState>}>
+                <Service id={service} day={third} me={ME} options={options} onReport={() => setReporting(true)} />
+            </Suspense>
+        )
+    ) : place === 'regions' ? (
+        <Regions />
+    ) : place === 'on-call' ? (
+        <OnCall options={options} onHandOver={() => setHandingOver(true)} />
+    ) : (
+        <Overview options={options} onReport={() => setReporting(true)} />
+    )
 
     // The listings fill the page's height, so their tables scroll inside it.
     const fills = (place === 'incidents' && second === undefined) || (place === 'services' && service === undefined) || place === 'regions'

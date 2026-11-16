@@ -1,3 +1,4 @@
+import { NotFound } from '@winterop-com/sokkel-ui/NotFound'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Board, type BoardMove } from '@winterop-com/sokkel-ui/board/Board'
 import { BoardCard } from '@winterop-com/sokkel-ui/board/BoardCard'
@@ -407,7 +408,9 @@ export function TasksDemo({ frame }: { frame: Frame }) {
         },
     ]
 
-    const label = list?.label ?? ''
+    const first = settings.route[0]
+    const missing = first !== undefined && first !== '' && !LISTS.some((one) => one.id === first)
+    const label = missing ? 'Not found' : (list?.label ?? '')
 
     return (
         <Shell
@@ -443,102 +446,108 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                 </StatusLine>
             }
         >
-            <Page className="h-full">
-                <PageHeader title={label} count={`${String(open)} open`} />
-                <Toolbar
-                    search={<QuickAdd inputRef={quickAdd} placeholder="Add a task" onAdd={add} />}
-                    end={
-                        <Row gap="md">
-                            {mine.view === 'list' && (
-                                <SwitchField
-                                    id="show-done"
-                                    label="Show done"
-                                    checked={showDone}
-                                    onCheckedChange={(next) => setPrefs({ showDone: next })}
+            {missing ? (
+                <Page>
+                    <NotFound />
+                </Page>
+            ) : (
+                <Page className="h-full">
+                    <PageHeader title={label} count={`${String(open)} open`} />
+                    <Toolbar
+                        search={<QuickAdd inputRef={quickAdd} placeholder="Add a task" onAdd={add} />}
+                        end={
+                            <Row gap="md">
+                                {mine.view === 'list' && (
+                                    <SwitchField
+                                        id="show-done"
+                                        label="Show done"
+                                        checked={showDone}
+                                        onCheckedChange={(next) => setPrefs({ showDone: next })}
+                                    />
+                                )}
+                                <Segmented
+                                    label="View"
+                                    size="sm"
+                                    value={mine.view}
+                                    onValueChange={(view) => setPrefs({ view })}
+                                    options={[
+                                        { value: 'list', label: 'List' },
+                                        { value: 'board', label: 'Board' },
+                                    ]}
                                 />
-                            )}
-                            <Segmented
-                                label="View"
-                                size="sm"
-                                value={mine.view}
-                                onValueChange={(view) => setPrefs({ view })}
-                                options={[
-                                    { value: 'list', label: 'List' },
-                                    { value: 'board', label: 'Board' },
-                                ]}
-                            />
-                        </Row>
-                    }
-                />
-                <PageState loading={rows === undefined && error === undefined} error={error}>
-                    {mine.view === 'board' ? (
-                        <Board onMove={moveCard} className="min-h-0 flex-1">
-                            <Row gap="md" align="stretch" className="h-full w-max">
-                                {STATES.map((state) => {
-                                    const held = inList.filter((task) => task.state === state).sort(byRank)
-                                    return (
-                                        <BoardColumn
-                                            key={state}
-                                            id={state}
-                                            title={COLUMNS[state].title}
-                                            icon={COLUMNS[state].icon}
-                                            count={held.length}
-                                            empty="Nothing here"
-                                        >
-                                            {held.map((task) => (
-                                                <BoardCard
-                                                    key={task.id}
-                                                    id={task.id}
-                                                    title={task.title}
-                                                    assignee={{ name: task.assignee }}
-                                                    due={task.due === null ? undefined : dateOf(task.due)}
-                                                    now={now}
-                                                    done={isDone(task)}
-                                                    menu={<CardMenu task={task} onMove={(next) => moveTo(task, next)} />}
-                                                />
-                                            ))}
-                                        </BoardColumn>
-                                    )
-                                })}
                             </Row>
-                        </Board>
-                    ) : (
-                        <DataTable
-                            className="min-h-0 flex-1"
-                            variant="list"
-                            minWidth="auto"
-                            stackLayout="compact"
-                            columns={columns(now, change, mine.weekStart === 'sunday' ? 0 : 1)}
-                            rows={shown}
-                            rowKey={(task) => task.id}
-                            rowLabel={(task) => task.title}
-                            onReorder={mine.order === 'mine' ? reorder : undefined}
-                            rowActions={actions}
-                            editing={tableEditing}
-                            empty={
-                                <Empty>
-                                    <EmptyHeader>
-                                        <EmptyMedia variant="icon">{list === undefined ? null : <list.icon aria-hidden />}</EmptyMedia>
-                                        <EmptyTitle>Nothing in {label}</EmptyTitle>
-                                        <EmptyDescription>
-                                            {hiddenDone > 0
-                                                ? `${String(hiddenDone)} done ${hiddenDone === 1 ? 'task is' : 'tasks are'} hidden. Add one above, or show the done ones.`
-                                                : 'Add one above, and it lands here.'}
-                                        </EmptyDescription>
-                                    </EmptyHeader>
-                                    {hiddenDone > 0 && (
-                                        <EmptyContent>
-                                            <Button variant="outline" size="sm" onClick={() => setPrefs({ showDone: true })}>
-                                                Show done
-                                            </Button>
-                                        </EmptyContent>
-                                    )}
-                                </Empty>
-                            }
-                        />
-                    )}
-                </PageState>
-            </Page>
+                        }
+                    />
+                    <PageState loading={rows === undefined && error === undefined} error={error}>
+                        {mine.view === 'board' ? (
+                            <Board onMove={moveCard} className="min-h-0 flex-1">
+                                <Row gap="md" align="stretch" className="h-full w-max">
+                                    {STATES.map((state) => {
+                                        const held = inList.filter((task) => task.state === state).sort(byRank)
+                                        return (
+                                            <BoardColumn
+                                                key={state}
+                                                id={state}
+                                                title={COLUMNS[state].title}
+                                                icon={COLUMNS[state].icon}
+                                                count={held.length}
+                                                empty="Nothing here"
+                                            >
+                                                {held.map((task) => (
+                                                    <BoardCard
+                                                        key={task.id}
+                                                        id={task.id}
+                                                        title={task.title}
+                                                        assignee={{ name: task.assignee }}
+                                                        due={task.due === null ? undefined : dateOf(task.due)}
+                                                        now={now}
+                                                        done={isDone(task)}
+                                                        menu={<CardMenu task={task} onMove={(next) => moveTo(task, next)} />}
+                                                    />
+                                                ))}
+                                            </BoardColumn>
+                                        )
+                                    })}
+                                </Row>
+                            </Board>
+                        ) : (
+                            <DataTable
+                                className="min-h-0 flex-1"
+                                variant="list"
+                                minWidth="auto"
+                                stackLayout="compact"
+                                columns={columns(now, change, mine.weekStart === 'sunday' ? 0 : 1)}
+                                rows={shown}
+                                rowKey={(task) => task.id}
+                                rowLabel={(task) => task.title}
+                                onReorder={mine.order === 'mine' ? reorder : undefined}
+                                rowActions={actions}
+                                editing={tableEditing}
+                                empty={
+                                    <Empty>
+                                        <EmptyHeader>
+                                            <EmptyMedia variant="icon">{list === undefined ? null : <list.icon aria-hidden />}</EmptyMedia>
+                                            <EmptyTitle>Nothing in {label}</EmptyTitle>
+                                            <EmptyDescription>
+                                                {hiddenDone > 0
+                                                    ? `${String(hiddenDone)} done ${hiddenDone === 1 ? 'task is' : 'tasks are'} hidden. Add one above, or show the done ones.`
+                                                    : 'Add one above, and it lands here.'}
+                                            </EmptyDescription>
+                                        </EmptyHeader>
+                                        {hiddenDone > 0 && (
+                                            <EmptyContent>
+                                                <Button variant="outline" size="sm" onClick={() => setPrefs({ showDone: true })}>
+                                                    Show done
+                                                </Button>
+                                            </EmptyContent>
+                                        )}
+                                    </Empty>
+                                }
+                            />
+                        )}
+                    </PageState>
+                </Page>
+            )}
             {settings.open && (
                 <Settings
                     frame={frame}

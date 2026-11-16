@@ -303,7 +303,8 @@ export async function probe(): Promise<{ version: string }> {
     return { version: SERVER.version }
 }
 
-async function guard(): Promise<void> {
+/** Throws `Unreachable`, after the wait a request takes, while the server does not answer. */
+export async function guard(): Promise<void> {
     if (serverDown()) {
         await wait(150)
         throw new Unreachable()
@@ -433,6 +434,12 @@ export async function withdraw(receipt: Receipt, note: string): Promise<Receipt>
             { at: new Date().toISOString(), state: 'withdrawn', by: ME, note: note.trim() === '' ? undefined : note.trim() },
         ],
     })
+}
+
+/** Takes a household out of the register; its records stay. */
+export async function removeHousehold(id: string): Promise<void> {
+    await guard()
+    await households.remove(id)
 }
 
 /** A receipt by the id the server gave it. */

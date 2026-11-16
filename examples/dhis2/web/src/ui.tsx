@@ -4,6 +4,9 @@ import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
 import type { StatusMap } from '@winterop-com/sokkel-ui/lib/status'
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
 
+import { useCollection } from 'tidevann-shared/backend'
+
+import { indicators as indicatorRows } from './data/backend'
 import { check, itemName, type CheckContext, type Checked } from './data/check'
 import { describe as describeExpression, EVALUATED, type Language } from './data/expression'
 import { CONSTANTS, DATA_ELEMENTS, DATA_SET, dataElement, optionCombo, REPORTING_METRICS } from './data/metadata'
@@ -47,9 +50,16 @@ export function useFoot(note: ReactNode, items?: ReactNode, deps: readonly unkno
 }
 
 /** An expression checked against the server as it is typed. */
+/** The uids of the indicators the server holds, which an `N{uid}` names. */
+export function useIndicatorIds(): readonly string[] {
+    const { rows } = useCollection(indicatorRows)
+    return useMemo(() => (rows ?? []).map((one) => one.id), [rows])
+}
+
 export function useChecked(source: string, language: Language, context: Omit<CheckContext, 'version'> = {}): Checked {
     const version = useVersion()
-    const { variables, evaluatedVariables, indicators } = context
+    const held = useIndicatorIds()
+    const { variables, evaluatedVariables, indicators = held } = context
     return useMemo(
         () => check(source, language, { version, variables, evaluatedVariables, indicators }),
         [source, language, version, variables, evaluatedVariables, indicators],

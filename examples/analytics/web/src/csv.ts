@@ -176,16 +176,3 @@ export function fileName(name: string, now: number): string {
             .replaceAll(/^-|-$/g, '') || 'report'
     return `${slug}-${isoDay(dayOf(now))}.csv`
 }
-
-/** Hands the person a file to keep, as a download. */
-export function download(name: string, text: string, type = 'text/csv'): void {
-    const url = URL.createObjectURL(new Blob([text], { type: `${type};charset=utf-8` }))
-    const link = document.createElement('a')
-    link.href = url
-    link.download = name
-    link.rel = 'noopener'
-    document.body.append(link)
-    link.click()
-    link.remove()
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-}

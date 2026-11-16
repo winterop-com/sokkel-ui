@@ -1,6 +1,18 @@
 import type { ApiAnswer, ApiParamHint, ApiPresetGroup, ApiRequest } from '@winterop-com/sokkel-ui/ApiPlayground'
 
-import { forward, households, receipts, Refused, SERVER, STATES, submit, Unreachable, type Receipt, type Submission } from './backend'
+import {
+    forward,
+    guard,
+    households,
+    receipts,
+    Refused,
+    SERVER,
+    STATES,
+    submit,
+    Unreachable,
+    type Receipt,
+    type Submission,
+} from './backend'
 import { FORMS, formOf, questionCount, testAnswers, testPlace } from './forms'
 import { PLACES, placeOf } from './geo'
 import { checkMetadata } from './health'
@@ -243,6 +255,7 @@ const ROUTES: Route[] = [
 /** Answers a request as the demo server does, through the same backend the app uses. */
 export async function answer(request: ApiRequest): Promise<ApiAnswer> {
     const started = performance.now()
+    await guard()
     const [path, inline = ''] = request.path.split('?')
     const query = new URLSearchParams(inline)
     for (const param of request.params) if (param.name.trim() !== '') query.append(param.name.trim(), param.value)

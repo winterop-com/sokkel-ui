@@ -2,6 +2,7 @@ import { Download, Info, Maximize2, MoreHorizontal } from 'lucide-react'
 import { Suspense, lazy, memo, useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { LoadingOverlay } from '@winterop-com/sokkel-ui/Loaders'
 import { WINDOWED_PANE_WORDS, WindowedPane, useWindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
@@ -67,13 +68,6 @@ const ChartDataTable = lazy(() => import('./ChartDataTable').then((module) => ({
 
 /** What a frame shows: the chart, or its rows as a table. */
 export type ChartFrameView = 'chart' | 'data'
-
-function save(name: string, href: string) {
-    const link = document.createElement('a')
-    link.href = href
-    link.download = name
-    link.click()
-}
 
 const TOOL =
     'flex size-(--density-control-xs) items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-solid focus-visible:outline-ring data-popup-open:bg-hover'
@@ -222,12 +216,10 @@ export function ChartFrame({
             legend: legend !== undefined && legend.length > 1,
         }
         if (format === 'png') {
-            save(`${file}.png`, await chart.png(decor))
+            download(`${file}.png`, { href: await chart.png(decor) })
             return
         }
-        const url = URL.createObjectURL(new Blob([await chart.svg(decor)], { type: 'image/svg+xml' }))
-        save(`${file}.svg`, url)
-        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        download(`${file}.svg`, await chart.svg(decor), 'image/svg+xml')
     }
 
     const failed = error !== undefined && error !== false

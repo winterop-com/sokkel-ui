@@ -1,3 +1,4 @@
+import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
@@ -7,12 +8,12 @@ import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { ChartColumn, Download, Trash2, Upload } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { charts as chartStore, datasets as datasetStore } from '../backend'
 import { counted, type Dataset, type SavedChart } from '../model'
-import { download, fileName, toCsv } from '../parse'
+import { fileName, toCsv } from '../parse'
 
 const SOURCE: Record<Dataset['source'], string> = { seed: 'Demo data', file: 'File', paste: 'Pasted', link: 'From a link' }
 
@@ -24,7 +25,8 @@ export function datasetCsv(dataset: Dataset): string {
     )
 }
 
-export const downloadDataset = (dataset: Dataset) => download(`${fileName(dataset.name)}.csv`, datasetCsv(dataset), 'text/csv')
+export const downloadDataset = (dataset: Dataset) =>
+    download(`${fileName(dataset.name)}.csv`, datasetCsv(dataset), 'text/csv;charset=utf-8')
 
 /** Deletes a dataset and the charts drawn from it, after asking. */
 export function useDeleteDataset(charts: readonly SavedChart[]) {
@@ -48,7 +50,7 @@ export function useDeleteDataset(charts: readonly SavedChart[]) {
                     const gone = deleting
                     setDeleting(null)
                     void Promise.all([datasetStore.remove(gone.id), ...drawn.map((chart) => chartStore.remove(chart.id))]).then(() => {
-                        toast.success(`${gone.name} deleted`)
+                        toast.add({ type: 'success', title: `${gone.name} deleted` })
                         go('/datasets')
                     })
                 },

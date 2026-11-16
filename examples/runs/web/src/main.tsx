@@ -5,7 +5,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { configureDemo } from 'tidevann-shared/backend'
 
-configureDemo({ app: 'runs' })
+configureDemo({ app: 'runs', version: 2 })
 // The example's own modules load once it is named, since one may read the backend as it loads.
 const { App } = await import('./App')
 

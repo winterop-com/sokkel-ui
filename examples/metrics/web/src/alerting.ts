@@ -1,6 +1,6 @@
 import { createStore } from '@winterop-com/sokkel-ui/lib/stored'
 import { useEffect, useRef } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 
 import { type AlertEvent, type AlertRule, crosses, events, type Preferences } from './data'
 import { scraped } from './live'
@@ -81,8 +81,11 @@ export function useAlerting(rules: readonly AlertRule[] | undefined, fired: read
                             })
                             .finally(() => opening.current.delete(rule.id))
                         if (settings.notify) {
-                            const say = rule.severity === 'critical' ? toast.error : toast.warning
-                            say(`${rule.name} is firing`, { description: `${written(rule, value)}: ${conditionOf(rule)}` })
+                            toast.add({
+                                type: rule.severity === 'critical' ? 'error' : 'warning',
+                                title: `${rule.name} is firing`,
+                                description: `${written(rule, value)}: ${conditionOf(rule)}`,
+                            })
                         }
                     }
                     next[rule.id] = { state: due || open !== undefined ? 'firing' : 'pending', value }
@@ -90,7 +93,8 @@ export function useAlerting(rules: readonly AlertRule[] | undefined, fired: read
                     since.current.delete(rule.id)
                     if (open !== undefined) {
                         void events.update(open.id, { resolvedAt: second })
-                        if (settings.notify) toast.success(`${rule.name} resolved`, { description: written(rule, value) })
+                        if (settings.notify)
+                            toast.add({ type: 'success', title: `${rule.name} resolved`, description: written(rule, value) })
                     }
                     next[rule.id] = { state: 'normal', value }
                 }

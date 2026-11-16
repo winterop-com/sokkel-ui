@@ -11,7 +11,7 @@ import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { BellOff, BellRing, Copy, Eraser, PencilLine, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 
 import { conditionOf, readings, type RuleReading, written } from './alerting'
 import { type AlertEvent, type AlertRule, events, rules as ruleStore } from './data'
@@ -186,7 +186,9 @@ export function AlertsPage({
             icon: <Copy />,
             onSelect: () => {
                 const { id: _, ...fields } = rule
-                void ruleStore.create({ ...fields, name: `${rule.name} copy` }).then(() => toast.success(`${rule.name} duplicated`))
+                void ruleStore
+                    .create({ ...fields, name: `${rule.name} copy` })
+                    .then(() => toast.add({ type: 'success', title: `${rule.name} duplicated` }))
             },
         },
         { id: 'line', separator: true },
@@ -285,7 +287,7 @@ export function AlertsPage({
                         if (deleting === null) return
                         const gone = deleting
                         setDeleting(null)
-                        void ruleStore.remove(gone.id).then(() => toast.success(`${gone.name} deleted`))
+                        void ruleStore.remove(gone.id).then(() => toast.add({ type: 'success', title: `${gone.name} deleted` }))
                     },
                 }}
             />
@@ -301,7 +303,7 @@ export function AlertsPage({
                         setClearing(false)
                         void Promise.all(
                             allFired.filter((event) => event.resolvedAt !== null).map((event) => events.remove(event.id)),
-                        ).then(() => toast.success('Resolved alerts cleared'))
+                        ).then(() => toast.add({ type: 'success', title: 'Resolved alerts cleared' }))
                     },
                 }}
             />

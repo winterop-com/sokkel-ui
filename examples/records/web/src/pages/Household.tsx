@@ -14,11 +14,11 @@ import { Unfoldable } from '@winterop-com/sokkel-ui/Unfoldable'
 import { TextLink } from '@winterop-com/sokkel-ui/TextLink'
 import { ArrowUpRight, ClipboardPlus, DoorOpen, FileJson, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
-import { eventsOf, households, receipts } from '../data/backend'
+import { eventsOf, households, receipts, removeHousehold } from '../data/backend'
 import { formOf, PROGRAMS, questionsOf } from '../data/forms'
 import { placeName, regionNameOf } from '../data/geo'
 import { answerText, count, onDay, sectionTrail, StateChip, useFoot, when } from '../ui'
@@ -47,18 +47,24 @@ export function Household({ id }: { id: string }) {
     const remove = () => {
         if (home === undefined) return
         setBusy(true)
-        households.remove(home.id).then(
+        removeHousehold(home.id).then(
             () => {
                 setBusy(false)
                 setRemoving(false)
-                toast.success('Household removed', {
+                toast.add({
+                    type: 'success',
+                    title: 'Household removed',
                     description: `${home.identifier} is no longer in the register; its records stay on the server.`,
                 })
                 go('/people')
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not removed', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({
+                    type: 'error',
+                    title: 'Not removed',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                })
             },
         )
     }

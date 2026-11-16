@@ -7,7 +7,7 @@ import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { moveTreeNode, Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { FileText, Folder, FolderOpen, PenLine, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
@@ -82,7 +82,11 @@ export function FormLayout({ formId }: { formId: string }) {
             () => setHeld(null),
             (failure: unknown) => {
                 setHeld(null)
-                toast.error('The order was not kept', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({
+                    type: 'error',
+                    title: 'The order was not kept',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                })
             },
         )
     }
@@ -92,11 +96,11 @@ export function FormLayout({ formId }: { formId: string }) {
         resetLayout(formId).then(
             () => {
                 setBusy(false)
-                toast.success('Back in the form’s own order')
+                toast.add({ type: 'success', title: 'Back in the form’s own order' })
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not reset', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({ type: 'error', title: 'Not reset', description: failure instanceof Error ? failure.message : String(failure) })
             },
         )
     }

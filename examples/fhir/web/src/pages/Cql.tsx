@@ -11,7 +11,7 @@ import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem } from '@winterop-com/sokkel-ui/StatusLine'
 import { Plus, RotateCcw, Save, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
@@ -99,7 +99,11 @@ export function CqlLibraries() {
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not created', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({
+                    type: 'error',
+                    title: 'Not created',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                })
             },
         )
     }
@@ -179,7 +183,9 @@ export function CqlEditor({ id }: { id: string }) {
     const against = own.find((row) => row.versionId === compared) ?? own[1] ?? own[0]
     const header = cqlHeader(text)
     const status = String(stored?.resource.status ?? '')
-    const frozen = status === 'active' && header?.version === stored?.resource.version && text !== base
+    // A declaration without a version keeps the stored one, so it never edits an active version in place.
+    const declared = header === undefined ? undefined : (header.version ?? stored?.resource.version)
+    const frozen = status === 'active' && declared === stored?.resource.version && text !== base
     useFoot(
         stored === undefined
             ? undefined
@@ -212,16 +218,18 @@ export function CqlEditor({ id }: { id: string }) {
     const save = (nextStatus?: string) => {
         if (stored === undefined || saving) return
         if (header === undefined) {
-            toast.error('Not saved', { description: 'The library does not declare itself on its first line.' })
+            toast.add({ type: 'error', title: 'Not saved', description: 'The library does not declare itself on its first line.' })
             return
         }
         if (frozen && nextStatus === undefined) {
-            toast.error('Not saved', {
+            toast.add({
+                type: 'error',
+                title: 'Not saved',
                 description: `Version ${String(stored.resource.version ?? '')} is active, so its content is fixed. Raise the version in the declaration.`,
             })
             return
         }
-        const raised = header.version !== stored.resource.version
+        const raised = declared !== stored.resource.version
         const resource: Resource = {
             ...stored.resource,
             name: header.name,
@@ -237,14 +245,14 @@ export function CqlEditor({ id }: { id: string }) {
             (kept) => {
                 setSaving(false)
                 setDraft(draftKey, undefined)
-                toast.success(
-                    nextStatus === 'active'
-                        ? `${header.name} ${header.version ?? ''} published`
-                        : `Saved as version ${kept.resource.meta?.versionId ?? ''}`,
-                    {
-                        description: `${key} on ${SERVER.name}`,
-                    },
-                )
+                toast.add({
+                    type: 'success',
+                    title:
+                        nextStatus === 'active'
+                            ? `${header.name} ${header.version ?? ''} published`
+                            : `Saved as version ${kept.resource.meta?.versionId ?? ''}`,
+                    description: `${key} on ${SERVER.name}`,
+                })
             },
             (failure: unknown) => {
                 setSaving(false)
@@ -254,8 +262,8 @@ export function CqlEditor({ id }: { id: string }) {
                             mark.path === undefined ? mark : { line: header.line, tone: mark.tone, message: mark.message },
                         ),
                     )
-                    toast.error('Not saved', { description: failure.message })
-                } else toast.error('Not saved', { description: String(failure) })
+                    toast.add({ type: 'error', title: 'Not saved', description: failure.message })
+                } else toast.add({ type: 'error', title: 'Not saved', description: String(failure) })
             },
         )
     }

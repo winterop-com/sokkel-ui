@@ -1,3 +1,4 @@
+import { download as saveDownload } from '@winterop-com/sokkel-ui/lib/download'
 import { type DataAction, type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
@@ -26,12 +27,7 @@ async function saveFile({ download, video }: Kept) {
         toast.add({ type: 'error', title: 'The file is gone', description: 'Remove the download and download it again.' })
         return
     }
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${video.title}.webm`
-    link.click()
-    window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    saveDownload(`${video.title}.webm`, blob)
 }
 
 function remove({ video }: Kept) {
