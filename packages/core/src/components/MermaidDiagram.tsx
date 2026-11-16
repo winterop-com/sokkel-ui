@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { cn } from '../lib/cn'
 import { cssPixels } from '../lib/css-pixels'
 import { CopyButton } from './CopyButton'
+import { mermaidConfig } from './mermaid-config'
 import { useWindowedPane, WindowedPane, WindowedPaneButton } from './WindowedPane'
 
 let count = 0
@@ -97,14 +98,7 @@ interface Drawn {
 async function render(code: string, host: HTMLElement): Promise<Drawn> {
     const mermaid = (await import('mermaid')).default
     const radius = getComputedStyle(host).getPropertyValue('--radius').trim() || '4px'
-    mermaid.initialize({
-        startOnLoad: false,
-        theme: 'base',
-        themeVariables: themeVariables(host),
-        themeCSS: `.node rect, .node polygon, .node circle, .cluster rect { filter: none !important; } .node rect, .cluster rect { rx: ${radius}; ry: ${radius}; }`,
-        securityLevel: 'strict',
-        suppressErrorRendering: true,
-    })
+    mermaid.initialize(mermaidConfig(themeVariables(host), radius))
     // Parsing first refuses bad source before mermaid draws its own error graphic into the page.
     await mermaid.parse(code)
     count += 1
@@ -259,7 +253,7 @@ function Diagram({
                         windowed && 'min-h-0 flex-1 items-center [&_svg]:size-full [&_svg]:max-w-none!',
                     )}
                     style={{ '--diagram-least': `${String(drawn.least)}px` } as CSSProperties}
-                    // The SVG comes from mermaid run with `securityLevel: 'strict'`.
+                    // The SVG comes from mermaid run with `securityLevel: 'strict'` and the style keys locked in `mermaidConfig`.
                     dangerouslySetInnerHTML={{ __html: drawn.svg }}
                 />
             )}

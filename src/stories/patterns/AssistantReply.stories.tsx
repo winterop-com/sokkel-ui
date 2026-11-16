@@ -222,6 +222,30 @@ export const ReadOnPress: StoryObj = {
     ),
 }
 
+/**
+ * An answer holding an image and links: the image is drawn as its alt text and address, as it is by
+ * default, so nothing is fetched, and with `linkSchemes={['https']}` the mail link is only its words.
+ */
+export const ImagesAndLinks: StoryObj = {
+    name: 'Images and links',
+    render: () => (
+        <Ground>
+            <AssistantReply
+                {...SPEAKER}
+                content={[
+                    'The last **nightly-export** run took 4m 12s:',
+                    '',
+                    '![Run durations this week](https://example.org/charts/nightly-export.png)',
+                    '',
+                    'The [run log](https://example.org/runs/nightly-export/1842) has each step; [mail grace](mailto:grace@example.org) if it fails again.',
+                ].join('\n')}
+                linkSchemes={['https']}
+                onFeedback={() => undefined}
+            />
+        </Ground>
+    ),
+}
+
 /** In a card: waiting for the first word, thinking with the thought open and growing, streaming with a caret while a tool runs, stopped, failed with Try again, and the second of three versions. */
 export const CardStates: StoryObj = {
     name: 'Card states',

@@ -23,6 +23,12 @@ export interface ReasoningProps {
     /** Still being written: open, its line shimmering. */
     thinking: boolean
     math?: boolean
+    /** Draws the images the thinking holds; off, each is its alt text and address. On by default, as in `Markdown`. */
+    images?: boolean
+    /** The schemes a link may have to be live, as `Markdown` takes them. */
+    linkSchemes?: readonly string[]
+    /** Follows a link inside the app, as `Markdown` does. */
+    onLink?: (href: string) => boolean
     words: ReasoningWords
 }
 
@@ -31,7 +37,7 @@ export interface ReasoningProps {
  * written it is open, its line shimmers as it says Thinking, and the text grows; once the answer
  * begins it folds away, and a press opens it again.
  */
-export function Reasoning({ text, thinking, math = true, words }: ReasoningProps) {
+export function Reasoning({ text, thinking, math = true, images, linkSchemes, onLink, words }: ReasoningProps) {
     const [open, setOpen] = useState(false)
     return (
         <Trace data-slot="assistant-reasoning">
@@ -45,7 +51,16 @@ export function Reasoning({ text, thinking, math = true, words }: ReasoningProps
                     </TraceLine>
                 </TraceCollapsibleTrigger>
                 <TraceCollapsibleContent>
-                    <Markdown content={text} streaming={thinking} math={math} className="text-muted-foreground" words={words.markdown} />
+                    <Markdown
+                        content={text}
+                        streaming={thinking}
+                        math={math}
+                        images={images}
+                        linkSchemes={linkSchemes}
+                        onLink={onLink}
+                        className="text-muted-foreground"
+                        words={words.markdown}
+                    />
                 </TraceCollapsibleContent>
             </TraceCollapsible>
         </Trace>
