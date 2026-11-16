@@ -215,7 +215,7 @@ function ServiceJobs({ open = false }: { open?: boolean }) {
  * `monoMeta` sets each row's end in the code face, here the service that runs the job, and
  * `metaInValue` shows it at the chosen value's end too. The list grows to its longest row.
  */
-export const CodeMeta: StoryObj = { name: 'Code at the end', render: () => <ServiceJobs open /> }
+export const CodeMeta: StoryObj = { name: 'Code at end', render: () => <ServiceJobs open /> }
 
 /** Places to run in: each country's parts, 240 in all, too many to send at once. */
 const PLACES = REGIONS.flatMap((country) =>

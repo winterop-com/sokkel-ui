@@ -45,7 +45,7 @@ describe('the tokens', () => {
 })
 
 /** The surfaces tidevann, the base theme, sets as fixed colors, which every other theme mixes from its own. */
-const SURFACES_OF_THEIR_OWN = ['canvas', 'node', 'node-line', 'critical-wash', 'panel-line', 'panel-ground'] as const
+const SURFACES_OF_THEIR_OWN = ['canvas', 'node', 'node-line', 'panel-ground'] as const
 
 describe('the tinted surfaces', () => {
     const base = tokens.themes.tidevann

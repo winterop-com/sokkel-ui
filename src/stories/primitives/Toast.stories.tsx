@@ -54,11 +54,11 @@ const STACK: Options[] = [
 const plain = createToastManager()
 const PLAIN: Options[] = [{ id: 'plain', title: 'Rules saved', description: 'The orders rules apply from the next run.' }]
 
+/** A toast with no type, a title and its description alone. */
+export const Plain: StoryObj = { render: () => <Shown manager={plain} toasts={PLAIN} /> }
 /** One toast for a run that succeeded. */
 export const Success: StoryObj = { render: () => <Shown manager={single} toasts={SUCCEEDED} /> }
 /** A failed run's toast with an action that opens the run. */
 export const ErrorWithAction: StoryObj = { render: () => <Shown manager={failing} toasts={FAILED} /> }
 /** Three toasts stacked: info, a warning and one still loading. */
 export const Stacked: StoryObj = { render: () => <Shown manager={stacked} toasts={STACK} /> }
-/** A toast with no type, a title and its description alone. */
-export const Plain: StoryObj = { render: () => <Shown manager={plain} toasts={PLAIN} /> }

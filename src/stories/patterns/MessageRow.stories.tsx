@@ -2,13 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { MessageRow, type MessageLabel } from '@winterop-com/sokkel-ui/MessageRow'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /** A row of a message list, alone and in a list column with every mark it carries. */
 const HARBOR: MessageLabel = { id: 'harbor', label: 'harbor', color: 'var(--color-kind-blue)' }
 const JUNIPER: MessageLabel = { id: 'juniper', label: 'juniper', color: 'var(--color-kind-green)' }
 
 function Column({ children }: { children: React.ReactNode }) {
-    return <div className="mx-auto w-full max-w-md overflow-hidden rounded-surface border border-border-strong bg-card">{children}</div>
+    return <Surface className="mx-auto w-full max-w-md">{children}</Surface>
 }
 
 function Rows({ highlight }: { highlight?: string }) {

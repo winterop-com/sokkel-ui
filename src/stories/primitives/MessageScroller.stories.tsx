@@ -13,6 +13,7 @@ import {
     MessageScrollerProvider,
     MessageScrollerViewport,
 } from '@winterop-com/sokkel-ui/primitives/message-scroller'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /**
  * The scrolling column a conversation lives in. It opens at the end, and a button appears to
@@ -69,7 +70,7 @@ function Turn({ turn }: { turn: (typeof TURNS)[number] }) {
 
 function Column({ turns, position }: { turns: typeof TURNS; position: 'start' | 'end' }) {
     return (
-        <div className="h-96 w-full max-w-xl rounded-lg border border-border">
+        <Surface className="h-96 w-full max-w-xl">
             <MessageScrollerProvider defaultScrollPosition={position}>
                 <MessageScroller>
                     <MessageScrollerViewport aria-label="Conversation">
@@ -89,7 +90,7 @@ function Column({ turns, position }: { turns: typeof TURNS; position: 'start' | 
                     <MessageScrollerButton direction="end" />
                 </MessageScroller>
             </MessageScrollerProvider>
-        </div>
+        </Surface>
     )
 }
 

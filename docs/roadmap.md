@@ -380,11 +380,12 @@ to `plan.md` when it ships.
 
 ## Example apps
 
-- **The examples.** Twelve apps in `examples/<name>/{web,electron,tauri}`, each a Tidevann product
+- **The examples.** Sixteen apps in `examples/<name>/{web,electron,tauri}`, each a Tidevann product
   built only on the packages' public exports, with a fake backend kept per app
-  (`tidevann-shared`). They are tasks; runs, a jobs console; records; three live dashboards
-  (metrics, status and analytics); notes; dataviz; models, with chat and compare; music; podcast;
-  and video. Each passed a scripted click-through of every page and control. `make examples`
+  (`tidevann-shared`). They are tasks; runs, a jobs console; records; four live dashboards
+  (metrics, status, analytics and dashboard); notes; dataviz; models, with chat and compare; music;
+  podcast; video; studio, an editor for pipelines, schemas and queries; and two workbenches on the
+  domain add-ons, fhir and dhis2. `examples/README.md` says what each holds. Each passed a scripted click-through of every page and control. `make examples`
   builds them all, `make <name>-web|-electron|-tauri` runs one, and Pages publishes them at
   `/sokkel-ui/examples/` beside Storybook.
 - **CI starts each shell once.** CI builds every web app and checks every shell but never starts
@@ -399,7 +400,7 @@ to `plan.md` when it ships.
       touch devices. Run that pass before calling the examples checked on every platform.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
-  201.1 kB and forms at 191.8 kB start and 78.4 kB lazy (2026-11-11); the forms lazy one is full. A
+  206.8 kB and forms at 194.7 kB start and 79.9 kB lazy (2026-11-16); the forms lazy one is full. A
   change trims what it adds itself; when it is worth its size, its PR raises the budget it needs
   with the reason, rather than reworking unrelated parts to fit. A loader that lets `DataTable`
   register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { BarVisualizer } from '@winterop-com/sokkel-ui/primitives/bar-visualizer'
 import { AudioScrubber, StaticWaveform, Waveform } from '@winterop-com/sokkel-ui/primitives/waveform'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /**
  * Audio shown as bars: a recording's waveform, a scrubber over a voice note, and the level bars a
@@ -41,15 +42,17 @@ function VoiceNote() {
     const [time, setTime] = useState(14)
     return (
         <Ground>
-            <Row gap="md" className="rounded-surface border border-border-strong bg-card p-3">
-                <IconButton label="Pause" variant="secondary">
-                    <Pause aria-hidden />
-                </IconButton>
-                <AudioScrubber data={LEVELS} currentTime={time} duration={42} onSeek={setTime} height={36} className="min-w-0 flex-1" />
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">
-                    0:{String(Math.round(time)).padStart(2, '0')} / 0:42
-                </span>
-            </Row>
+            <Surface pad>
+                <Row gap="md">
+                    <IconButton label="Pause" variant="secondary">
+                        <Pause aria-hidden />
+                    </IconButton>
+                    <AudioScrubber data={LEVELS} currentTime={time} duration={42} onSeek={setTime} height={36} className="min-w-0 flex-1" />
+                    <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                        0:{String(Math.round(time)).padStart(2, '0')} / 0:42
+                    </span>
+                </Row>
+            </Surface>
         </Ground>
     )
 }
@@ -57,11 +60,13 @@ function VoiceNote() {
 function Listening() {
     return (
         <Ground>
-            <Row gap="md" className="rounded-surface border border-border-strong bg-card p-3">
-                <Mic className="size-4 text-destructive" aria-hidden />
-                <BarVisualizer barCount={32} minHeight={12} centerAlign className="h-10 flex-1 bg-transparent p-0" />
-                <span className="text-sm text-muted-foreground">Listening</span>
-            </Row>
+            <Surface pad>
+                <Row gap="md">
+                    <Mic className="size-4 text-destructive" aria-hidden />
+                    <BarVisualizer barCount={32} minHeight={12} centerAlign className="h-10 flex-1 bg-transparent p-0" />
+                    <span className="text-sm text-muted-foreground">Listening</span>
+                </Row>
+            </Surface>
         </Ground>
     )
 }

@@ -104,7 +104,7 @@ export function PageProgress({ loading, value = null, delay = 200, fixed = false
                 finishing && 'opacity-0',
             )}
         >
-            <LoadingBar value={finishing ? 100 : value} label={label} className="h-[3px] bg-transparent" />
+            <LoadingBar value={finishing ? 100 : value} label={label} className="h-0.75 bg-transparent" />
         </div>
     )
 }

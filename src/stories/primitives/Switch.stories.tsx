@@ -4,6 +4,7 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from '@winterop-com
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Inputs/Switch', parameters: { frame: 'column' } }
 export default meta
@@ -67,19 +68,21 @@ export const JobSchedules: StoryObj = {
     render: () => (
         <Stack className="max-w-lg">
             <p className="text-sm font-medium">Schedules and webhooks of sync-inventory</p>
-            <Stack gap="none" className="divide-y divide-border rounded-lg border border-border">
-                {SCHEDULES.map((schedule) => (
-                    <Field key={schedule.code} orientation="horizontal" className="px-3 py-3">
-                        <FieldContent>
-                            <FieldLabel htmlFor={`s-${schedule.code}`} className="font-mono">
-                                {schedule.code}
-                            </FieldLabel>
-                            <FieldDescription>{schedule.detail}</FieldDescription>
-                        </FieldContent>
-                        <Switch id={`s-${schedule.code}`} defaultChecked={schedule.on} />
-                    </Field>
-                ))}
-            </Stack>
+            <Surface>
+                <Stack gap="none" className="divide-y divide-border">
+                    {SCHEDULES.map((schedule) => (
+                        <Field key={schedule.code} orientation="horizontal" className="px-3 py-3">
+                            <FieldContent>
+                                <FieldLabel htmlFor={`s-${schedule.code}`} className="font-mono">
+                                    {schedule.code}
+                                </FieldLabel>
+                                <FieldDescription>{schedule.detail}</FieldDescription>
+                            </FieldContent>
+                            <Switch id={`s-${schedule.code}`} defaultChecked={schedule.on} />
+                        </Field>
+                    ))}
+                </Stack>
+            </Surface>
         </Stack>
     ),
 }

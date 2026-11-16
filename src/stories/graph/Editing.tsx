@@ -8,6 +8,7 @@ import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/
 import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Stage } from './Frame'
 import { NIGHTLY_EXPORT } from './data'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /**
  * The pipeline as an editor with local state: the graph reports each gesture, and this applies it
@@ -115,26 +116,30 @@ export function Editor() {
                     })}
                 />
             </Fill>
-            <Stack as="aside" gap="lg" className="shrink-0 rounded-surface border border-border bg-card p-4 md:w-72">
-                <p className="text-sm text-muted-foreground" aria-live="polite">
-                    {said}
-                </p>
-                {chosen !== undefined && (
-                    <TextField
-                        id="step-name"
-                        label="Name"
-                        help="Backspace here edits the name and never removes the step."
-                        value={chosen.name ?? ''}
-                        placeholder={chosen.code}
-                        onChange={(value) => {
-                            const name = value
-                            setSteps((held) =>
-                                held.map((step) => (step.code === chosen.code ? { ...step, name: name === '' ? undefined : name } : step)),
-                            )
-                        }}
-                    />
-                )}
-            </Stack>
+            <Surface pad className="shrink-0 md:w-72">
+                <Stack as="aside" gap="lg">
+                    <p className="text-sm text-muted-foreground" aria-live="polite">
+                        {said}
+                    </p>
+                    {chosen !== undefined && (
+                        <TextField
+                            id="step-name"
+                            label="Name"
+                            help="Backspace here edits the name and never removes the step."
+                            value={chosen.name ?? ''}
+                            placeholder={chosen.code}
+                            onChange={(value) => {
+                                const name = value
+                                setSteps((held) =>
+                                    held.map((step) =>
+                                        step.code === chosen.code ? { ...step, name: name === '' ? undefined : name } : step,
+                                    ),
+                                )
+                            }}
+                        />
+                    )}
+                </Stack>
+            </Surface>
         </Stage>
     )
 }
