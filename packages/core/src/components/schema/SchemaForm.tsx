@@ -248,8 +248,12 @@ export interface SchemaFormState {
     value: unknown
     setValue: (value: unknown) => void
     set: (path: Path, value: unknown) => void
-    /** The text typed into a field that holds JSON, kept while it does not parse. */
+    /**
+     * The text typed into a field that holds JSON or a choice of scalar types, kept as typed while
+     * the value is the one it was typed over; a value changed from elsewhere since shows instead.
+     */
     draft: (path: Path) => string | undefined
+    /** Keeps the text typed at a path over the value there now, set first; undefined lets it go. */
     setDraft: (path: Path, text: string | undefined) => void
     /** Marks a number field whose typed text is not a number, which is said and stops the submit until it is one. */
     setUnread: (path: Path, unread: boolean) => void
@@ -360,7 +364,12 @@ export function useSchemaForm(
         if (outside === undefined) setOwn(latest.current)
         onChange?.(latest.current)
     }
-    const [drafts, setDrafts] = useState<Record<string, string>>({})
+    // Each draft with the value it was typed over, so a value changed from elsewhere since shows in its place.
+    const [drafts, setDrafts] = useState<Record<string, { text: string; over: string | undefined }>>({})
+    const draftAt = (at: string): string | undefined => {
+        const draft = drafts[at]
+        return draft !== undefined && JSON.stringify(valueAt(value, parsePointer(at))) === draft.over ? draft.text : undefined
+    }
     const [unread, setUnread] = useState<ReadonlySet<string>>(new Set())
     const [held, setHeld] = useState<Record<string, string>>({})
     const [touched, setTouched] = useState<ReadonlySet<string>>(new Set())
@@ -452,7 +461,7 @@ export function useSchemaForm(
     const add = (at: string, issue: Issue) => all.set(at, [...(all.get(at) ?? []), issue])
     for (const issue of found) {
         const at = pointer(issue.path)
-        if (issue.kind === 'required' && ((drafts[at] ?? '').trim() !== '' || unread.has(at) || sealedAt.has(at))) continue
+        if (issue.kind === 'required' && ((draftAt(at) ?? '').trim() !== '' || unread.has(at) || sealedAt.has(at))) continue
         add(at, asIssue(issue))
     }
     // Text typed into a number or JSON field that does not parse leaves the value as it was, and says so.
@@ -461,8 +470,9 @@ export function useSchemaForm(
         add(at, { tone: 'critical', ...words.say({ kind: 'type', expected: types(field).main[0], path: [], tone: 'critical' }, field) })
     }
     for (const [at, text] of Object.entries(held)) add(at, { tone: 'critical', text })
-    for (const [at, text] of Object.entries(drafts)) {
-        if (text.trim() === '' || kindOf(schemaAt(schema, parsePointer(at)), schema) !== 'json') continue
+    for (const at of Object.keys(drafts)) {
+        const text = draftAt(at)
+        if (text === undefined || text.trim() === '' || kindOf(schemaAt(schema, parsePointer(at)), schema) !== 'json') continue
         try {
             JSON.parse(text)
         } catch {
@@ -515,9 +525,11 @@ export function useSchemaForm(
         value,
         setValue,
         set,
-        draft: (path) => drafts[pointer(path)],
-        setDraft: (path, text) =>
-            setDrafts(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: text })),
+        draft: (path) => draftAt(pointer(path)),
+        setDraft: (path, text) => {
+            const over = JSON.stringify(valueAt(latest.current, path))
+            setDrafts(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: { text, over } }))
+        },
         setUnread: (path, now) =>
             setUnread((current) => {
                 const at = pointer(path)
@@ -531,7 +543,7 @@ export function useSchemaForm(
             setHeld(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: text })),
         touch: (path) => {
             const at = pointer(path)
-            if (given(valueAt(value, path)) || drafts[at] !== undefined || unread.has(at)) setTouched((current) => new Set(current).add(at))
+            if (given(valueAt(value, path)) || draftAt(at) !== undefined || unread.has(at)) setTouched((current) => new Set(current).add(at))
         },
         shown: (path) => shownAt(pointer(path)),
         count,

@@ -463,6 +463,47 @@ describe('an empty row in a list of scalars', () => {
     })
 })
 
+describe('text typed over a value that then changes from elsewhere', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        properties: {
+            buffer: { title: 'Buffer', anyOf: [{ type: 'string' }, { type: 'integer' }] },
+            params: { title: 'Params' },
+        },
+    }
+
+    /** Types `1.` into the buffer and `{` into the params, then, when `change` says so, changes the value from outside or by setValue. */
+    function Typed({ change }: { change?: 'outside' | 'setValue' }) {
+        const [outside, setOutside] = useState<unknown>({ buffer: 1, params: { a: 1 } })
+        const form = useSchemaForm(schema, change === 'setValue' ? { initial: outside } : { value: outside, onChange: () => {} })
+        const once = useRef(false)
+        if (!once.current) {
+            once.current = true
+            form.setDraft(['buffer'], '1.')
+            form.setDraft(['params'], '{')
+            const next = { buffer: 2, params: { b: 2 } }
+            if (change === 'outside') setOutside(next)
+            if (change === 'setValue') form.setValue(next)
+        }
+        return <SchemaForm form={form} marks={false} />
+    }
+
+    it('keeps the text while the value is the one it was typed over', () => {
+        const html = renderToStaticMarkup(<Typed />)
+        expect(html).toMatch(/<input[^>]*value="1\."/)
+        expect(html).toMatch(/<textarea[^>]*>\{<\/textarea>/)
+    })
+
+    it('shows the new value once it changes, held from outside or set by setValue', () => {
+        for (const change of ['outside', 'setValue'] as const) {
+            const html = renderToStaticMarkup(<Typed change={change} />)
+            expect(html).toMatch(/<input[^>]*value="2"/)
+            expect(html).toContain('&quot;b&quot;: 2')
+            expect(html).not.toContain('Not valid JSON')
+        }
+    })
+})
+
 describe("the server's issues", () => {
     const schema: JsonSchema = { type: 'object', properties: { code: { type: 'string', title: 'Code' } } }
 
