@@ -72,6 +72,19 @@ export interface AnswerColumnProps {
     content: string
     /** The model's thinking before its answer, as markdown: open while it is written, folded once the answer begins. */
     reasoning?: string
+    /**
+     * Draws the images the answer and its thinking hold. Off by default: an image is its alt text and
+     * address as plain text, and nothing is fetched. On, every image address the model writes is
+     * fetched as it is drawn.
+     */
+    images?: boolean
+    /**
+     * The schemes a link in the answer and its thinking may have to be live, as `Markdown` takes them,
+     * such as `['https']`; any other link is drawn as its words. `Markdown`'s safe schemes by default.
+     */
+    linkSchemes?: readonly string[]
+    /** Follows a link in the answer inside the app, as `Markdown` does: it stays in the page when this answers true. */
+    onLink?: (href: string) => boolean
     /** What the answer cost and how fast it came, under it; its count says so far while it streams. */
     usage?: Omit<UsageLineProps, 'live' | 'words' | 'className'>
     /** What went wrong, when `failed`, in a sentence. */
@@ -96,6 +109,9 @@ export interface AnswerColumnProps {
  * its usage line pinned under it. The head offers Copy once something is written, Stop while the
  * answer is coming, Run again once it has ended and Remove, each when its handler is given. A failed answer says why; a stopped one keeps
  * what was written. The column fills the height it is given and its answer scrolls within it.
+ *
+ * The answer is model output, so its images are off by default and drawn as their alt text and
+ * address; `images` turns them on, and `linkSchemes` narrows which links are live.
  */
 export function AnswerColumn({
     model,
@@ -103,6 +119,9 @@ export function AnswerColumn({
     state,
     content,
     reasoning = '',
+    images = false,
+    linkSchemes,
+    onLink,
     usage,
     problem,
     onStop,
@@ -151,6 +170,9 @@ export function AnswerColumn({
                     <Reasoning
                         text={reasoning}
                         thinking={going && content === ''}
+                        images={images}
+                        linkSchemes={linkSchemes}
+                        onLink={onLink}
                         words={{ thinking: words.thinking, thoughtFor: words.thoughtFor, markdown: words.markdown }}
                     />
                 )}
@@ -158,7 +180,16 @@ export function AnswerColumn({
                     <p className="text-sm text-muted-foreground motion-safe:animate-pulse">{words.first}</p>
                 )}
                 {content !== '' && (
-                    <Markdown content={content} streaming={state === 'streaming'} caret inlineCode="wash" words={words.markdown} />
+                    <Markdown
+                        content={content}
+                        streaming={state === 'streaming'}
+                        caret
+                        inlineCode="wash"
+                        images={images}
+                        linkSchemes={linkSchemes}
+                        onLink={onLink}
+                        words={words.markdown}
+                    />
                 )}
                 {state === 'failed' && <Problem title={words.failedTitle} detail={problem} />}
             </div>
