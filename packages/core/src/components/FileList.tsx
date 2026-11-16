@@ -82,16 +82,21 @@ export function FileTypeIcon({ kind, className }: FileTypeIconProps) {
     return <Icon aria-hidden className={cn('size-4 shrink-0', tone, className)} />
 }
 
-/** A byte count in the largest unit that keeps it at one or more: `812 B`, `14.2 KB`, `3.1 MB`. */
+/**
+ * A byte count in the largest unit that keeps it at one or more as shown, a tenth below ten and
+ * whole above: `812 B`, `14 KB`, `3.1 MB`; 999,600 bytes are `1.0 MB`, never `1000 KB`.
+ */
 export function formatSize(bytes: number): string {
     const units = ['B', 'KB', 'MB', 'GB', 'TB']
     let value = bytes
     let unit = 0
-    while (value >= 1000 && unit < units.length - 1) {
+    while ((value >= 1000 || (unit > 0 && Math.round(value) >= 1000)) && unit < units.length - 1) {
         value /= 1000
         unit += 1
     }
-    return unit === 0 ? `${value} ${units[0]}` : `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`
+    if (unit === 0) return `${value} ${units[0]}`
+    const tenths = Math.round(value * 10) / 10
+    return `${tenths < 10 ? tenths.toFixed(1) : Math.round(value)} ${units[unit]}`
 }
 
 /** The entries in the order a sort asks for, folders always before files. */
