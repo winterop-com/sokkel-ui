@@ -5,8 +5,6 @@ html[data-theme='indigo'],
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: var(--card);
     --node-line: color-mix(in oklab, var(--faint) 70%, var(--border-strong));
-    --critical-wash: color-mix(in oklab, var(--destructive) 12%, var(--card));
-    --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
     --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --background: oklch(0.98 0.004 265);
@@ -53,7 +51,6 @@ html[data-theme='indigo'],
     --graph-edge: oklch(0.75 0.015 265);
     --terminal-accent: oklch(0.76 0.13 277);
     --brand: #4a4bd0;
-    --brand-foreground: #f2f2fd;
     --radius: 5px;
     --control-radius: var(--radius);
     --surface-radius: calc(var(--radius) * 2);
@@ -92,8 +89,6 @@ html.dark[data-theme='indigo'],
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: color-mix(in oklab, var(--foreground) 18%, var(--card));
     --node-line: color-mix(in oklab, var(--faint) 80%, var(--border-strong));
-    --critical-wash: color-mix(in oklab, var(--destructive) 16%, var(--card));
-    --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
     --brand-ground: color-mix(in oklab, var(--shade) 20%, var(--background));
     --background: oklch(0.155 0.015 270);
@@ -140,7 +135,6 @@ html.dark[data-theme='indigo'],
     --graph-edge: oklch(0.47 0.025 270);
     --terminal-accent: oklch(0.76 0.13 277);
     --brand: #4a4bd0;
-    --brand-foreground: #f2f2fd;
     --radius: 5px;
     --control-radius: var(--radius);
     --surface-radius: calc(var(--radius) * 2);

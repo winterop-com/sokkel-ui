@@ -8,6 +8,8 @@ import {
     ContextMenuGroup,
     ContextMenuItem,
     ContextMenuLabel,
+    ContextMenuRadioGroup,
+    ContextMenuRadioItem,
     ContextMenuSeparator,
     ContextMenuShortcut,
     ContextMenuSub,
@@ -52,6 +54,15 @@ function StepMenu({ open }: { open?: boolean }) {
                 </ContextMenuSub>
                 <ContextMenuCheckboxItem checked>Stop the run on failure</ContextMenuCheckboxItem>
                 <ContextMenuSeparator />
+                <ContextMenuGroup>
+                    <ContextMenuLabel>Retries</ContextMenuLabel>
+                    <ContextMenuRadioGroup defaultValue="once">
+                        <ContextMenuRadioItem value="none">None</ContextMenuRadioItem>
+                        <ContextMenuRadioItem value="once">Once</ContextMenuRadioItem>
+                        <ContextMenuRadioItem value="three">Three times</ContextMenuRadioItem>
+                    </ContextMenuRadioGroup>
+                </ContextMenuGroup>
+                <ContextMenuSeparator />
                 <ContextMenuItem variant="destructive">
                     <Trash2 />
                     Remove step
@@ -63,5 +74,5 @@ function StepMenu({ open }: { open?: boolean }) {
 
 /** The area a right-click opens the menu over, closed. */
 export const Trigger: StoryObj = { render: () => <StepMenu /> }
-/** The menu open over a step: its actions, a disabled one and a submenu. */
+/** The menu open over a step: its actions, a disabled one, a submenu, a check and a radio group of retries. */
 export const Opened: StoryObj = { render: () => <StepMenu open /> }

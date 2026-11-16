@@ -9,6 +9,8 @@ export default defineConfig({
     testDir: 'e2e',
     snapshotPathTemplate: '{testDir}/__screenshots__/{arg}{ext}',
     fullyParallel: true,
+    // A test left focused with `.only` fails the run on CI rather than skipping every other test.
+    forbidOnly: !!process.env.CI,
     reporter: [['line']],
     // A screenshot of a tall story, such as every icon, can take more than the default five seconds on a busy runner.
     expect: { toHaveScreenshot: { maxDiffPixels: 20, animations: 'disabled', timeout: 20_000 } },

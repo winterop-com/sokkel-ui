@@ -74,7 +74,7 @@ function Node({ name, value, depth, open, limit, words }: NodeProps) {
             </button>
             {expanded && (
                 <>
-                    <div className="ml-[7px] border-l border-border pl-1">
+                    <div className="ml-1.75 border-l border-border pl-1">
                         {entries.slice(0, shown).map(([childName, child]) => (
                             <Node
                                 key={childName}

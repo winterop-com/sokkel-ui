@@ -2,7 +2,9 @@ import { describe, expect, test } from 'vitest'
 
 import { graphNodeSize, LINE_GAP, NODE_MAX_WIDTH, NODE_MIN_WIDTH } from './GraphNode'
 import {
+    bendOf,
     edgePath,
+    EDGE_BEND,
     elkOptions,
     GRAPH_SPACING,
     layoutGraph,
@@ -167,6 +169,13 @@ describe('edge paths', () => {
         expect(polylinePath(points)).toBe('M 0 0 L 10 0 L 10 20 L 30 20')
         expect(edgePath(points, 'polyline')).toBe(polylinePath(points))
         expect(edgePath(points)).toContain('Q')
+    })
+
+    test("an orthogonal route's bends follow the theme's radius, square in a square theme", () => {
+        expect(bendOf(4.5)).toBe(EDGE_BEND)
+        expect(bendOf(0)).toBe(0)
+        expect(edgePath(points, 'orthogonal', 0)).toBe('M 0 0 L 10 0 Q 10 0 10 0 L 10 20 Q 10 20 10 20 L 30 20')
+        expect(edgePath(points, 'orthogonal', 3)).toContain('L 7 0 Q 10 0 10 3')
     })
 
     test("a spline reads elk's runs of three points as cubic curves, and curves through any other run", () => {

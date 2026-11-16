@@ -4,6 +4,7 @@ import { Command, CornerDownLeft } from 'lucide-react'
 import { Kbd, KbdGroup } from '@winterop-com/sokkel-ui/primitives/kbd'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Actions/Kbd', parameters: { frame: 'column' } }
 export default meta
@@ -55,18 +56,20 @@ export const Shortcuts: StoryObj = {
     render: () => (
         <Stack className="max-w-md">
             <p className="text-sm font-medium">Keyboard shortcuts</p>
-            <ul className="divide-y divide-border rounded-lg border border-border">
-                {SHORTCUTS.map((shortcut) => (
-                    <Row key={shortcut.does} as="li" gap="md" justify="between" className="px-3 py-2 text-sm">
-                        <span>{shortcut.does}</span>
-                        <KbdGroup>
-                            {shortcut.keys.map((key) => (
-                                <Kbd key={key}>{key}</Kbd>
-                            ))}
-                        </KbdGroup>
-                    </Row>
-                ))}
-            </ul>
+            <Surface>
+                <ul className="divide-y divide-border">
+                    {SHORTCUTS.map((shortcut) => (
+                        <Row key={shortcut.does} as="li" gap="md" justify="between" className="px-3 py-2 text-sm">
+                            <span>{shortcut.does}</span>
+                            <KbdGroup>
+                                {shortcut.keys.map((key) => (
+                                    <Kbd key={key}>{key}</Kbd>
+                                ))}
+                            </KbdGroup>
+                        </Row>
+                    ))}
+                </ul>
+            </Surface>
         </Stack>
     ),
 }

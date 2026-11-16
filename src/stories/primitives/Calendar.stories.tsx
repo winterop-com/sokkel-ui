@@ -6,6 +6,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Calendar } from '@winterop-com/sokkel-ui/primitives/calendar'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const MONTH = new Date(2026, 10, 1)
 const DAY = new Date(2026, 10, 4)
@@ -89,32 +90,34 @@ function format(date: Date | undefined) {
 function Backfill() {
     const [range, setRange] = useState<DateRange | undefined>({ from: new Date(2026, 9, 26), to: new Date(2026, 10, 1) })
     return (
-        <Stack className="max-w-md rounded-lg border border-border p-4">
-            <Stack gap="2xs">
-                <p className="text-sm font-medium">Backfill nightly-export</p>
-                <p className="text-sm text-muted-foreground">
-                    Start one run per day in the range. Runs that already succeeded are skipped.
-                </p>
+        <Surface pad className="max-w-md">
+            <Stack>
+                <Stack gap="2xs">
+                    <p className="text-sm font-medium">Backfill nightly-export</p>
+                    <p className="text-sm text-muted-foreground">
+                        Start one run per day in the range. Runs that already succeeded are skipped.
+                    </p>
+                </Stack>
+                <Calendar
+                    mode="range"
+                    defaultMonth={new Date(2026, 9, 1)}
+                    numberOfMonths={1}
+                    selected={range}
+                    onSelect={setRange}
+                    today={TODAY}
+                    disabled={{ after: TODAY }}
+                    className="self-center"
+                />
+                <Row justify="between" wrap>
+                    <p className="font-mono text-xs text-muted-foreground">
+                        {format(range?.from)} to {format(range?.to)}
+                    </p>
+                    <Button size="sm" disabled={!range?.from || !range?.to}>
+                        Start backfill
+                    </Button>
+                </Row>
             </Stack>
-            <Calendar
-                mode="range"
-                defaultMonth={new Date(2026, 9, 1)}
-                numberOfMonths={1}
-                selected={range}
-                onSelect={setRange}
-                today={TODAY}
-                disabled={{ after: TODAY }}
-                className="self-center"
-            />
-            <Row justify="between" wrap>
-                <p className="font-mono text-xs text-muted-foreground">
-                    {format(range?.from)} to {format(range?.to)}
-                </p>
-                <Button size="sm" disabled={!range?.from || !range?.to}>
-                    Start backfill
-                </Button>
-            </Row>
-        </Stack>
+        </Surface>
     )
 }
 

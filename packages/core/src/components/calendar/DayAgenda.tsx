@@ -44,7 +44,7 @@ export function DayAgenda<E extends CalendarEvent>({
         <li aria-label={words.now} className="flex items-center gap-2 px-3 py-1">
             <span className="w-12 shrink-0 text-xs font-medium text-critical-ink tabular-nums">{now !== undefined && words.time(now)}</span>
             <span className="relative h-0.5 flex-1 bg-critical">
-                <span className="absolute -top-[3px] -left-1 size-2 rounded-full bg-critical" />
+                <span className="absolute -top-0.75 -left-1 size-2 rounded-full bg-critical" />
             </span>
         </li>
     )

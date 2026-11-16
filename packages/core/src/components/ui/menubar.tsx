@@ -31,7 +31,7 @@ function Menubar({ className, ...props }: MenubarProps) {
         <menuPartsAtOnce.Provider value={MenuPrimitive}>
             <MenubarPrimitive
                 data-slot="menubar"
-                className={cn('flex h-(--density-control) items-center gap-0.5 rounded-control border p-[3px]', className)}
+                className={cn('flex h-(--density-control) items-center gap-0.5 rounded-control border p-0.75', className)}
                 {...props}
             />
         </menuPartsAtOnce.Provider>
@@ -63,7 +63,7 @@ function MenubarTrigger({ className, ...props }: MenubarTriggerProps) {
         <DropdownMenuTrigger
             data-slot="menubar-trigger"
             className={cn(
-                'flex items-center rounded-sm px-1.5 py-[2px] text-sm font-medium outline-hidden select-none hover:bg-hover aria-expanded:bg-hover',
+                'flex items-center rounded-sm px-1.5 py-0.5 text-sm font-medium outline-hidden select-none hover:bg-hover aria-expanded:bg-hover',
                 className,
             )}
             {...props}

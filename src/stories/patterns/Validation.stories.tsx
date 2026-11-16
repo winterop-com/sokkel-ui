@@ -10,6 +10,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
 import { SchemaForm, SchemaIssueCount, useSchemaForm } from '@winterop-com/sokkel-ui/schema/SchemaForm'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /**
  * How every form says what is wrong. A field with an issue gets a colored edge and a mark at the end
@@ -108,14 +109,16 @@ export const NarrowBar: StoryObj = {
     name: 'Narrow bar',
     parameters: { frame: 'padded' },
     render: () => (
-        <Stack gap="none" className="w-72 rounded-lg border border-border bg-card">
-            <FormBar placement="end" className="p-3">
-                <IssueCount critical={2} warning={1} list={[]} />
-                <Button variant="ghost">Cancel</Button>
-                <Button variant="outline">Save draft</Button>
-                <Button>Submit</Button>
-            </FormBar>
-        </Stack>
+        <Surface className="w-72">
+            <Stack gap="none">
+                <FormBar placement="end" className="p-3">
+                    <IssueCount critical={2} warning={1} list={[]} />
+                    <Button variant="ghost">Cancel</Button>
+                    <Button variant="outline">Save draft</Button>
+                    <Button>Submit</Button>
+                </FormBar>
+            </Stack>
+        </Surface>
     ),
 }
 
