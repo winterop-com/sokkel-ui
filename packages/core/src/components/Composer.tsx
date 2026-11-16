@@ -400,7 +400,7 @@ export function Composer({
                                         type="button"
                                         aria-label={`${pending ? words.cancel : words.remove} ${attachment.name}`}
                                         onClick={() => drop(attachment.id)}
-                                        className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-border-strong bg-popover text-muted-foreground opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:text-foreground pointer-coarse:opacity-100"
+                                        className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-border-strong bg-popover text-muted-foreground opacity-0 shadow-surface transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:text-foreground pointer-coarse:opacity-100"
                                     >
                                         <X className="size-3" aria-hidden />
                                     </button>

@@ -365,7 +365,7 @@ function TileFace({
             {onSelectedChange !== undefined && (
                 <span
                     className={cn(
-                        'absolute top-2 left-2 flex rounded-md bg-card/90 p-0.5 shadow-sm transition-opacity',
+                        'absolute top-2 left-2 flex rounded-md bg-card/90 p-0.5 shadow-surface transition-opacity',
                         selected || selecting
                             ? 'opacity-100'
                             : 'opacity-0 group-focus-within/tile:opacity-100 group-hover/tile:opacity-100 pointer-coarse:opacity-100',
@@ -381,7 +381,7 @@ function TileFace({
             )}
             {source.enabled && (
                 <span
-                    className={cn('absolute top-2 right-2 flex rounded-md bg-card/90 shadow-sm', GRIP_ON_HOVER)}
+                    className={cn('absolute top-2 right-2 flex rounded-md bg-card/90 shadow-surface', GRIP_ON_HOVER)}
                     onClick={(event) => event.stopPropagation()}
                 >
                     <DragSourceGrip source={source} size="icon-xs" label={words.drag(entry.name)} />

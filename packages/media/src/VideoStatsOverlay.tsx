@@ -122,7 +122,7 @@ export function VideoStatsOverlay({
             aria-label={words.title}
             data-slot="video-stats-overlay"
             className={cn(
-                'w-64 max-w-full overflow-y-auto rounded-surface bg-terminal/80 py-1.5 pr-1.5 pl-3 text-xs text-terminal-foreground shadow-md backdrop-blur-sm',
+                'w-64 max-w-full overflow-y-auto rounded-surface bg-terminal/80 py-1.5 pr-1.5 pl-3 text-xs text-terminal-foreground shadow-pop backdrop-blur-sm',
                 className,
             )}
         >

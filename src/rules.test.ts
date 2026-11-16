@@ -94,6 +94,12 @@ const RULES: Rule[] = [
         in: ALL,
     },
     {
+        name: 'a Tailwind shadow instead of an elevation token',
+        // shadow-surface, shadow-node, shadow-pop and shadow-dialog read the elevation tokens, which a theme sets.
+        pattern: /(?<![\w-])shadow-(?:2xs|xs|sm|md|lg|xl|2xl)(?![\w-])/,
+        in: ALL,
+    },
+    {
         name: 'an invalid look in the destructive color instead of the issue edge',
         // A refused value wears the critical tints of `lib/issue-edge`, so a bare primitive and a field agree.
         pattern: /invalid[^\s"'`]*:(?:border|ring)-destructive/,

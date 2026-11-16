@@ -550,7 +550,7 @@ function AlbumPage({ album = PLAYING, shelf = ALBUMS, from = 'Music' }: { album?
             />
             <Row gap="2xl" align="start" stackBelowRoom="2xl">
                 <Row gap="lg" align="end" wrap className="shrink-0 @2xl:sticky @2xl:top-0 @2xl:w-44 @4xl:w-60">
-                    <span className="block size-32 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border @2xl:aspect-square @2xl:size-auto @2xl:w-full">
+                    <span className="block size-32 shrink-0 overflow-hidden rounded-surface shadow-surface ring-1 ring-border @2xl:aspect-square @2xl:size-auto @2xl:w-full">
                         <Artwork cover={album.cover} />
                     </span>
                     <Row>

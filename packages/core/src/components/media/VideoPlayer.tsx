@@ -1129,7 +1129,7 @@ export function VideoPlayer({
                     size="icon-lg"
                     aria-label={words.play}
                     onClick={toggle}
-                    className="absolute top-1/2 left-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-surface bg-terminal/70 text-terminal-foreground shadow-md backdrop-blur-sm hover:bg-terminal/85 [&_svg:not([class*='size-'])]:size-6"
+                    className="absolute top-1/2 left-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-surface bg-terminal/70 text-terminal-foreground shadow-pop backdrop-blur-sm hover:bg-terminal/85 [&_svg:not([class*='size-'])]:size-6"
                 >
                     <Play className="translate-x-px fill-current" aria-hidden />
                 </Button>
@@ -1139,7 +1139,7 @@ export function VideoPlayer({
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
                     <div
                         role={trouble.phase === 'failed' ? 'alert' : 'status'}
-                        className="pointer-events-auto flex max-w-full flex-col items-center gap-2 rounded-surface bg-terminal/75 px-4 py-3 text-center text-sm text-terminal-foreground shadow-md backdrop-blur-sm"
+                        className="pointer-events-auto flex max-w-full flex-col items-center gap-2 rounded-surface bg-terminal/75 px-4 py-3 text-center text-sm text-terminal-foreground shadow-pop backdrop-blur-sm"
                     >
                         {trouble.phase === 'retrying' ? (
                             <p className="flex items-center gap-2">

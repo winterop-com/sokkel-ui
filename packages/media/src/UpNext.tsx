@@ -105,7 +105,7 @@ export function UpNext({
             data-slot="up-next"
             className={cn('flex w-full max-w-xl items-center gap-4 text-terminal-foreground', className)}
         >
-            <div className="hidden aspect-video w-2/5 shrink-0 overflow-hidden rounded-surface shadow-md @md:block">
+            <div className="hidden aspect-video w-2/5 shrink-0 overflow-hidden rounded-surface shadow-pop @md:block">
                 {cover ?? <Artwork seed={placeholderSeed ?? title} wide />}
             </div>
             <div className="min-w-0 flex-1">
