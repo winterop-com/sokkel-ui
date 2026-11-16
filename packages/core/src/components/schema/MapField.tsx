@@ -48,8 +48,9 @@ export function objectOf(rows: readonly MapRow[], blank?: unknown): Record<strin
     const out: Record<string, unknown> = {}
     for (const row of rows) {
         const value = row.value ?? blank
-        if (row.key === '' || row.key in out || value === undefined) continue
-        out[row.key] = value
+        if (row.key === '' || Object.hasOwn(out, row.key) || value === undefined) continue
+        // Defined, not assigned: a key such as `__proto__` or `constructor` is a key like any other.
+        Object.defineProperty(out, row.key, { value, enumerable: true, writable: true, configurable: true })
     }
     return out
 }

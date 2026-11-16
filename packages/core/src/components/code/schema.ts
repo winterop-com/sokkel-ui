@@ -106,6 +106,11 @@ function firstError(node: SyntaxNode): SyntaxNode | null {
     return null
 }
 
+/** Sets a key as the object's own, `__proto__` included, which an assignment would take as the prototype. */
+function own(out: Record<string, unknown>, key: string, value: unknown): void {
+    Object.defineProperty(out, key, { value, enumerable: true, writable: true, configurable: true })
+}
+
 /** A JSON tree read into a value. */
 function readJson(state: EditorState, node: SyntaxNode, path: Path, spans: Map<string, Span>, key?: Span['key']): unknown {
     spans.set(pointer(path), { from: node.from, to: node.to, key, path })
@@ -117,7 +122,7 @@ function readJson(state: EditorState, node: SyntaxNode, path: Path, spans: Map<s
                 const value = children(property).find((child) => child.name !== 'PropertyName' && child.name !== ':')
                 if (name === null) continue
                 const label = parseString(text(state, name))
-                out[label] = value === undefined ? null : readJson(state, value, [...path, label], spans, { from: name.from, to: name.to })
+                own(out, label, value === undefined ? null : readJson(state, value, [...path, label], spans, { from: name.from, to: name.to }))
             }
             return out
         }
@@ -231,11 +236,13 @@ function readYaml(
                 const scalar = name.firstChild
                 const label =
                     scalar?.name === 'QuotedLiteral' ? yamlQuoted(text(state, scalar)) : text(state, name).trim().replace(/\s+/g, ' ')
-                out[label] = readYaml(state, value, [...path, label], spans, anchors, { from: name.from, to: name.to })
+                own(out, label, readYaml(state, value, [...path, label], spans, anchors, { from: name.from, to: name.to }))
             }
             if (merged.length === 0) return out
             // The mapping's own keys win, then the merged mappings in the order they are listed.
-            return Object.assign({}, ...[...merged].reverse(), out) as Record<string, unknown>
+            const all: Record<string, unknown> = {}
+            for (const one of [...[...merged].reverse(), out]) for (const [name, held] of Object.entries(one)) own(all, name, held)
+            return all
         }
         case 'BlockSequence':
         case 'FlowSequence':
@@ -516,10 +523,22 @@ function resolveLocal(root: JsonSchema, ref: string): JsonSchema | undefined {
     if (!ref.startsWith('#')) return undefined
     const rest = ref.slice(1)
     if (rest === '') return root
-    if (!rest.startsWith('/')) return anchored(root, decodeURIComponent(rest))
+    // A reference with a broken percent escape names nothing, as ajv reads it.
+    const decode = (part: string) => {
+        try {
+            return decodeURIComponent(part)
+        } catch {
+            return undefined
+        }
+    }
+    if (!rest.startsWith('/')) {
+        const name = decode(rest)
+        return name === undefined ? undefined : anchored(root, name)
+    }
     let node: unknown = root
     for (const raw of rest.slice(1).split('/')) {
-        const part = decodeURIComponent(raw).replaceAll('~1', '/').replaceAll('~0', '~')
+        const part = decode(raw)?.replaceAll('~1', '/').replaceAll('~0', '~')
+        if (part === undefined) return undefined
         if (typeof node !== 'object' || node === null) return undefined
         node = (node as Record<string, unknown>)[part]
     }

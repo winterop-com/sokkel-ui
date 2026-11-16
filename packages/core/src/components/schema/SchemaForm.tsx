@@ -541,7 +541,8 @@ export function useSchemaForm(
         const keys = parsePointer(at)
         for (const key of keys) {
             const here: JsonSchema = resolve(node ?? {}, schema)
-            node = typeof key === 'number' ? (childSchema(here, schema) ?? undefined) : here.properties?.[key]
+            // A key of digits is an index only in a list; in an object it is a key, such as a port.
+            node = typeof key === 'number' && here.items !== undefined ? (childSchema(here, schema) ?? undefined) : here.properties?.[key]
         }
         const found = node === undefined ? undefined : resolve(node, schema).title
         return found ?? String(keys[keys.length - 1] ?? '')
@@ -641,7 +642,7 @@ function schemaAt(schema: JsonSchema, path: Path, root: JsonSchema = schema): Js
     let at = fieldSchema(schema, root)
     for (const part of path) {
         const next =
-            typeof part === 'number'
+            typeof part === 'number' && at.items !== undefined
                 ? at.items
                 : (at.properties?.[part] ?? (typeof at.additionalProperties === 'object' ? at.additionalProperties : undefined))
         if (next === undefined) return {}

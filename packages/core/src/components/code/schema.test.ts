@@ -119,6 +119,18 @@ describe('schema diagnostics', () => {
         )
     })
 
+    it('sees a key the object prototype also has, in JSON and in YAML', () => {
+        const strict: JsonSchema = { type: 'object', additionalProperties: false, properties: { code: { type: 'string' } } }
+        const keys = (state: EditorState, language: 'json' | 'yaml') =>
+            schemaDiagnostics(state, language, strict, validate).map((each) => state.doc.sliceString(each.from, each.to))
+        expect(keys(jsonState('{"code": "a", "__proto__": {"code": 1}}'), 'json')).toEqual(['"__proto__"'])
+        expect(keys(jsonState('{"code": "a", "constructor": 2}'), 'json')).toEqual(['"constructor"'])
+        expect(keys(yamlState('code: a\n__proto__:\n  code: 1\n'), 'yaml')).toEqual(['__proto__'])
+        const merged = readDocument(yamlState('base: &base\n  __proto__: 1\nuse:\n  <<: *base\n'), 'yaml')?.value as Record<string, Record<string, unknown>>
+        expect(Object.hasOwn(merged.use, '__proto__')).toBe(true)
+        expect(Object.getPrototypeOf(merged.use)).toBe(Object.prototype)
+    })
+
     it('marks a missing property at its object and a broken document where it breaks', () => {
         const doc = '{\n  "code": "nightly-export"\n}'
         const [missing] = schemaDiagnostics(jsonState(doc), 'json', SCHEMA, validate)
@@ -356,6 +368,12 @@ describe('a schema that refers to itself', () => {
             not: { $ref: '#/properties/items' },
         },
     }
+
+    it('finds nothing at a reference with a broken percent escape, rather than throwing', () => {
+        const broken: JsonSchema = { type: 'object', properties: { code: { $ref: '#/$defs/%zz' }, owner: { $ref: '#%E0' } }, $defs: {} }
+        expect(schemasAt(broken, ['code'])).toEqual([{ $ref: '#/$defs/%zz' }])
+        expect(schemasAt(broken, ['owner'])).toEqual([{ $ref: '#%E0' }])
+    })
 
     it('walks into a part that points at the root, by a pointer, an anchor or a dynamic reference', () => {
         expect(schemasAt(META, ['properties', 'id', 'type'])[0].enum).toContain('integer')

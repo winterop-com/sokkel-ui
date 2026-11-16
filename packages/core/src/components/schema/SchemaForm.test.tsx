@@ -183,6 +183,18 @@ describe('a map of scalars', () => {
         expect(rowsOf(undefined)).toEqual([])
     })
 
+    it('keeps a key the object prototype also has as a key of its own', () => {
+        const rows = [
+            { id: 1, key: 'constructor', value: 'grace' },
+            { id: 2, key: '__proto__', value: 'linus' },
+            { id: 3, key: 'toString', value: 'ada' },
+        ]
+        const value = objectOf(rows)
+        expect(Object.keys(value)).toEqual(['constructor', '__proto__', 'toString'])
+        expect(Object.getPrototypeOf(value)).toBe(Object.prototype)
+        expect(JSON.parse(JSON.stringify(value))).toEqual(JSON.parse('{"constructor": "grace", "__proto__": "linus", "toString": "ada"}'))
+    })
+
     it('stops the submit while a field holds its own refusal, such as a key given twice', () => {
         let critical = -1
         function Held() {
