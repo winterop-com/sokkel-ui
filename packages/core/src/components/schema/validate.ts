@@ -33,6 +33,8 @@ function checker(formats: SchemaFormats): Ajv2020 {
         allErrors: true,
         strict: false,
         validateFormats: true,
+        // A decimal multipleOf (0.01, 0.1) counts a value as a multiple within this many decimal places, as floating point needs.
+        multipleOfPrecision: 9,
         logger: { log: () => {}, warn: () => {}, error: (...args: unknown[]) => console.error(...args) },
     })
     addFormats(made)

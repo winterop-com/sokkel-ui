@@ -95,6 +95,17 @@ describe('a schema that cannot be compiled', () => {
     })
 })
 
+describe('a decimal multipleOf', () => {
+    it('passes a multiple that floating point cannot divide exactly, and still refuses one that is not', () => {
+        const step = (multipleOf: number) => (value: number) => validate({ type: 'number', multipleOf }, value)
+        expect(step(0.01)(19.99)).toEqual([])
+        expect(step(0.1)(0.3)).toEqual([])
+        expect(step(0.05)(1.15)).toEqual([])
+        expect(step(0.1)(0.35)).toMatchObject([{ kind: 'other', keyword: 'multipleOf' }])
+        expect(step(0.01)(1.005)).toMatchObject([{ kind: 'other', keyword: 'multipleOf' }])
+    })
+})
+
 describe('fieldSchema', () => {
     it('reads a nullable anyOf as its one real type', () => {
         expect(fieldSchema({ title: 'Note', anyOf: [{ type: 'string' }, { type: 'null' }] }, {})).toEqual({ type: 'string', title: 'Note' })
