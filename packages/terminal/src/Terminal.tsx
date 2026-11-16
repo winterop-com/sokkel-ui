@@ -66,6 +66,15 @@ export function Terminal({
     const exited = words.exited
     const text = useMemo(() => sessionText(entries, prompt, exited), [entries, prompt, exited])
 
+    // The view disposes its engine when its effects are cleaned up and makes an empty one when they
+    // run again, so nothing counts as written until the text is written to the new one.
+    useEffect(
+        () => () => {
+            written.current = ''
+        },
+        [],
+    )
+
     useEffect(() => {
         const handle = view.current
         if (handle === null) return
