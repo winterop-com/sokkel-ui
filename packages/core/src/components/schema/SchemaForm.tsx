@@ -772,6 +772,17 @@ function Control({
     const id = form.id(path)
     const invalid = worst(form.shown(path)) === 'critical' || undefined
     const renderer = useContext(FieldRendererContext)
+    // Text in a number field that does not read as a number, marked at the field's place while it is drawn there.
+    const [unreadable, setUnreadable] = useState(false)
+    const where = pointer(path)
+    const markUnread = useRef(form.setUnread)
+    markUnread.current = form.setUnread
+    useEffect(() => {
+        if (!unreadable) return
+        const place = parsePointer(where)
+        markUnread.current(place, true)
+        return () => markUnread.current(place, false)
+    }, [where, unreadable])
     const custom = (ask ? renderer : undefined)?.({
         path,
         schema: at,
@@ -849,7 +860,7 @@ function Control({
         case 'number': {
             // The field reads, writes and steps within the bounds; a value past them is said by the schema's checks, with their fix.
             const said = (expected: string) => form.words.say({ kind: 'type', expected, path, tone: 'critical' }, at).text
-            const unreadable = [said('number'), said('integer')]
+            const unreadableText = [said('number'), said('integer')]
             return (
                 <Marked form={form} path={path}>
                     <NumberField
@@ -860,7 +871,7 @@ function Control({
                         issues={form.shown(path)}
                         value={typeof value === 'number' ? value : null}
                         onValueChange={(next) => set(next ?? undefined)}
-                        onIssueChange={(issue) => form.setUnread(path, issue !== null && unreadable.includes(issue.text))}
+                        onIssueChange={(issue) => setUnreadable(issue !== null && unreadableText.includes(issue.text))}
                         integer={types(at).main[0] === 'integer'}
                         min={at.minimum}
                         max={at.maximum}
@@ -869,7 +880,7 @@ function Control({
                         placeholder={placeholder}
                         onBlur={() => form.touch(path)}
                         className={edge(form, path)}
-                        words={{ unreadable: unreadable[0], whole: unreadable[1] }}
+                        words={{ unreadable: unreadableText[0], whole: unreadableText[1] }}
                     />
                 </Marked>
             )
