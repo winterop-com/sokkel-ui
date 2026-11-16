@@ -42,7 +42,7 @@ function useMemoryHistory(first: string) {
     return {
         route: partsOf(paths[paths.length - 1] ?? '/'),
         go: (path: string) => setPaths((now) => [...now, path]),
-        back: () => setPaths((now) => (now.length > 1 ? now.slice(0, -1) : now)),
+        back: (steps: number) => setPaths((now) => now.slice(0, Math.max(1, now.length - steps))),
         replace: (route: readonly string[]) => setPaths((now) => [...now.slice(0, -1), `/${route.join('/')}`]),
     }
 }
