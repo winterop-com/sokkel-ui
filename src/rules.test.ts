@@ -299,6 +299,23 @@ describe('the exports maps', () => {
     })
 })
 
+describe('the workflows', () => {
+    it('install the one Bun version .bun-version names', () => {
+        const scripts = [
+            ...readdirSync(join(ROOT, '.github/workflows')).map((name) => join(ROOT, '.github/workflows', name)),
+            ...readdirSync(join(ROOT, 'scripts')).map((name) => join(ROOT, 'scripts', name)),
+        ].filter((path) => /\.(ya?ml|sh)$/.test(path))
+        const unpinned = scripts.flatMap((path) =>
+            text(path)
+                .split('\n')
+                .filter((line) => /install -g (["']?)bun\b/.test(line) && !/bun@(\$\(cat \.bun-version\)|\$\{bun\})/.test(line))
+                .map((line) => `${relative(ROOT, path)}: ${line.trim()}`),
+        )
+        expect(text(join(ROOT, '.bun-version')).trim()).toMatch(/^\d+\.\d+\.\d+$/)
+        expect(unpinned, unpinned.join('\n')).toEqual([])
+    })
+})
+
 describe('the components', () => {
     it('export the type of their props as `<Component>Props`, beside them', () => {
         const missing: string[] = []
