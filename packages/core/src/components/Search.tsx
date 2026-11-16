@@ -3,6 +3,7 @@ import { useContext, useEffect, useId, useRef, useState, type ReactNode } from '
 
 import { useSearch } from '../hooks/use-search'
 import { cn } from '../lib/cn'
+import { composing } from '../lib/keys'
 import { queryRanges, searchEntries, searchKey, searchWait, type SearchGroup, type SearchResult, type SearchSource } from '../lib/search'
 import { GroupLabel } from './GroupLabel'
 import { Highlight } from './Highlight'
@@ -375,7 +376,7 @@ export function Search({
                             setOpen(false)
                         },
                         onKeyDown: (event) => {
-                            if (event.nativeEvent.isComposing) return
+                            if (composing(event)) return
                             const action = searchKey(event.key, highlighted, count, shown)
                             if (action === null) {
                                 if (!shown && event.key === 'ArrowDown') setOpen(true)

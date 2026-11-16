@@ -1,5 +1,5 @@
 import { CircleAlert, ListChecks, Wrench } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { Code } from './Code'
 import { Spinner } from './ui/spinner'
@@ -161,12 +161,19 @@ export interface ToolCallsProps {
  */
 export function ToolCalls({ calls, summary, defaultOpen, words: given }: ToolCallsProps) {
     const words = { ...WORDS, ...given }
-    if (summary === undefined) return <Calls calls={calls} words={words} openFailed={false} />
     const running = calls.some((call) => call.status === 'running' || call.status === 'pending')
     const failed = calls.some((call) => call.status === 'error')
+    const [open, setOpen] = useState(defaultOpen ?? failed)
+    // A call that fails after the calls were first drawn opens them, as one failed at first does.
+    const [wasFailed, setWasFailed] = useState(failed)
+    if (failed !== wasFailed) {
+        setWasFailed(failed)
+        if (failed && defaultOpen === undefined) setOpen(true)
+    }
+    if (summary === undefined) return <Calls calls={calls} words={words} openFailed={false} />
     return (
         <Trace>
-            <TraceCollapsible defaultOpen={defaultOpen ?? failed}>
+            <TraceCollapsible open={open} onOpenChange={setOpen}>
                 <TraceCollapsibleTrigger>
                     <TraceLine status={failed ? 'error' : running ? 'running' : undefined}>
                         <TraceIcon>{failed ? <CircleAlert /> : running ? <Spinner /> : <ListChecks />}</TraceIcon>

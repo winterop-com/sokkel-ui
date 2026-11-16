@@ -5,6 +5,7 @@
  */
 
 import type { IssueWords } from '../components/IssueMark'
+import { composing, type ComposingPress } from './keys'
 
 /** Which control edits a value: a line of text, several lines, a number, a date, a time of day, or one of a list. */
 export type EditorKind = 'text' | 'multiline' | 'number' | 'date' | 'time' | 'select'
@@ -99,15 +100,13 @@ export function failureOf(error: unknown, words: Pick<EditWords, 'failed'> = EDI
 /** What a key does in an open editor: save it, drop it, or save it and move to another cell. */
 export type EditMove = 'save' | 'cancel' | 'next' | 'previous' | 'down' | 'up'
 
-/** A key press as an editor reads it. */
-export interface EditKeyPress {
+/** A key press as an editor reads it, with the fields `composing` reads to keep Enter for an input method. */
+export interface EditKeyPress extends ComposingPress {
     key: string
     shiftKey?: boolean
     metaKey?: boolean
     ctrlKey?: boolean
     altKey?: boolean
-    /** An input method is composing a character, so Enter picks it rather than saving. */
-    isComposing?: boolean
 }
 
 /**
@@ -117,7 +116,7 @@ export interface EditKeyPress {
  * Enter for its list. In a cell, Tab saves and moves to the next editable cell (back with Shift).
  */
 export function editKey(press: EditKeyPress, kind: EditorKind, cell: boolean): EditMove | undefined {
-    if (press.isComposing === true) return undefined
+    if (composing(press)) return undefined
     if (press.key === 'Escape') return 'cancel'
     if (press.key === 'Tab' && cell) return press.shiftKey === true ? 'previous' : 'next'
     if (press.key !== 'Enter' || kind === 'select') return undefined
@@ -139,7 +138,7 @@ export function typesInto(press: EditKeyPress): boolean {
         press.metaKey !== true &&
         press.ctrlKey !== true &&
         press.altKey !== true &&
-        press.isComposing !== true
+        !composing(press)
     )
 }
 

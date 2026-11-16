@@ -134,3 +134,20 @@ export function typing(target: EventTarget | null): boolean {
     const element = target as KeyTarget | null
     return element !== null && typeof element === 'object' && textEntry(element)
 }
+
+/** The little of a key event `composing` reads: a DOM event's own fields, or React's with its `nativeEvent`. */
+export interface ComposingPress {
+    isComposing?: boolean
+    keyCode?: number
+    nativeEvent?: { isComposing?: boolean; keyCode?: number }
+}
+
+/**
+ * Whether a key press belongs to an input method still composing a character, so Enter picks the
+ * character rather than sending or saving. Safari fires the Enter that commits a composition after
+ * `compositionend`, with `isComposing` false but `keyCode` 229, so both are read.
+ */
+export function composing(event: ComposingPress): boolean {
+    const native = event.nativeEvent
+    return event.isComposing === true || event.keyCode === 229 || native?.isComposing === true || native?.keyCode === 229
+}

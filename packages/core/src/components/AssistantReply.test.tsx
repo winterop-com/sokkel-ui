@@ -25,6 +25,18 @@ describe('AssistantReply math', () => {
     })
 })
 
+describe('AssistantReply tool calls', () => {
+    it('says the headings of an opened call through its words', () => {
+        const calls = [{ id: '1', name: 'read_run', args: { job: 'nightly-export' }, result: 'timed out', status: 'error' as const }]
+        const html = renderToStaticMarkup(
+            <AssistantReply content="It failed." calls={calls} words={{ calls: { args: 'Argumenter', result: 'Svar' } }} />,
+        )
+        expect(html).toContain('Argumenter')
+        expect(html).toContain('Svar')
+        expect(html).not.toContain('Arguments')
+    })
+})
+
 describe('AssistantReply waiting', () => {
     it('says Thinking when streaming with children React draws as nothing', () => {
         for (const children of [undefined, false, null, '', [false, null]]) {

@@ -9,7 +9,7 @@ function history(...entries: (readonly string[])[]) {
     return {
         now: () => stack[stack.length - 1] ?? [],
         push: (route: readonly string[]) => stack.push(route),
-        back: () => void stack.pop(),
+        back: (steps = 1) => void stack.splice(Math.max(0, stack.length - steps)),
         replace: (route: readonly string[]) => {
             stack[stack.length - 1] = route
         },
@@ -41,6 +41,24 @@ describe('overlayTracker', () => {
         tracker.step(['runs'])
         expect(tracker.step(['settings'])).toEqual({ route: ['runs'], open: true })
         expect(tracker.step(['settings', 'theme'])).toEqual({ route: ['runs'], open: true })
+    })
+
+    it('goes back past the entries a move inside the overlay pushed', () => {
+        const pages = history(['runs'])
+        const tracker = overlayTracker('settings', pages.now())
+        tracker.step(pages.now())
+        pages.push(['settings'])
+        tracker.step(pages.now())
+        pages.push(['settings', 'theme'])
+        tracker.step(pages.now())
+        pages.push(['settings', 'keys'])
+        tracker.step(pages.now())
+        // Back inside the overlay leaves one entry fewer to go back past.
+        pages.back()
+        tracker.step(pages.now())
+        tracker.close(pages.back, pages.replace)
+        expect(pages.now()).toEqual(['runs'])
+        expect(tracker.step(pages.now())).toEqual({ route: ['runs'], open: false })
     })
 
     it('draws the fallback under an overlay the app opened on, and puts that page in its place to close', () => {
@@ -103,7 +121,7 @@ describe('useOverlayRoute', () => {
 
     it('puts the hash in its place to close when no router is given', () => {
         const replace = vi.fn()
-        vi.stubGlobal('window', { location: { replace }, history: { back: vi.fn() } })
+        vi.stubGlobal('window', { location: { replace }, history: { go: vi.fn() } })
         renderToStaticMarkup(<Probe route={['settings']} fallback={['jobs', 'nightly-export']} />)
         expect(replace).toHaveBeenCalledWith('#/jobs/nightly-export')
     })

@@ -74,6 +74,16 @@ export function AudioPlayer({
     const [scrub, setScrub] = useState<number | null>(null)
     useOneSound(element, playing, exclusive)
 
+    // New media starts stopped at its beginning: a changed `src` pauses the element without a `pause` event.
+    const [shownSrc, setShownSrc] = useState(src)
+    if (shownSrc !== src) {
+        setShownSrc(src)
+        setPlaying(false)
+        setAt(0)
+        setLoaded(0)
+        setScrub(null)
+    }
+
     const attach = useCallback(
         (node: HTMLAudioElement | null) => {
             element.current = node
@@ -111,6 +121,7 @@ export function AudioPlayer({
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
                 onEnded={() => setPlaying(false)}
+                onEmptied={() => setPlaying(false)}
                 onTimeUpdate={(event) => setAt(event.currentTarget.currentTime)}
                 onLoadedMetadata={(event) => setLoaded(known(event.currentTarget.duration))}
                 onDurationChange={(event) => setLoaded(known(event.currentTarget.duration))}
