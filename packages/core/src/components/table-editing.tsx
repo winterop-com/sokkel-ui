@@ -46,6 +46,8 @@ export interface EditingHeld {
     attempts: number
     /** The table takes the focus back once the open editor has gone. */
     refocus: boolean
+    /** The active cell last scrolled into view, and whether its editor was open, so it is scrolled to once. */
+    revealed: string | undefined
 }
 
 /** What a table hands its editing: its columns and rows as drawn, the active cell, and the cells' edits. */
@@ -61,6 +63,8 @@ export interface TableEditingContext<T> {
     open: OpenCell | undefined
     setOpen: (cell: OpenCell | undefined) => void
     held: RefObject<EditingHeld>
+    /** Whether a row is drawn now, inside the scroller's drawn window. */
+    drawn: (key: string) => boolean
     /** Moves the active row to an index of `flat` and scrolls it into view. */
     moveTo: (index: number) => void
     /** The table shows cards, stacked or in a grid, rather than rows. */
@@ -116,7 +120,11 @@ export interface TableEditing {
     value<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>): ReactNode
     /** Whether a cell's editor is open. */
     isOpen<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>): boolean
-    /** After the table has drawn: the focus back to the grid from a closed editor, and the active cell in view in the rows' scroller. */
+    /**
+     * After the table has drawn: an open editor whose row has left the drawn window saved and closed, the
+     * focus back to the grid from a closed editor, and the active cell in view in the rows' scroller once it
+     * becomes the active one or its editor opens or closes.
+     */
     settle<T>(table: TableEditingContext<T>, grid: HTMLElement | null, box: HTMLElement | null): void
 }
 
@@ -495,6 +503,13 @@ export const tableEditing: TableEditing = {
 
     settle(table, grid, box) {
         if (grid === null || box === null) return
+        // An editor whose row has scrolled out of the drawn window is gone from the page: what was typed is saved,
+        // and the table takes the focus the editor had.
+        if (table.open !== undefined && !table.drawn(table.open.row)) {
+            saveEdit(table, true)
+            closeEdit(table, true)
+            return
+        }
         // Closed by a key or a choice, the table takes the focus back once the editor, and a select's list, have
         // gone, unless the focus has moved on elsewhere meanwhile.
         if (table.open === undefined && table.held.current.refocus) {
@@ -502,12 +517,17 @@ export const tableEditing: TableEditing = {
             const now = document.activeElement
             if (now === null || now === document.body || grid.contains(now)) grid.focus({ preventScroll: true })
         }
-        // The active cell scrolled into view sideways, clear of the pinned first column.
+        // The active cell scrolled into view sideways, clear of the pinned first column, once as it becomes the
+        // active one or its editor opens or closes, so the reader can still scroll away from it.
         if (table.active === undefined || table.activeColumn === undefined) return
+        const at = `${cellId(table.active, table.activeColumn)}\u0000${table.open === undefined ? '' : 'open'}`
+        if (table.held.current.revealed === at) return
         const cell = box.querySelector<HTMLElement>(
             `[data-row="${CSS.escape(table.active)}"] [data-column="${CSS.escape(table.activeColumn)}"]`,
         )
-        if (cell === null || cell.dataset.pinned !== undefined) return
+        if (cell === null) return
+        table.held.current.revealed = at
+        if (cell.dataset.pinned !== undefined) return
         const pinnedRight = cell.parentElement?.querySelector<HTMLElement>('[data-pinned]')?.getBoundingClientRect().right
         const frame = box.getBoundingClientRect()
         const rect = cell.getBoundingClientRect()
