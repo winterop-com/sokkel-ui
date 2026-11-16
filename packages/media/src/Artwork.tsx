@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ARTWORK_HUES, coverFor, type ArtworkCover, type ArtworkMotif } from './cover-seed'
@@ -36,6 +36,12 @@ export function Artwork({ src, alt, cover, seed = '', wide = false, className }:
     const drawn = cover ?? coverFor(seed)
     const width = wide ? 160 : 100
     const shown = src !== undefined && loaded === src
+    const picture = useRef<HTMLImageElement>(null)
+    // A picture that loaded before the page was hydrated fired its load with no one listening.
+    useEffect(() => {
+        const element = picture.current
+        if (src !== undefined && element !== null && element.complete && element.naturalWidth > 0) setLoaded(src)
+    }, [src])
     return (
         <span
             data-slot="artwork"
@@ -62,6 +68,7 @@ export function Artwork({ src, alt, cover, seed = '', wide = false, className }:
             )}
             {src !== undefined && (
                 <img
+                    ref={picture}
                     src={src}
                     alt={alt ?? ''}
                     loading="lazy"

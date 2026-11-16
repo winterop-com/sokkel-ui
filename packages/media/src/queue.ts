@@ -72,7 +72,7 @@ function inOrder(count: number): number[] {
  */
 export function shuffledOrder(count: number, first: number, random: () => number = Math.random): number[] {
     if (count <= 0) return []
-    const lead = Math.min(Math.max(0, Math.floor(first)), count - 1)
+    const lead = Number.isFinite(first) ? Math.min(Math.max(0, Math.floor(first)), count - 1) : 0
     const rest = inOrder(count).filter((index) => index !== lead)
     for (let index = rest.length - 1; index > 0; index -= 1) {
         const other = Math.floor(random() * (index + 1))
@@ -106,7 +106,10 @@ export function createQueue<T>(items: readonly T[], options: QueueOptions = {}):
     if (count === 0) return { items, order: [], at: -1, shuffle: options.shuffle ?? false, repeat }
     const given = options.order !== undefined && isOrder(options.order, count) ? [...options.order] : undefined
     const shuffle = options.shuffle ?? (given !== undefined && !isInOrder(given))
-    const start = options.start === undefined ? undefined : Math.min(Math.max(0, Math.floor(options.start)), count - 1)
+    const start =
+        options.start === undefined || !Number.isFinite(options.start)
+            ? undefined
+            : Math.min(Math.max(0, Math.floor(options.start)), count - 1)
     if (shuffle) {
         const order = given ?? shuffledOrder(count, start ?? 0, randomOf(options.seed))
         return { items, order, at: start === undefined ? 0 : order.indexOf(start), shuffle, repeat }

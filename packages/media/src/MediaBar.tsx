@@ -4,7 +4,7 @@ import { usePanelSize } from '@winterop-com/sokkel-ui/hooks/use-panel-size'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ResizeHandle } from '@winterop-com/sokkel-ui/ResizeHandle'
 import { grows, LINE, WIDE, type MediaBarLayout } from './bar-growth'
-import { chapterIndex, chapterSpan, nextChapterStart, previousChapterStart, waveformSpan } from './chapters'
+import { chapterIndex, chapterSpan, nextChapterStart, previousChapterStart, seekPoint, waveformSpan } from './chapters'
 import { LineBar, PanelBar, RowsBar, StageBar, type BarProps } from './MediaBarLayouts'
 import {
     kindOf,
@@ -373,7 +373,10 @@ export function MediaBar({
     const count = byChapter ? marked.length : trackCount
     const placeOf = stepping === 'chapter' ? words.chapterOf : words.trackOf
     const interval = skip ?? (onSkip === undefined ? undefined : MEDIA_SKIP)
-    const seekWithin = (seconds: number) => onSeek(Math.min(duration, Math.max(0, seconds)))
+    const seekWithin = (seconds: number) => {
+        const to = seekPoint(seconds, duration)
+        if (to !== undefined) onSeek(to)
+    }
     const nextStart = byChapter ? nextChapterStart(marked, position) : undefined
     const read = getPosition ?? (media === undefined || media === null ? undefined : () => media.currentTime)
 

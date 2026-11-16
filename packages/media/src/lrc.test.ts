@@ -39,6 +39,14 @@ describe('reading LRC', () => {
         expect(times).toEqual([62, 62.5, 62.5, 62.5])
     })
 
+    it('reads a stamp with hours, and a fraction past three digits', () => {
+        const parsed = parseLyrics('[01:02:03.50]an hour in\n[00:04.1234]early <00:04.5678>on')
+        expect(parsed.lines).toEqual([
+            { text: 'early on', time: 4.1234 },
+            { text: 'an hour in', time: 3723.5 },
+        ])
+    })
+
     it('moves every line earlier by a positive offset, and later by a negative one', () => {
         expect(parseLyrics('[offset:+500]\n[00:10.00]a').lines[0].time).toBe(9.5)
         expect(parseLyrics('[offset:-250]\n[00:10.00]a').lines[0].time).toBe(10.25)

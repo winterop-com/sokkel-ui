@@ -153,6 +153,35 @@ export function SleepTimerMenu({
     )
 }
 
+/** The fastest a listener plays, and the seconds a report may lag, for telling playing on from a seek. */
+const FASTEST = 4
+const LAG = 1
+
+/**
+ * Whether a position report `seconds` after the last plays on from `from` to `to`, as playback does,
+ * rather than seeking: forward, and no further than playing at any speed could go in that time. A
+ * player that reports seldom still plays on; Next chapter, a jump, does not.
+ */
+export function playedOn(from: number, to: number, seconds: number): boolean {
+    const step = to - from
+    return step >= 0 && step <= Math.max(0, seconds) * FASTEST + LAG
+}
+
+/**
+ * A timer to the end of the chapter, after a position report: whether the chapter it waited on has
+ * ended, played on from it into a later one, and else the chapter it waits on now.
+ */
+export function chapterTimerStep(
+    chapters: readonly number[],
+    anchor: number,
+    report: { from: number | undefined; to: number; seconds: number; playing: boolean },
+): { ended: boolean; anchor: number } {
+    const index = chapterIndex(chapters, report.to)
+    if (index === anchor) return { ended: false, anchor }
+    const ended = report.playing && index > anchor && report.from !== undefined && playedOn(report.from, report.to, report.seconds)
+    return { ended, anchor: index }
+}
+
 export interface SleepTimerOptions {
     playing: boolean
     /** Seconds from the start of what plays. */
@@ -176,8 +205,8 @@ export interface SleepTimerControls {
 }
 
 /**
- * Keeps a sleep timer for `SleepTimerMenu`. Minutes count down only while playing, so a pause holds
- * them; a timer to the end of the chapter runs out as playback passes from the chapter it was set in
+ * Keeps a sleep timer for `SleepTimerMenu`. Minutes count down by the clock only while playing, so a
+ * pause holds them and a throttled page does not stretch them; a timer to the end of the chapter runs out as playback passes from the chapter it was set in
  * into the next, and follows a seek into another chapter, timing that one instead; a timer to the
  * end runs out through `ended`. Running out calls `onSleep` and turns the timer off.
  */
@@ -191,6 +220,8 @@ export function useSleepTimer({ playing, position, chapters, onSleep }: SleepTim
     const anchor = useRef(-1)
     const where = useRef({ position, chapters })
     where.current = { position, chapters }
+    // The last position reported, and when, to tell playing on from a seek.
+    const last = useRef<{ position: number; at: number } | undefined>(undefined)
 
     const set = useCallback((next: SleepTimer) => {
         const { position: at, chapters: starts } = where.current
@@ -209,25 +240,34 @@ export function useSleepTimer({ playing, position, chapters, onSleep }: SleepTim
 
     useEffect(() => {
         if (typeof timer !== 'number' || !playing) return
+        let since = performance.now()
         const tick = window.setInterval(() => {
-            const next = (left.current ?? 0) - 1
+            const now = performance.now()
+            const next = (left.current ?? 0) - (now - since) / 1000
+            since = now
             if (next <= 0) {
                 runOut()
                 return
             }
             left.current = next
-            setRemaining(next)
+            setRemaining(Math.ceil(next))
         }, 1000)
         return () => window.clearInterval(tick)
     }, [timer, playing, runOut])
 
     useEffect(() => {
+        const now = performance.now()
+        const before = last.current
+        last.current = { position, at: now }
         if (timer !== 'chapter' || chapters === undefined) return
-        const index = chapterIndex(chapters, position)
-        if (index === anchor.current) return
-        // Played on from the chapter it waited on into the next: the chapter has ended.
-        if (playing && index === anchor.current + 1 && position - chapters[index] < 2) runOut()
-        else anchor.current = index
+        const step = chapterTimerStep(chapters, anchor.current, {
+            from: before?.position,
+            to: position,
+            seconds: before === undefined ? 0 : (now - before.at) / 1000,
+            playing,
+        })
+        anchor.current = step.anchor
+        if (step.ended) runOut()
     }, [timer, chapters, position, playing, runOut])
 
     const ended = useCallback(() => {
