@@ -61,7 +61,7 @@ EXAMPLES := $(sort $(patsubst examples/%/Makefile,%,$(wildcard examples/*/Makefi
 EXAMPLE_TARGETS := web dev electron tauri tauri-build
 
 examples: build ## Build every example's web app and check its desktop shells, as CI does
-	@for name in $(EXAMPLES); do $(MAKE) -C examples/$$name check || exit 1; done
+	@for name in $(EXAMPLES); do $(MAKE) -C examples/$$name check PACKAGES_BUILT=1 || exit 1; done
 
 # Each example installs a copy of the packages, taken when it was installed, so each takes a fresh copy first.
 examples-web: build ## Build every example's web app against the packages as they are now, as CI does
@@ -78,7 +78,7 @@ examples-list: ## List the examples and what make runs for each, e.g. make tasks
 
 # make <example>-<target>, e.g. make tasks-web or make runs-tauri-build, after building the packages.
 $(foreach target,$(EXAMPLE_TARGETS),$(addsuffix -$(target),$(EXAMPLES))): build
-	$(MAKE) -C examples/$(firstword $(subst -, ,$@)) $(patsubst $(firstword $(subst -, ,$@))-%,%,$@)
+	$(MAKE) -C examples/$(firstword $(subst -, ,$@)) PACKAGES_BUILT=1 $(patsubst $(firstword $(subst -, ,$@))-%,%,$@)
 
 clean: ## Remove what the builds made
 	rm -rf packages/*/dist storybook-static examples-static test-results

@@ -113,7 +113,8 @@ make examples           # build every web app and check every shell, as CI does
 ```
 
 Inside an example's folder, the same targets run without the prefix: `make tauri`, `make web`.
-Each runs `bun install` in its folder first. The Tauri shells share one Cargo target folder,
+Each builds the packages and takes a fresh copy of them first, then runs `bun install` in its
+folder. The Tauri shells share one Cargo target folder,
 `examples/.cargo-target/`, so Rust builds its crates once for all of them. Tauri needs Rust and, on
 Linux, the system libraries it lists (webkit2gtk 4.1 and others; see the workflow). Electron's
 binary is fetched in its `postinstall`.
