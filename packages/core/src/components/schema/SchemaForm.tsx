@@ -143,7 +143,8 @@ const WORDS: SchemaFormWords = {
 /**
  * A form's value with every nested object in place, and the schema defaults a field cannot show
  * itself: an object's or a list's, and a required field's. An optional field with a plain default
- * is left unset and shows the default as what applies.
+ * is left unset and shows the default as what applies. A required boolean without a default, and
+ * a list's boolean item, starts as false, as its switch reads.
  */
 export function initialValue(schema: JsonSchema, root: JsonSchema = schema, keep = true): unknown {
     const at = fieldSchema(schema, root)
@@ -157,7 +158,10 @@ export function initialValue(schema: JsonSchema, root: JsonSchema = schema, keep
         }
         return out
     }
-    if (types(at).main[0] === 'array') return []
+    const main = types(at).main
+    if (main[0] === 'array') return []
+    // A required switch reads off, so it starts as false rather than unset.
+    if (keep && main.length === 1 && main[0] === 'boolean' && at.enum === undefined) return false
     return undefined
 }
 

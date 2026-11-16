@@ -418,6 +418,28 @@ describe('lists and maps of booleans', () => {
     })
 })
 
+describe('a required boolean without a default', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        required: ['paused'],
+        properties: { paused: { type: 'boolean', title: 'Paused' }, notify: { type: 'boolean', title: 'Notify' } },
+    }
+
+    it('starts as false, as its switch reads, and asks for nothing more', async () => {
+        await loadSchemaChecks()
+        expect(initialValue(schema)).toEqual({ paused: false })
+        expect(initialValue({ type: 'boolean' })).toBe(false)
+        let state: SchemaFormState | undefined
+        function Switches() {
+            state = useSchemaForm(schema, { defaultSubmitted: true })
+            return <SchemaForm form={state} marks={false} />
+        }
+        renderToStaticMarkup(<Switches />)
+        expect(state?.blocking).toBe(false)
+        expect(state?.count.critical).toBe(0)
+    })
+})
+
 describe("the server's issues", () => {
     const schema: JsonSchema = { type: 'object', properties: { code: { type: 'string', title: 'Code' } } }
 
