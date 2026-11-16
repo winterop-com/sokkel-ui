@@ -74,7 +74,7 @@ function Group({ node }: { node: CheckNode }) {
                 />
             </button>
             {open && (
-                <ul className="ml-[17px] border-l border-border">
+                <ul className="ml-4.25 border-l border-border">
                     {node.children.map((child) => (
                         <li key={child.name} className="flex items-start gap-2.5 px-3 py-1.5">
                             <Line check={child} status={child.status} />
