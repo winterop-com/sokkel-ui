@@ -25,6 +25,7 @@ import { Button } from '../ui/button'
 import { PlainCheckbox } from '../ui/checkbox-look'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Switch } from '../ui/switch'
 import { Textarea } from '../ui/textarea'
 import { MapField } from './MapField'
 import { childSchema, literal, resolve, type JsonSchema } from './read'
@@ -142,7 +143,8 @@ const WORDS: SchemaFormWords = {
 /**
  * A form's value with every nested object in place, and the schema defaults a field cannot show
  * itself: an object's or a list's, and a required field's. An optional field with a plain default
- * is left unset and shows the default as what applies.
+ * is left unset and shows the default as what applies. A required boolean without a default, and
+ * a list's boolean item, starts as false, as its switch reads.
  */
 export function initialValue(schema: JsonSchema, root: JsonSchema = schema, keep = true): unknown {
     const at = fieldSchema(schema, root)
@@ -156,8 +158,31 @@ export function initialValue(schema: JsonSchema, root: JsonSchema = schema, keep
         }
         return out
     }
-    if (types(at).main[0] === 'array') return []
+    const main = types(at).main
+    if (main[0] === 'array') return []
+    // A required switch reads off, so it starts as false rather than unset.
+    if (keep && main.length === 1 && main[0] === 'boolean' && at.enum === undefined) return false
     return undefined
+}
+
+/**
+ * What a list's new or emptied item holds: its initial value, else '' for a plain string, so a list
+ * never holds undefined where a string goes. A number or a choice without a default stays unset.
+ */
+export function blankItem(items: JsonSchema, root: JsonSchema): unknown {
+    const start = initialValue(items, root)
+    if (start !== undefined) return start
+    const at = fieldSchema(items, root)
+    const main = types(at).main
+    return main.length === 1 && main[0] === 'string' && at.enum === undefined && scalarUnion(at, root) === undefined ? '' : undefined
+}
+
+/** The value with every empty string in a list read as unset, so an empty item is checked as one with nothing in it. */
+function emptied(value: unknown): unknown {
+    if (Array.isArray(value)) return value.map((item) => (item === '' ? undefined : emptied(item)))
+    if (value !== null && typeof value === 'object')
+        return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, child]) => [key, emptied(child)]))
+    return value
 }
 
 /** The value with the one at a path replaced; an undefined value takes the key out of its object. */
@@ -174,6 +199,19 @@ function setAt(value: unknown, path: Path, next: unknown): unknown {
     if (child === undefined) delete copy[head]
     else copy[head] = child
     return copy
+}
+
+/** A list's removal or move: the list's place and each old index's new one, or null for taken out. */
+interface Move {
+    list: string
+    map: (index: number) => number | null
+}
+
+/** A place carried through removals and moves to where its item is now, or null once its item was taken out. */
+function shifted(at: string, moves: readonly Move[]): string | null {
+    let now: string | null = at
+    for (const move of moves) now = now === null ? null : shiftKey(now, move.list, move.map)
+    return now
 }
 
 const NONE: readonly ServerIssue[] = []
@@ -211,7 +249,7 @@ function useChecked(schema: JsonSchema, value: unknown, deferred?: DeferredValue
         }
     }, [check])
     return useMemo((): readonly SchemaIssue[] | undefined => {
-        if (check !== undefined) return withoutDeferred(check(schema, value), value, deferred)
+        if (check !== undefined) return withoutDeferred(check(schema, emptied(value)), value, deferred)
         if (failed !== null) return [{ kind: 'unchecked', reason: failed, path: [], tone: 'critical' }]
         return undefined
     }, [check, failed, schema, value, deferred])
@@ -223,8 +261,12 @@ export interface SchemaFormState {
     value: unknown
     setValue: (value: unknown) => void
     set: (path: Path, value: unknown) => void
-    /** The text typed into a field that holds JSON, kept while it does not parse. */
+    /**
+     * The text typed into a field that holds JSON or a choice of scalar types, kept as typed while
+     * the value is the one it was typed over; a value changed from elsewhere since shows instead.
+     */
     draft: (path: Path) => string | undefined
+    /** Keeps the text typed at a path over the value there now, set first; undefined lets it go. */
     setDraft: (path: Path, text: string | undefined) => void
     /** Marks a number field whose typed text is not a number, which is said and stops the submit until it is one. */
     setUnread: (path: Path, unread: boolean) => void
@@ -315,7 +357,8 @@ export function useSchemaForm(
         /**
          * The secrets already set, by path: each `writeOnly` property among them shows as set and
          * stays out of the value until it is replaced, so what is sent leaves it as it is. A
-         * required secret that is set asks for nothing more.
+         * required secret that is set asks for nothing more. Removing or moving a list's item carries
+         * its secrets with it, until `sealed` says something new.
          */
         sealed?: readonly SealedSecret[]
         /** The moment a sealed secret's `setAt` is counted from; without it, the clock. */
@@ -335,20 +378,35 @@ export function useSchemaForm(
         if (outside === undefined) setOwn(latest.current)
         onChange?.(latest.current)
     }
-    const [drafts, setDrafts] = useState<Record<string, string>>({})
+    // Each draft with the value it was typed over, so a value changed from elsewhere since shows in its place.
+    const [drafts, setDrafts] = useState<Record<string, { text: string; over: string | undefined }>>({})
+    const draftAt = (at: string): string | undefined => {
+        const draft = drafts[at]
+        return draft !== undefined && JSON.stringify(valueAt(value, parsePointer(at))) === draft.over ? draft.text : undefined
+    }
     const [unread, setUnread] = useState<ReadonlySet<string>>(new Set())
     const [held, setHeld] = useState<Record<string, string>>({})
     const [touched, setTouched] = useState<ReadonlySet<string>>(new Set())
     const [submitted, setSubmitted] = useState(defaultSubmitted)
     const [open, setOpen] = useState<string | null>(defaultOpen === undefined ? null : pointer(defaultOpen))
-    const [seen, setSeen] = useState(server)
+    // The server's issues by what they say, so an equal array made anew each render counts as the same.
+    const serverKey = JSON.stringify(server.map((issue) => [pointer(issue.path), issue.text, issue.detail ?? null, issue.tone ?? null]))
+    const [seen, setSeen] = useState(serverKey)
     const [changed, setChanged] = useState<ReadonlySet<string>>(new Set())
     // The removals and moves made since the server's issues came, which carry each issue to its item's place now.
-    const [moves, setMoves] = useState<readonly { list: string; map: (index: number) => number | null }[]>([])
-    if (seen !== server) {
-        setSeen(server)
+    const [moves, setMoves] = useState<readonly Move[]>([])
+    if (seen !== serverKey) {
+        setSeen(serverKey)
         setChanged(new Set())
         setMoves([])
+    }
+    // The removals and moves made since the sealed secrets came, which carry each to its item's place now.
+    const sealedKey = JSON.stringify(sealed.map((secret) => [pointer(secret.path), secret.setAt ?? null]))
+    const [sealedSeen, setSealedSeen] = useState(sealedKey)
+    const [sealedMoves, setSealedMoves] = useState<readonly Move[]>([])
+    if (sealedSeen !== sealedKey) {
+        setSealedSeen(sealedKey)
+        setSealedMoves([])
     }
 
     const rowKeys = useRef(new Map<string, string[]>())
@@ -381,6 +439,7 @@ export function useSchemaForm(
         nextRows.set(at, nextKeys)
         rowKeys.current = nextRows
         setMoves((current) => [...current, { list: at, map }])
+        setSealedMoves((current) => [...current, { list: at, map }])
         setValue((current: unknown) => setAt(current, path, nextItems))
         setTouched((current) => shiftSet(current, at, map))
         setUnread((current) => shiftSet(current, at, map))
@@ -420,12 +479,17 @@ export function useSchemaForm(
         return { tone: issue.tone, ...said, actions }
     }
 
-    const sealedAt = new Map(sealed.map((secret) => [pointer(secret.path), secret]))
+    const sealedAt = new Map(
+        sealed.flatMap((secret) => {
+            const at = shifted(pointer(secret.path), sealedMoves)
+            return at === null ? [] : [[at, secret] as const]
+        }),
+    )
     const all = new Map<string, Issue[]>()
     const add = (at: string, issue: Issue) => all.set(at, [...(all.get(at) ?? []), issue])
     for (const issue of found) {
         const at = pointer(issue.path)
-        if (issue.kind === 'required' && ((drafts[at] ?? '').trim() !== '' || unread.has(at) || sealedAt.has(at))) continue
+        if (issue.kind === 'required' && ((draftAt(at) ?? '').trim() !== '' || unread.has(at) || sealedAt.has(at))) continue
         add(at, asIssue(issue))
     }
     // Text typed into a number or JSON field that does not parse leaves the value as it was, and says so.
@@ -434,8 +498,9 @@ export function useSchemaForm(
         add(at, { tone: 'critical', ...words.say({ kind: 'type', expected: types(field).main[0], path: [], tone: 'critical' }, field) })
     }
     for (const [at, text] of Object.entries(held)) add(at, { tone: 'critical', text })
-    for (const [at, text] of Object.entries(drafts)) {
-        if (text.trim() === '' || kindOf(schemaAt(schema, parsePointer(at)), schema) !== 'json') continue
+    for (const at of Object.keys(drafts)) {
+        const text = draftAt(at)
+        if (text === undefined || text.trim() === '' || kindOf(schemaAt(schema, parsePointer(at)), schema) !== 'json') continue
         try {
             JSON.parse(text)
         } catch {
@@ -444,8 +509,7 @@ export function useSchemaForm(
     }
     // Each refusal at its item's place now, gone with an item that was taken out.
     const refused = server.flatMap((issue) => {
-        let at: string | null = pointer(issue.path)
-        for (const move of moves) at = at === null ? null : shiftKey(at, move.list, move.map)
+        const at = shifted(pointer(issue.path), moves)
         return at === null ? [] : [{ issue, at }]
     })
     const refusedAt = (at: string): Issue[] =>
@@ -488,9 +552,11 @@ export function useSchemaForm(
         value,
         setValue,
         set,
-        draft: (path) => drafts[pointer(path)],
-        setDraft: (path, text) =>
-            setDrafts(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: text })),
+        draft: (path) => draftAt(pointer(path)),
+        setDraft: (path, text) => {
+            const over = JSON.stringify(valueAt(latest.current, path))
+            setDrafts(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: { text, over } }))
+        },
         setUnread: (path, now) =>
             setUnread((current) => {
                 const at = pointer(path)
@@ -504,7 +570,8 @@ export function useSchemaForm(
             setHeld(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: text })),
         touch: (path) => {
             const at = pointer(path)
-            if (given(valueAt(value, path)) || drafts[at] !== undefined || unread.has(at)) setTouched((current) => new Set(current).add(at))
+            if (given(valueAt(value, path)) || draftAt(at) !== undefined || unread.has(at))
+                setTouched((current) => new Set(current).add(at))
         },
         shown: (path) => shownAt(pointer(path)),
         count,
@@ -722,6 +789,7 @@ function Control({
     held,
     ask = true,
     required = false,
+    empty,
 }: {
     form: SchemaFormState
     path: Path
@@ -735,6 +803,8 @@ function Control({
     required?: boolean
     /** Whether to ask the app's `field` for this field, false where its property already did. */
     ask?: boolean
+    /** What a text field holds once emptied: unset by default, '' for a list's item. */
+    empty?: unknown
 }) {
     const kind = kindOf(at, form.schema)
     const value = held === undefined ? valueAt(form.value, path) : held.value
@@ -742,6 +812,17 @@ function Control({
     const id = form.id(path)
     const invalid = worst(form.shown(path)) === 'critical' || undefined
     const renderer = useContext(FieldRendererContext)
+    // Text in a number field that does not read as a number, marked at the field's place while it is drawn there.
+    const [unreadable, setUnreadable] = useState(false)
+    const where = pointer(path)
+    const markUnread = useRef(form.setUnread)
+    markUnread.current = form.setUnread
+    useEffect(() => {
+        if (!unreadable) return
+        const place = parsePointer(where)
+        markUnread.current(place, true)
+        return () => markUnread.current(place, false)
+    }, [where, unreadable])
     const custom = (ask ? renderer : undefined)?.({
         path,
         schema: at,
@@ -819,7 +900,7 @@ function Control({
         case 'number': {
             // The field reads, writes and steps within the bounds; a value past them is said by the schema's checks, with their fix.
             const said = (expected: string) => form.words.say({ kind: 'type', expected, path, tone: 'critical' }, at).text
-            const unreadable = [said('number'), said('integer')]
+            const unreadableText = [said('number'), said('integer')]
             return (
                 <Marked form={form} path={path}>
                     <NumberField
@@ -830,7 +911,7 @@ function Control({
                         issues={form.shown(path)}
                         value={typeof value === 'number' ? value : null}
                         onValueChange={(next) => set(next ?? undefined)}
-                        onIssueChange={(issue) => form.setUnread(path, issue !== null && unreadable.includes(issue.text))}
+                        onIssueChange={(issue) => setUnreadable(issue !== null && unreadableText.includes(issue.text))}
                         integer={types(at).main[0] === 'integer'}
                         min={at.minimum}
                         max={at.maximum}
@@ -839,11 +920,30 @@ function Control({
                         placeholder={placeholder}
                         onBlur={() => form.touch(path)}
                         className={edge(form, path)}
-                        words={{ unreadable: unreadable[0], whole: unreadable[1] }}
+                        words={{ unreadable: unreadableText[0], whole: unreadableText[1] }}
                     />
                 </Marked>
             )
         }
+        case 'boolean':
+            // A list's item or a map's value; a property draws its own SwitchField with the label beside it.
+            return (
+                <Marked form={form} path={path}>
+                    <div className="flex min-h-(--density-control) items-center">
+                        <Switch
+                            id={id}
+                            aria-label={label}
+                            aria-invalid={invalid}
+                            checked={value === undefined ? at.default === true : value === true}
+                            onCheckedChange={(checked) => {
+                                set(checked)
+                                form.touch(path)
+                            }}
+                            disabled={at.readOnly === true}
+                        />
+                    </div>
+                </Marked>
+            )
         case 'longtext':
             return (
                 <Marked form={form} path={path} top>
@@ -851,7 +951,7 @@ function Control({
                         {...common}
                         rows={4}
                         value={typeof value === 'string' ? value : ''}
-                        onChange={(event) => set(event.target.value === '' ? undefined : event.target.value)}
+                        onChange={(event) => set(event.target.value === '' ? empty : event.target.value)}
                         className={edge(form, path)}
                     />
                 </Marked>
@@ -927,7 +1027,7 @@ function Control({
                         {...common}
                         type={at.format === 'date' ? 'date' : 'text'}
                         value={typeof value === 'string' ? value : value === undefined || value === null ? '' : String(value)}
-                        onChange={(event) => set(event.target.value === '' ? undefined : event.target.value)}
+                        onChange={(event) => set(event.target.value === '' ? empty : event.target.value)}
                         className={cn(mono && 'font-mono', edge(form, path))}
                     />
                 </Marked>
@@ -1183,7 +1283,7 @@ function Property({
     }
 
     if (kind === 'list') {
-        const addOne = () => form.set(path, [...items, initialValue(at.items ?? {}, form.schema)])
+        const addOne = () => form.set(path, [...items, blankItem(at.items ?? {}, form.schema)])
         const removeAt = (index: number) => form.removeItem(path, index)
         const keys = form.itemKeys(path, items.length)
         const moves = (index: number) =>
@@ -1221,7 +1321,7 @@ function Property({
                 {items.map((_, index) => (
                     <div key={keys[index]} className="flex min-w-0 items-center gap-1.5">
                         <div className="min-w-0 flex-1">
-                            <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} />
+                            <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} empty="" />
                         </div>
                         {moves(index)}
                         {!locked && (

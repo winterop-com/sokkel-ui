@@ -33,6 +33,8 @@ function checker(formats: SchemaFormats): Ajv2020 {
         allErrors: true,
         strict: false,
         validateFormats: true,
+        // A decimal multipleOf (0.01, 0.1) counts a value as a multiple within this many decimal places, as floating point needs.
+        multipleOfPrecision: 9,
         logger: { log: () => {}, warn: () => {}, error: (...args: unknown[]) => console.error(...args) },
     })
     addFormats(made)
@@ -138,6 +140,8 @@ function read(error: ErrorObject, document: unknown): SchemaIssue {
         case 'required':
             return { kind: 'required', path: [...path, String(params.missingProperty)], tone: 'critical' }
         case 'type': {
+            // A list's item with nothing in it is said to be empty, not of the wrong type.
+            if (value === undefined) return { kind: 'required', path, tone: 'critical' }
             const expected = String(params.type).split(',')[0]
             const number = typeof value === 'number' ? value : typeof value === 'string' ? Number(value.trim()) : Number.NaN
             return at({ kind: 'type', expected }, expected === 'integer' && Number.isFinite(number) ? Math.round(number) : undefined)

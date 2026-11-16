@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
@@ -6,6 +6,7 @@ import { readScalar, scalarUnion } from './issues'
 import { objectOf, repeatedKeys, rowsOf } from './MapField'
 import type { JsonSchema } from './read'
 import {
+    blankItem,
     initialValue,
     loadSchemaChecks,
     SchemaForm,
@@ -391,5 +392,176 @@ describe("a schema form's secret words", () => {
         const html = renderToStaticMarkup(<Words />)
         expect(html).toContain('>Kept<')
         expect(html).toContain('>Change<')
+    })
+})
+
+describe('lists and maps of booleans', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        properties: {
+            flags: { type: 'array', title: 'Flags', items: { type: 'boolean' } },
+            features: { type: 'object', title: 'Features', additionalProperties: { type: 'boolean' } },
+        },
+    }
+
+    it('draw a switch for each item and value, not a text box, and what they hold passes the schema', () => {
+        const value = { flags: [true, false], features: { digest: true } }
+        const html = render(schema, value)
+        const switches = html.match(/<[^>]*role="switch"[^>]*>/g) ?? []
+        expect(switches).toHaveLength(3)
+        expect(switches.filter((one) => one.includes('aria-checked="true"'))).toHaveLength(2)
+        expect(html).toContain('aria-label="Flags 1"')
+        expect(html).toContain('aria-label="Features value 1"')
+        // The only text box left is the map row's key.
+        expect(html.match(/<input[^>]*type="text"/g) ?? []).toHaveLength(0)
+        expect(html.match(/<input[^>]*value="digest"/g)).toHaveLength(1)
+        expect(validate(schema, value)).toEqual([])
+    })
+})
+
+describe('a required boolean without a default', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        required: ['paused'],
+        properties: { paused: { type: 'boolean', title: 'Paused' }, notify: { type: 'boolean', title: 'Notify' } },
+    }
+
+    it('starts as false, as its switch reads, and asks for nothing more', async () => {
+        await loadSchemaChecks()
+        expect(initialValue(schema)).toEqual({ paused: false })
+        expect(initialValue({ type: 'boolean' })).toBe(false)
+        let state: SchemaFormState | undefined
+        function Switches() {
+            state = useSchemaForm(schema, { defaultSubmitted: true })
+            return <SchemaForm form={state} marks={false} />
+        }
+        renderToStaticMarkup(<Switches />)
+        expect(state?.blocking).toBe(false)
+        expect(state?.count.critical).toBe(0)
+    })
+})
+
+describe('an empty row in a list of scalars', () => {
+    const schema: JsonSchema = { type: 'object', properties: { tags: { type: 'array', title: 'Tags', items: { type: 'string' } } } }
+
+    it('holds an empty string, never undefined, and says it is empty', async () => {
+        await loadSchemaChecks()
+        expect(blankItem({ type: 'string' }, schema)).toBe('')
+        expect(blankItem({ type: 'string', default: 'harbor' }, schema)).toBe('harbor')
+        expect(blankItem({ type: 'boolean' }, schema)).toBe(false)
+        expect(blankItem({ type: 'integer' }, schema)).toBeUndefined()
+        let state: SchemaFormState | undefined
+        function Tags() {
+            state = useSchemaForm(schema, { initial: { tags: ['nightly', ''] }, defaultSubmitted: true })
+            return <SchemaForm form={state} marks={false} />
+        }
+        const html = renderToStaticMarkup(<Tags />)
+        expect(JSON.stringify(state?.value)).toBe('{"tags":["nightly",""]}')
+        expect(state?.shown(['tags', 1]).map((issue) => issue.text)).toEqual(['Enter a value'])
+        expect(state?.shown(['tags', 0])).toEqual([])
+        expect(html).toContain('aria-label="Error: Enter a value"')
+    })
+})
+
+describe('text typed over a value that then changes from elsewhere', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        properties: {
+            buffer: { title: 'Buffer', anyOf: [{ type: 'string' }, { type: 'integer' }] },
+            params: { title: 'Params' },
+        },
+    }
+
+    /** Types `1.` into the buffer and `{` into the params, then, when `change` says so, changes the value from outside or by setValue. */
+    function Typed({ change }: { change?: 'outside' | 'setValue' }) {
+        const [outside, setOutside] = useState<unknown>({ buffer: 1, params: { a: 1 } })
+        const form = useSchemaForm(schema, change === 'setValue' ? { initial: outside } : { value: outside, onChange: () => {} })
+        const once = useRef(false)
+        if (!once.current) {
+            once.current = true
+            form.setDraft(['buffer'], '1.')
+            form.setDraft(['params'], '{')
+            const next = { buffer: 2, params: { b: 2 } }
+            if (change === 'outside') setOutside(next)
+            if (change === 'setValue') form.setValue(next)
+        }
+        return <SchemaForm form={form} marks={false} />
+    }
+
+    it('keeps the text while the value is the one it was typed over', () => {
+        const html = renderToStaticMarkup(<Typed />)
+        expect(html).toMatch(/<input[^>]*value="1\."/)
+        expect(html).toMatch(/<textarea[^>]*>\{<\/textarea>/)
+    })
+
+    it('shows the new value once it changes, held from outside or set by setValue', () => {
+        for (const change of ['outside', 'setValue'] as const) {
+            const html = renderToStaticMarkup(<Typed change={change} />)
+            expect(html).toMatch(/<input[^>]*value="2"/)
+            expect(html).toContain('&quot;b&quot;: 2')
+            expect(html).not.toContain('Not valid JSON')
+        }
+    })
+})
+
+describe('sealed secrets in a list', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        properties: {
+            hooks: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    required: ['token'],
+                    properties: { name: { type: 'string' }, token: { type: 'string', writeOnly: true } },
+                },
+            },
+        },
+    }
+
+    function after(act: (form: SchemaFormState) => void): SchemaFormState | undefined {
+        let state: SchemaFormState | undefined
+        function Hooks() {
+            const form = useSchemaForm(schema, {
+                initial: { hooks: [{ name: 'api' }, { name: 'worker' }, { name: 'scheduler' }] },
+                sealed: [{ path: ['hooks', 0, 'token'] }, { path: ['hooks', 2, 'token'] }],
+            })
+            const once = useRef(false)
+            if (!once.current) {
+                once.current = true
+                act(form)
+            }
+            state = form
+            return null
+        }
+        renderToStaticMarkup(<Hooks />)
+        return state
+    }
+    const sealedAt = (state: SchemaFormState | undefined) =>
+        [0, 1, 2].map((index) => state?.sealed(['hooks', index, 'token']) !== undefined)
+
+    it('move with their items when one is removed', () => {
+        const state = after((form) => form.removeItem(['hooks'], 0))
+        expect(state?.value).toEqual({ hooks: [{ name: 'worker' }, { name: 'scheduler' }] })
+        expect(sealedAt(state)).toEqual([false, true, false])
+    })
+
+    it('move with their items when one is moved', () => {
+        expect(sealedAt(after((form) => form.moveItem(['hooks'], 0, 1)))).toEqual([false, true, true])
+    })
+})
+
+describe("the server's issues", () => {
+    const schema: JsonSchema = { type: 'object', properties: { code: { type: 'string', title: 'Code' } } }
+
+    it('are read by what they say, so an array made anew each render draws once', () => {
+        function Inline() {
+            // Drawn a second time, as any later render is, with an equal array of a new identity.
+            const [again, setAgain] = useState(false)
+            if (!again) setAgain(true)
+            const form = useSchemaForm(schema, { initial: { code: 'x' }, issues: [{ path: ['code'], text: 'Taken' }] })
+            return <SchemaForm form={form} marks={false} />
+        }
+        expect(renderToStaticMarkup(<Inline />)).toContain('aria-label="Error: Taken"')
     })
 })

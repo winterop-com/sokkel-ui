@@ -136,8 +136,8 @@ export interface EntryFieldProps<V> {
     onValueChange?: (value: V | null) => void
     /**
      * Told what the field finds wrong itself (text that does not read, or a value outside the
-     * bounds), and null once it is put right, so a form can count it and hold its submit. It is
-     * told at once, before the field shows it.
+     * bounds), and null once it is put right or the field is taken away, so a form can count it and
+     * hold its submit. It is told at once, before the field shows it.
      */
     onIssueChange?: (issue: Issue | null) => void
     /** The lowest value allowed; one under it is kept and said, with an action that puts in the bound. */
@@ -342,7 +342,7 @@ export function TypedField<V extends string | number>({
     )
 }
 
-/** Tells `onIssueChange` the field's own issue each time it changes, and null once it is gone. */
+/** Tells `onIssueChange` the field's own issue each time it changes, and null once it is gone or the field is. */
 function useReported(issue: Issue | null, onIssueChange?: (issue: Issue | null) => void) {
     const latest = useRef({ issue, onIssueChange })
     latest.current = { issue, onIssueChange }
@@ -350,4 +350,10 @@ function useReported(issue: Issue | null, onIssueChange?: (issue: Issue | null) 
     useEffect(() => {
         latest.current.onIssueChange?.(latest.current.issue)
     }, [key])
+    useEffect(
+        () => () => {
+            if (latest.current.issue !== null) latest.current.onIssueChange?.(null)
+        },
+        [],
+    )
 }
