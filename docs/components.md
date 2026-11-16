@@ -46,7 +46,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 263 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 264 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -326,6 +326,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **IconButton** | `@winterop-com/sokkel-ui/IconButton` | A button that shows only an icon. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-icon-button--actions) |
 | **ListSkeleton**, Pending | `@winterop-com/sokkel-ui/Loading` | The shape of a list before its rows arrive: rows of uneven length with a short value at the end, or a grid of cards. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **LoadingBar**, PageProgress, LoadingOverlay | `@winterop-com/sokkel-ui/Loaders` | A thin bar for a wait: filled to `value` (0 to 100) when the progress is known, a sliding segment when it is not. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-loading--bars) |
+| **NotFound** | `@winterop-com/sokkel-ui/NotFound` | The page an app draws for an address none of its pages answers, in place of drawing its first page as if nothing were wrong: what the address was, and a link to the first page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-not-found--address) |
 | **PageState** | `@winterop-com/sokkel-ui/PageState` | The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and the content. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
 | **PointMenu** | `@winterop-com/sokkel-ui/PointMenu` | A menu opened at a point rather than from a trigger: where a right click landed on a canvas, a row or a drawing. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-point-menu--open) |
 | **Problem** | `@winterop-com/sokkel-ui/Problem` | Something that went wrong, said for a person: what happened in one sentence, then where and what a right value looks like, with machine words marked by backticks drawn in the code face. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |

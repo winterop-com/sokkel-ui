@@ -378,6 +378,7 @@ const CORE_AREAS: Record<string, string> = {
     Loaders: 'Actions, dialogs and feedback',
     Loading: 'Actions, dialogs and feedback',
     ErrorBoundary: 'Actions, dialogs and feedback',
+    NotFound: 'Actions, dialogs and feedback',
     PageState: 'Actions, dialogs and feedback',
     PointMenu: 'Actions, dialogs and feedback',
     Problem: 'Actions, dialogs and feedback',
