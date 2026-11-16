@@ -1,5 +1,5 @@
 import { Download, Info, Maximize2, MoreHorizontal } from 'lucide-react'
-import { Suspense, lazy, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { Suspense, lazy, memo, useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { LoadingOverlay } from '@winterop-com/sokkel-ui/Loaders'
@@ -265,9 +265,8 @@ export function ChartFrame({
                     />
                 ) : null
             }
-        >
-            {(windowed) => children({ hidden, hovered, handle, windowed })}
-        </FrameBody>
+            chart={{ draw: children, hidden, hovered, handle }}
+        />
     )
     return (
         <section
@@ -391,6 +390,18 @@ export function ChartFrame({
     )
 }
 
+interface FrameChartProps extends Omit<ChartState, 'windowed'> {
+    draw: (state: ChartState) => ReactNode
+}
+
+/**
+ * The app's chart, drawn again only when the app's render function or the state it is handed
+ * changes, never when the chart inside tells the frame what it draws.
+ */
+const FrameChart = memo(function FrameChart({ draw, hidden, hovered, handle, windowed }: FrameChartProps & { windowed: boolean }) {
+    return draw({ hidden, hovered, handle, windowed })
+})
+
 /** The chart and its legend, in the frame or filling the window. */
 function FrameBody({
     loading,
@@ -401,7 +412,7 @@ function FrameBody({
     legend,
     words,
     table,
-    children,
+    chart,
 }: {
     table: FrameData | null
     loading: boolean
@@ -411,7 +422,7 @@ function FrameBody({
     bodyClassName: string
     legend: ReactNode
     words: ChartFrameWords
-    children: (windowed: boolean) => ReactNode
+    chart: FrameChartProps
 }) {
     const windowed = useWindowedPane()?.windowed === true
     return (
@@ -429,7 +440,9 @@ function FrameBody({
                     </p>
                 ) : (
                     <>
-                        <div className={cn(!fit && 'absolute inset-0', table !== null && 'invisible')}>{children(windowed)}</div>
+                        <div className={cn(!fit && 'absolute inset-0', table !== null && 'invisible')}>
+                            <FrameChart {...chart} windowed={windowed} />
+                        </div>
                         {table !== null && (
                             <div className="absolute inset-0 overflow-auto">
                                 <Suspense>
