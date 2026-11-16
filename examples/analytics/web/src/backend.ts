@@ -56,9 +56,7 @@ export async function setOwner(team: Team, owner: Person): Promise<void> {
 
 /** Sets an invoice's state by hand: refunded, or paid. */
 export async function setInvoiceStatus(invoice: Invoice, status: InvoiceStatus, by: Person): Promise<void> {
-    const known = await invoiceChanges.list()
-    if (known.some((one) => one.id === invoice.id)) await invoiceChanges.update(invoice.id, { status, by, at: Date.now() })
-    else await invoiceChanges.create({ status, by, at: Date.now() }, invoice.id)
+    await invoiceChanges.upsert(invoice.key, () => ({ status, by, at: Date.now() }))
 }
 
 /** Charges a failed or open invoice again: most cards go through, and about one in five is declined again. */

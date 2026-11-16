@@ -10,18 +10,25 @@ import { startEngine } from './backend'
 import { Console } from './Console'
 import { SignInPage } from './SignInPage'
 import { ConsoleProvider, useConsole } from './state'
+import { CARRIED } from './themes'
 
 /** The run states, and a job's paused schedule. */
 const STATUSES = { ...RUN_STATUS_MAP, paused: { color: 'warning' as const } }
 
 function Door() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     const { prefs } = useConsole()
-    if (prefs.user === null) return <SignInPage frame={frame} />
     return (
-        <ActionsProvider>
-            <Console frame={frame} />
-        </ActionsProvider>
+        <>
+            {prefs.user === null ? (
+                <SignInPage frame={frame} />
+            ) : (
+                <ActionsProvider>
+                    <Console frame={frame} />
+                </ActionsProvider>
+            )}
+            {frame.dialogs}
+        </>
     )
 }
 

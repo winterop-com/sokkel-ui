@@ -1,6 +1,6 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
-import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { DEFAULT_APPEARANCE } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Input } from '@winterop-com/sokkel-ui/primitives/input'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
@@ -268,7 +268,7 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                         ...themeSettings({
                             value: look,
                             onChange: setLook,
-                            themes: THEMES,
+                            themes: frame.themes,
                             system: true,
                         }),
                     ],

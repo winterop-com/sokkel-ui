@@ -208,6 +208,7 @@ function build(
         const id = numberOf(on, index)
         const invoice: Invoice = {
             id,
+            key: bill.key,
             team: team.id,
             name: team.name,
             country: team.country,
@@ -218,7 +219,7 @@ function build(
             amount: bill.amount,
             at: bill.at,
             day: on,
-            status: status.get(id) ?? statusOf(bill, today),
+            status: status.get(bill.key) ?? statusOf(bill, today),
         }
         invoices.push(invoice)
         const own = invoicesOf.get(team.id)

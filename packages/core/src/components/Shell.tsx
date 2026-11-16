@@ -11,6 +11,7 @@ import {
     useMemo,
     useRef,
     useState,
+    type ErrorInfo,
     type Key,
     type ReactNode,
 } from 'react'
@@ -27,6 +28,7 @@ import type { ShortcutGroup } from '../lib/shortcut-groups'
 import { createShortcutRegistry, paletteMayOpen, type KeyBinding } from '../lib/shortcuts'
 
 export { overSearch } from '../lib/shortcuts'
+import { ErrorBoundary, type ErrorBoundaryWords } from './ErrorBoundary'
 import type { CommandPaletteWords, PaletteFilter, PaletteFoot, PaletteGroup, PaletteSearch } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
 import { PanelTabStrip, type PanelStrip, type PanelTabs } from './panel-strip'
@@ -141,6 +143,10 @@ export interface ShellProps {
     routeKey?: Key
     children: ReactNode
     words?: Partial<ShellWords>
+    /** The words of the failure drawn in the page's place when drawing it throws. */
+    errorWords?: Partial<ErrorBoundaryWords>
+    /** Hears a failure thrown while drawing the page, which the shell draws in the page's place, for an app's own error reporting. */
+    onPageError?: (error: Error, info: ErrorInfo) => void
 }
 
 /** The `h1`s a page's area holds, each with its words. */
@@ -308,6 +314,8 @@ export function Shell({
     routeKey,
     children,
     words: given,
+    errorWords,
+    onPageError,
 }: ShellProps) {
     const words = { ...SHELL_WORDS, ...given }
     // What screens ask of the rail while they are mounted, the latest last.
@@ -545,7 +553,11 @@ export function Shell({
                     className="@container scroller-thin shrink-0 overflow-hidden border-border empty:hidden has-[>[data-shell-head-rule]]:border-b"
                 />
                 <main className="@container relative scroller-thin min-h-0 flex-1 overflow-y-auto" ref={setMain}>
-                    <Fragment key={contentKey}>{children}</Fragment>
+                    <Fragment key={contentKey}>
+                        <ErrorBoundary resetKey={routeKey} onError={onPageError} inset words={errorWords}>
+                            {children}
+                        </ErrorBoundary>
+                    </Fragment>
                 </main>
             </div>
             {!docked && strip}

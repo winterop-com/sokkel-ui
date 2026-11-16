@@ -142,7 +142,10 @@ export interface Standing {
 export type InvoiceStatus = 'paid' | 'open' | 'failed' | 'refunded'
 
 export interface Invoice {
+    /** Its number, given in the order the day's invoices were made. */
     id: string
+    /** What it bills, which never changes as other invoices come and go: a person's change to it is kept under this. */
+    key: string
     team: string
     name: string
     country: string
@@ -157,7 +160,7 @@ export interface Invoice {
     status: InvoiceStatus
 }
 
-/** A person's change to an invoice: refunded, marked paid, a charge tried again. */
+/** A person's change to an invoice, kept under the invoice's `key`: refunded, marked paid, a charge tried again. */
 export interface InvoiceChange {
     id: string
     status: InvoiceStatus

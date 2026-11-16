@@ -1,4 +1,4 @@
-import type { Column, Dataset, ViewSpec } from './model'
+import { AGGREGATES, BINS, COLUMN_TYPES, SORTS, type Column, type Dataset, type ViewSpec } from './model'
 
 /** What a shared link carries: the chart's name, its view, and its whole dataset, so a fresh load needs nothing else. */
 export interface SharedChart {
@@ -25,6 +25,48 @@ function fromBase64Url(text: string): Uint8Array {
     const bytes = new Uint8Array(binary.length)
     for (let at = 0; at < binary.length; at += 1) bytes[at] = binary.charCodeAt(at)
     return bytes
+}
+
+const VIEW_KINDS = new Set(['bar', 'line', 'area', 'scatter', 'pie', 'heatmap', 'map', 'table', 'stat'])
+const isText = (value: unknown): value is string => typeof value === 'string'
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+const oneOf = (values: readonly { value: string }[], value: unknown) => values.some((one) => one.value === value)
+
+/** Whether a column reads as one: an id, a name and a known type. */
+function isColumn(value: unknown): value is Column {
+    return isRecord(value) && isText(value.id) && isText(value.name) && oneOf(COLUMN_TYPES, value.type)
+}
+
+/** Whether a view reads as one, every field of the shape the builder draws from. */
+function isSpec(value: unknown): value is ViewSpec {
+    if (!isRecord(value)) return false
+    const field = (key: string) => value[key] === undefined || isText(value[key])
+    return (
+        VIEW_KINDS.has(value.view as string) &&
+        ['x', 'y', 'series', 'size', 'color'].every(field) &&
+        oneOf(AGGREGATES, value.aggregate) &&
+        oneOf(BINS, value.bin) &&
+        oneOf(SORTS, value.sort) &&
+        typeof value.limit === 'number' &&
+        Number.isFinite(value.limit) &&
+        typeof value.stack === 'boolean' &&
+        typeof value.horizontal === 'boolean' &&
+        isText(value.palette)
+    )
+}
+
+/** Whether what a link carried has the whole shape of a packed chart, so nothing drawn from it meets a value it cannot read. */
+function isPacked(value: unknown): value is Packed {
+    if (!isRecord(value) || value.v !== 1 || !isText(value.n) || !isSpec(value.s) || !isRecord(value.d)) return false
+    const { n, t, c, r } = value.d
+    return (
+        isText(n) &&
+        isText(t) &&
+        Array.isArray(c) &&
+        c.every(isColumn) &&
+        Array.isArray(r) &&
+        r.every((row) => Array.isArray(row) && row.every(isText))
+    )
 }
 
 async function through(bytes: Uint8Array, stream: CompressionStream | DecompressionStream): Promise<Uint8Array> {
@@ -72,14 +114,14 @@ export async function unpackChart(text: string): Promise<SharedChart> {
             throw new Error('The link is cut short or changed: its chart cannot be read.')
         }
     } else if (kind !== 'j') throw new Error('This is not a link to a shared chart.')
-    let packed: Packed
+    let read: unknown
     try {
-        packed = JSON.parse(new TextDecoder().decode(bytes)) as Packed
+        read = JSON.parse(new TextDecoder().decode(bytes))
     } catch {
         throw new Error('The link is cut short or changed: its chart cannot be read.')
     }
-    if (packed.v !== 1 || !Array.isArray(packed.d.c) || !Array.isArray(packed.d.r))
-        throw new Error('The link was made by a version that cannot be read here.')
+    if (!isPacked(read)) throw new Error('The link was made by a version that cannot be read here.')
+    const packed = read
     return { name: packed.n, spec: packed.s, dataset: { name: packed.d.n, description: packed.d.t, columns: packed.d.c, rows: packed.d.r } }
 }
 

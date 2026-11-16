@@ -1,5 +1,5 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
-import { CORNERS, DEFAULT_APPEARANCE, THEMES, TYPEFACES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { CORNERS, DEFAULT_APPEARANCE, TYPEFACES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
@@ -148,7 +148,7 @@ export function SettingsPage({ prefs, frame, open, onClose }: { prefs: Preferenc
                         ...themeSettings({
                             value: settings,
                             onChange: setSettings,
-                            themes: THEMES,
+                            themes: frame.themes,
                             corners: CORNERS,
                             typefaces: TYPEFACES,
                             system: true,

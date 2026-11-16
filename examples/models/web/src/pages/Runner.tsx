@@ -228,7 +228,7 @@ export function RunnerPage() {
                         <Button
                             size="sm"
                             variant="outline"
-                            disabled={status !== 'up' || loaded.some((one) => one.id === pick)}
+                            disabled={status !== 'up' || !models.some((one) => one.id === pick) || loaded.some((one) => one.id === pick)}
                             onClick={() => load(pick)}
                         >
                             <Cpu aria-hidden />

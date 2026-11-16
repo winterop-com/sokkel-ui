@@ -1,6 +1,9 @@
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { app, BrowserWindow, shell } from 'electron'
+
+import { keepToTheApp } from '../../../shared/electron'
 
 /** The built web example, loaded from disk; its asset paths are relative, so file:// serves them. */
 const page = join(import.meta.dirname, '..', '..', 'web', 'dist', 'index.html')
@@ -22,11 +25,8 @@ function open(): void {
     window.on('enter-full-screen', tellFullscreen)
     window.on('leave-full-screen', tellFullscreen)
     window.webContents.on('did-finish-load', tellFullscreen)
-    // Links that leave the app open in the system browser, not in a second app window.
-    window.webContents.setWindowOpenHandler(({ url }) => {
-        void shell.openExternal(url)
-        return { action: 'deny' }
-    })
+    // Web and mail links open in the system browser, the window stays on the app, and the page is granted only what it uses.
+    keepToTheApp(window.webContents, pathToFileURL(page).href, (url) => shell.openExternal(url))
     void window.loadFile(page)
 }
 

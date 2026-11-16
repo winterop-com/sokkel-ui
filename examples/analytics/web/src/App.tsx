@@ -10,6 +10,7 @@ import { PLAN_NAMES, PRICE } from './model'
 import { STATUSES } from './parts'
 import { AppProvider, useApp } from './state'
 import { go } from './view'
+import { CARRIED } from './themes'
 
 /** Notes in the corner for the stream's big orders and the teams that leave, as the settings ask. */
 function StreamNotes() {
@@ -48,7 +49,7 @@ function StreamNotes() {
 
 /** The Analytics example: Tidevann's live business dashboard, in a browser or either desktop shell. */
 export function App() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     return (
         <TooltipProvider>
             <StatusProvider statuses={STATUSES}>
@@ -59,6 +60,7 @@ export function App() {
                     </AppProvider>
                 </Toaster>
             </StatusProvider>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }

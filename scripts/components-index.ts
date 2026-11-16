@@ -377,6 +377,7 @@ const CORE_AREAS: Record<string, string> = {
     IconButton: 'Actions, dialogs and feedback',
     Loaders: 'Actions, dialogs and feedback',
     Loading: 'Actions, dialogs and feedback',
+    ErrorBoundary: 'Actions, dialogs and feedback',
     PageState: 'Actions, dialogs and feedback',
     PointMenu: 'Actions, dialogs and feedback',
     Problem: 'Actions, dialogs and feedback',

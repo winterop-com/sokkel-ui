@@ -265,3 +265,27 @@ export function InlineEdit<K extends EditorKind = 'text'>(props: InlineEditProps
         </button>
     )
 }
+
+export interface InlineValueProps {
+    /** The value, such as one the app works out rather than one a person sets. */
+    children: ReactNode
+    className?: string
+}
+
+/**
+ * A value no one edits, drawn in the place and type an `InlineEdit` field draws its value at rest,
+ * so it lines up with the editable rows around it, as in a `DescriptionList` of a record's settings.
+ */
+export function InlineValue({ children, className }: InlineValueProps) {
+    return (
+        <span
+            data-slot="inline-value"
+            className={cn(
+                'flex min-h-(--density-control) w-full min-w-0 items-center rounded-control border border-transparent px-2.5 py-1 text-left text-sm max-md:min-h-finger',
+                className,
+            )}
+        >
+            <span className="min-w-0 flex-1 truncate">{children}</span>
+        </span>
+    )
+}

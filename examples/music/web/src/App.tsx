@@ -74,6 +74,7 @@ export function App() {
                     <PageState loading>{null}</PageState>
                 )}
             </Toaster>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }

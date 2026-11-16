@@ -1,7 +1,7 @@
 import { PipelineGraph } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
-import { InlineEdit } from '@winterop-com/sokkel-ui/InlineEdit'
+import { InlineEdit, InlineValue } from '@winterop-com/sokkel-ui/InlineEdit'
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
@@ -225,12 +225,7 @@ export function JobPage({ id }: { id: string }) {
                             {
                                 term: 'Next run',
                                 value: (
-                                    <InlineEdit
-                                        label="Next run"
-                                        value={job.paused ? 'Paused' : next === null ? 'Only when started' : stamp(next)}
-                                        disabled
-                                        onSave={() => undefined}
-                                    />
+                                    <InlineValue>{job.paused ? 'Paused' : next === null ? 'Only when started' : stamp(next)}</InlineValue>
                                 ),
                             },
                         ]}

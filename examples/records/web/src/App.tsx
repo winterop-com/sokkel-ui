@@ -2,7 +2,7 @@ import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
-import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { DEFAULT_APPEARANCE } from '@winterop-com/sokkel-ui/lib/appearance'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import type { SearchGroup, SearchSource } from '@winterop-com/sokkel-ui/lib/search'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -35,7 +35,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { resetAll, useCollection } from 'tidevann-shared/backend'
+import { useCollection } from 'tidevann-shared/backend'
 import { useFrame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
@@ -56,11 +56,9 @@ import { ReceiptPage } from './pages/Receipt'
 import { Responses } from './pages/Responses'
 import { Server } from './pages/Server'
 import { FootContext, RECEIPT_STATUSES, type Foot } from './ui'
+import { CARRIED } from './themes'
 
 /** The themes `app.css` loads, the base theme first. */
-const OFFERED = new Set(['tidevann', 'indigo', 'paper', 'contrast', 'terminal', 'steel', 'ember'])
-const APP_THEMES = THEMES.filter((theme) => OFFERED.has(theme.value))
-
 /** The place each first part of the route opens. */
 const PLACES_BY_ROUTE: Record<string, string> = {
     '': 'overview',
@@ -159,7 +157,7 @@ function useServerState(): { state: ServerHealth; check: () => void } {
 
 /** The Records example: forms filled in sections, responses and receipts, households and their visits, places on a map, the API and the metadata's health. */
 export function App() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     // Settings open as a dialog over the page they were opened from.
     const settingsRoute = useOverlayRoute(frame.route, 'settings')
     const route = settingsRoute.route
@@ -287,7 +285,7 @@ export function App() {
                         ...themeSettings({
                             value: settings,
                             onChange: setSettings,
-                            themes: APP_THEMES,
+                            themes: frame.themes,
                             system: true,
                             themeList: true,
                         }),
@@ -329,7 +327,7 @@ export function App() {
                             title: 'Reset the demo data',
                             description: 'Puts back the responses and households the demo starts with.',
                             control: (
-                                <Button variant="outline" size="sm" onClick={() => void resetAll().then(() => window.location.reload())}>
+                                <Button variant="outline" size="sm" onClick={frame.askReset}>
                                     Reset
                                 </Button>
                             ),
@@ -471,6 +469,7 @@ export function App() {
                     <Toaster position="bottom-right" />
                 </FootContext.Provider>
             </StatusProvider>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }

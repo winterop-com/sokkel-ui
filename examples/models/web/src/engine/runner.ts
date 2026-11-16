@@ -151,11 +151,16 @@ export async function unloadModel(id: string, why = ''): Promise<void> {
 export function answeredWith(id: string): void {
     const one = state.loaded.rows().find((row) => row.id === id)
     if (one !== undefined) void loaded.update(id, { usedAt: Date.now(), answers: one.answers + 1 })
+    // The library says when each model last answered.
+    if (state.models.rows().some((model) => model.id === id)) void models.update(id, { used: Date.now() })
 }
 
 /** Unloads the models idle past the keep-alive, every few seconds while the app is open. */
 export function startRunnerEngine(): () => void {
-    void Promise.all([state.runner.ready, state.prefs.ready, state.loaded.ready]).then(() => {
+    void Promise.all([state.runner.ready, state.prefs.ready, state.loaded.ready]).then(async () => {
+        // A start or a stop cut off by a reload never finishes: the runner is down, so Start works again.
+        const left = state.runner.rows()[0]?.status
+        if (left === 'starting' || left === 'stopping') await runner.update('runner', { status: 'down', since: Date.now() })
         if (prefsNow().startRunner && state.runner.rows()[0]?.status === 'down') void startRunner()
         // A load cut off by a reload never finishes; it is dropped.
         for (const one of state.loaded.rows()) if (one.state === 'loading') void loaded.remove(one.id)

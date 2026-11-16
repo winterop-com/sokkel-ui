@@ -3,7 +3,7 @@ import { Play } from 'lucide-react'
 import { useState } from 'react'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
-import { InlineEdit, type EditOption } from '@winterop-com/sokkel-ui/InlineEdit'
+import { InlineEdit, InlineValue, type EditOption } from '@winterop-com/sokkel-ui/InlineEdit'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
@@ -294,6 +294,7 @@ export const JobPage: StoryObj = {
                                 ),
                             },
                             { term: 'Last run', value: <StatusChip status="succeeded" /> },
+                            { term: 'Next run', value: <InlineValue>Tomorrow at 02:00</InlineValue> },
                             {
                                 term: 'Project',
                                 value: <InlineEdit label="Project" defaultValue="harbor" disabled onSave={() => pause()} />,

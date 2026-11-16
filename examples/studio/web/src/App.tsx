@@ -16,6 +16,7 @@ export function App() {
                     <Studio frame={frame} />
                 </StudioProvider>
             </Toaster>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }
