@@ -2,7 +2,7 @@ import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import type { PaletteCommand, PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
-import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
+import { Toaster } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
@@ -256,7 +256,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
             {settings.open && <SettingsPage prefs={prefs} frame={frame} datasets={allDatasets} open onClose={settings.close} />}
             <ImportDialog open={importing} onOpenChange={setImporting} />
             <BoardDialog open={newBoard} onOpenChange={setNewBoard} onMade={(made) => go(`/boards/${made.id}`)} />
-            <Toaster position="bottom-right" />
+            <Toaster />
         </>
     )
 }

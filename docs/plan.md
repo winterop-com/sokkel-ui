@@ -447,8 +447,9 @@ either.
 
 Code is colored from the `code-*` tokens (keyword, operator, punctuation, string, regexp, number,
 constant, comment, function, variable, type, property, tag, attribute, heading, link, inserted,
-deleted, invalid, and `code-bracket-1` to `-3` for bracket pairs by depth), set by every theme in
-light and dark. Shiki highlights `Code` and `Markdown`'s
+deleted, invalid, and `code-bracket-1` to `-3` for bracket pairs by depth), set by the base theme in
+light and dark and again by every theme whose ground they would not suit; `steel` and `ember`, on
+the base's cool gray and on a near white, keep the base's. Shiki highlights `Code` and `Markdown`'s
 fences through one theme whose every scope is a `code-*` variable, and CodeMirror's highlight style
 in `CodeEditor` reads the same tokens, so code follows the theme and scheme with no second pass.
 The highlighter knows the common languages and `jq` (a grammar of the library's own), each loaded
@@ -484,7 +485,7 @@ going to its root.
 Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,
 through `--typeface-sans` and `--typeface-mono`, with mono's x-height at `--mono-x-height: 0.462`
 and `--mono-x-height-small: 0.503`, the same share of Geist's x-height as the default's of Plex's.
-Both pairs were picked from the typeface research once mono was sized to its sans.
+Both pairs were picked once mono was sized to its sans.
 
 Terminal text has a face of its own, `--typeface-terminal`: JetBrains Mono NL patched as a Nerd Font
 Mono, subset to Latin, box drawing and the Powerline and Octicons glyphs a prompt or a run state
@@ -512,6 +513,7 @@ a `font-*` class still overrides:
 | Help and metadata           | `text-help`                 | 13 / 20                 | 400       |
 | Badge and status            | `text-badge`                | 13 / 20                 | 500       |
 | Main statistic              | `text-statistic`            | 32 / 36                 | 600       |
+| Hero statistic              | `text-statistic-hero`       | 48 / 56                 | 600       |
 | Fullscreen media title      | `text-media-title`          | 48 / 56                 | 600       |
 | Brand name on a sign-in     | `text-brand-name`           | 48 / 56, tight tracking | 700       |
 | Sign-in title               | `text-welcome-title`        | 32 / 36, tight tracking | 700       |
@@ -532,7 +534,7 @@ direction, drawer, dropdown-menu, empty, field, hover-card, input, input-group, 
 kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination,
 popover, progress, progress-ring, questionnaire, radio-group, resizable, scroll-area, select, separator, sheet,
 sidebar, skeleton, slider, sonner, spinner, switch, table, tabs, textarea, toast, toggle,
-toggle-group, tooltip, trace.
+toggle-group, tooltip, trace, and two of the library's own for sound: bar-visualizer and waveform.
 
 ## Patterns
 
@@ -868,7 +870,7 @@ it says whether the dialog is open and which page to draw under it (the last one
 the history when the dialog was opened from it, so Back afterwards does not open it again, and in
 its place otherwise. It goes back through the history and the hash unless the app hands it its
 router's `back` and `replace`, so it needs no router of its own.
-`WizardView` lays `WizardDialog`'s steps out on a page the same way, the two sharing their moves
+`WizardView` lays `WizardDialog`'s steps out on a page, the two sharing their moves
 (`wizardMoves`): the steps down the side, each with its description (`StepIndicator`'s `vertical`),
 or along the top with `layout="top"` and always below `lg`; the step's body under the page's title;
 and Cancel, Back and Next, or the finish, in a `FormBar`, Next shut with its reason.
@@ -1205,6 +1207,14 @@ interactive graph; a mini graph has nothing to press, pan or zoom, and a canvas 
 and observers per row would make a list of fifty rows heavy, so it is drawn as a sparkline is.
 Placements are kept by shape, so many rows of one pipeline ask elk once.
 
+## Periods
+
+`lib/periods.ts` and `PeriodPicker` stay in the core although their ids follow one platform's
+format (`2026W45`, `202611B`, `2026S2`). Weeks, bi-months, quarters and half-years are plain
+calendar periods any app reports by, and a compact sortable id for each is generic; keeping them
+in the core means no app needs a domain add-on for a period picker. A domain's own period rules
+(its financial years, its offsets in an expression language) belong in its add-on.
+
 ## Plugins
 
 Domain packages extend the core through plugins. A domain add-on holds one domain's parts and
@@ -1480,7 +1490,7 @@ with `onSizeChange` restores a height the app kept. `fullscreenActions`, such as
 plays, end the line under its title in the fullscreen view, so they never take the title's room.
 
 MediaBar resizes from its top edge. Up to about 96 pixels every layout is the one-line bar; above
-it the bar grows by its `layout`, picked from the player growth research, continuously and with no
+it the bar grows by its `layout`, continuously and with no
 jump: `rows` (the default: the cover across two rows, what plays, the transport and the volume over
 a full-width waveform that grows from 18 to 96 pixels), `panel` (the large now-playing panel) or
 `stage` (a centered stage). The heights where things change and the sizes between them are pure
@@ -1530,12 +1540,12 @@ changes, as one passing levels it holds. Both are off while motion is reduced (`
 
 ## Validation
 
-Option F, picked from the validation research. A field with a problem gets a colored
-edge and a mark at the end of its input, the edge alone at rest and a ring in the same tone only
-while the field has focus, in every control that takes `aria-invalid` (`src/rules.test.ts` fails a
-ring drawn at rest); pressing the mark opens what is wrong, what to do, and a
-fix when one is plain. The dialog footer counts what stops the submit, beside the verb, and pressing
-the count opens the first. Nothing is inserted between fields, so a form never changes height.
+A field with a problem gets a colored edge and a mark at the end of its input, the edge alone at
+rest and a ring in the same tone only while the field has focus, in every control that takes
+`aria-invalid` (`src/rules.test.ts` fails a ring drawn at rest); pressing the mark opens what is
+wrong, what to do, and a fix when one is plain. The dialog footer counts what stops the submit,
+beside the verb, and pressing the count opens the first. Nothing is inserted between fields, so a
+form never changes height.
 Issues show once a field is left with a value, or once the form is submitted, and go the moment the
 value is put right. A server's refusal lands on its field until that field is changed.
 
@@ -1552,7 +1562,7 @@ translates (`issueCritical`, `issueWarning`): every field takes them in its `wor
 to its mark, as do `SchemaForm`, `RepeatedGroup`, `QuickAdd`, `InlineEdit` and a table's editable
 cells.
 
-For what happens outside a form, the activity list was picked from the notification research: what
+For what happens outside a form, the activity list holds what
 happened while a person was away, newest first, unread drawn stronger, each item with its own way to
 act. `ActivityList`, `ActivityButton` and `ActivityMenu` carry it (Patterns/Activity).
 

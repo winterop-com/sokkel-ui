@@ -1,3 +1,4 @@
+import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { DashboardArrange, type DashboardWidget } from '@winterop-com/sokkel-ui/dashboard/DashboardArrange'
 import { DashboardEditActions, useDashboardEdit } from '@winterop-com/sokkel-ui/dashboard/DashboardEdit'
 import { DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
@@ -21,14 +22,14 @@ import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { useWindowedPane, WindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
 import { CopyPlus, FileSpreadsheet, LayoutDashboard, Pencil, MoreHorizontal, PencilLine, Plus, Presentation, Trash2, X } from 'lucide-react'
 import { createElement, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { boards as boardStore } from '../backend'
 import { ChartView } from '../ChartView'
 import { AddChartDialog, BoardDialog, SPANS } from '../dialogs'
 import { type Board, type BoardItem, counted, type Dataset, freshId, now, type Preferences, type SavedChart } from '../model'
-import { download, fileName, toCsv } from '../parse'
+import { fileName, toCsv } from '../parse'
 import { filtersFor, shape, typedRows } from '../shape'
 import { VIEW_ICONS } from '../views'
 import { useDeleteBoard } from './Boards'
@@ -267,14 +268,16 @@ export function BoardPage({
     const csvOf = (entry: Placed) => {
         if (entry.chart === undefined || entry.dataset === undefined) return
         const shaped = shape(entry.dataset, entry.chart.spec, filtersFor(entry.dataset, filters))
-        download(`${fileName(entry.chart.name)}.csv`, toCsv(shaped.table.names, shaped.table.rows), 'text/csv')
+        download(`${fileName(entry.chart.name)}.csv`, toCsv(shaped.table.names, shaped.table.rows), 'text/csv;charset=utf-8')
     }
     const takeOff = (entry: Placed) => {
         if (arranging) return edit.change(items.filter((item) => item.id !== entry.item.id))
         const before = items
         void save(items.filter((item) => item.id !== entry.item.id)).then(() =>
-            toast.success(`${entry.chart?.name ?? 'The chart'} taken off ${board.name}`, {
-                action: { label: 'Undo', onClick: () => void save(before) },
+            toast.add({
+                type: 'success',
+                title: `${entry.chart?.name ?? 'The chart'} taken off ${board.name}`,
+                actionProps: { children: 'Undo', onClick: () => void save(before) },
             }),
         )
     }
@@ -381,7 +384,7 @@ export function BoardPage({
                                                 freshId('bd'),
                                             )
                                             .then((made) => {
-                                                toast.success(`${made.name} made`)
+                                                toast.add({ type: 'success', title: `${made.name} made` })
                                                 go(`/boards/${made.id}`)
                                             })
                                     }

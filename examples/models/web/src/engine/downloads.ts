@@ -36,26 +36,33 @@ export function activePull(entry: string, quant: string): Download | undefined {
         )
 }
 
+/** The pulls being queued, by entry and quant, so a second press before the first is kept queues nothing. */
+const queueing = new Set<string>()
+
 /** Starts pulling an entry's variant, or says why it cannot. */
 export async function pull(entry: CatalogEntry, variant: Variant): Promise<void> {
     const id = modelId(entry.name, variant.quant)
     if (state.models.rows().some((model) => model.id === id)) throw new Error(`${entry.name} ${variant.quant} is already in the library.`)
-    if (activePull(entry.id, variant.quant) !== undefined) return
-    await downloads.create({
-        entry: entry.id,
-        quant: variant.quant,
-        name: entry.name,
-        publisher: entry.publisher,
-        source: entry.source,
-        format: variant.format,
-        size: variant.size,
-        done: 0,
-        speed: 0,
-        state: 'queued',
-        started: Date.now(),
-        ended: null,
-        error: null,
-    })
+    const key = `${entry.id}:${variant.quant}`
+    if (activePull(entry.id, variant.quant) !== undefined || queueing.has(key)) return
+    queueing.add(key)
+    await downloads
+        .create({
+            entry: entry.id,
+            quant: variant.quant,
+            name: entry.name,
+            publisher: entry.publisher,
+            source: entry.source,
+            format: variant.format,
+            size: variant.size,
+            done: 0,
+            speed: 0,
+            state: 'queued',
+            started: Date.now(),
+            ended: null,
+            error: null,
+        })
+        .finally(() => queueing.delete(key))
     log('info', 'pull', `queued ${entry.name} ${variant.quant} (${bytes(variant.size)}) from ${SOURCES[entry.source].label}`)
 }
 
@@ -133,7 +140,8 @@ async function land(one: Download): Promise<void> {
         return
     }
     const model = modelOf(entry, variant, one.source, Date.now())
-    await models.insert([model])
+    // A model already in the library, as from a pull of the same variant from elsewhere, is kept once.
+    if (!state.models.rows().some((kept) => kept.id === model.id)) await models.insert([model])
     const done = { ...one, state: 'done' as const, done: one.size, speed: 0, ended: Date.now() }
     await downloads.update(one.id, { state: 'done', done: one.size, speed: 0, ended: done.ended })
     log('info', 'pull', `${one.name} ${one.quant} is in the library (${bytes(model.size)}, ${String(model.files.length)} files)`)

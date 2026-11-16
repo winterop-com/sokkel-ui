@@ -7,6 +7,7 @@ import {
     ComboboxChip,
     ComboboxChips,
     ComboboxChipsInput,
+    ComboboxCollection,
     ComboboxContent,
     ComboboxEmpty,
     ComboboxGroup,
@@ -165,11 +166,13 @@ export const AddStep: StoryObj = {
                             <ComboboxGroup key={group.group} items={group.items}>
                                 {index > 0 && <ComboboxSeparator />}
                                 <ComboboxLabel>{group.group}</ComboboxLabel>
-                                {group.items.map((item) => (
-                                    <ComboboxItem key={item} value={item}>
-                                        <span className="font-mono">{item}</span>
-                                    </ComboboxItem>
-                                ))}
+                                <ComboboxCollection>
+                                    {(item: string) => (
+                                        <ComboboxItem key={item} value={item}>
+                                            <span className="font-mono">{item}</span>
+                                        </ComboboxItem>
+                                    )}
+                                </ComboboxCollection>
                             </ComboboxGroup>
                         )}
                     </ComboboxList>

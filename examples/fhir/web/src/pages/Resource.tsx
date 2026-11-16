@@ -10,7 +10,7 @@ import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem } from '@winterop-com/sokkel-ui/StatusLine'
 import { Braces, RotateCcw, Save, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
@@ -84,8 +84,8 @@ export function ResourcePage({
     const refused = (failure: unknown, verb: string) => {
         if (failure instanceof Refused) {
             setAnswer(key, failure.issues)
-            toast.error(`Not ${verb}`, { description: `${String(failure.status)}: ${failure.message}` })
-        } else toast.error(`Not ${verb}`, { description: failure instanceof Error ? failure.message : String(failure) })
+            toast.add({ type: 'error', title: `Not ${verb}`, description: `${String(failure.status)}: ${failure.message}` })
+        } else toast.add({ type: 'error', title: `Not ${verb}`, description: failure instanceof Error ? failure.message : String(failure) })
     }
 
     const save = () => {
@@ -98,7 +98,11 @@ export function ResourcePage({
                 setDraft(key, undefined)
                 setAnswer(key, [])
                 setAnswer(`${type}/${made.resource.id}`, made.warnings)
-                toast.success(`${type}/${made.resource.id} created`, { description: 'Saved as version 1.' })
+                toast.add({
+                    type: 'success',
+                    title: `${type}/${made.resource.id} created`,
+                    description: `Saved as version ${made.resource.meta?.versionId ?? '1'}.`,
+                })
                 go(`/resources/${type}/${made.resource.id}`)
                 return
             }
@@ -106,8 +110,13 @@ export function ResourcePage({
             setDraft(key, undefined)
             setAnswer(key, kept.warnings)
             const same = kept.resource.meta?.versionId === String(version)
-            if (same) toast('Nothing changed', { description: 'The server kept the version it had.' })
-            else toast.success(`Saved as version ${kept.resource.meta?.versionId ?? ''}`, { description: `${key} on ${SERVER.name}` })
+            if (same) toast.add({ title: 'Nothing changed', description: 'The server kept the version it had.' })
+            else
+                toast.add({
+                    type: 'success',
+                    title: `Saved as version ${kept.resource.meta?.versionId ?? ''}`,
+                    description: `${key} on ${SERVER.name}`,
+                })
         }
         run().then(
             () => setSaving(false),
@@ -125,7 +134,7 @@ export function ResourcePage({
                 setSaving(false)
                 setDeleting(false)
                 setDraft(key, undefined)
-                toast.success(`${key} deleted`, { description: 'Its versions stay in the history.' })
+                toast.add({ type: 'success', title: `${key} deleted`, description: 'Its versions stay in the history.' })
                 go(`/resources/${type}`)
             },
             (failure: unknown) => {

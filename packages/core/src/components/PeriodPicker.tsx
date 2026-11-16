@@ -3,11 +3,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { cn } from '../lib/cn'
 import {
     PERIOD_ISSUE_WORDS,
+    PERIOD_LABEL_WORDS,
     PERIOD_TYPES,
     parsePeriod,
     periodIssue,
     recentPeriods,
     type PeriodIssueWords,
+    type PeriodLabelWords,
     type PeriodType,
 } from '../lib/periods'
 import { ISSUE_EDGE, ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
@@ -17,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, Sele
 export type { Period, PeriodType } from '../lib/periods'
 
 /** The words a period picker says. */
-export interface PeriodPickerWords extends PeriodIssueWords, IssueWords {
+export interface PeriodPickerWords extends PeriodIssueWords, PeriodLabelWords, IssueWords {
     /** The last row of the list, which opens the field an id is typed in. */
     other: string
     /** The typed field's name. */
@@ -28,6 +30,7 @@ export interface PeriodPickerWords extends PeriodIssueWords, IssueWords {
 
 const WORDS: PeriodPickerWords = {
     ...PERIOD_ISSUE_WORDS,
+    ...PERIOD_LABEL_WORDS,
     ...ISSUE_WORDS,
     other: 'Other period',
     typed: 'Period id',
@@ -86,7 +89,10 @@ export function PeriodPicker({
 }: PeriodPickerProps) {
     const words = { ...WORDS, ...given }
     const day = today ?? localToday()
-    const periods = useMemo(() => recentPeriods(type, day, count), [type, day, count])
+    // Labeled again when the app passes new words; the ids alone decide what the list holds.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- `words` is made from `given` each render
+    const periods = useMemo(() => recentPeriods(type, day, count, words), [type, day, count, given])
+    const ids = periods.map((period) => period.id).join(' ')
     const listed = value !== null && periods.some((period) => period.id === value)
     const [typing, setTyping] = useState(value !== null && !listed)
     const [text, setText] = useState(value !== null && !listed ? value : '')
@@ -100,7 +106,7 @@ export function PeriodPicker({
             setText(value)
         }
         // oxlint-disable-next-line react-hooks/exhaustive-deps -- only a new value from outside is followed; the text follows typing
-    }, [value, periods])
+    }, [value, ids])
 
     useEffect(() => onIssueChange?.(shown), [shown, onIssueChange])
 
@@ -118,7 +124,7 @@ export function PeriodPicker({
                     if (next === null) return
                     if (next === OTHER) {
                         setTyping(true)
-                        const read = parsePeriod(text, type)
+                        const read = parsePeriod(text, type, words)
                         if (read !== null) onValueChange(read.id)
                         return
                     }
@@ -160,7 +166,7 @@ export function PeriodPicker({
                         onChange={(event) => {
                             const next = event.target.value
                             setText(next)
-                            const read = parsePeriod(next, type)
+                            const read = parsePeriod(next, type, words)
                             onValueChange(read === null ? null : read.id)
                         }}
                     />

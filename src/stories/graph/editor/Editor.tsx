@@ -19,6 +19,7 @@ import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@winterop-com/sokkel-ui/primitives/popover'
 import { Center, Fill, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /** The canvas of the editor: the pipeline with its toolbar, the open picker, and the last notice. */
 export function EditorCanvas({
@@ -275,9 +276,11 @@ function EditorStage({
                 {palette}
                 <Fill className="max-md:order-first max-md:h-[65svh] max-md:flex-none">{children}</Fill>
                 {aside !== undefined && (
-                    <Stack as="aside" gap="none" className="shrink-0 overflow-y-auto rounded-surface border border-border bg-card md:w-80">
-                        {aside}
-                    </Stack>
+                    <Surface className="shrink-0 overflow-y-auto md:w-80">
+                        <Stack as="aside" gap="none">
+                            {aside}
+                        </Stack>
+                    </Surface>
                 )}
             </Row>
         </Stack>

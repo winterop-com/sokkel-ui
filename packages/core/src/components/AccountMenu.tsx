@@ -109,7 +109,8 @@ export function AccountMenu({
     const openShortcuts = onShortcuts ?? shellShortcuts
     // The `?` beside Keyboard shortcuts is drawn only where the key works.
     const keyed = inShell ? shellShortcuts !== undefined : onShortcuts !== undefined
-    const initial = name.slice(0, 1).toUpperCase()
+    // By code point, so a name that starts outside the basic plane keeps its whole first letter.
+    const initial = ([...name][0] ?? '').toUpperCase()
     const avatar = (size: string) => (
         <Avatar.Root
             className={cn(

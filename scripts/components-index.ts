@@ -68,6 +68,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/schema/checks': 'what the checker loads in one fetch: `validate` and the words for its issues',
         'components/schema/issue-words': "`SchemaForm`'s words for each issue, loaded with the checker",
         'components/schema/MapField': "`SchemaForm`'s key/value table for a map of scalars",
+        'components/schema/patterns': "the checker's schema patterns, each tested only as far as it answers quickly",
         'components/drag-parts':
             'what `RailDrops` and `RepeatedDrag` hand the rail and a `RepeatedGroup` to drag with, so neither part loads the drag engine itself',
         'components/settings-parts':
@@ -378,6 +379,7 @@ const CORE_AREAS: Record<string, string> = {
     Loaders: 'Actions, dialogs and feedback',
     Loading: 'Actions, dialogs and feedback',
     ErrorBoundary: 'Actions, dialogs and feedback',
+    NotFound: 'Actions, dialogs and feedback',
     PageState: 'Actions, dialogs and feedback',
     PointMenu: 'Actions, dialogs and feedback',
     Problem: 'Actions, dialogs and feedback',
@@ -519,7 +521,7 @@ export function pascal(name: string): string {
         .join('')
 }
 
-type Exports = Record<string, string | { import?: string }>
+type Exports = Record<string, string | { import?: string; types?: string }>
 
 /**
  * The path an app imports a source module by, from its package's `exports` map, or undefined when

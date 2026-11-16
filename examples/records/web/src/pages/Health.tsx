@@ -12,7 +12,7 @@ import { Unfoldable } from '@winterop-com/sokkel-ui/Unfoldable'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { RefreshCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { households } from '../data/backend'
@@ -51,11 +51,15 @@ export function Health() {
                 const found = checkMetadata(all)
                 setFindings(found)
                 setBusy(false)
-                if (said) toast('Checked again', { description: count(found.length, 'finding') })
+                if (said) toast.add({ title: 'Checked again', description: count(found.length, 'finding') })
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not checked', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({
+                    type: 'error',
+                    title: 'Not checked',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                })
             },
         )
     }

@@ -22,7 +22,7 @@ import { YesNoField } from '@winterop-com/sokkel-ui/YesNoField'
 import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
@@ -74,7 +74,8 @@ export function ProgramRules({ selected }: { selected?: string }) {
         })
         const changed = next.filter((one, place) => one.priority !== place + 1)
         Promise.all(changed.map((one) => programRules.update(one.id, { priority: priorities.get(one.id) ?? one.priority }))).catch(
-            (failure: unknown) => toast.error('Not moved', { description: failure instanceof Error ? failure.message : String(failure) }),
+            (failure: unknown) =>
+                toast.add({ type: 'error', title: 'Not moved', description: failure instanceof Error ? failure.message : String(failure) }),
         )
     }
 
@@ -94,7 +95,11 @@ export function ProgramRules({ selected }: { selected?: string }) {
             .then(
                 (one: ProgramRule) => go(`/program-rules/${one.id}`),
                 (failure: unknown) =>
-                    toast.error('Not created', { description: failure instanceof Error ? failure.message : String(failure) }),
+                    toast.add({
+                        type: 'error',
+                        title: 'Not created',
+                        description: failure instanceof Error ? failure.message : String(failure),
+                    }),
             )
     }
 
@@ -181,11 +186,11 @@ function Editor({
             () => {
                 setBusy(false)
                 onDiscard()
-                toast.success('Saved', { description: draft.name })
+                toast.add({ type: 'success', title: 'Saved', description: draft.name })
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not saved', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({ type: 'error', title: 'Not saved', description: failure instanceof Error ? failure.message : String(failure) })
             },
         )
     }
@@ -193,10 +198,15 @@ function Editor({
     const remove = () =>
         programRules.remove(saved.id).then(
             () => {
-                toast(`${saved.name} deleted`)
+                toast.add({ title: `${saved.name} deleted` })
                 go('/program-rules')
             },
-            (failure: unknown) => toast.error('Not deleted', { description: failure instanceof Error ? failure.message : String(failure) }),
+            (failure: unknown) =>
+                toast.add({
+                    type: 'error',
+                    title: 'Not deleted',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                }),
         )
 
     return (

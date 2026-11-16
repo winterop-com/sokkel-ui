@@ -57,6 +57,20 @@ describe('nextRuns', () => {
         expect(iso(nextRuns('0 0 1 * 0', FROM, 3))).toEqual(['2026-11-08T00:00', '2026-11-15T00:00', '2026-11-22T00:00'])
     })
 
+    it('fires only on a day that is both when one of the two day fields starts with *, as Vixie cron does', () => {
+        // Odd days of the month that are Mondays: 2026-11-09 and 2026-11-23 are Mondays on odd days, 2026-11-16 is not.
+        expect(iso(nextRuns('0 0 */2 * 1', FROM, 3))).toEqual(['2026-11-09T00:00', '2026-11-23T00:00', '2026-12-07T00:00'])
+        expect(parseCron('0 0 */2 * 1')?.bothDays).toBe(true)
+        expect(parseCron('0 0 1 * 1')?.bothDays).toBe(false)
+        expect(parseCron('0 0 * * 1')?.bothDays).toBe(false)
+    })
+
+    it('refuses a step past the largest value of its field', () => {
+        expect(parseCron('*/90 * * * *')).toBeNull()
+        expect(parseCron('0 */24 * * *')).toBeNull()
+        expect(parseCron('*/59 * * * *')?.minutes).toEqual([0, 59])
+    })
+
     it('runs on the last day, the last weekday and the weekday nearest a day, within the month', () => {
         const days = (expression: string, count = 4) => iso(nextRuns(expression, FROM, count)).map((at) => at.slice(0, 10))
         expect(days('0 2 L * *')).toEqual(['2026-11-30', '2026-12-31', '2027-01-31', '2027-02-28'])
@@ -178,6 +192,13 @@ describe('describeCron', () => {
         ['0 9 * * 5#2', 'At 09:00 on the 2nd Friday of the month'],
         ['0 9 * * friL', 'At 09:00 on the last Friday of the month'],
         ['0 9 1,L * *', 'At 09:00 on the 1st and on the last day of the month'],
+        ['* 2 * * *', 'Every minute from 02:00 to 02:59'],
+        ['* 9-17 * * *', 'Every minute from 09:00 to 17:59'],
+        ['* 2,14 * * *', 'Every minute of hours 2 and 14'],
+        ['*/5 2 * * *', 'Every 5 minutes from 02:00 to 02:59'],
+        ['0 0 */2 * *', 'At 00:00 on every 2nd day of the month'],
+        ['0 0 */2 * 1', 'At 00:00 on every 2nd day of the month, when it falls on Monday'],
+        ['0 0 1,15 * 1', 'At 00:00 on the 1st and 15th or on Monday'],
     ])('reads %s as %s', (expression, said) => {
         expect(describeCron(expression)).toBe(said)
     })

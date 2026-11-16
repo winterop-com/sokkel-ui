@@ -22,7 +22,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } f
 
 import { cn } from '../lib/cn'
 import { returnFocusOnKeyboard } from '../lib/focus'
-import { composing } from '../lib/keys'
+import { composing, touchTyping } from '../lib/keys'
 import { Markdown, type MarkdownWords } from './Markdown'
 import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { Segmented } from './Segmented'
@@ -265,7 +265,8 @@ export interface MessageComposerProps {
 /**
  * Where a message to people is written: the formatting toolbar on top, the text that grows with
  * what is typed, and a row under it with add, the text style toggle, emoji and mentions at the left,
- * then any `actions`, and Send at the right. Enter sends and Shift+Enter breaks the line. A toolbar
+ * then any `actions`, and Send at the right. Enter sends and Shift+Enter breaks the line; on a touch
+ * screen Enter breaks the line and only Send sends. A toolbar
  * button wraps the selection in markdown; the code block button opens a menu of languages and
  * puts the selection, or the cursor, inside a fence named for the one chosen.
  *
@@ -334,6 +335,8 @@ export function MessageComposer({
     const picked = useRef(false)
     const id = useId()
     const empty = value.trim() === ''
+    // Read once: on a touch screen Enter breaks the line, as its keyboard has no Shift+Enter to reach for.
+    const [touch] = useState(touchTyping)
 
     const setMode = (next: MessageComposerMode) => {
         if (next === mode) return
@@ -614,7 +617,7 @@ export function MessageComposer({
                     onSelect={(event) => mention.onSelect(event.currentTarget.value, event.currentTarget.selectionStart)}
                     onKeyDown={(event) => {
                         if (mention.onKeyDown(event)) return
-                        if (event.key === 'Enter' && !event.shiftKey && !composing(event)) {
+                        if (event.key === 'Enter' && !event.shiftKey && !touch && !composing(event)) {
                             event.preventDefault()
                             if (!empty) send()
                         }

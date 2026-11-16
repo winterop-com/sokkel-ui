@@ -5,6 +5,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@winterop-com/sokkel-ui/primitives/input-otp'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 function Six({ invalid }: { invalid?: boolean }) {
     return (
@@ -99,20 +100,24 @@ export const States: StoryObj = {
 /** A deletion confirmed with an authenticator's six-digit code, the Delete button shut until it is complete. */
 export const ConfirmDelete: StoryObj = {
     render: () => (
-        <Stack gap="lg" className="max-w-sm rounded-lg border border-border p-4">
-            <Stack gap="2xs">
-                <p className="text-sm font-medium">Confirm with your authenticator</p>
-                <p className="text-sm text-muted-foreground">Deleting the service api stops 4 jobs. Enter the six-digit code to go on.</p>
+        <Surface pad className="max-w-sm">
+            <Stack gap="lg">
+                <Stack gap="2xs">
+                    <p className="text-sm font-medium">Confirm with your authenticator</p>
+                    <p className="text-sm text-muted-foreground">
+                        Deleting the service api stops 4 jobs. Enter the six-digit code to go on.
+                    </p>
+                </Stack>
+                <Otp maxLength={6} initial="4829" aria-label="Authenticator code">
+                    <Six />
+                </Otp>
+                <Row align="stretch" justify="end" wrap>
+                    <Button variant="outline">Cancel</Button>
+                    <Button variant="destructive" disabled>
+                        Delete
+                    </Button>
+                </Row>
             </Stack>
-            <Otp maxLength={6} initial="4829" aria-label="Authenticator code">
-                <Six />
-            </Otp>
-            <Row align="stretch" justify="end" wrap>
-                <Button variant="outline">Cancel</Button>
-                <Button variant="destructive" disabled>
-                    Delete
-                </Button>
-            </Row>
-        </Stack>
+        </Surface>
     ),
 }

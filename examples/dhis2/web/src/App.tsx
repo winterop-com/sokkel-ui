@@ -1,3 +1,4 @@
+import { NotFound } from '@winterop-com/sokkel-ui/NotFound'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
@@ -14,7 +15,7 @@ import {
     DropdownMenuSubContent,
     DropdownMenuSubTrigger,
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
-import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
+import { Toaster } from '@winterop-com/sokkel-ui/primitives/toast'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
@@ -111,6 +112,7 @@ export function App() {
     const settingsRoute = useOverlayRoute(frame.route, 'settings')
     const route = settingsRoute.route
     const place = PLACES_BY_ROUTE[route[0] ?? ''] ?? 'indicators'
+    const missing = PLACES_BY_ROUTE[route[0] ?? ''] === undefined
     const groups = railGroups(place)
     const [foot, setFoot] = useState<Foot>({})
     const [section, setSection] = useState('appearance')
@@ -282,7 +284,7 @@ export function App() {
                 : undefined
     const trail: Crumb[] = [
         { label: 'larkspur', href: '#/', code: true },
-        { label: TITLES[place] ?? '', href: opened === undefined ? undefined : `#/${place}` },
+        { label: missing ? 'Not found' : (TITLES[place] ?? ''), href: opened === undefined ? undefined : `#/${place}` },
         ...(opened === undefined ? [] : [{ label: opened }]),
     ]
 
@@ -294,6 +296,7 @@ export function App() {
     else if (first === 'data-elements') page = <DataElements selected={second} />
     else if (first === 'org-units') page = <OrgUnits selected={second} />
     else if (first === 'functions') page = <Functions />
+    else if (missing) page = <NotFound />
     else page = <Indicators />
 
     return (
@@ -395,7 +398,7 @@ export function App() {
                                 if (at === 'server') setVersion(LATEST)
                             }}
                         />
-                        <Toaster position="bottom-right" />
+                        <Toaster />
                     </FootContext.Provider>
                 </StatusProvider>
             </VersionContext.Provider>

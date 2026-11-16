@@ -12,7 +12,7 @@ import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { ArrowUpRight, Copy, RefreshCw, Send, Undo2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
@@ -104,11 +104,11 @@ export function Responses({ state }: { state?: string }) {
         receipts.list().then(
             (fresh) => {
                 setBusy(false)
-                toast('Read again', { description: `${count(fresh.length, 'response')} on the server.` })
+                toast.add({ title: 'Read again', description: `${count(fresh.length, 'response')} on the server.` })
             },
             (failure: unknown) => {
                 setBusy(false)
-                toast.error('Not read', { description: failure instanceof Error ? failure.message : String(failure) })
+                toast.add({ type: 'error', title: 'Not read', description: failure instanceof Error ? failure.message : String(failure) })
             },
         )
     }
@@ -116,11 +116,17 @@ export function Responses({ state }: { state?: string }) {
     const sendOn = () =>
         forwardAll().then(
             ({ taken, refused }) =>
-                toast.success(`${String(taken + refused)} sent on to the register`, {
+                toast.add({
+                    type: 'success',
+                    title: `${String(taken + refused)} sent on to the register`,
                     description: refused === 0 ? 'The register took them all.' : `${String(refused)} refused; each receipt says why.`,
                 }),
             (failure: unknown) =>
-                toast.error('Nothing was sent on', { description: failure instanceof Error ? failure.message : String(failure) }),
+                toast.add({
+                    type: 'error',
+                    title: 'Nothing was sent on',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                }),
         )
 
     const actions = (receipt: Receipt): DataAction[] => [
@@ -131,8 +137,8 @@ export function Responses({ state }: { state?: string }) {
             icon: <Copy />,
             onSelect: () =>
                 void navigator.clipboard.writeText(receipt.receipt).then(
-                    () => toast('Copied', { description: receipt.receipt }),
-                    () => toast.error('The browser did not let the page copy'),
+                    () => toast.add({ title: 'Copied', description: receipt.receipt }),
+                    () => toast.add({ type: 'error', title: 'The browser did not let the page copy' }),
                 ),
         },
         ...(receipt.state === 'received' || receipt.state === 'rejected'
@@ -146,10 +152,18 @@ export function Responses({ state }: { state?: string }) {
                           void forward(receipt).then(
                               (next) =>
                                   next.state === 'rejected'
-                                      ? toast.error('Refused by the register', { description: next.refusal ?? undefined })
-                                      : toast.success('Sent on', { description: 'The register took the record.' }),
+                                      ? toast.add({
+                                            type: 'error',
+                                            title: 'Refused by the register',
+                                            description: next.refusal ?? undefined,
+                                        })
+                                      : toast.add({ type: 'success', title: 'Sent on', description: 'The register took the record.' }),
                               (failure: unknown) =>
-                                  toast.error('Not sent on', { description: failure instanceof Error ? failure.message : String(failure) }),
+                                  toast.add({
+                                      type: 'error',
+                                      title: 'Not sent on',
+                                      description: failure instanceof Error ? failure.message : String(failure),
+                                  }),
                           ),
                   },
               ]
@@ -164,9 +178,16 @@ export function Responses({ state }: { state?: string }) {
                       destructive: true,
                       onSelect: () =>
                           void withdraw(receipt, 'Taken back from the list.').then(
-                              () => toast.success('Withdrawn', { description: 'The register keeps the record, no longer active.' }),
+                              () =>
+                                  toast.add({
+                                      type: 'success',
+                                      title: 'Withdrawn',
+                                      description: 'The register keeps the record, no longer active.',
+                                  }),
                               (failure: unknown) =>
-                                  toast.error('Not withdrawn', {
+                                  toast.add({
+                                      type: 'error',
+                                      title: 'Not withdrawn',
                                       description: failure instanceof Error ? failure.message : String(failure),
                                   }),
                           ),

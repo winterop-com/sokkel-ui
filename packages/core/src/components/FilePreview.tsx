@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Code } from './Code'
@@ -100,11 +100,16 @@ function CsvTable({ text, cut, maxRows, words }: { text: string; cut: boolean; m
 }
 
 function Json({ text, cut, room, words }: { text: string; cut: boolean; room: string; words: FilePreviewWords }) {
-    let value: unknown
-    try {
-        if (cut) throw new Error('cut')
-        value = JSON.parse(text)
-    } catch {
+    // Read once per text, not each time the parent draws: a file may be a megabyte of JSON.
+    const read = useMemo((): { value: unknown } | null => {
+        if (cut) return null
+        try {
+            return { value: JSON.parse(text) as unknown }
+        } catch {
+            return null
+        }
+    }, [text, cut])
+    if (read === null) {
         return (
             <div className={cn('flex flex-col gap-2', room === FILL && FILL)}>
                 {!cut && <p className="text-xs text-muted-foreground">{words.unreadable}</p>}
@@ -114,7 +119,7 @@ function Json({ text, cut, room, words }: { text: string; cut: boolean; room: st
     }
     return (
         <div className={cn('overflow-auto rounded-surface border border-border-strong bg-card p-3 font-mono text-xs', room)}>
-            <JsonTree value={value} />
+            <JsonTree value={read.value} />
         </div>
     )
 }

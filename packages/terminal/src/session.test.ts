@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { nextWrite, sessionText } from './session'
+import { sessionText, sessionWrite, type TerminalEntry } from './session'
 
 const E = '\u001b['
 const exited = (code: number) => `exited with ${code}`
@@ -39,12 +39,41 @@ describe('sessionText', () => {
     })
 })
 
-describe('nextWrite', () => {
-    it('writes only what was added when the text continues', () => {
-        expect(nextWrite('fetch', 'fetch ok')).toEqual({ reset: false, data: ' ok' })
+describe('sessionWrite', () => {
+    const write = (before: TerminalEntry[], after: TerminalEntry[]) => {
+        const first = sessionWrite(undefined, before, '$', exited)
+        const next = sessionWrite(first.written, after, '$', exited)
+        // Whatever it writes, the terminal ends up showing the whole session.
+        expect(next.reset ? next.data : first.data + next.data).toBe(sessionText(after, '$', exited))
+        return next
+    }
+    const run: TerminalEntry = { id: '1', command: 'jobs run nightly-export', output: 'fetch' }
+
+    it('writes only what was added as the last output grows and entries follow', () => {
+        expect(write([run], [{ ...run, output: 'fetch ok' }])).toMatchObject({ reset: false, data: ' ok' })
+        expect(write([run], [run, { id: '2', command: 'echo $?', output: '0' }])).toMatchObject({ reset: false })
+    })
+
+    it('writes nothing when nothing changed, even as new objects', () => {
+        expect(write([run], [{ ...run }])).toMatchObject({ reset: false, data: '' })
+    })
+
+    it('adds after entries that showed nothing', () => {
+        expect(write([run, { id: '2' }], [run, { id: '2', output: 'validate ok' }])).toMatchObject({ reset: false })
+        expect(write([{ id: '0' }], [{ id: '0' }, run])).toMatchObject({ reset: false })
     })
 
     it('resets and writes everything when what was written changed', () => {
-        expect(nextWrite('fetch ok', 'validate')).toEqual({ reset: true, data: 'validate' })
+        expect(write([run], [{ ...run, output: 'validate' }]).reset).toBe(true)
+        expect(
+            write(
+                [run, { id: '2', output: '0' }],
+                [
+                    { ...run, output: 'fetch ok' },
+                    { id: '2', output: '0' },
+                ],
+            ).reset,
+        ).toBe(true)
+        expect(write([run, { id: '2', output: '0' }], [run]).reset).toBe(true)
     })
 })

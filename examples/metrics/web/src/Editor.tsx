@@ -17,7 +17,7 @@ import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { useUnsavedChanges } from '@winterop-com/sokkel-ui/UnsavedChanges'
 import { Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 
 import { TimeControls } from './controls'
 import { dashboards } from './data'
@@ -134,7 +134,7 @@ export function EditorPage({
     const [draft, setDraft] = useState<Panel>(() => original ?? newPanel())
     const [saving, setSaving] = useState(false)
     const dirty = original === undefined || JSON.stringify(draft) !== JSON.stringify(original)
-    const guard = useUnsavedChanges(dirty && !saving, { hashRoutes: true })
+    const guard = useUnsavedChanges(dirty && !saving, { hashRoutes: true, overlays: ['settings'] })
     const back = (focus?: string) => {
         const params = new URLSearchParams(kept)
         if (focus !== undefined) params.set('focus', focus)
@@ -189,7 +189,7 @@ export function EditorPage({
         const panels =
             original === undefined ? [...dashboard.panels, panel] : dashboard.panels.map((one) => (one.id === panel.id ? panel : one))
         void dashboards.update(dashboard.id, { panels }).then(() => {
-            toast.success(`${panel.title} saved to ${dashboard.title}`)
+            toast.add({ type: 'success', title: `${panel.title} saved to ${dashboard.title}` })
             back(panel.id)
         })
     }

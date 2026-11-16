@@ -1,3 +1,4 @@
+import { NotFound } from '@winterop-com/sokkel-ui/NotFound'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import type { CodeProblem } from '@winterop-com/sokkel-ui/CodeEditor'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
@@ -5,7 +6,7 @@ import { DEFAULT_APPEARANCE } from '@winterop-com/sokkel-ui/lib/appearance'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import type { SearchGroup, SearchSource } from '@winterop-com/sokkel-ui/lib/search'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
-import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
+import { Toaster } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
@@ -130,6 +131,7 @@ export function App() {
     const route = settingsRoute.route
     const [first = '', second, third] = route
     const place = TITLES[first] === undefined ? 'overview' : first
+    const missing = first !== '' && TITLES[first] === undefined
     const { rows } = useCollection(resources)
     const counts = Object.fromEntries(TYPE_NAMES.map((name) => [name, (rows ?? []).filter((row) => row.type === name).length]))
     const resourceType =
@@ -140,7 +142,8 @@ export function App() {
               : undefined
     const groups = railGroups(place, place === 'resources' ? resourceType : undefined, counts)
     const [foot, setFoot] = useState<Foot>({})
-    const [problems, setProblems] = useState<readonly CodeProblem[]>([])
+    // The open resource's problems, kept with its key, so another resource's never show.
+    const [problems, setProblems] = useState<{ key: string; list: readonly CodeProblem[] }>({ key: '', list: [] })
     const [section, setSection] = useState('appearance')
     const [settingsQuery, setSettingsQuery] = useState('')
     const [prefs, setPrefs] = usePrefs()
@@ -296,7 +299,7 @@ export function App() {
         },
     ]
 
-    const trail: Crumb[] = [{ label: SERVER.name, href: '#/', code: true }, { label: TITLES[place] ?? '' }]
+    const trail: Crumb[] = [{ label: SERVER.name, href: '#/', code: true }, { label: missing ? 'Not found' : (TITLES[place] ?? '') }]
     if (place === 'resources' && resourceType !== undefined) {
         trail[1] = { label: 'Resources', href: '#/resources/Patient' }
         trail.push({ label: resourceType, ...(third === undefined ? {} : { href: `#/resources/${resourceType}` }) })
@@ -310,14 +313,16 @@ export function App() {
     let page: ReactNode
     let panel: ReactNode
     if (place === 'resources' && resourceType !== undefined && third !== undefined) {
-        page = <ResourcePage key={`${resourceType}/${third}`} type={resourceType} id={third} onProblems={setProblems} />
-        panel = <ResourcePanel key={`${resourceType}/${third}`} type={resourceType} id={third} problems={problems} />
+        const shown = `${resourceType}/${third}`
+        page = <ResourcePage key={shown} type={resourceType} id={third} onProblems={(list) => setProblems({ key: shown, list })} />
+        panel = <ResourcePanel key={shown} type={resourceType} id={third} problems={problems.key === shown ? problems.list : []} />
     } else if (place === 'resources' && resourceType !== undefined) page = <Resources type={resourceType} />
     else if (place === 'fhirpath')
         page = <FhirPathPage subjectKey={second !== undefined && third !== undefined ? `${second}/${third}` : undefined} />
     else if (place === 'cql' && second !== undefined) page = <CqlEditor key={second} id={second} />
     else if (place === 'cql') page = <CqlLibraries />
     else if (place === 'search') page = <SearchPage />
+    else if (missing) page = <NotFound />
     else page = <Overview />
 
     return (
@@ -374,7 +379,7 @@ export function App() {
                             if (at === 'tools') setPrefs({ live: DEFAULT_PREFS.live, pageSize: DEFAULT_PREFS.pageSize })
                         }}
                     />
-                    <Toaster position="bottom-right" />
+                    <Toaster />
                 </FootContext.Provider>
             </StatusProvider>
             {frame.dialogs}

@@ -131,7 +131,16 @@ export function createStore<V>(initial: V, { key, ...options }: StoredOptions<V>
         for (const listener of Array.from(listeners)) listener()
     }
     let stopKept: (() => void) | undefined
+    // Reads the key again while nothing listens to it, since a write made elsewhere then went unheard.
+    const catchUp = () => {
+        if (full === undefined || stopKept !== undefined) return
+        const now = readStored(full)
+        if (now === raw) return
+        raw = now
+        current = parseStored(now, initial, options.check, options.normalize)
+    }
     const set = (next: V) => {
+        catchUp()
         if (Object.is(next, current)) return
         current = next
         if (full !== undefined) {
@@ -141,10 +150,17 @@ export function createStore<V>(initial: V, { key, ...options }: StoredOptions<V>
         tell()
     }
     return {
-        get: () => current,
+        get: () => {
+            catchUp()
+            return current
+        },
         set,
-        update: (change) => set(change(current)),
+        update: (change) => {
+            catchUp()
+            set(change(current))
+        },
         subscribe: (listener) => {
+            catchUp()
             listeners.add(listener)
             // A kept value follows writes to its key made elsewhere: another store, a hook, another tab.
             if (full !== undefined && stopKept === undefined)

@@ -20,7 +20,7 @@ import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { tableEditing } from '@winterop-com/sokkel-ui/table-editing'
 import { ChartColumn, Copy, Download, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { datasets as datasetStore } from '../backend'
@@ -152,10 +152,10 @@ export function DatasetPage({
                 { id: freshId(`${current.id}-r`), ...Object.fromEntries(current.columns.map((column) => [column.id, ''])) } as DataRow,
                 ...current.rows,
             ],
-        })).then(() => toast.success('A blank row added at the top'))
+        })).then(() => toast.add({ type: 'success', title: 'A blank row added at the top' }))
     const removeRows = (ids: ReadonlySet<string>) =>
         void write((current) => ({ rows: current.rows.filter((row) => !ids.has(row.id)) })).then(() =>
-            toast.success(`${counted(ids.size, 'row')} deleted`),
+            toast.add({ type: 'success', title: `${counted(ids.size, 'row')} deleted` }),
         )
 
     const rowColumns: DataColumn<Line>[] = dataset.columns.map((column) => ({
@@ -272,7 +272,7 @@ export function DatasetPage({
         void write((current) => ({
             rows: current.rows.map((row) => ({ ...row, [id]: '' }) as DataRow),
             columns: [...current.columns, { id, name, type: 'text' }],
-        })).then(() => toast.success(`${name} added; press its name to rename it`))
+        })).then(() => toast.add({ type: 'success', title: `${name} added; press its name to rename it` }))
     }
     const readers = dropping === null ? [] : drawn.filter((chart) => Object.values(chart.spec).includes(dropping.id))
 
@@ -319,7 +319,7 @@ export function DatasetPage({
                                                 freshId('ds'),
                                             )
                                             .then((made) => {
-                                                toast.success(`${made.name} made`)
+                                                toast.add({ type: 'success', title: `${made.name} made` })
                                                 go(`/datasets/${made.id}`)
                                             })
                                     }
@@ -394,7 +394,7 @@ export function DatasetPage({
                                         const rows = [...current.rows]
                                         rows.splice(at + 1, 0, { ...line.row, id: freshId(`${current.id}-r`) })
                                         return { rows }
-                                    }).then(() => toast.success('Row duplicated'))
+                                    }).then(() => toast.add({ type: 'success', title: 'Row duplicated' }))
                                 },
                             },
                             {
@@ -486,7 +486,7 @@ export function DatasetPage({
                                 (row) => Object.fromEntries(Object.entries(row).filter(([key]) => key !== gone.id)) as DataRow,
                             ),
                             columns: current.columns.filter((column) => column.id !== gone.id),
-                        })).then(() => toast.success(`${gone.name} deleted`))
+                        })).then(() => toast.add({ type: 'success', title: `${gone.name} deleted` }))
                     },
                 }}
             />

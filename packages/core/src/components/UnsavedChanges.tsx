@@ -167,6 +167,18 @@ export interface UnsavedChangesOptions {
      * answer, the address stays where the changes are.
      */
     hashRoutes?: boolean
+    /**
+     * With `hashRoutes`, the first parts of the hash routes drawn as overlays over the page rather
+     * than in its place, as Settings on `#/settings` is (`['settings']`): opening one, moving inside
+     * it and going back from it to the page are not leaving, and ask nothing.
+     */
+    overlays?: readonly string[]
+}
+
+/** The first part of a hash route in an address: `settings` in `#/settings/theme?tab=look`. */
+export function hashRouteHead(href: string): string {
+    const hash = new URL(href, 'http://page.invalid/').hash
+    return hash.replace(/^#\/?/, '').split(/[/?]/)[0] ?? ''
 }
 
 /** What `useUnsavedChanges` gives a page. */
@@ -193,14 +205,16 @@ export interface UnsavedChanges {
  */
 export function useUnsavedChanges(
     dirty: boolean,
-    { words: given, defaultAsking = false, hashRoutes = false }: UnsavedChangesOptions = {},
+    { words: given, defaultAsking = false, hashRoutes = false, overlays = [] }: UnsavedChangesOptions = {},
 ): UnsavedChanges {
     const words = { ...LEAVE_WORDS, ...given }
     const [asking, setAsking] = useState(defaultAsking)
     const [question] = useState(() => leaveQuestion(setAsking))
     const latest = useRef(dirty)
+    const overlayHeads = useRef(overlays)
     useLayoutEffect(() => {
         latest.current = dirty
+        overlayHeads.current = overlays
     })
     useEffect(() => {
         if (!dirty) return
@@ -222,6 +236,11 @@ export function useUnsavedChanges(
         if (!dirty || !hashRoutes) return
         confirmed.current = false
         let here = window.location.href
+        // The address of the page with the changes, which going back to from an overlay is not leaving.
+        let page = here
+        const overlayAt = (href: string) => overlayHeads.current.includes(hashRouteHead(href))
+        // A move to an overlay, inside one, or from one back to the page stays on the page.
+        const stays = (to: string) => overlayAt(to) || (to === page && overlayAt(window.location.href))
         // A move this guard makes itself, or one already confirmed, which its listeners let through.
         let passing = false
         const through = () => {
@@ -235,7 +254,7 @@ export function useUnsavedChanges(
         // Where the browser has the Navigation API, a move is stopped before it happens and, once
         // the reader leaves, made as it was asked: Back goes back, so the history stays as it was.
         const navigate = (event: GuardNavigateEvent) => {
-            if (!event.hashChange || !event.cancelable || through()) return
+            if (!event.hashChange || !event.cancelable || stays(event.destination.url) || through()) return
             event.preventDefault()
             const { url, key } = event.destination
             const traverse = event.navigationType === 'traverse'
@@ -265,17 +284,23 @@ export function useUnsavedChanges(
             const link = event.target instanceof Element ? event.target.closest('a[href]') : null
             if (!(link instanceof HTMLAnchorElement) || (link.target !== '' && link.target !== '_self')) return
             const to = new URL(link.href, window.location.href)
-            if (!samePage(to) || to.hash === window.location.hash || through()) return
+            if (!samePage(to) || to.hash === window.location.hash || stays(to.href) || through()) return
             event.preventDefault()
             leaveTo(to.href)
         }
         const moved = () => {
-            if (window.location.href === here || through()) return
+            if (window.location.href === here) return
             const to = window.location.href
+            if (stays(to) || (overlayAt(here) && to === page)) {
+                here = to
+                return
+            }
+            if (through()) return
             window.history.replaceState(window.history.state, '', here)
             leaveTo(to)
         }
         const changed = () => {
+            if (!overlayAt(window.location.href)) page = window.location.href
             if (!passing) return
             passing = false
             here = window.location.href

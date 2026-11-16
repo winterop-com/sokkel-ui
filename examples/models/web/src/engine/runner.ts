@@ -64,6 +64,8 @@ export async function stopRunner(): Promise<void> {
 const pause = (ms: number) => new Promise((done) => setTimeout(done, ms))
 
 const loads = new Map<string, Promise<void>>()
+/** The last load to make room and take it, which the next one waits on. */
+let reserving: Promise<unknown> = Promise.resolve()
 
 /**
  * Makes sure a model is in memory, loading it if it is not (for an answer, only when loading on
@@ -101,34 +103,39 @@ async function loadModel(model: Model): Promise<void> {
             `${model.name} needs ${bytes(need)} of memory and the runner may use ${bytes(limit)}. Raise the limit in Settings, or pick a smaller model.`,
         )
     }
-    let used = state.loaded.rows().reduce((sum, one) => sum + one.memory, 0)
-    const idle = state.loaded
-        .rows()
-        .filter((one) => one.state === 'ready' && (busy.get(one.id) ?? 0) === 0)
-        .sort((a, b) => a.usedAt - b.usedAt)
-    for (const one of idle) {
-        if (used + need <= limit) break
-        await loaded.remove(one.id)
-        used -= one.memory
-        log('info', 'loader', `unloaded ${one.model} to make room for ${model.name}`)
-    }
-    if (used + need > limit) {
-        log('error', 'loader', `no room for ${model.name}: ${bytes(used)} in use by models still answering`)
-        throw new Error(`There is no room for ${model.name}: the models still answering hold ${bytes(used)} of ${bytes(limit)}.`)
-    }
     const started = Date.now()
-    const row: Loaded = {
-        id: model.id,
-        model: model.name,
-        state: 'loading',
-        progress: 0,
-        memory: need,
-        context: Math.min(model.context, 8192),
-        loadedAt: started,
-        usedAt: started,
-        answers: 0,
-    }
-    await loaded.insert([row])
+    // Room is made and taken one load at a time, so two loads never both count the same free memory.
+    const reserve = reserving.then(async () => {
+        let used = state.loaded.rows().reduce((sum, one) => sum + one.memory, 0)
+        const idle = state.loaded
+            .rows()
+            .filter((one) => one.state === 'ready' && (busy.get(one.id) ?? 0) === 0)
+            .sort((a, b) => a.usedAt - b.usedAt)
+        for (const one of idle) {
+            if (used + need <= limit) break
+            await loaded.remove(one.id)
+            used -= one.memory
+            log('info', 'loader', `unloaded ${one.model} to make room for ${model.name}`)
+        }
+        if (used + need > limit) {
+            log('error', 'loader', `no room for ${model.name}: ${bytes(used)} in use by models still answering`)
+            throw new Error(`There is no room for ${model.name}: the models still answering hold ${bytes(used)} of ${bytes(limit)}.`)
+        }
+        const row: Loaded = {
+            id: model.id,
+            model: model.name,
+            state: 'loading',
+            progress: 0,
+            memory: need,
+            context: Math.min(model.context, 8192),
+            loadedAt: started,
+            usedAt: started,
+            answers: 0,
+        }
+        await loaded.insert([row])
+    })
+    reserving = reserve.catch(() => undefined)
+    await reserve
     log('info', 'loader', `loading ${model.name} ${model.quant} (${bytes(need)})`)
     const takes = 500 + (model.size / (2.4 * GB)) * 1000
     for (let at = 250; at < takes; at += 250) {

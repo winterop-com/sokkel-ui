@@ -367,14 +367,26 @@ export function search(all: readonly Stored[], text: string, pageSize: number): 
     }
     if (sort.length > 0) {
         const keys = sort.map((one) => ({ param: known.find((param) => param.name === one.replace(/^-/, '')), down: one.startsWith('-') }))
-        const first = (param: SearchParam | undefined, row: Stored) => {
+        const first = (param: SearchParam | undefined, row: Stored): string | number => {
             if (param === undefined) return ''
             const value = valuesOf(param, row.resource)[0]
+            // A quantity sorts by its figure, not its unit.
+            if (
+                param.type === 'quantity' &&
+                typeof value === 'object' &&
+                value !== null &&
+                typeof (value as { value?: unknown }).value === 'number'
+            )
+                return (value as { value: number }).value
             return typeof value === 'object' ? (stringsOf(value)[0] ?? tokensOf(value)[0]?.code ?? '') : String(value ?? '')
         }
         rows = [...rows].sort((left, right) => {
             for (const { param, down } of keys) {
-                const order = first(param, left).localeCompare(first(param, right), 'en', { numeric: true })
+                const [one, other] = [first(param, left), first(param, right)]
+                const order =
+                    typeof one === 'number' && typeof other === 'number'
+                        ? one - other
+                        : String(one).localeCompare(String(other), 'en', { numeric: true })
                 if (order !== 0) return down ? -order : order
             }
             return 0
@@ -389,7 +401,7 @@ export function search(all: readonly Stored[], text: string, pageSize: number): 
         return `${SERVER.base}/${type}${shown.length === 0 ? '' : `?${shown.map(([key, value]) => `${key}=${value}`).join('&')}`}`
     }
     const links = [{ relation: 'self', url: link(offset) }]
-    if (!summary && offset + count < total) links.push({ relation: 'next', url: link(offset + count) })
+    if (!summary && count > 0 && offset + count < total) links.push({ relation: 'next', url: link(offset + count) })
     if (!summary && offset > 0) links.push({ relation: 'previous', url: link(Math.max(0, offset - count)) })
     const bundle: Resource = {
         resourceType: 'Bundle',

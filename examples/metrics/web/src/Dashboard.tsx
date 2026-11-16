@@ -17,7 +17,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { Copy, CopyPlus, LayoutDashboard, Maximize2, MoreHorizontal, PencilLine, Plus, Share2, Table2, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 
 import { TimeControls, variables } from './controls'
 import { dashboards, seedDashboards, widgetCatalog } from './data'
@@ -77,7 +77,7 @@ export function DashboardPage({
     /** A change to the panels: into the draft while editing, else kept at once. */
     const change = (next: Panel[], said: string) => {
         if (editing) return edit.change(next)
-        void dashboards.update(dashboard.id, { panels: next }).then(() => toast.success(said))
+        void dashboards.update(dashboard.id, { panels: next }).then(() => toast.add({ type: 'success', title: said }))
     }
     const catalog = useMemo(() => widgetCatalog(), [])
     const titles = new Set(panels.map((panel) => panel.title))
@@ -102,7 +102,7 @@ export function DashboardPage({
                 panels: panels.map((panel) => ({ ...panel, id: panelId() })),
             })
             .then((made) => {
-                toast.success(`${made.title} made`)
+                toast.add({ type: 'success', title: `${made.title} made` })
                 go(`/d/${made.id}`, kept)
             })
     }
@@ -263,7 +263,7 @@ export function DashboardPage({
                     onConfirm: () => {
                         setDeletingBoard(false)
                         void dashboards.remove(dashboard.id).then(() => {
-                            toast.success(`${dashboard.title} deleted`)
+                            toast.add({ type: 'success', title: `${dashboard.title} deleted` })
                             go('/dashboards')
                         })
                     },

@@ -39,7 +39,7 @@ Every add-on's styles go the same way, after the core's: `@winterop-com/sokkel-u
 
 A Vite app that draws maps adds `mapsVite()` from `@winterop-com/sokkel-ui-maps/vite` to its plugins (`plugins: [react(), tailwindcss(), mapsVite()]`): the dev server's dependency prebundling cannot load the maps package's `?worker&url` import of maplibre's worker without it, and fails. The build needs nothing from it.
 
-An app that offers every theme (a theme picker in its settings) imports them all at once instead, about 9 kB gzipped for all ten, and `ThemePicker` then shows each one:
+An app that offers every theme (a theme picker in its settings) imports them all at once instead, about 9 kB gzipped for all twelve, and `ThemePicker` then shows each one:
 
 ```css
 @import '@winterop-com/sokkel-ui/styles.css';

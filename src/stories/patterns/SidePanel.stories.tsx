@@ -44,7 +44,7 @@ export const SoleTitle: StoryObj = {
 
 /** One tab drawn as a tablist of one with `soleTab="tab"`, for a panel whose tabs come and go. */
 export const SoleTab: StoryObj = {
-    name: 'One tab as tab',
+    name: 'Sole tab',
     render: () => (
         <Edge>
             <SidePanel tabs={runPanelTabs(1)} soleTab="tab" />

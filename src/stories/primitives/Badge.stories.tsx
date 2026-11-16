@@ -5,6 +5,7 @@ import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Display/Badge', parameters: { frame: 'column' } }
 export default meta
@@ -100,29 +101,31 @@ const TONE: Record<string, string> = {
 /** A job's badges: its state, its project and format, its schedule, and the colors of every run state. */
 export const JobTags: StoryObj = {
     render: () => (
-        <Stack className="max-w-xl rounded-lg border p-4">
-            <Row wrap>
-                <span className="font-mono text-sm font-medium">nightly-export</span>
-                <Badge className={TONE.succeeded}>
-                    <CircleCheck data-icon="inline-start" />
-                    succeeded
-                </Badge>
-            </Row>
-            <Row gap="xs" align="stretch" wrap>
-                <Badge variant="outline">larkspur</Badge>
-                <Badge variant="outline">csv</Badge>
-                <Badge variant="secondary">
-                    <Repeat data-icon="inline-start" />
-                    every night at 02:00
-                </Badge>
-            </Row>
-            <Row gap="xs" align="stretch" wrap>
-                {Object.keys(TONE).map((state) => (
-                    <Badge key={state} className={TONE[state]}>
-                        {state}
+        <Surface pad className="max-w-xl">
+            <Stack>
+                <Row wrap>
+                    <span className="font-mono text-sm font-medium">nightly-export</span>
+                    <Badge className={TONE.succeeded}>
+                        <CircleCheck data-icon="inline-start" />
+                        succeeded
                     </Badge>
-                ))}
-            </Row>
-        </Stack>
+                </Row>
+                <Row gap="xs" align="stretch" wrap>
+                    <Badge variant="outline">larkspur</Badge>
+                    <Badge variant="outline">csv</Badge>
+                    <Badge variant="secondary">
+                        <Repeat data-icon="inline-start" />
+                        every night at 02:00
+                    </Badge>
+                </Row>
+                <Row gap="xs" align="stretch" wrap>
+                    {Object.keys(TONE).map((state) => (
+                        <Badge key={state} className={TONE[state]}>
+                            {state}
+                        </Badge>
+                    ))}
+                </Row>
+            </Stack>
+        </Surface>
     ),
 }

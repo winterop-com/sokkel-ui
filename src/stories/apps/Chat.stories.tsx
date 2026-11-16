@@ -817,13 +817,3 @@ export const LongThread: StoryObj = {
         </ChatApp>
     ),
 }
-
-/** The conversation at a phone's width, the rail behind the menu button. */
-export const Phone: StoryObj = {
-    globals: { viewport: { value: 'w390', isRotated: false } },
-    render: () => (
-        <ChatApp>
-            <Exchange />
-        </ChatApp>
-    ),
-}

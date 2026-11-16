@@ -5,6 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '../../lib/cn'
 
 import { useIsMobile } from '../../hooks/use-mobile'
+import { useShortcuts } from '../../hooks/use-shortcuts'
 import { Button } from './button'
 import { Input } from './input'
 import { Separator } from './separator'
@@ -13,8 +14,6 @@ import { Skeleton } from './skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 import { PanelLeftIcon } from 'lucide-react'
 
-const SIDEBAR_COOKIE_NAME = 'sidebar_state'
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
@@ -45,12 +44,18 @@ export type SidebarProviderProps = React.ComponentProps<'div'> & {
     defaultOpen?: boolean
     open?: boolean
     onOpenChange?: (open: boolean) => void
+    /** Whether Mod+B folds and unfolds the sidebar, through the shortcut registry; on by default. */
+    shortcut?: boolean
+    /** What the shortcuts dialog lists Mod+B as. */
+    shortcutLabel?: string
 }
 
 function SidebarProvider({
     defaultOpen = true,
     open: openProp,
     onOpenChange: setOpenProp,
+    shortcut = true,
+    shortcutLabel = 'Toggle sidebar',
     className,
     style,
     children,
@@ -71,9 +76,6 @@ function SidebarProvider({
             } else {
                 _setOpen(openState)
             }
-
-            // This sets the cookie to keep the sidebar state.
-            document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
         },
         [setOpenProp, open],
     )
@@ -83,18 +85,12 @@ function SidebarProvider({
         return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
     }, [isMobile, setOpen, setOpenMobile])
 
-    // Adds a keyboard shortcut to toggle the sidebar.
-    React.useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
-                event.preventDefault()
-                toggleSidebar()
-            }
-        }
-
-        window.addEventListener('keydown', handleKeyDown)
-        return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [toggleSidebar])
+    // Mod+B toggles the sidebar, quiet in fields and under dialogs as every registered key is.
+    useShortcuts(shortcut ? [{ id: 'sidebar', key: SIDEBAR_KEYBOARD_SHORTCUT, mod: true, label: shortcutLabel, run: toggleSidebar }] : [], [
+        shortcut,
+        shortcutLabel,
+        toggleSidebar,
+    ])
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
@@ -264,7 +260,7 @@ function SidebarRail({ className, ...props }: SidebarRailProps) {
             onClick={toggleSidebar}
             title="Toggle Sidebar"
             className={cn(
-                'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex',
+                'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-0.5 hover:after:bg-sidebar-border sm:flex',
                 'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
                 '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
                 'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-sidebar',

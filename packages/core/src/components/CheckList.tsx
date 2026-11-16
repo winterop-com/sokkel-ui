@@ -26,15 +26,32 @@ const SEVERITY: Record<CheckStatus, number> = { ok: 0, warn: 1, fail: 2 }
 const DOT: Record<CheckStatus, string> = { ok: 'bg-good', warn: 'bg-warning', fail: 'bg-critical' }
 
 /**
- * The checks as a two-level tree by each check's `group`. A check naming a group that is not in
- * the list stays at the top level rather than being dropped, and the order is the order given.
+ * The checks as a two-level tree by each check's `group`: a check nests under the top-level check
+ * its groups lead up to, a group's group included. A check naming a group that is not in the list,
+ * or whose groups run in a circle, stays at the top level rather than being dropped, and the order
+ * is the order given.
  */
 export function checkTree(checks: readonly Check[]): CheckNode[] {
-    const names = new Set(checks.map((check) => check.name))
-    const nested = (check: Check) => check.group !== undefined && check.group !== check.name && names.has(check.group)
-    const nodes = checks.filter((check) => !nested(check)).map((check) => ({ check, children: [] as Check[] }))
-    const byName = new Map(nodes.map((node) => [node.check.name, node]))
-    for (const check of checks) if (nested(check)) byName.get(check.group as string)?.children.push(check)
+    const byName = new Map(checks.map((check) => [check.name, check]))
+    const parent = (check: Check) => (check.group === undefined || check.group === check.name ? undefined : byName.get(check.group))
+    const top = (check: Check): Check | undefined => {
+        const seen = new Set([check.name])
+        for (let up = parent(check); up !== undefined;) {
+            if (seen.has(up.name)) return undefined
+            seen.add(up.name)
+            const next = parent(up)
+            if (next === undefined) return up
+            up = next
+        }
+        return undefined
+    }
+    const homes = new Map(checks.map((check) => [check, top(check)]))
+    const nodes = checks.filter((check) => homes.get(check) === undefined).map((check) => ({ check, children: [] as Check[] }))
+    const byTop = new Map(nodes.map((node) => [node.check, node]))
+    for (const check of checks) {
+        const home = homes.get(check)
+        if (home !== undefined) byTop.get(home)?.children.push(check)
+    }
     return nodes
 }
 
@@ -74,7 +91,7 @@ function Group({ node }: { node: CheckNode }) {
                 />
             </button>
             {open && (
-                <ul className="ml-[17px] border-l border-border">
+                <ul className="ml-4.25 border-l border-border">
                     {node.children.map((child) => (
                         <li key={child.name} className="flex items-start gap-2.5 px-3 py-1.5">
                             <Line check={child} status={child.status} />

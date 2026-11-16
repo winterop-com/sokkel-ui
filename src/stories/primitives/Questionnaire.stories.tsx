@@ -21,6 +21,7 @@ import {
     QuestionnaireSubmit,
     QuestionnaireTitle,
 } from '@winterop-com/sokkel-ui/primitives/questionnaire'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /**
  * Questions an assistant asks back, one at a time: a single choice, several choices, or a typed
@@ -31,7 +32,11 @@ function Caption({ children }: { children: ReactNode }) {
 }
 
 function Panel({ children }: { children: ReactNode }) {
-    return <div className="w-full max-w-md rounded-xl border border-border p-4">{children}</div>
+    return (
+        <Surface pad className="w-full max-w-md">
+            {children}
+        </Surface>
+    )
 }
 
 const meta: Meta = { title: 'Primitives/Chat/Questionnaire', parameters: { frame: 'column' } }
@@ -189,7 +194,7 @@ export const FollowUp: StoryObj = {
                     <BotIcon className="size-4" />
                 </MessageAvatar>
                 <MessageContent>
-                    <div className="rounded-xl border border-border p-4">
+                    <Surface pad>
                         <Questionnaire shortcuts="letters" items={STEPS} defaultItem="source">
                             <QuestionnaireProgress />
                             <QuestionnaireItem name="action">
@@ -229,7 +234,7 @@ export const FollowUp: StoryObj = {
                                 <QuestionnaireSubmit />
                             </QuestionnaireActions>
                         </Questionnaire>
-                    </div>
+                    </Surface>
                 </MessageContent>
             </Message>
         </div>

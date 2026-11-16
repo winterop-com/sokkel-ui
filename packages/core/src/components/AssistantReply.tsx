@@ -13,7 +13,7 @@ import {
     ThumbsDown,
     ThumbsUp,
 } from 'lucide-react'
-import { Children, type ReactNode } from 'react'
+import { Children, memo, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ConfirmCard, type ConfirmCardProps } from './ConfirmCard'
@@ -249,7 +249,7 @@ export interface AssistantReplyProps {
  * held change as a section of it. The `steps` layout sets it on a rail: Checked holds the tools,
  * Found the answer, and Next the held change and the actions, inline code in the code face alone.
  */
-export function AssistantReply({
+export const AssistantReply = memo(function AssistantReply({
     layout = 'card',
     name,
     mark,
@@ -504,4 +504,4 @@ export function AssistantReply({
             <Timeline events={events} />
         </div>
     )
-}
+})

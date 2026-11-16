@@ -27,6 +27,7 @@ import { PointMenu, menuPoint, type PointMenuItem } from '@winterop-com/sokkel-u
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { GRAPH_DRAG_TYPE } from './blocks'
 import {
+    GraphBendContext,
     GraphControlsContext,
     GraphDirectionContext,
     GraphEditableContext,
@@ -37,7 +38,9 @@ import {
 import { GraphEdge } from './GraphEdge'
 import { GraphNode } from './GraphNode'
 import {
+    bendOf,
     boundsOf,
+    EDGE_BEND,
     FIT_MAX_ZOOM,
     FIT_MIN_ZOOM,
     FIT_PADDING,
@@ -447,6 +450,23 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     const said = useWords(words)
     const box = useRef<HTMLDivElement | null>(null)
     const [width, setWidth] = useState(0)
+    const [bend, setBend] = useState(EDGE_BEND)
+    // The edges' bends follow the theme's --radius, read again as the document's theme changes.
+    useEffect(() => {
+        const read = () => {
+            const element = box.current
+            if (element === null) return
+            const given = getComputedStyle(element).getPropertyValue('--radius').trim()
+            const radius =
+                Number.parseFloat(given) *
+                (given.endsWith('rem') ? Number.parseFloat(getComputedStyle(document.documentElement).fontSize) : 1)
+            setBend(Number.isFinite(radius) ? bendOf(radius) : EDGE_BEND)
+        }
+        read()
+        const watch = new MutationObserver(read)
+        watch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] })
+        return () => watch.disconnect()
+    }, [])
     const [moved, setMoved] = useState(false)
     const [fittedFor, setFittedFor] = useState<string | null>(null)
     const gesture = useRef<Viewport | null>(null)
@@ -603,247 +623,253 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
 
     return (
         <GraphDirectionContext value={direction}>
-            <GraphEditableContext value={editable}>
-                <GraphEditingContext value={editingContext}>
-                    <div
-                        ref={box}
-                        data-graph-view=""
-                        data-graph-frame={frame}
-                        data-graph-editable={editable ? '' : undefined}
-                        data-graph-connecting={connecting ? '' : undefined}
-                        data-graph-dropping={dropping ? '' : undefined}
-                        data-graph-settled={settled && (empty || moved || fittedFor === key) ? '' : undefined}
-                        style={
-                            {
-                                ...THEME,
-                                ...(ground ? { '--xy-background-color': 'transparent' } : {}),
-                                height,
-                                minHeight: floor,
-                            } as CSSProperties
-                        }
-                        className={cn(
-                            'group/graph relative w-full overflow-hidden',
-                            fitted ? (empty ? 'h-30' : undefined) : filled ? 'h-full' : 'h-full min-h-0 rounded-surface bg-canvas',
-                            'data-graph-dropping:outline-2 data-graph-dropping:-outline-offset-2 data-graph-dropping:outline-ring data-graph-dropping:outline-dashed',
-                            className,
-                        )}
-                    >
-                        <ReactFlow<N, E>
-                            nodes={drawn}
-                            edges={lines}
-                            onInit={(instance) => {
-                                flowRef.current = instance
-                            }}
-                            nodeTypes={allNodeTypes}
-                            edgeTypes={allEdgeTypes}
-                            defaultEdgeOptions={EDGE_DEFAULTS}
-                            proOptions={PRO_OPTIONS}
-                            aria-label={said.label}
-                            ariaLabelConfig={{
-                                'node.a11yDescription.default': said.select,
-                                'node.a11yDescription.keyboardDisabled': said.select,
-                            }}
-                            className="bg-transparent"
-                            minZoom={MIN_ZOOM}
-                            maxZoom={MAX_ZOOM}
-                            nodesDraggable={editable}
-                            nodesConnectable={editable}
-                            edgesFocusable={editable}
-                            elementsSelectable
-                            selectNodesOnDrag={false}
-                            deleteKeyCode={editable ? DELETE_KEYS : null}
-                            connectionLineStyle={CONNECTION_LINE}
-                            isValidConnection={(connection) => allowed(connection.source, connection.target)}
-                            onEdgesChange={
-                                editable
-                                    ? (changes) => {
-                                          const chosen = changes.filter((change) => change.type === 'select')
-                                          if (chosen.length > 0) setChosenEdge(chosen.find((change) => change.selected)?.id ?? null)
-                                      }
-                                    : undefined
+            <GraphBendContext value={bend}>
+                <GraphEditableContext value={editable}>
+                    <GraphEditingContext value={editingContext}>
+                        <div
+                            ref={box}
+                            data-graph-view=""
+                            data-graph-frame={frame}
+                            data-graph-editable={editable ? '' : undefined}
+                            data-graph-connecting={connecting ? '' : undefined}
+                            data-graph-dropping={dropping ? '' : undefined}
+                            data-graph-settled={settled && (empty || moved || fittedFor === key) ? '' : undefined}
+                            style={
+                                {
+                                    ...THEME,
+                                    ...(ground ? { '--xy-background-color': 'transparent' } : {}),
+                                    height,
+                                    minHeight: floor,
+                                } as CSSProperties
                             }
-                            onDelete={
-                                editable
-                                    ? ({ nodes: removed, edges: cut }) => {
-                                          const gone = new Set(removed.map((node) => node.id))
-                                          for (const node of removed) editing.onRemove(node.id)
-                                          for (const edge of cut)
-                                              if (!gone.has(edge.source) && !gone.has(edge.target))
-                                                  editing.onDisconnect(edge.id, edge.source, edge.target)
-                                          setChosenEdge(null)
-                                      }
-                                    : undefined
-                            }
-                            onConnectStart={editable ? () => setConnecting(true) : undefined}
-                            onEdgeMouseEnter={editable && editing.onInsert !== undefined ? (_, edge) => hoverEdge(edge.id) : undefined}
-                            onEdgeMouseLeave={editable && editing.onInsert !== undefined ? () => hoverEdge(null) : undefined}
-                            onConnect={editable ? (connection) => editing.onConnect(connection.source, connection.target) : undefined}
-                            onConnectEnd={
-                                editable
-                                    ? (event, state) => {
-                                          setConnecting(false)
-                                          const from = state.fromNode?.id
-                                          if (state.isValid === true || from === undefined) return
-                                          const at = 'changedTouches' in event ? event.changedTouches[0] : event
-                                          if (at === undefined) return
-                                          const outward = state.fromHandle?.type !== 'target'
-                                          // Let go over a box rather than its port, the connection joins that box.
-                                          const over = state.toNode?.id ?? nodeAt(at.clientX, at.clientY)
-                                          if (over === null) {
-                                              if (outward) editing.onDrop?.(from, pointer(at))
-                                              return
-                                          }
-                                          if (over === from) return
-                                          const [source, target] = outward ? [from, over] : [over, from]
-                                          const reason = editing.canConnect?.(source, target) ?? null
-                                          if (reason !== null) editing.onRefuse?.(source, target, reason)
-                                          else if (state.toNode === null) editing.onConnect(source, target)
-                                      }
-                                    : undefined
-                            }
-                            onNodeDragStart={editable ? () => setMoved(true) : undefined}
-                            onNodeDragStop={
-                                editable
-                                    ? (_, node, moved) => {
-                                          const all = moved.length > 0 ? moved : [node]
-                                          for (const each of all) editing.onMove?.(each.id, each.position)
-                                          setDragged((held) => {
-                                              const next = { ...held }
-                                              for (const each of all) delete next[each.id]
-                                              return next
-                                          })
-                                      }
-                                    : undefined
-                            }
-                            onNodeContextMenu={
-                                nodeMenu !== undefined || (editable && editing.onNodeMenu !== undefined)
-                                    ? (event, node) => {
-                                          if (nodeMenu !== undefined) openMenu(event, (at) => nodeMenu(node.id, at))
-                                          if (!editable || editing.onNodeMenu === undefined) return
-                                          event.preventDefault()
-                                          editing.onNodeMenu(node.id, pointer(event))
-                                      }
-                                    : undefined
-                            }
-                            onPaneContextMenu={
-                                paneMenu !== undefined || (editable && editing.onPaneMenu !== undefined)
-                                    ? (event) => {
-                                          if (paneMenu !== undefined) openMenu(event, paneMenu)
-                                          if (!editable || editing.onPaneMenu === undefined) return
-                                          event.preventDefault()
-                                          editing.onPaneMenu(pointer(event))
-                                      }
-                                    : undefined
-                            }
-                            selectionKeyCode={multiple ? 'Shift' : null}
-                            multiSelectionKeyCode={multiple ? MULTI_KEYS : null}
-                            onDragOver={
-                                editable
-                                    ? (event) => {
-                                          if (!carriesItem(event)) return
-                                          event.preventDefault()
-                                          event.dataTransfer.dropEffect = 'copy'
-                                          setDropping(true)
-                                      }
-                                    : undefined
-                            }
-                            onDragLeave={
-                                editable
-                                    ? (event) => {
-                                          if (!event.currentTarget.contains(event.relatedTarget as globalThis.Node | null))
-                                              setDropping(false)
-                                      }
-                                    : undefined
-                            }
-                            onDrop={
-                                editable
-                                    ? (event) => {
-                                          setDropping(false)
-                                          if (!carriesItem(event)) return
-                                          event.preventDefault()
-                                          const item = event.dataTransfer.getData(GRAPH_DRAG_TYPE)
-                                          if (item !== '') editing.onDropItem?.(item, pointer(event))
-                                      }
-                                    : undefined
-                            }
-                            panOnDrag={!ground || !mobile}
-                            zoomOnScroll={!ground}
-                            preventScrolling={!fitted && !(filled && mobile)}
-                            zoomOnPinch
-                            zoomOnDoubleClick={zoomOnDoubleClick && !fitted}
-                            onNodesChange={onNodesChange}
-                            onPaneClick={() => {
-                                onSelect?.(null)
-                                onSelectionChange?.([])
-                            }}
-                            onMoveStart={(event, view) => {
-                                gesture.current = event === null ? null : view
-                            }}
-                            onMoveEnd={(event, view) => {
-                                const from = gesture.current
-                                gesture.current = null
-                                if (event !== null && from !== null && (from.x !== view.x || from.y !== view.y || from.zoom !== view.zoom))
-                                    setMoved(true)
-                            }}
-                        >
-                            <FitToGraph
-                                placement={key}
-                                moved={moved}
-                                settled={settled}
-                                direction={direction}
-                                minZoom={fitMinZoom}
-                                narrowFit={narrowFit}
-                                tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
-                                top={fitted ? 0 : toolbarRoom}
-                                fitted={fitted}
-                                onFitted={(fittedKey) => setFittedFor(fittedKey)}
-                            />
-                            {fitted && <ModifierWheel onZoomed={() => setMoved(true)} />}
-                            {filled && <StepWheel onZoomed={() => setMoved(true)} />}
-                            {!ground && <Background variant={BackgroundVariant.Dots} gap={18} size={1} />}
-                            <ViewControls
-                                empty={empty}
-                                onMoved={setMoved}
-                                minZoom={fitMinZoom}
-                                narrowFit={narrowFit}
-                                tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
-                                top={fitted ? 0 : toolbarRoom}
-                                fitted={fitted}
-                                onControls={onControls}
-                            >
-                                {empty && (
-                                    <div className="pointer-events-none absolute inset-0 z-5 flex flex-col items-center justify-center gap-3 px-6 text-center">
-                                        <p className="text-sm text-muted-foreground">{said.empty}</p>
-                                        {emptyAction !== undefined && <div className="pointer-events-auto">{emptyAction}</div>}
-                                    </div>
-                                )}
-                                {controls && (
-                                    <Panel position="bottom-right" className="m-2!">
-                                        <GraphViewButtons orientation={fitted ? 'row' : 'column'} whenEmpty="hide" words={said}>
-                                            {extraControls}
-                                        </GraphViewButtons>
-                                    </Panel>
-                                )}
-                                {toolbar !== undefined && (
-                                    <Panel ref={setToolbarBox} position="top-left" className="m-2! max-w-[calc(100%-1rem)]">
-                                        {toolbar}
-                                    </Panel>
-                                )}
-                                {editing?.canConnect !== undefined && <ConnectionVerdict canConnect={editing.canConnect} />}
-                                {children}
-                            </ViewControls>
-                            {(nodeMenu !== undefined || paneMenu !== undefined) && (
-                                <PointMenu
-                                    at={menu === null ? null : { x: menu.x, y: menu.y }}
-                                    onClose={() => setMenu(null)}
-                                    head={(menu?.menu ?? lastMenu)?.head}
-                                    items={(menu?.menu ?? lastMenu)?.items ?? []}
-                                />
+                            className={cn(
+                                'group/graph relative w-full overflow-hidden',
+                                fitted ? (empty ? 'h-30' : undefined) : filled ? 'h-full' : 'h-full min-h-0 rounded-surface bg-canvas',
+                                'data-graph-dropping:outline-2 data-graph-dropping:-outline-offset-2 data-graph-dropping:outline-ring data-graph-dropping:outline-dashed',
+                                className,
                             )}
-                        </ReactFlow>
-                    </div>
-                </GraphEditingContext>
-            </GraphEditableContext>
+                        >
+                            <ReactFlow<N, E>
+                                nodes={drawn}
+                                edges={lines}
+                                onInit={(instance) => {
+                                    flowRef.current = instance
+                                }}
+                                nodeTypes={allNodeTypes}
+                                edgeTypes={allEdgeTypes}
+                                defaultEdgeOptions={EDGE_DEFAULTS}
+                                proOptions={PRO_OPTIONS}
+                                aria-label={said.label}
+                                ariaLabelConfig={{
+                                    'node.a11yDescription.default': said.select,
+                                    'node.a11yDescription.keyboardDisabled': said.select,
+                                }}
+                                className="bg-transparent"
+                                minZoom={MIN_ZOOM}
+                                maxZoom={MAX_ZOOM}
+                                nodesDraggable={editable}
+                                nodesConnectable={editable}
+                                edgesFocusable={editable}
+                                elementsSelectable
+                                selectNodesOnDrag={false}
+                                deleteKeyCode={editable ? DELETE_KEYS : null}
+                                connectionLineStyle={CONNECTION_LINE}
+                                isValidConnection={(connection) => allowed(connection.source, connection.target)}
+                                onEdgesChange={
+                                    editable
+                                        ? (changes) => {
+                                              const chosen = changes.filter((change) => change.type === 'select')
+                                              if (chosen.length > 0) setChosenEdge(chosen.find((change) => change.selected)?.id ?? null)
+                                          }
+                                        : undefined
+                                }
+                                onDelete={
+                                    editable
+                                        ? ({ nodes: removed, edges: cut }) => {
+                                              const gone = new Set(removed.map((node) => node.id))
+                                              for (const node of removed) editing.onRemove(node.id)
+                                              for (const edge of cut)
+                                                  if (!gone.has(edge.source) && !gone.has(edge.target))
+                                                      editing.onDisconnect(edge.id, edge.source, edge.target)
+                                              setChosenEdge(null)
+                                          }
+                                        : undefined
+                                }
+                                onConnectStart={editable ? () => setConnecting(true) : undefined}
+                                onEdgeMouseEnter={editable && editing.onInsert !== undefined ? (_, edge) => hoverEdge(edge.id) : undefined}
+                                onEdgeMouseLeave={editable && editing.onInsert !== undefined ? () => hoverEdge(null) : undefined}
+                                onConnect={editable ? (connection) => editing.onConnect(connection.source, connection.target) : undefined}
+                                onConnectEnd={
+                                    editable
+                                        ? (event, state) => {
+                                              setConnecting(false)
+                                              const from = state.fromNode?.id
+                                              if (state.isValid === true || from === undefined) return
+                                              const at = 'changedTouches' in event ? event.changedTouches[0] : event
+                                              if (at === undefined) return
+                                              const outward = state.fromHandle?.type !== 'target'
+                                              // Let go over a box rather than its port, the connection joins that box.
+                                              const over = state.toNode?.id ?? nodeAt(at.clientX, at.clientY)
+                                              if (over === null) {
+                                                  if (outward) editing.onDrop?.(from, pointer(at))
+                                                  return
+                                              }
+                                              if (over === from) return
+                                              const [source, target] = outward ? [from, over] : [over, from]
+                                              const reason = editing.canConnect?.(source, target) ?? null
+                                              if (reason !== null) editing.onRefuse?.(source, target, reason)
+                                              else if (state.toNode === null) editing.onConnect(source, target)
+                                          }
+                                        : undefined
+                                }
+                                onNodeDragStart={editable ? () => setMoved(true) : undefined}
+                                onNodeDragStop={
+                                    editable
+                                        ? (_, node, moved) => {
+                                              const all = moved.length > 0 ? moved : [node]
+                                              for (const each of all) editing.onMove?.(each.id, each.position)
+                                              setDragged((held) => {
+                                                  const next = { ...held }
+                                                  for (const each of all) delete next[each.id]
+                                                  return next
+                                              })
+                                          }
+                                        : undefined
+                                }
+                                onNodeContextMenu={
+                                    nodeMenu !== undefined || (editable && editing.onNodeMenu !== undefined)
+                                        ? (event, node) => {
+                                              if (nodeMenu !== undefined) openMenu(event, (at) => nodeMenu(node.id, at))
+                                              if (!editable || editing.onNodeMenu === undefined) return
+                                              event.preventDefault()
+                                              editing.onNodeMenu(node.id, pointer(event))
+                                          }
+                                        : undefined
+                                }
+                                onPaneContextMenu={
+                                    paneMenu !== undefined || (editable && editing.onPaneMenu !== undefined)
+                                        ? (event) => {
+                                              if (paneMenu !== undefined) openMenu(event, paneMenu)
+                                              if (!editable || editing.onPaneMenu === undefined) return
+                                              event.preventDefault()
+                                              editing.onPaneMenu(pointer(event))
+                                          }
+                                        : undefined
+                                }
+                                selectionKeyCode={multiple ? 'Shift' : null}
+                                multiSelectionKeyCode={multiple ? MULTI_KEYS : null}
+                                onDragOver={
+                                    editable
+                                        ? (event) => {
+                                              if (!carriesItem(event)) return
+                                              event.preventDefault()
+                                              event.dataTransfer.dropEffect = 'copy'
+                                              setDropping(true)
+                                          }
+                                        : undefined
+                                }
+                                onDragLeave={
+                                    editable
+                                        ? (event) => {
+                                              if (!event.currentTarget.contains(event.relatedTarget as globalThis.Node | null))
+                                                  setDropping(false)
+                                          }
+                                        : undefined
+                                }
+                                onDrop={
+                                    editable
+                                        ? (event) => {
+                                              setDropping(false)
+                                              if (!carriesItem(event)) return
+                                              event.preventDefault()
+                                              const item = event.dataTransfer.getData(GRAPH_DRAG_TYPE)
+                                              if (item !== '') editing.onDropItem?.(item, pointer(event))
+                                          }
+                                        : undefined
+                                }
+                                panOnDrag={!ground || !mobile}
+                                zoomOnScroll={!ground}
+                                preventScrolling={!fitted && !(filled && mobile)}
+                                zoomOnPinch
+                                zoomOnDoubleClick={zoomOnDoubleClick && !fitted}
+                                onNodesChange={onNodesChange}
+                                onPaneClick={() => {
+                                    onSelect?.(null)
+                                    onSelectionChange?.([])
+                                }}
+                                onMoveStart={(event, view) => {
+                                    gesture.current = event === null ? null : view
+                                }}
+                                onMoveEnd={(event, view) => {
+                                    const from = gesture.current
+                                    gesture.current = null
+                                    if (
+                                        event !== null &&
+                                        from !== null &&
+                                        (from.x !== view.x || from.y !== view.y || from.zoom !== view.zoom)
+                                    )
+                                        setMoved(true)
+                                }}
+                            >
+                                <FitToGraph
+                                    placement={key}
+                                    moved={moved}
+                                    settled={settled}
+                                    direction={direction}
+                                    minZoom={fitMinZoom}
+                                    narrowFit={narrowFit}
+                                    tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
+                                    top={fitted ? 0 : toolbarRoom}
+                                    fitted={fitted}
+                                    onFitted={(fittedKey) => setFittedFor(fittedKey)}
+                                />
+                                {fitted && <ModifierWheel onZoomed={() => setMoved(true)} />}
+                                {filled && <StepWheel onZoomed={() => setMoved(true)} />}
+                                {!ground && <Background variant={BackgroundVariant.Dots} gap={18} size={1} />}
+                                <ViewControls
+                                    empty={empty}
+                                    onMoved={setMoved}
+                                    minZoom={fitMinZoom}
+                                    narrowFit={narrowFit}
+                                    tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
+                                    top={fitted ? 0 : toolbarRoom}
+                                    fitted={fitted}
+                                    onControls={onControls}
+                                >
+                                    {empty && (
+                                        <div className="pointer-events-none absolute inset-0 z-5 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                                            <p className="text-sm text-muted-foreground">{said.empty}</p>
+                                            {emptyAction !== undefined && <div className="pointer-events-auto">{emptyAction}</div>}
+                                        </div>
+                                    )}
+                                    {controls && (
+                                        <Panel position="bottom-right" className="m-2!">
+                                            <GraphViewButtons orientation={fitted ? 'row' : 'column'} whenEmpty="hide" words={said}>
+                                                {extraControls}
+                                            </GraphViewButtons>
+                                        </Panel>
+                                    )}
+                                    {toolbar !== undefined && (
+                                        <Panel ref={setToolbarBox} position="top-left" className="m-2! max-w-[calc(100%-1rem)]">
+                                            {toolbar}
+                                        </Panel>
+                                    )}
+                                    {editing?.canConnect !== undefined && <ConnectionVerdict canConnect={editing.canConnect} />}
+                                    {children}
+                                </ViewControls>
+                                {(nodeMenu !== undefined || paneMenu !== undefined) && (
+                                    <PointMenu
+                                        at={menu === null ? null : { x: menu.x, y: menu.y }}
+                                        onClose={() => setMenu(null)}
+                                        head={(menu?.menu ?? lastMenu)?.head}
+                                        items={(menu?.menu ?? lastMenu)?.items ?? []}
+                                    />
+                                )}
+                            </ReactFlow>
+                        </div>
+                    </GraphEditingContext>
+                </GraphEditableContext>
+            </GraphBendContext>
         </GraphDirectionContext>
     )
 }

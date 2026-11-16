@@ -9,7 +9,7 @@ import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { SwitchField } from '@winterop-com/sokkel-ui/SwitchField'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 
 import { written } from './alerting'
 import { type AlertRule, crosses, rules } from './data'
@@ -124,7 +124,7 @@ export function RuleDialog({
         const done = rule === undefined ? rules.create(saved) : rules.update(rule.id, saved)
         void done.then(() => {
             setBusy(false)
-            toast.success(rule === undefined ? `${name} added` : `${name} saved`)
+            toast.add({ type: 'success', title: rule === undefined ? `${name} added` : `${name} saved` })
             onOpenChange(false)
             onSaved?.()
         })
@@ -137,7 +137,7 @@ export function RuleDialog({
             title={rule === undefined ? 'New alert rule' : `Edit ${rule.name}`}
             description="A rule fires when its value crosses the threshold for as long as it says, and resolves once it is back."
             confirm={{
-                label: rule === undefined ? 'Add rule' : 'Save',
+                label: rule === undefined ? 'Add' : 'Save',
                 onConfirm: submit,
                 why: name === '' ? 'A rule needs a name.' : undefined,
                 busy,

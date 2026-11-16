@@ -19,6 +19,12 @@ export interface Cron {
     anyDay: boolean
     anyWeekday: boolean
     /**
+     * Whether a day must be both one of the days of the month and one of the weekdays: when both
+     * fields are given and one of them starts with `*`, a step over the whole field, as Vixie cron
+     * reads it. Otherwise a day that is either runs.
+     */
+    bothDays?: boolean
+    /**
      * Whether the minute or the hour field starts with `*`: such an expression runs on both passes
      * of an hour the clock repeats in autumn, as Vixie cron does, and one at fixed times on the first.
      */
@@ -50,7 +56,8 @@ function field(text: string, at: (typeof FIELDS)[number]): number[] | null {
         const [range, stepText, extra] = part.split('/')
         if (extra !== undefined || range === '') return null
         const step = stepText === undefined ? 1 : /^\d+$/.test(stepText) ? Number(stepText) : 0
-        if (step < 1) return null
+        // A step past the field's largest value steps nowhere, so it is refused, as cronie does.
+        if (step < 1 || step > at.max) return null
         let from: number
         let to: number
         if (range === '*') {
@@ -134,6 +141,7 @@ export function parseCron(expression: string): Cron | null {
         weekdayRules: weekdays.rules,
         anyDay: parts[2] === '*',
         anyWeekday: parts[4] === '*',
+        bothDays: parts[2] !== '*' && parts[4] !== '*' && (parts[2].startsWith('*') || parts[4].startsWith('*')),
         wildcardTime: parts[0].startsWith('*') || parts[1].startsWith('*'),
     }
 }
@@ -168,7 +176,7 @@ function dayMatches(cron: Cron, date: Date): boolean {
     if (cron.anyDay && cron.anyWeekday) return true
     if (cron.anyDay) return weekday
     if (cron.anyWeekday) return day
-    return day || weekday
+    return cron.bothDays === true ? day && weekday : day || weekday
 }
 
 /** A wall-clock time in a zone: the month counts from 1, the weekday from Sunday as 0. */
@@ -334,6 +342,10 @@ export interface CronWords {
     at: (times: string) => string
     /** Every few minutes between two times. */
     minutesBetween: (step: number, from: string, to: string) => string
+    /** Every minute between two times: "every minute from 09:00 to 17:59". */
+    everyMinuteBetween: (from: string, to: string) => string
+    /** Every minute of a few hours that do not run on, joined: "every minute of hours 2 and 14". */
+    everyMinuteOfHours: (hours: string) => string
     /** Any other set of minutes and hours, each joined. */
     minutesOfHours: (minutes: string, hours: string) => string
     /** Times of day, on every day: "every day at 02:00". */
@@ -356,8 +368,12 @@ export interface CronWords {
     weekdayRange: (from: string, to: string) => string
     /** Days of the week by name, joined. */
     onWeekdays: (days: string) => string
+    /** Every few days of the month from the 1st, given the step as an ordinal: "on every 2nd day of the month". */
+    everyNthDay: (nth: string) => string
     /** Days of the month or days of the week, when the expression names both. */
     either: (days: string, weekdays: string) => string
+    /** Days of the month that are also days of the week, when one of the two fields starts with `*`. */
+    both: (days: string, weekdays: string) => string
     /** Months by name, joined. */
     inMonths: (months: string) => string
     /** Puts the parts that apply together as a sentence. */
@@ -378,6 +394,8 @@ export const CRON_WORDS: CronWords = {
     hourly: (from, to) => `every hour from ${from} to ${to}`,
     at: (times) => `at ${times}`,
     minutesBetween: (step, from, to) => `every ${String(step)} minutes from ${from} to ${to}`,
+    everyMinuteBetween: (from, to) => `every minute from ${from} to ${to}`,
+    everyMinuteOfHours: (hours) => `every minute of hours ${hours}`,
     minutesOfHours: (minutes, hours) => `at minute ${minutes} of hour ${hours}`,
     daily: (time) => `every day ${time}`,
     onDays: (days) => `on the ${days}`,
@@ -390,7 +408,9 @@ export const CRON_WORDS: CronWords = {
     lastOf: (day) => `on the last ${day} of the month`,
     weekdayRange: (from, to) => `on ${from} to ${to}`,
     onWeekdays: (days) => `on ${days}`,
+    everyNthDay: (nth) => `on every ${nth} day of the month`,
     either: (days, weekdays) => `${days} or ${weekdays}`,
+    both: (days, weekdays) => `${days}, when it falls ${weekdays}`,
     inMonths: (months) => `in ${months}`,
     sentence: (parts) => {
         const full = parts.join(' ')
@@ -407,7 +427,12 @@ function stepOf(values: readonly number[], min: number, max: number): number | n
 }
 
 function contiguous(values: readonly number[]): boolean {
-    return values.length > 2 && values.every((v, index) => index === 0 || v === values[index - 1] + 1)
+    return values.length > 2 && runsOn(values)
+}
+
+/** Whether the values run on without a gap, one alone included. */
+function runsOn(values: readonly number[]): boolean {
+    return values.length > 0 && values.every((v, index) => index === 0 || v === values[index - 1] + 1)
 }
 
 /** A list joined in the words' separators. */
@@ -450,12 +475,14 @@ export function describeCron(expression: string, words?: Partial<CronWords>): st
     let time: string
     let recurs = true
     if (everyMinute && everyHour) time = said.everyMinute
+    else if (everyMinute && runsOn(cron.hours)) time = said.everyMinuteBetween(clock(first, 0), clock(last, 59))
+    else if (everyMinute) time = said.everyMinuteOfHours(joined(cron.hours.map(String), said))
     else if (minuteStep !== null && everyHour) time = said.everyMinutes(minuteStep)
     else if (cron.minutes.length === 1 && everyHour) time = said.everyHour(cron.minutes[0])
     else if (cron.minutes.length === 1 && hourStep !== null) time = said.everyHours(hourStep, cron.minutes[0])
     else if (cron.minutes.length === 1 && contiguous(cron.hours))
         time = said.hourly(clock(first, cron.minutes[0]), clock(last, cron.minutes[0]))
-    else if (times > 4 && minuteStep !== null && contiguous(cron.hours))
+    else if (times > 4 && minuteStep !== null && runsOn(cron.hours))
         time = said.minutesBetween(minuteStep, clock(first, 0), clock(last, 59))
     else {
         recurs = false
@@ -470,8 +497,15 @@ export function describeCron(expression: string, words?: Partial<CronWords>): st
                 : said.minutesOfHours(joined(cron.minutes.map(String), said), joined(cron.hours.map(String), said))
     }
 
+    const dayStep = stepOf(cron.days, 1, 31)
     const dayParts = [
-        ...(cron.days.length > 0 ? [said.onDays(joined(cron.days.map(said.ordinal), said))] : []),
+        ...(cron.days.length === 0
+            ? []
+            : [
+                  dayStep !== null && dayStep > 1
+                      ? said.everyNthDay(said.ordinal(dayStep))
+                      : said.onDays(joined(cron.days.map(said.ordinal), said)),
+              ]),
         ...(cron.dayRules ?? []).map((rule) =>
             rule.kind === 'last'
                 ? said.lastDay
@@ -490,7 +524,7 @@ export function describeCron(expression: string, words?: Partial<CronWords>): st
     ]
     const days = cron.anyDay ? '' : joined(dayParts, said)
     const week = cron.anyWeekday ? '' : joined(weekParts, said)
-    const day = days !== '' && week !== '' ? said.either(days, week) : days + week
+    const day = days !== '' && week !== '' ? (cron.bothDays === true ? said.both : said.either)(days, week) : days + week
     const month =
         cron.months.length === 12
             ? ''

@@ -11,6 +11,7 @@ import {
     EllipsisIcon,
     GripVerticalIcon,
     LayoutGridIcon,
+    RotateCwIcon,
     TableIcon,
 } from 'lucide-react'
 import {
@@ -36,7 +37,7 @@ import { cn } from '../lib/cn'
 import { stepTo } from '../lib/reorder'
 import type { DragHandleProps } from './DragDrop'
 import type { IssueWords } from './IssueMark'
-import { PageState, type PageStateWords, type ReadOutcome } from './PageState'
+import { PAGE_STATE_WORDS, PageState, type PageStateWords, type ReadOutcome } from './PageState'
 import { ResizeHandle } from './ResizeHandle'
 import { NO_CELL, TableCellContext } from './table-cell'
 import { ListingBar } from './ListingBar'
@@ -413,11 +414,38 @@ export interface GroupHead<T> extends RowGroup<T> {
     entries: FlatRow<T>[]
 }
 
-/** A line of a grouped table: a group's head or a row. */
-export type TableLine<T> = GroupHead<T> | FlatRow<T>
+/** The line under an open branch whose children did not load, which offers to try again. */
+export interface RefusedLine<T> {
+    refused: true
+    key: string
+    /** The branch whose load failed. */
+    entry: FlatRow<T>
+}
+
+/** A line of a table: a group's head, a row, or the line under a branch whose children did not load. */
+export type TableLine<T> = GroupHead<T> | FlatRow<T> | RefusedLine<T>
 
 export function isGroupHead<T>(line: TableLine<T>): line is GroupHead<T> {
     return 'head' in line
+}
+
+export function isRefusedLine<T>(line: TableLine<T>): line is RefusedLine<T> {
+    return 'refused' in line
+}
+
+/** Whether a line is one of the table's rows. */
+export function isRowLine<T>(line: TableLine<T>): line is FlatRow<T> {
+    return !isGroupHead(line) && !isRefusedLine(line)
+}
+
+/** The lines with a refused line under each open branch whose children did not load, as `refused` says. */
+export function withRefusedLines<T>(lines: readonly TableLine<T>[], refused: (entry: FlatRow<T>) => boolean): readonly TableLine<T>[] {
+    if (!lines.some((line) => isRowLine(line) && line.waiting && refused(line))) return lines
+    return lines.flatMap((line) =>
+        isRowLine(line) && line.waiting && refused(line)
+            ? [line, { refused: true as const, key: `${line.key}:refused`, entry: line }]
+            : [line],
+    )
 }
 
 /**
@@ -993,7 +1021,7 @@ export function topRow<T>(
     if (grid) return rows[Math.min(line * perLine, rows.length - 1)] ?? rows[0]
     for (let index = line; index < lines.length; index++) {
         const entry = lines[index]
-        if (!isGroupHead(entry)) return entry
+        if (isRowLine(entry)) return entry
     }
     return rows[0]
 }
@@ -1054,9 +1082,41 @@ export interface PageShown {
     view: string
 }
 
+/**
+ * What client pages count among the rows as drawn: each row, or in a tree each top-level row with
+ * the open rows under it, so a page never parts a row from its children. `count` is how many there
+ * are, and `startOf` where the one at a place starts among the rows as drawn.
+ */
+export function clientPages<T>(all: readonly FlatRow<T>[], tree: boolean): { count: number; startOf: (unit: number) => number } {
+    if (!tree) return { count: all.length, startOf: (unit) => Math.min(unit, all.length) }
+    const roots: number[] = []
+    all.forEach((entry, index) => {
+        if (entry.depth === 0) roots.push(index)
+    })
+    return { count: roots.length, startOf: (unit) => roots[unit] ?? all.length }
+}
+
+/** The client page a row drawn at `index` among `all` is on. */
+export function pageOfRow<T>(all: readonly FlatRow<T>[], index: number, pageSize: number, tree: boolean): number {
+    if (!tree) return Math.floor(index / pageSize)
+    let roots = -1
+    for (let at = 0; at <= index && at < all.length; at++) if (all[at].depth === 0) roots += 1
+    return Math.floor(Math.max(0, roots) / pageSize)
+}
+
 /** Whether a table turned to another page, page size or view since `before`, which starts it at the top; not on its first drawing. */
 export function turnedPage(before: PageShown | undefined, now: PageShown): boolean {
     return before !== undefined && (before.page !== now.page || before.pageSize !== now.pageSize || before.view !== now.view)
+}
+
+const NO_REFUSALS: ReadonlyMap<string, string | number | undefined> = new Map()
+
+/** `held` without `keys`; the same map when it holds none of them. */
+function forget<V>(held: ReadonlyMap<string, V>, keys: readonly string[]): ReadonlyMap<string, V> {
+    if (!keys.some((key) => held.has(key))) return held
+    const next = new Map(held)
+    for (const key of keys) next.delete(key)
+    return next
 }
 
 /** Children a branch loaded with `loadChildren`, kept with the version of the row they were loaded at. */
@@ -1326,6 +1386,12 @@ export interface DataTableProps<T> {
      */
     onSelectAllPages?: () => void
     /**
+     * With server pages, that the app holds every row on every page as selected after
+     * `onSelectAllPages`: the bar says all are selected and offers it no more. The app lets go of it
+     * once the selection changes, such as by Clear.
+     */
+    allPagesSelected?: boolean
+    /**
      * A row drawn as a card, for the grid view; given one, the bar offers table and grid. Cards keep
      * the table's selection, menus, sort, pages and loading; a tree's rows show as they are open.
      */
@@ -1587,6 +1653,7 @@ export function DataTable<T>({
     scrollKey,
     scrollerRef,
     onSelectAllPages,
+    allPagesSelected = false,
     card,
     view: viewValue,
     defaultView = 'table',
@@ -1640,6 +1707,8 @@ export function DataTable<T>({
 
     // Children loaded on demand, kept by the table unless `childRows` gives them.
     const [loaded, setLoaded] = useState(NO_CHILDREN as ReadonlyMap<string, LoadedChildren<T>>)
+    // Branches whose children did not load, by key, with the `childrenVersion` they were asked at.
+    const [refusals, setRefusals] = useState(NO_REFUSALS)
     const fetching = useRef(new Set<string>())
     const kids = useCallback(
         (row: T) => childRows?.(row) ?? currentChildren(loaded.get(rowKey(row)), childrenVersion?.(row)),
@@ -1733,37 +1802,43 @@ export function DataTable<T>({
         else next.add(key)
         setFolded(next)
     }
-    const latestExpanded = useRef({ expanded, setExpanded })
-    useEffect(() => {
-        latestExpanded.current = { expanded, setExpanded }
-    })
-    // An open branch whose children are not known asks for them once; a failed load closes it.
+    // A branch whose load failed at the row's version now waits for Try again rather than asking.
+    const refusedNow = useCallback(
+        (entry: FlatRow<T>) => refusals.has(entry.key) && refusals.get(entry.key) === childrenVersion?.(entry.row),
+        [refusals, childrenVersion],
+    )
+    // An open branch whose children are not known asks for them once; a failed load says so under it, with Try again.
     useEffect(() => {
         if (loadChildren === undefined) return
         for (const entry of all) {
-            if (!entry.waiting || fetching.current.has(entry.key)) continue
+            if (!entry.waiting || fetching.current.has(entry.key) || refusedNow(entry)) continue
             fetching.current.add(entry.key)
             const version = childrenVersion?.(entry.row)
             loadChildren(entry.row).then(
                 (children) => {
                     fetching.current.delete(entry.key)
                     setLoaded((before) => new Map(before).set(entry.key, { children, version }))
+                    setRefusals((before) => forget(before, [entry.key]))
                 },
                 () => {
                     fetching.current.delete(entry.key)
-                    const { expanded: now, setExpanded: set } = latestExpanded.current
-                    const next = new Set(now)
-                    next.delete(entry.key)
-                    set(next)
+                    setRefusals((before) => new Map(before).set(entry.key, version))
                 },
             )
         }
-    }, [all, loadChildren, childrenVersion])
+    }, [all, loadChildren, childrenVersion, refusedNow])
+    // A refused branch, once closed, forgets the refusal and asks again when opened.
+    useEffect(() => {
+        const closed = [...refusals.keys()].filter((key) => !expanded.has(key))
+        if (closed.length > 0) setRefusals((before) => forget(before, closed))
+    }, [refusals, expanded])
+    const retryChildren = (key: string) => setRefusals((before) => forget(before, [key]))
 
     // A page of the rows, or all of them; everything below draws and moves through `flat`.
     const [page, setPage] = useHeld(pageValue, defaultPage, onPageChange)
     const [pageSize, setPageSize] = useHeld(pageSizeValue, defaultPageSize, onPageSizeChange)
-    const pageCount = paging === 'server' ? (total ?? all.length) : all.length
+    const units = useMemo(() => clientPages(all, tree), [all, tree])
+    const pageCount = paging === 'server' ? (total ?? all.length) : units.count
     const pages = paging === undefined ? 1 : Math.max(1, Math.ceil(pageCount / pageSize))
     const current = Math.min(page, pages - 1)
     // A page held past the last, once a filter or a smaller total leaves it there, moves to the last, and its owner hears so.
@@ -1772,11 +1847,11 @@ export function DataTable<T>({
         if (inRange !== undefined) setPage(inRange)
     }, [inRange, setPage])
     const flat = useMemo(
-        () => (paging === 'client' ? all.slice(current * pageSize, (current + 1) * pageSize) : all),
-        [paging, all, current, pageSize],
+        () => (paging === 'client' ? all.slice(units.startOf(current * pageSize), units.startOf((current + 1) * pageSize)) : all),
+        [paging, all, current, pageSize, units],
     )
-    // The table's lines: the rows, with the group heads among them when grouped.
-    const drawn: TableLine<T>[] = groupedLines ?? flat
+    // The table's lines: the rows, with the group heads among them when grouped, and a line under each branch that did not load.
+    const drawn = useMemo(() => withRefusedLines(groupedLines ?? flat, refusedNow), [groupedLines, flat, refusedNow])
     const allKeys = useMemo(
         () => (selectable ? rows.flatMap((row) => branchKeys(row, rowKey, treeKids)) : []),
         [selectable, rows, rowKey, treeKids],
@@ -1871,8 +1946,10 @@ export function DataTable<T>({
     // Rows that grow are all drawn, as their heights are not known before they are.
     // A narrow list is a plain list of rows as tall as their lines.
     const listed = list && stacked
+    // A stacked card with a free title is as tall as its title needs, so every card is drawn at its own height.
+    const freeTitle = stacked && stackParts.title?.stackTitle === 'free'
     // Grouped cards are drawn group by group, every one of them.
-    const every = (auto && !gridView) || listed || (gridView && groupHeads !== undefined)
+    const every = (auto && !gridView) || listed || freeTitle || (gridView && groupHeads !== undefined)
     const whole = every || detailed
     // Rows drawn whole end where the scroller measures, and rows coming or growing move that end with
     // no scroll to say so: what it holds is watched, so the view hears of it.
@@ -1901,9 +1978,16 @@ export function DataTable<T>({
     }
     const asks = asksAt(view, moreRows)
     // Rows drawn whole are measured again before asking, as the view may not have heard of the rows just drawn.
+    // Rows that arrive still short of the view ask again, whether or not the app says it is `loading`;
+    // a new `onLoadMore` on each render of the app's does not.
+    const loadMoreNow = useRef(onLoadMore)
     useEffect(() => {
-        if (asks && stillAsks(scroller.current, moreRows, setView)) onLoadMore?.()
-    }, [asks, onLoadMore])
+        loadMoreNow.current = onLoadMore
+    })
+    const loadsMore = onLoadMore !== undefined
+    useEffect(() => {
+        if (asks && loadsMore && stillAsks(scroller.current, moreRows, setView)) loadMoreNow.current?.()
+    }, [asks, loadsMore, rows.length])
     const lineWindow: LineWindow = { lineHeight, over, whole, lines }
     const { firstLine, lastLine } = drawnLines(view, lineWindow)
     const first = firstLine * perLine
@@ -1941,7 +2025,9 @@ export function DataTable<T>({
                 : undefined,
         [measuresText],
     )
-    useLayoutEffect(() => setMeasuring(true), [rows, contentKey, rowHeight, columnHeads, fontLoads])
+    // A table first drawn hidden measures nothing, so it measures again once it has a width.
+    const laidOut = view.width > 0
+    useLayoutEffect(() => setMeasuring(true), [rows, contentKey, rowHeight, columnHeads, fontLoads, laidOut])
     const contentCells = (box: HTMLElement, column: string) =>
         box.querySelectorAll<HTMLElement>(`[role="gridcell"][data-track="${CSS.escape(column)}"] > :last-child`)
     useLayoutEffect(() => {
@@ -2128,10 +2214,12 @@ export function DataTable<T>({
         setSelection(next)
     }
     const everyCount = paging === 'server' ? (total ?? pageCount) : allKeys.length
+    // Every row on every page selected: the client's pages all in the selection, or the server's as the app says.
+    const everyChosen = paging === 'client' ? allChosen : paging === 'server' && allPagesSelected && selection.size > 0
     const offerEvery =
         paging !== undefined &&
         headChosen &&
-        !allChosen &&
+        !everyChosen &&
         (paging === 'client' || onSelectAllPages !== undefined) &&
         everyCount > selection.size
 
@@ -2197,9 +2285,7 @@ export function DataTable<T>({
                   setOpen: setOpenCell,
                   held,
                   drawn: (key) =>
-                      (gridView ? flat.slice(first, last) : drawn.slice(first, last)).some(
-                          (line) => !isGroupHead(line) && line.key === key,
-                      ),
+                      (gridView ? flat.slice(first, last) : drawn.slice(first, last)).some((line) => isRowLine(line) && line.key === key),
                   moveTo,
                   grid: gridView,
                   step: gridView ? perLine : 1,
@@ -2298,6 +2384,9 @@ export function DataTable<T>({
         // A press on a control in a cell, such as a switch or a link, is the control's alone.
         const control = event.target instanceof Element ? event.target.closest(CELL_CONTROL) : null
         if (control !== null && control !== event.currentTarget && event.currentTarget.contains(control)) return
+        // A press that ends a drag over the row's words selects them, and leaves the row as it is.
+        const dragged = window.getSelection()
+        if (dragged !== null && !dragged.isCollapsed && event.currentTarget.contains(dragged.anchorNode)) return
         setHeadAt(undefined)
         setActive(entry.key)
         if (selectable && event.shiftKey) toggle(entry, true)
@@ -2346,8 +2435,8 @@ export function DataTable<T>({
     useEffect(() => {
         if (revealing.current === undefined) return
         const at = all.findIndex((entry) => entry.key === revealing.current)
-        const on = Math.floor(at / pageSize)
         if (at < 0) return
+        const on = pageOfRow(all, at, pageSize, tree)
         if (paging === 'client' && on !== current) return setPage(on)
         revealing.current = undefined
         gridBox.current?.focus({ preventScroll: true })
@@ -2369,7 +2458,7 @@ export function DataTable<T>({
     /** A tree row's indent and its control: open or close, or a spinner while its children load. */
     const treeControl = (entry: FlatRow<T>) => (
         <span className="flex shrink-0 items-center" style={{ paddingLeft: `${String(entry.depth * 1.25)}rem` }}>
-            {entry.waiting ? (
+            {entry.waiting && !refusedNow(entry) ? (
                 <span className="mr-1 flex size-5 items-center justify-center text-muted-foreground">
                     <Spinner className="size-3.5" aria-label={words.loadingChildren} />
                 </span>
@@ -2834,6 +2923,55 @@ export function DataTable<T>({
             </div>
         )
     }
+    /** The line under a branch whose children did not load: what the server did, and Try again. */
+    const refusedLine = (line: RefusedLine<T>, kind: 'row' | 'item', index = 0) => {
+        const said = (
+            <>
+                <span className="min-w-0 truncate text-critical">{words.refused ?? PAGE_STATE_WORDS.refused}</span>
+                <button
+                    type="button"
+                    onClick={() => retryChildren(line.entry.key)}
+                    className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
+                >
+                    <RotateCwIcon className="size-3.5" aria-hidden />
+                    {words.retry ?? PAGE_STATE_WORDS.retry}
+                </button>
+            </>
+        )
+        const own = { key: line.key, role: 'row', 'data-refused': line.entry.key, onClick: keep }
+        const indent = `${String((line.entry.depth + 1) * 1.25 + 1.5)}rem`
+        if (kind === 'item')
+            return (
+                <li
+                    {...own}
+                    className="flex min-w-0 items-center gap-2 px-(--density-panel-pad) py-2 text-sm"
+                    style={{ paddingLeft: indent }}
+                >
+                    {said}
+                </li>
+            )
+        return (
+            <div
+                {...own}
+                aria-rowindex={index + 2}
+                className={cn('border-b border-border bg-card text-sm', every ? 'min-h-(--density-row)' : 'h-(--density-row)')}
+                style={{ minWidth: rowMin }}
+            >
+                <div
+                    role="gridcell"
+                    aria-colspan={shown.length + (selectable ? 1 : 0) + (endWidth === undefined ? 0 : 1)}
+                    className={cn('sticky left-0 flex h-full min-w-0 items-center gap-2 pr-3', every && 'py-2')}
+                    style={{
+                        maxWidth: view.width,
+                        paddingLeft: `calc(${selectable ? CHECK : '0rem'} + ${indent} + ${list ? 'var(--density-panel-pad)' : '0.75rem'})`,
+                    }}
+                >
+                    {said}
+                </div>
+            </div>
+        )
+    }
+
     /** A row's own element with its open detail after it. */
     const withDetail = (entry: FlatRow<T>, body: ReactElement, kind: 'row' | 'item' | 'card', ground?: string) => {
         const after = detailFor(entry, kind, ground)
@@ -2922,7 +3060,7 @@ export function DataTable<T>({
                     dragged === true && 'opacity-40',
                     typeof passedClass === 'string' && passedClass,
                 )}
-                style={{ height: cardPixels }}
+                style={freeTitle ? { minHeight: cardPixels } : { height: cardPixels }}
             >
                 {stacked ? stackedCard(grip) : card?.(entry.row)}
                 {stacked && rowAt?.key === entry.key && <RowLine part={rowAt.part} inside />}
@@ -3071,8 +3209,7 @@ export function DataTable<T>({
                                         )
                                     }
                                     words={{
-                                        selected: (count) =>
-                                            paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(count),
+                                        selected: (count) => (everyChosen ? words.allSelected(everyCount) : words.selected(count)),
                                         clear: words.clear,
                                         label: words.selection,
                                     }}
@@ -3436,6 +3573,7 @@ export function DataTable<T>({
                             wrapRows(
                                 <ul className="divide-y divide-border">
                                     {drawn.map((entry) => {
+                                        if (isRefusedLine(entry)) return refusedLine(entry, 'item')
                                         if (isGroupHead(entry))
                                             return (
                                                 <li
@@ -3594,6 +3732,7 @@ export function DataTable<T>({
                                     {!whole && <div style={{ height: first * rowHeight }} />}
                                     {drawn.slice(first, last).map((entry, offset) => {
                                         if (isGroupHead(entry)) return groupRow(entry, first + offset)
+                                        if (isRefusedLine(entry)) return refusedLine(entry, 'row', first + offset)
                                         const chosen = selection.has(entry.key)
                                         const isOpened = opened?.(entry.row) === true
                                         const state = selectable ? branchState(entry) : 'none'
@@ -3625,7 +3764,7 @@ export function DataTable<T>({
                                                 aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
                                                 aria-expanded={entry.branch ? entry.open : undefined}
                                                 aria-level={tree ? entry.depth + 1 : undefined}
-                                                aria-busy={entry.waiting || undefined}
+                                                aria-busy={(entry.waiting && !refusedNow(entry)) || undefined}
                                                 data-row={entry.key}
                                                 data-active={entry.key === marked || undefined}
                                                 onClick={(event) => press(entry, event)}

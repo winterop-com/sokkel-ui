@@ -29,7 +29,7 @@ import { YesNoField } from '@winterop-com/sokkel-ui/YesNoField'
 import { TextLink } from '@winterop-com/sokkel-ui/TextLink'
 import { Eraser, ListOrdered, Send, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
@@ -105,8 +105,15 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
         if (form.levels === undefined || level === undefined || form.levels.includes(level)) return undefined
         return `Filed per ${form.levels.map((each) => LEVEL_LABEL[each].toLowerCase()).join(' or ')}`
     }
+    // A visit opened for a household starts from the household's place, set once it is read.
     const startPlace =
-        keepPlace && lastPlace !== null && placeOf(lastPlace) !== undefined && outside(lastPlace) === undefined ? lastPlace : null
+        givenHousehold === undefined &&
+        keepPlace &&
+        lastPlace !== null &&
+        placeOf(lastPlace) !== undefined &&
+        outside(lastPlace) === undefined
+            ? lastPlace
+            : null
     const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
     const [place, setPlace] = useState<string | null>(startPlace)
     const [period, setPeriod] = useState<string | null>(form.period === undefined ? null : lastWholePeriod(form.period, today))
@@ -177,7 +184,11 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
         if (place === null) setPlace(form.id === 'FRM-STOCK' ? (pathOf(testPlace(used))[1]?.id ?? testPlace(used)) : testPlace(used))
         setFieldIssues({})
         setServerIssues({})
-        toast.success('Filled with test data', { description: `Seed ${String(used)}. Change anything you like before submitting.` })
+        toast.add({
+            type: 'success',
+            title: 'Filled with test data',
+            description: `Seed ${String(used)}. Change anything you like before submitting.`,
+        })
     }
 
     const clear = () => {
@@ -187,7 +198,7 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
         setServerIssues({})
         setTried(false)
         setSeed(null)
-        toast('Cleared', { description: 'The answers are empty again. Where and when the record is for stay as they were.' })
+        toast.add({ title: 'Cleared', description: 'The answers are empty again. Where and when the record is for stay as they were.' })
     }
 
     const send = () => {
@@ -200,7 +211,11 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
             (form.kind !== 'periodic' && visitDate === null) ||
             (form.kind === 'followup' && householdId === null)
         ) {
-            toast.error('Not filed yet', { description: 'Some answers need attention; the count beside Submit lists them.' })
+            toast.add({
+                type: 'error',
+                title: 'Not filed yet',
+                description: 'Some answers need attention; the count beside Submit lists them.',
+            })
             return
         }
         setBusy(true)
@@ -213,7 +228,9 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
             (receipt) => {
                 setBusy(false)
                 if (keepPlace) setLastPlace(place)
-                toast.success('Filed', {
+                toast.add({
+                    type: 'success',
+                    title: 'Filed',
                     description: `Stored as receipt ${receipt.receipt.slice(0, 12)}, not yet sent on to the register.`,
                 })
                 go(`/responses/${receipt.receipt}`)
@@ -222,14 +239,23 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
                 setBusy(false)
                 if (failure instanceof Refused) {
                     setServerIssues(Object.fromEntries(failure.issues.map((issue) => [issue.question, issue.text])))
-                    toast.error('The server refused the response', {
+                    toast.add({
+                        type: 'error',
+                        title: 'The server refused the response',
                         description: `${count(failure.issues.length, 'issue')}; nothing was stored.`,
                     })
                 } else if (failure instanceof Unreachable)
-                    toast.error('Not filed', {
+                    toast.add({
+                        type: 'error',
+                        title: 'Not filed',
                         description: 'The server is not answering, so nothing was stored. Try again once it answers.',
                     })
-                else toast.error('Not filed', { description: failure instanceof Error ? failure.message : String(failure) })
+                else
+                    toast.add({
+                        type: 'error',
+                        title: 'Not filed',
+                        description: failure instanceof Error ? failure.message : String(failure),
+                    })
             },
         )
     }

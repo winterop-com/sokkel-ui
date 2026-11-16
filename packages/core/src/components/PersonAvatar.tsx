@@ -101,17 +101,20 @@ export function PersonAvatar({
 }: PersonAvatarProps) {
     const words = { ...WORDS, ...given }
     const fit = SIZE[size]
-    const letters = (
-        initials ??
-        name
-            .split('@')[0]
-            .split(/[\s._-]+/)
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((part) => part[0])
-            .join('')
-            .toUpperCase()
-    ).slice(0, fit.letters)
+    // By code point, so a name that starts outside the basic plane keeps its whole first letter.
+    const letters = [
+        ...(initials ??
+            name
+                .split('@')[0]
+                .split(/[\s._-]+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => [...part][0])
+                .join('')
+                .toUpperCase()),
+    ]
+        .slice(0, fit.letters)
+        .join('')
     const corner = shape === 'round' ? 'rounded-full' : size === 'xl' ? 'rounded-xl' : 'rounded-md'
     const badge = cn(
         'inline-flex shrink-0 items-center justify-center overflow-hidden font-medium select-none',
