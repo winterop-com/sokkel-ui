@@ -1017,6 +1017,7 @@ export function Tree({
                                     variant="ghost"
                                     size="icon-xs"
                                     tabIndex={-1}
+                                    data-no-drag
                                     aria-label={words.actions}
                                     className="shrink-0 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100"
                                 />

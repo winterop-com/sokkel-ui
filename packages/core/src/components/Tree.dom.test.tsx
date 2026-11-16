@@ -124,3 +124,21 @@ describe('a level that did not load', () => {
         expect(loadChildren).toHaveBeenCalledTimes(2)
     })
 })
+
+describe('a row that moves', () => {
+    it('keeps the press on its menu button, which the drag leaves alone', async () => {
+        const at = await mount(
+            <Tree
+                nodes={sites}
+                selection="none"
+                onMove={() => undefined}
+                actions={() => [{ id: 'rename', label: 'Rename', onSelect: () => undefined }]}
+                label="Sites"
+            />,
+        )
+        const menu = rowOf(at, 'asia')?.querySelector('[aria-label="Actions"]')
+        expect(menu).toBeDefined()
+        // A press inside `data-no-drag` is the control's own, never the start of a drag.
+        expect(menu?.closest('[data-no-drag]')).not.toBeNull()
+    })
+})
