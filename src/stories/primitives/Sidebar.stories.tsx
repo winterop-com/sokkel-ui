@@ -226,7 +226,7 @@ function Frame({
                     <span className="text-sm text-muted-foreground">/</span>
                     <span className="font-mono text-sm">import-orders</span>
                 </Row>
-                <Stack gap="lg" className="max-w-[1100px] p-6">
+                <Stack gap="lg" className="max-w-275 p-6">
                     <PageHeader title="Import orders" code="import-orders" />
                     <DataTable variant="list" columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
                 </Stack>
@@ -264,7 +264,7 @@ export const CollapsedToIcons: StoryObj = { parameters: { frame: 'none' }, rende
 /** Static sidebars side by side: menu button sizes and variants, and the disabled and loading states. */
 export const Variants: StoryObj = {
     render: () => (
-        <Row gap="xl" align="start" wrap className="mx-auto max-w-[1100px]">
+        <Row gap="xl" align="start" wrap className="mx-auto max-w-275">
             <Stack gap="sm">
                 <Caption>menu button sizes and variants</Caption>
                 <Static>

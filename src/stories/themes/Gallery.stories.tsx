@@ -114,7 +114,7 @@ function Grid({ base }: { base: ThemeSettings }) {
     return (
         // Settling while frames draw; the screenshot suite waits for it to end.
         <div className="relative min-h-svh bg-background p-4 text-foreground md:p-6" data-settling={done ? undefined : ''}>
-            <Stack gap="xl" className="mx-auto max-w-[1800px]">
+            <Stack gap="xl" className="mx-auto max-w-450">
                 <Stack gap="2xs">
                     <PageHeader
                         title="Themes"

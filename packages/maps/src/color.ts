@@ -1,9 +1,3 @@
-/** The color a token that does not resolve is drawn in. */
-const UNRESOLVED = 'rgb(128, 128, 128)'
-
-/** An inherited color no stylesheet sets, so a probe that comes back with it failed to resolve. */
-const SENTINEL = 'rgb(1, 2, 3)'
-
 let pixel: CanvasRenderingContext2D | null | undefined
 
 function pixelContext(): CanvasRenderingContext2D | null {
@@ -25,7 +19,7 @@ function toRgb(color: string): string | null {
     if (context === null) return null
     try {
         context.clearRect(0, 0, 1, 1)
-        context.fillStyle = 'rgba(0, 0, 0, 0)'
+        context.fillStyle = 'transparent'
         context.fillStyle = color
         context.fillRect(0, 0, 1, 1)
         const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data
@@ -40,21 +34,25 @@ function toRgb(color: string): string | null {
 /**
  * Resolve CSS colors in the scope of an element: tokens, `var()`, `color-mix()` and `oklch()` all
  * come back as `rgb()` strings maplibre can paint. The element decides which theme the tokens are
- * read in, so a map inside a `data-theme-scope` takes that scope's colors.
+ * read in, so a map inside a `data-theme-scope` takes that scope's colors. A color that does not
+ * resolve, such as a token no theme defines, comes back in the scope's own text color.
  */
 export function resolveColors<K extends string>(scope: HTMLElement, colors: Record<K, string>): Record<K, string> {
     const holder = document.createElement('span')
-    holder.style.cssText = `position:absolute;width:0;height:0;overflow:hidden;color:${SENTINEL}`
+    holder.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden'
     const probe = document.createElement('span')
     holder.append(probe)
     scope.append(holder)
     const resolved = {} as Record<K, string>
     try {
+        // A probe whose color fails to resolve inherits this one, so it needs no check of its own.
+        const text = getComputedStyle(holder).color
+        const fallback = toRgb(text) ?? text
         for (const key of Object.keys(colors) as K[]) {
             probe.style.color = ''
             probe.style.color = colors[key]
             const computed = getComputedStyle(probe).color
-            resolved[key] = computed === SENTINEL || computed === '' ? UNRESOLVED : (toRgb(computed) ?? UNRESOLVED)
+            resolved[key] = computed === '' ? fallback : (toRgb(computed) ?? fallback)
         }
     } finally {
         holder.remove()

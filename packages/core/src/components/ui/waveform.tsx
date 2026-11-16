@@ -4,6 +4,25 @@ import { useEffect, useMemo, useRef, useState, type HTMLAttributes } from 'react
 
 import { cn } from '../../lib/cn'
 
+/**
+ * Fades both ends of what is drawn by erasing through a gradient. Under `destination-out` only a
+ * stop's alpha counts, so the mask's color is any opaque one and no theme sets it.
+ */
+function fadeEnds(ctx: CanvasRenderingContext2D, width: number, height: number, fadeWidth: number) {
+    const gradient = ctx.createLinearGradient(0, 0, width, 0)
+    const fade = Math.min(0.2, fadeWidth / width)
+    gradient.addColorStop(0, 'black')
+    gradient.addColorStop(fade, 'transparent')
+    gradient.addColorStop(1 - fade, 'transparent')
+    gradient.addColorStop(1, 'black')
+    ctx.save()
+    ctx.globalAlpha = 1
+    ctx.globalCompositeOperation = 'destination-out'
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, width, height)
+    ctx.restore()
+}
+
 export type WaveformProps = HTMLAttributes<HTMLDivElement> & {
     data?: readonly number[]
     barWidth?: number
@@ -67,7 +86,7 @@ export const Waveform = ({
             const rect = canvas.getBoundingClientRect()
             ctx.clearRect(0, 0, rect.width, rect.height)
 
-            const computedBarColor = barColor || getComputedStyle(canvas).color || '#000'
+            const computedBarColor = barColor || getComputedStyle(canvas).color
 
             const barCount = Math.floor(rect.width / (barWidth + barGap))
             const centerY = rect.height / 2
@@ -92,18 +111,7 @@ export const Waveform = ({
             }
 
             if (fadeEdges && fadeWidth > 0 && rect.width > 0) {
-                const gradient = ctx.createLinearGradient(0, 0, rect.width, 0)
-                const fadePercent = Math.min(0.2, fadeWidth / rect.width)
-
-                gradient.addColorStop(0, 'rgba(255,255,255,1)')
-                gradient.addColorStop(fadePercent, 'rgba(255,255,255,0)')
-                gradient.addColorStop(1 - fadePercent, 'rgba(255,255,255,0)')
-                gradient.addColorStop(1, 'rgba(255,255,255,1)')
-
-                ctx.globalCompositeOperation = 'destination-out'
-                ctx.fillStyle = gradient
-                ctx.fillRect(0, 0, rect.width, rect.height)
-                ctx.globalCompositeOperation = 'source-over'
+                fadeEnds(ctx, rect.width, rect.height, fadeWidth)
             }
 
             ctx.globalAlpha = 1
@@ -230,7 +238,7 @@ export const ScrollingWaveform = ({
             const rect = canvas.getBoundingClientRect()
             ctx.clearRect(0, 0, rect.width, rect.height)
 
-            const computedBarColor = barColor || getComputedStyle(canvas).getPropertyValue('--foreground') || '#000'
+            const computedBarColor = barColor || getComputedStyle(canvas).getPropertyValue('--foreground') || getComputedStyle(canvas).color
 
             const step = barWidth + barGap
             for (let i = 0; i < barsRef.current.length; i++) {
@@ -287,18 +295,7 @@ export const ScrollingWaveform = ({
             }
 
             if (fadeEdges && fadeWidth > 0) {
-                const gradient = ctx.createLinearGradient(0, 0, rect.width, 0)
-                const fadePercent = Math.min(0.2, fadeWidth / rect.width)
-
-                gradient.addColorStop(0, 'rgba(255,255,255,1)')
-                gradient.addColorStop(fadePercent, 'rgba(255,255,255,0)')
-                gradient.addColorStop(1 - fadePercent, 'rgba(255,255,255,0)')
-                gradient.addColorStop(1, 'rgba(255,255,255,1)')
-
-                ctx.globalCompositeOperation = 'destination-out'
-                ctx.fillStyle = gradient
-                ctx.fillRect(0, 0, rect.width, rect.height)
-                ctx.globalCompositeOperation = 'source-over'
+                fadeEnds(ctx, rect.width, rect.height, fadeWidth)
             }
 
             ctx.globalAlpha = 1

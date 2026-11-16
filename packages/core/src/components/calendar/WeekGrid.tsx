@@ -362,7 +362,7 @@ export function WeekGrid<E extends CalendarEvent>({
                                         // The lines of title a narrow lane has room for, at the block's 16px line height.
                                         const titleLines = Math.max(1, Math.floor((height - (roomy ? 8 : 0)) / 16))
                                         const look = cn(
-                                            '@container/event flex flex-col overflow-hidden rounded-md border-l-[3px] px-1.5 text-left text-xs leading-4',
+                                            '@container/event flex flex-col overflow-hidden rounded-md border-l-3 px-1.5 text-left text-xs leading-4',
                                             roomy ? 'py-1' : 'justify-center',
                                             KIND_INK[event.color ?? 'blue'],
                                             KIND_EDGE[event.color ?? 'blue'],
@@ -464,7 +464,7 @@ export function WeekGrid<E extends CalendarEvent>({
                                             className="pointer-events-none absolute inset-x-0 z-30 h-0.5 bg-critical"
                                             style={{ top: (nowMinutes / 60) * hourHeight - 1 }}
                                         >
-                                            <span className="absolute -top-[3px] -left-1 size-2 rounded-full bg-critical" />
+                                            <span className="absolute -top-0.75 -left-1 size-2 rounded-full bg-critical" />
                                         </div>
                                     )}
                                 </div>

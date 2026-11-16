@@ -263,7 +263,7 @@ function worstTone(tones: readonly (string | null | undefined)[]): keyof typeof 
  */
 const BOX: Partial<Record<Status, string>> = {
     succeeded: 'border-status-succeeded-ink',
-    failed: 'border-[1.5px] border-status-failed-ink bg-[color-mix(in_oklab,var(--status-failed)_12%,var(--node))]',
+    failed: 'border-2 border-status-failed-ink bg-[color-mix(in_oklab,var(--status-failed)_12%,var(--node))]',
     running: 'border-status-running',
     waiting: 'border-status-waiting',
     completed_with_errors: 'border-status-completed-with-errors-ink',
