@@ -3,7 +3,7 @@ import { useLayoutEffect, useState } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { useOptionalMapContext } from './context'
-import { NO_DATA_BACKGROUND, NO_DATA_POINT_COLOR, classLabels, scaleColors, type ColorScale } from './scale'
+import { NO_DATA_BACKGROUND, NO_DATA_POINT_COLOR, classLabels, scaleColors, type ClassWords, type ColorScale } from './scale'
 
 /** One line of a legend that keys something other than a scale, such as the selection's emphasis. */
 export interface MapLegendEntry {
@@ -39,15 +39,17 @@ function Count({ value }: { value: number | undefined }) {
     return <span className="ml-auto pl-3 text-muted-foreground tabular-nums">{value.toLocaleString('en-US')}</span>
 }
 
-/** The words a legend says. */
-export interface MapLegendWords {
+/** The words a legend says, its classes' among them. */
+export interface MapLegendWords extends ClassWords {
     /** What the button a collapsed legend shows says where the legend has no title. */
     legend: string
     /** The name of the button that collapses the legend again. */
     hide: string
+    /** The entry for features with no value, where `noData` is on and names none. */
+    noData: string
 }
 
-const WORDS: MapLegendWords = { legend: 'Legend', hide: 'Hide the legend' }
+const WORDS: Omit<MapLegendWords, keyof ClassWords> = { legend: 'Legend', hide: 'Hide the legend', noData: 'No data' }
 
 /** The width a legend's map is narrow below: about a phone's, where a legend open at first would cover much of it. */
 export const LEGEND_COLLAPSE_BELOW = 480
@@ -159,11 +161,11 @@ export function MapLegend({
             </Button>
         )
     const colors = scale === undefined ? [] : scaleColors(scale)
-    const labels = scale === undefined ? [] : classLabels(scale)
+    const labels = scale === undefined ? [] : classLabels(scale, given)
     const list = scale === undefined || scale.kind === 'categorical' || layout === 'list'
     const classes: MapLegendEntry[] = colors.map((color, index) => ({ label: labels[index], color }))
     const lines = list ? [...classes, ...entries] : entries
-    const noDataLabel = typeof noData === 'string' ? noData : 'No data'
+    const noDataLabel = typeof noData === 'string' ? noData : words.noData
     const headed = title !== undefined || description !== undefined
     return (
         <section

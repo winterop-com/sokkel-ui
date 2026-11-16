@@ -19,6 +19,7 @@ export const stream: ChartBuilder = (spec, look) => {
         aggregate: spec.aggregate,
         order: spec.order,
         seriesOrder: spec.seriesOrder,
+        count: spec.words?.count,
     })
     const time = categories.length > 0 && categories.every((label) => dayOf(label) !== null)
     const text = { color: look.muted, fontFamily: look.font, fontSize: look.size.label }

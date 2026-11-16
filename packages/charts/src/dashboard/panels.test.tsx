@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ChartFrameProps, ChartFrameViewProps } from '../ChartFrame'
+import { dataColumns } from '../data-columns'
+import type { ChartKind, ChartSpec } from '../kinds'
 import { BarPanel } from './BarPanel'
 import { ChartPanel } from './ChartPanel'
 import { ComboPanel } from './ComboPanel'
@@ -56,6 +58,23 @@ describe('dashboard panels', () => {
             const onViewChange = vi.fn()
             const frame = frameOf(draw({ defaultView: 'data', view: 'chart', onViewChange }))
             expect(frame).toMatchObject({ defaultView: 'data', view: 'chart', onViewChange })
+        })
+    }
+    const DRAWN = Object.entries(PANELS).filter(([name]) => name !== 'ChartPanel')
+
+    for (const [name, draw] of DRAWN) {
+        it(`${name} heads its data view's columns with words an app can translate`, () => {
+            const heads = (words?: Record<string, string>) => {
+                const frame = frameOf(draw({ words } as ChartFrameViewProps))
+                const chart = frame.children({ hidden: new Set(), hovered: null, handle: { current: null }, windowed: false })
+                const { kind, ...spec } = (chart as ReactElement<ChartSpec & { kind: ChartKind }>).props
+                return dataColumns(kind, spec).map((column) => column.header)
+            }
+            expect(heads()).toContain('Category')
+            expect(heads()).toContain('Value')
+            for (const head of heads()) expect(['Category', 'Series', 'Value']).toContain(head)
+            const translated = heads({ category: 'Kategori', series: 'Serie', value: 'Verdi' })
+            for (const head of translated) expect(['Kategori', 'Serie', 'Verdi']).toContain(head)
         })
     }
 })

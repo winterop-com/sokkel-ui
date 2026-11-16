@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react'
+import { useCallback, useEffect, useReducer, useRef, type RefObject } from 'react'
 
 /** A value with what it was before and what an undo took back. */
 export interface HistoryState<T> {
@@ -104,9 +104,14 @@ export function historyKey(press: HistoryKeyPress): 'undo' | 'redo' | null {
 /**
  * The undo and redo keys for a history kept elsewhere, such as the text a graph is drawn from:
  * Cmd or Ctrl with Z calls `undo`, and with Shift and Z, or Ctrl with Y, `redo`, anywhere on the
- * page but in a field, which keeps its own undo. Off while `enabled` is false.
+ * page but in a field, which keeps its own undo, or only within `scope` where it is given, so two
+ * editors on one page each undo their own. Off while `enabled` is false.
  */
-export function useHistoryKeys(undo: () => void, redo: () => void, { enabled = true }: { enabled?: boolean } = {}): void {
+export function useHistoryKeys(
+    undo: () => void,
+    redo: () => void,
+    { enabled = true, scope }: { enabled?: boolean; scope?: RefObject<HTMLElement | null> } = {},
+): void {
     const calls = useRef({ undo, redo })
     useEffect(() => {
         calls.current = { undo, redo }
@@ -116,18 +121,19 @@ export function useHistoryKeys(undo: () => void, redo: () => void, { enabled = t
         const onKey = (event: KeyboardEvent) => {
             const which = historyKey(event)
             if (which === null || event.defaultPrevented || typing(event.target)) return
+            if (scope !== undefined && !(event.target instanceof Node && scope.current?.contains(event.target) === true)) return
             event.preventDefault()
             calls.current[which]()
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
-    }, [enabled])
+    }, [enabled, scope])
 }
 
 /**
  * The value an editor works on, with undo and redo. Cmd or Ctrl with Z undoes, and with Shift and
  * Z, or Ctrl with Y, redoes, unless `keys` is false or the key is pressed in a field, which keeps
- * its own undo.
+ * its own undo; with `scope`, only for a key pressed within that element.
  */
 export function useGraphHistory<T>(
     initial: T,
@@ -135,12 +141,15 @@ export function useGraphHistory<T>(
         past = [],
         limit = 100,
         keys = true,
+        scope,
     }: {
         /** Earlier values to start with, oldest first, as when a document is reopened with its history. */
         past?: readonly T[]
         /** The most steps kept to undo. */
         limit?: number
         keys?: boolean
+        /** The element the undo keys act within, such as the editor's own box; the whole page by default. */
+        scope?: RefObject<HTMLElement | null>
     } = {},
 ): GraphHistory<T> {
     const [state, dispatch] = useReducer(historyStep<T>, null, () => ({
@@ -170,7 +179,7 @@ export function useGraphHistory<T>(
     const redo = useCallback(() => dispatch({ type: 'redo' }), [])
     const reset = useCallback((value: T) => dispatch({ type: 'reset', value }), [])
 
-    useHistoryKeys(undo, redo, { enabled: keys })
+    useHistoryKeys(undo, redo, { enabled: keys, scope })
 
     return {
         value: state.present,

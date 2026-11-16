@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react'
-import { useId, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useState, type KeyboardEvent } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { BlockRow } from './BlockPalette'
@@ -79,8 +79,14 @@ export function BlockPicker({
     const at = Math.min(active, Math.max(0, flat.length - 1))
     const base = useId()
     const optionId = (index: number) => `${base}-o${String(index)}`
+    // The focus stays in the search, so the list is scrolled to the active block for it.
+    useEffect(() => {
+        document.getElementById(`${base}-o${String(at)}`)?.scrollIntoView({ block: 'nearest' })
+    }, [base, at])
 
     const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+        // A key that ends a word being composed, as in Japanese, is the input method's.
+        if (event.nativeEvent.isComposing) return
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
             event.preventDefault()
             if (flat.length === 0) return

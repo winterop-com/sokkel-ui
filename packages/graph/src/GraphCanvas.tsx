@@ -324,6 +324,30 @@ export function pickedNode(changes: readonly NodeChange[]): string | undefined {
     return undefined
 }
 
+/**
+ * The edges with the route elk drew dropped from each one whose end is being dragged, so it follows
+ * the box as a line between their handles rather than staying where the box was.
+ */
+export function edgesWhileDragged<E extends Edge>(edges: readonly E[], dragged: Readonly<Record<string, unknown>>): E[] {
+    return edges.map((edge) => {
+        if (dragged[edge.source] === undefined && dragged[edge.target] === undefined) return edge
+        const data = edge.data as { points?: unknown; labelAt?: unknown } | undefined
+        if (data?.points === undefined && data?.labelAt === undefined) return edge
+        const { points: _points, labelAt: _labelAt, ...rest } = data
+        return { ...edge, data: rest }
+    })
+}
+
+/** The words, kept as the same object while each says the same, so words written inline do not draw every node and edge again. */
+function useWords(words: Partial<GraphWords> | undefined): GraphWords {
+    const given = { ...GRAPH_WORDS, ...words }
+    const [kept, setKept] = useState(given)
+    const keys = Object.keys(given) as (keyof GraphWords)[]
+    const same = keys.length === Object.keys(kept).length && keys.every((key) => given[key] === kept[key])
+    if (!same) setKept(given)
+    return same ? kept : given
+}
+
 /** The nodes' ids, places and sizes as one string, which is what a fit is redone on. */
 function placementKey(nodes: readonly Node[]): string {
     return nodes
@@ -423,7 +447,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     className,
     children,
 }: GraphCanvasProps<N, E>) {
-    const said = { ...GRAPH_WORDS, ...words }
+    const said = useWords(words)
     const box = useRef<HTMLDivElement | null>(null)
     const [width, setWidth] = useState(0)
     const [bend, setBend] = useState(EDGE_BEND)
@@ -493,6 +517,8 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
         [editing, said, hoveredEdge, hoverEdge],
     )
     const flowRef = useRef<ReactFlowInstance<N, E> | null>(null)
+    const allNodeTypes = useMemo(() => ({ ...NODE_TYPES, ...nodeTypes }), [nodeTypes])
+    const allEdgeTypes = useMemo(() => ({ ...EDGE_TYPES, ...edgeTypes }), [edgeTypes])
 
     // A box being dragged stands where the pointer has it until the app answers the drop.
     const drawn = useMemo(
@@ -502,10 +528,12 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                 : nodes.map((node) => (dragged[node.id] === undefined ? node : { ...node, position: dragged[node.id] })),
         [nodes, dragged],
     )
-    const lines = useMemo(
-        () => (!editable ? edges : edges.map((edge) => ({ ...edge, selectable: true, focusable: true, selected: edge.id === chosenEdge }))),
-        [edges, editable, chosenEdge],
-    )
+    const lines = useMemo(() => {
+        const following = Object.keys(dragged).length === 0 ? edges : edgesWhileDragged(edges, dragged)
+        return !editable
+            ? following
+            : following.map((edge) => ({ ...edge, selectable: true, focusable: true, selected: edge.id === chosenEdge }))
+    }, [edges, editable, chosenEdge, dragged])
     const key = placementKey(nodes)
     const empty = nodes.length === 0
     const pointer = (event: { clientX: number; clientY: number }): GraphPointer => {
@@ -627,8 +655,8 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 onInit={(instance) => {
                                     flowRef.current = instance
                                 }}
-                                nodeTypes={{ ...NODE_TYPES, ...nodeTypes }}
-                                edgeTypes={{ ...EDGE_TYPES, ...edgeTypes }}
+                                nodeTypes={allNodeTypes}
+                                edgeTypes={allEdgeTypes}
                                 defaultEdgeOptions={EDGE_DEFAULTS}
                                 proOptions={PRO_OPTIONS}
                                 aria-label={said.label}

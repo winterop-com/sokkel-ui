@@ -2,7 +2,7 @@ import { tooltipMarkup } from '../look'
 import { area, line } from './categories'
 import { edgeAxis, valueTicks } from './axes'
 import { spreadOf } from './legend-range'
-import { written, categoryText, colorOf, isFigure, type ChartBuilder } from './spec'
+import { written, categoryText, colorOf, isFigure, wordsOf, type ChartBuilder } from './spec'
 
 /**
  * A line that holds each figure flat until the next category, then steps: for a level that changes
@@ -38,7 +38,7 @@ export const range: ChartBuilder = (spec, look) => {
                     categoryText(spec, categories[index] ?? ''),
                     shown.map((entry) => ({
                         label: entry.name,
-                        value: `${written(spec, entry.middle[index])} (${written({ ...spec, unit: '' }, entry.low[index])} to ${written({ ...spec, unit: '' }, entry.high[index])})`,
+                        value: `${written(spec, entry.middle[index])} (${written({ ...spec, unit: '' }, entry.low[index])} ${wordsOf(spec).to} ${written({ ...spec, unit: '' }, entry.high[index])})`,
                         color: colorOf(spec, look, entry.name, series.indexOf(entry)),
                     })),
                 )

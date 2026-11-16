@@ -6,7 +6,7 @@ import type { LegendStat } from '../ChartLegend'
 import { Chart } from '../Chart'
 import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { legendItems, panelFormat, seriesSpec, valueWriter, type PanelSeries } from './series'
+import { legendItems, panelFormat, seriesSpec, valueWriter, type PanelSeries, usePanelFields, type PanelWords } from './series'
 
 export interface BarPanelProps extends ChartFrameViewProps {
     title: ReactNode
@@ -38,7 +38,8 @@ export interface BarPanelProps extends ChartFrameViewProps {
     /** Whether the panel is in its window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
     expanded?: boolean
     onExpandedChange?: (expanded: boolean) => void
-    words?: Partial<ChartFrameWords>
+    /** The frame's words, and the heads of its data view's columns. */
+    words?: Partial<ChartFrameWords & PanelWords>
     className?: string
 }
 
@@ -79,16 +80,18 @@ export function BarPanel({
     onViewChange,
     className,
 }: BarPanelProps) {
+    const fieldNames = usePanelFields(words)
     const spec = useMemo<ChartSpec>(
         () => ({
             ...seriesSpec(x, series),
+            fieldNames,
             ...panelFormat(unit, decimals, format),
             stack: stacked === 'percent' ? 'percent' : stacked === true ? 'stacked' : undefined,
             horizontal,
             gap,
             labelEvery,
         }),
-        [x, series, unit, decimals, format, stacked, horizontal, gap, labelEvery],
+        [x, series, fieldNames, unit, decimals, format, stacked, horizontal, gap, labelEvery],
     )
     const items = useMemo(() => legendItems(series), [series])
     const write = useMemo(

@@ -6,7 +6,7 @@ import type { ChartLook } from '../look'
 import { bandLabel, fanShape } from './legend-fan'
 import { ringFigures } from './legend-rings'
 import { LEGENDS, loadedLegend, loadLegend } from './legends'
-import { loadKind } from './load'
+import { loadKind, readsHidden } from './load'
 import { dialSplits } from './gauge'
 import { linkedLayout, SHARED_SCALE } from './linked'
 import { KINDS, type ChartKind, type ChartSpec } from '.'
@@ -76,6 +76,38 @@ describe('the chart kinds', () => {
             expect(() => legendOf(kind as ChartKind, spec)).not.toThrow()
         })
     }
+
+    it("writes the words it names itself in the spec's words", () => {
+        const words = { all: 'Alle', count: 'Antall', to: 'til' }
+        const scatter = KINDS.scatter.build({ rows: ROWS, x: 'duration', y: 'runs', words }, LOOK) as unknown as Option
+        expect(scatter.series.map((series) => series.name)).toEqual(['Alle'])
+        expect(legendOf('scatter', { rows: ROWS, x: 'duration', y: 'runs', words }).map((item) => item.label)).toEqual(['Alle'])
+        const bar = KINDS.bar.build({ rows: ROWS, x: 'job', words }, LOOK) as unknown as Option
+        expect(bar.series.map((series) => series.name)).toEqual(['Antall'])
+        type Range = Option & { tooltip: { formatter: (points: { dataIndex: number; seriesName: string }[]) => string } }
+        const range = KINDS.range.build({ rows: ROWS, x: 'job', y: 'duration', words }, LOOK) as unknown as Range
+        const said = range.tooltip.formatter(range.series.map((series) => ({ dataIndex: 0, seriesName: series.name ?? '' })))
+        expect(said).toContain(' til ')
+        expect(said).not.toContain(' to ')
+    })
+
+    it('draws the same option whatever is hidden, for a kind whose builder does not read it', () => {
+        for (const [kind, spec] of Object.entries(SPECS)) {
+            if (readsHidden(kind as ChartKind)) continue
+            const hidden = new Set(['succeeded', 'nightly-export', 'duration', 'fetch'])
+            const build = KINDS[kind as ChartKind].build
+            expect(JSON.stringify(build(spec, LOOK, hidden)), kind).toBe(JSON.stringify(build(spec, LOOK)))
+        }
+    })
+
+    it('sizes a scatter point with a negative value, and draws a gauge whose min is its max', () => {
+        type Scatter = { series: { symbolSize: (point: [number, number, number]) => number }[] }
+        const scatter = KINDS.scatter.build({ rows: ROWS, x: 'duration', y: 'runs', value: 'duration' }, LOOK) as unknown as Scatter
+        expect(Number.isNaN(scatter.series[0].symbolSize([0, 0, -30]))).toBe(false)
+        const gauge = KINDS.gauge.build({ ...SPECS.gauge, min: 10, max: 10 }, LOOK)
+        expect(JSON.stringify(gauge)).not.toContain('[null,')
+        expect(JSON.stringify(gauge)).not.toMatch(/NaN|Infinity/)
+    })
 
     it('runs a waterfall into a total, rises and falls apart', () => {
         const option = KINDS.waterfall.build(SPECS.waterfall, LOOK) as unknown as Option

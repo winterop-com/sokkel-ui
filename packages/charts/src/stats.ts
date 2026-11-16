@@ -19,6 +19,15 @@ export function niceCeil(value: number): number {
     return Math.ceil(value / step - 1e-9) * step
 }
 
+/** Where `value` stands from `min` to `max`, from 0 to 1; on a scale with no length it is full at or past its end and empty below. */
+export function shareOn(value: number, min: number, max: number): number {
+    if (!(max > min)) return value >= max ? 1 : 0
+    return Math.min(1, Math.max(0, (value - min) / (max - min)))
+}
+
+/** The most bins a histogram cuts, however narrow `width` asks them, so a width far under the range widens to fit. */
+export const MOST_BINS = 1000
+
 /** Equal bins over a range of numbers: where the first starts, how wide each is, and how many there are. */
 export interface Bins {
     start: number
@@ -38,7 +47,9 @@ export function binsFor(values: readonly number[], how?: number | { width: numbe
     if (span === null) return { start: 0, width: 1, count: 0 }
     const [low, high] = span
     const wanted = typeof how === 'number' ? how : Math.min(30, Math.max(5, Math.ceil(Math.log2(values.length) + 1)))
-    const width = typeof how === 'object' && how.width > 0 ? how.width : niceStep((high - low || Math.abs(high) || 1) / Math.max(1, wanted))
+    const asked = typeof how === 'object' && how.width > 0 ? how.width : niceStep((high - low || Math.abs(high) || 1) / Math.max(1, wanted))
+    let width = asked
+    while ((high - low) / width >= MOST_BINS) width = niceStep(width * 2)
     const start = typeof how === 'object' && how.start !== undefined ? how.start : Math.floor(low / width + 1e-9) * width
     return { start, width, count: Math.max(1, Math.ceil((high - start) / width - 1e-9)) }
 }

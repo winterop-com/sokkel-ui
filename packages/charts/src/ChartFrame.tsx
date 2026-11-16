@@ -1,5 +1,5 @@
 import { Download, Info, Maximize2, MoreHorizontal } from 'lucide-react'
-import { Suspense, lazy, memo, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { Suspense, lazy, memo, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { download } from '@winterop-com/sokkel-ui/lib/download'
@@ -96,6 +96,7 @@ export interface ChartFrameProps {
     legendFigures?: boolean
     /** The export's file name, without an extension. */
     file?: string
+    /** Whether the head offers Export, shown while a `Chart` inside can draw an image; on by default. */
     exportable?: boolean
     expandable?: boolean
     /** Expanding also takes the screen: the page goes full screen while the window is open, as `WindowedPane`'s `fullscreen` does. */
@@ -180,7 +181,20 @@ export function ChartFrame({
 }: ChartFrameProps) {
     const words = { ...WORDS, ...given }
     const legend = useLegendEntries(entries)
-    const handle = useRef<ChartHandle | null>(null)
+    const [exports, setExports] = useState(false)
+    // The chart inside fills the handle as it mounts and empties it as it goes, so Export is offered only while one can draw an image.
+    const [handle] = useState<RefObject<ChartHandle | null>>(() => {
+        let current: ChartHandle | null = null
+        return {
+            get current() {
+                return current
+            },
+            set current(next) {
+                current = next
+                setExports(next !== null)
+            },
+        }
+    })
     const [root, setRoot] = useState<HTMLElement | null>(null)
     const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set())
     const [hovered, setHovered] = useState<string | null>(null)
@@ -313,7 +327,7 @@ export function ChartFrame({
                         {/* The frame's tools and the grid's stay on one line, so tools hidden until hover never leave an empty line of their own. */}
                         <div className="flex shrink-0 items-center">
                             <div className="flex items-center transition-opacity group-focus-within/frame:opacity-100 group-hover/frame:opacity-100 [@media(hover:hover)]:opacity-0">
-                                {exportable && (
+                                {exportable && exports && (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger
                                             aria-label={words.export}

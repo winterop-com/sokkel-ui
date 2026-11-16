@@ -105,6 +105,8 @@ export interface PivotSpec {
     order?: readonly string[]
     /** Series in this order first, then any others. */
     seriesOrder?: readonly string[]
+    /** What the one series is called where rows are counted; `Count` by default. */
+    count?: string
 }
 
 /** How the `index`th `y` field is combined: its own way where `how` lists one per field, the sum where none is given. */
@@ -119,7 +121,7 @@ export function aggregateAt(how: Aggregate | readonly Aggregate[] | undefined, i
  * combined by `aggregate`: the sum where a `y` is given and the count where none is. Several `y`
  * fields make one series each, each combined its own way where `aggregate` lists one per field.
  */
-export function pivot({ rows, x, y, series, aggregate: how, order, seriesOrder }: PivotSpec): Pivot {
+export function pivot({ rows, x, y, series, aggregate: how, order, seriesOrder, count = 'Count' }: PivotSpec): Pivot {
     const categories = distinct(rows, x, order)
     const fields = y === undefined ? [] : typeof y === 'string' ? [y] : [...y]
     // A category the order names more than once has a place for each: its nth row goes to its nth place, and any past the last join that one.
@@ -158,16 +160,16 @@ export function pivot({ rows, x, y, series, aggregate: how, order, seriesOrder }
             })),
         }
     }
-    if (fields.length === 0) return { categories, series: [{ name: 'Count', values: collect(() => true, undefined) }] }
+    if (fields.length === 0) return { categories, series: [{ name: count, values: collect(() => true, undefined) }] }
     return {
         categories,
         series: fields.map((field, index) => ({ name: field, values: collect(() => true, field, aggregateAt(how, index)) })),
     }
 }
 
-/** Each category's figures as shares of that category's total, in percent. */
+/** Each category's figures as shares of that category's total, in percent; a negative figure is a negative share of the sizes added up, so no share passes 100. */
 export function asShares(series: readonly Series[]): Series[] {
-    const totals = series[0]?.values.map((_, index) => series.reduce((sum, entry) => sum + (entry.values[index] ?? 0), 0)) ?? []
+    const totals = series[0]?.values.map((_, index) => series.reduce((sum, entry) => sum + Math.abs(entry.values[index] ?? 0), 0)) ?? []
     return series.map((entry) => ({
         name: entry.name,
         values: entry.values.map((value, index) => (value === null || totals[index] === 0 ? null : (value / totals[index]) * 100)),

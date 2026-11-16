@@ -6,7 +6,7 @@ import type { LegendStat } from '../ChartLegend'
 import { Chart } from '../Chart'
 import type { ChartAxis, ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { legendItems, seriesSpec, type PanelSeries } from './series'
+import { legendItems, seriesSpec, type PanelSeries, usePanelFields, type PanelWords } from './series'
 import { formatValue } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 
 /** One series of a combined chart: bars or a line, measured on the left axis or the right one. */
@@ -58,7 +58,8 @@ export interface ComboPanelProps extends ChartFrameViewProps {
     /** Whether the panel is in its window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
     expanded?: boolean
     onExpandedChange?: (expanded: boolean) => void
-    words?: Partial<ChartFrameWords>
+    /** The frame's words, and the heads of its data view's columns. */
+    words?: Partial<ChartFrameWords & PanelWords>
     className?: string
 }
 
@@ -97,15 +98,17 @@ export function ComboPanel({
     onViewChange,
     className,
 }: ComboPanelProps) {
+    const fieldNames = usePanelFields(words)
     const spec = useMemo<ChartSpec>(
         () => ({
             ...seriesSpec(x, series),
+            fieldNames,
             layers: Object.fromEntries(series.map((entry) => [entry.name, { mark: entry.kind, axis: entry.axis ?? 'left' }])),
             axes: { left: comboAxis(left), right: comboAxis(right) },
             stack: stacked === true ? 'stacked' : undefined,
             labelEvery,
         }),
-        [x, series, left, right, stacked, labelEvery],
+        [x, series, fieldNames, left, right, stacked, labelEvery],
     )
     const items = useMemo(() => legendItems(series), [series])
     return (
