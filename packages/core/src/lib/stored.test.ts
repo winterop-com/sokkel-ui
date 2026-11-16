@@ -173,6 +173,20 @@ describe('stores', () => {
         stop()
     })
 
+    it('read a write to the key made while nothing listened, and keep a set equal to the old value', () => {
+        const store = createStore('runs', { key: 'tab' })
+        store.set('jobs')
+        writeStored('tab', '"logs"')
+        expect(store.get()).toBe('logs')
+        writeStored('tab', '"runs"')
+        store.set('jobs')
+        expect(storage.items.get('tab')).toBe('"jobs"')
+        writeStored('tab', '"logs"')
+        const stop = store.subscribe(() => undefined)
+        expect(store.get()).toBe('logs')
+        stop()
+    })
+
     it('without a key, keep nothing', () => {
         const store = createStore('runs')
         store.set('jobs')

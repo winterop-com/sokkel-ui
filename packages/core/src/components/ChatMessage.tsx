@@ -1,6 +1,6 @@
 import { IconButton } from './IconButton'
 import { ChevronRight, Ellipsis, FileText, MessageSquareText, SmilePlus } from 'lucide-react'
-import { isValidElement, useState, type CSSProperties, type ReactNode } from 'react'
+import { isValidElement, memo, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import type { DragData } from './DragDrop'
@@ -183,7 +183,7 @@ export interface ChatMessageProps {
  * link glyph; an edited message says so after its last line. The actions float at the top right on hover: react, reply in thread and a
  * menu, each given by its handler or items.
  */
-export function ChatMessage({
+export const ChatMessage = memo(function ChatMessage({
     author,
     avatar,
     image,
@@ -451,7 +451,7 @@ export function ChatMessage({
             )}
         </article>
     )
-}
+})
 
 export interface ChatDayDividerProps {
     children: ReactNode

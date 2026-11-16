@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { hasLanguage, loadHighlighter, registerLanguage } from './highlighter'
 
@@ -17,6 +17,19 @@ describe('the highlighter', () => {
         expect(out).toContain('color:var(--code-keyword)')
         expect(out).toContain('color:var(--code-number)')
         expect(out).toContain('color:var(--code-comment);font-style:italic')
+    })
+
+    it('draws the rest of a line that takes too long plain', async () => {
+        const highlighter = await loadHighlighter('ts')
+        let now = 0
+        const clock = vi.spyOn(Date, 'now').mockImplementation(() => (now += 5_000))
+        try {
+            const out = html(highlighter?.highlight('const total = 42 // rows').lines ?? null)
+            expect(out).toContain('const total = 42 // rows')
+            expect(out).not.toContain('color:var(--code-comment)')
+        } finally {
+            clock.mockRestore()
+        }
     })
 
     it('draws a line too long to color plain', async () => {

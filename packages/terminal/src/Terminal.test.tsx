@@ -120,4 +120,30 @@ describe('Terminal', () => {
         expect(text).toContain('transform ok')
         await act(async () => root.unmount())
     })
+
+    it('reads only the entry that changed as output streams into a long session', async () => {
+        let reads = 0
+        const entry = (at: number): TerminalEntry => ({
+            id: String(at),
+            command: `jobs run sync-inventory --shard ${String(at)}`,
+            get output() {
+                reads += 1
+                return 'upload ok\n'
+            },
+        })
+        const earlier = Array.from({ length: 200 }, (_, at) => entry(at))
+        const root = createRoot(container())
+        await act(async () => {
+            root.render(<Terminal entries={[...earlier, { id: 'last', command: 'jobs run send-digest', output: 'fetch' }]} />)
+        })
+        const engine = live()[0]
+        const start = reads
+        const before = engine.written.join('')
+        await act(async () => {
+            root.render(<Terminal entries={[...earlier, { id: 'last', command: 'jobs run send-digest', output: 'fetch ok' }]} />)
+        })
+        expect(reads).toBe(start)
+        expect(engine.written.join('')).toBe(`${before} ok`)
+        await act(async () => root.unmount())
+    })
 })

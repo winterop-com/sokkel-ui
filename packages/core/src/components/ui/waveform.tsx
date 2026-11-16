@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type HTMLAttributes } from 'react'
 
+import { useReducedMotion } from '../../hooks/use-reduced-motion'
 import { cn } from '../../lib/cn'
 
 export type WaveformProps = HTMLAttributes<HTMLDivElement> & {
@@ -149,6 +150,13 @@ export type ScrollingWaveformProps = Omit<WaveformProps, 'data' | 'onBarClick'> 
     speed?: number
     barCount?: number
     data?: number[]
+    /**
+     * Whether the bars scroll; on by default. Held still, and while motion is reduced, the bars stay
+     * where they are and nothing is drawn again until the size changes.
+     */
+    active?: boolean
+    /** The number the made-up bars are drawn from when no `data` is given, so the same seed draws the same bars. */
+    seed?: number
 }
 
 export const ScrollingWaveform = ({
@@ -163,6 +171,8 @@ export const ScrollingWaveform = ({
     fadeWidth = 24,
     height = 128,
     data,
+    active = true,
+    seed = 1,
     className,
     ...props
 }: ScrollingWaveformProps) => {
@@ -171,8 +181,15 @@ export const ScrollingWaveform = ({
     const barsRef = useRef<Array<{ x: number; height: number }>>([])
     const animationRef = useRef<number>(0)
     const lastTimeRef = useRef<number>(0)
-    const seedRef = useRef(Math.random())
+    const seedRef = useRef(seed)
+    seedRef.current = seed
     const dataIndexRef = useRef(0)
+    // How many bars have been made, so the next made-up one follows from it rather than from the clock.
+    const madeRef = useRef(0)
+    // Draws one frame again while the bars are held still, as after a resize.
+    const redrawRef = useRef<(() => void) | undefined>(undefined)
+    const reduced = useReducedMotion()
+    const moving = active && !reduced
     const heightStyle = typeof height === 'number' ? `${height}px` : height
 
     useEffect(() => {
@@ -210,6 +227,7 @@ export const ScrollingWaveform = ({
                     currentX -= step
                 }
             }
+            redrawRef.current?.()
         })
 
         resizeObserver.observe(container)
@@ -224,8 +242,9 @@ export const ScrollingWaveform = ({
         if (!ctx) return
 
         const animate = (currentTime: number) => {
-            const deltaTime = lastTimeRef.current ? (currentTime - lastTimeRef.current) / 1000 : 0
-            lastTimeRef.current = currentTime
+            animationRef.current = 0
+            const deltaTime = moving && lastTimeRef.current ? (currentTime - lastTimeRef.current) / 1000 : 0
+            lastTimeRef.current = moving ? currentTime : 0
 
             const rect = canvas.getBoundingClientRect()
             ctx.clearRect(0, 0, rect.width, rect.height)
@@ -248,8 +267,7 @@ export const ScrollingWaveform = ({
                     newHeight = data[dataIndexRef.current % data.length] || 0.1
                     dataIndexRef.current = (dataIndexRef.current + 1) % data.length
                 } else {
-                    const time = Date.now() / 1000
-                    const uniqueIndex = barsRef.current.length + time * 0.01
+                    const uniqueIndex = madeRef.current++
                     const seededRandom = (index: number) => {
                         const x = Math.sin(seedRef.current * 10000 + index * 137.5) * 10000
                         return x - Math.floor(x)
@@ -303,17 +321,24 @@ export const ScrollingWaveform = ({
 
             ctx.globalAlpha = 1
 
-            animationRef.current = requestAnimationFrame(animate)
+            if (moving) animationRef.current = requestAnimationFrame(animate)
         }
 
         animationRef.current = requestAnimationFrame(animate)
+        redrawRef.current = moving
+            ? undefined
+            : () => {
+                  if (!animationRef.current) animationRef.current = requestAnimationFrame(animate)
+              }
 
         return () => {
+            redrawRef.current = undefined
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current)
+                animationRef.current = 0
             }
         }
-    }, [speed, barCount, barWidth, baseBarHeight, barGap, barRadius, barColor, fadeEdges, fadeWidth, data])
+    }, [speed, barCount, barWidth, baseBarHeight, barGap, barRadius, barColor, fadeEdges, fadeWidth, data, moving])
 
     return (
         <div className={cn('relative flex items-center', className)} ref={containerRef} style={{ height: heightStyle }} {...props}>

@@ -3,8 +3,10 @@ import { ArrowUp, Check, CircleAlert, FileText, Mic, Paperclip, Play, Square, X 
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { composing } from '../lib/keys'
+import { composing, touchTyping } from '../lib/keys'
+import { accepts } from '../lib/uploads'
 import { insertTranscript, useDictation, type Dictation, type DictationOptions } from '../hooks/use-dictation'
+import { useFileDrop } from '../hooks/use-file-drop'
 import { DialogShell } from './DialogShell'
 import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { AudioPlayer } from './media/AudioPlayer'
@@ -263,8 +265,13 @@ export interface ComposerProps {
     onCancel?: (id: string) => void
     tools?: ReactNode
     disabled?: boolean
-    /** The file types the attach button offers, as an `accept` attribute. */
+    /**
+     * The file types taken, as an `accept` attribute: what the attach button offers, and what a drop
+     * or a paste hands to `onAttach`.
+     */
     accept?: string
+    /** Hears the files a drop or a paste brought that `accept` does not take, so the app can say why. */
+    onRefuse?: (files: File[]) => void
     /** Adds a microphone that dictates into the text, through the app's transcriber or the browser's recognition. */
     dictation?: ComposerDictation
     /** Suggests people at the caret as an `@` is typed, from the app's list or its search, and puts the one picked in as `@handle`. */
@@ -275,7 +282,8 @@ export interface ComposerProps {
 
 /**
  * Where a message is written: the text grows with what is typed up to a limit, Enter sends and
- * Shift+Enter breaks the line, and files come in by the attach button, a paste or a drop. While an
+ * Shift+Enter breaks the line (on a touch screen Enter breaks the line and only the send button
+ * sends), and files come in by the attach button, a paste or a drop. While an
  * answer is streaming the send button becomes Stop. Tools such as a model picker sit in the row
  * under the text.
  *
@@ -309,6 +317,7 @@ export function Composer({
     tools,
     disabled = false,
     accept,
+    onRefuse,
     dictation: dictating,
     mentions,
     words: given,
@@ -324,8 +333,9 @@ export function Composer({
     useLayoutEffect(() => {
         latest.current = { value, onChange }
     })
-    const [over, setOver] = useState(false)
     const [playing, setPlaying] = useState<ComposerAttachment>()
+    // Read once: on a touch screen Enter breaks the line, as its keyboard has no Shift+Enter to reach for.
+    const [touch] = useState(touchTyping)
     const mention = useMentions({
         options: mentions,
         value,
@@ -355,6 +365,16 @@ export function Composer({
     const files = (list: FileList | null) => {
         if (onAttach !== undefined && list !== null && list.length > 0) onAttach([...list])
     }
+    // Hands on the files `accept` takes, and the rest to `onRefuse`; whether any were taken.
+    const take = (brought: File[]) => {
+        const taken = brought.filter((file) => accepts(file, accept))
+        const refused = brought.filter((file) => !taken.includes(file))
+        if (refused.length > 0) onRefuse?.(refused)
+        if (taken.length > 0) onAttach?.(taken)
+        return taken.length > 0
+    }
+    const drop = useFileDrop(take, onAttach !== undefined && !disabled)
+    const over = drop.over
     return (
         <div
             ref={root}
@@ -370,18 +390,7 @@ export function Composer({
                 disabled && 'opacity-60',
                 className,
             )}
-            onDragOver={(event) => {
-                if (onAttach === undefined || !event.dataTransfer.types.includes('Files')) return
-                event.preventDefault()
-                setOver(true)
-            }}
-            onDragLeave={() => setOver(false)}
-            onDrop={(event) => {
-                if (!event.dataTransfer.types.includes('Files')) return
-                event.preventDefault()
-                setOver(false)
-                files(event.dataTransfer.files)
-            }}
+            {...drop.handlers}
         >
             {over && (
                 <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-control bg-background/80 text-sm font-medium">
@@ -430,7 +439,7 @@ export function Composer({
                 }}
                 onKeyDown={(event) => {
                     if (mention.onKeyDown(event)) return
-                    if (event.key !== 'Enter' || event.shiftKey || composing(event)) return
+                    if (event.key !== 'Enter' || event.shiftKey || touch || composing(event)) return
                     event.preventDefault()
                     if (ready) onSend()
                 }}
@@ -441,8 +450,7 @@ export function Composer({
                         .map((item) => item.getAsFile())
                         .filter((file): file is File => file !== null)
                     if (pasted.length === 0) return
-                    if (!event.clipboardData.types.includes('text/plain')) event.preventDefault()
-                    onAttach(pasted)
+                    if (take(pasted) && !event.clipboardData.types.includes('text/plain')) event.preventDefault()
                 }}
                 className="max-h-60 min-h-12 px-3 pt-3 pb-1 text-sm"
             />
