@@ -121,3 +121,40 @@ export function holdScroll(
     stops.push(() => clearTimeout(timer))
     return settle
 }
+
+/**
+ * Keeps where `area` is left under `key` while it shows what it scrolls (`ready`): puts the place
+ * back and holds it as `holdScroll` does, then notes each move. Once what it showed is dropped
+ * (`ready` false after `shown`), the place it stands at now, the top once it is emptied, is noted
+ * and each move after, so what it shows next starts there rather than at the place left before.
+ * Before it has shown anything it does nothing. Returns what stops it.
+ */
+export function followScroll(
+    area: HTMLElement,
+    key: string,
+    { ready, shown, wait }: { ready: boolean; shown: boolean; wait?: number },
+): () => void {
+    if (!ready && !shown) return () => undefined
+    let held = ready
+    const note = () => {
+        if (!held) rememberScroll(key, { top: area.scrollTop, left: area.scrollLeft })
+    }
+    const stop = ready
+        ? holdScroll(area, recallScroll(key) ?? { top: 0, left: 0 }, {
+              wait,
+              onSettled: () => {
+                  held = false
+              },
+          })
+        : () => undefined
+    note()
+    const keep = () => keepScroll(key)
+    area.addEventListener('scroll', note, { passive: true })
+    window.addEventListener('pagehide', keep)
+    return () => {
+        stop()
+        area.removeEventListener('scroll', note)
+        window.removeEventListener('pagehide', keep)
+        keep()
+    }
+}
