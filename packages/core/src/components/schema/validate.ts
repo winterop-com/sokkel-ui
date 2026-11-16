@@ -140,6 +140,8 @@ function read(error: ErrorObject, document: unknown): SchemaIssue {
         case 'required':
             return { kind: 'required', path: [...path, String(params.missingProperty)], tone: 'critical' }
         case 'type': {
+            // A list's item with nothing in it is said to be empty, not of the wrong type.
+            if (value === undefined) return { kind: 'required', path, tone: 'critical' }
             const expected = String(params.type).split(',')[0]
             const number = typeof value === 'number' ? value : typeof value === 'string' ? Number(value.trim()) : Number.NaN
             return at({ kind: 'type', expected }, expected === 'integer' && Number.isFinite(number) ? Math.round(number) : undefined)

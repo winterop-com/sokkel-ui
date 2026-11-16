@@ -165,6 +165,26 @@ export function initialValue(schema: JsonSchema, root: JsonSchema = schema, keep
     return undefined
 }
 
+/**
+ * What a list's new or emptied item holds: its initial value, else '' for a plain string, so a list
+ * never holds undefined where a string goes. A number or a choice without a default stays unset.
+ */
+export function blankItem(items: JsonSchema, root: JsonSchema): unknown {
+    const start = initialValue(items, root)
+    if (start !== undefined) return start
+    const at = fieldSchema(items, root)
+    const main = types(at).main
+    return main.length === 1 && main[0] === 'string' && at.enum === undefined && scalarUnion(at, root) === undefined ? '' : undefined
+}
+
+/** The value with every empty string in a list read as unset, so an empty item is checked as one with nothing in it. */
+function emptied(value: unknown): unknown {
+    if (Array.isArray(value)) return value.map((item) => (item === '' ? undefined : emptied(item)))
+    if (value !== null && typeof value === 'object')
+        return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, child]) => [key, emptied(child)]))
+    return value
+}
+
 /** The value with the one at a path replaced; an undefined value takes the key out of its object. */
 function setAt(value: unknown, path: Path, next: unknown): unknown {
     if (path.length === 0) return next
@@ -216,7 +236,7 @@ function useChecked(schema: JsonSchema, value: unknown, deferred?: DeferredValue
         }
     }, [check])
     return useMemo((): readonly SchemaIssue[] | undefined => {
-        if (check !== undefined) return withoutDeferred(check(schema, value), value, deferred)
+        if (check !== undefined) return withoutDeferred(check(schema, emptied(value)), value, deferred)
         if (failed !== null) return [{ kind: 'unchecked', reason: failed, path: [], tone: 'critical' }]
         return undefined
     }, [check, failed, schema, value, deferred])
@@ -729,6 +749,7 @@ function Control({
     held,
     ask = true,
     required = false,
+    empty,
 }: {
     form: SchemaFormState
     path: Path
@@ -742,6 +763,8 @@ function Control({
     required?: boolean
     /** Whether to ask the app's `field` for this field, false where its property already did. */
     ask?: boolean
+    /** What a text field holds once emptied: unset by default, '' for a list's item. */
+    empty?: unknown
 }) {
     const kind = kindOf(at, form.schema)
     const value = held === undefined ? valueAt(form.value, path) : held.value
@@ -877,7 +900,7 @@ function Control({
                         {...common}
                         rows={4}
                         value={typeof value === 'string' ? value : ''}
-                        onChange={(event) => set(event.target.value === '' ? undefined : event.target.value)}
+                        onChange={(event) => set(event.target.value === '' ? empty : event.target.value)}
                         className={edge(form, path)}
                     />
                 </Marked>
@@ -953,7 +976,7 @@ function Control({
                         {...common}
                         type={at.format === 'date' ? 'date' : 'text'}
                         value={typeof value === 'string' ? value : value === undefined || value === null ? '' : String(value)}
-                        onChange={(event) => set(event.target.value === '' ? undefined : event.target.value)}
+                        onChange={(event) => set(event.target.value === '' ? empty : event.target.value)}
                         className={cn(mono && 'font-mono', edge(form, path))}
                     />
                 </Marked>
@@ -1209,7 +1232,7 @@ function Property({
     }
 
     if (kind === 'list') {
-        const addOne = () => form.set(path, [...items, initialValue(at.items ?? {}, form.schema)])
+        const addOne = () => form.set(path, [...items, blankItem(at.items ?? {}, form.schema)])
         const removeAt = (index: number) => form.removeItem(path, index)
         const keys = form.itemKeys(path, items.length)
         const moves = (index: number) =>
@@ -1247,7 +1270,13 @@ function Property({
                 {items.map((_, index) => (
                     <div key={keys[index]} className="flex min-w-0 items-center gap-1.5">
                         <div className="min-w-0 flex-1">
-                            <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} />
+                            <Control
+                                form={form}
+                                path={[...path, index]}
+                                at={itemSchema}
+                                label={`${label} ${String(index + 1)}`}
+                                empty=""
+                            />
                         </div>
                         {moves(index)}
                         {!locked && (

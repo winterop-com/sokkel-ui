@@ -6,6 +6,7 @@ import { readScalar, scalarUnion } from './issues'
 import { objectOf, repeatedKeys, rowsOf } from './MapField'
 import type { JsonSchema } from './read'
 import {
+    blankItem,
     initialValue,
     loadSchemaChecks,
     SchemaForm,
@@ -437,6 +438,28 @@ describe('a required boolean without a default', () => {
         renderToStaticMarkup(<Switches />)
         expect(state?.blocking).toBe(false)
         expect(state?.count.critical).toBe(0)
+    })
+})
+
+describe('an empty row in a list of scalars', () => {
+    const schema: JsonSchema = { type: 'object', properties: { tags: { type: 'array', title: 'Tags', items: { type: 'string' } } } }
+
+    it('holds an empty string, never undefined, and says it is empty', async () => {
+        await loadSchemaChecks()
+        expect(blankItem({ type: 'string' }, schema)).toBe('')
+        expect(blankItem({ type: 'string', default: 'harbor' }, schema)).toBe('harbor')
+        expect(blankItem({ type: 'boolean' }, schema)).toBe(false)
+        expect(blankItem({ type: 'integer' }, schema)).toBeUndefined()
+        let state: SchemaFormState | undefined
+        function Tags() {
+            state = useSchemaForm(schema, { initial: { tags: ['nightly', ''] }, defaultSubmitted: true })
+            return <SchemaForm form={state} marks={false} />
+        }
+        const html = renderToStaticMarkup(<Tags />)
+        expect(JSON.stringify(state?.value)).toBe('{"tags":["nightly",""]}')
+        expect(state?.shown(['tags', 1]).map((issue) => issue.text)).toEqual(['Enter a value'])
+        expect(state?.shown(['tags', 0])).toEqual([])
+        expect(html).toContain('aria-label="Error: Enter a value"')
     })
 })
 

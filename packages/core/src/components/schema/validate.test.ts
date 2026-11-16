@@ -106,6 +106,14 @@ describe('a decimal multipleOf', () => {
     })
 })
 
+describe("a list's empty item", () => {
+    it('is said to be empty, not of the wrong type', () => {
+        expect(validate({ type: 'array', items: { type: 'integer' } }, [1, undefined])).toEqual([
+            { kind: 'required', path: [1], tone: 'critical' },
+        ])
+    })
+})
+
 describe('fieldSchema', () => {
     it('reads a nullable anyOf as its one real type', () => {
         expect(fieldSchema({ title: 'Note', anyOf: [{ type: 'string' }, { type: 'null' }] }, {})).toEqual({ type: 'string', title: 'Note' })
