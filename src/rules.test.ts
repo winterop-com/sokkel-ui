@@ -14,6 +14,17 @@ import { ADDONS, exportedComponents, exportProblems, importPath, manifestOf, PAC
 
 const ROOT = join(__dirname, '..')
 
+/** A file's text, read once and shared by every test that reads it. */
+const TEXTS = new Map<string, string>()
+function text(path: string): string {
+    let found = TEXTS.get(path)
+    if (found === undefined) {
+        found = readFileSync(path, 'utf8')
+        TEXTS.set(path, found)
+    }
+    return found
+}
+
 function files(dir: string): string[] {
     return readdirSync(dir).flatMap((name) => {
         const path = join(dir, name)
@@ -160,7 +171,7 @@ const RULES: Rule[] = [
 const COMPONENTS = Object.values(SOURCES)
     .flat()
     .filter((path) => path.endsWith('.tsx') && !/\/packages\/core\/src\/(hooks|lib)\//.test(path))
-    .filter((path) => /export (function|const) [A-Z]/.test(readFileSync(path, 'utf8')))
+    .filter((path) => /export (function|const) [A-Z]/.test(text(path)))
 
 /** A package's `exports` map, by the package's folder name. */
 const EXPORTS = Object.fromEntries(PACKAGES.map((name) => [name, manifestOf(name as PackageDir).exports]))
@@ -235,7 +246,7 @@ describe('the packages', () => {
         for (const name of PACKAGES) {
             const own = join(ROOT, 'packages', name)
             for (const path of SOURCES[name]) {
-                for (const match of readFileSync(path, 'utf8').matchAll(/(?:from|import)\s*\(?\s*'(\.{1,2}\/[^'?]*)/g)) {
+                for (const match of text(path).matchAll(/(?:from|import)\s*\(?\s*'(\.{1,2}\/[^'?]*)/g)) {
                     if (relative(own, resolve(dirname(path), match[1])).startsWith('..')) found.push(`${relative(ROOT, path)}: ${match[1]}`)
                 }
             }
@@ -273,14 +284,13 @@ describe('the exports maps', () => {
     it('export every package path the packages, stories, examples, tools and docs import', { timeout: 30_000 }, () => {
         const unexported: string[] = []
         for (const path of IMPORTERS) {
-            const text = readFileSync(path, 'utf8')
-            for (const match of text.matchAll(/(?:from|import|mock)\s*\(?\s*['"](@winterop-com\/sokkel-ui[^'"]*)['"]/g)) {
+            for (const match of text(path).matchAll(/(?:from|import|mock)\s*\(?\s*['"](@winterop-com\/sokkel-ui[^'"]*)['"]/g)) {
                 if (exported(match[1]) === undefined) unexported.push(`${relative(ROOT, path)}: ${match[1]}`)
             }
         }
         // A path a doc names in code, quotes or backticks; a placeholder such as `<name>` or `*`, or a folder, names no one module.
         for (const path of DOCS) {
-            for (const match of readFileSync(path, 'utf8').matchAll(/[`'"](@winterop-com\/sokkel-ui(?:-[a-z]+)?\/[^`'"\s]+)[`'"]/g)) {
+            for (const match of text(path).matchAll(/[`'"](@winterop-com\/sokkel-ui(?:-[a-z]+)?\/[^`'"\s]+)[`'"]/g)) {
                 if (/[<*{$]|\/$/.test(match[1])) continue
                 if (exported(match[1]) === undefined) unexported.push(`${relative(ROOT, path)}: ${match[1]}`)
             }
@@ -294,7 +304,7 @@ describe('the components', () => {
         const missing: string[] = []
         for (const path of Object.values(SOURCES).flat()) {
             if (!path.endsWith('.tsx')) continue
-            const source = readFileSync(path, 'utf8')
+            const source = text(path)
             for (const { name } of exportedComponents(source)) {
                 const takesNone = new RegExp(`(?:function ${name}\\s*(?:<[^>]*>)?\\(\\s*\\)|const ${name}\\s*=\\s*\\(\\s*\\)\\s*=>)`).test(
                     source,
@@ -311,14 +321,20 @@ describe('the components', () => {
 
 describe('the stories', () => {
     it('show every component, itself or through the component it is a part of', () => {
-        const stories = files(join(ROOT, 'src/stories'))
-            .map((path) => readFileSync(path, 'utf8'))
-            .join('\n')
+        // Every package path a story names in quotes, and every module name a component file imports by its last segment.
+        const named = new Set(
+            files(join(ROOT, 'src/stories')).flatMap((path) =>
+                [...text(path).matchAll(/'(@winterop-com\/[^']*)'/g)].map((match) => match[1]),
+            ),
+        )
+        const imports = new Map(
+            COMPONENTS.map((path) => [path, new Set([...text(path).matchAll(/\/([^/']*)'/g)].map((match) => match[1]))]),
+        )
         const unseen = COMPONENTS.filter((path) => {
             const module = specifier(path)
-            if (stories.includes(`'${module}'`)) return false
+            if (named.has(module)) return false
             const name = module.split('/').pop() ?? module
-            return !COMPONENTS.some((other) => other !== path && readFileSync(other, 'utf8').includes(`/${name}'`))
+            return !COMPONENTS.some((other) => other !== path && imports.get(other)?.has(name) === true)
         }).map((path) => relative(ROOT, path))
         expect(unseen, unseen.join('\n')).toEqual([])
     })
@@ -326,13 +342,11 @@ describe('the stories', () => {
 
 describe('the chart stories', () => {
     it('name every chart kind, so a search of the catalog for it finds it', () => {
-        const kinds = [...readFileSync(join(ROOT, 'packages/charts/src/kinds/index.ts'), 'utf8').matchAll(/^\s+(\w+): \{ build/gm)].map(
-            (match) => match[1],
-        )
+        const kinds = [...text(join(ROOT, 'packages/charts/src/kinds/index.ts')).matchAll(/^\s+(\w+): \{ build/gm)].map((match) => match[1])
         expect(kinds.length).toBeGreaterThan(10)
         // What the sidebar search reads: each section's title and each story's name, written as one word.
         const names = files(join(ROOT, 'src/stories/charts'))
-            .map((path) => readFileSync(path, 'utf8'))
+            .map((path) => text(path))
             .flatMap((text) => [
                 ...[...text.matchAll(/title: '([^']+)'/g)].map((match) => match[1]),
                 ...[...text.matchAll(/^\s+name: '([^']+)'/gm)].map((match) => match[1]),
@@ -351,7 +365,7 @@ describe('the library rules', () => {
             for (const path of rule.in) {
                 const file = relative(ROOT, path)
                 if (rule.except?.[file] !== undefined) continue
-                readFileSync(path, 'utf8')
+                text(path)
                     .split('\n')
                     .forEach((line, index) => {
                         if (rule.skipLine?.(line) === true) return
