@@ -5,10 +5,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { configureDemo, onReset } from 'tidevann-shared/backend'
 
-import { App } from './App'
-import { forgetClips } from './clips'
-
 configureDemo({ app: 'video' })
+// The example's own modules load once it is named, since one may read the backend as it loads.
+const [{ App }, { forgetClips }] = await Promise.all([import('./App'), import('./clips')])
 // The clips kept in IndexedDB, pinned and downloaded ones too, go with the demo data.
 onReset(() => forgetClips({ downloads: true }))
 

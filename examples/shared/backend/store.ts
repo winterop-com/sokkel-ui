@@ -18,8 +18,10 @@ let app: string | undefined
 /**
  * Names the example whose data the page keeps, its folder's name: every key the backend writes is
  * `tidevann-demo:<app>:<name>`, and so is every `useStored` key, the library's own included. The
- * look's keys take no prefix, so the look stays shared. Called once in the app's `main.tsx`, before
- * it renders. `version` is the shape of the example's own kept data: raise it when a stored row or
+ * look's keys take no prefix, so the look stays shared. Called once in the app's `main.tsx`, which
+ * imports the example's own modules only after it, with `await import`: a static import runs before
+ * the body of the module that names it, wherever the bundler puts it, and a module may read the
+ * backend as it loads. `version` is the shape of the example's own kept data: raise it when a stored row or
  * value changes shape, and data kept under another version is dropped, so the example starts from
  * its seed rather than reading rows it no longer understands.
  */
@@ -41,7 +43,10 @@ export function configureDemo(options: { app: string; version?: number }): void 
 
 /** The localStorage key of `name` in the example's own data; it throws until `configureDemo` has named the example. */
 export function storageKey(name: string): string {
-    if (app === undefined) throw new Error('Call configureDemo({ app }) in main.tsx before the backend is used.')
+    if (app === undefined)
+        throw new Error(
+            "Call configureDemo({ app }) in main.tsx before the backend is used, and import the example's own modules after it with `await import`.",
+        )
     return `${PREFIX}${app}:${name}`
 }
 

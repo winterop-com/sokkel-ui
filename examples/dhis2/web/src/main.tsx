@@ -7,10 +7,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { configureDemo } from 'tidevann-shared/backend'
 
-import { App } from './App'
-import { LATEST, namesOf } from './data/versions'
-
 configureDemo({ app: 'dhis2' })
+// The example's own modules load once it is named, since one may read the backend as it loads.
+const [{ App }, { LATEST, namesOf }] = await Promise.all([import('./App'), import('./data/versions')])
 
 // The expression languages, knowing the latest server's names until the app reads the version it runs.
 registerPlugins([dhis2Plugin(namesOf(LATEST))])
