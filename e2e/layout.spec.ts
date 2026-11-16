@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from 'node:fs'
 
 import { expect, test } from '@playwright/test'
 
-import { mapsSettled, routeTiles } from './tiles.ts'
+import { settled } from './settled.ts'
+import { routeTiles } from './tiles.ts'
 
 /**
  * Every story at the narrow widths the library supports: a foldable folded and unfolded, the
@@ -69,7 +70,8 @@ const stories: Entry[] = existsSync(INDEX)
 
 for (const story of stories) {
     test(`layout ${story.id}`, async ({ page }) => {
-        test.setTimeout(2 * 60_000)
+        // A story tagged slow, such as the theme gallery, takes as long to settle at each width as the screenshots allow it.
+        test.setTimeout(story.tags?.includes('slow') ? 8 * 60_000 : 3 * 60_000)
         await routeTiles(page, false)
         const thrown: string[] = []
         page.on('pageerror', (error) => thrown.push(error.message))
@@ -77,10 +79,7 @@ for (const story of stories) {
         for (const [name, width] of Object.entries(WIDTHS)) {
             await page.setViewportSize({ width, height: 900 })
             await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:dark`)
-            await page.locator('#storybook-root > *').first().waitFor()
-            await mapsSettled(page)
-            await page.evaluate(() => document.fonts.ready)
-            await page.waitForTimeout(150)
+            await settled(page)
             const wide = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth))
             if (wide > width + 1) over.push(`${name} (${String(width)}px): the page is ${String(wide)}px wide`)
             for (const area of await page.evaluate(emptyScroll)) over.push(`${name} (${String(width)}px): ${area}`)
