@@ -44,7 +44,26 @@ jobs:
             # packages/ is packed, so a new add-on ships without a change here.
             - name: Pack the packages
               run: for package in packages/*/; do (cd "$package" && bun pm pack --destination ../../packed); done
+            # A tarball whose name and version the registry already holds is skipped, so a re-run finishes a
+            # release that stopped partway. Any other failure stops the step.
             - name: Publish the packages
-              run: for tarball in packed/winterop-com-sokkel-ui-[0-9]*.tgz packed/winterop-com-sokkel-ui-[a-z]*.tgz; do npm publish "./$tarball"; done
+              run: |
+                  set -euo pipefail
+                  published=()
+                  skipped=()
+                  for tarball in packed/winterop-com-sokkel-ui-[0-9]*.tgz packed/winterop-com-sokkel-ui-[a-z]*.tgz; do
+                      manifest=$(tar -xzOf "$tarball" package/package.json)
+                      name=$(node -p 'JSON.parse(process.argv[1]).name' "$manifest")
+                      version=$(node -p 'JSON.parse(process.argv[1]).version' "$manifest")
+                      if [ "$(npm view "$name@$version" version 2>/dev/null || true)" = "$version" ]; then
+                          echo "$name@$version is already published, skipping"
+                          skipped+=("$name@$version")
+                          continue
+                      fi
+                      npm publish "./$tarball"
+                      published+=("$name@$version")
+                  done
+                  echo "Published: ${published[*]:-none}"
+                  echo "Already there: ${skipped[*]:-none}"
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
