@@ -25,6 +25,7 @@ import { Button } from '../ui/button'
 import { PlainCheckbox } from '../ui/checkbox-look'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Switch } from '../ui/switch'
 import { Textarea } from '../ui/textarea'
 import { MapField } from './MapField'
 import { childSchema, literal, resolve, type JsonSchema } from './read'
@@ -846,6 +847,25 @@ function Control({
                 </Marked>
             )
         }
+        case 'boolean':
+            // A list's item or a map's value; a property draws its own SwitchField with the label beside it.
+            return (
+                <Marked form={form} path={path}>
+                    <div className="flex min-h-(--density-control) items-center">
+                        <Switch
+                            id={id}
+                            aria-label={label}
+                            aria-invalid={invalid}
+                            checked={value === undefined ? at.default === true : value === true}
+                            onCheckedChange={(checked) => {
+                                set(checked)
+                                form.touch(path)
+                            }}
+                            disabled={at.readOnly === true}
+                        />
+                    </div>
+                </Marked>
+            )
         case 'longtext':
             return (
                 <Marked form={form} path={path} top>

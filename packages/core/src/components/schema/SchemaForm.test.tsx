@@ -394,6 +394,30 @@ describe("a schema form's secret words", () => {
     })
 })
 
+describe('lists and maps of booleans', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        properties: {
+            flags: { type: 'array', title: 'Flags', items: { type: 'boolean' } },
+            features: { type: 'object', title: 'Features', additionalProperties: { type: 'boolean' } },
+        },
+    }
+
+    it('draw a switch for each item and value, not a text box, and what they hold passes the schema', () => {
+        const value = { flags: [true, false], features: { digest: true } }
+        const html = render(schema, value)
+        const switches = html.match(/<[^>]*role="switch"[^>]*>/g) ?? []
+        expect(switches).toHaveLength(3)
+        expect(switches.filter((one) => one.includes('aria-checked="true"'))).toHaveLength(2)
+        expect(html).toContain('aria-label="Flags 1"')
+        expect(html).toContain('aria-label="Features value 1"')
+        // The only text box left is the map row's key.
+        expect(html.match(/<input[^>]*type="text"/g) ?? []).toHaveLength(0)
+        expect(html.match(/<input[^>]*value="digest"/g)).toHaveLength(1)
+        expect(validate(schema, value)).toEqual([])
+    })
+})
+
 describe("the server's issues", () => {
     const schema: JsonSchema = { type: 'object', properties: { code: { type: 'string', title: 'Code' } } }
 

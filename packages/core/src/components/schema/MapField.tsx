@@ -70,7 +70,10 @@ export interface MapFieldProps {
 /** A map's rows, each a key and a value, with Add in its head and Remove on each row. */
 export function MapField({ form, path, at, label, readOnly, head, control }: MapFieldProps) {
     const item = typeof at.additionalProperties === 'object' ? fieldSchema(at.additionalProperties, form.schema) : {}
-    const blank = types(item).main[0] === 'string' && item.anyOf === undefined && item.oneOf === undefined ? '' : undefined
+    const plain = item.anyOf === undefined && item.oneOf === undefined
+    const main = types(item).main[0]
+    // A row of text left empty holds '', a row of a switch left as drawn holds its default, else false.
+    const blank = !plain ? undefined : main === 'string' ? '' : main === 'boolean' && item.enum === undefined ? item.default === true : undefined
     const current = valueAt(form.value, path)
     const [rows, setRows] = useState(() => rowsOf(current))
     const [seen, setSeen] = useState(current)
