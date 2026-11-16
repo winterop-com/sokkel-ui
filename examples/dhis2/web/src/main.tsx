@@ -1,5 +1,6 @@
 import './app.css'
 
+import { ErrorBoundary } from '@winterop-com/sokkel-ui/ErrorBoundary'
 import { registerPlugins } from '@winterop-com/sokkel-ui/lib/plugins'
 import { dhis2Plugin } from '@winterop-com/sokkel-ui-dhis2/plugin'
 import { StrictMode } from 'react'
@@ -19,6 +20,8 @@ if (root === null) throw new Error('No #root element in index.html')
 
 createRoot(root).render(
     <StrictMode>
-        <App />
+        <ErrorBoundary inset>
+            <App />
+        </ErrorBoundary>
     </StrictMode>,
 )

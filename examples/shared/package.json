@@ -2,14 +2,15 @@
     "name": "tidevann-shared",
     "version": "0.0.0",
     "private": true,
-    "description": "What every example shares: the fake backend, the window frame, the hash route and the Tidevann mark.",
+    "description": "What every example shares: the fake backend, the window frame, the hash route, the Tidevann mark and the page's security policy.",
     "type": "module",
     "exports": {
         "./backend": "./backend/index.ts",
         "./desktop": "./desktop.ts",
-        "./frame": "./frame.ts",
+        "./frame": "./frame.tsx",
         "./mark": "./TidevannMark.tsx",
-        "./router": "./router.ts"
+        "./router": "./router.ts",
+        "./vite": "./vite.ts"
     },
     "peerDependencies": {
         "@winterop-com/sokkel-ui": "*",

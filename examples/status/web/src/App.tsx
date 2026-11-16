@@ -109,6 +109,7 @@ export function App() {
                     </Toaster>
                 </RowsProvider>
             </StatusProvider>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }

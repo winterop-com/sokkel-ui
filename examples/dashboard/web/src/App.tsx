@@ -17,6 +17,7 @@ export function App() {
                     <Home frame={frame} />
                 </Toaster>
             </StatusProvider>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }

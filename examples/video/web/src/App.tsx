@@ -7,10 +7,11 @@ import { settleDownloads } from './clips'
 import { downloads } from './data'
 import { DialogsProvider } from './dialogs'
 import { Site } from './Site'
+import { CARRIED } from './themes'
 
 /** The Video example: Tidevann's video site, whose every video is made in the browser, in a browser or either desktop shell. */
 export function App() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     // Downloads put back by a reset of the demo data leave their kept clips free to go.
     useEffect(() => {
         void downloads.list().then((rows) => settleDownloads(rows.map((row) => row.id)))
@@ -22,6 +23,7 @@ export function App() {
                     <Site frame={frame} />
                 </DialogsProvider>
             </Toaster>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }

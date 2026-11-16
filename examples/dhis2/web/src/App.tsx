@@ -1,7 +1,7 @@
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
-import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { DEFAULT_APPEARANCE } from '@winterop-com/sokkel-ui/lib/appearance'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { registerPlugins } from '@winterop-com/sokkel-ui/lib/plugins'
 import type { SearchGroup, SearchSource } from '@winterop-com/sokkel-ui/lib/search'
@@ -28,7 +28,7 @@ import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { dhis2Plugin } from '@winterop-com/sokkel-ui-dhis2/plugin'
 import { Calculator, Database, FunctionSquare, GitBranch, ListChecks, Network, Settings, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { resetAll, useCollection } from 'tidevann-shared/backend'
+import { useCollection } from 'tidevann-shared/backend'
 import { useFrame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
@@ -46,11 +46,9 @@ import { ProgramRules } from './pages/ProgramRules'
 import { ValidationRulePage } from './pages/ValidationRule'
 import { ValidationRules } from './pages/ValidationRules'
 import { FootContext, STATUSES, VersionContext, type Foot } from './ui'
+import { CARRIED } from './themes'
 
 /** The themes `app.css` loads, the base theme first. */
-const OFFERED = new Set(['tidevann', 'indigo', 'paper', 'contrast', 'steel'])
-const APP_THEMES = THEMES.filter((theme) => OFFERED.has(theme.value))
-
 const PLACES_BY_ROUTE: Record<string, string> = {
     '': 'indicators',
     indicators: 'indicators',
@@ -109,7 +107,7 @@ function railGroups(place: string): RailGroup[] {
 
 /** The DHIS2 Workbench example: indicators, validation rules and program rules in DHIS2's expression languages, on a simulated server. */
 export function App() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     const settingsRoute = useOverlayRoute(frame.route, 'settings')
     const route = settingsRoute.route
     const place = PLACES_BY_ROUTE[route[0] ?? ''] ?? 'indicators'
@@ -224,7 +222,7 @@ export function App() {
                         ...themeSettings({
                             value: settings,
                             onChange: setSettings,
-                            themes: APP_THEMES,
+                            themes: frame.themes,
                             system: true,
                             themeList: true,
                         }),
@@ -262,7 +260,7 @@ export function App() {
                             title: 'Reset the demo data',
                             description: 'Puts back the indicators, validation rules and program rules the demo starts with.',
                             control: (
-                                <Button variant="outline" size="sm" onClick={() => void resetAll().then(() => window.location.reload())}>
+                                <Button variant="outline" size="sm" onClick={frame.askReset}>
                                     Reset
                                 </Button>
                             ),
@@ -401,6 +399,7 @@ export function App() {
                     </FootContext.Provider>
                 </StatusProvider>
             </VersionContext.Provider>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }

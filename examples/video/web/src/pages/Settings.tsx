@@ -2,7 +2,7 @@ import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
-import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { DEFAULT_APPEARANCE } from '@winterop-com/sokkel-ui/lib/appearance'
 import {
     CAPTION_BACKGROUNDS,
     CAPTION_COLORS,
@@ -281,7 +281,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                         ...themeSettings({
                             value: look,
                             onChange: setLook,
-                            themes: THEMES,
+                            themes: frame.themes,
                             system: true,
                         }),
                     ],
@@ -387,9 +387,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                     busyLabel: 'Resetting',
                     onConfirm: () => {
                         setBusy(true)
-                        void forgetClips({ downloads: true })
-                            .then(resetAll)
-                            .then(() => window.location.reload())
+                        void resetAll().then(() => window.location.reload())
                     },
                 }}
             />

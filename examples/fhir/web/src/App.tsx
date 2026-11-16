@@ -1,7 +1,7 @@
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import type { CodeProblem } from '@winterop-com/sokkel-ui/CodeEditor'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
-import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { DEFAULT_APPEARANCE } from '@winterop-com/sokkel-ui/lib/appearance'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import type { SearchGroup, SearchSource } from '@winterop-com/sokkel-ui/lib/search'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -19,13 +19,12 @@ import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { Braces, Database, FileCode2, LayoutDashboard, Search, Settings } from 'lucide-react'
 import { useCallback, useState, type ReactNode } from 'react'
-import { resetAll, useCollection } from 'tidevann-shared/backend'
+import { useCollection } from 'tidevann-shared/backend'
 import { useFrame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 
-import { drafts } from './editing'
 import { ME, resources, SERVER } from './data/server'
 import { TYPE_NAMES } from './data/types'
 import { CqlEditor, CqlLibraries } from './pages/Cql'
@@ -36,11 +35,9 @@ import { ResourcePanel } from './pages/ResourcePanel'
 import { Resources } from './pages/Resources'
 import { SearchPage } from './pages/Search'
 import { DEFAULT_PREFS, FootContext, STATUSES, titleOf, usePrefs, type Foot } from './ui'
+import { CARRIED } from './themes'
 
 /** The themes `app.css` loads, the base theme first. */
-const OFFERED = new Set(['tidevann', 'paper', 'steel', 'contrast'])
-const APP_THEMES = THEMES.filter((theme) => OFFERED.has(theme.value))
-
 const TITLES: Record<string, string> = {
     overview: 'Overview',
     resources: 'Resources',
@@ -127,7 +124,7 @@ const SHORTCUTS: ShortcutGroup[] = [
 
 /** The FHIR workbench: a FHIR server's resources edited as JSON, FHIRPath evaluated live, CQL libraries in versions and search by parameters. */
 export function App() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     // Settings open as a dialog over the page they were opened from.
     const settingsRoute = useOverlayRoute(frame.route, 'settings')
     const route = settingsRoute.route
@@ -200,7 +197,7 @@ export function App() {
                     id: 'appearance',
                     label: 'Appearance',
                     settings: [
-                        ...themeSettings({ value: settings, onChange: setSettings, themes: APP_THEMES, system: true, themeList: true }),
+                        ...themeSettings({ value: settings, onChange: setSettings, themes: frame.themes, system: true, themeList: true }),
                     ],
                 },
                 {
@@ -288,16 +285,7 @@ export function App() {
                             title: 'Reset the demo data',
                             description: 'Puts back the resources and versions the server starts with, and drops unsaved edits.',
                             control: (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        void resetAll().then(() => {
-                                            drafts.set({})
-                                            window.location.reload()
-                                        })
-                                    }
-                                >
+                                <Button variant="outline" size="sm" onClick={frame.askReset}>
                                     Reset
                                 </Button>
                             ),
@@ -389,6 +377,7 @@ export function App() {
                     <Toaster position="bottom-right" />
                 </FootContext.Provider>
             </StatusProvider>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }

@@ -137,8 +137,23 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
   prefix, which `configureDemo({ app })` in its `main.tsx` names, answering promises after a short
   delay as a server would; `useStored` keys take the same prefix, and `storageKey` gives it to any
   other key the example keeps), `tidevann-shared/frame` (`useFrame`: the look, the window, the
-  route and the palette's shared groups, Reset demo data among them), `tidevann-shared/router` (a
-  hash route of its own) and `tidevann-shared/mark`.
+  route, the themes the example carries and the palette's shared groups, Reset demo data among them,
+  asked before it runs), `tidevann-shared/router` (a hash route of its own), `tidevann-shared/mark`
+  and `tidevann-shared/vite` (`pagePolicyVite`, the page's Content Security Policy). A change is
+  kept in storage at once and only its answer waits, so a change made as the page leaves is kept; a
+  full quota refuses it with an error, and `useSaving` says where the changes stand. `version` in
+  `configureDemo` names the shape of the example's kept data: raise it when a stored shape changes,
+  and data kept under another drops, so the example starts from its seed. `onReset` adds a step of
+  the example's own to Reset demo data, which also drops every `useStored` value.
+- **Themes:** `web/src/themes.ts` lists the themes whose styles `app.css` imports; the example
+  passes it to `useFrame`, and its palette and Settings offer those (`frame.themes`) and no other.
+- **Security:** the built page carries a Content Security Policy as a meta tag, the same in the
+  browser and in both shells: scripts only from the app's own files, and `'unsafe-eval'` only in an
+  example that checks values against a schema (`pagePolicyVite({ generatedCode: true })`). Tauri's
+  own `csp` stays off, since it would add nonces to the page that turn off the inline styles the
+  editors and maps write. Each Electron shell's `main.ts` calls `keepToTheApp` from
+  `examples/shared/electron.ts`: only web and mail links leave for the system browser, the window
+  never navigates away from the app, and the page is granted only full screen and the clipboard.
 - **The desktop frame:** inside a shell the app passes `desktop` to `Shell`, so its top strip is the
   window's title bar, with room for the macOS window buttons. Electron uses `hiddenInset`; Tauri an
   overlay title bar with the title hidden, and `capabilities/default.json` lets the page drag, zoom

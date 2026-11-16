@@ -10,6 +10,7 @@ import { startDownloadEngine } from './engine/downloads'
 import { startRunnerEngine } from './engine/runner'
 import { ModelsApp } from './ModelsApp'
 import { AppDataProvider } from './state'
+import { CARRIED } from './themes'
 
 /** The states the app's chips say beside the run states: a pull's, a model's in memory, the runner's. */
 const STATUSES = {
@@ -26,7 +27,7 @@ const STATUSES = {
 
 /** The Models example: a local library of language models with a chat, in a browser or either desktop shell. */
 export function App() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     useEffect(() => {
         settleCutOff()
         const stopRunner = startRunnerEngine()
@@ -45,6 +46,7 @@ export function App() {
                     </AppDataProvider>
                 </Toaster>
             </StatusProvider>
+            {frame.dialogs}
         </TooltipProvider>
     )
 }
