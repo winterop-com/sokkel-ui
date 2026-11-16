@@ -544,6 +544,24 @@ export function useDropTarget({ id, data, disabled = false }: DropTargetOptions)
     return { ref: setNodeRef, over: isOver && takes(data, drag), dragged: drag }
 }
 
+/**
+ * The handlers a drag spreads on an element, each run after the app's own of the same name, which
+ * keeps the drag's from running by `preventDefault`; the drag's alone where the app has none.
+ */
+export function joinHandlers<H extends object>(own: object, drag: H): H {
+    const joined: Record<string, unknown> = { ...(drag as Record<string, unknown>) }
+    const theirs = own as Record<string, unknown>
+    for (const [name, handler] of Object.entries(joined)) {
+        const first = theirs[name]
+        if (!/^on[A-Z]/.test(name) || typeof first !== 'function' || typeof handler !== 'function') continue
+        joined[name] = (event: { defaultPrevented: boolean }) => {
+            first(event)
+            if (!event.defaultPrevented) handler(event)
+        }
+    }
+    return joined as H
+}
+
 /** Joins a grip's own key handler before the drag's, so its arrows can move it a place at a time. */
 export function withKeys(handle: DragHandleProps, onKeyDown: (event: KeyboardEvent<HTMLElement>) => void): DragHandleProps {
     return {
