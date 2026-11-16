@@ -1207,6 +1207,14 @@ interactive graph; a mini graph has nothing to press, pan or zoom, and a canvas 
 and observers per row would make a list of fifty rows heavy, so it is drawn as a sparkline is.
 Placements are kept by shape, so many rows of one pipeline ask elk once.
 
+## Periods
+
+`lib/periods.ts` and `PeriodPicker` stay in the core although their ids follow one platform's
+format (`2026W45`, `202611B`, `2026S2`). Weeks, bi-months, quarters and half-years are plain
+calendar periods any app reports by, and a compact sortable id for each is generic; keeping them
+in the core means no app needs a domain add-on for a period picker. A domain's own period rules
+(its financial years, its offsets in an expression language) belong in its add-on.
+
 ## Plugins
 
 Domain packages extend the core through plugins. A domain add-on holds one domain's parts and
