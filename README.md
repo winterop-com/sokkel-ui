@@ -446,6 +446,14 @@ app's bundler still resolves the import when it builds, so the app installs it a
 | Geist as a theme's typeface                                                                                                                        | `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`                                                                                                                                                                                                                                               |
 | `hlsSource` (media package)                                                                                                                        | `hls.js`                                                                                                                                                                                                                                                                                                         |
 
+KaTeX is 0.18.2 or later. `rehype-katex` and `remark-math` still ask for KaTeX 0.16, so without more
+an app gets a second, older copy that draws the formulas while the 0.18 stylesheet styles them. One
+line in the app's `package.json` makes the one copy do both:
+
+```json
+"overrides": { "katex": "^0.18.2" }
+```
+
 Schema checks (`schema/SchemaForm`, `schema/validate` and a `CodeEditor` given a `schema`) compile
 each schema to a function with ajv, which uses `new Function`. A page served with a Content Security
 Policy therefore needs `'unsafe-eval'` in its `script-src`; without it no schema compiles, and no
