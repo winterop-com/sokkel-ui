@@ -137,18 +137,26 @@ export function DatasetPage({
             : filtered.filter((line) => dataset.columns.some((column) => (line.row[column.id] ?? '').toLowerCase().includes(wanted)))
     const drawn = charts.filter((chart) => chart.datasetId === dataset.id)
 
-    const write = (rows: DataRow[], patch: Partial<Dataset> = {}) =>
-        datasetStore.update(dataset.id, { ...patch, rows, updatedAt: now() }).then(() => undefined)
+    // Each change is made to the dataset as the store holds it, not as this render drew it, so quick edits in turn each keep the last.
+    const write = (change: (current: Dataset) => Partial<Dataset>) =>
+        datasetStore.update(dataset.id, (current) => ({ ...change(current), updatedAt: now() })).then(() => undefined)
     const saveCell = (column: Column) => (line: Line, text: string) =>
-        write(
-            dataset.rows.map((row) => (row.id === line.row.id ? ({ ...row, [column.id]: normalize(text, column.type) } as DataRow) : row)),
-        )
-    const addRow = () => {
-        const row = { id: freshId(`${dataset.id}-r`), ...Object.fromEntries(dataset.columns.map((column) => [column.id, ''])) } as DataRow
-        void write([row, ...dataset.rows]).then(() => toast.success('A blank row added at the top'))
-    }
+        write((current) => ({
+            rows: current.rows.map((row) =>
+                row.id === line.row.id ? ({ ...row, [column.id]: normalize(text, column.type) } as DataRow) : row,
+            ),
+        }))
+    const addRow = () =>
+        void write((current) => ({
+            rows: [
+                { id: freshId(`${current.id}-r`), ...Object.fromEntries(current.columns.map((column) => [column.id, ''])) } as DataRow,
+                ...current.rows,
+            ],
+        })).then(() => toast.success('A blank row added at the top'))
     const removeRows = (ids: ReadonlySet<string>) =>
-        void write(dataset.rows.filter((row) => !ids.has(row.id))).then(() => toast.success(`${counted(ids.size, 'row')} deleted`))
+        void write((current) => ({ rows: current.rows.filter((row) => !ids.has(row.id)) })).then(() =>
+            toast.success(`${counted(ids.size, 'row')} deleted`),
+        )
 
     const rowColumns: DataColumn<Line>[] = dataset.columns.map((column) => ({
         id: column.id,
@@ -172,16 +180,16 @@ export function DatasetPage({
     }))
 
     type ColumnLine = { column: Column; at: number }
-    const setColumn = (at: number, patch: Partial<Column>) => {
-        const before = dataset.columns[at]
-        const after = { ...before, ...patch }
-        const columns = dataset.columns.map((column, index) => (index === at ? after : column))
-        const rows =
-            patch.type === undefined
-                ? dataset.rows
-                : dataset.rows.map((row) => ({ ...row, [after.id]: normalize(row[after.id] ?? '', after.type) }) as DataRow)
-        return write(rows, { columns })
-    }
+    const setColumn = (at: number, patch: Partial<Column>) =>
+        write((current) => {
+            const after = { ...current.columns[at], ...patch }
+            const columns = current.columns.map((column, index) => (index === at ? after : column))
+            const rows =
+                patch.type === undefined
+                    ? current.rows
+                    : current.rows.map((row) => ({ ...row, [after.id]: normalize(row[after.id] ?? '', after.type) }) as DataRow)
+            return { rows, columns }
+        })
     const columnLines: ColumnLine[] = dataset.columns.map((column, at) => ({ column, at }))
     const stats = (column: Column) => {
         const values = lines.map((line) => line.values[column.id])
@@ -261,10 +269,10 @@ export function DatasetPage({
         const names = new Set(dataset.columns.map((column) => column.name.toLowerCase()))
         let name = 'New column'
         for (let count = 2; names.has(name.toLowerCase()); count += 1) name = `New column ${String(count)}`
-        void write(
-            dataset.rows.map((row) => ({ ...row, [id]: '' }) as DataRow),
-            { columns: [...dataset.columns, { id, name, type: 'text' }] },
-        ).then(() => toast.success(`${name} added; press its name to rename it`))
+        void write((current) => ({
+            rows: current.rows.map((row) => ({ ...row, [id]: '' }) as DataRow),
+            columns: [...current.columns, { id, name, type: 'text' }],
+        })).then(() => toast.success(`${name} added; press its name to rename it`))
     }
     const readers = dropping === null ? [] : drawn.filter((chart) => Object.values(chart.spec).includes(dropping.id))
 
@@ -381,10 +389,12 @@ export function DatasetPage({
                                 label: 'Duplicate row',
                                 icon: <Copy aria-hidden />,
                                 onSelect: () => {
-                                    const at = dataset.rows.findIndex((row) => row.id === line.row.id)
-                                    const next = [...dataset.rows]
-                                    next.splice(at + 1, 0, { ...line.row, id: freshId(`${dataset.id}-r`) })
-                                    void write(next).then(() => toast.success('Row duplicated'))
+                                    void write((current) => {
+                                        const at = current.rows.findIndex((row) => row.id === line.row.id)
+                                        const rows = [...current.rows]
+                                        rows.splice(at + 1, 0, { ...line.row, id: freshId(`${current.id}-r`) })
+                                        return { rows }
+                                    }).then(() => toast.success('Row duplicated'))
                                 },
                             },
                             {
@@ -471,12 +481,12 @@ export function DatasetPage({
                         if (dropping === null) return
                         const gone = dropping
                         setDropping(null)
-                        void write(
-                            dataset.rows.map(
+                        void write((current) => ({
+                            rows: current.rows.map(
                                 (row) => Object.fromEntries(Object.entries(row).filter(([key]) => key !== gone.id)) as DataRow,
                             ),
-                            { columns: dataset.columns.filter((column) => column.id !== gone.id) },
-                        ).then(() => toast.success(`${gone.name} deleted`))
+                            columns: current.columns.filter((column) => column.id !== gone.id),
+                        })).then(() => toast.success(`${gone.name} deleted`))
                     },
                 }}
             />

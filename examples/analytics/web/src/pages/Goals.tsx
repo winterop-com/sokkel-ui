@@ -238,7 +238,8 @@ export function Goals() {
     }
     const close = () => {
         setEditing(null)
-        if (asked) go(href('goals'))
+        // The dialog's address goes in place, so Back does not open it again.
+        if (asked) go(href('goals'), { replace: true })
     }
     const [deleting, setDeleting] = useState<Goal | null>(null)
     const list = rows ?? []

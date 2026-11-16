@@ -240,7 +240,7 @@ export interface Comparison extends Row {
 export interface Prefs extends Row {
     /** Where the library keeps its models. */
     root: string
-    /** The model a new conversation starts with, by name. */
+    /** The model a new conversation starts with, by its id in the library. */
     defaultModel: string
     /** Megabytes a second all downloads may take together; 0 for no limit. */
     bandwidth: number
@@ -261,7 +261,7 @@ export interface Prefs extends Row {
 export const DEFAULT_PREFS: Prefs = {
     id: 'prefs',
     root: '/Volumes/models',
-    defaultModel: 'tide-7b-instruct',
+    defaultModel: 'tide-7b-instruct-q4_k_m',
     bandwidth: 0,
     parallel: 2,
     keepAlive: 10,

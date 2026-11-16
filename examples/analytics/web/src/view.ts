@@ -86,9 +86,10 @@ export function useHash(): string {
     return hash
 }
 
-/** Goes to an address made by `hrefOf`. */
-export function go(href: string): void {
-    window.location.hash = href.replace(/^#/, '')
+/** Goes to an address made by `hrefOf`; with `replace`, in place of the address shown, so Back skips it. */
+export function go(href: string, options: { replace?: boolean } = {}): void {
+    if (options.replace === true) window.location.replace(`#${href.replace(/^#/, '')}`)
+    else window.location.hash = href.replace(/^#/, '')
 }
 
 /** The range for the picker: a preset, or the custom span as dates. */

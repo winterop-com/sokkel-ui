@@ -146,11 +146,17 @@ function attempt(step: StepInfo, fill: (text: string) => string, before: readonl
 }
 
 const timers = new Map<string, number>()
+/** The runs started since the page loaded, whose timers move them; any other run still going was left so by a reload. */
+const begun = new Set<string>()
 
-/** Stops a run that is going: the step running and those ahead are cancelled. */
+/**
+ * Stops a run that is going: the step running and those ahead are cancelled. A run left going by a
+ * reload, whose steps no timer moves any more, is cancelled the same way.
+ */
 export function cancelRun(run: Run): void {
     const timer = timers.get(run.id)
-    if (timer === undefined) return
+    // A run of this page with no timer has just finished.
+    if (run.state !== 'running' || (timer === undefined && begun.has(run.id))) return
     window.clearTimeout(timer)
     timers.delete(run.id)
     const at = Date.now() - run.started
@@ -193,6 +199,7 @@ export async function startRun(file: WorkFile, text: string, number: number, dra
         draft,
     }
     const run = await runRows.create(first)
+    begun.add(run.id)
     const results = new Map<string, Done>()
     const date = new Date(started).toISOString().slice(0, 10)
     const fill = (value: string) =>

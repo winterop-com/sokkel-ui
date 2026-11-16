@@ -9,7 +9,7 @@ import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { ChartColumn, Database, LayoutDashboard, LayoutGrid, Plus, Presentation, Settings2, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useCollection } from 'tidevann-shared/backend'
+import { savingNote, useCollection, useSaving } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
@@ -31,6 +31,7 @@ import { VIEW_ICONS } from './views'
 
 /** The Visualizer: datasets to chart, a builder with a live preview, saved and shared charts, and boards of them. */
 export function Visualizer({ frame }: { frame: Frame }) {
+    const saving = savingNote(useSaving())
     const datasets = useCollection(datasetStore)
     const charts = useCollection(chartStore)
     const boards = useCollection(boardStore)
@@ -243,7 +244,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
                 }
                 top={<TopBar trail={trail} />}
                 foot={
-                    <StatusLine note="All changes saved">
+                    <StatusLine note={saving.note} tone={saving.tone} live={saving.live}>
                         <StatusItem label="datasets">{allDatasets.length}</StatusItem>
                         <StatusItem label="charts">{allCharts.length}</StatusItem>
                         <StatusItem label="boards">{allBoards.length}</StatusItem>

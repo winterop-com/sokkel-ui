@@ -195,28 +195,22 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
 
     // Time listened, written down every so often and on a pause.
     const heard = useRef({ show: '', seconds: 0, content: 0, finished: 0 })
-    const writing = useRef(Promise.resolve())
     const writeListens = useCallback(() => {
         const { show, seconds, content, finished } = heard.current
         heard.current = { show, seconds: 0, content: 0, finished: 0 }
         if (show === '' || (seconds === 0 && finished === 0)) return
-        const id = `${day()}:${show}`
-        writing.current = writing.current
-            .then(() => listenRows.list())
-            .then((rows) => {
-                const found = rows.find((row) => row.id === id)
-                if (found === undefined)
-                    return listenRows
-                        .create({ day: day(), show, seconds, content: Math.round(content), finished }, id)
-                        .then(() => undefined)
-                return listenRows
-                    .update(id, {
-                        seconds: found.seconds + seconds,
-                        content: found.content + Math.round(content),
-                        finished: found.finished + finished,
-                    })
-                    .then(() => undefined)
-            })
+        // One change, kept at once, so the time is written down even as the page leaves.
+        void listenRows
+            .upsert(`${day()}:${show}`, (found) =>
+                found === undefined
+                    ? { day: day(), show, seconds, content: Math.round(content), finished }
+                    : {
+                          ...found,
+                          seconds: found.seconds + seconds,
+                          content: found.content + Math.round(content),
+                          finished: found.finished + finished,
+                      },
+            )
             .catch(failed('The time listened was not saved'))
     }, [])
 

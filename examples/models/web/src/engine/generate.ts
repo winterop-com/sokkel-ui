@@ -2,7 +2,8 @@
  * The simulated model: what it answers to a prompt, how many tokens that is, and how fast a given
  * model writes it. Answers are drawn from a few written ones per kind of question, picked by the
  * prompt, the model, the temperature and the attempt, so temperature 0 always answers alike and
- * asking again at a higher one gives another version. A system prompt asking to be brief keeps
+ * asking again at a higher one gives another version; top p narrows the draw to the likeliest of
+ * them, the first ones written. A system prompt asking to be brief keeps
  * the first paragraph, and max tokens cuts the answer where it runs out.
  */
 
@@ -405,11 +406,12 @@ function aboutFiles(ask: Ask): boolean {
 export function plan(ask: Ask): Plan {
     const kind = kindOf(ask.prompt, ask.model)
     const choices = ANSWERS[kind]
+    // Top p keeps the likeliest share of the written answers to draw from: the first ones, at least one.
+    const kept = Math.max(1, Math.min(choices.length, Math.ceil(choices.length * ask.settings.topP)))
     const pick =
         ask.settings.temperature === 0
             ? 0
-            : hash(`${ask.prompt}|${ask.model.id}|${String(ask.attempt)}|${String(Math.round(ask.settings.temperature * 10))}`) %
-              choices.length
+            : hash(`${ask.prompt}|${ask.model.id}|${String(ask.attempt)}|${String(Math.round(ask.settings.temperature * 10))}`) % kept
     let text = aboutFiles(ask)
         ? ask.attachments.map(describe).join('\n\n')
         : readAttachments(ask.attachments) + choices[pick](ask.prompt, ask.model)

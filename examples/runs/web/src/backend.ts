@@ -190,7 +190,8 @@ export function startEngine(): () => void {
         const missed = history(await jobs.list(), from, Date.now()).filter((run) => run.by === 'schedule')
         const ids = new Set(all.map((run) => run.id))
         const added = missed.filter((run) => !ids.has(run.id))
-        if (added.length > 0) await runs.insert(added)
+        // Stopped meanwhile (React's StrictMode starts the engine twice in development): the next start catches up.
+        if (added.length > 0 && !stopped) await runs.insert(added)
     })()
     const timer = window.setInterval(() => void tick(), TICK)
     return () => {

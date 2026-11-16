@@ -46,7 +46,7 @@ import {
 } from 'lucide-react'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 
-import { useCollection } from 'tidevann-shared/backend'
+import { savingNote, useCollection, useSaving } from 'tidevann-shared/backend'
 import {
     dateOf,
     day,
@@ -263,6 +263,7 @@ function CardMenu({ task, onMove }: { task: Task; onMove: (state: TaskState) => 
  * dragged between the columns of their state.
  */
 export function TasksDemo({ frame }: { frame: Frame }) {
+    const saving = savingNote(useSaving())
     const today = day(0)
     const now = useMemo(() => dateOf(today), [today])
     // Settings open as a dialog over the list they were opened from.
@@ -437,7 +438,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
             }
             top={<TopBar trail={[{ label: 'Tasks', href: '#/inbox' }, { label }]} />}
             foot={
-                <StatusLine note="All changes saved">
+                <StatusLine note={saving.note} tone={saving.tone} live={saving.live}>
                     <StatusItem label="open">{all.filter((task) => !isDone(task)).length}</StatusItem>
                 </StatusLine>
             }

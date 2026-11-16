@@ -249,6 +249,8 @@ export function ChatPage({ id }: { id: string | undefined }) {
         )
 
     const model = modelOf(talk.model)
+    // A new chat keeps this one's model, or takes the default one when this one's was deleted.
+    const startWith = model ?? modelOf(prefs.defaultModel) ?? models[0]
     const busy = writing(all, `chat:${talk.id}:`)
     const draft = drafts[talk.id] ?? ''
     const setDraft = (text: string) => setDrafts((kept) => ({ ...kept, [talk.id]: text }))
@@ -300,7 +302,7 @@ export function ChatPage({ id }: { id: string | undefined }) {
             }
             actions={
                 <>
-                    <IconButton label="New chat" onClick={() => model !== undefined && chatWith(model)}>
+                    <IconButton label="New chat" onClick={() => startWith !== undefined && chatWith(startWith)}>
                         <MessageSquarePlus aria-hidden />
                     </IconButton>
                 </>
