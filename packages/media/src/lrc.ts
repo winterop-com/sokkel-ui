@@ -26,16 +26,21 @@ const TAGS = new Set(['ti', 'ar', 'al', 'au', 'by', 're', 've', 'tool', 'length'
 
 const TAG = /^\[([A-Za-z#]+)\s*:(.*)\]$/
 
-/** `[m:ss]` with an optional fraction after a point or a colon: `[01:02.5]`, `[01:02.50]`, `[01:02:500]`. */
-const STAMP = /^\[(\d+):(\d{1,2})(?:[.:](\d{1,3}))?\]\s*/
+/**
+ * `[m:ss]` with an optional fraction after a point or a colon (`[01:02.5]`, `[01:02.50]`,
+ * `[01:02:500]`), or with hours before, `[h:mm:ss.xx]`, whose fraction follows a point.
+ */
+const STAMP = /^\[(?:(\d+):(\d{1,2}):(\d{1,2})\.(\d+)|(\d+):(\d{1,2})(?:[.:](\d+))?)\]\s*/
 
 /** A word's own time in enhanced LRC, `<01:02.50>`, dropped from the text. */
-const WORD_STAMP = /<\d+:\d{1,2}(?:[.:]\d{1,3})?>\s*/g
+const WORD_STAMP = /<(?:\d+:)?\d+:\d{1,2}(?:[.:]\d+)?>\s*/g
 
 /** The seconds a stamp says; the fraction is decimal, so `.5` is half a second. */
 function secondsOf(match: RegExpExecArray): number {
-    const fraction = match[3] === undefined ? 0 : Number(match[3].padEnd(3, '0')) / 1000
-    return Number(match[1]) * 60 + Number(match[2]) + fraction
+    const [, hours, hourMinutes, hourSeconds, hourFraction, minutes, seconds, fraction] = match
+    const decimal = (digits: string | undefined) => (digits === undefined ? 0 : Number(`0.${digits}`))
+    if (hours !== undefined) return Number(hours) * 3600 + Number(hourMinutes) * 60 + Number(hourSeconds) + decimal(hourFraction)
+    return Number(minutes) * 60 + Number(seconds) + decimal(fraction)
 }
 
 /** `lines` with blank runs closed up to one blank line and none at either end. */

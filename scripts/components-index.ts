@@ -184,6 +184,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'use-graph-layout': 'the elk layout `GraphCanvas` waits on',
     },
     terminal: {
+        host: 'what `TerminalView` decides of its box and its links, apart from xterm',
         look: "the terminal's colors and type, read from the tokens",
         session: "the text of `Terminal`'s entries; `TerminalEntry` is exported by `Terminal`",
     },

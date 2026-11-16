@@ -9,6 +9,7 @@ import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type 
 import { useCopy } from '@winterop-com/sokkel-ui/hooks/use-copy'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 
+import { hasBox, linkHandler } from './host'
 import { readTerminalLook, useLookKey, type TerminalLook } from './look'
 
 /** A terminal's size in character cells. */
@@ -19,8 +20,12 @@ export interface TerminalSize {
 
 /** What an app does to a terminal from outside: write the bytes its connection brings, and the rest. */
 export interface TerminalHandle {
-    /** Writes output, with its escape sequences, as a program writes to its terminal. */
-    write: (data: string | Uint8Array) => void
+    /**
+     * Writes output, with its escape sequences, as a program writes to its terminal. `done` is
+     * called once the terminal has parsed it, so an app can hold its connection back while output
+     * waits, as a fast stream needs.
+     */
+    write: (data: string | Uint8Array, done?: () => void) => void
     /** Clears the scrollback and the screen but the cursor's line, as Ctrl+L does in a shell. */
     clear: () => void
     /** Clears everything and puts the terminal back as it started. */
@@ -48,7 +53,7 @@ export interface TerminalViewProps {
     onResize?: (size: TerminalSize) => void
     /** The title a program set with an escape sequence. */
     onTitleChange?: (title: string) => void
-    /** A link in the output was opened; without it the link opens in a new tab. */
+    /** A link in the output was opened, found in the text or marked by the program; without it the link opens in a new tab. */
     onLink?: (uri: string, event: MouseEvent) => void
     /** What runs here, in a title bar with copy: a host, a job, a shell. Without it, and without `actions` or `onClear`, there is no bar. */
     title?: ReactNode
@@ -119,7 +124,7 @@ export function TerminalView({
     const term = useRef<Xterm | null>(null)
     const fit = useRef<FitAddon | null>(null)
     /** Output written before the terminal exists, written to it once it does. */
-    const pending = useRef<(string | Uint8Array)[]>([])
+    const pending = useRef<{ data: string | Uint8Array; done?: () => void }[]>([])
     /** Writes the terminal has not yet parsed, and whether it has opened; the frame says it is settling until both are done. */
     const busy = useRef({ writes: 0, open: false })
     const [away, setAway] = useState(false)
@@ -139,10 +144,10 @@ export function TerminalView({
         else element.setAttribute('data-settling', '')
     }
 
-    const write = (data: string | Uint8Array) => {
+    const write = (data: string | Uint8Array, done?: () => void) => {
         const current = term.current
         if (current === null) {
-            pending.current.push(data)
+            pending.current.push({ data, done })
             return
         }
         busy.current.writes += 1
@@ -150,13 +155,15 @@ export function TerminalView({
         current.write(data, () => {
             busy.current.writes -= 1
             settle()
+            done?.()
         })
     }
 
     const fitNow = () => {
         const current = term.current
         const addon = fit.current
-        if (current === null || addon === null || current.element === undefined) return
+        const element = host.current
+        if (current === null || addon === null || current.element === undefined || element === null || !hasBox(element)) return
         if (fixedRows.current === undefined) {
             addon.fit()
             return
@@ -188,6 +195,10 @@ export function TerminalView({
         const element = host.current
         if (element === null) return
         const look = readTerminalLook(element)
+        const openLink = (uri: string, event: MouseEvent) => {
+            if (handlers.current.onLink !== undefined) handlers.current.onLink(uri, event)
+            else window.open(uri, '_blank', 'noopener')
+        }
         const current = new Xterm({
             ...look,
             cursorBlink,
@@ -196,15 +207,11 @@ export function TerminalView({
             scrollback,
             ...(fixedRows.current === undefined ? {} : { rows: fixedRows.current }),
             allowProposedApi: false,
+            linkHandler: linkHandler(openLink),
         })
         const addon = new FitAddon()
         current.loadAddon(addon)
-        current.loadAddon(
-            new WebLinksAddon((event, uri) => {
-                if (handlers.current.onLink !== undefined) handlers.current.onLink(uri, event)
-                else window.open(uri, '_blank', 'noopener')
-            }),
-        )
+        current.loadAddon(new WebLinksAddon((event, uri) => openLink(uri, event)))
         term.current = current
         fit.current = addon
         busy.current = { writes: 0, open: false }
@@ -214,32 +221,43 @@ export function TerminalView({
             const buffer = current.buffer.active
             setAway(buffer.viewportY < buffer.baseY)
         }
+        // Whether a size has been reported yet: a hidden terminal reports none until it is shown and fitted.
+        let reported = false
         const subscriptions = [
             current.onData((data) => handlers.current.onData?.(data)),
-            current.onResize((size) => handlers.current.onResize?.({ cols: size.cols, rows: size.rows })),
+            current.onResize((size) => {
+                reported = true
+                handlers.current.onResize?.({ cols: size.cols, rows: size.rows })
+            }),
             current.onTitleChange((text) => handlers.current.onTitleChange?.(text)),
             current.onScroll(checkAway),
             current.onWriteParsed(checkAway),
         ]
-        for (const data of pending.current) write(data)
+        for (const { data, done } of pending.current) write(data, done)
         pending.current = []
+
+        // Fits the terminal to its box, and reports the first size even when the fit kept xterm's starting one.
+        const fitFirst = () => {
+            if (!hasBox(element)) return
+            const before = { cols: current.cols, rows: current.rows }
+            fitNow()
+            if (!reported && current.cols === before.cols && current.rows === before.rows) {
+                reported = true
+                handlers.current.onResize?.({ cols: current.cols, rows: current.rows })
+            }
+        }
 
         let alive = true
         let frameId = 0
         const observer = new ResizeObserver(() => {
             cancelAnimationFrame(frameId)
-            frameId = requestAnimationFrame(fitNow)
+            frameId = requestAnimationFrame(fitFirst)
         })
         // xterm measures a cell once, when it opens, so it opens once the typeface has loaded.
         void fontsLoaded(look).then(() => {
             if (!alive) return
             current.open(element)
-            const before = { cols: current.cols, rows: current.rows }
-            fitNow()
-            // A fit that kept xterm's starting size fires no resize, so the first size is reported here.
-            if (current.cols === before.cols && current.rows === before.rows) {
-                handlers.current.onResize?.({ cols: current.cols, rows: current.rows })
-            }
+            fitFirst()
             observer.observe(element)
             if (autoFocus) current.focus()
             busy.current.open = true
