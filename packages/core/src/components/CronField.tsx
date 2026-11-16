@@ -1,7 +1,7 @@
 import { useId, useState, type HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
-import { describeCron, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
+import { describeCron, knownZone, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
 import { FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
 import { ISSUE_EDGE, IssueMark } from './IssueMark'
 import { Input } from './ui/input'
@@ -49,9 +49,11 @@ function offsetOf(date: Date, timeZone: string): string {
 
 /**
  * A run's time as `Fri 2026-11-06 02:00`, on the wall clock of `timeZone`. Outside UTC it ends in
- * the zone's offset at that time, `+02:00`, so a change of clocks shows.
+ * the zone's offset at that time, `+02:00`, so a change of clocks shows. In a zone the runtime does
+ * not know it is the instant in UTC, as `2026-11-06T01:00:00.000Z`.
  */
 function formatRun(date: Date, timeZone: string): string {
+    if (!knownZone(timeZone)) return date.toISOString()
     const at = zonedTime(date, timeZone)
     const time = `${DAYS[at.weekday]} ${String(at.year)}-${pad(at.month)}-${pad(at.day)} ${pad(at.hour)}:${pad(at.minute)}`
     return timeZone === 'UTC' ? time : `${time} ${offsetOf(date, timeZone)}`

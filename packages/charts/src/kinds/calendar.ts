@@ -1,4 +1,4 @@
-import { aggregateAt } from '../data'
+import { aggregateAt, extent } from '../data'
 import { tooltipMarkup } from '../look'
 import { byDay, calendarRange } from '../shapes'
 import { written, measureName, type ChartBuilder } from './spec'
@@ -26,7 +26,7 @@ export const calendar: ChartBuilder = (spec, look) => {
     const range = calendarRange(days.map(([day]) => day))
     if (range === null) return { series: [] }
     const across = spec.horizontal ?? range.months > 1
-    const values = days.map(([, value]) => value)
+    const span = extent(days.map(([, value]) => value))
     const text = { color: look.muted, fontFamily: look.font, fontSize: look.size.small }
     return {
         tooltip: {
@@ -51,8 +51,8 @@ export const calendar: ChartBuilder = (spec, look) => {
         visualMap: {
             show: false,
             seriesIndex: 0,
-            min: values.length === 0 ? 0 : Math.min(...values),
-            max: values.length === 0 ? 1 : Math.max(...values),
+            min: span?.[0] ?? 0,
+            max: span?.[1] ?? 1,
             inRange: { color: look.ramp(spec.colors?.value ?? 'chart-2') },
         },
         series: [

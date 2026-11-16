@@ -42,6 +42,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/code/shared':
             'a document several `CodeEditor`s edit as one; `SharedDocument`, `useSharedDocument` and `useSharedText` are exported by `CodeEditor`',
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
+        'components/code/steady': 'how `CodeEditor` tells a prop given afresh from one that changed',
         'components/markdown-view': '`Markdown` and `PlainMarkdown` as drawn, without their engines; both export its types',
         'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
         'components/entry':
@@ -184,6 +185,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'use-graph-layout': 'the elk layout `GraphCanvas` waits on',
     },
     terminal: {
+        host: 'what `TerminalView` decides of its box and its links, apart from xterm',
         look: "the terminal's colors and type, read from the tokens",
         session: "the text of `Terminal`'s entries; `TerminalEntry` is exported by `Terminal`",
     },

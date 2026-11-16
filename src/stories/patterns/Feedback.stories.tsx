@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import { Callout } from '@winterop-com/sokkel-ui/Callout'
 import { CheckList } from '@winterop-com/sokkel-ui/CheckList'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { ListSkeleton, Pending } from '@winterop-com/sokkel-ui/Loading'
 import { Problem, ProblemLine } from '@winterop-com/sokkel-ui/Problem'
 import { Section } from '@winterop-com/sokkel-ui/Section'
@@ -13,7 +14,9 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 function Ground({ children, pad = true }: { children: React.ReactNode; pad?: boolean }) {
     return (
         <div className={pad ? 'min-h-svh bg-background p-6 text-foreground' : 'min-h-svh bg-background text-foreground'}>
-            <div className={pad ? 'mx-auto flex max-w-4xl flex-col gap-6' : 'flex flex-col'}>{children}</div>
+            <Stack gap={pad ? 'xl' : 'none'} className={pad ? 'mx-auto max-w-4xl' : undefined}>
+                {children}
+            </Stack>
         </div>
     )
 }
@@ -166,8 +169,16 @@ function Problems() {
 const meta: Meta = { title: 'Patterns/Feedback' }
 export default meta
 
+/**
+ * Banners across the top of a page in each tone: a server that does not answer, with Retry and a
+ * dismiss, a read-only upgrade, a new version to reload, and all jobs running.
+ */
 export const Banners_: StoryObj = { name: 'Banner', render: () => <Banners /> }
+/** Boxed notes in the content in each tone, from a failed run with Retry to a neutral note without its icon. */
 export const Callouts_: StoryObj = { name: 'Callout', render: () => <Callouts /> }
+/** What is still coming: row and card skeletons standing in for lists, and a pending graph with its label. */
 export const Skeletons: StoryObj = { name: 'Loading', render: () => <Loading /> }
+/** A health check list: checks that pass, a group of workers with one a version behind and its hint, and a scheduler that failed. */
 export const Checks: StoryObj = { name: 'Check list', render: () => <Health /> }
+/** A failure said for a person with the raw message folded away, and a warning with a way forward. */
 export const Problems_: StoryObj = { name: 'Problem', render: () => <Problems /> }

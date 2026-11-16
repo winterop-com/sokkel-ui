@@ -100,7 +100,11 @@ function DeleteJob() {
     )
 }
 
+/** The button that opens a delete confirmation, the dialog closed. */
 export const Trigger: StoryObj = { render: () => <Closed /> }
+/** A confirmation open, asking before a running run is cancelled. */
 export const Opened: StoryObj = { render: () => <Default /> }
+/** The small size with a warning icon over its title. */
 export const SmallWithMedia: StoryObj = { render: () => <Small /> }
+/** Deleting a job, its action in the destructive color. */
 export const Destructive: StoryObj = { render: () => <DeleteJob /> }

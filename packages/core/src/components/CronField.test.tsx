@@ -22,6 +22,15 @@ describe('CronField', () => {
         expect(html).toContain('Mon 2027-03-29 02:00 +02:00')
     })
 
+    it('renders in a zone the runtime does not know, its own runs none and told runs in UTC', () => {
+        const html = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} timeZone="Europe/Nowhere" />)
+        expect(html).toContain('Never runs')
+        const told = renderToStaticMarkup(
+            <CronField value="0 2 * * *" onChange={noop} from={FROM} timeZone="Europe/Nowhere" runs={[new Date('2027-03-26T01:00:00Z')]} />,
+        )
+        expect(told).toContain('2027-03-26T01:00:00.000Z')
+    })
+
     it('paused, reads the expression in words and lists no runs', () => {
         const html = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} runs={[]} readOnly paused />)
         expect(html).toContain('>Every day at 02:00<')

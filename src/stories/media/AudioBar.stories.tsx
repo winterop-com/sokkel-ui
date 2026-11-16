@@ -242,7 +242,7 @@ function Player({ queue = false, ...options }: BarOptions & { queue?: boolean })
             <Stack gap="none" className="min-h-svh w-full">
                 <Stack gap="none" justify="end" className="flex-1 p-4">
                     {queueOpen && (
-                        <section className="ml-auto w-full max-w-sm rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-md">
+                        <section className="ml-auto w-full max-w-sm rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-pop">
                             <PaneHeader title="Up next" />
                             <TrackList
                                 variant="plain"

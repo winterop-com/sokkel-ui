@@ -110,7 +110,9 @@ export function TrackList({
 }: TrackListProps) {
     const said = { ...WORDS, ...words }
     const followed = useRef<HTMLLIElement | null>(null)
-    useFollow(followed, current, { enabled: follow && current !== undefined })
+    // Keyed on the row being there too, so rows that arrive after `current` still bring it into view.
+    const listed = current !== undefined && tracks.some((track) => track.id === current)
+    useFollow(followed, listed ? current : undefined, { enabled: follow && listed })
     const discs = manyDiscs(tracks)
     return (
         <ol

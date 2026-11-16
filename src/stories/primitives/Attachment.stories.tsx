@@ -45,6 +45,7 @@ function Csv({ size, orientation }: { size: 'default' | 'sm' | 'xs'; orientation
 const meta: Meta = { title: 'Primitives/Chat/Attachment', parameters: { frame: 'column' } }
 export default meta
 
+/** Media only, an image, and an attachment that opens on a press. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -99,6 +100,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Idle, uploading, processing, failed with Retry, and done. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -163,6 +165,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** Files attached to a message, above the question that asks about them. */
 export const InAMessage: StoryObj = {
     render: () => (
         <Stack gap="lg" className="max-w-2xl">

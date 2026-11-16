@@ -21,6 +21,7 @@ function Fill({ children }: { children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Layout/Resizable', parameters: { frame: 'column' } }
 export default meta
 
+/** Panels split across, with a grip, split down with a grip, and with a handle that does not move. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -91,6 +92,7 @@ const RUNS: [string, Status, string][] = [
     ['01a1a5b1', 'running', '-'],
 ]
 
+/** A list of runs beside the chosen run, which is split again into its summary and its log, each split resizable. */
 export const RunInspector: StoryObj = {
     render: () => (
         <div className="h-[28rem] rounded-lg border border-border">

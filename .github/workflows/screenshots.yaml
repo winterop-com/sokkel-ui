@@ -47,7 +47,7 @@ jobs:
               with:
                   ref: ${{ github.ref_name }}
             - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-            - run: npm install -g bun
+            - run: npm install -g "bun@$(cat .bun-version)"
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
             - run: scripts/baselines.sh checkout "$BRANCH"

@@ -26,6 +26,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Inputs/Field', parameters: { frame: 'column' } }
 export default meta
 
+/** Fields laid down, across, across with content and responsive, a fieldset with a legend, a choice card, and a separator. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="2xl" align="stretch" wrap>
@@ -228,4 +229,5 @@ function ServiceFormDemo() {
     )
 }
 
+/** A service's form built from fields: name, base URL, auth kind, TLS and timeout, its code checked as it is typed. */
 export const ServiceForm: StoryObj = { render: () => <ServiceFormDemo /> }

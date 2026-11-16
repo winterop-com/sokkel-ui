@@ -19,11 +19,18 @@ describe('readNumber', () => {
         expect(readNumber('1.2.3')).toBeNull()
         expect(readNumber('12ms')).toBeNull()
         expect(readNumber('-')).toBeNull()
-        expect(readNumber('1e3')).toBeNull()
+        expect(readNumber('1e')).toBeNull()
+        expect(readNumber('1e999')).toBeNull()
     })
 
     it('reads what writeNumber writes', () => {
         for (const value of [0, 7, -12.25, 3600, 0.001]) expect(readNumber(writeNumber(value))).toBe(value)
+    })
+
+    it('reads an exponent, so very small and very large numbers read back', () => {
+        expect(readNumber('1e3')).toBe(1000)
+        expect(readNumber('2.5E-3')).toBe(0.0025)
+        for (const value of [1e-7, 1e21, 5e-324, -3.2e-12]) expect(readNumber(writeNumber(value))).toBe(value)
     })
 })
 
@@ -40,6 +47,31 @@ describe('localeNumber', () => {
         const american = localeNumber('en-US')
         expect(american.parse('1,250.5')).toBe(1250.5)
         expect(american.parse('twelve')).toBeNull()
+    })
+
+    it('reads a decimal comma when the format writes no groups', () => {
+        const german = localeNumber('de-DE', { useGrouping: false })
+        expect(german.format(1250.5)).toBe('1250,5')
+        expect(german.parse('1250,5')).toBe(1250.5)
+    })
+
+    it('reads a group mark only where groups stand', () => {
+        expect(localeNumber('de-DE').parse('3.5')).toBeNull()
+        expect(localeNumber('en-US').parse('1,5')).toBeNull()
+        expect(localeNumber('en-US').parse('1,250,000')).toBe(1250000)
+        expect(localeNumber('en-IN').parse('12,34,567.5')).toBe(1234567.5)
+        expect(localeNumber('nb-NO').parse('3 600')).toBe(3600)
+        expect(localeNumber('nb-NO').parse('1,2,3')).toBeNull()
+    })
+
+    it('reads back what it writes, in each locale', () => {
+        const values = [0, 7, -2, 1250.5, -12345.678, 1234567.25, 0.0001]
+        for (const locale of ['en-US', 'de-DE', 'nb-NO', 'fr-FR', 'de-CH', 'en-IN', 'ar-EG', 'fa-IR']) {
+            for (const options of [{}, { useGrouping: false }]) {
+                const number = localeNumber(locale, options)
+                for (const value of values) expect(number.parse(number.format(value)), `${locale} ${value}`).toBe(value)
+            }
+        }
     })
 })
 

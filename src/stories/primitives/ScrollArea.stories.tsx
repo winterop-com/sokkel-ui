@@ -34,6 +34,7 @@ const ACTIONS = ['http.get', 'rows.check', 'rows.map', 'rows.filter', 'csv.read'
 const meta: Meta = { title: 'Primitives/Layout/ScrollArea', parameters: { frame: 'column' } }
 export default meta
 
+/** Scrolling down, scrolling sideways, and content short enough to need no scrollbar. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -73,6 +74,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Today's runs of a job in a table that scrolls in its area. */
 export const RunHistory: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-2xl">

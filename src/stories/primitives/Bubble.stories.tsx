@@ -16,6 +16,7 @@ const VARIANTS = ['default', 'secondary', 'muted', 'tinted', 'outline', 'ghost',
 const meta: Meta = { title: 'Primitives/Chat/Bubble', parameters: { frame: 'column' } }
 export default meta
 
+/** The bubble in each variant, one aligned to the end, and one with reactions under it. */
 export const Variants: StoryObj = {
     render: () => (
         <Stack gap="lg" className="max-w-2xl">
@@ -46,6 +47,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A bubble drawn as a button, one saying an error, and one holding a long unbroken value that wraps. */
 export const States: StoryObj = {
     render: () => (
         <Stack gap="lg" className="max-w-2xl">
@@ -78,6 +80,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** Grouped bubbles on either side of a short exchange about a schedule. */
 export const Exchange: StoryObj = {
     render: () => (
         <Stack gap="lg" className="max-w-2xl">

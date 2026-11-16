@@ -50,6 +50,17 @@ describe('normalizeMath', () => {
         expect(normalizeMath(source)).toBe(source)
     })
 
+    it('holds a $$ block still being written as its source while streaming', () => {
+        const source = 'Then\n\n$$\n\\frac{a}{b'
+        expect(normalizeMath(source, { streaming: true })).toBe('Then\n\n```latex\n\\frac{a}{b')
+        expect(normalizeMath(source)).toBe(source)
+    })
+
+    it('draws a closed $$ block while streaming', () => {
+        const source = 'Then\n\n$$\n\\frac{a}{b}\n$$\n\nAnd'
+        expect(normalizeMath(source, { streaming: true })).toBe(source)
+    })
+
     it('leaves text with no math as it is', () => {
         expect(normalizeMath('Nothing to see (here) [or there].')).toBe('Nothing to see (here) [or there].')
     })

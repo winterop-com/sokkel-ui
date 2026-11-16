@@ -944,6 +944,132 @@ export function asksAt(at: ScrollView, { hasMore, busy, byButton, end = at.full,
     })
 }
 
+/** How a table draws its lines from its view: how tall each is, how many past the view, and how many there are. */
+export interface LineWindow {
+    lineHeight: number
+    /** Lines drawn above and below the ones in view. */
+    over: number
+    /** Every line is drawn, at its own height. */
+    whole: boolean
+    lines: number
+}
+
+/** The lines a table draws with its view at `at`: from `firstLine`, up to but not including `lastLine`. */
+export function drawnLines(at: ScrollView, { lineHeight, over, whole, lines }: LineWindow): { firstLine: number; lastLine: number } {
+    if (whole) return { firstLine: 0, lastLine: lines }
+    return {
+        firstLine: Math.max(0, Math.floor(at.top / lineHeight) - over),
+        lastLine: Math.min(lines, Math.ceil((at.top + at.height) / lineHeight) + over),
+    }
+}
+
+/**
+ * Whether a table draws anything new with its view moved from `before` to `next`: its box changed
+ * size, the lines it draws changed, whether it asks for more changed, or it reached the place it was
+ * on its way to. A scroll within the lines already drawn changes none of these, nor does a scroll
+ * sideways.
+ */
+export function redraws(before: ScrollView, next: ScrollView, frame: LineWindow, rows: MoreRows): boolean {
+    if (before.width !== next.width || before.height !== next.height) return true
+    if (frame.whole && before.full !== next.full) return true
+    const was = drawnLines(before, frame)
+    const now = drawnLines(next, frame)
+    if (was.firstLine !== now.firstLine || was.lastLine !== now.lastLine) return true
+    if (asksAt(before, rows) !== asksAt(next, rows)) return true
+    return rows.seeking !== undefined && before.top >= rows.seeking - 1 !== next.top >= rows.seeking - 1
+}
+
+/**
+ * The row at the top of a table's view, scrolled `top` down: in a grid of cards the first card of
+ * the line there, and in a table the row of the line there, or the first row below it where that
+ * line is a group's head. The first row when the view lies past them all.
+ */
+export function topRow<T>(
+    lines: readonly TableLine<T>[],
+    rows: readonly FlatRow<T>[],
+    { top, lineHeight, perLine, grid }: { top: number; lineHeight: number; perLine: number; grid: boolean },
+): FlatRow<T> | undefined {
+    const line = Math.max(0, Math.floor(top / Math.max(1, lineHeight)))
+    if (grid) return rows[Math.min(line * perLine, rows.length - 1)] ?? rows[0]
+    for (let index = line; index < lines.length; index++) {
+        const entry = lines[index]
+        if (!isGroupHead(entry)) return entry
+    }
+    return rows[0]
+}
+
+/** The pixels a line of a wheel's `deltaMode` 1 stands for, as browsers that count in lines scroll them. */
+const WHEEL_LINE = 16
+
+/**
+ * How far a wheel moves a scroller, in pixels, held to how far it can go each way: nothing on an
+ * axis it cannot scroll further on. A wheel counted in lines or pages is turned into pixels.
+ */
+export function wheelBy(
+    box: Pick<HTMLElement, 'scrollTop' | 'scrollLeft' | 'scrollHeight' | 'scrollWidth' | 'clientHeight' | 'clientWidth'>,
+    { deltaX, deltaY, deltaMode }: Pick<WheelEvent, 'deltaX' | 'deltaY' | 'deltaMode'>,
+): { x: number; y: number } {
+    const scale = (delta: number, page: number) => (deltaMode === 1 ? delta * WHEEL_LINE : deltaMode === 2 ? delta * page : delta)
+    const held = (delta: number, at: number, room: number) => Math.max(-at, Math.min(Math.max(0, room - at), delta))
+    return {
+        x: held(scale(deltaX, box.clientWidth), box.scrollLeft, box.scrollWidth - box.clientWidth),
+        y: held(scale(deltaY, box.clientHeight), box.scrollTop, box.scrollHeight - box.clientHeight),
+    }
+}
+
+/**
+ * Whether a press lands on a table's empty ground, which leaves the table as a press outside would:
+ * outside its rows, and outside what it says in their place, a failed read or its empty words.
+ */
+export function onGround(target: { closest: (selectors: string) => unknown } | null): boolean {
+    return target !== null && target.closest('[role=row], [data-table-says]') === null
+}
+
+/**
+ * The page a paged table moves to when the page held lies past its last, as a filter or a smaller
+ * total leaves it there; undefined while it does not, or while what it pages is not known yet: rows
+ * on their way, or a server's total not given.
+ */
+export function pageInRange({
+    page,
+    pages,
+    paging,
+    total,
+    loading,
+}: {
+    page: number
+    pages: number
+    paging: 'client' | 'server' | undefined
+    total: number | undefined
+    loading: boolean
+}): number | undefined {
+    if (paging === undefined || loading || (paging === 'server' && total === undefined) || page <= pages - 1) return undefined
+    return pages - 1
+}
+
+/** What a table shows at a time: its page, how many rows a page holds, and its view. */
+export interface PageShown {
+    page: number
+    pageSize: number
+    view: string
+}
+
+/** Whether a table turned to another page, page size or view since `before`, which starts it at the top; not on its first drawing. */
+export function turnedPage(before: PageShown | undefined, now: PageShown): boolean {
+    return before !== undefined && (before.page !== now.page || before.pageSize !== now.pageSize || before.view !== now.view)
+}
+
+/** Children a branch loaded with `loadChildren`, kept with the version of the row they were loaded at. */
+export interface LoadedChildren<T> {
+    children: readonly T[]
+    version: string | number | undefined
+}
+
+/** Loaded children while they are still current: undefined once the row's `version` has moved on, so they load again. */
+export function currentChildren<T>(held: LoadedChildren<T> | undefined, version: string | number | undefined): readonly T[] | undefined {
+    return held === undefined || held.version !== version ? undefined : held.children
+}
+
 /**
  * Whether a table that asked for more still does once the rows it asked with are on the page. A
  * table that draws its rows whole ends where its scroller measures, and rows just drawn move that
@@ -998,7 +1124,7 @@ function useHeld<V>(value: V | undefined, initial: V, onChange?: (value: V) => v
 const EMPTY: ReadonlySet<string> = new Set()
 const NO_WIDTHS: Readonly<Record<string, number>> = {}
 const NO_ORDER: readonly string[] = []
-const NO_CHILDREN: ReadonlyMap<string, readonly unknown[]> = new Map()
+const NO_CHILDREN: ReadonlyMap<string, LoadedChildren<unknown>> = new Map()
 const CHECK = '2.5rem'
 /** The widths of the bars a placeholder row draws, taken in turn so the rows on their way do not line up. */
 const PLACEHOLDER_WIDTHS = ['w-2/5', 'w-1/2', 'w-1/3', 'w-3/5']
@@ -1049,6 +1175,12 @@ export interface DataTableProps<T> {
      * table keeps them; a load that fails closes the branch again.
      */
     loadChildren?: (row: T) => Promise<readonly T[]>
+    /**
+     * Which version of a row's children the table holds, such as a count or the time they last
+     * changed: once it is another, the children `loadChildren` brought are dropped and an open
+     * branch loads them again, so a move, a rename or a delete among them is drawn.
+     */
+    childrenVersion?: (row: T) => string | number | undefined
     /**
      * A row's own detail, drawn under it across the table's width once it is opened, such as the
      * fields of a record that are not more rows; `undefined` or `null` for a row without one. A row
@@ -1402,6 +1534,7 @@ export function DataTable<T>({
     childRows,
     hasChildren,
     loadChildren,
+    childrenVersion,
     detail,
     hasDetail: givenHasDetail,
     expandLabel,
@@ -1506,9 +1639,12 @@ export function DataTable<T>({
     const stackBelow = ownStackBelow ?? stackDefault(minWidth === 'auto')
 
     // Children loaded on demand, kept by the table unless `childRows` gives them.
-    const [loaded, setLoaded] = useState(NO_CHILDREN as ReadonlyMap<string, readonly T[]>)
+    const [loaded, setLoaded] = useState(NO_CHILDREN as ReadonlyMap<string, LoadedChildren<T>>)
     const fetching = useRef(new Set<string>())
-    const kids = useCallback((row: T) => childRows?.(row) ?? loaded.get(rowKey(row)), [childRows, loaded, rowKey])
+    const kids = useCallback(
+        (row: T) => childRows?.(row) ?? currentChildren(loaded.get(rowKey(row)), childrenVersion?.(row)),
+        [childRows, loaded, rowKey, childrenVersion],
+    )
     const tree = childRows !== undefined || loadChildren !== undefined
     const treeKids = tree ? kids : undefined
     // Rows open into children, a detail of their own, or both; each such row draws the control that opens it.
@@ -1526,7 +1662,7 @@ export function DataTable<T>({
         [detail, givenHasDetail],
     )
 
-    const shown = ordered.filter((column, index) => index === 0 || !hidden.has(column.id))
+    const shown = useMemo(() => ordered.filter((column, index) => index === 0 || !hidden.has(column.id)), [ordered, hidden])
     // Columns in bands draw a head line above theirs, and a rule where each band starts and ends.
     const banded = shown.some((column) => column.band !== undefined)
     const bandEdge = (index: number) =>
@@ -1607,10 +1743,11 @@ export function DataTable<T>({
         for (const entry of all) {
             if (!entry.waiting || fetching.current.has(entry.key)) continue
             fetching.current.add(entry.key)
+            const version = childrenVersion?.(entry.row)
             loadChildren(entry.row).then(
                 (children) => {
                     fetching.current.delete(entry.key)
-                    setLoaded((before) => new Map(before).set(entry.key, children))
+                    setLoaded((before) => new Map(before).set(entry.key, { children, version }))
                 },
                 () => {
                     fetching.current.delete(entry.key)
@@ -1621,7 +1758,7 @@ export function DataTable<T>({
                 },
             )
         }
-    }, [all, loadChildren])
+    }, [all, loadChildren, childrenVersion])
 
     // A page of the rows, or all of them; everything below draws and moves through `flat`.
     const [page, setPage] = useHeld(pageValue, defaultPage, onPageChange)
@@ -1629,6 +1766,11 @@ export function DataTable<T>({
     const pageCount = paging === 'server' ? (total ?? all.length) : all.length
     const pages = paging === undefined ? 1 : Math.max(1, Math.ceil(pageCount / pageSize))
     const current = Math.min(page, pages - 1)
+    // A page held past the last, once a filter or a smaller total leaves it there, moves to the last, and its owner hears so.
+    const inRange = pageInRange({ page, pages, paging, total, loading })
+    useEffect(() => {
+        if (inRange !== undefined) setPage(inRange)
+    }, [inRange, setPage])
     const flat = useMemo(
         () => (paging === 'client' ? all.slice(current * pageSize, (current + 1) * pageSize) : all),
         [paging, all, current, pageSize],
@@ -1710,8 +1852,13 @@ export function DataTable<T>({
     const lineHeight = gridView ? cardPixels + GAP : rowHeight
     const lines = gridView ? Math.ceil(flat.length / perLine) : drawn.length
     const over = gridView ? 2 : OVERSCAN
+    // Another page, page size or view starts at the top; the first drawing keeps the place its memory puts back.
+    const pageShown = useRef<PageShown | undefined>(undefined)
     useLayoutEffect(() => {
-        if (scroller.current !== null) scroller.current.scrollTop = 0
+        const now = { page: current, pageSize, view: shownView }
+        const turned = turnedPage(pageShown.current, now)
+        pageShown.current = now
+        if (turned && scroller.current !== null) scroller.current.scrollTop = 0
     }, [current, pageSize, shownView])
     // A table with a key keeps its place, its memory loaded the first time one is drawn.
     const memory = useTableMemory(scrollKey !== undefined)
@@ -1757,8 +1904,8 @@ export function DataTable<T>({
     useEffect(() => {
         if (asks && stillAsks(scroller.current, moreRows, setView)) onLoadMore?.()
     }, [asks, onLoadMore])
-    const firstLine = whole ? 0 : Math.max(0, Math.floor(view.top / lineHeight) - over)
-    const lastLine = whole ? lines : Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
+    const lineWindow: LineWindow = { lineHeight, over, whole, lines }
+    const { firstLine, lastLine } = drawnLines(view, lineWindow)
     const first = firstLine * perLine
     const last = Math.min(gridView ? flat.length : drawn.length, lastLine * perLine)
 
@@ -1812,7 +1959,7 @@ export function DataTable<T>({
         setMeasuring(false)
     })
     // A content cell whose size or content changes, its value grown or its face loaded, is measured again once cut short.
-    const drawnFrom = view.top
+    const drawnFrom = firstLine
     useEffect(() => {
         const box = scroller.current
         if (measuring || contentColumns.length === 0 || box === null || typeof ResizeObserver === 'undefined') return
@@ -2155,7 +2302,8 @@ export function DataTable<T>({
         setActive(entry.key)
         if (selectable && event.shiftKey) toggle(entry, true)
         else if (selectable && (event.metaKey || event.ctrlKey)) toggle(entry, false)
-        else pick(entry)
+        // A press on a cell that edits makes it the active cell, or opens it, rather than the row.
+        else if (!(event.target instanceof Element && event.target.closest('[data-cell-edits]') !== null)) pick(entry)
     }
 
     /** A branch row's selection: all of it, part of it, or none. */
@@ -2376,10 +2524,14 @@ export function DataTable<T>({
     useEffect(() => {
         const head = headBox.current
         if (!showHeads || head === null) return
+        // A wheel the rows cannot follow, at their end or with nothing to scroll, is left to the page.
         const wheel = (event: WheelEvent) => {
-            if (event.ctrlKey || scroller.current === null) return
+            const box = scroller.current
+            if (event.ctrlKey || box === null) return
+            const by = wheelBy(box, event)
+            if (by.x === 0 && by.y === 0) return
             event.preventDefault()
-            scroller.current.scrollBy(event.deltaX, event.deltaY)
+            box.scrollBy(by.x, by.y)
         }
         head.addEventListener('wheel', wheel, { passive: false })
         return () => head.removeEventListener('wheel', wheel)
@@ -2759,6 +2911,7 @@ export function DataTable<T>({
                 data-dragging={dragged}
                 role="row"
                 aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
+                data-row={entry.key}
                 data-active={entry.key === marked || undefined}
                 onClick={(event) => press(entry, event)}
                 className={cn(
@@ -2980,7 +3133,7 @@ export function DataTable<T>({
                                                 onClick={() => setShownView(one)}
                                                 className={cn(
                                                     'text-muted-foreground',
-                                                    shownView === one && 'bg-background text-foreground shadow-xs hover:bg-background',
+                                                    shownView === one && 'bg-background text-foreground shadow-surface hover:bg-background',
                                                 )}
                                             >
                                                 {one === 'table' ? <TableIcon /> : <LayoutGridIcon />}
@@ -3029,7 +3182,7 @@ export function DataTable<T>({
                     onKeyDown={onKeyDown}
                     // A press on the table's empty ground, past its rows, leaves it, as a press outside would.
                     onMouseDown={(event) => {
-                        if (event.target instanceof Element && event.target.closest('[role=row]') === null) {
+                        if (event.target instanceof Element && onGround(event.target)) {
                             event.preventDefault()
                             if (event.currentTarget.contains(document.activeElement) && document.activeElement instanceof HTMLElement)
                                 document.activeElement.blur()
@@ -3038,8 +3191,18 @@ export function DataTable<T>({
                     onFocus={(event) => {
                         // The table itself taking the focus, from Tab or a press, leaves the head row for the rows.
                         if (event.target === event.currentTarget) setHeadAt(undefined)
-                        if (active === undefined && flat.length > 0 && !failed)
-                            setActive(flat[Math.min(first + OVERSCAN, flat.length - 1)]?.key ?? flat[0].key)
+                        // The row at the top of the view becomes the active one, unless one still in the rows is.
+                        if ((active === undefined || activeIndex === -1) && flat.length > 0 && !failed) {
+                            const box = scroller.current
+                            // Rows drawn whole are as tall as they grow, so the first one reaching into the view is found on the page.
+                            const shownTop =
+                                whole && box !== null
+                                    ? Array.from(box.querySelectorAll<HTMLElement>('[data-row]')).find(
+                                          (element) => element.getBoundingClientRect().bottom > box.getBoundingClientRect().top,
+                                      )?.dataset.row
+                                    : topRow(drawn, flat, { top: box?.scrollTop ?? 0, lineHeight, perLine, grid: gridView })?.key
+                            setActive(shownTop ?? flat[0].key)
+                        }
                         if (edits !== undefined) editing?.focus(edits)
                     }}
                     data-measuring={measuringContent || undefined}
@@ -3213,7 +3376,9 @@ export function DataTable<T>({
                         ref={setScroller}
                         onScroll={(event) => {
                             if (headBox.current !== null) headBox.current.scrollLeft = event.currentTarget.scrollLeft
-                            setView(viewOf(event.currentTarget))
+                            // A scroll that draws nothing new, within the lines drawn or sideways, renders nothing.
+                            const next = viewOf(event.currentTarget)
+                            setView((before) => (redraws(before, next, lineWindow, moreRows) ? next : before))
                         }}
                         className="relative min-h-0 flex-1 overflow-auto"
                     >
@@ -3245,23 +3410,28 @@ export function DataTable<T>({
                             />
                         </div>
                         {failed ? (
-                            <PageState
-                                loading={false}
-                                error={error}
-                                status={status}
-                                problems={problems}
-                                onRetry={onRetry}
-                                frame={false}
-                                words={words}
-                            >
-                                {null}
-                            </PageState>
+                            // What the table says in place of its rows is read and pressed as any text and control are.
+                            <div data-table-says="" className="contents">
+                                <PageState
+                                    loading={false}
+                                    error={error}
+                                    status={status}
+                                    problems={problems}
+                                    onRetry={onRetry}
+                                    frame={false}
+                                    words={words}
+                                >
+                                    {null}
+                                </PageState>
+                            </div>
                         ) : drawn.length === 0 && !loading ? (
-                            empty === undefined || typeof empty === 'string' ? (
-                                <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{empty ?? words.empty}</p>
-                            ) : (
-                                empty
-                            )
+                            <div data-table-says="" className="contents">
+                                {empty === undefined || typeof empty === 'string' ? (
+                                    <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{empty ?? words.empty}</p>
+                                ) : (
+                                    empty
+                                )}
+                            </div>
                         ) : listed ? (
                             wrapRows(
                                 <ul className="divide-y divide-border">

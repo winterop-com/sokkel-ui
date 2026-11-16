@@ -5,10 +5,10 @@ name: examples
 # electron/ and tauri/ is one example; the size apps in size/ are built by ci.yaml instead.
 on:
     pull_request:
-        paths: ['examples/**', '.github/workflows/examples.yaml']
+        paths: ['examples/**', '.bun-version', '.github/workflows/examples.yaml']
     push:
         branches: [main]
-        paths: ['examples/**', '.github/workflows/examples.yaml']
+        paths: ['examples/**', '.bun-version', '.github/workflows/examples.yaml']
     schedule:
         - cron: '0 3 * * *'
     workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
             CARGO_TARGET_DIR: ${{ github.workspace }}/examples/.cargo-target
         steps:
             - uses: actions/checkout@v5
-            - run: npm install -g bun
+            - run: npm install -g "bun@$(cat .bun-version)"
             - run: bun install --frozen-lockfile
             - run: bun run build
             - name: Web apps

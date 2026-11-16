@@ -184,6 +184,7 @@ function Palette({
 const meta: Meta = { title: 'Patterns/Command palette' }
 export default meta
 
+/** The palette closed, with the button that opens it; Cmd+K or Ctrl+K opens it too. */
 export const Closed: StoryObj = { render: () => <Palette initial={false} /> }
 /** A few commands: the palette is as tall as its rows, with no scrolling. */
 export const Short: StoryObj = { render: () => <Palette initial groups={SHORT} /> }

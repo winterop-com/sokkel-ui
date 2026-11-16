@@ -47,7 +47,8 @@ export function RunsByJob({ runs }: { runs: readonly Run[] }) {
 
 `label` is what the chart shows, for a screen reader. Keep `rows` stable between renders, at module
 level or memoized: the chart is built again when they change. A chart fills its box, so give the
-box a size.
+box a size. Its colors, typefaces and sizes come from the theme it sits in: the page's, or that of a
+`data-theme-scope` around it, and it is drawn again when either changes.
 
 **In a frame.** `ChartFrame` puts a title, a subtitle, an Export menu (SVG and PNG), an expand
 button and a legend around a chart. Expanding opens the chart and its legend near full screen
@@ -103,7 +104,10 @@ expect(dataColumns('fan', FORECAST).map((column) => column.header)).toEqual(['We
 
 **Small multiples.** `ChartGrid` draws the same kind and fields once per label of `facet`, each
 from that label's rows, on one shared scale and in one set of colors, so one frame legend (with
-`fit` on the frame) serves them all.
+`fit` on the frame) serves them all. Each value axis is shared with the same axis of the others, so
+a `dual` chart's right axis with the other right axes and a `linked` chart's panels each with the
+same panel; a histogram's bins are cut from every chart's numbers, and a radar's spokes and a
+bullet chart's scale end where the furthest chart reaches.
 
 **In a dashboard.** `ChartPanel` is a dashboard panel of a `Chart`: the same `kind` and fields, with
 the panel's title, span in a `DashboardGrid`, legend and loading and empty states. Beside it, the
@@ -139,57 +143,57 @@ own `intervals` and, with `onPausedChange`, a pause that keeps the interval for 
 
 What a chart reads. Each kind reads some of these fields; its row in the tables below says which.
 
-| Field            | What it says                                                                                                                                                                 |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rows`           | The rows the chart reads, one record of named fields each.                                                                                                                   |
-| `x`              | The field along the category axis, or the first number for a kind that plots two.                                                                                            |
-| `y`              | The field, or fields, whose numbers are drawn.                                                                                                                               |
-| `series`         | The field that splits the rows into series.                                                                                                                                  |
-| `value`          | A third field some kinds read: a point's size, a bullet's target.                                                                                                            |
-| `aggregate`      | How the values that fall in one place are combined (`sum`, `count`, `avg`, `min`, `max`, `median`, `p90`), or one per `y`.                                                   |
-| `stack`          | Bars and areas stacked (`stacked`), or as shares of each category's total (`percent`).                                                                                       |
-| `horizontal`     | Bars running sideways, categories down the side.                                                                                                                             |
-| `order`          | Categories in this order first.                                                                                                                                              |
-| `seriesOrder`    | Series in this order first.                                                                                                                                                  |
-| `colors`         | A color token for a series or a category by its name, such as `status-failed`; `muted-foreground/45` draws it at 45% opacity.                                                |
-| `palette`        | The color tokens series and categories take in turn where `colors` names none, in place of the theme's order.                                                                |
-| `format`         | How a figure is written in tooltips, labels and the value axis' ticks; a tick's figure is written short, so `1,500 GB` reads `1.5K GB`.                                      |
-| `unit`           | A unit written after each figure, such as `s` or `%`, or one per `y` field.                                                                                                  |
-| `fieldNames`     | What a field is called where the chart names it.                                                                                                                             |
-| `dataFields`     | Fields the chart does not draw, shown after its own in a frame's data view, written as they are.                                                                             |
-| `smooth`         | A line drawn smooth rather than straight between points.                                                                                                                     |
-| `labelEvery`     | Labels every nth category on the category axis.                                                                                                                              |
-| `formatCategory` | How a category is written on the category axis and as the tooltip's title, such as an hour `15:00` as `15:00-16:00`; the rows, `order` and `marks` keep the category itself. |
-| `gap`            | How far apart bars stand: `tight` draws a histogram's tall bars, nearly touching.                                                                                            |
-| `quiet`          | Bars and lines on a quiet axis: no value axis or lines across, the categories in mono.                                                                                       |
-| `baseline`       | A bar of zero drawn as a line one pixel high, so an empty category still shows.                                                                                              |
-| `fill`           | How an area is filled: `solid`, `gradient`, fading from its line toward the axis, or `none`.                                                                                 |
-| `showScale`      | A heatmap's color scale shown beside the grid.                                                                                                                               |
-| `total`          | A ring's total written in its middle with this word under it; under a gauge's figure, the word alone.                                                                        |
-| `fit`            | A scatter's axes, or a line's, an area's or a step's value axis, fitted to the figures rather than starting at zero: a pulse, a temperature.                                 |
-| `bins`           | How many bins a histogram splits its numbers into, or `{ width }` for how wide each is.                                                                                      |
-| `steps`          | Steps along the value axis, each a `value` where it starts, a `color` token and a `label`: thresholds, bands. A line draws each after the first as a dashed line across.     |
-| `min`, `max`     | Where the value axis starts and ends, for a kind that fixes it, such as a gauge's dial or a heatmap's scale.                                                                 |
-| `words`          | The words a chart writes itself (Count, Total, Rise, Fall, Target and others), for translation.                                                                              |
-| `path`           | The fields from the outermost in, for a kind that nests or flows through stages.                                                                                             |
-| `dial`           | A gauge's shape: `arc` (the default), `ring`, `half`, `bands` or `needle`.                                                                                                   |
-| `panels`         | How each panel of a linked chart is drawn, by its field's or series' name: `mark` (`bar`, `line`, `area`), `hang`, `weight`.                                                 |
-| `scales`         | Whether a linked chart's panels share one value scale: `shared` for panels split by `series`, `own` for separate fields.                                                     |
-| `zoom`           | The part of a linked chart's axis in view at first: `[from, to]` in percent, or the first and last category.                                                                 |
-| `stacks`         | The stack each series joins, by its name; series sharing one are drawn on top of each other.                                                                                 |
-| `dashed`         | Series drawn as a thin dashed line with no area: a reference, such as a target or the period before.                                                                         |
-| `layers`         | How a two-axis chart draws each series or field, by its name: `mark` (`bar`, `line`) and `axis` (`left`, `right`).                                                           |
-| `axes`           | A two-axis chart's axes, `left` and `right`: each one's `name`, `unit`, `format`, `min` and `max`. A chart of one value axis reads the `unit` of `left` for its ticks.       |
-| `rims`           | Where each radar spoke ends, by its category's name, in place of the one scale.                                                                                              |
-| `round`          | A radar's rings drawn as circles rather than polygons.                                                                                                                       |
-| `levels`         | How many rings a radar's scale is drawn with.                                                                                                                                |
-| `scale`          | The color tokens a heatmap's scale runs through: one shades from the card to it, several are stepped through.                                                                |
-| `small`          | A gauge's figure written at the small size, for a dial in a small box.                                                                                                       |
-| `bands`          | A fan's bands from the outermost in, each from its `low` field to its `high` field, with a `label` (the fields' figures, `10-90`, by default).                               |
-| `points`         | The field drawn as dots, not a line: a fan's observed truth.                                                                                                                 |
-| `history`        | The field drawn as a solid line on the rows before a fan's forecast starts.                                                                                                  |
-| `bridge`         | Whether a fan's median is drawn from the last `history` figure, so history and forecast read as one line; true by default.                                                   |
-| `marks`          | Lines down the chart at categories of `x`, each dashed, with a `label` at its top and a `color` token: where a forecast starts.                                              |
+| Field            | What it says                                                                                                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rows`           | The rows the chart reads, one record of named fields each.                                                                                                                                                    |
+| `x`              | The field along the category axis, or the first number for a kind that plots two.                                                                                                                             |
+| `y`              | The field, or fields, whose numbers are drawn.                                                                                                                                                                |
+| `series`         | The field that splits the rows into series.                                                                                                                                                                   |
+| `value`          | A third field some kinds read: a point's size, a bullet's target.                                                                                                                                             |
+| `aggregate`      | How the values that fall in one place are combined (`sum`, `count`, `avg`, `min`, `max`, `median`, `p90`), or one per `y`.                                                                                    |
+| `stack`          | Bars and areas stacked (`stacked`), or as shares of each category's total (`percent`).                                                                                                                        |
+| `horizontal`     | Bars running sideways, categories down the side.                                                                                                                                                              |
+| `order`          | Categories in this order first.                                                                                                                                                                               |
+| `seriesOrder`    | Series in this order first.                                                                                                                                                                                   |
+| `colors`         | A color token for a series or a category by its name, such as `status-failed`; `muted-foreground/45` draws it at 45% opacity.                                                                                 |
+| `palette`        | The color tokens series and categories take in turn where `colors` names none, in place of the theme's order.                                                                                                 |
+| `format`         | How a figure is written in tooltips, labels and the value axis' ticks; a tick's figure is written short, so `1,500 GB` reads `1.5K GB`.                                                                       |
+| `unit`           | A unit written after each figure, such as `s` or `%`, or one per `y` field.                                                                                                                                   |
+| `fieldNames`     | What a field is called where the chart names it.                                                                                                                                                              |
+| `dataFields`     | Fields the chart does not draw, shown after its own in a frame's data view, written as they are.                                                                                                              |
+| `smooth`         | A line drawn smooth rather than straight between points.                                                                                                                                                      |
+| `labelEvery`     | Labels every nth category on the category axis.                                                                                                                                                               |
+| `formatCategory` | How a category is written on the category axis and as the tooltip's title, such as an hour `15:00` as `15:00-16:00`; the rows, `order` and `marks` keep the category itself.                                  |
+| `gap`            | How far apart bars stand: `tight` draws a histogram's tall bars, nearly touching.                                                                                                                             |
+| `quiet`          | Bars and lines on a quiet axis: no value axis or lines across, the categories in mono.                                                                                                                        |
+| `baseline`       | A bar of zero drawn as a line one pixel high, so an empty category still shows.                                                                                                                               |
+| `fill`           | How an area is filled: `solid`, `gradient`, fading from its line toward the axis, or `none`.                                                                                                                  |
+| `showScale`      | A heatmap's color scale shown beside the grid.                                                                                                                                                                |
+| `total`          | A ring's total written in its middle with this word under it; under a gauge's figure, the word alone.                                                                                                         |
+| `fit`            | A scatter's axes, or a line's, an area's or a step's value axis, fitted to the figures rather than starting at zero: a pulse, a temperature.                                                                  |
+| `bins`           | How many bins a histogram splits its numbers into, or `{ width }` for how wide each is, with `start` and `count` for the edges themselves.                                                                    |
+| `steps`          | Steps along the value axis, each a `value` where it starts, a `color` token and a `label`: thresholds, bands. A line draws each after the first as a dashed line across, kept when the legend hides a series. |
+| `min`, `max`     | Where the value axis starts and ends, for a kind that fixes it, such as a gauge's dial or a heatmap's scale.                                                                                                  |
+| `words`          | The words a chart writes itself (Count, Total, Rise, Fall, Target and others), for translation.                                                                                                               |
+| `path`           | The fields from the outermost in, for a kind that nests or flows through stages.                                                                                                                              |
+| `dial`           | A gauge's shape: `arc` (the default), `ring`, `half`, `bands` or `needle`.                                                                                                                                    |
+| `panels`         | How each panel of a linked chart is drawn, by its field's or series' name: `mark` (`bar`, `line`, `area`), `hang`, `weight`.                                                                                  |
+| `scales`         | Whether a linked chart's panels share one value scale: `shared` for panels split by `series`, `own` for separate fields.                                                                                      |
+| `zoom`           | The part of a linked chart's axis in view at first: `[from, to]` in percent, or the first and last category.                                                                                                  |
+| `stacks`         | The stack each series joins, by its name; series sharing one are drawn on top of each other.                                                                                                                  |
+| `dashed`         | Series drawn as a thin dashed line with no area: a reference, such as a target or the period before.                                                                                                          |
+| `layers`         | How a two-axis chart draws each series or field, by its name: `mark` (`bar`, `line`) and `axis` (`left`, `right`).                                                                                            |
+| `axes`           | A two-axis chart's axes, `left` and `right`: each one's `name`, `unit`, `format`, `min` and `max`. A chart of one value axis reads the `unit` of `left` for its ticks.                                        |
+| `rims`           | Where each radar spoke ends, by its category's name, in place of the one scale.                                                                                                                               |
+| `round`          | A radar's rings drawn as circles rather than polygons.                                                                                                                                                        |
+| `levels`         | How many rings a radar's scale is drawn with.                                                                                                                                                                 |
+| `scale`          | The color tokens a heatmap's scale runs through: one shades from the card to it, several are stepped through.                                                                                                 |
+| `small`          | A gauge's figure written at the small size, for a dial in a small box.                                                                                                                                        |
+| `bands`          | A fan's bands from the outermost in, each from its `low` field to its `high` field, with a `label` (the fields' figures, `10-90`, by default).                                                                |
+| `points`         | The field drawn as dots, not a line: a fan's observed truth.                                                                                                                                                  |
+| `history`        | The field drawn as a solid line on the rows before a fan's forecast starts.                                                                                                                                   |
+| `bridge`         | Whether a fan's median is drawn from the last `history` figure, so history and forecast read as one line; true by default.                                                                                    |
+| `marks`          | Lines down the chart at categories of `x`, each dashed, with a `label` at its top and a `color` token: where a forecast starts.                                                                               |
 
 **Ticks.** A value axis writes its ticks as the tooltips write its figures: by `format`, then the
 unit, so ticks and tooltips never disagree on a unit. Ticks are short: the figure `format` writes
@@ -200,6 +204,11 @@ the ticks' unit in place of the spec's on a chart of one value axis, and an axis
 its own in `axes` writes its ticks with it, unit and all. Figures stacked to 100% are written in
 percent; a needle gauge's ticks and a heatmap's scale follow `format` too. A builder that draws a
 value axis writes its ticks with `tickWriter` from `kinds/axes.ts`.
+
+**Dates.** A `Date` in the rows is read by the reader's own calendar: a category of its local day,
+`2026-03-01`, with its time after it where it is not midnight, `2026-03-01 10:00`, so two hours of
+one day stay two categories. A histogram writes its bins' edges to the decimals their width needs,
+`0.002–0.004`, unless `format` writes them.
 
 **Categories.** `formatCategory` writes a category where the chart shows it: on the category
 axis and as the tooltip's title, on the kinds with a category axis (`bar`, `line`, `area`, `step`,

@@ -10,6 +10,7 @@ function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** A bar at several values, and one with its label and value. */
 export const Variants: StoryObj = {
     render: () => (
         <Stack gap="xl" className="max-w-md">
@@ -61,6 +62,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** A backfill's progress counted in months, with what it is writing now. */
 export const RunningExport: StoryObj = {
     render: () => (
         <Stack gap="lg" className="max-w-lg rounded-lg border p-4">

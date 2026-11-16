@@ -69,6 +69,9 @@ function Toolbar() {
     )
 }
 
+/** An icon button with a tooltip, closed. */
 export const Trigger: StoryObj = { render: () => <Closed /> }
+/** The tooltip open over its icon button, saying what the button does. */
 export const Opened: StoryObj = { parameters: { frame: 'none' }, render: () => <Open /> }
+/** A toolbar of icon buttons, one tooltip open below its button showing its key, and a disabled button. */
 export const WithShortcut: StoryObj = { parameters: { frame: 'none' }, render: () => <Toolbar /> }

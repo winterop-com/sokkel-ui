@@ -1,6 +1,23 @@
 import { describe, expect, it } from 'vitest'
 
-import { bindingKeys, keyLabels, shortcutLabel, typing } from './keys'
+import { bindingKeys, composing, keyLabels, shortcutLabel, typing } from './keys'
+
+describe('composing', () => {
+    it('reads a composition from the event or from the native one a React event carries', () => {
+        expect(composing({ isComposing: true })).toBe(true)
+        expect(composing({ nativeEvent: { isComposing: true } })).toBe(true)
+    })
+
+    it('reads the Enter Safari sends after the composition ends by its key code', () => {
+        expect(composing({ isComposing: false, keyCode: 229 })).toBe(true)
+        expect(composing({ keyCode: 13, nativeEvent: { isComposing: false, keyCode: 229 } })).toBe(true)
+    })
+
+    it('takes a plain Enter as no composition', () => {
+        expect(composing({ isComposing: false, keyCode: 13, nativeEvent: { isComposing: false, keyCode: 13 } })).toBe(false)
+        expect(composing({})).toBe(false)
+    })
+})
 
 describe('shortcutLabel', () => {
     it('writes the command key as the device does', () => {

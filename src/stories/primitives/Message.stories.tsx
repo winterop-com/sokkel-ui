@@ -164,6 +164,7 @@ function ConversationView() {
 const meta: Meta = { title: 'Primitives/Chat/Message', parameters: { frame: 'column' } }
 export default meta
 
+/** Aligned at the start with an avatar and a header, at the end with a footer, with no avatar, and a group of messages in a row. */
 export const Variants: StoryObj = {
     render: () => (
         <Stack gap="xl" className="max-w-2xl">
@@ -224,6 +225,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Working, with a tool call running, and an error. */
 export const States: StoryObj = {
     render: () => (
         <Stack gap="xl" className="max-w-2xl">
@@ -256,6 +258,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** A conversation between a person and the assistant under a day marker. */
 export const Conversation: StoryObj = {
     render: () => <ConversationView />,
 }

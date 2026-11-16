@@ -28,6 +28,7 @@ const KINDS: [KindColor, string][] = [
     ['jade', 'Survey'],
 ]
 
+/** The badge in each variant, with an icon at the start or the end, and as a link. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -72,6 +73,7 @@ export const Kinds: StoryObj = {
     ),
 }
 
+/** A badge marked invalid and one holding a long code. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -95,6 +97,7 @@ const TONE: Record<string, string> = {
     cancelled: 'bg-status-cancelled/15 text-status-cancelled-ink',
 }
 
+/** A job's badges: its state, its project and format, its schedule, and the colors of every run state. */
 export const JobTags: StoryObj = {
     render: () => (
         <Stack className="max-w-xl rounded-lg border p-4">

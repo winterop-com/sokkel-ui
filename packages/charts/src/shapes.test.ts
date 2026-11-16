@@ -82,7 +82,8 @@ describe('the shapes', () => {
 
     it('reads days from dates and times', () => {
         expect(dayOf('2026-10-02T23:10:00Z')).toBe('2026-10-02')
-        expect(dayOf(new Date(Date.UTC(2026, 9, 2)))).toBe('2026-10-02')
+        expect(dayOf(new Date(2026, 9, 2))).toBe('2026-10-02')
+        expect(dayOf(new Date(2026, 9, 2, 23, 10))).toBe('2026-10-02')
         expect(dayOf('Oct 2')).toBeNull()
     })
 

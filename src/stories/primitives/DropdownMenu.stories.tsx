@@ -238,9 +238,13 @@ function ViewMenu() {
     )
 }
 
+/** The menu's button, closed. */
 export const Trigger: StoryObj = { render: () => <Closed /> }
+/** Submenus open two levels deep, with checkbox and radio items inside them. */
 export const Nested: StoryObj = { name: 'Submenus', render: () => <Submenus /> }
+/** Every kind of row open at once: a label, checks, a radio group, an inset row and a disabled one with its key. */
 export const Items: StoryObj = { render: () => <Variants /> }
 /** Checks and plain rows in one menu, as wide as its longest row and never wider than the screen. */
 export const Checks: StoryObj = { render: () => <ViewMenu /> }
+/** A job's actions behind its icon button: run, edit, duplicate, recent runs in a submenu, and delete. */
 export const RowActions: StoryObj = { render: () => <JobActions /> }

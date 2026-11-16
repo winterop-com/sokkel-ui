@@ -520,6 +520,7 @@ function NewJobPage({ layout }: { layout?: 'side' | 'top' }) {
 const meta: Meta = { title: 'Apps/Workspace' }
 export default meta
 
+/** The runs in a table with the chosen one in the side panel. */
 export const ListAndPanel: StoryObj = { name: 'List and panel', render: (_, { globals }) => <Workspace globals={globals} /> }
 /** The chosen run's command output in the side panel, colored as the program printed it. */
 export const Output: StoryObj = { name: 'Run output', render: (_, { globals }) => <Workspace globals={globals} tab="output" /> }
@@ -531,6 +532,7 @@ export const Output: StoryObj = { name: 'Run output', render: (_, { globals }) =
  */
 export const Queue: StoryObj = { render: (_, { globals }) => <Workspace globals={globals} queue /> }
 
+/** The runs with a log dock at the page's foot, its lines filtered by level. */
 export const WithDock: StoryObj = { name: 'Log dock', render: (_, { globals }) => <Workspace globals={globals} dock /> }
 
 /** The runs grouped by job, each head counting its runs; the Group choice and the dock's fold are kept for the next visit. */

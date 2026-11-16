@@ -16,6 +16,7 @@ const PICTURE =
 
 const SIZES = ['sm', 'default', 'lg'] as const
 
+/** Avatars at each size with initials, a picture and a badge. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="end" wrap>
@@ -54,6 +55,7 @@ const CHANGES = [
     ['LT', 'linus', 'renamed the job to nightly-export', '2026-11-02 17:40'],
 ] as const
 
+/** Overlapping avatars, with a count for the rest, and the people who changed a job, each beside their change. */
 export const Group: StoryObj = {
     render: () => (
         <>

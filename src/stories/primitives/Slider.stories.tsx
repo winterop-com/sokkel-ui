@@ -17,6 +17,7 @@ function Labeled({ label, children }: { label: string; children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Inputs/Slider', parameters: { frame: 'column' } }
 export default meta
 
+/** A slider with one value, a range, steps of one, and laid upright. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="2xl" align="stretch" wrap>
@@ -38,6 +39,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A slider disabled, at its minimum and at its maximum. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="2xl" align="stretch" wrap>
@@ -77,4 +79,5 @@ function Concurrency() {
     )
 }
 
+/** A field setting how many runs may go at once, its value shown beside the label and explained below. */
 export const RunConcurrency: StoryObj = { render: () => <Concurrency /> }

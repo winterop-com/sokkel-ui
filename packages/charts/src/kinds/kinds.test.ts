@@ -259,11 +259,13 @@ describe('the chart kinds', () => {
         }
         const option = KINDS.area.build(spec, LOOK) as unknown as Lines
         expect([option.yAxis.min, option.yAxis.max]).toEqual([0, 1000])
-        expect(option.series[0].markLine?.data.map((line) => line.yAxis)).toEqual([30])
-        expect(option.series.map((entry) => [entry.name, entry.areaStyle !== undefined, entry.lineStyle.type])).toEqual([
+        const [succeeded, failed, marks] = option.series
+        expect(marks.markLine?.data.map((line) => line.yAxis)).toEqual([30])
+        expect([succeeded, failed].map((entry) => [entry.name, entry.areaStyle !== undefined, entry.lineStyle.type])).toEqual([
             ['succeeded', true, undefined],
             ['failed', false, 'dashed'],
         ])
+        expect([succeeded.markLine, failed.markLine]).toEqual([undefined, undefined])
         const steps = KINDS.step.build({ ...spec, fill: 'none' }, LOOK) as unknown as Lines
         expect(steps.series.every((entry) => entry.areaStyle === undefined)).toBe(true)
     })
@@ -373,8 +375,26 @@ describe('the chart kinds', () => {
     it('draws a mark down a line chart at its category', () => {
         type Lines = { series: { markLine?: { data: { xAxis?: string; yAxis?: number }[] } }[] }
         const option = KINDS.line.build({ ...BY_STATE, marks: [{ x: 'sync-inventory' }] }, LOOK) as unknown as Lines
-        expect(option.series[0].markLine?.data).toHaveLength(1)
-        expect(option.series[0].markLine?.data[0].xAxis).toBe('sync-inventory')
+        const carrier = option.series[option.series.length - 1]
+        expect(carrier.markLine?.data).toHaveLength(1)
+        expect(carrier.markLine?.data[0].xAxis).toBe('sync-inventory')
+    })
+
+    it('labels a histogram of small numbers by edges that read apart', () => {
+        type Bars = { xAxis: { data: string[] } }
+        const rows = [0.001, 0.003, 0.005, 0.007, 0.009].map((share) => ({ share }))
+        const option = KINDS.histogram.build({ rows, x: 'share', bins: 5 }, LOOK) as unknown as Bars
+        expect(option.xAxis.data).toEqual(['0–0.002', '0.002–0.004', '0.004–0.006', '0.006–0.008', '0.008–0.01'])
+    })
+
+    it('keeps the lines across and down when the legend hides the first series', () => {
+        type Lines = { series: { name: string; data: unknown[]; markLine?: { data: unknown[] } }[] }
+        const spec: ChartSpec = { ...BY_STATE, steps: [{}, { value: 30, color: 'critical' }], marks: [{ x: 'sync-inventory' }] }
+        for (const kind of ['line', 'area', 'step'] as const) {
+            const option = KINDS[kind].build(spec, LOOK, new Set(['succeeded'])) as unknown as Lines
+            const carriers = option.series.filter((entry) => entry.markLine !== undefined)
+            expect(carriers.map((entry) => [entry.name, entry.data.length, entry.markLine?.data.length])).toEqual([['', 0, 2]])
+        }
     })
 
     it('draws a dual chart of series by their layers, on the axes they name', () => {

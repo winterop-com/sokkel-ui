@@ -11,8 +11,9 @@ set -euo pipefail
 args=$(printf '%q ' "$@")
 scripts/baselines.sh checkout
 version=$(node -p "require('./node_modules/@playwright/test/package.json').version")
+bun=$(cat .bun-version)
 docker run --rm --ipc=host \
     -v "$PWD":/work -v sokkel-ui-linux-modules:/work/node_modules -w /work \
     -e CI=1 \
     "mcr.microsoft.com/playwright:v${version}-noble" \
-    bash -c "npm install -g bun >/dev/null 2>&1 && bun install --frozen-lockfile >/dev/null && bun run build-storybook >/dev/null && touch /tmp/started && status=0 && { bunx playwright test ${args} || status=\$?; } && scripts/compress-screenshots.sh /tmp/started && exit \$status"
+    bash -c "npm install -g bun@${bun} >/dev/null 2>&1 && bun install --frozen-lockfile >/dev/null && bun run build-storybook >/dev/null && touch /tmp/started && status=0 && { bunx playwright test ${args} || status=\$?; } && scripts/compress-screenshots.sh /tmp/started && exit \$status"

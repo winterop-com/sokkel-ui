@@ -35,6 +35,7 @@ export const Playground: StoryObj<{
     ),
 }
 
+/** The input empty with a placeholder, filled, and as a URL, a password, a number and a file. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -60,6 +61,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The input disabled, read only, invalid and empty. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -96,6 +98,7 @@ export const Bare: StoryObj = {
     ),
 }
 
+/** A search input with its label above and a line under it saying what it found. */
 export const SearchRuns: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-md">

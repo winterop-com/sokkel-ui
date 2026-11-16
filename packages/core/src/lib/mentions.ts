@@ -99,3 +99,21 @@ export function matchPeople<P extends MentionPerson>(people: readonly P[], query
         .slice(0, limit)
         .map((one) => one.person)
 }
+
+/** What a key does in open suggestions: close them, move the choice, pick it, hold it until the search answers, or nothing. */
+export type MentionKey = 'close' | 'down' | 'up' | 'pick' | 'hold'
+
+/**
+ * What a key does while suggestions show `count` people. While the app's search has not answered the
+ * query typed (`searching`), the people shown belong to an older one, so Enter and Tab pick no one
+ * and are kept from the field, where Enter would send the raw `@` text.
+ */
+export function mentionKey(key: string, count: number, searching: boolean): MentionKey | undefined {
+    if (key === 'Escape') return 'close'
+    const choose = key === 'Enter' || key === 'Tab'
+    if (choose && searching) return 'hold'
+    if (count === 0) return undefined
+    if (key === 'ArrowDown') return 'down'
+    if (key === 'ArrowUp') return 'up'
+    return choose ? 'pick' : undefined
+}

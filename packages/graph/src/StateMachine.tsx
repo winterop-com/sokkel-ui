@@ -101,7 +101,13 @@ export function StateMachine({
                 : [{ id: INITIAL, type: 'initial', size: { width: 14, height: 14 }, selectable: false, data: { code: '' } }]),
             ...states.map((state) => ({
                 id: state.code,
-                data: { code: state.code, name: state.name, ...(state.code === current ? { status: 'running' as const } : {}) },
+                // Every state keeps the current one's room, so the current state moving repaints and lays nothing out again.
+                data: {
+                    code: state.code,
+                    name: state.name,
+                    reserveStatus: true,
+                    ...(state.code === current ? { status: 'running' as const } : {}),
+                },
             })),
             ...(finals.length === 0
                 ? []

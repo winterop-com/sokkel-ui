@@ -79,6 +79,14 @@ describe('a new queue', () => {
         expect(queueItem(broken)).toBe('b')
     })
 
+    it('starts from the first item when the start is not a number', () => {
+        expect(createQueue(ITEMS, { start: Number.NaN }).at).toBe(0)
+        const shuffled = createQueue(['a', 'b'], { start: Number.NaN, shuffle: true, seed: 1 })
+        expect([...shuffled.order].sort()).toEqual([0, 1])
+        expect(shuffled.at).toBe(0)
+        expect(shuffledOrder(2, Number.NaN, seededRandom(1))).toHaveLength(2)
+    })
+
     it('holds nothing when empty', () => {
         const queue = createQueue<string>([])
         expect(queue.at).toBe(-1)

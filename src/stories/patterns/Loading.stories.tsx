@@ -151,9 +151,13 @@ function ElementReload({ interactive = false }: { interactive?: boolean }) {
 const meta: Meta = { title: 'Patterns/Loading', parameters: { frame: 'padded' } }
 export default meta
 
+/** Loading bars: unknown progress, known progress at 35% and 80%, and quiet on a muted track. */
 export const Bars_: StoryObj = { name: 'Bars', render: () => <Bars /> }
 /** Thin lines in the ink around them, `tone="current"`: under a row's muted detail, known and unknown, and in a warning's ink. */
 export const Tone: StoryObj = { name: 'In its tone', render: () => <InTone /> }
+/** A page loading under the top bar, the progress line at the bar's foot. */
 export const Page: StoryObj = { parameters: { frame: 'none' }, name: 'Page load', render: () => <PageLoad /> }
+/** One block reloading, its rows dimmed under the overlay and its bar. */
 export const Element: StoryObj = { name: 'Element reload', render: () => <ElementReload /> }
+/** Refresh reloads the block for two seconds; the overlay shows only once a refresh takes longer than 300ms. */
 export const Try: StoryObj = { name: 'Try it', render: () => <ElementReload interactive /> }

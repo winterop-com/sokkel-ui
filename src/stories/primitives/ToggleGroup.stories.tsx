@@ -27,6 +27,7 @@ function Views(props: React.ComponentProps<typeof ToggleGroup>) {
 const meta: Meta = { title: 'Primitives/Actions/ToggleGroup', parameters: { frame: 'column' } }
 export default meta
 
+/** Default, outline, outline with no spacing, small, large, vertical, and many pressed at once. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -59,6 +60,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The group disabled, one item disabled, and nothing pressed. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -131,4 +133,5 @@ function RunFilter() {
     )
 }
 
+/** Filtering runs by their state. */
 export const RunStateFilter: StoryObj = { render: () => <RunFilter /> }

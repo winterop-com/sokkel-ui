@@ -54,6 +54,30 @@ interface ClusterLabel {
     count: number
 }
 
+/**
+ * A point's radius: one radius without `size`, or its value's square root drawn from one end of the
+ * range to the other across the domain, ends below zero taken as zero. A domain whose ends are equal
+ * (one point, or every value the same) draws every point at the range's far end, and a reversed one
+ * runs the other way, as maplibre refuses an interpolation whose stops do not rise, and the layer with it.
+ */
+export function pointRadius(size: PointSize | undefined, radius: number): ExpressionSpecification | number {
+    if (size === undefined) return radius
+    const [near, far] = [size.range?.[0] ?? 3, size.range?.[1] ?? 14]
+    const [low, high] = size.domain.map((end) => Math.sqrt(Math.max(end, 0)))
+    if (!(Number.isFinite(low) && Number.isFinite(high)) || low === high) return far
+    const [from, to] =
+        low < high
+            ? [
+                  [low, near],
+                  [high, far],
+              ]
+            : [
+                  [high, far],
+                  [low, near],
+              ]
+    return ['interpolate', ['linear'], ['sqrt', ['max', ['to-number', ['get', SIZE_PROPERTY], 0], 0]], from[0], from[1], to[0], to[1]]
+}
+
 const COMPACT = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
 
 /**
@@ -104,18 +128,7 @@ export function PointLayer({
         cluster: 'color-mix(in oklab, var(--foreground) 78%, var(--card))',
     }
 
-    const base: ExpressionSpecification | number =
-        size === undefined
-            ? radius
-            : [
-                  'interpolate',
-                  ['linear'],
-                  ['sqrt', ['max', ['to-number', ['get', SIZE_PROPERTY], 0], 0]],
-                  Math.sqrt(Math.max(size.domain[0], 0)),
-                  size.range?.[0] ?? 3,
-                  Math.sqrt(Math.max(size.domain[1], 0)),
-                  size.range?.[1] ?? 14,
-              ]
+    const base = pointRadius(size, radius)
 
     const { source } = useGeoJsonLayer({
         id,

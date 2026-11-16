@@ -226,7 +226,7 @@ export function LogView({
                 <button
                     type="button"
                     onClick={toEnd}
-                    className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-terminal-bar px-3 py-1 font-sans text-xs text-terminal-foreground shadow-md outline-none hover:bg-terminal-muted/30 focus-visible:ring-focus focus-visible:ring-ring"
+                    className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-terminal-bar px-3 py-1 font-sans text-xs text-terminal-foreground shadow-pop outline-none hover:bg-terminal-muted/30 focus-visible:ring-focus focus-visible:ring-ring"
                 >
                     <ArrowDown className="size-3.5" aria-hidden />
                     {words.jump}

@@ -77,6 +77,7 @@ const ORDER: JsonSchema = {
 const meta: Meta = { title: 'Patterns/Schema', parameters: { frame: 'padded' } }
 export default meta
 
+/** A job's settings read from its JSON Schema as a list of fields, each with its default and rules. */
 export const Flat: StoryObj = {
     name: 'Settings',
     render: () => (
@@ -90,6 +91,7 @@ export const Flat: StoryObj = {
     ),
 }
 
+/** An order's schema with nested objects, a list of line items and a shared definition, open two levels deep. */
 export const Nested: StoryObj = {
     name: 'Nested',
     render: () => (

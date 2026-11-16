@@ -30,6 +30,7 @@ function Choices({ prefix, ...props }: { prefix: string } & React.ComponentProps
 const meta: Meta = { title: 'Primitives/Inputs/RadioGroup', parameters: { frame: 'column' } }
 export default meta
 
+/** Vertical, horizontal, and nothing picked. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="3xl" align="stretch" wrap>
@@ -46,6 +47,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The group disabled, one choice disabled, and invalid. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="3xl" align="stretch" wrap>
@@ -84,6 +86,7 @@ const ON_FAILURE = [
     { value: 'retry', title: 'Retry the step', detail: 'Up to 3 times, 10s apart, then stop.' },
 ]
 
+/** What a step does when it fails, each choice a field with its title and description. */
 export const StepFailurePolicy: StoryObj = {
     render: () => (
         <FieldSet className="max-w-md">

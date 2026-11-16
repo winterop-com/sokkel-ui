@@ -4,7 +4,7 @@ name: examples web
 # example's web app against it. The desktop shells are checked by examples.yaml when the examples change.
 on:
     pull_request:
-        paths: ['packages/**', '.github/workflows/examples-web.yaml']
+        paths: ['packages/**', '.bun-version', '.github/workflows/examples-web.yaml']
     workflow_dispatch:
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v5
-            - run: npm install -g bun
+            - run: npm install -g "bun@$(cat .bun-version)"
             - run: bun install --frozen-lockfile
             - run: bun run build
             - name: Web apps

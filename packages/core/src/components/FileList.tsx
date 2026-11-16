@@ -2,7 +2,7 @@ import { File, FileArchive, FileBraces, FileCode, FileImage, FileSpreadsheet, Fi
 import type { KeyboardEvent, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { DataTable, type DataColumn, type DataSort } from './DataTable'
+import { DataTable, type DataColumn, type DataSort, type DataTableProps, type DataTableWords } from './DataTable'
 import type { DragData } from './DragDrop'
 import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER, type DragSourceState } from './DragSource'
 import { Checkbox } from './ui/checkbox'
@@ -40,6 +40,8 @@ export interface FileListWords {
     owner: string
     selectAll: string
     select: string
+    /** A tile's checkbox, for the file it selects. */
+    selectEntry: (name: string) => string
     empty: string
     /** A tile's grip, with `dragKind`: what the keyboard picks the file up by. */
     drag: (name: string) => string
@@ -52,6 +54,7 @@ const WORDS: FileListWords = {
     owner: 'Owner',
     selectAll: 'Select all',
     select: 'Select',
+    selectEntry: (name) => `Select ${name}`,
     empty: 'This folder is empty.',
     drag: (name) => `Drag ${name}`,
 }
@@ -161,8 +164,22 @@ export interface FileListProps {
      * reorder here.
      */
     dragKind?: string
+    /** What a row's menu offers, opened from a button at its end or a right-click: rename, move, delete. */
+    rowActions?: DataTableProps<FileEntry>['rowActions']
+    /** The folder's entries are on their way: placeholder rows stand in for them. */
+    loading?: boolean
+    /** Why the folder did not load, said in place of its rows. */
+    error?: DataTableProps<FileEntry>['error']
+    /** How the failed read ended, as the table says it. */
+    status?: DataTableProps<FileEntry>['status']
+    /** Tries the read again, from a button under the failure. */
+    onRetry?: () => void
+    /** Keeps where the rows are scrolled under this key, and puts it back when a listing with the same key returns. */
+    scrollKey?: string
     className?: string
     words?: Partial<FileListWords>
+    /** The words of the table the rows are drawn in: how many are selected, the column menu, a row moved. */
+    tableWords?: Partial<DataTableWords>
 }
 
 /**
@@ -191,8 +208,15 @@ export function FileList({
     onReorder,
     rowLabel = (entry) => entry.name,
     dragKind,
+    rowActions,
+    loading,
+    error,
+    status,
+    onRetry,
+    scrollKey,
     className,
     words: given,
+    tableWords,
 }: FileListProps) {
     const words = { ...WORDS, ...given }
     // A column sorts from its head only when the app hears it; the app orders the entries, folders first.
@@ -262,8 +286,14 @@ export function FileList({
             onReorder={onReorder}
             rowLabel={rowLabel}
             dragKind={dragKind}
+            rowActions={rowActions}
+            loading={loading}
+            error={error}
+            status={status}
+            onRetry={onRetry}
+            scrollKey={scrollKey}
             empty={empty ?? words.empty}
-            words={{ selectAll: words.selectAll, selectRow: words.select, empty: words.empty }}
+            words={{ selectAll: words.selectAll, selectRow: words.select, empty: words.empty, ...tableWords }}
             className={className}
         />
     )
@@ -280,7 +310,7 @@ export interface FileTileProps {
     onOpen?: (entry: FileEntry) => void
     /** What the tile carries when it is dragged to a target elsewhere on the page; it does not drag without it. */
     drag?: DragData
-    words?: Partial<Pick<FileListWords, 'select' | 'drag'>>
+    words?: Partial<Pick<FileListWords, 'selectEntry' | 'drag'>>
 }
 
 /**
@@ -365,7 +395,7 @@ function TileFace({
             {onSelectedChange !== undefined && (
                 <span
                     className={cn(
-                        'absolute top-2 left-2 flex rounded-md bg-card/90 p-0.5 shadow-sm transition-opacity',
+                        'absolute top-2 left-2 flex rounded-md bg-card/90 p-0.5 shadow-surface transition-opacity',
                         selected || selecting
                             ? 'opacity-100'
                             : 'opacity-0 group-focus-within/tile:opacity-100 group-hover/tile:opacity-100 pointer-coarse:opacity-100',
@@ -373,7 +403,7 @@ function TileFace({
                     onClick={(event) => event.stopPropagation()}
                 >
                     <Checkbox
-                        aria-label={`${words.select} ${entry.name}`}
+                        aria-label={words.selectEntry(entry.name)}
                         checked={selected}
                         onCheckedChange={(checked) => onSelectedChange(checked)}
                     />
@@ -381,7 +411,7 @@ function TileFace({
             )}
             {source.enabled && (
                 <span
-                    className={cn('absolute top-2 right-2 flex rounded-md bg-card/90 shadow-sm', GRIP_ON_HOVER)}
+                    className={cn('absolute top-2 right-2 flex rounded-md bg-card/90 shadow-surface', GRIP_ON_HOVER)}
                     onClick={(event) => event.stopPropagation()}
                 >
                     <DragSourceGrip source={source} size="icon-xs" label={words.drag(entry.name)} />

@@ -53,13 +53,14 @@ import {
     readDocument,
     SCHEMA_WORDS,
     schemaCompletion,
-    schemaDiagnostics,
     schemaHover,
+    schemaProblems,
     type CodeSchemaWords,
     type PathDiagnostic,
     type SchemaLanguage,
 } from './code/schema'
 import { sharedLink, type SharedDocument } from './code/shared'
+import { editedHere, fromValue, sameLanguage, sameMarks, sameWords, useSteady } from './code/steady'
 import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
 
@@ -72,7 +73,10 @@ type BuiltInLanguage = 'json' | 'yaml' | 'jq' | 'markdown' | 'sql' | 'shell' | '
 /** The languages the editor knows by name: its own, and those the installed plugins give it (see `lib/plugins`). */
 export type CodeLanguageName = BuiltInLanguage | Extract<keyof PluginLanguageNames, string>
 
-/** A language described by its tokens: a CodeMirror stream parser with a name. */
+/**
+ * A language described by its tokens: a CodeMirror stream parser with a name. The editor knows it by
+ * its name, so one written inline in each render is not parsed again; a new name is a new language.
+ */
 export type CodeLanguageSpec = StreamParser<unknown> & { name: string }
 
 /** A language by name, a CodeMirror `LanguageSupport`, or a stream parser to build one from. */
@@ -237,6 +241,11 @@ export function languageForMediaType(mediaType: string | null | undefined): Code
 }
 
 const built = new WeakMap<CodeLanguageSpec, LanguageSupport>()
+
+/** The editable text's name for a screen reader, and its id for a form's label. */
+function contentAttributes(label: string, id: string | undefined): Extension {
+    return EditorView.contentAttributes.of(id === undefined ? { 'aria-label': label } : { 'aria-label': label, id })
+}
 
 function languageExtension(given: CodeLanguage): Extension {
     if (isLazy(given)) return loaded.get(given) ?? []
@@ -660,13 +669,16 @@ export interface CodeEditorProps {
     /**
      * Called with every problem the editor shows (what the schema finds and the marks with a
      * message) each time they change, an empty list once there are none, for a problems list beside it.
+     * With a schema it waits for the schema checker to load; one that cannot load is one error at the
+     * start, saying the document cannot be checked, and is tried again as the document is edited.
      */
     onProblems?: (problems: readonly CodeProblem[]) => void
     /**
      * Hears a JSON or YAML document read into a value, shortly after each edit and once at the start,
-     * for a view drawn from it such as a graph; not called while the text does not read.
+     * for a view drawn from it such as a graph; not called while the text does not read. A YAML
+     * stream of several documents gives the first as `value` and every one in `documents`.
      */
-    onDocument?: (value: unknown) => void
+    onDocument?: (value: unknown, documents?: readonly unknown[]) => void
     /** The words the schema check says, in English unless given. */
     words?: Partial<CodeSchemaWords>
     /** CodeMirror's own words (the find bar, the fold marks), by their English text, to translate them. */
@@ -697,7 +709,8 @@ export interface CodeEditorProps {
  * go to each through `reveal`, which takes a JSON or YAML value's `path` as well as a line, and
  * `onDocument` the document read into a value, for a view drawn from it. `wrap` folds long lines at the editor's edge, for prose such as a prompt.
  * `variant="line"` is a one-line editor at an input's height, such as a query bar, which Enter runs. The value is
- * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
+ * controlled: a new `value` replaces the document without calling `onChange`, and an edit made in
+ * the editor is reported through `onChange`.
  *
  * `doc` edits a document shared with other editors in place of `value`, as a pane and the window
  * it opens into (`WindowedPane`) edit one document: `useSharedDocument` makes one, `useSharedText`
@@ -712,12 +725,12 @@ export function CodeEditor({
     value: givenValue,
     onChange,
     doc,
-    language = 'text',
+    language: givenLanguage = 'text',
     readOnly = false,
     lineNumbers: numberedGiven = true,
     activeLine: activeGiven = true,
     wrap = false,
-    marks = NO_MARKS,
+    marks: givenMarks = NO_MARKS,
     completions,
     languageWords = true,
     links,
@@ -737,7 +750,7 @@ export function CodeEditor({
     reveal,
     onProblems,
     onDocument,
-    words,
+    words: givenWords,
     phrases,
     placeholder,
     label,
@@ -746,6 +759,10 @@ export function CodeEditor({
     className,
     invalid = false,
 }: CodeEditorProps) {
+    // Marks, words and a language spec built afresh in each render are the same props while they say the same.
+    const marks = useSteady(givenMarks, sameMarks)
+    const words = useSteady(givenWords, sameWords)
+    const language = useSteady(givenLanguage, sameLanguage)
     const host = useRef<HTMLDivElement>(null)
     const view = useRef<EditorView | null>(null)
     const value = givenValue ?? ''
@@ -800,14 +817,20 @@ export function CodeEditor({
             const { onDocument: hear, language: lang } = props.current
             if (hear === undefined || (lang !== 'json' && lang !== 'yaml') || view.current !== editor) return
             const read = readDocument(editor.state, lang)
-            if (read !== null && read.broken === undefined) hear(read.value)
+            if (read === null || read.broken !== undefined) return
+            if (read.documents === undefined) hear(read.value)
+            else
+                hear(
+                    read.value,
+                    read.documents.map((document) => document.value),
+                )
         }, wait)
     }
     // The problems last reported, so a change of anything else reports nothing.
     const reported = useRef<string | undefined>(undefined)
     const reportProblems = (state: EditorState) => {
         const tell = props.current.onProblems
-        if (tell === undefined) return
+        if (tell === undefined || checking(state)) return
         const problems = codeProblems(state)
         const key = JSON.stringify(problems)
         if (key === reported.current) return
@@ -827,6 +850,9 @@ export function CodeEditor({
         size: new Compartment(),
         lint: new Compartment(),
         schema: new Compartment(),
+        placeholder: new Compartment(),
+        phrases: new Compartment(),
+        attributes: new Compartment(),
     })
 
     const oneLine = variant === 'line'
@@ -841,16 +867,48 @@ export function CodeEditor({
         .filter((key, index, all) => all.indexOf(key) === index)
         .join(' ')
 
+    /** Why the schema checker failed to load, while it has; a later check loads it again. */
+    const checkFailed = useRef<string | null>(null)
+    const checkLoading = useRef(false)
+    /** Loads the schema checker, unless it is loading, and draws what it finds, or that it cannot check. */
+    const loadChecker = () => {
+        if (checkLoading.current || loadedValidate() !== undefined) return
+        checkLoading.current = true
+        const redraw = () => {
+            checkLoading.current = false
+            const editor = view.current
+            if (editor !== null) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
+        }
+        loadValidate().then(
+            () => {
+                checkFailed.current = null
+                redraw()
+            },
+            (error: unknown) => {
+                checkFailed.current = error instanceof Error ? error.message : String(error)
+                redraw()
+            },
+        )
+    }
+    /** What the schema finds in a state: undefined while the checker loads, an error that it cannot check once it failed to. */
+    const schemaFound = (state: EditorState): PathDiagnostic[] | undefined => {
+        const { schema: against, words, language: lang, deferred: unchecked } = props.current
+        if (against === undefined || (lang !== 'json' && lang !== 'yaml')) return []
+        return schemaProblems(state, lang, against, loadedValidate(), checkFailed.current, { ...SCHEMA_WORDS, ...words }, unchecked)
+    }
+    /** Whether the schema checker is still loading for a schema, so the problems are not known yet. */
+    const checking = (state: EditorState) => schemaFound(state) === undefined
+
     /**
-     * Every diagnostic the editor shows: the marks with a message and what the schema finds, once
-     * the schema checker has loaded.
+     * Every diagnostic the editor shows: the marks with a message and what the schema finds, or
+     * that it cannot check the document once the schema checker failed to load.
      */
     const diagnose = (state: EditorState): Diagnostic[] => {
-        const { marks: given, schema: against, words, language: lang, deferred: unchecked } = props.current
+        const { marks: given, language: lang } = props.current
         const found: PathDiagnostic[] = markDiagnostics(state, given, lang === 'json' || lang === 'yaml' ? lang : undefined)
-        const check = loadedValidate()
-        if (against === undefined || (lang !== 'json' && lang !== 'yaml') || check === undefined) return found
-        return [...found, ...schemaDiagnostics(state, lang, against, check, { ...SCHEMA_WORDS, ...words }, unchecked)]
+        // A checker that failed to load is tried again as the document is checked again.
+        if (checkFailed.current !== null) loadChecker()
+        return [...found, ...(schemaFound(state) ?? [])]
     }
 
     const extensions = {
@@ -964,15 +1022,16 @@ export function CodeEditor({
                     EditorState.languageData.of(() => given),
                     hoverTooltip(describe, { hoverTime: 300 }),
                     THEME,
-                    phrases === undefined ? [] : EditorState.phrases.of(phrases),
-                    placeholder !== undefined ? placeholderText(placeholder) : [],
-                    EditorView.contentAttributes.of(id === undefined ? { 'aria-label': label } : { 'aria-label': label, id }),
+                    parts.phrases.of(phrases === undefined ? [] : EditorState.phrases.of(phrases)),
+                    parts.placeholder.of(placeholder !== undefined ? placeholderText(placeholder) : []),
+                    parts.attributes.of(contentAttributes(label, id)),
                     EditorView.domEventHandlers({ blur: () => void props.current.onBlur?.() }),
                     EditorView.updateListener.of((update) => {
                         if (update.transactions.length > 0) reportProblems(update.state)
                         if (!update.docChanged) return
                         const text = update.state.doc.toString()
-                        report.current?.(text)
+                        // A new `value` put in is the app's own; only an edit made here is reported.
+                        if (editedHere(update.transactions)) report.current?.(text)
                         readSoon(update.view, 300)
                         const lang = props.current.language
                         if (lang === 'json' || lang === 'yaml') setAddress(namedSchema(text, lang))
@@ -1070,8 +1129,18 @@ export function CodeEditor({
     useEffect(() => {
         const editor = view.current
         if (editor === null || doc !== undefined || editor.state.doc.toString() === value) return
-        editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: value } })
+        editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: value }, annotations: fromValue.of(true) })
     }, [value])
+
+    useEffect(() => {
+        view.current?.dispatch({
+            effects: [
+                compartments.current.placeholder.reconfigure(placeholder !== undefined ? placeholderText(placeholder) : []),
+                compartments.current.phrases.reconfigure(phrases === undefined ? [] : EditorState.phrases.of(phrases)),
+                compartments.current.attributes.reconfigure(contentAttributes(label, id)),
+            ],
+        })
+    }, [placeholder, phrases, label, id])
 
     useEffect(() => {
         view.current?.dispatch({ effects: compartments.current.language.reconfigure(languageExtension(language)) })
@@ -1197,18 +1266,7 @@ export function CodeEditor({
 
     // The schema checker loads with the first schema; what it finds is drawn as soon as it is there.
     useEffect(() => {
-        if (schemaLanguage === undefined || loadedValidate() !== undefined) return
-        let live = true
-        loadValidate().then(
-            () => {
-                const editor = view.current
-                if (live && editor !== null) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
-            },
-            () => undefined,
-        )
-        return () => {
-            live = false
-        }
+        if (schemaLanguage !== undefined) loadChecker()
     }, [schemaLanguage])
 
     useEffect(() => {

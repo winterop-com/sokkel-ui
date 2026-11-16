@@ -16,7 +16,7 @@ import type { CalendarCarry, CalendarEventDrag } from './calendar-drag'
 import { landingAt, movedBy, movedTo, resizedBy, snapTo, SNAP_MINUTES, type CalendarEventChange } from './event-change'
 import { useCalendarDrag, useEventKeys } from './event-keys'
 import { EventPopover, useOpenEvent } from './EventPopover'
-import { CALENDAR_WORDS, layoutDay, layoutSpans, type CalendarEvent, type CalendarWords } from './events'
+import { CALENDAR_WORDS, gridMinute, layoutDay, layoutSpans, type CalendarEvent, type CalendarWords } from './events'
 import { followPress } from './follow-press'
 
 export type { CalendarEventChange } from './event-change'
@@ -150,7 +150,7 @@ export function WeekGrid<E extends CalendarEvent>({
         if (box === undefined || carry.point.y < box.top || carry.point.y > box.bottom) return null
         const from = carry.value.day
         if (grab.current === null && carry.start !== null && placed[from] !== undefined) {
-            const top = Math.max(0, differenceInMinutes(event.start, startOfDay(days[from])))
+            const top = isSameDay(event.start, days[from]) ? gridMinute(event.start) : 0
             grab.current = ((carry.start.y - placed[from].top) / hourHeight) * 60 - top
         }
         const at = landingAt(carry.point, placed, hourHeight, grab.current ?? 0, snapMinutes)

@@ -374,8 +374,9 @@ to `plan.md` when it ships.
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
   https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 are republished under the new name, and
   the old `@winterop-com/ui` package is deleted.
-- The first app has adopted it. A PR still merges as soon as the local gates pass and main's CI
-  catches the rest; a release waits for green.
+- The first two apps have adopted it (see Adoption under Next). A PR merges as soon as the local
+  gates pass and main's CI catches the rest; a release does not wait for main's CI either, as
+  `release.yaml` runs the gates itself before it publishes.
 
 ## Example apps
 
@@ -434,25 +435,17 @@ to `plan.md` when it ships.
 - **Parts the app stories still build.** A letter header (avatar, sender, address, time, the
   attachment mark, folding over its body) for Mail;
   one detail sheet for the Workspace, Files and Admin detail panes;
-  the board item's panel with its checklist; a sideways-scrolling chip row with one chosen; a
-  channel row (avatar, name, followers, Follow) and an action cluster for a watch page; checkboxes
-  with a color dot for calendar toggles.
+  the board item's panel with its checklist; checkboxes with a color dot for calendar toggles.
 - **The records app's conversion.** `examples/records/GAPS.md` maps every screen of the records app
-  onto the library and ends with the work left, in order:
-    - a free-form detail under an opened `DataTable` row
-    - more modes for the entry grid
-    - `TreeSelect` scopes
-    - counts beside `BarList`'s bars
-
-    A `--color-*` name exists only once a class uses it, so a prop that takes a CSS color takes the
-    raw token (`var(--status-running)`); decide whether every color is emitted.
+  onto the library; every item in it is closed. One question is left: a `--color-*` name exists
+  only once a class uses it, so a prop that takes a CSS color takes the raw token
+  (`var(--status-running)`); decide whether every color is emitted.
 
 - **Gaps the examples found (2026-11-09)**, still open:
     - **Frame:**
         - a rail that shows its places above its body, not behind a row
         - ⌘K refused while a closing dialog still counts as a layer
     - **Tables:**
-        - `DataTable` heads that take a node (a type badge)
         - a list variant with its own search
         - `stack: 'lead'` passing a press on a non-control through to the row
         - blank space under stacked cards
@@ -484,9 +477,6 @@ to `plan.md` when it ships.
         them in Tauri on the system WebKit, as in Chromium. Native HLS (MPEG-TS, `startAt`, stalls and
         giving up) and full screen with a cover, in the browser and through a desktop call, were
         checked headless in WebKit the same day.
-- **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
-  ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
-  thin panels over the kinds, adding what the kinds lack first.
 
 ## 1.0
 

@@ -22,7 +22,7 @@ import { Markdown, type MarkdownInlineCode, type MarkdownWords } from './Markdow
 import { useCopy } from '../hooks/use-copy'
 import { Problem } from './Problem'
 import { Timeline, type TimelineEvent } from './Timeline'
-import { ToolCalls, type ToolCallEntry } from './ToolCall'
+import { ToolCalls, type ToolCallEntry, type ToolCallsWords } from './ToolCall'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { Button } from './ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
@@ -89,6 +89,8 @@ export interface AssistantReplyWords {
     speak: Partial<SpeakButtonWords>
     /** The words the answer's markdown says: its callouts, code blocks and diagrams. */
     markdown: Partial<MarkdownWords>
+    /** The words of the tool calls opened: the headings over each call's arguments and result. */
+    calls: Partial<ToolCallsWords>
 }
 
 export { wordCount }
@@ -123,6 +125,7 @@ const WORDS: AssistantReplyWords = {
     player: {},
     speak: {},
     markdown: {},
+    calls: {},
 }
 
 /** The answer read aloud: a recording the model made of it. */
@@ -299,7 +302,9 @@ export function AssistantReply({
     )
 
     const tools =
-        calls !== undefined && calls.length > 0 ? <ToolCalls calls={calls} summary={summary ?? words.summary(calls)} /> : undefined
+        calls !== undefined && calls.length > 0 ? (
+            <ToolCalls calls={calls} summary={summary ?? words.summary(calls)} words={words.calls} />
+        ) : undefined
 
     const written = content !== undefined && content !== ''
     const thought = reasoning !== undefined && reasoning !== ''
@@ -404,7 +409,10 @@ export function AssistantReply({
                     </span>
                 )}
                 <CopyAction value={content} onCopy={onCopy} words={words} />
-                {speak !== undefined && <SpeakButton load={speak} variant="labeled" words={words.speak} />}
+                {speak !== undefined && (
+                    // Keyed by the text, so a new version fetches its own audio rather than playing the last one's.
+                    <SpeakButton key={content} load={speak} variant="labeled" words={words.speak} />
+                )}
                 {onRetry !== undefined && (
                     <Button variant="ghost" disabled={waiting} onClick={onRetry}>
                         <RotateCcw aria-hidden />

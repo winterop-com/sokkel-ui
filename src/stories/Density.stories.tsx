@@ -28,7 +28,9 @@ export default meta
 
 type Story = StoryObj<typeof RunsPage>
 
+/** The Runs page at the regular density. */
 export const Regular: Story = { globals: { density: 'regular' } }
+/** The Runs page at the compact density, every distance on it tighter. */
 export const Compact: Story = { globals: { density: 'compact' } }
 
 const PROJECTS = [

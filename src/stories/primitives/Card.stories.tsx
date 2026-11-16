@@ -14,6 +14,7 @@ function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** A card at both sizes with a title, action, content and foot, one with a header and content only, and one with its header as a bar. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -101,6 +102,7 @@ const PROJECTS = [
     },
 ] as const
 
+/** Project cards in a grid, each with its name or code, its people and a description. */
 export const Projects: StoryObj = {
     render: () => (
         <Columns count={3} gap="lg">

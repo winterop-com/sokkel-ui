@@ -41,7 +41,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v5
-            - run: npm install -g bun
+            - run: npm install -g "bun@$(cat .bun-version)"
             - run: bun install --frozen-lockfile
             - run: bun scripts/build-tokens.ts --check
             - run: bun run components -- --check
@@ -72,7 +72,7 @@ jobs:
             CI: '1'
         steps:
             - uses: actions/checkout@v5
-            - run: npm install -g bun
+            - run: npm install -g "bun@$(cat .bun-version)"
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
             - run: bunx playwright test e2e/layout.spec.ts --shard=${{ matrix.shard }}/2

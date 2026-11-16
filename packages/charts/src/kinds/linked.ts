@@ -1,3 +1,4 @@
+import { extent } from '../data'
 import { textWidth, tooltipMarkup, withAlpha, type ChartLook } from '../look'
 import { niceExtent } from '../scales'
 import { farCorners, fading, tickWriter } from './axes'
@@ -44,7 +45,8 @@ export function linkedLayout(weights: readonly number[]): { top: number | string
 /** The widest tick label a value axis over these figures draws, in pixels, with three or so ticks from zero. */
 function widestTick(values: readonly (number | null)[], write: (value: number) => string, size: number): number {
     const numbers = values.filter((value): value is number => value !== null)
-    const { min, max, interval } = niceExtent([Math.min(0, ...numbers), Math.max(0, ...numbers)], 3)
+    const [low, high] = extent(numbers) ?? [0, 0]
+    const { min, max, interval } = niceExtent([Math.min(0, low), Math.max(0, high)], 3)
     let widest = 0
     // One step past the end too, as the axis may round up further when the zoom shows a part.
     for (let tick = min; tick <= max + interval / 2; tick += interval) widest = Math.max(widest, textWidth(write(tick), size))

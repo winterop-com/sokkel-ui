@@ -46,6 +46,7 @@ function Otp({
 const meta: Meta = { title: 'Primitives/Inputs/InputOTP', parameters: { frame: 'column' } }
 export default meta
 
+/** Six digits split in two, four digits, and a code filled in. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -72,6 +73,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A code disabled, refused as invalid, and empty. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -94,6 +96,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** A deletion confirmed with an authenticator's six-digit code, the Delete button shut until it is complete. */
 export const ConfirmDelete: StoryObj = {
     render: () => (
         <Stack gap="lg" className="max-w-sm rounded-lg border border-border p-4">

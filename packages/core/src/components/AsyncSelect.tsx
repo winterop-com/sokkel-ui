@@ -132,6 +132,38 @@ export function nearEnd(list: { scrollTop: number; clientHeight: number; scrollH
     return list.scrollTop + list.clientHeight >= list.scrollHeight - margin
 }
 
+/**
+ * One option made at a time, and whether a made one may still be applied: `start` gives a ticket,
+ * or null while one is being made, so the create row cannot be pressed twice; `pick` counts a value
+ * picked meanwhile; `finish` frees the gate and says whether nothing was picked since its ticket.
+ */
+export function createGate() {
+    let busy = false
+    let picks = 0
+    return {
+        start: (): number | null => {
+            if (busy) return null
+            busy = true
+            return picks
+        },
+        pick: () => {
+            picks += 1
+        },
+        finish: (ticket: number): boolean => {
+            busy = false
+            return ticket === picks
+        },
+        fail: () => {
+            busy = false
+        },
+    }
+}
+
+/** The values chosen with a made option added, unless one with its key is chosen already. */
+export function withCreated<T>(chosen: readonly T[], made: T, key: (item: T) => string): T[] {
+    return chosen.some((item) => key(item) === key(made)) ? [...chosen] : [...chosen, made]
+}
+
 /** Whether to offer making an option of the typed text: there is text, and no option is called that. */
 export function offersCreate<T>(text: string, items: readonly T[], label: (item: T) => string): boolean {
     const wanted = text.trim().toLocaleLowerCase('en-US')
@@ -295,6 +327,12 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
     const listRef = useRef<HTMLDivElement | null>(null)
     const inputRef = useRef<HTMLInputElement | null>(null)
     const anchorRef = useRef<HTMLDivElement | null>(null)
+    const [gate] = useState(createGate)
+    // The values chosen now, so an option made meanwhile joins them rather than those at its press.
+    const chosenRef = useRef<readonly T[]>(props.multiple === true ? props.value : [])
+    useLayoutEffect(() => {
+        if (props.multiple === true) chosenRef.current = props.value
+    })
     useEffect(() => {
         loadRef.current = load
     }, [load])
@@ -377,9 +415,14 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
     const keyOf = (item: T | Creation) => (item instanceof Creation ? `create:${item.text}` : itemKey(item))
     const labelOf = (item: T | Creation) => (item instanceof Creation ? item.text : itemLabel(item))
 
-    /** Makes the typed option through the app and hands it on, or says it could not. */
-    const create = (text: string, then: (made: T) => void) => {
+    /**
+     * Makes the typed option through the app and hands it on with whether nothing was picked
+     * meanwhile, or says it could not. A press while one is being made does nothing.
+     */
+    const create = (text: string, then: (made: T, unpicked: boolean) => void) => {
         if (onCreate === undefined) return
+        const ticket = gate.start()
+        if (ticket === null) return
         setCreating('busy')
         Promise.resolve()
             .then(() => onCreate(text))
@@ -387,9 +430,12 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                 (made) => {
                     setCreating(null)
                     setQuery('')
-                    then(made)
+                    then(made, gate.finish(ticket))
                 },
-                () => setCreating('failed'),
+                () => {
+                    gate.fail()
+                    setCreating('failed')
+                },
             )
     }
 
@@ -506,8 +552,11 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     const picked = next as (T | Creation)[]
                     const made = picked.find((item): item is Creation => item instanceof Creation)
                     const kept = picked.filter((item): item is T => !(item instanceof Creation))
-                    if (made === undefined) return onChange(kept)
-                    create(made.text, (option) => onChange([...kept, option]))
+                    if (made === undefined) {
+                        gate.pick()
+                        return onChange(kept)
+                    }
+                    create(made.text, (option) => onChange(withCreated(chosenRef.current, option, itemKey)))
                 }}
                 onOpenChange={(next, details) => {
                     // Picking keeps the list open, so several values are picked in a row.
@@ -589,7 +638,8 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
             value={value}
             onValueChange={(next) => {
                 const picked = next as T | Creation | null
-                if (picked instanceof Creation) return create(picked.text, (option) => onChange(option))
+                if (picked instanceof Creation) return create(picked.text, (option, unpicked) => unpicked && onChange(option))
+                gate.pick()
                 onChange(picked)
             }}
             onOpenChange={setOpen}

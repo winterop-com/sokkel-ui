@@ -34,6 +34,7 @@ function Sample({ variant, orientation }: { variant: 'default' | 'line'; orienta
     )
 }
 
+/** Tabs in the default and line looks, laid across and down. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -61,6 +62,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Tabs with icons, one disabled with the reason said in its panel. */
 export const States: StoryObj = {
     render: () => (
         <Stack gap="sm">
@@ -93,6 +95,7 @@ const FILES: FileEntry[] = [
     { id: 'orders-2026-09', name: 'orders-2026-09.csv', kind: 'table', size: 2_200_000, modified: 'Oct 1, 02:03', owner: 'scheduler' },
 ]
 
+/** Tabs under a job's page header in the line look, the Files tab open on its file list. */
 export const JobPage: StoryObj = {
     render: () => (
         <Stack gap="lg">

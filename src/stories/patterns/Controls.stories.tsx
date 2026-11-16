@@ -335,9 +335,13 @@ export const Playground: StoryObj<{ variant: SegmentedVariant; size: 'sm' | 'md'
     },
 }
 
+/** Each variant of Segmented in the same three settings rows, at its natural width, lettered to pick from. */
 export const SegmentedVariants: StoryObj = { name: 'Segmented, options', render: () => <SegmentedOptions /> }
+/** The same settings with each label above its control, every control as wide as its column. */
 export const SegmentedStackedLayout: StoryObj = { name: 'Segmented, stacked', render: () => <SegmentedStacked /> }
+/** Settings rows whose controls fill one shared column, so every choice lines up under the others. */
 export const SegmentedAligned: StoryObj = { name: 'Segmented, aligned', render: () => <SegmentedSettings fill /> }
+/** Settings rows whose controls keep their natural width, each as wide as its own options. */
 export const SegmentedChoice: StoryObj = { name: 'Segmented, natural width', render: () => <SegmentedSettings fill={false} /> }
 /** Two options off on their own, each with a tooltip on hover and focus that says why. */
 export const SegmentedOffOptions: StoryObj = { name: 'Segmented, off options', render: () => <SegmentedOff /> }
@@ -345,5 +349,7 @@ export const SegmentedOffOptions: StoryObj = { name: 'Segmented, off options', r
 export const SegmentedCountsStory: StoryObj = { name: 'Segmented, counts', render: () => <SegmentedCounts /> }
 /** Eight options in cards a third of the width: they wrap onto more lines rather than overflow, each line shared out evenly. */
 export const SegmentedWrap: StoryObj = { name: 'Segmented, wrapping', render: () => <SegmentedWrapping /> }
+/** Segmented as a form field, labeled by its Field: when a job notifies. */
 export const SegmentedField: StoryObj = { name: 'Form field', render: () => <SegmentedInForm /> }
+/** Copy buttons beside an id, an address and a trace on their lines, at each size, and one that says Copy link. */
 export const Copy: StoryObj = { name: 'Copy button', render: () => <CopyLines /> }

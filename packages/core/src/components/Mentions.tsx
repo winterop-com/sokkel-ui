@@ -1,8 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type RefObject } from 'react'
 
 import { cn } from '../lib/cn'
+import { composing } from '../lib/keys'
 import { POPUP } from '../lib/popup'
-import { handleOf, insertMention, matchPeople, mentionQuery, mentionsIn, type MentionPerson } from '../lib/mentions'
+import { handleOf, insertMention, matchPeople, mentionKey, mentionQuery, mentionsIn, type MentionPerson } from '../lib/mentions'
 import { PersonAvatar } from './PersonAvatar'
 import { Spinner } from './ui/spinner'
 
@@ -127,7 +128,8 @@ export interface Mentions {
  * Suggests people at the caret as an `@` is typed in a composer's text area: from the app's list,
  * matched by name and handle, or from its search, the last answer winning. The arrow keys move
  * through them, Enter or Tab puts the one chosen in as `@handle` with a space after it, and Escape
- * closes them until the next `@`.
+ * closes them until the next `@`. While the search has not answered what is typed, Enter and Tab
+ * pick no one, so neither a person from an older answer nor the raw `@` text goes in.
  */
 export function useMentions({
     options,
@@ -173,9 +175,13 @@ export function useMentions({
         update(value, value.length)
     })
 
-    // The app's search answers each query; an answer to an older one is dropped.
+    // The app's search answers each query; an answer to an older one is dropped, and every answer once the list closes.
     useEffect(() => {
-        if (search === undefined || query === null) return
+        if (search === undefined) return
+        if (query === null) {
+            setAnswer(null)
+            return
+        }
         const controller = new AbortController()
         search(query.query, { signal: controller.signal }).then(
             (found) => {
@@ -243,21 +249,19 @@ export function useMentions({
         onInput: update,
         onSelect: update,
         onKeyDown: (event) => {
-            if (!open || event.nativeEvent.isComposing) return false
-            if (event.key === 'Escape') {
+            if (!open || composing(event)) return false
+            const move = mentionKey(event.key, found.length, searching)
+            if (move === undefined) return false
+            if (move === 'close') {
                 dismissed.current = query.start
                 setQuery(null)
-            } else if (found.length === 0) {
-                return false
-            } else if (event.key === 'ArrowDown') {
+            } else if (move === 'down') {
                 // The arrows stop at the first and last people, as every list of choices does.
                 setActive((current) => Math.min(current + 1, found.length - 1))
-            } else if (event.key === 'ArrowUp') {
+            } else if (move === 'up') {
                 setActive((current) => Math.max(current - 1, 0))
-            } else if (event.key === 'Enter' || event.key === 'Tab') {
+            } else if (move === 'pick') {
                 pick(found[Math.min(active, found.length - 1)])
-            } else {
-                return false
             }
             event.preventDefault()
             event.stopPropagation()

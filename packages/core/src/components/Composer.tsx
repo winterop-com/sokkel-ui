@@ -3,6 +3,7 @@ import { ArrowUp, Check, CircleAlert, FileText, Mic, Paperclip, Play, Square, X 
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { composing } from '../lib/keys'
 import { insertTranscript, useDictation, type Dictation, type DictationOptions } from '../hooks/use-dictation'
 import { DialogShell } from './DialogShell'
 import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
@@ -400,7 +401,7 @@ export function Composer({
                                         type="button"
                                         aria-label={`${pending ? words.cancel : words.remove} ${attachment.name}`}
                                         onClick={() => drop(attachment.id)}
-                                        className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-border-strong bg-popover text-muted-foreground opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:text-foreground pointer-coarse:opacity-100"
+                                        className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-border-strong bg-popover text-muted-foreground opacity-0 shadow-surface transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:text-foreground pointer-coarse:opacity-100"
                                     >
                                         <X className="size-3" aria-hidden />
                                     </button>
@@ -429,7 +430,7 @@ export function Composer({
                 }}
                 onKeyDown={(event) => {
                     if (mention.onKeyDown(event)) return
-                    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
+                    if (event.key !== 'Enter' || event.shiftKey || composing(event)) return
                     event.preventDefault()
                     if (ready) onSend()
                 }}

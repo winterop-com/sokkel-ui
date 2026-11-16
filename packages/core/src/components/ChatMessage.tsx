@@ -304,7 +304,7 @@ export function ChatMessage({
                                                     size="icon-xs"
                                                     variant="secondary"
                                                     label={words.dragFile(file.name)}
-                                                    className={cn('absolute top-1.5 right-1.5 shadow-sm', GRIP_ON_HOVER)}
+                                                    className={cn('absolute top-1.5 right-1.5 shadow-surface', GRIP_ON_HOVER)}
                                                 />
                                             </span>
                                         ) : (
