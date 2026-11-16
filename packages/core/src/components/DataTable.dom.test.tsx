@@ -266,3 +266,53 @@ describe('stacked cards with a free title', () => {
         }
     })
 })
+
+describe('a table first drawn hidden', () => {
+    it('measures its content columns once it is shown', async () => {
+        // Hidden, every box is 0 wide; shown, the box is 1000 wide and each cell 120. The observers are
+        // called by hand, as happy-dom lays nothing out.
+        let hidden = true
+        const heard = new Set<() => void>()
+        class Observer {
+            constructor(private readonly call: () => void) {}
+            observe() {
+                heard.add(this.call)
+            }
+            unobserve() {}
+            disconnect() {
+                heard.delete(this.call)
+            }
+        }
+        const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
+        const rect = Element.prototype.getBoundingClientRect
+        vi.stubGlobal('ResizeObserver', Observer)
+        Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => (hidden ? 0 : 1000) })
+        Element.prototype.getBoundingClientRect = function (this: Element) {
+            return DOMRect.fromRect({ width: hidden || !this.hasAttribute('data-track') ? 0 : 120, height: 40 })
+        }
+        try {
+            const sized: DataColumn<Job>[] = [
+                { id: 'name', header: 'Name', width: 'content', cell: (job) => job.name },
+                { id: 'id', header: 'Id', width: '1fr', cell: (job) => job.id },
+            ]
+            const at = await mount(
+                <div style={{ height: 400, overflow: 'auto' }}>
+                    <DataTable columns={sized} rows={jobs} rowKey={(job) => job.id} />
+                </div>,
+            )
+            const template = () => at.querySelector<HTMLElement>('[data-row]')?.style.gridTemplateColumns ?? ''
+            expect(template()).toContain('max-content')
+            hidden = false
+            await act(async () => {
+                for (const call of heard) call()
+            })
+            await settle()
+            expect(template()).not.toContain('max-content')
+            expect(template()).toContain('120px')
+        } finally {
+            vi.unstubAllGlobals()
+            Element.prototype.getBoundingClientRect = rect
+            if (width !== undefined) Object.defineProperty(HTMLElement.prototype, 'clientWidth', width)
+        }
+    })
+})

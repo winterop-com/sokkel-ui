@@ -2002,7 +2002,9 @@ export function DataTable<T>({
                 : undefined,
         [measuresText],
     )
-    useLayoutEffect(() => setMeasuring(true), [rows, contentKey, rowHeight, columnHeads, fontLoads])
+    // A table first drawn hidden measures nothing, so it measures again once it has a width.
+    const laidOut = view.width > 0
+    useLayoutEffect(() => setMeasuring(true), [rows, contentKey, rowHeight, columnHeads, fontLoads, laidOut])
     const contentCells = (box: HTMLElement, column: string) =>
         box.querySelectorAll<HTMLElement>(`[role="gridcell"][data-track="${CSS.escape(column)}"] > :last-child`)
     useLayoutEffect(() => {
