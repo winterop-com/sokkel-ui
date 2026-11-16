@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type RefObject } from 'react'
 
 /** The tokens series take in order when they name no color of their own. */
 export const SERIES_ORDER = ['chart-2', 'chart-3', 'chart-4', 'kind-teal', 'kind-pink', 'kind-green', 'kind-blue', 'chart-5'] as const
@@ -49,20 +49,39 @@ export function tokenColor(token: string): string {
     return alpha === 1 ? `var(--${name})` : `color-mix(in oklab, var(--${name}) ${String(Math.round(alpha * 100))}%, transparent)`
 }
 
-function readKey(): string {
+/** The nearest element around this one that wears a theme of its own, or null where the page's theme holds. */
+const scopeOf = (element: Element | null): HTMLElement | null => element?.closest<HTMLElement>('[data-theme-scope]') ?? null
+
+function readKey(scope: HTMLElement | null = null): string {
     const root = document.documentElement
-    return `${root.className}|${root.getAttribute('data-theme') ?? ''}|${root.getAttribute('style') ?? ''}`
+    const page = `${root.className}|${root.getAttribute('data-theme') ?? ''}|${root.getAttribute('style') ?? ''}`
+    if (scope === null) return page
+    const dark = scope.closest('.dark') !== null ? 'dark' : 'light'
+    return `${page}|${scope.getAttribute('data-theme-scope') ?? ''}|${dark}|${scope.className}|${scope.getAttribute('style') ?? ''}`
 }
 
-/** A key that changes whenever the document's scheme, theme or inline token overrides change. */
-function useLookKey(): string {
-    const [key, setKey] = useState(readKey)
+const WATCHED = ['class', 'data-theme', 'data-theme-scope', 'style']
+
+/**
+ * A key that changes whenever the scheme, theme or inline token overrides change: the document's,
+ * and those of the `data-theme-scope` around the element, where there is one.
+ */
+function useLookKey(element: RefObject<HTMLElement | null>): { key: string; scope: HTMLElement | null } {
+    const [held, setHeld] = useState(() => ({ key: readKey(), scope: null as HTMLElement | null }))
     useEffect(() => {
-        const observer = new MutationObserver(() => setKey(readKey()))
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] })
+        const scope = scopeOf(element.current)
+        const update = () =>
+            setHeld((last) => {
+                const key = readKey(scope)
+                return last.key === key && last.scope === scope ? last : { key, scope }
+            })
+        update()
+        const observer = new MutationObserver(update)
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: WATCHED })
+        if (scope !== null) observer.observe(scope, { attributes: true, attributeFilter: WATCHED })
         return () => observer.disconnect()
-    }, [])
-    return key
+    }, [element])
+    return held
 }
 
 /** The hidden element colors are resolved on, kept in the page so a lookup restyles it alone, not the page around it. */
@@ -78,17 +97,34 @@ function probeElement(): HTMLSpanElement {
     return probe
 }
 
-/** Resolves a CSS color expression to hex by painting it on a one-pixel canvas. */
-function makeHex(): (css: string) => string {
+/** A CSS color as the browser computes it: in the page's theme, or inside a theme scope for its tokens. */
+function computedColor(css: string, scope: HTMLElement | null): string {
+    if (scope === null || !scope.isConnected) {
+        const element = probeElement()
+        element.style.color = css
+        return getComputedStyle(element).color
+    }
+    // Held in the scope only while it is read, so no element of the app's gains a child it does not know.
+    const holder = document.createElement('span')
+    holder.style.display = 'none'
+    holder.style.color = css
+    scope.append(holder)
+    try {
+        return getComputedStyle(holder).color
+    } finally {
+        holder.remove()
+    }
+}
+
+/** Resolves a CSS color expression to hex by painting it on a one-pixel canvas, in the scope `where` gives. */
+function makeHex(where: () => HTMLElement | null): (css: string) => string {
     const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
     const cache = new Map<string, string>()
     return (css) => {
         const known = cache.get(css)
         if (known !== undefined) return known
         if (context === null) return '#888888'
-        const element = probeElement()
-        element.style.color = css
-        const computed = getComputedStyle(element).color
+        const computed = computedColor(css, where())
         context.clearRect(0, 0, 1, 1)
         context.fillStyle = computed
         context.fillRect(0, 0, 1, 1)
@@ -99,34 +135,39 @@ function makeHex(): (css: string) => string {
     }
 }
 
-/** The look last read, which every chart shares until the key changes. */
-let latest: ChartLook | undefined
+/** The looks last read, by key, which every chart in the same theme shares until its key changes. */
+const looks = new Map<string, ChartLook>()
+
+/** The scope each look resolves its colors in: the last one mounted with its key, as the first may since have gone. */
+const scopes = new Map<string, HTMLElement | null>()
 
 /**
- * Resolves the chart look against the document as it is styled, once per key: each color it
- * resolves forces a style pass, so charts mounting together share one look rather than each
- * reading its own.
+ * Resolves the chart look against the document as it is styled, or inside a theme scope, once per
+ * key: each color it resolves forces a style pass, so charts mounting together share one look
+ * rather than each reading its own.
  */
-export function readLook(key = readKey()): ChartLook {
-    if (latest?.key === key) return latest
-    const hex = makeHex()
-    const style = getComputedStyle(document.documentElement)
+export function readLook(key = readKey(), scope: HTMLElement | null = null): ChartLook {
+    if (scope?.isConnected === true || !scopes.has(key)) scopes.set(key, scope)
+    const known = looks.get(key)
+    if (known !== undefined) return known
+    const hex = makeHex(() => scopes.get(key) ?? null)
+    const style = getComputedStyle(scope?.isConnected === true ? scope : document.documentElement)
     const token = (name: string) => {
         const { name: base, alpha } = tokenAlpha(name)
         const solid = hex(`var(--${base})`)
         return alpha === 1 ? solid : withAlpha(solid, alpha)
     }
     const mix = (css: string, percent: number, base = 'var(--card)') => hex(`color-mix(in oklab, ${css} ${percent}%, ${base})`)
-    const rem = Number.parseFloat(style.fontSize) || 16
+    const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
     const pixels = (name: string, fallback: number) => {
         const value = style.getPropertyValue(`--${name}`).trim()
         const number = Number.parseFloat(value)
         if (Number.isNaN(number)) return fallback
         return value.endsWith('rem') ? number * rem : number
     }
-    latest = {
+    const look: ChartLook = {
         key,
-        dark: document.documentElement.classList.contains('dark'),
+        dark: (scope ?? document.documentElement).closest('.dark') !== null,
         font: style.getPropertyValue('--typeface-sans').trim() || 'sans-serif',
         mono: style.getPropertyValue('--typeface-mono').trim() || 'monospace',
         foreground: token('foreground'),
@@ -150,12 +191,22 @@ export function readLook(key = readKey()): ChartLook {
         ramp: (name, steps = 6) =>
             Array.from({ length: steps }, (_, index) => mix(tokenColor(name), Math.round(12 + (88 * index) / Math.max(1, steps - 1)))),
     }
-    return latest
+    // A page wears a few themes at most; past that the oldest look is let go.
+    if (looks.size >= 16) {
+        const oldest = looks.keys().next().value as string
+        looks.delete(oldest)
+        scopes.delete(oldest)
+    }
+    looks.set(key, look)
+    return look
 }
 
-/** The chart look, read again when the scheme, the theme or a token override changes, once fonts have loaded. */
-export function useChartLook(): ChartLook | null {
-    const key = useLookKey()
+/**
+ * The chart look for the element, read in the `data-theme-scope` around it where there is one, and
+ * read again when the scheme, the theme or a token override changes, once fonts have loaded.
+ */
+export function useChartLook(element: RefObject<HTMLElement | null>): ChartLook | null {
+    const { key, scope } = useLookKey(element)
     const [fonts, setFonts] = useState(false)
     useEffect(() => {
         let live = true
@@ -164,7 +215,7 @@ export function useChartLook(): ChartLook | null {
             live = false
         }
     }, [])
-    return useMemo(() => (fonts ? readLook(key) : null), [fonts, key])
+    return useMemo(() => (fonts ? readLook(key, scope) : null), [fonts, key, scope])
 }
 
 /** A hex color with an alpha. */

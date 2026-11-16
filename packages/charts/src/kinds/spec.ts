@@ -8,6 +8,13 @@ import { tokenColor, type ChartLook } from '../look'
  * `x`'s labels along an axis, combine `y` by `aggregate` and split the rows into series by
  * `series`.
  */
+/** A histogram's bins by width: how wide each is, and where the first starts and how many there are where they are fixed. */
+export interface HistogramBins {
+    width: number
+    start?: number
+    count?: number
+}
+
 export interface ChartSpec {
     /** The rows the chart reads, one record of named fields each. */
     rows: readonly Row[]
@@ -81,8 +88,11 @@ export interface ChartSpec {
     total?: string
     /** A scatter's axes, or a line's, an area's or a step's value axis, fitted to the figures rather than starting at zero. */
     fit?: boolean
-    /** How many bins a histogram splits its numbers into, or how wide each is. */
-    bins?: number | { width: number }
+    /**
+     * How many bins a histogram splits its numbers into, or how wide each is; with `start` and
+     * `count` too, the edges themselves, as `ChartGrid` gives each of its charts so they bin alike.
+     */
+    bins?: number | HistogramBins
     /** Steps along the value axis: a gauge's thresholds, a bullet's qualitative bands. */
     steps?: readonly ChartStep[]
     /** Where the value axis starts, for a kind that fixes it, such as a gauge's dial. */

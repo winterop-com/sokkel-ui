@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react'
 import type { DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { useLegendEntries, type LegendEntries } from './chart-legend'
+import { extent } from './data'
 
 // The table mode's table loads the first time a legend is drawn as one, so a list carries none of it.
 const LegendTable = lazy(() => import('./legend-table').then((module) => ({ default: module.LegendTable })))
@@ -35,10 +36,11 @@ const WORDS: LegendWords = { series: 'Series', min: 'Min', max: 'Max', avg: 'Avg
 /** The min, max, mean and last of a series' values, leaving out gaps. */
 export function legendStats(values: readonly (number | null | undefined)[]): Record<LegendStat, number | null> {
     const numbers = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
-    if (numbers.length === 0) return { min: null, max: null, avg: null, current: null }
+    const span = extent(numbers)
+    if (span === null) return { min: null, max: null, avg: null, current: null }
     return {
-        min: Math.min(...numbers),
-        max: Math.max(...numbers),
+        min: span[0],
+        max: span[1],
         avg: numbers.reduce((sum, value) => sum + value, 0) / numbers.length,
         current: numbers[numbers.length - 1],
     }

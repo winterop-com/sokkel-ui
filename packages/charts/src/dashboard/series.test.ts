@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { pivot } from '../data'
-import { panelFormat, seriesSpec } from './series'
+import { heatmapRows, panelFormat, seriesSpec } from './series'
 
 describe('seriesSpec', () => {
     const spec = seriesSpec(
@@ -41,5 +41,22 @@ describe('panelFormat', () => {
         expect([fixed.format?.(42), fixed.unit]).toEqual(['42.0', '%'])
         const own = panelFormat('%', 1, (value) => `${String(value)} runs`)
         expect([own.format?.(3), own.unit, own.axes]).toEqual(['3 runs', undefined, undefined])
+    })
+})
+
+describe('heatmapRows', () => {
+    it('keeps every column and row in place, those with no cells too', () => {
+        const x = ['mon', 'tue', 'wed']
+        const y = ['api', 'worker']
+        const rows = heatmapRows(x, y, [
+            [0, 0, 3],
+            [2, 0, 4],
+        ])
+        const { categories, series } = pivot({ rows, x: 'category', y: 'value', series: 'series', order: x, seriesOrder: [...y].reverse() })
+        expect(categories).toEqual(['mon', 'tue', 'wed'])
+        expect(series).toEqual([
+            { name: 'worker', values: [null, null, null] },
+            { name: 'api', values: [3, null, 4] },
+        ])
     })
 })

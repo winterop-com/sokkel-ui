@@ -14,11 +14,38 @@ export function numberOf(value: unknown): number | null {
     return null
 }
 
-/** A field's value as a label: what a category, a series or a slice is called. */
+const two = (value: number) => String(value).padStart(2, '0')
+
+/**
+ * A date by its local calendar, as the reader's clock reads it: `YYYY-MM-DD` at midnight, and with
+ * its time after it otherwise, `YYYY-MM-DD HH:MM`, seconds too where it has them.
+ */
+function dateLabel(date: Date): string {
+    const day = `${String(date.getFullYear()).padStart(4, '0')}-${two(date.getMonth() + 1)}-${two(date.getDate())}`
+    const [hours, minutes, seconds] = [date.getHours(), date.getMinutes(), date.getSeconds()]
+    if (hours === 0 && minutes === 0 && seconds === 0) return day
+    return `${day} ${two(hours)}:${two(minutes)}${seconds === 0 ? '' : `:${two(seconds)}`}`
+}
+
+/** A field's value as a label: what a category, a series or a slice is called. A date reads by its local day, and its time when not midnight. */
 export function labelOf(value: unknown): string {
     if (value === null || value === undefined) return ''
-    if (value instanceof Date) return value.toISOString().slice(0, 10)
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? '' : dateLabel(value)
     return String(value)
+}
+
+/**
+ * The least and greatest of some numbers, or null when there are none. A loop rather than a spread
+ * into `Math.min`, which runs out of stack from about 125,000 values.
+ */
+export function extent(values: Iterable<number>): [number, number] | null {
+    let low = Infinity
+    let high = -Infinity
+    for (const value of values) {
+        if (value < low) low = value
+        if (value > high) high = value
+    }
+    return low > high ? null : [low, high]
 }
 
 /** The value at a fraction of the way through sorted numbers, interpolated between neighbors. */
@@ -36,8 +63,8 @@ export function aggregate(values: readonly number[], how: Aggregate): number | n
     if (values.length === 0) return null
     if (how === 'sum') return values.reduce((sum, value) => sum + value, 0)
     if (how === 'avg') return values.reduce((sum, value) => sum + value, 0) / values.length
-    if (how === 'min') return Math.min(...values)
-    if (how === 'max') return Math.max(...values)
+    if (how === 'min') return (extent(values) as [number, number])[0]
+    if (how === 'max') return (extent(values) as [number, number])[1]
     const sorted = [...values].sort((a, b) => a - b)
     return quantile(sorted, how === 'median' ? 0.5 : 0.9)
 }

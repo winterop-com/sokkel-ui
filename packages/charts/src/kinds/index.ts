@@ -68,5 +68,6 @@ export type {
     ChartStep,
     ChartWords,
     GaugeDial,
+    HistogramBins,
     LinkedPanel,
 } from './spec'

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import {
     layoutGraph,
@@ -9,6 +9,9 @@ import {
     type GraphShape,
     type PlacedGraph,
 } from './layout'
+
+/** How long a graph fitted to its room waits for the room to stop changing before elk lays it out again, in milliseconds. */
+const RESIZE_REST = 150
 
 /** A placed graph, and whether elk has answered for it. */
 export interface GraphPlacement extends PlacedGraph {
@@ -21,7 +24,8 @@ export interface GraphPlacement extends PlacedGraph {
  * when its signature changes (its nodes, their sizes, its edges, the direction, routing and spacing),
  * so a status changing on a node moves nothing. If elk fails, the rank layout stays and the placement
  * still settles. While `ready` is false, as it is until the node sizes are measured in their fonts,
- * elk is not asked.
+ * elk is not asked. A placement a newer signature supersedes is given up on between elk's tries, and
+ * a graph cut to its room waits for the room to rest before it is laid out again.
  */
 export function useGraphLayout(
     shape: GraphShape,
@@ -32,19 +36,28 @@ export function useGraphLayout(
     const signature = shapeSignature(shape, direction, style)
     const [answer, setAnswer] = useState<{ signature: string; placed: PlacedGraph | null } | null>(null)
 
+    // Whether elk has answered once: after that, a shape fitted to a room that is still changing size waits for it to rest.
+    const answered = useRef(false)
     useEffect(() => {
         if (!ready) return
         let current = true
-        layoutGraph(shape, direction, undefined, style).then(
-            (placed) => {
-                if (current) setAnswer({ signature, placed })
-            },
-            () => {
-                if (current) setAnswer({ signature, placed: null })
-            },
-        )
+        const abandon = new AbortController()
+        const place = () =>
+            layoutGraph(shape, direction, undefined, style, abandon.signal).then(
+                (placed) => {
+                    answered.current = true
+                    if (current) setAnswer({ signature, placed })
+                },
+                () => {
+                    if (current) setAnswer({ signature, placed: null })
+                },
+            )
+        const timer = answered.current && style.wrapRoom !== undefined ? setTimeout(place, RESIZE_REST) : undefined
+        if (timer === undefined) void place()
         return () => {
             current = false
+            clearTimeout(timer)
+            abandon.abort()
         }
         // The placement is a function of the signature alone.
         // oxlint-disable-next-line react/exhaustive-deps

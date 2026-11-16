@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { aggregate, asShares, distinct, formatTick, pivot, quantile } from './data'
+import { aggregate, asShares, distinct, extent, formatTick, labelOf, pivot, quantile } from './data'
 import { compactWritten, tickWriter } from './kinds/axes'
 
 describe('formatTick', () => {
@@ -107,5 +107,42 @@ describe('the chart data', () => {
             { name: 'a', values: [25, null] },
             { name: 'b', values: [75, null] },
         ])
+    })
+})
+
+describe('labelOf', () => {
+    // East of UTC, a local midnight falls on the day before in UTC.
+    const zone = process.env.TZ
+    beforeAll(() => {
+        process.env.TZ = 'Europe/Oslo'
+    })
+    afterAll(() => {
+        if (zone === undefined) delete process.env.TZ
+        else process.env.TZ = zone
+    })
+
+    it('writes a date by its local day', () => {
+        expect(labelOf(new Date(2026, 2, 1))).toBe('2026-03-01')
+        expect(labelOf(new Date(2026, 11, 31))).toBe('2026-12-31')
+    })
+
+    it('keeps the time of a date that is not midnight, so two hours of one day stay apart', () => {
+        expect(labelOf(new Date(2026, 2, 1, 10))).toBe('2026-03-01 10:00')
+        expect(labelOf(new Date(2026, 2, 1, 11, 5, 9))).toBe('2026-03-01 11:05:09')
+        const rows = [
+            { at: new Date(2026, 2, 1, 10), runs: 2 },
+            { at: new Date(2026, 2, 1, 11), runs: 3 },
+        ]
+        expect(pivot({ rows, x: 'at', y: 'runs' }).categories).toEqual(['2026-03-01 10:00', '2026-03-01 11:00'])
+    })
+})
+
+describe('extent', () => {
+    it('spans more values than a spread into Math.min holds', () => {
+        const many = Array.from({ length: 300_000 }, (_, index) => index - 1000)
+        expect(extent(many)).toEqual([-1000, 298_999])
+        expect(extent([])).toBeNull()
+        expect(aggregate(many, 'max')).toBe(298_999)
+        expect(aggregate(many, 'min')).toBe(-1000)
     })
 })
