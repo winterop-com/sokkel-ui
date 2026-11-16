@@ -8,20 +8,21 @@ import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
 import { indicators, indicatorValue, INDICATOR_TYPES, type Indicator, type IndicatorType } from '../data/backend'
 import { check } from '../data/check'
 import { DE, PERIODS, periodLabel, ROOT, uid } from '../data/metadata'
-import { count, describeItems, figure, useFoot, useVersion, verdict } from '../ui'
+import { count, describeItems, figure, useFoot, useIndicatorIds, useVersion, verdict } from '../ui'
 
 const LATEST_PERIOD = PERIODS[PERIODS.length - 1]
 
 /** The indicators the server holds, each checked against its version and worked out for the whole country in the latest month. */
 export function Indicators() {
     const version = useVersion()
+    const ids = useIndicatorIds()
     const { rows, error } = useCollection(indicators)
     const [query, setQuery] = useState('')
     const [types, setTypes] = useState<string[]>([])
@@ -30,8 +31,8 @@ export function Indicators() {
     const worked = useMemo(
         () =>
             (rows ?? []).map((one) => {
-                const numerator = check(one.numerator, 'expression', { version })
-                const denominator = check(one.denominator, 'expression', { version })
+                const numerator = check(one.numerator, 'expression', { version, indicators: ids })
+                const denominator = check(one.denominator, 'expression', { version, indicators: ids })
                 const state = verdict(numerator, denominator)
                 const value =
                     numerator.node !== null && denominator.node !== null && state !== 'invalid'
@@ -39,7 +40,7 @@ export function Indicators() {
                         : null
                 return { ...one, state, value, findings: numerator.findings.length + denominator.findings.length }
             }),
-        [rows, version],
+        [rows, version, ids],
     )
     type Row = (typeof worked)[number]
 
@@ -114,7 +115,11 @@ export function Indicators() {
             .then(
                 (one: Indicator) => go(`/indicators/${one.id}`),
                 (failure: unknown) =>
-                    toast.error('Not created', { description: failure instanceof Error ? failure.message : String(failure) }),
+                    toast.add({
+                        type: 'error',
+                        title: 'Not created',
+                        description: failure instanceof Error ? failure.message : String(failure),
+                    }),
             )
     }
 

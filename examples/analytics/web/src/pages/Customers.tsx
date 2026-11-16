@@ -11,7 +11,7 @@ import { useMemo, useState } from 'react'
 
 import { COUNTRIES, PEOPLE, PLAN_NAMES, PLANS, REGION_NAMES, REGIONS, dayOf, isoDay, shortDay, type Standing, type Team } from '../model'
 import { PlanChip, STATUSES, useSegment, useSpans, ViewBar } from '../parts'
-import { useLoaded } from '../state'
+import { useLoaded, useMoneyFields } from '../state'
 import { go, rangeName } from '../view'
 import { standing } from '../world'
 
@@ -23,6 +23,8 @@ interface CustomerRow {
 }
 
 const ICON = 'size-4 text-muted-foreground'
+
+const mrrOf = (row: CustomerRow) => row.now.mrr
 
 const FIELDS: FilterField<CustomerRow>[] = [
     {
@@ -77,7 +79,6 @@ const FIELDS: FilterField<CustomerRow>[] = [
         id: 'mrr',
         label: 'MRR',
         type: 'number',
-        unit: 'USD',
         operators: ['atLeast', 'atMost', 'between'],
         icon: <Banknote className={ICON} aria-hidden />,
         value: (row) => row.now.mrr,
@@ -99,6 +100,7 @@ export function Customers() {
     const [filters, setFilters] = useState<readonly Filter[]>([])
     const [sort, setSort] = useState<DataSort | null>({ column: 'mrr', direction: 'desc' })
     const [query, setQuery] = useState('')
+    const fields = useMoneyFields(FIELDS, 'mrr', mrrOf)
 
     const all = useMemo((): CustomerRow[] => {
         const paid = new Map<string, number>()
@@ -115,10 +117,10 @@ export function Customers() {
             )
     }, [world, span, segment])
     const rows = useMemo(() => {
-        const kept = filterRows(all, filters, FIELDS)
+        const kept = filterRows(all, filters, fields)
         const wanted = query.trim().toLowerCase()
         return wanted === '' ? kept : kept.filter((row) => `${row.team.name} ${row.team.country}`.toLowerCase().includes(wanted))
-    }, [all, filters, query])
+    }, [all, filters, fields, query])
 
     const columns: DataColumn<CustomerRow>[] = [
         { id: 'team', header: 'Team', width: 'minmax(11rem,1fr)', cell: (row) => row.team.name, sortValue: (row) => row.team.name },
@@ -189,7 +191,7 @@ export function Customers() {
             <DataTable
                 className="min-h-0 flex-1"
                 search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
-                toolbar={<FilterBar fields={FIELDS} filters={filters} onFiltersChange={setFilters} />}
+                toolbar={<FilterBar fields={fields} filters={filters} onFiltersChange={setFilters} />}
                 columns={columns}
                 rows={rows}
                 rowKey={(row) => row.team.id}

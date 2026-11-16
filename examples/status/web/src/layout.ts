@@ -12,7 +12,7 @@ export interface Layout {
 /** The board's arrangement, kept in this browser and shared by every page. */
 export const layout = createStore<Layout>(
     { overview: null, services: null },
-    { key: 'layout', prefix: 'tidevann-status.', check: (value) => typeof value === 'object' && value !== null && 'overview' in value },
+    { key: 'layout', check: (value) => typeof value === 'object' && value !== null && 'overview' in value },
 )
 
 export function setLayout(patch: Partial<Layout>): void {

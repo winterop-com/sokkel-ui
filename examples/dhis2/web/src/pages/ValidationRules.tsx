@@ -7,28 +7,29 @@ import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
 import { OPERATORS, runRule, validationRules, type ValidationRule } from '../data/backend'
 import { check } from '../data/check'
 import { DE, PERIODS, ROOT, sitesUnder, uid } from '../data/metadata'
-import { count, describeItems, useFoot, useVersion, verdict } from '../ui'
+import { count, describeItems, useFoot, useIndicatorIds, useVersion, verdict } from '../ui'
 
 const SITES = sitesUnder(ROOT).map((site) => site.id)
 
 /** The validation rules the server holds, each checked against its version and run over every site and month. */
 export function ValidationRules() {
     const version = useVersion()
+    const ids = useIndicatorIds()
     const { rows, error } = useCollection(validationRules)
     const [query, setQuery] = useState('')
 
     const worked = useMemo(
         () =>
             (rows ?? []).map((one) => {
-                const left = check(one.left, 'expression', { version })
-                const right = check(one.right, 'expression', { version })
+                const left = check(one.left, 'expression', { version, indicators: ids })
+                const right = check(one.right, 'expression', { version, indicators: ids })
                 const state = verdict(left, right)
                 const violations =
                     left.node !== null && right.node !== null && state !== 'invalid'
@@ -36,7 +37,7 @@ export function ValidationRules() {
                         : null
                 return { ...one, state, violations }
             }),
-        [rows, version],
+        [rows, version, ids],
     )
     type Row = (typeof worked)[number]
     const asked = query.trim().toLowerCase()
@@ -116,7 +117,11 @@ export function ValidationRules() {
             .then(
                 (one: ValidationRule) => go(`/validation-rules/${one.id}`),
                 (failure: unknown) =>
-                    toast.error('Not created', { description: failure instanceof Error ? failure.message : String(failure) }),
+                    toast.add({
+                        type: 'error',
+                        title: 'Not created',
+                        description: failure instanceof Error ? failure.message : String(failure),
+                    }),
             )
     }
 

@@ -17,7 +17,7 @@ import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { ChevronDown, Copy, Database, PencilLine, Plus, Share2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { go } from 'tidevann-shared/router'
 
 import { boards as boardStore, charts as chartStore } from '../backend'
@@ -56,7 +56,7 @@ export function ChartsPage({
         void chartStore
             .create({ name: `${chart.name} copy`, datasetId: chart.datasetId, spec: chart.spec, updatedAt: now() }, freshId('ch'))
             .then((made) => {
-                toast.success(`${made.name} made`)
+                toast.add({ type: 'success', title: `${made.name} made` })
             })
     const actions = (chart: SavedChart) => [
         { id: 'open', label: 'Edit', icon: <PencilLine aria-hidden />, onSelect: () => go(`/charts/${chart.id}`) },
@@ -220,7 +220,7 @@ export function ChartsPage({
                                     updatedAt: now(),
                                 }),
                             ),
-                        ]).then(() => toast.success(`${gone.name} deleted`))
+                        ]).then(() => toast.add({ type: 'success', title: `${gone.name} deleted` }))
                     },
                 }}
             />

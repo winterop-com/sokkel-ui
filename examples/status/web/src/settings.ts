@@ -41,7 +41,6 @@ export const DEFAULT_SETTINGS: Settings = {
 /** The board's settings, kept in this browser and shared by every page. */
 export const settings = createStore<Settings>(DEFAULT_SETTINGS, {
     key: 'settings',
-    prefix: 'tidevann-status.',
     check: (value) => typeof value === 'object' && value !== null && 'interval' in value,
 })
 

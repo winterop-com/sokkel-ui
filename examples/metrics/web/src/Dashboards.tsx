@@ -6,7 +6,7 @@ import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { ExternalLink, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 
 import { dashboards } from './data'
 import type { Dashboard } from './model'
@@ -96,7 +96,7 @@ export function DashboardsPage({
                         if (deleting === null) return
                         const gone = deleting
                         setDeleting(null)
-                        void dashboards.remove(gone.id).then(() => toast.success(`${gone.title} deleted`))
+                        void dashboards.remove(gone.id).then(() => toast.add({ type: 'success', title: `${gone.title} deleted` }))
                     },
                 }}
             />

@@ -436,7 +436,7 @@ function ago(at: number, now: number): string {
 
 /** The live feed: the latest sign-ups, upgrades, orders and teams leaving, newest first, those since last read drawn stronger. */
 export function FeedPanel({ count = 7 }: { count?: number }) {
-    const { world, money, prefs, setPrefs, href, stream } = useLoaded()
+    const { world, money, prefs, setPrefs, href, stream, toggleStream } = useLoaded()
     const segment = useSegment()
     const rows = useFeed(count, segment)
     const [read, setRead] = useState<ReadonlySet<string>>(new Set())
@@ -480,7 +480,7 @@ export function FeedPanel({ count = 7 }: { count?: number }) {
                         size="icon-xs"
                         aria-label={prefs.pace === 'off' ? 'Resume the live stream' : 'Pause the live stream'}
                         title={prefs.pace === 'off' ? 'Resume the live stream' : 'Pause the live stream'}
-                        onClick={() => void setPrefs({ pace: prefs.pace === 'off' ? 'fast' : 'off' })}
+                        onClick={toggleStream}
                     >
                         {prefs.pace === 'off' ? <Play aria-hidden /> : <Pause aria-hidden />}
                     </Button>

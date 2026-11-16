@@ -1,3 +1,4 @@
+import { download, fileName } from '@winterop-com/sokkel-ui/lib/download'
 import { CopyButton } from '@winterop-com/sokkel-ui/CopyButton'
 import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { formatValue } from '@winterop-com/sokkel-ui/dashboard/thresholds'
@@ -9,7 +10,7 @@ import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 
 import { dashboards } from './data'
 import { SelectInput } from './inputs'
@@ -128,7 +129,7 @@ export function DashboardDialog({
         const source = all.find((one) => one.id === from)
         const panels = (source?.panels ?? []).map((panel) => ({ ...panel, id: panelId() }))
         void dashboards.create({ title: title.trim(), description: description.trim(), panels }).then((made) => {
-            toast.success(`${made.title} made`)
+            toast.add({ type: 'success', title: `${made.title} made` })
             done(made.id)
         })
     }
@@ -252,14 +253,9 @@ export function InspectDialog({ panel, onOpenChange, view }: { panel: Panel | nu
         ].join('\n')
         return { columns, rows, csv }
     }, [panel, view.range, view.at, view.vars, view.zone])
-    const download = () => {
+    const downloadCsv = () => {
         if (panel === null) return
-        const url = URL.createObjectURL(new Blob([table.csv], { type: 'text/csv' }))
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `${panel.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`
-        link.click()
-        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        download(fileName(panel.title, 'csv', 'panel'), table.csv, 'text/csv;charset=utf-8')
     }
     const metric = panel === null ? undefined : metricOf(panel.metric)
     return (
@@ -276,7 +272,7 @@ export function InspectDialog({ panel, onOpenChange, view }: { panel: Panel | nu
                       : `${metric.label}, ${panel.aggregation}${panel.groupBy === 'none' ? '' : ` by ${panel.groupBy}`}: ${String(table.rows.length)} steps, newest first.`
             }
             words={{ cancel: 'Close' }}
-            confirm={{ label: 'Download CSV', onConfirm: download }}
+            confirm={{ label: 'Download CSV', onConfirm: downloadCsv }}
         >
             <DataTable columns={table.columns} rows={table.rows} rowKey={(row) => String(row.key)} className="h-96" minWidth="auto" />
         </DialogShell>

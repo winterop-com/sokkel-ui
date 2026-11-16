@@ -5,7 +5,7 @@ import { useStore, useStoreValue } from '@winterop-com/sokkel-ui/hooks/use-store
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
-import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
+import { Toaster } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -305,7 +305,7 @@ export function MetricsApp({ frame }: { frame: Frame }) {
             {board !== undefined && <ShareDialog open={sharing} onOpenChange={setSharing} dashboard={board} view={view} />}
             <DashboardDialog open={creating} onOpenChange={setCreating} dashboards={all} kept={kept} />
             <RuleDialog open={newRule} onOpenChange={setNewRule} onSaved={() => go('/alerts')} />
-            <Toaster position="bottom-right" />
+            <Toaster />
         </StatusProvider>
     )
 }

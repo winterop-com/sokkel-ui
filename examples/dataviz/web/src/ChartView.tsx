@@ -96,7 +96,7 @@ function useRegions(): FeatureCollection | undefined {
     const [regions, setRegions] = useState<FeatureCollection | undefined>(undefined)
     useEffect(() => {
         let live = true
-        regionsLoad ??= import('./data/regions.json').then((module) => module.default as unknown as FeatureCollection)
+        regionsLoad ??= import('tidevann-shared/geo/regions.json').then((module) => module.default as unknown as FeatureCollection)
         void regionsLoad.then((loaded) => {
             if (live) setRegions(loaded)
         })

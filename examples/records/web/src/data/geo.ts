@@ -1,8 +1,8 @@
 import type { TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import type { Feature, FeatureCollection, MultiPolygon, Point, Polygon } from 'geojson'
 
-import placeData from './geo/sierra-leone-places.json'
-import regionData from './geo/sierra-leone-regions.json'
+import placeData from 'tidevann-shared/geo/places.json'
+import regionData from 'tidevann-shared/geo/regions.json'
 
 /** The country's regions, each a boundary. */
 export const regions = regionData as unknown as FeatureCollection<Polygon | MultiPolygon, { name: string }>

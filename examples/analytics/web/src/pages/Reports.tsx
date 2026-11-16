@@ -1,3 +1,4 @@
+import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Field } from '@winterop-com/sokkel-ui/Field'
@@ -17,7 +18,7 @@ import { Fragment, useState, type ReactNode } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
 import { reports } from '../collections'
-import { download, fileName, reportCsv } from '../csv'
+import { fileName, reportCsv } from '../csv'
 import { PANEL_NAMES, PANELS, counted, dayOf, shortDay, type PanelId, type Report } from '../model'
 import { OrderList } from '../order'
 import { PANEL_PARTS } from '../panels'
@@ -97,7 +98,10 @@ function Composer({ report: start, list }: { report: Report | undefined; list: R
     const [deleting, setDeleting] = useState(false)
 
     const changed = start === undefined || start.name !== name.trim() || start.panels.join() !== panels.join()
-    const guard = useUnsavedChanges((start === undefined ? name.trim() !== '' : changed) && !busy, { hashRoutes: true })
+    const guard = useUnsavedChanges((start === undefined ? name.trim() !== '' : changed) && !busy, {
+        hashRoutes: true,
+        overlays: ['settings'],
+    })
     const why =
         name.trim() === ''
             ? 'A report needs a name.'
@@ -138,7 +142,7 @@ function Composer({ report: start, list }: { report: Report | undefined; list: R
             currency: prefs.currency,
         })
         const file = fileName(title, world.now)
-        download(file, text)
+        download(file, text, 'text/csv;charset=utf-8')
         toast.add({ title: 'CSV downloaded', description: `${file}, ${counted(panels.length, 'panel')}` })
     }
     const left = PANELS.filter((panel) => !panels.includes(panel))

@@ -1,3 +1,4 @@
+import { NotFound } from '@winterop-com/sokkel-ui/NotFound'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { dragData, type DragData } from '@winterop-com/sokkel-ui/DragDrop'
 import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
@@ -163,6 +164,7 @@ export function Music({ frame }: { frame: Frame }) {
     const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['albums'] })
     const [first, second] = settings.route
     const place: Place = PLACES.includes(first as Place) ? (first as Place) : 'albums'
+    const missing = first !== undefined && first !== '' && !PLACES.includes(first as Place)
     const album = place === 'albums' && second !== undefined ? ALBUM_BY_ID.get(second) : undefined
     const artist = place === 'artists' && second !== undefined ? ARTIST_BY_ID.get(second) : undefined
     const playlist = place === 'playlists' && second !== undefined ? lists.find((row) => row.id === second) : undefined
@@ -352,53 +354,55 @@ export function Music({ frame }: { frame: Frame }) {
     ]
 
     const up: Crumb = { label: LABELS[place], href: `#/${place}` }
-    const trail: Crumb[] =
-        second === undefined
-            ? [{ label: LABELS[place] }]
-            : album !== undefined
-              ? [
-                    up,
-                    { label: ARTIST_BY_ID.get(album.artist)?.name ?? album.artist, href: `#/artists/${album.artist}` },
-                    { label: album.title },
-                ]
-              : artist !== undefined
-                ? [up, { label: artist.name }]
-                : playlist !== undefined
-                  ? [up, { label: playlist.name }]
-                  : place === 'search'
-                    ? [{ label: LABELS.search }, { label: `“${decodeURIComponent(second)}”` }]
-                    : [up]
+    const trail: Crumb[] = missing
+        ? [{ label: 'Not found' }]
+        : second === undefined
+          ? [{ label: LABELS[place] }]
+          : album !== undefined
+            ? [
+                  up,
+                  { label: ARTIST_BY_ID.get(album.artist)?.name ?? album.artist, href: `#/artists/${album.artist}` },
+                  { label: album.title },
+              ]
+            : artist !== undefined
+              ? [up, { label: artist.name }]
+              : playlist !== undefined
+                ? [up, { label: playlist.name }]
+                : place === 'search'
+                  ? [{ label: LABELS.search }, { label: `“${decodeURIComponent(second)}”` }]
+                  : [up]
 
-    const page =
-        place === 'albums' ? (
-            second === undefined ? (
-                <Albums />
-            ) : (
-                <Album id={second} />
-            )
-        ) : place === 'artists' ? (
-            second === undefined ? (
-                <Artists />
-            ) : (
-                <Artist id={second} />
-            )
-        ) : place === 'tracks' ? (
-            <Tracks />
-        ) : place === 'favorites' ? (
-            <Favorites />
-        ) : place === 'downloads' ? (
-            <Downloads />
-        ) : place === 'radio' ? (
-            <Radio />
-        ) : place === 'playlists' ? (
-            second === undefined ? (
-                <Playlists />
-            ) : (
-                <PlaylistPage id={second} />
-            )
+    const page = missing ? (
+        <NotFound />
+    ) : place === 'albums' ? (
+        second === undefined ? (
+            <Albums />
         ) : (
-            <Results query={decodeURIComponent(second ?? '')} />
+            <Album id={second} />
         )
+    ) : place === 'artists' ? (
+        second === undefined ? (
+            <Artists />
+        ) : (
+            <Artist id={second} />
+        )
+    ) : place === 'tracks' ? (
+        <Tracks />
+    ) : place === 'favorites' ? (
+        <Favorites />
+    ) : place === 'downloads' ? (
+        <Downloads />
+    ) : place === 'radio' ? (
+        <Radio />
+    ) : place === 'playlists' ? (
+        second === undefined ? (
+            <Playlists />
+        ) : (
+            <PlaylistPage id={second} />
+        )
+    ) : (
+        <Results query={decodeURIComponent(second ?? '')} />
+    )
 
     const openSearch = (kind: string, id: string) => {
         if (kind === 'artists') go(`/artists/${id}`)

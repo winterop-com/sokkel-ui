@@ -11,7 +11,7 @@ import { Stat } from '@winterop-com/sokkel-ui/Stat'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { ArrowRight, Send } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { useCollection } from 'tidevann-shared/backend'
 
 import { forwardAll, inOrder, ME, preferences, receipts, SERVER, STATE_WORDS, STATES } from '../data/backend'
@@ -45,11 +45,17 @@ export function Overview({ serverState }: { serverState: ServerHealth }) {
     const sendOn = () =>
         forwardAll().then(
             ({ taken, refused }) =>
-                toast.success(`${String(taken + refused)} sent on to the register`, {
+                toast.add({
+                    type: 'success',
+                    title: `${String(taken + refused)} sent on to the register`,
                     description: refused === 0 ? 'The register took them all.' : `${String(refused)} refused; each receipt says why.`,
                 }),
             (failure: unknown) =>
-                toast.error('Nothing was sent on', { description: failure instanceof Error ? failure.message : String(failure) }),
+                toast.add({
+                    type: 'error',
+                    title: 'Nothing was sent on',
+                    description: failure instanceof Error ? failure.message : String(failure),
+                }),
         )
 
     return (

@@ -331,6 +331,8 @@ export interface Prefs {
     id: string
     /** How often the live stream sends an event. */
     pace: Pace
+    /** The pace the stream resumes at after a pause. */
+    resume?: Exclude<Pace, 'off'>
     currency: Currency
     /** The range a dashboard opens on when its address names none. */
     range: string
