@@ -192,3 +192,32 @@ export const Live: StoryObj = {
         )
     },
 }
+
+/**
+ * An answer and its thinking holding images and links: each image is drawn as its alt text and
+ * address, as it is by default, so nothing is fetched, and with `linkSchemes={['https']}` the mail
+ * links are only their words.
+ */
+export const ImagesAndLinks: StoryObj = {
+    name: 'Images and links',
+    render: () => (
+        <TooltipProvider>
+            <AnswerColumn
+                model="reef-8b"
+                detail="Q4_K_M · 4.9 GB"
+                state="done"
+                reasoning="The run log should say which step was slow; ![the trace](https://example.org/traces/1842.png) shows it, and [ada](mailto:ada@example.org) owns the step."
+                content={[
+                    'The last **nightly-export** run took 4m 12s:',
+                    '',
+                    '![Run durations this week](https://example.org/charts/nightly-export.png)',
+                    '',
+                    'The [run log](https://example.org/runs/nightly-export/1842) has each step; [mail grace](mailto:grace@example.org) if it fails again.',
+                ].join('\n')}
+                linkSchemes={['https']}
+                usage={{ input: 184, output: 72, firstToken: 260, rate: 52.4, latency: 1_640 }}
+                onRetry={() => undefined}
+            />
+        </TooltipProvider>
+    ),
+}
