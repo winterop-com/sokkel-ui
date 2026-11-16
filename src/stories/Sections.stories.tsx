@@ -15,7 +15,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { RunGraph, type RunStep } from '@winterop-com/sokkel-ui-graph/RunGraph'
 import { TidevannMark } from './fixtures/TidevannMark'
-import { Columns, Row, Split, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Split, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A job's overview page in the three ways a page can be divided, drawn with the shell and
@@ -71,22 +71,9 @@ const COLUMNS: DataColumn<Run>[] = [
     { id: 'took', header: 'Took', width: '4rem', align: 'end', cell: (run) => <span className="font-mono text-xs">{run.took}</span> },
 ]
 
+/** The job's steps as a pipeline graph fitted to its drawing. */
 function Drawing() {
-    return (
-        <div className="relative h-44">
-            <Row gap="3xl" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                {['fetch', 'validate', 'upload'].map((step, at) => (
-                    <Row key={step} gap="3xl">
-                        <div className="rounded-node border border-node-line bg-node px-3 py-1.5 font-mono text-xs">
-                            <p className="font-medium">{step}</p>
-                            <p className="text-faint">{['http.get', 'rows.check', 'bucket.put'][at]}</p>
-                        </div>
-                        {at < 2 && <div className="h-px w-8 bg-border-strong" />}
-                    </Row>
-                ))}
-            </Row>
-        </div>
-    )
+    return <PipelineGraph steps={STEPS} frame="fitted" words={{ label: 'import-orders' }} />
 }
 
 function RunsList() {

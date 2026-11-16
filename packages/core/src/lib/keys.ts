@@ -143,6 +143,18 @@ export interface ComposingPress {
 }
 
 /**
+ * Whether the page is typed on a touch screen (a coarse pointer and no hover), where Enter in a
+ * composer breaks the line and only the send button sends; false on the server.
+ */
+export function touchTyping(): boolean {
+    try {
+        return globalThis.matchMedia?.('(pointer: coarse) and (hover: none)').matches === true
+    } catch {
+        return false
+    }
+}
+
+/**
  * Whether a key press belongs to an input method still composing a character, so Enter picks the
  * character rather than sending or saving. Safari fires the Enter that commits a composition after
  * `compositionend`, with `isComposing` false but `keyCode` 229, so both are read.

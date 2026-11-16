@@ -341,7 +341,7 @@ export function BoardDrop({ id, children, empty, label, locked = false, classNam
 
 /** The line that shows where a dragged card would land. */
 export function DropLine() {
-    return <span aria-hidden className="pointer-events-none absolute inset-x-0 -top-[5px] h-0.5 rounded-full bg-primary" />
+    return <span aria-hidden className="pointer-events-none absolute inset-x-0 -top-1.25 h-0.5 rounded-full bg-primary" />
 }
 
 interface ItemHandle {

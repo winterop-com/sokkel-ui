@@ -1,5 +1,5 @@
 import { Play, Volume2 } from 'lucide-react'
-import { Fragment, useRef, type ComponentProps, type ComponentType, type ReactNode } from 'react'
+import { Fragment, memo, useRef, type ComponentProps, type ComponentType, type ReactNode, type Ref } from 'react'
 
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
@@ -92,6 +92,10 @@ function PlainRow({ track: _track, index: _index, ...props }: TrackRowProps) {
  * An album of several discs gives each track its `disc`: the list then puts a head ("Disc 1",
  * "Disc 2") over the first track of each disc it reaches, in the order the tracks are given. A
  * list on one disc draws no head.
+ *
+ * A row draws again only when what it shows changes, so a `position` reported many times a second
+ * draws the current row alone; `onPlay`, `actions` and `row` kept the same between draws (made
+ * once, or with `useCallback`) keep it that way.
  */
 export function TrackList({
     tracks,
@@ -126,83 +130,136 @@ export function TrackList({
                 const now = track.id === current
                 const disc = track.disc ?? 1
                 const opens = discs && (index === 0 || (tracks[index - 1].disc ?? 1) !== disc)
-                const label = typeof track.title === 'string' ? said.play(track.title) : undefined
-                const played = now && position !== undefined ? position : undefined
-                const bar = progress === 'bar' && played !== undefined && track.duration > 0
                 return (
-                    <Fragment key={track.id}>
-                        {opens && (
-                            <li
-                                role="presentation"
-                                data-slot="track-list-disc"
-                                className={cn(
-                                    'pt-2.5 pr-2 pb-1.5',
-                                    variant === 'boxed' ? 'border-b border-border pl-(--density-panel-pad)' : 'pl-2',
-                                    index > 0 && variant === 'plain' && 'pt-4',
-                                )}
-                            >
-                                <GroupLabel as="span">{said.disc(disc)}</GroupLabel>
-                            </li>
-                        )}
-                        <Row
-                            track={track}
-                            index={index}
-                            ref={now ? followed : undefined}
-                            className={cn(
-                                'flex min-w-0 items-center gap-1 pr-2',
-                                bar && 'relative overflow-hidden',
-                                variant === 'boxed' && 'border-b border-border last:border-b-0',
-                                variant === 'plain' && 'rounded-control',
-                                now ? 'bg-secondary' : onPlay !== undefined && 'has-[>button:hover]:bg-hover',
-                            )}
-                        >
-                            <button
-                                type="button"
-                                aria-current={now || undefined}
-                                aria-label={label}
-                                onClick={onPlay === undefined ? undefined : () => onPlay(track)}
-                                className={cn(
-                                    'flex min-h-(--density-row) min-w-0 flex-1 items-center gap-3 py-1.5 text-left text-sm outline-none focus-visible:bg-hover',
-                                    variant === 'boxed' ? 'pl-(--density-panel-pad)' : 'pl-2',
-                                    onPlay !== undefined && 'cursor-pointer',
-                                )}
-                            >
-                                <Lead track={track} now={now} playing={playing} shape={artwork} label={said.playing} />
-                                <span className="min-w-0 flex-1">
-                                    <span className={cn('block truncate', now ? 'font-medium text-primary-ink' : 'text-foreground')}>
-                                        {track.title}
-                                    </span>
-                                    {track.subtitle !== undefined && (
-                                        <span className="block truncate text-xs text-muted-foreground">{track.subtitle}</span>
-                                    )}
-                                </span>
-                                {track.meta !== undefined && (
-                                    <span className="hidden w-[28%] min-w-0 truncate text-sm text-muted-foreground @xl:block">
-                                        {track.meta}
-                                    </span>
-                                )}
-                                <span className="min-w-12 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
-                                    {progress === 'left' && played !== undefined
-                                        ? formatRemaining(played, track.duration)
-                                        : formatTime(track.duration)}
-                                </span>
-                            </button>
-                            {actions !== undefined && <span className="flex shrink-0 items-center gap-0.5 pl-1">{actions(track)}</span>}
-                            {bar && (
-                                <span
-                                    aria-hidden
-                                    data-slot="track-progress"
-                                    className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary"
-                                    style={{ transform: `scaleX(${String(Math.min(1, Math.max(0, played / track.duration)))})` }}
-                                />
-                            )}
-                        </Row>
-                    </Fragment>
+                    <TrackRow
+                        key={track.id}
+                        track={track}
+                        index={index}
+                        now={now}
+                        playing={now && playing}
+                        played={now ? position : undefined}
+                        progress={progress}
+                        disc={opens ? said.disc(disc) : undefined}
+                        label={typeof track.title === 'string' ? said.play(track.title) : undefined}
+                        playingLabel={said.playing}
+                        variant={variant}
+                        artwork={artwork}
+                        Row={Row}
+                        onPlay={onPlay}
+                        actions={actions}
+                        followed={now ? followed : undefined}
+                    />
                 )
             })}
         </ol>
     )
 }
+
+interface TrackRowDrawProps {
+    track: Track
+    index: number
+    now: boolean
+    playing: boolean
+    played: number | undefined
+    progress: TrackProgress | undefined
+    /** The disc's head drawn over the row, when it is the first of its disc. */
+    disc: string | undefined
+    label: string | undefined
+    playingLabel: string
+    variant: 'boxed' | 'plain'
+    artwork: 'square' | 'wide'
+    Row: ComponentType<TrackRowProps>
+    onPlay: ((track: Track) => void) | undefined
+    actions: ((track: Track) => ReactNode) | undefined
+    followed: Ref<HTMLLIElement> | undefined
+}
+
+/** One track's row, with the disc's head over it when it opens one; drawn again only when what it shows changes. */
+const TrackRow = memo(function TrackRow({
+    track,
+    index,
+    now,
+    playing,
+    played,
+    progress,
+    disc,
+    label,
+    playingLabel,
+    variant,
+    artwork,
+    Row,
+    onPlay,
+    actions,
+    followed,
+}: TrackRowDrawProps) {
+    const bar = progress === 'bar' && played !== undefined && track.duration > 0
+    return (
+        <Fragment>
+            {disc !== undefined && (
+                <li
+                    role="presentation"
+                    data-slot="track-list-disc"
+                    className={cn(
+                        'pt-2.5 pr-2 pb-1.5',
+                        variant === 'boxed' ? 'border-b border-border pl-(--density-panel-pad)' : 'pl-2',
+                        index > 0 && variant === 'plain' && 'pt-4',
+                    )}
+                >
+                    <GroupLabel as="span">{disc}</GroupLabel>
+                </li>
+            )}
+            <Row
+                track={track}
+                index={index}
+                ref={followed}
+                className={cn(
+                    'flex min-w-0 items-center gap-1 pr-2',
+                    bar && 'relative overflow-hidden',
+                    variant === 'boxed' && 'border-b border-border last:border-b-0',
+                    variant === 'plain' && 'rounded-control',
+                    now ? 'bg-secondary' : onPlay !== undefined && 'has-[>button:hover]:bg-hover',
+                )}
+            >
+                <button
+                    type="button"
+                    aria-current={now || undefined}
+                    aria-label={label}
+                    onClick={onPlay === undefined ? undefined : () => onPlay(track)}
+                    className={cn(
+                        'flex min-h-(--density-row) min-w-0 flex-1 items-center gap-3 py-1.5 text-left text-sm outline-none focus-visible:bg-hover',
+                        variant === 'boxed' ? 'pl-(--density-panel-pad)' : 'pl-2',
+                        onPlay !== undefined && 'cursor-pointer',
+                    )}
+                >
+                    <Lead track={track} now={now} playing={playing} shape={artwork} label={playingLabel} />
+                    <span className="min-w-0 flex-1">
+                        <span className={cn('block truncate', now ? 'font-medium text-primary-ink' : 'text-foreground')}>
+                            {track.title}
+                        </span>
+                        {track.subtitle !== undefined && (
+                            <span className="block truncate text-xs text-muted-foreground">{track.subtitle}</span>
+                        )}
+                    </span>
+                    {track.meta !== undefined && (
+                        <span className="hidden w-[28%] min-w-0 truncate text-sm text-muted-foreground @xl:block">{track.meta}</span>
+                    )}
+                    <span className="min-w-12 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
+                        {progress === 'left' && played !== undefined ? formatRemaining(played, track.duration) : formatTime(track.duration)}
+                    </span>
+                </button>
+                {actions !== undefined && <span className="flex shrink-0 items-center gap-0.5 pl-1">{actions(track)}</span>}
+                {bar && (
+                    <span
+                        aria-hidden
+                        data-slot="track-progress"
+                        className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary"
+                        style={{ transform: `scaleX(${String(Math.min(1, Math.max(0, played / track.duration)))})` }}
+                    />
+                )}
+            </Row>
+        </Fragment>
+    )
+})
 
 /** The row's start: its picture, or its number, or the playing mark in its place. */
 function Lead({

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@winterop-com/sokkel-ui/primitives/carousel'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /** A row of slides that scrolls one or several at a time, with buttons either side. */
 function Caption({ children }: { children: ReactNode }) {
@@ -20,18 +21,20 @@ const JOBS: { code: string; name: string; status: Status; at: string; took: stri
 
 function JobCard({ job }: { job: (typeof JOBS)[number] }) {
     return (
-        <Stack gap="sm" className="h-full rounded-lg border border-border bg-card p-4 text-card-foreground">
-            <Row align="start" justify="between">
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{job.name}</p>
-                    <p className="truncate font-mono text-xs text-muted-foreground">{job.code}</p>
-                </div>
-                <StatusChip status={job.status} />
-            </Row>
-            <p className="mt-auto text-xs text-muted-foreground tabular-nums">
-                {job.at}, {job.took}
-            </p>
-        </Stack>
+        <Surface pad className="h-full">
+            <Stack gap="sm">
+                <Row align="start" justify="between">
+                    <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{job.name}</p>
+                        <p className="truncate font-mono text-xs text-muted-foreground">{job.code}</p>
+                    </div>
+                    <StatusChip status={job.status} />
+                </Row>
+                <p className="mt-auto text-xs text-muted-foreground tabular-nums">
+                    {job.at}, {job.took}
+                </p>
+            </Stack>
+        </Surface>
     )
 }
 

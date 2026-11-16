@@ -4,6 +4,7 @@ import { Bold, Pin, WrapText } from 'lucide-react'
 import { Toggle } from '@winterop-com/sokkel-ui/primitives/toggle'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Actions/Toggle', parameters: { frame: 'column' } }
 export default meta
@@ -67,25 +68,27 @@ export const States: StoryObj = {
 /** Wrap and Follow toggles in the bar over a run's log, Wrap on. */
 export const LogToolbar: StoryObj = {
     render: () => (
-        <Stack gap="none" className="overflow-hidden rounded-lg border border-border">
-            <Row justify="between" wrap className="border-b border-border px-3 py-2">
-                <p className="text-sm font-medium">Log for run 01a1a5c2</p>
-                <Row gap="2xs" align="stretch" wrap>
-                    <Toggle size="sm" defaultPressed>
-                        <WrapText data-icon="inline-start" />
-                        Wrap
-                    </Toggle>
-                    <Toggle size="sm">
-                        <Pin data-icon="inline-start" />
-                        Follow
-                    </Toggle>
+        <Surface>
+            <Stack gap="none">
+                <Row justify="between" wrap className="border-b border-border px-3 py-2">
+                    <p className="text-sm font-medium">Log for run 01a1a5c2</p>
+                    <Row gap="2xs" align="stretch" wrap>
+                        <Toggle size="sm" defaultPressed>
+                            <WrapText data-icon="inline-start" />
+                            Wrap
+                        </Toggle>
+                        <Toggle size="sm">
+                            <Pin data-icon="inline-start" />
+                            Follow
+                        </Toggle>
+                    </Row>
                 </Row>
-            </Row>
-            <pre className="overflow-x-auto p-3 font-mono text-xs whitespace-pre-wrap text-muted-foreground">
-                {`2026-11-04 14:02:11 fetch    started
+                <pre className="overflow-x-auto p-3 font-mono text-xs whitespace-pre-wrap text-muted-foreground">
+                    {`2026-11-04 14:02:11 fetch    started
 2026-11-04 14:02:11 fetch    GET https://api.example.org/v1/orders?month=2026-10
 2026-11-04 14:02:11 fetch    failed after 0.3s: connection refused`}
-            </pre>
-        </Stack>
+                </pre>
+            </Stack>
+        </Surface>
     ),
 }

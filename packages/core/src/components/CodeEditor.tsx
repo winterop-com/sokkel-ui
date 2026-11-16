@@ -251,9 +251,11 @@ function contentAttributes(label: string, id: string | undefined): Extension {
 }
 
 function languageExtension(given: CodeLanguage): Extension {
-    if (isLazy(given)) return loaded.get(given) ?? []
-    if (typeof given === 'string' && given in NAMED) return NAMED[given as keyof typeof NAMED]()
-    const language = typeof given === 'string' ? pluginLanguage(given)?.language : given
+    // An installed plugin's language wins over a built-in one of the same name.
+    const installed = typeof given === 'string' ? pluginLanguage(given)?.language : undefined
+    if (installed === undefined && isLazy(given)) return loaded.get(given) ?? []
+    if (installed === undefined && typeof given === 'string' && given in NAMED) return NAMED[given as keyof typeof NAMED]()
+    const language = typeof given === 'string' ? installed : given
     if (language === undefined) return []
     if (language instanceof LanguageSupport) return language
     let support = built.get(language)

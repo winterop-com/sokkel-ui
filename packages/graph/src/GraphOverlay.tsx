@@ -3,7 +3,7 @@ import { CircleAlert, Info, X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { useGraphDirection } from './context'
+import { useGraphBend, useGraphDirection } from './context'
 import { roughRoute, routedPath, type GraphDirection, type GraphPoint } from './layout'
 
 /** A rectangle on the screen, in the page's client pixels, such as `getBoundingClientRect` gives. */
@@ -162,6 +162,7 @@ export interface GraphOverlayProps {
  */
 export function GraphOverlay({ at, link, onClose, ignore, children, className }: GraphOverlayProps) {
     const direction = useGraphDirection()
+    const bend = useGraphBend()
     const view = useViewport()
     const point = useStore((state) => pointOf(state, at, direction), samePoint)
     const from = useStore((state) => {
@@ -259,7 +260,7 @@ export function GraphOverlay({ at, link, onClose, ignore, children, className }:
                 <svg className="pointer-events-none absolute inset-0 z-10 size-full overflow-visible" aria-hidden>
                     <path
                         data-slot="graph-overlay-link"
-                        d={routedPath(roughRoute({ ...start, width: 0, height: 0 }, { ...end, width: 0, height: 0 }, direction))}
+                        d={routedPath(roughRoute({ ...start, width: 0, height: 0 }, { ...end, width: 0, height: 0 }, direction), bend)}
                         fill="none"
                         stroke="var(--ring)"
                         strokeWidth={2}

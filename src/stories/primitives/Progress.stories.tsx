@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Progress, ProgressLabel, ProgressValue } from '@winterop-com/sokkel-ui/primitives/progress'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Display/Progress', parameters: { frame: 'column' } }
 export default meta
@@ -65,20 +66,22 @@ export const States: StoryObj = {
 /** A backfill's progress counted in months, with what it is writing now. */
 export const RunningExport: StoryObj = {
     render: () => (
-        <Stack gap="lg" className="max-w-lg rounded-lg border p-4">
-            <Row align="baseline" justify="between" wrap>
-                <p className="text-sm font-medium">
-                    Backfill of <span className="font-mono">nightly-export</span>
+        <Surface pad className="max-w-lg">
+            <Stack gap="lg">
+                <Row align="baseline" justify="between" wrap>
+                    <p className="text-sm font-medium">
+                        Backfill of <span className="font-mono">nightly-export</span>
+                    </p>
+                    <span className="text-xs text-muted-foreground tabular-nums">started 2026-11-04 14:02</span>
+                </Row>
+                <Progress value={7} max={12}>
+                    <ProgressLabel>Months exported</ProgressLabel>
+                    <ProgressValue>{(_, value) => `${value ?? 0} of 12`}</ProgressValue>
+                </Progress>
+                <p className="text-xs text-muted-foreground">
+                    Writing <span className="font-mono">orders-2026-08.csv</span>, about 1.2s a month.
                 </p>
-                <span className="text-xs text-muted-foreground tabular-nums">started 2026-11-04 14:02</span>
-            </Row>
-            <Progress value={7} max={12}>
-                <ProgressLabel>Months exported</ProgressLabel>
-                <ProgressValue>{(_, value) => `${value ?? 0} of 12`}</ProgressValue>
-            </Progress>
-            <p className="text-xs text-muted-foreground">
-                Writing <span className="font-mono">orders-2026-08.csv</span>, about 1.2s a month.
-            </p>
-        </Stack>
+            </Stack>
+        </Surface>
     ),
 }

@@ -27,8 +27,7 @@ around in the app.
 ## What is in it
 
 - **Primitives:** the full shadcn `base-nova` set on Base UI, restyled to the tokens: buttons,
-  inputs, selects, menus with submenus, dialogs, sheets, tables, tabs, charts, chat messages and
-  more.
+  inputs, selects, menus with submenus, dialogs, sheets, tables, tabs, chat messages and more.
 - **Frame:** Shell, Rail, TopBar, NavBar, SidePanel, Dock, StatusLine, CommandPalette and
   AccountMenu. The rail, side panel, inspector, channel list and dock resize by
   default.

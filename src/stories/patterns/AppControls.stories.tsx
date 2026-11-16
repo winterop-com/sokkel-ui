@@ -140,11 +140,11 @@ export const Keys: StoryObj = { name: 'Shortcuts dialog', render: () => <Shortcu
 /** A chart as a thumbnail in the text, closed; pressing it opens it large. */
 export const Image: StoryObj = { name: 'Image lightbox', render: () => <Lightbox open={false} /> }
 /** The same chart opened large over the page. */
-export const ImageOpen: StoryObj = { name: 'Image lightbox, open', render: () => <Lightbox open /> }
+export const ImageOpen: StoryObj = { name: 'Image lightbox open', render: () => <Lightbox open /> }
 /** An image with boxes over it, numbered and tagged, small and full screen alike. */
-export const ImageBoxes: StoryObj = { name: 'Image lightbox, boxes', render: () => <BoxedLightbox open={false} /> }
+export const ImageBoxes: StoryObj = { name: 'Boxed image', render: () => <BoxedLightbox open={false} /> }
 /** The boxed image opened full screen. */
-export const ImageBoxesOpen: StoryObj = { name: 'Image lightbox, boxes open', render: () => <BoxedLightbox open /> }
+export const ImageBoxesOpen: StoryObj = { name: 'Boxed image open', render: () => <BoxedLightbox open /> }
 /** Several photos, each opening the gallery at itself. */
 export const ImageGallery: StoryObj = { name: 'Image gallery', render: () => <Gallery /> }
 /**

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 
 import { CapabilityPicker, type Capability, type PickerItem } from '@winterop-com/sokkel-ui/CapabilityPicker'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /**
  * Picking one block for a pipeline step from a catalog, by searching and by what each block can
@@ -98,9 +99,11 @@ const BLOCKS: PickerItem[] = [
 
 function Ground({ children }: { children: ReactNode }) {
     return (
-        <Stack gap="none" className="h-[32rem] max-w-xl overflow-hidden rounded-surface border border-border-strong shadow-pop">
-            {children}
-        </Stack>
+        <Surface className="h-[32rem] max-w-xl">
+            <Stack gap="none" className="h-full">
+                {children}
+            </Stack>
+        </Surface>
     )
 }
 

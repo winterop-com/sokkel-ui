@@ -520,7 +520,7 @@ export function pascal(name: string): string {
         .join('')
 }
 
-type Exports = Record<string, string | { import?: string }>
+type Exports = Record<string, string | { import?: string; types?: string }>
 
 /**
  * The path an app imports a source module by, from its package's `exports` map, or undefined when

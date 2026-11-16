@@ -8,7 +8,7 @@ import { Inspector } from '@winterop-com/sokkel-ui/Inspector'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
-import { Section } from '@winterop-com/sokkel-ui/Section'
+import { Section, Surface } from '@winterop-com/sokkel-ui/Section'
 import { Sparkline, Stat } from '@winterop-com/sokkel-ui/Stat'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -198,35 +198,37 @@ const DURATIONS = [3.4, 3.5, 3.3, 3.6, 3.5, 3.7, 3.6, 3.8, 3.7, 3.9, 4.0, 3.9, 4
 function Numbers() {
     return (
         <Ground>
-            <Columns count={4} min="xs" gap="xl" className="rounded-surface border border-border-strong bg-card p-5">
-                <Stat
-                    label="Runs today"
-                    value="302"
-                    change="+6%"
-                    good
-                    note="vs yesterday"
-                    trend={<Sparkline values={RUNS} label="Runs per day, last 14 days" />}
-                />
-                <Stat
-                    label="Failure rate"
-                    value="1.8"
-                    unit="%"
-                    change="-0.4"
-                    good
-                    note="vs yesterday"
-                    trend={<Sparkline values={FAILURES} tone="good" label="Failure rate, last 14 days" />}
-                />
-                <Stat
-                    label="Median duration"
-                    value="4.2"
-                    unit="s"
-                    change="+0.6s"
-                    good={false}
-                    note="p50, last 24 hours"
-                    trend={<Sparkline values={DURATIONS} tone="warning" label="Median duration, last 14 days" />}
-                />
-                <Stat label="Jobs" value="18" note="3 paused" />
-            </Columns>
+            <Surface pad>
+                <Columns count={4} min="xs" gap="xl">
+                    <Stat
+                        label="Runs today"
+                        value="302"
+                        change="+6%"
+                        good
+                        note="vs yesterday"
+                        trend={<Sparkline values={RUNS} label="Runs per day, last 14 days" />}
+                    />
+                    <Stat
+                        label="Failure rate"
+                        value="1.8"
+                        unit="%"
+                        change="-0.4"
+                        good
+                        note="vs yesterday"
+                        trend={<Sparkline values={FAILURES} tone="good" label="Failure rate, last 14 days" />}
+                    />
+                    <Stat
+                        label="Median duration"
+                        value="4.2"
+                        unit="s"
+                        change="+0.6s"
+                        good={false}
+                        note="p50, last 24 hours"
+                        trend={<Sparkline values={DURATIONS} tone="warning" label="Median duration, last 14 days" />}
+                    />
+                    <Stat label="Jobs" value="18" note="3 paused" />
+                </Columns>
+            </Surface>
         </Ground>
     )
 }

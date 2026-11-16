@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import { Activity, CalendarRange, Gauge, Globe, ListChecks, Play, Workflow, type LucideIcon } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { CheckList } from '@winterop-com/sokkel-ui/CheckList'
@@ -20,6 +20,7 @@ import type { PanelSeries } from '@winterop-com/sokkel-ui-charts/dashboard/serie
 import { StatPanel } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import { tokenVar, type Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 import { RefreshControl, TimeRangePicker, type TimeRangeValue } from '@winterop-com/sokkel-ui/dashboard/TimeRange'
+import { useRefresh } from '@winterop-com/sokkel-ui/hooks/use-refresh'
 import { TimeSeriesPanel } from '@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel'
 import { VariablesBar, type Variable } from '@winterop-com/sokkel-ui/dashboard/VariablesBar'
 import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
@@ -161,29 +162,10 @@ function DashboardsApp({ board, children }: { board: Board; children: ReactNode 
     )
 }
 
-/** Refreshing a dashboard: it spins a moment, then `step` runs; a chosen interval keeps doing so until it is turned off. */
-function useRefresh(step: () => void) {
-    const [refreshing, setRefreshing] = useState(false)
+/** Refreshing a dashboard with the library's `useRefresh`: it spins a moment, as a fetch does, then `step` runs; a chosen interval keeps doing so until it is turned off. */
+function useDashboardRefresh(step: () => void) {
     const [interval, setInterval] = useState(0)
-    const timer = useRef<number | undefined>(undefined)
-    const onStep = useRef(step)
-    useEffect(() => {
-        onStep.current = step
-    })
-    useEffect(() => () => window.clearTimeout(timer.current), [])
-    useEffect(() => {
-        if (interval === 0) return
-        const id = window.setInterval(() => onStep.current(), interval * 1000)
-        return () => window.clearInterval(id)
-    }, [interval])
-    const refresh = () => {
-        setRefreshing(true)
-        window.clearTimeout(timer.current)
-        timer.current = window.setTimeout(() => {
-            onStep.current()
-            setRefreshing(false)
-        }, 450)
-    }
+    const { refreshing, refresh } = useRefresh(() => new Promise<void>((done) => window.setTimeout(done, 450)).then(step), { interval })
     return { refreshing, refresh, interval, setInterval }
 }
 
@@ -191,7 +173,7 @@ function useRefresh(step: () => void) {
 function useTimeControls() {
     const [range, setRange] = useState<TimeRangeValue>({ preset: '6h' })
     const [now, setNow] = useState(NOW)
-    const { refreshing, refresh, interval, setInterval } = useRefresh(() => setNow((step) => step + 1))
+    const { refreshing, refresh, interval, setInterval } = useDashboardRefresh(() => setNow((step) => step + 1))
     const span = useMemo(() => spanOf(range, now), [range, now])
     const controls = (
         <>
@@ -1628,7 +1610,7 @@ function Forecast() {
     const [project, setProject] = useState(ALL)
     const [horizon, setHorizon] = useState('7')
     const [run, setRun] = useState(0)
-    const { refreshing, refresh, interval, setInterval } = useRefresh(() => setRun((count) => count + 1))
+    const { refreshing, refresh, interval, setInterval } = useDashboardRefresh(() => setRun((count) => count + 1))
     const data = useMemo(() => forecast(project, Number(horizon), run), [project, horizon, run])
     const columns = useMemo(() => SLOT_COLUMNS(data.days), [data.days])
     const variables: Variable[] = [

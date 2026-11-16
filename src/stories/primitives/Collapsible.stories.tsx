@@ -5,6 +5,7 @@ import { useState, type ReactNode } from 'react'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@winterop-com/sokkel-ui/primitives/collapsible'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /** A region a trigger shows and hides. It carries no styling of its own; the story draws it. */
 function Caption({ children }: { children: ReactNode }) {
@@ -58,19 +59,21 @@ const STEPS = [
 function JobSteps() {
     const [open, setOpen] = useState<string | null>('validate')
     return (
-        <Stack gap="none" className="w-full max-w-xl divide-y divide-border rounded-lg border border-border">
-            {STEPS.map((step) => (
-                <Collapsible key={step.code} open={open === step.code} onOpenChange={(next) => setOpen(next ? step.code : null)}>
-                    <CollapsibleTrigger render={<Button variant="ghost" className="group w-full justify-start rounded-none" />}>
-                        <ChevronRightIcon className="transition-transform group-data-panel-open:rotate-90" />
-                        <span className="font-mono">{step.code}</span>
-                        <span className="text-xs text-muted-foreground">{step.uses}</span>
-                        <span className="ml-auto text-xs text-muted-foreground tabular-nums">{step.took}</span>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="px-3 py-2 font-mono text-xs text-muted-foreground">{step.with}</CollapsibleContent>
-                </Collapsible>
-            ))}
-        </Stack>
+        <Surface className="w-full max-w-xl">
+            <Stack gap="none" className="divide-y divide-border">
+                {STEPS.map((step) => (
+                    <Collapsible key={step.code} open={open === step.code} onOpenChange={(next) => setOpen(next ? step.code : null)}>
+                        <CollapsibleTrigger render={<Button variant="ghost" className="group w-full justify-start rounded-none" />}>
+                            <ChevronRightIcon className="transition-transform group-data-panel-open:rotate-90" />
+                            <span className="font-mono">{step.code}</span>
+                            <span className="text-xs text-muted-foreground">{step.uses}</span>
+                            <span className="ml-auto text-xs text-muted-foreground tabular-nums">{step.took}</span>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="px-3 py-2 font-mono text-xs text-muted-foreground">{step.with}</CollapsibleContent>
+                    </Collapsible>
+                ))}
+            </Stack>
+        </Surface>
     )
 }
 
