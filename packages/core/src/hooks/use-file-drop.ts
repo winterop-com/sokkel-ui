@@ -15,12 +15,14 @@ export interface FileDropHandlers {
 
 /**
  * Files dragged onto an element from the desktop: whether they are over it, held while the pointer
- * crosses its children by counting the enters and leaves, and the drop handed to `onFiles`. Off
- * (`enabled` false) it takes nothing, so the browser does what it would.
+ * crosses its children by keeping the elements entered and not yet left, and the drop handed to
+ * `onFiles`. An element entered that is gone from the page, such as a child the drop's own look
+ * replaced, counts as left, as no leave comes from it. Off (`enabled` false) it takes nothing, so
+ * the browser does what it would.
  */
 export function useFileDrop(onFiles: (files: File[]) => void, enabled = true): { over: boolean; handlers: FileDropHandlers } {
     const [over, setOver] = useState(false)
-    const depth = useRef(0)
+    const entered = useRef(new Set<EventTarget>())
     const takes = (event: DragEvent) => enabled && carriesFiles(event)
     return {
         over: enabled && over,
@@ -28,7 +30,7 @@ export function useFileDrop(onFiles: (files: File[]) => void, enabled = true): {
             onDragEnter: (event) => {
                 if (!takes(event)) return
                 event.preventDefault()
-                depth.current += 1
+                entered.current.add(event.target)
                 setOver(true)
             },
             onDragOver: (event) => {
@@ -38,13 +40,17 @@ export function useFileDrop(onFiles: (files: File[]) => void, enabled = true): {
             },
             onDragLeave: (event) => {
                 if (!takes(event)) return
-                depth.current = Math.max(0, depth.current - 1)
-                if (depth.current === 0) setOver(false)
+                const within = event.currentTarget
+                entered.current.delete(event.target)
+                for (const element of entered.current) {
+                    if (!(element instanceof Node) || !element.isConnected || !within.contains(element)) entered.current.delete(element)
+                }
+                if (entered.current.size === 0) setOver(false)
             },
             onDrop: (event) => {
                 if (!takes(event)) return
                 event.preventDefault()
-                depth.current = 0
+                entered.current.clear()
                 setOver(false)
                 const files = [...event.dataTransfer.files]
                 if (files.length > 0) onFiles(files)

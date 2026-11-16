@@ -4,6 +4,7 @@ import { MoreHorizontal, Play, Plus, RotateCcw, Save, Trash2 } from 'lucide-reac
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const VARIANTS = ['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] as const
 const SIZES = ['xs', 'sm', 'default', 'lg'] as const
@@ -176,32 +177,34 @@ export const DestructiveHover: StoryObj = {
 /** A job's actions beside its name and last run: Retry failed, Edit, Run now, and an icon-only Delete. */
 export const RunActions: StoryObj = {
     render: () => (
-        <Stack gap="lg" className="rounded-lg border border-border p-4">
-            <Row gap="md" justify="between" wrap>
-                <Stack gap="2xs">
-                    <p className="text-sm font-medium">Import orders</p>
-                    <p className="font-mono text-xs text-muted-foreground">import-orders</p>
-                </Stack>
-                <Row align="stretch" wrap>
-                    <Button variant="ghost" size="sm">
-                        <RotateCcw data-icon="inline-start" />
-                        Retry failed
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        Edit
-                    </Button>
-                    <Button size="sm">
-                        <Play data-icon="inline-start" />
-                        Run now
-                    </Button>
-                    <Button variant="destructive" size="icon-sm" aria-label="Delete job">
-                        <Trash2 />
-                    </Button>
+        <Surface pad>
+            <Stack gap="lg">
+                <Row gap="md" justify="between" wrap>
+                    <Stack gap="2xs">
+                        <p className="text-sm font-medium">Import orders</p>
+                        <p className="font-mono text-xs text-muted-foreground">import-orders</p>
+                    </Stack>
+                    <Row align="stretch" wrap>
+                        <Button variant="ghost" size="sm">
+                            <RotateCcw data-icon="inline-start" />
+                            Retry failed
+                        </Button>
+                        <Button variant="outline" size="sm">
+                            Edit
+                        </Button>
+                        <Button size="sm">
+                            <Play data-icon="inline-start" />
+                            Run now
+                        </Button>
+                        <Button variant="destructive" size="icon-sm" aria-label="Delete job">
+                            <Trash2 />
+                        </Button>
+                    </Row>
                 </Row>
-            </Row>
-            <p className="text-sm text-muted-foreground">
-                Last run failed at 2026-11-04 14:02 after 0.3s. The fetch step could not reach api.example.org.
-            </p>
-        </Stack>
+                <p className="text-sm text-muted-foreground">
+                    Last run failed at 2026-11-04 14:02 after 0.3s. The fetch step could not reach api.example.org.
+                </p>
+            </Stack>
+        </Surface>
     ),
 }

@@ -19,7 +19,8 @@ and ask before acting.
   example belongs to one fictional app, Tidevann ("tidewater"), drawn with its mark from
   `src/stories/fixtures/TidevannMark.tsx`, and uses its neutral workspace:
     - jobs such as nightly-export, sync-inventory, rebuild-index, send-digest and import-orders;
-    - run states succeeded, failed, running, queued, cancelled and skipped;
+    - run states succeeded, failed, running, queued, cancelled and skipped, and the library's
+      further states pending, waiting and completed_with_errors (and sending and sent for messages);
     - steps fetch, transform, validate, upload and notify;
     - people ada, grace, linus and margaret;
     - the app Tidevann, with the projects harbor, juniper and larkspur;

@@ -15,7 +15,7 @@ import { useContext } from 'react'
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { useStatus } from '@winterop-com/sokkel-ui/StatusProvider'
 
-import { GraphEditingContext } from './context'
+import { GraphBendContext, GraphEditingContext } from './context'
 import { edgePath, midpointOf, type GraphPoint, type GraphRouting } from './layout'
 
 /** What a graph edge carries: elk's route once it has one, and how the edge is drawn. */
@@ -116,15 +116,16 @@ export function GraphEdge({
     const routed = points !== undefined && points.length >= 2 && data?.loop !== true
     const routing = data?.routing ?? 'orthogonal'
     const ends = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }
+    const bend = useContext(GraphBendContext)
     // Until elk has answered, the line between the two handles is drawn in the routing asked for.
     const [rough, middleX, middleY] =
         routing === 'splines'
             ? getBezierPath(ends)
             : routing === 'polyline'
               ? getStraightPath(ends)
-              : getSmoothStepPath({ ...ends, borderRadius: 6 })
+              : getSmoothStepPath({ ...ends, borderRadius: bend })
     const loop = data?.loop === true ? loopOf(sourceX, sourceY, targetX, targetY, sourcePosition === Position.Bottom) : null
-    const path = loop?.path ?? (routed ? edgePath(points, routing) : rough)
+    const path = loop?.path ?? (routed ? edgePath(points, routing, bend) : rough)
     const tip = routed ? (points[points.length - 1] as GraphPoint) : { x: targetX, y: targetY }
     const from = loop?.from ?? (routed ? (points[points.length - 2] as GraphPoint) : behind(tip, targetPosition))
     const labelAt = loop?.labelAt ?? data?.labelAt ?? (routed ? midpointOf(points) : undefined) ?? { x: middleX, y: middleY }

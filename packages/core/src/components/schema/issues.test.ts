@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { shiftKey, shiftRecord, shiftSet } from './issues'
+import { readPointer, shiftKey, shiftRecord, shiftSet } from './issues'
 
 const removing = (gone: number) => (at: number) => (at === gone ? null : at > gone ? at - 1 : at)
 
@@ -16,5 +16,19 @@ describe('marks kept by place', () => {
         expect(shiftKey('/steps/2/name', '/steps', up)).toBe('/steps/1/name')
         expect(shiftKey('/steps/1', '/steps', up)).toBe('/steps/2')
         expect(shiftKey('/labels/1', '/steps', up)).toBe('/labels/1')
+    })
+})
+
+describe('a pointer read back into a path', () => {
+    it('reads digits as an index in a list and as a key in a map', () => {
+        const document = { ports: { '8080': 'api' }, steps: [{ name: 'fetch' }] }
+        expect(readPointer('/ports/8080', document)).toEqual(['ports', '8080'])
+        expect(readPointer('/steps/0/name', document)).toEqual(['steps', 0, 'name'])
+        expect(readPointer('/a~1b/c~0d', {})).toEqual(['a/b', 'c~d'])
+    })
+
+    it('reads digits past the end of the document as an index', () => {
+        expect(readPointer('/steps/3', { steps: [] })).toEqual(['steps', 3])
+        expect(readPointer('/steps/3', {})).toEqual(['steps', 3])
     })
 })

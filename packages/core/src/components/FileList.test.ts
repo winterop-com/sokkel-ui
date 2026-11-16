@@ -26,6 +26,13 @@ describe('formatSize', () => {
         expect(formatSize(14_200)).toBe('14 KB')
         expect(formatSize(3_140_000)).toBe('3.1 MB')
     })
+
+    it('moves up a unit once the value would show as a thousand, and shows ten whole', () => {
+        expect(formatSize(999_600)).toBe('1.0 MB')
+        expect(formatSize(999_400)).toBe('999 KB')
+        expect(formatSize(9_960)).toBe('10 KB')
+        expect(formatSize(9_940)).toBe('9.9 KB')
+    })
 })
 
 describe('parseCsv', () => {

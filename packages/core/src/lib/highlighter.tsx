@@ -216,6 +216,12 @@ const FONT_STYLE = { italic: 1, bold: 2, underline: 4 } as const
 /** The longest line the highlighter colors; a longer one is drawn plain. */
 const MAX_LINE_LENGTH = 20_000
 
+/** How long one line may take to color, in milliseconds; the rest of a slower line is drawn plain. */
+const LINE_TIME_LIMIT = 1_000
+
+// The languages whose grammar has been run once, so its first patterns are compiled.
+const warmed = new Set<string>()
+
 // Loads a language and returns a highlighter for it, or null for a language
 // that is not listed.
 export async function loadHighlighter(language: string) {
@@ -239,6 +245,13 @@ export async function loadHighlighter(language: string) {
         return null
     }
 
+    // The first line in a language compiles its grammar's patterns, which on a busy machine can outlast
+    // the time limit, so a short line is colored once with no limit before any code is.
+    if (!warmed.has(lang)) {
+        shiki.codeToTokens('a = 1', { lang, theme: THEME_NAME, tokenizeTimeLimit: 0 })
+        warmed.add(lang)
+    }
+
     return {
         // Returns one React node per line, and the state after the last line.
         // Pass that state back to continue where the code left off. Bracket
@@ -248,10 +261,9 @@ export async function loadHighlighter(language: string) {
                 lang,
                 theme: THEME_NAME,
                 grammarState: isCode(state) ? state.grammar : undefined,
-                // No time limit per line: the first line in a language compiles its grammar's patterns,
-                // which on a busy machine outlasts any limit and would leave the rest of that line plain.
-                // A line too long to color, such as minified code, is drawn plain instead.
-                tokenizeTimeLimit: 0,
+                // A grammar chosen by the text being drawn cannot hold the page: a line that takes too
+                // long, or is too long to color (minified code), is drawn plain from there on.
+                tokenizeTimeLimit: LINE_TIME_LIMIT,
                 tokenizeMaxLineLength: MAX_LINE_LENGTH,
             }).tokens
             let depth = isCode(state) ? state.depth : 0

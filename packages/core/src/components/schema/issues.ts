@@ -14,6 +14,26 @@ export function pointer(path: Path): string {
     return path.map((part) => `/${String(part).replaceAll('~', '~0').replaceAll('/', '~1')}`).join('')
 }
 
+/**
+ * A JSON Pointer read back into a path. A part of digits is an index where the document holds a
+ * list at that place, and a key where it holds an object, so a map keyed `"8080"` stays a map; past
+ * the end of the document, digits read as an index.
+ */
+export function readPointer(at: string, document: unknown): Path {
+    if (at === '') return []
+    let current: unknown = document
+    return at
+        .slice(1)
+        .split('/')
+        .map((raw) => {
+            const part = raw.replaceAll('~1', '/').replaceAll('~0', '~')
+            const here = current
+            const index = /^\d+$/.test(part) && (Array.isArray(here) || here === null || typeof here !== 'object')
+            current = here !== null && typeof here === 'object' ? (here as Record<string, unknown>)[part] : undefined
+            return index ? Number(part) : part
+        })
+}
+
 /** What is wrong with a value, by rule; the form says it in words. */
 export type SchemaIssueKind =
     | { kind: 'required' }

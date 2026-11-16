@@ -10,6 +10,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@winterop-com/sokkel-ui/primitives/pagination'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Navigation/Pagination', parameters: { frame: 'column' } }
 export default meta
@@ -113,31 +114,33 @@ export const States: StoryObj = {
 /** Paging through a job's runs. */
 export const RunHistory: StoryObj = {
     render: () => (
-        <Row gap="md" justify="between" wrap className="rounded-lg border px-3 py-2">
-            <p className="text-sm text-muted-foreground tabular-nums">
-                Runs 51 to 75 of 288 for <span className="font-mono text-foreground">nightly-export</span>
-            </p>
-            <Pagination className="mx-0 w-auto">
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious href="#" />
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationLink href="#">2</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationLink href="#" isActive>
-                            3
-                        </PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationLink href="#">4</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationNext href="#" />
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
-        </Row>
+        <Surface>
+            <Row gap="md" justify="between" wrap className="px-3 py-2">
+                <p className="text-sm text-muted-foreground tabular-nums">
+                    Runs 51 to 75 of 288 for <span className="font-mono text-foreground">nightly-export</span>
+                </p>
+                <Pagination className="mx-0 w-auto">
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious href="#" />
+                        </PaginationItem>
+                        <PaginationItem>
+                            <PaginationLink href="#">2</PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                            <PaginationLink href="#" isActive>
+                                3
+                            </PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                            <PaginationLink href="#">4</PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                            <PaginationNext href="#" />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </Row>
+        </Surface>
     ),
 }

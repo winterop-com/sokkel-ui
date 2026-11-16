@@ -600,7 +600,7 @@ function EntryMark({ entry, initial = false, className = 'size-4' }: { entry: Ra
     if (!initial) return null
     return (
         <span className={cn('flex shrink-0 items-center justify-center text-xs font-semibold', className)} aria-hidden>
-            {entry.label.slice(0, 1)}
+            {[...entry.label][0]}
         </span>
     )
 }

@@ -1,15 +1,17 @@
 import Ajv2020, { type ErrorObject, type ValidateFunction } from 'ajv/dist/2020'
+import type { RegExpEngine } from 'ajv/dist/types'
 import addFormats from 'ajv-formats'
 
 import { formatPhrase, formatTest, schemaFormats, type SchemaFormats } from './formats'
-import { fieldSchema, given, pointer, valueAt, type Path, type SchemaIssue, type SchemaIssueKind } from './issues'
+import { fieldSchema, given, pointer, readPointer, valueAt, type Path, type SchemaIssue, type SchemaIssueKind } from './issues'
+import { guardedPattern } from './patterns'
 import type { JsonSchema } from './read'
 
 /** A value that matches the pattern, made from the given one by the usual repairs, when one does. */
 function repair(value: string, pattern: string): string | undefined {
-    let test: RegExp
+    let test: { test: (text: string) => boolean }
     try {
-        test = new RegExp(pattern, 'u')
+        test = guardedPattern(pattern)
     } catch {
         return undefined
     }
@@ -27,6 +29,9 @@ function repair(value: string, pattern: string): string | undefined {
     return candidates.find((candidate) => candidate !== '' && candidate !== value && test.test(candidate))
 }
 
+/** Ajv's patterns, each tested only as far as it answers quickly. */
+const patterns: RegExpEngine = Object.assign((pattern: string, flags: string) => guardedPattern(pattern, flags), { code: 'guardedPattern' })
+
 /** Ajv with the standard formats and the app's; it logs errors only, so a format no one registered is passed over in silence. */
 function checker(formats: SchemaFormats): Ajv2020 {
     const made = new Ajv2020({
@@ -35,6 +40,7 @@ function checker(formats: SchemaFormats): Ajv2020 {
         validateFormats: true,
         // A decimal multipleOf (0.01, 0.1) counts a value as a multiple within this many decimal places, as floating point needs.
         multipleOfPrecision: 9,
+        code: { regExp: patterns },
         logger: { log: () => {}, warn: () => {}, error: (...args: unknown[]) => console.error(...args) },
     })
     addFormats(made)
@@ -150,20 +156,10 @@ function compile(schema: JsonSchema): Compiled | Error {
     return hold(text, check)
 }
 
-/** A JSON Pointer read back into a path, indexes as numbers. */
-function parse(at: string): (string | number)[] {
-    if (at === '') return []
-    return at
-        .slice(1)
-        .split('/')
-        .map((part) => part.replaceAll('~1', '/').replaceAll('~0', '~'))
-        .map((part) => (/^\d+$/.test(part) ? Number(part) : part))
-}
-
 /** An ajv error as an issue, with a fix when one is plain from the value and the rule. */
 function read(error: ErrorObject, document: unknown): SchemaIssue {
     const params = error.params as Record<string, unknown>
-    const path = parse(error.instancePath)
+    const path = readPointer(error.instancePath, document)
     const value = valueAt(document, path)
     const at = (issue: SchemaIssueKind, fix?: unknown): SchemaIssue => ({
         ...issue,
@@ -318,7 +314,7 @@ function narrowed(
 ): { start: number; kept: ErrorObject[] } | undefined {
     const error = errors[at]
     const base = error.instancePath
-    const value = valueAt(document, parse(base))
+    const value = valueAt(document, readPointer(base, document))
     const branches = schemaAt(made.body, error.schemaPath)
     if (!Array.isArray(branches)) return undefined
     const counts: number[] = []
@@ -433,7 +429,8 @@ export function validate(schema: JsonSchema, value: unknown): SchemaIssue[] {
         .map((error) => read(error, document))
     const seen = new Set<string>()
     const unique = issues.filter((issue) => {
-        const key = `${pointer(issue.path)} ${issue.kind}`
+        // Each property an object does not allow is its own issue at the object.
+        const key = `${pointer(issue.path)} ${issue.kind}${issue.kind === 'additional' ? ` ${issue.property}` : ''}`
         if (seen.has(key)) return false
         seen.add(key)
         return true

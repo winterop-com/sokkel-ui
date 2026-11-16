@@ -83,8 +83,13 @@ export interface IssueMarksProps {
 export function IssueMarks({ list, scroller: given, label = 'Issues in this form', className }: IssueMarksProps) {
     const anchor = useRef<HTMLDivElement>(null)
     const [layout, setLayout] = useState<Layout | null>(null)
+    // The list by what it says, so a list made anew each render with the same issues is measured once.
+    const said = list.map((entry) => [entry.target ?? '', entry.label, entry.issue.tone, entry.issue.text].join('\u0001')).join('\u0002')
+    const latest = useRef(list)
+    latest.current = list
     useLayoutEffect(() => {
         const here = anchor.current
+        const list = latest.current
         if (here === null || list.length === 0) {
             setLayout(null)
             return
@@ -93,7 +98,7 @@ export function IssueMarks({ list, scroller: given, label = 'Issues in this form
         let frame = 0
         const update = () => {
             cancelAnimationFrame(frame)
-            frame = requestAnimationFrame(() => setLayout(measure(here, scroller, list)))
+            frame = requestAnimationFrame(() => setLayout(measure(here, scroller, latest.current)))
         }
         setLayout(measure(here, scroller, list))
         const target: HTMLElement | Window = scroller === document.documentElement ? window : scroller
@@ -108,7 +113,7 @@ export function IssueMarks({ list, scroller: given, label = 'Issues in this form
             window.removeEventListener('resize', update)
             observer.disconnect()
         }
-    }, [given, list])
+    }, [given, said])
     return (
         <div ref={anchor} data-slot="issue-marks" className="relative h-0 w-full">
             {layout !== null && (
@@ -124,7 +129,7 @@ export function IssueMarks({ list, scroller: given, label = 'Issues in this form
                             type="button"
                             aria-label={`${entry.label}: ${entry.issue.text}`}
                             title={`${entry.label}: ${entry.issue.text}`}
-                            onClick={entry.onGo}
+                            onClick={() => (list.find((now) => now.target === entry.target && now.label === entry.label) ?? entry).onGo()}
                             className={cn(
                                 'absolute inset-x-0.5 h-2 -translate-y-1/2 rounded-sm outline-none hover:brightness-110 focus-visible:ring-focus focus-visible:ring-ring/60',
                                 TONE[entry.issue.tone],

@@ -6,6 +6,7 @@ import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@winterop-co
 import { Input } from '@winterop-com/sokkel-ui/primitives/input'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 const meta: Meta = { title: 'Primitives/Actions/ButtonGroup', parameters: { frame: 'column' } }
 export default meta
@@ -110,21 +111,23 @@ export const States: StoryObj = {
 /** A running run's Pause and Cancel joined as one group beside what the run is doing. */
 export const RunControls: StoryObj = {
     render: () => (
-        <Row gap="md" justify="between" wrap className="rounded-lg border border-border p-4">
-            <Stack gap="2xs">
-                <p className="text-sm font-medium">Run 01a1a5c6</p>
-                <p className="text-xs text-muted-foreground">running since 2026-11-04 14:02, step 2 of 3</p>
-            </Stack>
-            <ButtonGroup>
-                <Button variant="outline" size="sm">
-                    <Pause data-icon="inline-start" />
-                    Pause
-                </Button>
-                <Button variant="outline" size="sm">
-                    <Square data-icon="inline-start" />
-                    Cancel
-                </Button>
-            </ButtonGroup>
-        </Row>
+        <Surface pad>
+            <Row gap="md" justify="between" wrap>
+                <Stack gap="2xs">
+                    <p className="text-sm font-medium">Run 01a1a5c6</p>
+                    <p className="text-xs text-muted-foreground">running since 2026-11-04 14:02, step 2 of 3</p>
+                </Stack>
+                <ButtonGroup>
+                    <Button variant="outline" size="sm">
+                        <Pause data-icon="inline-start" />
+                        Pause
+                    </Button>
+                    <Button variant="outline" size="sm">
+                        <Square data-icon="inline-start" />
+                        Cancel
+                    </Button>
+                </ButtonGroup>
+            </Row>
+        </Surface>
     ),
 }

@@ -510,7 +510,7 @@ function Variables() {
     const [live, setLive] = useState(true)
     const [range, setRange] = useState<TimeRangeValue>({ preset: '24h' })
     const [interval, setInterval] = useState(30)
-    const [paused, setPaused] = useState(false)
+    const [paused, setPaused] = useState(true)
     // A refresh that takes a moment, as a fetch does, run on the control's interval and pause.
     const auto = useRefresh(() => new Promise((done) => window.setTimeout(done, 800)), { interval, paused })
     return (
@@ -547,7 +547,7 @@ function Variables() {
 
 /**
  * The variables bar: two dropdown filters and a toggle, with the range and refresh at the end, the
- * refresh with its own intervals and a pause. `useRefresh` runs the refresh on the chosen interval
+ * refresh with its own intervals and a pause, held paused until it is resumed. `useRefresh` runs the refresh on the chosen interval
  * unless paused, and at once on a press, the button spinning while it runs.
  */
 export const VariablesStory: StoryObj = { name: 'Variables bar', render: () => <Variables /> }

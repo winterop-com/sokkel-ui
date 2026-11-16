@@ -1,6 +1,6 @@
 import { Autocomplete } from '@base-ui/react/autocomplete'
 import { Plus, Send, SquareTerminal, X } from 'lucide-react'
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Code } from './Code'
@@ -141,23 +141,33 @@ const WORDS: ApiPlaygroundWords = {
     historyNote: 'Newest first. Choosing one puts it back in the builder.',
 }
 
-/** The path with its parameters as a query, each name and value encoded. */
+/**
+ * The path with its parameters as a query, each name and value encoded. It always starts with `/`,
+ * so put after a base it stays under the base: a path such as `@host/x` cannot name another host.
+ */
 export function requestTarget(request: ApiRequest): string {
+    const path = request.path.startsWith('/') ? request.path : `/${request.path}`
     const query = request.params
         .filter((param) => param.name.trim() !== '')
         .map((param) => `${encodeURIComponent(param.name.trim())}=${encodeURIComponent(param.value)}`)
         .join('&')
-    if (query === '') return request.path
-    return `${request.path}${request.path.includes('?') ? '&' : '?'}${query}`
+    if (query === '') return path
+    return `${path}${path.includes('?') ? '&' : '?'}${query}`
+}
+
+/** The whole address a request goes to: the base, then the request's target. */
+export function requestAddress(base: string, request: ApiRequest): string {
+    return `${base.replace(/\/+$/, '')}${requestTarget(request)}`
 }
 
 const quoted = (text: string) => `'${text.replaceAll("'", "'\\''")}'`
 
-/** The request as a curl command, with the headers every request carries and its body. */
+/** The request as a curl command, with the headers every request carries and its body, sent as written (a leading `@` names no file). */
 export function curlOf(base: string, request: ApiRequest, headers: Readonly<Record<string, string>> = {}): string {
-    const parts = [`curl -X ${request.method}`, quoted(`${base.replace(/\/$/, '')}${requestTarget(request)}`)]
+    const parts = [`curl -X ${request.method}`, quoted(requestAddress(base, request))]
     for (const [name, value] of Object.entries(headers)) parts.push(`-H ${quoted(`${name}: ${value}`)}`)
-    if (request.body !== undefined && request.body.trim() !== '' && request.method !== 'GET') parts.push(`--data ${quoted(request.body)}`)
+    if (request.body !== undefined && request.body.trim() !== '' && request.method !== 'GET')
+        parts.push(`--data-raw ${quoted(request.body)}`)
     return parts.join(' ')
 }
 
@@ -251,7 +261,11 @@ export function ApiPlayground({
     }
     const sendsBody = request.method !== 'GET'
     const shown: ApiRequest = sendsBody ? request : { ...request, body: undefined }
-    const target = `${base.replace(/\/$/, '')}${requestTarget(shown)}`
+    const target = requestAddress(base, shown)
+    const ids = useId()
+    const methodId = `${ids}-method`
+    const pathId = `${ids}-path`
+    const bodyId = `${ids}-body`
     const hints = paramHints?.(request.path.split('?')[0] ?? request.path) ?? []
 
     const go = () => {
@@ -305,13 +319,13 @@ export function ApiPlayground({
                 >
                     <div className="flex min-w-0 flex-wrap items-end gap-2">
                         <div className="flex w-28 flex-col gap-1.5">
-                            <Label htmlFor="api-method">{words.method}</Label>
+                            <Label htmlFor={methodId}>{words.method}</Label>
                             <Select
                                 items={methods.map((method) => ({ value: method, label: method }))}
                                 value={request.method}
                                 onValueChange={(next) => next !== null && set({ method: next })}
                             >
-                                <SelectTrigger id="api-method" className="w-full font-mono">
+                                <SelectTrigger id={methodId} className="w-full font-mono">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -324,9 +338,9 @@ export function ApiPlayground({
                             </Select>
                         </div>
                         <div className="flex min-w-48 flex-1 basis-48 flex-col gap-1.5">
-                            <Label htmlFor="api-path">{words.path}</Label>
+                            <Label htmlFor={pathId}>{words.path}</Label>
                             <Input
-                                id="api-path"
+                                id={pathId}
                                 className="w-full min-w-0 font-mono"
                                 value={request.path}
                                 spellCheck={false}
@@ -391,10 +405,10 @@ export function ApiPlayground({
                     </div>
                     {sendsBody && (
                         <div className="flex min-w-0 flex-col gap-1.5">
-                            <Label htmlFor="api-body">{words.body}</Label>
+                            <Label htmlFor={bodyId}>{words.body}</Label>
                             <Suspense fallback={<div className="min-h-24 rounded-control border border-input bg-field" />}>
                                 <CodeEditor
-                                    id="api-body"
+                                    id={bodyId}
                                     label={words.body}
                                     language="json"
                                     value={request.body ?? ''}
