@@ -36,7 +36,10 @@ fmt-check: ## Check the formatting
 test: ## Run the unit tests and the library rules
 	bun run test
 
-check: typecheck lint fmt-check test ## The fast gates to run before pushing
+check: typecheck lint fmt-check test ## The fast gates to run before pushing, with the generated files' checks CI runs
+	bun scripts/build-tokens.ts --check
+	bun run components -- --check
+	bun run design --check
 
 storybook-build: ## Build the static Storybook into storybook-static/
 	bun run build-storybook

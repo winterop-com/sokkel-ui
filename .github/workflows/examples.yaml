@@ -13,9 +13,13 @@ on:
         - cron: '0 3 * * *'
     workflow_dispatch:
 
+permissions:
+    contents: read
+
 jobs:
     build:
         runs-on: ubuntu-latest
+        timeout-minutes: 60
         env:
             # The Electron shells only bundle their main file here; they never start Electron.
             ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
@@ -40,8 +44,10 @@ jobs:
               run: |
                   sudo apt-get update
                   sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
-            - uses: dtolnay/rust-toolchain@stable
-            - uses: Swatinem/rust-cache@v2
+            - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+              with:
+                  toolchain: stable
+            - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
               with:
                   cache-directories: examples/.cargo-target
             - name: Tauri shells

@@ -24,6 +24,7 @@ jobs:
         # Runs once GitHub Pages is enabled for the repository with GitHub Actions as its source.
         if: github.event.repository.has_pages
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}

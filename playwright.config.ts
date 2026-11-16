@@ -9,6 +9,8 @@ export default defineConfig({
     testDir: 'e2e',
     snapshotPathTemplate: '{testDir}/__screenshots__/{arg}{ext}',
     fullyParallel: true,
+    // A `test.only` left in a spec would run that one test alone and pass the rest unseen.
+    forbidOnly: !!process.env.CI,
     reporter: [['line']],
     // A screenshot of a tall story, such as every icon, can take more than the default five seconds on a busy runner.
     expect: { toHaveScreenshot: { maxDiffPixels: 20, animations: 'disabled', timeout: 20_000 } },

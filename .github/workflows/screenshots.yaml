@@ -5,8 +5,9 @@ name: screenshots
 # scripts/baselines.sh reads and writes:
 #   - run on main, it retakes into `baselines`, which always holds a single commit;
 #   - run on any other branch, it retakes into `baselines-for/<branch>`: one commit on top of
-#     `baselines` with what the branch changed. CI compares that branch against it, and when the
-#     branch's PR merges, the ci workflow lays it onto `baselines` and deletes it.
+#     `baselines` with what the branch changed, which CI would compare that branch against. No
+#     workflow lays it onto `baselines` when the branch merges: `scripts/baselines.sh promote
+#     <branch>` does, by hand, or a retake on main after the merge.
 # `stories` narrows the retake to the story ids matching a pattern, so a change to a few stories
 # retakes in minutes; empty retakes every story. Start it with `make screenshots-ci`, or
 # `make screenshots-ci STORIES='foundations-icons|apps-music'`. Once the baselines are pushed, it
@@ -32,6 +33,7 @@ concurrency:
 jobs:
     update:
         runs-on: ubuntu-latest
+        timeout-minutes: 60
         container:
             image: mcr.microsoft.com/playwright:v1.64.1-noble
             options: --ipc=host
@@ -61,6 +63,7 @@ jobs:
     rerun-ci:
         needs: update
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         steps:
             # The commit's own ci run, from its PR or from its push to main, is run again (stopped
             # first if it is still going), so the commit's check ends on the new baselines rather than

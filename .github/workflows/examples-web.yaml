@@ -1,15 +1,28 @@
 name: examples web
 
-# A change to the packages can break an example, so a pull request that changes them builds every
-# example's web app against it. The desktop shells are checked by examples.yaml when the examples change.
+# A change to the packages, or to how they are built and installed, can break an example, so a pull
+# request that changes them builds every example's web app against it. The desktop shells are checked by examples.yaml when the examples change.
 on:
     pull_request:
-        paths: ['packages/**', '.bun-version', '.github/workflows/examples-web.yaml']
+        paths:
+            [
+                'packages/**',
+                'vite.lib.ts',
+                'package.json',
+                'bun.lock',
+                'tsconfig.json',
+                '.bun-version',
+                '.github/workflows/examples-web.yaml',
+            ]
     workflow_dispatch:
+
+permissions:
+    contents: read
 
 jobs:
     web:
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         steps:
             - uses: actions/checkout@v5
             - run: npm install -g "bun@$(cat .bun-version)"
