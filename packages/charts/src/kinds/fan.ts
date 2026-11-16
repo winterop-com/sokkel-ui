@@ -1,5 +1,5 @@
 import { tooltipMarkup, type ChartLook, type TooltipRow } from '../look'
-import { edgeAxis, markRoom, stepLines, valueLabels } from './axes'
+import { edgeAxis, markRoom, markSeries, valueLabels } from './axes'
 import { fanShape, partNames, type Fan } from './legend-fan'
 import { written, categoryText, colorOf, type ChartBuilder, type ChartSpec } from './spec'
 
@@ -20,7 +20,6 @@ export const fan: ChartBuilder = (spec, look, hidden) => {
     const { categories, fans } = fanShape(spec)
     const smooth = spec.smooth === true
     const several = spec.series !== undefined
-    const lines = stepLines(spec, look)
     const series = fans.flatMap((entry, index) => {
         const color = colorOf(spec, look, entry.name, index)
         const names = partNames(spec, entry)
@@ -88,7 +87,7 @@ export const fan: ChartBuilder = (spec, look, hidden) => {
         grid: { left: 4, right: 10, top: markRoom(spec, look), bottom: 4 },
         xAxis: edgeAxis(spec, categories),
         yAxis: { type: 'value', scale: true, ...valueLabels(spec) },
-        series: lines === undefined ? series : [...series, { type: 'line', name: '', data: [], silent: true, markLine: lines }],
+        series: [...series, ...markSeries(spec, look)],
     }
 }
 

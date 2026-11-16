@@ -5,7 +5,7 @@ import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../C
 import { Chart } from '../Chart'
 import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { CATEGORY, FIGURE, panelFormat, SERIES } from './series'
+import { CATEGORY, FIGURE, heatmapRows, panelFormat, SERIES } from './series'
 
 /** One heatmap cell: the x index, the y index and its value. */
 export type HeatCell = readonly [x: number, y: number, value: number]
@@ -77,7 +77,7 @@ export function HeatmapPanel({
 }: HeatmapPanelProps) {
     const spec = useMemo<ChartSpec>(
         () => ({
-            rows: cells.map(([column, row, figure]) => ({ [CATEGORY]: x[column], [SERIES]: y[row], [FIGURE]: figure })),
+            rows: heatmapRows(x, y, cells),
             x: CATEGORY,
             y: FIGURE,
             series: SERIES,

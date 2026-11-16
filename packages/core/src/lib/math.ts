@@ -142,8 +142,11 @@ function outsideFences(text: string): string {
  * escaped. A single dollar opens math when a non-space follows it and closes it when a non-space
  * comes before it and no digit after it, on the same line, as Pandoc reads them, so "costs $5 and
  * $10" stays prices. Fenced code, `$$` blocks, inline code and escapes are left as they are.
+ *
+ * With `streaming`, a `$$` block still being written (opened and not yet closed) becomes a `latex`
+ * fence, so it shows as its source until its closing `$$` lands rather than as an error each token.
  */
-export function normalizeMath(source: string): string {
+export function normalizeMath(source: string, { streaming = false }: { streaming?: boolean } = {}): string {
     if (!/[$\\]/.test(source)) return source
     const lines = source.split('\n')
     const out: string[] = []
@@ -168,13 +171,19 @@ export function normalizeMath(source: string): string {
             fence === null
                 ? candidate.trim().endsWith('$$')
                 : new RegExp(`^\\s*${marker[0] === '`' ? '`' : '~'}{${String(marker.length)},}\\s*$`).test(candidate)
+        const opener = out.length
         out.push(line)
         index++
+        let closed = false
         while (index < lines.length) {
             out.push(lines[index])
             index++
-            if (shut(lines[index - 1])) break
+            if (shut(lines[index - 1])) {
+                closed = true
+                break
+            }
         }
+        if (streaming && block && !closed) out[opener] = line.replace('$$', '```latex')
     }
     flush()
     return out.join('\n')

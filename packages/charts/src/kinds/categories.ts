@@ -1,5 +1,6 @@
+import { extent } from '../data'
 import { tokenColor, tooltipMarkup, type ChartLook } from '../look'
-import { categoryAxis, edgeAxis, endsStack, fading, farCorners, markRoom, stepLines, tickWriter, valueLabels } from './axes'
+import { categoryAxis, edgeAxis, endsStack, fading, farCorners, markRoom, markSeries, tickWriter, valueLabels } from './axes'
 import { shaped } from './legend-series'
 import {
     categoryText,
@@ -111,33 +112,34 @@ export const bar: ChartBuilder = (spec, look) => {
 function lines(filled: boolean): ChartBuilder {
     return (spec, look) => {
         const { categories, series } = shaped(spec)
-        const marks = stepLines(spec, look)
         return {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
             grid: { left: 4, right: 10, top: markRoom(spec, look), bottom: 4 },
             xAxis: quietCategory(spec, look, edgeAxis(spec, categories)),
             yAxis: quietValue(spec, { type: 'value', scale: fitted(spec), ...valueRange(spec), ...valueLabels(spec) }),
-            series: series.map((entry, index) => {
-                const color = colorOf(spec, look, entry.name, index)
-                const stack = stackOf(spec, entry.name)
-                const dashed = isDashed(spec, entry.name)
-                return {
-                    type: 'line',
-                    name: entry.name,
-                    data: entry.values,
-                    smooth: spec.smooth === true,
-                    stack,
-                    itemStyle: { color },
-                    lineStyle: dashed ? { color, width: 1.25, type: 'dashed' } : { color },
-                    areaStyle:
-                        !filled || dashed || spec.fill === 'none'
-                            ? undefined
-                            : spec.fill === 'gradient'
-                              ? { opacity: 1, color: fading(look, color, stack !== undefined) }
-                              : { color, opacity: stack === undefined ? 0.15 : 0.55 },
-                    markLine: index === 0 ? marks : undefined,
-                }
-            }),
+            series: [
+                ...series.map((entry, index) => {
+                    const color = colorOf(spec, look, entry.name, index)
+                    const stack = stackOf(spec, entry.name)
+                    const dashed = isDashed(spec, entry.name)
+                    return {
+                        type: 'line',
+                        name: entry.name,
+                        data: entry.values,
+                        smooth: spec.smooth === true,
+                        stack,
+                        itemStyle: { color },
+                        lineStyle: dashed ? { color, width: 1.25, type: 'dashed' } : { color },
+                        areaStyle:
+                            !filled || dashed || spec.fill === 'none'
+                                ? undefined
+                                : spec.fill === 'gradient'
+                                  ? { opacity: 1, color: fading(look, color, stack !== undefined) }
+                                  : { color, opacity: stack === undefined ? 0.15 : 0.55 },
+                    }
+                }),
+                ...markSeries(spec, look),
+            ],
         }
     }
 }
@@ -217,8 +219,9 @@ export const heatmap: ChartBuilder = (spec, look) => {
     const cells = series.flatMap((entry, row) => entry.values.map((value, column) => [column, row, value]))
     const values = cells.map((cell) => cell[2]).filter((value): value is number => typeof value === 'number')
     const scale = spec.scale ?? spec.colors?.value ?? paletteToken(spec, 0) ?? 'chart-2'
-    const low = spec.min ?? (values.length === 0 ? 0 : Math.min(...values))
-    const high = spec.max ?? (values.length === 0 ? 1 : Math.max(...values))
+    const span = extent(values)
+    const low = spec.min ?? span?.[0] ?? 0
+    const high = spec.max ?? span?.[1] ?? 1
     return {
         tooltip: {
             trigger: 'item',

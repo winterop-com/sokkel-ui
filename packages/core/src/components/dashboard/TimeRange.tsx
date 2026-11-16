@@ -37,6 +37,14 @@ export function rangeLabel(from: Date, to: Date, locale = 'en-US'): string {
     return `${short.format(from)} to ${year.format(to)}`
 }
 
+/** Whether two ranges cover the same: the same preset, or a custom span of the same days. */
+export function sameRange(a: TimeRangeValue, b: TimeRangeValue): boolean {
+    if ('preset' in a || 'preset' in b) return 'preset' in a && 'preset' in b && a.preset === b.preset
+    return a.from.getTime() === b.from.getTime() && a.to.getTime() === b.to.getTime()
+}
+
+const draftOf = (value: TimeRangeValue): DateRange | undefined => ('from' in value ? { from: value.from, to: value.to } : undefined)
+
 /** The words a time range picker says; `range` writes a custom span for a reader. */
 export interface TimeRangeWords {
     custom: string
@@ -96,7 +104,13 @@ export function TimeRangePicker({
         onOpenChange?.(next)
     }
     const chosenRef = useRef<HTMLButtonElement>(null)
-    const [draft, setDraft] = useState<DateRange | undefined>('from' in value ? { from: value.from, to: value.to } : undefined)
+    const [draft, setDraft] = useState<DateRange | undefined>(() => draftOf(value))
+    // A range changed from outside replaces the span being picked; an equal one built afresh does not.
+    const [basis, setBasis] = useState(value)
+    if (!sameRange(basis, value)) {
+        setBasis(value)
+        setDraft(draftOf(value))
+    }
     const label =
         'preset' in value
             ? (presets.find((preset) => preset.id === value.preset)?.label ?? value.preset)

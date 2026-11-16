@@ -56,7 +56,9 @@ export interface QueueControls<T> {
  * A queue held in state: the list, the order it plays in, shuffle and repeat, and the steps a
  * player takes through it, over the pure helpers in `queue`. A shuffle is drawn from `seed` when
  * one is given, so the same seed shuffles the same way every time. It answers what the player
- * should do (play another item, the same again, or stop) and leaves playing to the app.
+ * should do (play another item, the same again, or stop) and leaves playing to the app. `items`
+ * and `options` are read once, as the queue starts, as a state's first value is; `load` starts it
+ * again from another list.
  */
 export function useQueue<T>(items: readonly T[], options: QueueOptions = {}): QueueControls<T> {
     const [queue, setQueue] = useState(() => createQueue(items, options))

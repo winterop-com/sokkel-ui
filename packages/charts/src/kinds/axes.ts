@@ -105,6 +105,15 @@ export function stepLines(spec: ChartSpec, look: ChartLook) {
 }
 
 /**
+ * The spec's lines across and down as an unseen series of their own, or none: a series the legend
+ * hides takes its marks with it, so the lines ride on a series no legend lists.
+ */
+export function markSeries(spec: ChartSpec, look: ChartLook) {
+    const lines = stepLines(spec, look)
+    return lines === undefined ? [] : [{ type: 'line', name: '', data: [], silent: true, markLine: lines }]
+}
+
+/**
  * Whether a bar ends its stack in its category: it stands alone, or it is the last of its stack
  * with a figure on its side of zero.
  */

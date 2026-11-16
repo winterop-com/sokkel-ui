@@ -1,7 +1,7 @@
 import type { LegendItem } from '../ChartLegend'
-import { asShares, distinct, formatNumber, labelOf, numberOf } from '../data'
+import { asShares, distinct, labelOf, numberOf } from '../data'
 import { SERIES_ORDER } from '../look'
-import { binCounts, binsFor, type Bins } from '../stats'
+import { binCounts, binsFor, edgeDecimals, type Bins } from '../stats'
 import { legendColor, unitAt, wordsOf, type ChartSpec } from './spec'
 
 /** A histogram's `x` numbers in bins, counted per group of `series`, and each bin's label. */
@@ -11,7 +11,9 @@ export function binned(spec: ChartSpec) {
     const numbers = (rows: readonly ChartSpec['rows'][number][]) =>
         rows.map((row) => numberOf(row[x])).filter((value): value is number => value !== null)
     const bins: Bins = binsFor(numbers(spec.rows), spec.bins)
-    const write = (value: number) => (spec.format ?? formatNumber)(value)
+    // Without a format an edge is written to the decimals the width needs, so 0.001 to 0.002 never reads 0-0.
+    const decimals = edgeDecimals(bins.width)
+    const write = spec.format ?? ((value: number) => value.toLocaleString('en-US', { maximumFractionDigits: decimals }))
     const labels = Array.from({ length: bins.count }, (_, index) => {
         const from = bins.start + index * bins.width
         return `${write(from)}–${write(from + bins.width)}${unitAt(spec)}`

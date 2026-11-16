@@ -62,6 +62,11 @@ export interface GraphNodeData extends Record<string, unknown> {
     reserveBadges?: readonly string[]
     /** Keeps room for an issue mark while the box has none, so an issue arriving moves nothing. */
     reserveIssue?: boolean
+    /**
+     * Keeps room for a status dot, and the line under the title for its duration, while the box has
+     * no status, so a status arriving or leaving moves nothing, as a state machine's current state does.
+     */
+    reserveStatus?: boolean
 }
 
 /** A short word on a node box's title line. */
@@ -176,7 +181,7 @@ export function graphNodeSize(
     const head =
         (data.icon === undefined ? 0 : GLYPH + GAP) +
         measure(title, named ? 'title' : 'title-mono') +
-        (data.status === undefined ? 0 : GAP + DOT) +
+        (data.status === undefined && data.reserveStatus !== true ? 0 : GAP + DOT) +
         (hasIssues(data) || data.reserveIssue === true ? GAP + MARK - 4 : 0) +
         badgeRoom(data, measure)
     const said = Math.max(
@@ -184,7 +189,7 @@ export function graphNodeSize(
         ...(data.reserve ?? []).map((words) => measure(words, 'small-mono')),
     )
     // A box with a state keeps room for a duration, so its step ending does not widen it.
-    const timed = duration !== null || data.status !== undefined
+    const timed = duration !== null || data.status !== undefined || data.reserveStatus === true
     const ends = [
         ...(timed ? [Math.max(duration === null ? 0 : measure(duration, 'small-mono'), measure(DURATION_ROOM, 'small-mono'))] : []),
         ...(onLine && data.count !== undefined ? [countWidth(data, measure)] : []),
@@ -433,7 +438,12 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                     </span>
                 )}
             </div>
-            {(line !== '' || duration !== null || status !== undefined || countOnLine || (data.reserve ?? []).length > 0) && (
+            {(line !== '' ||
+                duration !== null ||
+                status !== undefined ||
+                data.reserveStatus === true ||
+                countOnLine ||
+                (data.reserve ?? []).length > 0) && (
                 <div
                     data-slot="graph-node-line"
                     className={cn(

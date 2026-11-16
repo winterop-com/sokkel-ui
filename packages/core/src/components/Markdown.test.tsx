@@ -1,9 +1,11 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { loadHtml, Markdown } from './Markdown'
+import { loadHtml, loadMath, Markdown } from './Markdown'
+import { MARKDOWN_COMPONENTS, MarkdownView } from './markdown-view'
 
 beforeAll(loadHtml)
+beforeAll(loadMath)
 
 const PAGE = [
     '## Schedule',
@@ -101,5 +103,45 @@ describe('Markdown links', () => {
         expect(measured).toContain('max-w-(--reading-measure)')
         expect(renderToStaticMarkup(<Markdown content="Some text." />)).not.toContain('reading-measure')
         expect(renderToStaticMarkup(<Markdown content="Some text." measure inline />)).not.toContain('reading-measure')
+    })
+
+    it('keeps a link to a place in the page in it, and opens any other in a new tab', () => {
+        const html = renderToStaticMarkup(<Markdown content="See [Steps](#steps) and [the docs](https://example.org/docs)." />)
+        expect(html).toMatch(/<a [^>]*href="#steps"(?![^>]*target)[^>]*>Steps<\/a>/)
+        expect(html).toMatch(/<a [^>]*href="https:\/\/example\.org\/docs"[^>]*target="_blank"/)
+    })
+})
+
+describe('Markdown headings', () => {
+    it('gives a repeated heading its own id under anchors, matching markdownHeadings', () => {
+        const html = renderToStaticMarkup(<Markdown content={'## Example\n\nOne.\n\n## Example\n\nTwo.'} anchors />)
+        expect(html).toContain('<h2 id="example">')
+        expect(html).toContain('<h2 id="example-1">')
+    })
+})
+
+describe('Markdown streaming', () => {
+    it('draws every view with one map of renderers, which reads streaming from the view', () => {
+        const seen: boolean[] = []
+        const Diagram = ({ streaming }: { code: string; streaming: boolean }) => {
+            seen.push(streaming)
+            return <svg />
+        }
+        const fence = '```mermaid\ngraph LR\n  fetch --> upload\n```'
+        renderToStaticMarkup(<MarkdownView content={fence} Diagram={Diagram} streaming />)
+        renderToStaticMarkup(<MarkdownView content={fence} Diagram={Diagram} />)
+        expect(seen).toEqual([true, false])
+        expect(Object.keys(MARKDOWN_COMPONENTS).sort()).toEqual(['a', 'blockquote', 'div', 'pre', 'span', 'th'])
+    })
+
+    it('shows a display formula still being written as its source, with no error', () => {
+        const html = renderToStaticMarkup(<Markdown content={'The ratio:\n\n$$\n\\frac{a}{'} streaming />)
+        expect(html).not.toContain('class="katex-error"')
+        expect(html).toContain('\\frac{a}{')
+    })
+
+    it('draws the formula once it closes', () => {
+        const html = renderToStaticMarkup(<Markdown content={'The ratio:\n\n$$\n\\frac{a}{b}\n$$'} streaming />)
+        expect(html).toContain('class="katex-display"')
     })
 })

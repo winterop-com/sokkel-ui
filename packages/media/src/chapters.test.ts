@@ -1,10 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
-import { chapterIndex, chapterSpan, nextChapterStart, previousChapterStart, waveformSpan } from './chapters'
+import { chapterIndex, chapterSpan, nextChapterStart, previousChapterStart, seekPoint, waveformSpan } from './chapters'
 
 const STARTS = [0, 600, 1500, 2400]
 
 describe('chapters', () => {
+    it('seeks within the length once it is known, and forward still before it is', () => {
+        expect(seekPoint(45, 30)).toBe(30)
+        expect(seekPoint(-5, 30)).toBe(0)
+        expect(seekPoint(30, 0)).toBe(30)
+        expect(seekPoint(30, Number.NaN)).toBe(30)
+        expect(seekPoint(Number.NaN, 30)).toBeUndefined()
+    })
+
     it('finds the chapter playing, and none before the first', () => {
         expect(chapterIndex(STARTS, 0)).toBe(0)
         expect(chapterIndex(STARTS, 599.9)).toBe(0)

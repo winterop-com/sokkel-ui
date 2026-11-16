@@ -28,23 +28,62 @@ function visit(geometry: Geometry | null, each: (position: Position) => void): v
     }
 }
 
-/** The extent of every feature in the collections, or null when none has coordinates. */
+/** A longitude brought into -180 to 180, where it lies outside. */
+const wrapped = (lng: number) => (lng >= -180 && lng <= 180 ? lng : ((((lng + 180) % 360) + 360) % 360) - 180)
+
+/**
+ * The west and east that hold every span of longitude, each a west and an east no more than 360
+ * degrees further. Where more than half the world lies empty between them, they are held across the
+ * antimeridian, the east then past 180: islands either side of it are held by 177 to 181.5 rather
+ * than by the whole world.
+ */
+export function longitudeSpan(spans: readonly (readonly [number, number])[]): [number, number] | null {
+    if (spans.length === 0) return null
+    const sorted = spans
+        .map(([west, east]): [number, number] => [wrapped(west), wrapped(west) + Math.min(360, Math.max(0, east - west))])
+        .sort((a, b) => a[0] - b[0])
+    const merged: [number, number][] = []
+    for (const [west, east] of sorted) {
+        const last = merged.at(-1)
+        if (last !== undefined && west <= last[1]) last[1] = Math.max(last[1], east)
+        else merged.push([west, east])
+    }
+    // A run that reaches past 180 onto the first runs joins them across the antimeridian.
+    while (merged.length > 1 && (merged.at(-1) as [number, number])[1] - 360 >= merged[0][0]) {
+        const joined = merged.shift() as [number, number]
+        const last = merged[merged.length - 1]
+        last[1] = Math.max(last[1], joined[1] + 360)
+    }
+    const first = merged[0]
+    const last = merged[merged.length - 1]
+    if (merged.some(([west, east]) => east - west >= 360)) return [-180, 180]
+    for (let index = 0; index < merged.length - 1; index += 1)
+        if (merged[index + 1][0] - merged[index][1] > 180) return [merged[index + 1][0], merged[index][1] + 360]
+    return [first[0], last[1]]
+}
+
+/** The extent of every feature in the collections, or null when none has coordinates; its east is past 180 where it crosses the antimeridian. */
 export function boundsOf(collections: readonly FeatureCollection[]): Bounds | null {
     let west = Infinity
     let south = Infinity
     let east = -Infinity
     let north = -Infinity
-    for (const collection of collections) {
-        for (const feature of collection.features) {
-            visit(feature.geometry, ([lng, lat]) => {
-                if (lng < west) west = lng
-                if (lng > east) east = lng
-                if (lat < south) south = lat
-                if (lat > north) north = lat
-            })
-        }
+    const each = (visitor: (position: Position) => void) => {
+        for (const collection of collections) for (const feature of collection.features) visit(feature.geometry, visitor)
     }
-    return west === Infinity ? null : [west, south, east, north]
+    each(([lng, lat]) => {
+        if (lng < west) west = lng
+        if (lng > east) east = lng
+        if (lat < south) south = lat
+        if (lat > north) north = lat
+    })
+    if (west === Infinity) return null
+    // Within half the world the plain extent is the narrowest; past it, the antimeridian may hold a narrower one.
+    if (east - west <= 180) return [west, south, east, north]
+    const longitudes: [number, number][] = []
+    each(([lng]) => longitudes.push([lng, lng]))
+    const span = longitudeSpan(longitudes) ?? [west, east]
+    return [span[0], south, span[1], north]
 }
 
 /** The extent of the features whose ids are given, or null when none of them has coordinates. */
@@ -97,16 +136,18 @@ export function isReadable(geometry: Geometry | null | undefined): boolean {
     }
 }
 
-/** The union of extents, or null when there are none. */
+/** The union of extents, or null when there are none; across the antimeridian where that is narrower. */
 export function unionBounds(extents: readonly (Bounds | null)[]): Bounds | null {
     const present = extents.filter((extent): extent is Bounds => extent !== null)
-    if (present.length === 0) return null
-    return [
-        Math.min(...present.map((extent) => extent[0])),
-        Math.min(...present.map((extent) => extent[1])),
-        Math.max(...present.map((extent) => extent[2])),
-        Math.max(...present.map((extent) => extent[3])),
-    ]
+    const span = longitudeSpan(present.map((extent) => [extent[0], extent[2]]))
+    if (span === null) return null
+    let south = Infinity
+    let north = -Infinity
+    for (const extent of present) {
+        south = Math.min(south, extent[1])
+        north = Math.max(north, extent[3])
+    }
+    return [span[0], south, span[1], north]
 }
 
 function ringArea(ring: Position[]): number {

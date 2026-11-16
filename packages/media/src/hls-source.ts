@@ -73,6 +73,27 @@ function kindOf(type: string): VideoErrorKind {
 
 const loadHls = () => import('hls.js')
 
+/** The fatal network errors of the playlist itself, which `startLoad` cannot load again: only `loadSource` fetches it anew. */
+const PLAYLIST_ERRORS: ReadonlySet<string> = new Set(['manifestLoadError', 'manifestLoadTimeOut'])
+
+/**
+ * What the source does about a fatal hls.js error, given the tries of each kind so far: fetch the
+ * playlist again (`reload`), go on loading fragments (`load`), recover the decoder (`recover`), or
+ * give up and tell the player. A playlist that cannot be parsed is given up on at once, as fetching
+ * it again brings the same one.
+ */
+export function hlsRecovery(
+    data: Pick<ErrorData, 'type' | 'details'>,
+    tries: { network: number; media: number },
+    recoveries: number,
+): 'reload' | 'load' | 'recover' | 'give-up' {
+    const kind = kindOf(data.type)
+    if (data.details === 'manifestParsingError') return 'give-up'
+    if (kind === 'network' && tries.network < recoveries) return PLAYLIST_ERRORS.has(data.details) ? 'reload' : 'load'
+    if (kind === 'decode' && tries.media < recoveries) return 'recover'
+    return 'give-up'
+}
+
 /** A number hls.js reports, when it is one: its estimates are `NaN` until it has measured. */
 const measured = (value: number | undefined): number | undefined =>
     value !== undefined && Number.isFinite(value) && value > 0 ? value : undefined
@@ -123,9 +144,11 @@ export function hlsStats(
  * optional peer dependency of this package, installed by the app that plays streams. hls.js starts
  * loading where the player picks up (`startAt`, or where a try resumes), so the first fragment fetched is
  * the one played, and a live stream with no such point starts at its live edge. A fatal network
- * error loads again and a fatal media error recovers the decoder, `recoveries` times each, before
- * the source gives up and the player's own tries take over; every error is told to the player's
- * `onError`. Its `stats` give the player's handle hls.js's bandwidth estimate, the rendition
+ * error loads again (the playlist itself when it was the playlist that failed) and a fatal media
+ * error recovers the decoder, `recoveries` times each, before the source gives up and the player's
+ * own tries take over; a playlist that cannot be parsed is given up on at once (`hlsRecovery`).
+ * Every fatal error is told to the player's `onError`, and the errors hls.js recovers from by
+ * itself are not. Its `stats` give the player's handle hls.js's bandwidth estimate, the rendition
  * playing and the buffer ahead.
  */
 export function hlsSource(url: string, { config, native = true, recoveries = 3, load = loadHls }: HlsSourceOptions = {}): VideoSource {
@@ -160,31 +183,29 @@ export function hlsSource(url: string, { config, native = true, recoveries = 3, 
                     engine = hls
                     const loaded: HlsLoaded = { bytes: 0, duration: 0 }
                     engines.set(video, { hls, loaded })
-                    let network = 0
-                    let media = 0
+                    const tries = { network: 0, media: 0 }
                     hls.on(Engine.Events.FRAG_LOADED, (_event: string, data: FragLoadedData) => {
                         loaded.bytes += data.frag.stats.loaded
                         loaded.duration += data.frag.duration
                     })
                     hls.on(Engine.Events.FRAG_BUFFERED, () => {
-                        network = 0
-                        media = 0
+                        tries.network = 0
+                        tries.media = 0
                     })
                     hls.on(Engine.Events.ERROR, (_event: string, data: ErrorData) => {
                         if (!data.fatal) return
                         const kind = kindOf(data.type)
                         const message = data.error?.message ?? data.details
-                        if (kind === 'network' && network < recoveries) {
-                            network += 1
-                            report({ kind, message, fatal: false })
-                            hls.startLoad()
-                        } else if (kind === 'decode' && media < recoveries) {
-                            media += 1
-                            report({ kind, message, fatal: false })
-                            if (media > 1) hls.swapAudioCodec()
+                        const recovery = hlsRecovery(data, tries, recoveries)
+                        report({ kind, message, fatal: recovery === 'give-up' })
+                        if (recovery === 'reload' || recovery === 'load') {
+                            tries.network += 1
+                            if (recovery === 'reload') hls.loadSource(url)
+                            else hls.startLoad()
+                        } else if (recovery === 'recover') {
+                            tries.media += 1
+                            if (tries.media > 1) hls.swapAudioCodec()
                             hls.recoverMediaError()
-                        } else {
-                            report({ kind, message, fatal: true })
                         }
                     })
                     hls.loadSource(url)

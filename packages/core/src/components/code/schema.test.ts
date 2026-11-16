@@ -15,6 +15,7 @@ import {
     readDocument,
     schemaCompletion,
     schemaDiagnostics,
+    schemaProblems,
     schemasAt,
     yamlKeys,
     yamlScalar,
@@ -62,6 +63,46 @@ describe('reading a document', () => {
         expect(readDocument(jsonState('{"a": [1, true, null], "b": "x"}'), 'json')?.value).toEqual({ a: [1, true, null], b: 'x' })
         expect(readDocument(jsonState('{"a": }'), 'json')?.broken).toBeDefined()
     })
+
+    it('reads a text once, and again only once it changes', () => {
+        const state = jsonState('{"steps": [{"name": "fetch"}, {"name": "upload"}]}')
+        const first = readDocument(state, 'json')
+        expect(readDocument(state, 'json')).toBe(first)
+        const moved = state.update({ selection: { anchor: 3 } }).state
+        expect(readDocument(moved, 'json')).toBe(first)
+        const edited = state.update({ changes: { from: 1, insert: ' ' } }).state
+        expect(readDocument(edited, 'json')).not.toBe(first)
+        expect(readDocument(edited, 'json')?.value).toEqual(first?.value)
+    })
+
+    it('reads a YAML alias as the value its anchor names, and a merge key into the mapping', () => {
+        const doc = [
+            'defaults: &defaults',
+            '  retries: 2',
+            '  timeout: 30',
+            'steps: &steps [fetch, upload]',
+            'nightly-export:',
+            '  <<: *defaults',
+            '  timeout: 60',
+            '  steps: *steps',
+            'sync-inventory:',
+            '  <<: [*defaults, {owner: ada, retries: 5}]',
+            '',
+        ].join('\n')
+        expect(readDocument(yamlState(doc), 'yaml')?.value).toEqual({
+            defaults: { retries: 2, timeout: 30 },
+            steps: ['fetch', 'upload'],
+            'nightly-export': { retries: 2, timeout: 60, steps: ['fetch', 'upload'] },
+            'sync-inventory': { retries: 2, timeout: 30, owner: 'ada' },
+        })
+    })
+
+    it('reads every document of a YAML stream', () => {
+        const read = readDocument(yamlState('code: nightly-export\n---\ncode: sync-inventory\n'), 'yaml')
+        expect(read?.value).toEqual({ code: 'nightly-export' })
+        expect(read?.documents?.map((document) => document.value)).toEqual([{ code: 'nightly-export' }, { code: 'sync-inventory' }])
+        expect(readDocument(yamlState('code: nightly-export\n'), 'yaml')?.documents).toBeUndefined()
+    })
 })
 
 describe('schema diagnostics', () => {
@@ -85,6 +126,36 @@ describe('schema diagnostics', () => {
         expect(missing.from).toBe(0)
         const [broken] = schemaDiagnostics(jsonState('{"code": }'), 'json', SCHEMA, validate)
         expect(broken.message).toBe('Not valid JSON')
+    })
+
+    it('takes an alias for its value and checks each document of a stream', () => {
+        const aliased = 'code: &code nightly-export\nsteps:\n  - &step {name: fetch, retries: 2}\n  - *step\n'
+        expect(schemaDiagnostics(yamlState(aliased), 'yaml', SCHEMA, validate)).toEqual([])
+        const doc = 'code: nightly-export\nsteps: []\n---\ncode: sync-inventory\nsteps:\n  - name: fetch\n    retries: many\n'
+        const found = schemaDiagnostics(yamlState(doc), 'yaml', SCHEMA, validate).map((each) => [
+            doc.slice(each.from, each.to),
+            each.message,
+        ])
+        expect(found).toEqual([['many', 'Expected an integer']])
+    })
+})
+
+describe('the schema check without its checker', () => {
+    const doc = 'code: nightly-export\nsteps: []\n'
+
+    it('knows nothing yet while the checker loads, save a document that does not read', () => {
+        expect(schemaProblems(yamlState(doc), 'yaml', SCHEMA, undefined, null)).toBeUndefined()
+        const [broken] = schemaProblems(jsonState('{"code": }'), 'json', SCHEMA, undefined, null) ?? []
+        expect(broken.message).toBe('Not valid JSON')
+    })
+
+    it('fails closed once the checker failed to load', () => {
+        const found = schemaProblems(yamlState(doc), 'yaml', SCHEMA, undefined, 'Failed to fetch')
+        expect(found).toMatchObject([{ from: 0, to: 20, severity: 'error', message: 'The schema cannot be checked: Failed to fetch' }])
+    })
+
+    it('says what the checker finds once it has loaded', () => {
+        expect(schemaProblems(yamlState(doc), 'yaml', SCHEMA, validate, 'Failed to fetch')).toEqual([])
     })
 })
 

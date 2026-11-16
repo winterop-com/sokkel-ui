@@ -9,14 +9,19 @@ export interface NumberFormat {
     parse: (text: string) => number | null
 }
 
+/** A plain number: digits with an optional sign, a point before the decimals and an exponent. */
+export const NUMBER_PATTERN = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i
+
 /**
- * The number typed in `text`, or null when it is not one: digits with an optional sign and a point
- * before the decimals, as `writeNumber` writes them. Spaces between the digits are dropped, and the
- * minus sign (−) reads as a hyphen.
+ * The number typed in `text`, or null when it is not a finite one: digits with an optional sign, a
+ * point before the decimals and an optional exponent (`1e-7`), as `writeNumber` writes them. Spaces
+ * and underscores between the digits are dropped, and the minus sign (−) reads as a hyphen.
  */
 export function readNumber(text: string): number | null {
     const typed = text.replace(/[\s_]/g, '').replace(/^−/, '-')
-    return /^[+-]?(\d+\.?\d*|\.\d+)$/.test(typed) ? Number(typed) : null
+    if (!NUMBER_PATTERN.test(typed)) return null
+    const value = Number(typed)
+    return Number.isFinite(value) ? value : null
 }
 
 /** A number written plainly, with a point before its decimals and no digit groups. */
@@ -27,19 +32,40 @@ export function writeNumber(value: number): string {
 /** The plain format: `writeNumber` and `readNumber`. */
 export const PLAIN_NUMBER: NumberFormat = { format: writeNumber, parse: readNumber }
 
+/** Marks a locale writes around a number to keep its direction, which reading drops. */
+const DIRECTION_MARKS = /[\u061c\u200e\u200f]/g
+
 /**
- * A number written and read the way a locale writes it, with its decimal mark and its digit
- * groups: `3 600,5` in `nb-NO`. Reading drops the groups and takes the locale's decimal mark, so
- * in `de-DE` `1.250,5` reads as 1250.5.
+ * A number written and read the way a locale writes it, with its decimal mark, its digit groups
+ * and its digits: `3 600,5` in `nb-NO`. Reading takes the locale's decimal mark and drops its
+ * groups where they stand between whole digits, so in `de-DE` `1.250,5` and `1250,5` read as
+ * 1250.5 and `3.5` reads as no number; a locale that writes groups with a space also reads a plain
+ * space. Reading takes the locale's own digits (`١٢٫٥` in `ar-EG`) as well as 0 to 9.
  */
 export function localeNumber(locale: string, options: Intl.NumberFormatOptions = {}): NumberFormat {
     const writer = new Intl.NumberFormat(locale, { maximumFractionDigits: 20, ...options })
-    const parts = writer.formatToParts(-12345.6)
-    const mark = (type: string, fallback: string) => parts.find((part) => part.type === type)?.value ?? fallback
+    const { numberingSystem } = writer.resolvedOptions()
+    const marks = new Intl.NumberFormat(locale, { numberingSystem, useGrouping: true }).formatToParts(-12345.6)
+    const mark = (type: string, fallback: string) => marks.find((part) => part.type === type)?.value ?? fallback
     const [group, decimal, minus] = [mark('group', ','), mark('decimal', '.'), mark('minusSign', '-')]
+    const digitWriter = new Intl.NumberFormat(locale, { numberingSystem, useGrouping: false })
+    const digits = new Map(Array.from({ length: 10 }, (_, digit) => [digitWriter.format(digit), String(digit)]))
+    const spaced = /^\s$/.test(group)
     return {
         format: (value) => writer.format(value),
-        parse: (text) => readNumber(text.split(group).join('').replace(minus, '-').replace(decimal, '.')),
+        parse: (text) => {
+            let plain = [...text.replace(DIRECTION_MARKS, '').trim()].map((char) => digits.get(char) ?? char).join('')
+            plain = plain.replace(minus, '-').replace(/^−/, '-')
+            if (spaced) plain = plain.replace(/\s+/g, group)
+            const [whole = '', fraction, ...rest] = plain.split(decimal)
+            if (rest.length > 0) return null
+            if (whole.includes(group)) {
+                const groupAt = group.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                if (!new RegExp(`^[+-]?\\d{1,3}(${groupAt}\\d{2,3})*${groupAt}\\d{3}$`).test(whole)) return null
+            }
+            const read = whole.split(group).join('') + (fraction === undefined ? '' : `.${fraction}`)
+            return readNumber(read)
+        },
     }
 }
 

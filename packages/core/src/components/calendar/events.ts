@@ -43,8 +43,8 @@ export function layoutDay<E extends CalendarEvent>(events: readonly E[], day: Da
     const touching = events
         .filter((event) => event.allDay !== true && isBefore(event.start, dayEnd) && event.end > dayStart)
         .map((event) => {
-            const from = minutesInto(max([event.start, dayStart]), dayStart)
-            const to = event.end > dayEnd ? 24 * 60 : minutesInto(min([event.end, dayEnd]), dayStart)
+            const from = gridMinute(max([event.start, dayStart]))
+            const to = event.end > dayEnd ? 24 * 60 : gridMinute(min([event.end, dayEnd]))
             return { event, from, to, shown: Math.min(24 * 60, Math.max(to, from + minMinutes)), column: 0, columns: 1 }
         })
         .sort((a, b) => a.from - b.from || b.to - a.to)
@@ -76,8 +76,13 @@ export function layoutDay<E extends CalendarEvent>(events: readonly E[], day: Da
     return placed
 }
 
-function minutesInto(date: Date, dayStart: Date): number {
-    return Math.round((date.getTime() - dayStart.getTime()) / 60_000)
+/**
+ * The minute of its day a time stands at on the wall clock, which is where a day's grid draws it:
+ * 10:00 is minute 600 on a day the clocks change too, though more or fewer real minutes have
+ * passed since midnight.
+ */
+export function gridMinute(date: Date): number {
+    return Math.round(date.getHours() * 60 + date.getMinutes() + (date.getSeconds() + date.getMilliseconds() / 1000) / 60)
 }
 
 /** An all-day event placed on a strip of days: its first day's index, how many days it spans, and its row. */

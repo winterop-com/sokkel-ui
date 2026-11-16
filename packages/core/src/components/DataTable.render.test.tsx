@@ -485,5 +485,68 @@ describe('a stacked card that edits', () => {
     })
 })
 
+describe('a press on a table that edits', () => {
+    type Job = { id: string; job: string; schedule: string }
+    const columns: DataColumn<Job>[] = [
+        { id: 'job', header: 'Job', width: '1fr', cell: (job) => job.job },
+        {
+            id: 'schedule',
+            header: 'Schedule',
+            width: '9rem',
+            cell: (job) => job.schedule,
+            edit: { editor: 'text', value: (job) => job.schedule, save: () => undefined },
+        },
+    ]
+    const html = renderToStaticMarkup(
+        <DataTable
+            columns={columns}
+            rows={[{ id: 'a', job: 'nightly-export', schedule: '0 2 * * *' }]}
+            rowKey={(job) => job.id}
+            editing={tableEditing}
+            onOpen={() => undefined}
+        />,
+    )
+
+    it('marks a cell that edits as taking its own press, so the row does not open, and leaves the rest to the row', () => {
+        expect(html).toMatch(/role="gridcell"[^>]*data-column="schedule"[^>]*data-cell-edits="true"/)
+        expect(html).not.toMatch(/data-column="job"[^>]*data-cell-edits/)
+    })
+})
+
+describe('cards drawn every one', () => {
+    const rows = [
+        { id: 'nightly-export', team: 'harbor' },
+        { id: 'sync-inventory', team: 'juniper' },
+    ]
+    const html = renderToStaticMarkup(
+        <DataTable
+            columns={[{ id: 'job', header: 'Job', width: '1fr', cell: (job) => job.id }]}
+            rows={rows}
+            rowKey={(job) => job.id}
+            groupBy="team"
+            card={(job) => <b>{job.id}</b>}
+            defaultView="grid"
+        />,
+    )
+
+    it('names each card’s row, so the keys and a reveal find it to scroll to', () => {
+        expect(html).toMatch(/role="row"[^>]*data-row="nightly-export"/)
+        expect(html).toMatch(/role="row"[^>]*data-row="sync-inventory"/)
+    })
+})
+
+describe('what a table says in place of its rows', () => {
+    const columns: DataColumn<{ id: string }>[] = [{ id: 'job', header: 'Job', width: '1fr', cell: (job) => job.id }]
+
+    it('says a failed read and its empty words where a press selects them as text', () => {
+        const failed = renderToStaticMarkup(
+            <DataTable columns={columns} rows={[]} rowKey={(job) => job.id} error="Request 7f3a-22c1 was refused" />,
+        )
+        expect(failed).toMatch(/data-table-says=""[^>]*>.*Request 7f3a-22c1 was refused/)
+        const empty = renderToStaticMarkup(<DataTable columns={columns} rows={[]} rowKey={(job) => job.id} empty="No runs yet." />)
+        expect(empty).toMatch(/data-table-says=""[^>]*>.*No runs yet\./)
+    })
+})
+
 /** A class list as a pattern that matches it as written. */
 const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

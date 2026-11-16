@@ -18,6 +18,11 @@ export interface Cron {
     /** Whether the day of the month and the weekday were each written as `*` (or `?`). */
     anyDay: boolean
     anyWeekday: boolean
+    /**
+     * Whether the minute or the hour field starts with `*`: such an expression runs on both passes
+     * of an hour the clock repeats in autumn, as Vixie cron does, and one at fixed times on the first.
+     */
+    wildcardTime?: boolean
 }
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -129,6 +134,7 @@ export function parseCron(expression: string): Cron | null {
         weekdayRules: weekdays.rules,
         anyDay: parts[2] === '*',
         anyWeekday: parts[4] === '*',
+        wildcardTime: parts[0].startsWith('*') || parts[1].startsWith('*'),
     }
 }
 
@@ -222,14 +228,17 @@ export function zoneOffset(date: Date, timeZone?: string): number {
 }
 
 /**
- * The instant a wall-clock time, written as a UTC timestamp, names in a zone whose offset is
+ * The instants a wall-clock time, written as a UTC timestamp, names in a zone whose offset is
  * `before` on the day before and `after` on the day after. A time the clock skips is moved to the
- * instant the clock jumps; a time the clock passes twice is its first pass.
+ * instant the clock jumps; a time the clock passes twice gives both passes with `both`, else its
+ * first pass.
  */
-function instantOf(wall: number, before: number, after: number, timeZone: string): number {
-    if (before === after) return wall - before
-    const passes = [wall - before, wall - after].filter((at) => at + zoneOffset(new Date(at), timeZone) === wall)
-    if (passes.length > 0) return Math.min(...passes)
+function instantsOf(wall: number, before: number, after: number, timeZone: string, both: boolean): number[] {
+    if (before === after) return [wall - before]
+    const passes = [...new Set([wall - before, wall - after])]
+        .filter((at) => at + zoneOffset(new Date(at), timeZone) === wall)
+        .sort((a, b) => a - b)
+    if (passes.length > 0) return both ? passes : passes.slice(0, 1)
     let low = Math.min(wall - before, wall - after)
     let high = Math.max(wall - before, wall - after)
     while (high - low > MINUTE) {
@@ -237,7 +246,17 @@ function instantOf(wall: number, before: number, after: number, timeZone: string
         if (zoneOffset(new Date(middle), timeZone) === after) high = middle
         else low = middle
     }
-    return high
+    return [high]
+}
+
+/** Whether `timeZone` names a zone this runtime knows. */
+export function knownZone(timeZone: string): boolean {
+    try {
+        if (timeZone !== 'UTC') formatFor(timeZone)
+        return true
+    } catch {
+        return false
+    }
 }
 
 /**
@@ -245,12 +264,15 @@ function instantOf(wall: number, before: number, after: number, timeZone: string
  * expression is read as wall-clock time in `timeZone`, an IANA name such as Europe/Oslo, and in UTC
  * without one. Across a change of clocks it does what Vixie cron and cronie do: a time the clock
  * skips in spring runs once, at the instant the clock jumps (02:30 runs at 03:00), and a time the
- * clock passes twice in autumn runs once, at its first pass.
+ * clock passes twice in autumn runs once, at its first pass, unless the minute or the hour field
+ * starts with `*`: `0 * * * *` runs on both passes, keeping to real time. A zone the runtime
+ * does not know gives no runs.
  */
 export function nextRuns(expression: string | Cron, from: Date, count = 5, timeZone?: string): Date[] {
     const cron = typeof expression === 'string' ? parseCron(expression) : expression
     if (cron === null) return []
     const zone = timeZone === 'UTC' ? undefined : timeZone
+    if (zone !== undefined && !knownZone(zone)) return []
     const runs: Date[] = []
     const local = zonedTime(from, zone)
     const start = Date.UTC(local.year, local.month - 1, local.day)
@@ -259,14 +281,18 @@ export function nextRuns(expression: string | Cron, from: Date, count = 5, timeZ
         if (!dayMatches(cron, new Date(day))) continue
         const before = zoneOffset(new Date(day - DAY / 2), zone)
         const after = zoneOffset(new Date(day + DAY * 1.5), zone)
+        const instants: number[] = []
         for (const hour of cron.hours) {
             for (const minute of cron.minutes) {
                 const wall = day + hour * 3_600_000 + minute * MINUTE
-                const at = zone === undefined ? wall : instantOf(wall, before, after, zone)
-                const last = runs.at(-1)
-                if (at > from.getTime() && (last === undefined || at > last.getTime())) runs.push(new Date(at))
-                if (runs.length === count) return runs
+                if (zone === undefined) instants.push(wall)
+                else instants.push(...instantsOf(wall, before, after, zone, cron.wildcardTime === true))
             }
+        }
+        for (const at of instants.sort((a, b) => a - b)) {
+            const last = runs.at(-1)
+            if (at > from.getTime() && (last === undefined || at > last.getTime())) runs.push(new Date(at))
+            if (runs.length === count) return runs
         }
     }
     return runs

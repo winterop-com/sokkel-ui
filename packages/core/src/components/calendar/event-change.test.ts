@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
 import { keyChange, landingAt, movedBy, movedTo, resizedBy, snapTo } from './event-change'
 import type { CalendarEvent } from './events'
@@ -65,5 +65,34 @@ describe('an event changed from the keyboard', () => {
         expect(keyChange(review, 'ArrowUp', false, 'month', 15)?.change).toMatchObject({ start: new Date(2026, 9, 29, 9) })
         expect(keyChange(review, 'ArrowRight', false, 'month', 15)?.change).toMatchObject({ start: at(6, 9) })
         expect(keyChange(review, 'ArrowRight', true, 'month', 15)).toMatchObject({ resize: true, change: { end: at(6, 10, 30) } })
+    })
+})
+
+/** Runs the tests of a describe block in Europe/Oslo, whose clocks change on 2026-03-29 and 2026-10-25. */
+function inOslo() {
+    let zone: string | undefined
+    beforeAll(() => {
+        zone = process.env.TZ
+        process.env.TZ = 'Europe/Oslo'
+    })
+    afterAll(() => {
+        if (zone === undefined) delete process.env.TZ
+        else process.env.TZ = zone
+    })
+}
+
+describe('an event dropped on a day the clocks change', () => {
+    inOslo()
+
+    test('starts at the grid minute it was dropped on', () => {
+        for (const [month, day] of [
+            [2, 29],
+            [9, 25],
+        ]) {
+            const event: CalendarEvent = { id: 'sync', title: 'sync', start: at(5, 9), end: at(5, 10) }
+            const { start, end } = movedTo(event, new Date(2026, month, day), 600)
+            expect([start.getHours(), start.getMinutes()], `${month + 1}-${day}`).toEqual([10, 0])
+            expect(end.getTime() - start.getTime()).toBe(60 * 60_000)
+        }
     })
 })

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { aggregateAt, pivot } from './data'
-import { binCounts, binOf, binsFor, niceCeil, niceStep, runningTotals, spreadOf, stepAt } from './stats'
+import { binCounts, binOf, binsFor, edgeDecimals, niceCeil, niceStep, runningTotals, spreadOf, stepAt } from './stats'
 
 describe('the chart statistics', () => {
     it('steps and rounds up in numbers a reader counts in', () => {
@@ -22,6 +22,21 @@ describe('the chart statistics', () => {
         expect(binsFor(values, { width: 25 })).toEqual({ start: 0, width: 25, count: 2 })
         expect(binsFor([], 5).count).toBe(0)
         expect(binsFor([7, 7, 7]).count).toBe(1)
+    })
+
+    it('bins more values than a spread into Math.min holds', () => {
+        const many = Array.from({ length: 200_000 }, (_, index) => index % 100)
+        expect(binsFor(many, 10)).toEqual({ start: 0, width: 10, count: 10 })
+    })
+
+    it('keeps edges it is given, so charts side by side bin alike', () => {
+        expect(binsFor([12, 18], { width: 10, start: 0, count: 5 })).toEqual({ start: 0, width: 10, count: 5 })
+        expect(binsFor([], { width: 10, start: 0, count: 5 })).toEqual({ start: 0, width: 10, count: 5 })
+        expect(binsFor([12, 18], { width: 10, start: 0 })).toEqual({ start: 0, width: 10, count: 2 })
+    })
+
+    it('writes bin edges to the decimals their width needs', () => {
+        expect([5, 2.5, 0.1, 0.002, 1000].map(edgeDecimals)).toEqual([0, 1, 1, 3, 0])
     })
 
     it('puts a value on an edge in the bin it starts, and the end in the last bin', () => {

@@ -53,8 +53,8 @@ class FakeHls {
         for (const listener of this.listeners.get(event) ?? []) listener(event, data)
     }
 
-    fail(type: string, fatal = true) {
-        this.emit(FakeHls.Events.ERROR, { type, details: `${type}Details`, fatal })
+    fail(type: string, fatal = true, details = `${type}Details`) {
+        this.emit(FakeHls.Events.ERROR, { type, details, fatal })
     }
 
     loadSource(url: string) {
@@ -212,6 +212,23 @@ describe('an HLS source', () => {
         expect(reports.map((report) => report.fatal)).toEqual([false, false])
         hls.fail('networkError')
         expect(reports.at(-1)).toEqual({ kind: 'network', message: 'networkErrorDetails', fatal: true })
+    })
+
+    test('fetches the playlist again when it is the playlist that failed, then gives up', async () => {
+        const { hls, reports } = await attached({ recoveries: 2 })
+        hls.fail('networkError', true, 'manifestLoadError')
+        hls.fail('networkError', true, 'manifestLoadTimeOut')
+        expect(hls.calls.slice(2)).toEqual([`loadSource ${STREAM}`, `loadSource ${STREAM}`])
+        hls.fail('networkError', true, 'manifestLoadError')
+        expect(reports.map((report) => report.fatal)).toEqual([false, false, true])
+        expect(hls.calls).not.toContain('startLoad')
+    })
+
+    test('gives up at once on a playlist it cannot parse', async () => {
+        const { hls, reports } = await attached()
+        hls.fail('networkError', true, 'manifestParsingError')
+        expect(reports).toEqual([{ kind: 'network', message: 'manifestParsingError', fatal: true }])
+        expect(hls.calls.slice(2)).toEqual([])
     })
 
     test('recovers the decoder after a fatal media error, swapping the audio codec from the second time', async () => {

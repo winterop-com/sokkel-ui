@@ -1,7 +1,20 @@
 import type { Feature, FeatureCollection, Geometry, Polygon } from 'geojson'
 import { describe, expect, test } from 'vitest'
 
-import { anchorOf, areaOf, autoTolerance, boundsOfIds, isReadable, kindOf, simplifyGeometry, simplifyLine, splitByKind } from './geometry'
+import {
+    anchorOf,
+    areaOf,
+    autoTolerance,
+    boundsOf,
+    boundsOfIds,
+    isReadable,
+    kindOf,
+    longitudeSpan,
+    simplifyGeometry,
+    simplifyLine,
+    splitByKind,
+    unionBounds,
+} from './geometry'
 
 describe('reading geometry', () => {
     test('draws what has finite positions, lines of two and rings of four', () => {
@@ -33,6 +46,70 @@ describe('reading geometry', () => {
         }
         expect(boundsOfIds(points, ['a', 'b'])).toEqual([1, 2, 3, 5])
         expect(boundsOfIds(points, ['z'])).toBeNull()
+    })
+})
+
+describe('bounds across the antimeridian', () => {
+    const square = (west: number, east: number, south: number, north: number) => [
+        [
+            [west, south],
+            [east, south],
+            [east, north],
+            [west, north],
+            [west, south],
+        ],
+    ]
+    const islands: FeatureCollection = {
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                properties: {},
+                geometry: { type: 'MultiPolygon', coordinates: [square(177, 179.9, -18, -16), square(-179.9, -178.5, -18, -16)] },
+            },
+        ],
+    }
+
+    test('holds islands either side of 180 by the narrow span, its east past 180', () => {
+        const [west, south, east, north] = boundsOf([islands]) ?? []
+        expect([west, south, north]).toEqual([177, -18, -16])
+        expect(east).toBeCloseTo(181.5)
+    })
+
+    test('keeps a plain extent and a world-wide one as they are', () => {
+        expect(
+            longitudeSpan([
+                [1, 1],
+                [3, 3],
+            ]),
+        ).toEqual([1, 3])
+        expect(
+            longitudeSpan([
+                [0, 0],
+                [180, 180],
+            ]),
+        ).toEqual([0, 180])
+        expect(
+            longitudeSpan([
+                [-170, -170],
+                [-20, -20],
+                [100, 100],
+                [170, 170],
+            ]),
+        ).toEqual([-170, 170])
+        expect(longitudeSpan([])).toBeNull()
+    })
+
+    test('joins extents across the antimeridian', () => {
+        const joined = unionBounds([[177, -18, 181.5, -16], [-179, -20, -178, -19], null])
+        expect(joined).toEqual([177, -20, 182, -16])
+        expect(
+            unionBounds([
+                [1, 2, 3, 5],
+                [4, 0, 6, 1],
+            ]),
+        ).toEqual([1, 0, 6, 5])
+        expect(unionBounds([null])).toBeNull()
     })
 })
 

@@ -403,6 +403,8 @@ export const tableEditing: TableEditing = {
         const opens = canEdit(column, entry.row)
         return {
             'data-column': column.id,
+            // A press on it is the cell's, not the row's: the row does not open.
+            'data-cell-edits': opens || undefined,
             'data-cell-active': (entry.key === table.active && column.id === table.activeColumn) || undefined,
             'aria-invalid': edit?.error != null || undefined,
             'aria-busy': edit?.saving === true || undefined,

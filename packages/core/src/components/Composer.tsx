@@ -3,6 +3,7 @@ import { ArrowUp, Check, CircleAlert, FileText, Mic, Paperclip, Play, Square, X 
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { composing } from '../lib/keys'
 import { insertTranscript, useDictation, type Dictation, type DictationOptions } from '../hooks/use-dictation'
 import { DialogShell } from './DialogShell'
 import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
@@ -429,7 +430,7 @@ export function Composer({
                 }}
                 onKeyDown={(event) => {
                     if (mention.onKeyDown(event)) return
-                    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
+                    if (event.key !== 'Enter' || event.shiftKey || composing(event)) return
                     event.preventDefault()
                     if (ready) onSend()
                 }}

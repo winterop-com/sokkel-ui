@@ -22,6 +22,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } f
 
 import { cn } from '../lib/cn'
 import { returnFocusOnKeyboard } from '../lib/focus'
+import { composing } from '../lib/keys'
 import { Markdown, type MarkdownWords } from './Markdown'
 import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { Segmented } from './Segmented'
@@ -613,7 +614,7 @@ export function MessageComposer({
                     onSelect={(event) => mention.onSelect(event.currentTarget.value, event.currentTarget.selectionStart)}
                     onKeyDown={(event) => {
                         if (mention.onKeyDown(event)) return
-                        if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                        if (event.key === 'Enter' && !event.shiftKey && !composing(event)) {
                             event.preventDefault()
                             if (!empty) send()
                         }

@@ -2,6 +2,7 @@ import { CornerDownLeft, Plus } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 
 import { cn } from '../lib/cn'
+import { composing } from '../lib/keys'
 import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { failureOf } from '../lib/edit'
 import { ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
@@ -142,7 +143,7 @@ export function QuickAdd({
                     setText(event.target.value)
                 }}
                 onKeyDown={(event) => {
-                    if (event.nativeEvent.isComposing) return
+                    if (composing(event)) return
                     if (event.key === 'Enter') {
                         event.preventDefault()
                         add()

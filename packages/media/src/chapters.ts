@@ -34,6 +34,17 @@ export function previousChapterStart(starts: readonly number[], position: number
     return starts[index - 1]
 }
 
+/**
+ * Where a seek to `seconds` lands: no earlier than the start, and no later than `duration` once it
+ * is known, a finite length above zero; before that, as metadata loads, only the start bounds it.
+ * Nowhere when `seconds` is not a finite number.
+ */
+export function seekPoint(seconds: number, duration: number): number | undefined {
+    if (!Number.isFinite(seconds)) return undefined
+    const from = Math.max(0, seconds)
+    return Number.isFinite(duration) && duration > 0 ? Math.min(duration, from) : from
+}
+
 /** Where next goes: the start of the chapter after the one playing, or `undefined` in the last. */
 export function nextChapterStart(starts: readonly number[], position: number): number | undefined {
     return starts[chapterIndex(starts, position) + 1]
