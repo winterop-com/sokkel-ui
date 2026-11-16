@@ -5,7 +5,7 @@ import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../C
 import { Chart } from '../Chart'
 import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { legendItems, panelFormat, seriesSpec, type PanelSeries } from './series'
+import { legendItems, panelFormat, seriesSpec, type PanelSeries, usePanelFields, type PanelWords } from './series'
 
 /** One spoke of a radar chart: the measure it stands for and the value at its rim. */
 export interface RadarSpoke {
@@ -39,7 +39,8 @@ export interface RadarPanelProps extends ChartFrameViewProps {
     /** Whether the panel is in its window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
     expanded?: boolean
     onExpandedChange?: (expanded: boolean) => void
-    words?: Partial<ChartFrameWords>
+    /** The frame's words, and the heads of its data view's columns. */
+    words?: Partial<ChartFrameWords & PanelWords>
     className?: string
 }
 
@@ -78,19 +79,21 @@ export function RadarPanel({
     onViewChange,
     className,
 }: RadarPanelProps) {
+    const fieldNames = usePanelFields(words)
     const spec = useMemo<ChartSpec>(
         () => ({
             ...seriesSpec(
                 spokes.map((spoke) => spoke.name),
                 series,
             ),
+            fieldNames,
             ...panelFormat(unit, decimals, format),
             rims: Object.fromEntries(spokes.map((spoke) => [spoke.name, spoke.max])),
             round: shape === 'circle',
             levels: rings,
             fill: fill === false ? 'none' : undefined,
         }),
-        [spokes, series, unit, decimals, format, shape, fill, rings],
+        [spokes, series, fieldNames, unit, decimals, format, shape, fill, rings],
     )
     const items = useMemo(() => legendItems(series).map((item) => ({ ...item, values: undefined })), [series])
     return (

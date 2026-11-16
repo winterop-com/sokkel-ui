@@ -4,6 +4,7 @@ import { EChart, type ChartHandle } from './EChart'
 import { useFrameData } from './frame-data'
 import type { ChartKind, ChartSpec } from './kinds'
 import type { ChartLook } from './look'
+import { readsHidden } from './kinds/load'
 import { useBuilder } from './use-builder'
 
 export type ChartProps = ChartSpec & {
@@ -13,6 +14,8 @@ export type ChartProps = ChartSpec & {
     hidden?: ReadonlySet<string>
     hovered?: string | null
     handle?: Ref<ChartHandle | null>
+    /** Whether a frame draws the chart in its expanded window, as its state says; the chart draws the same either way. */
+    windowed?: boolean
     animate?: boolean
     className?: string
 }
@@ -25,11 +28,12 @@ export type ChartProps = ChartSpec & {
  * the frame its legend for the same spec. Keep `rows` stable between renders, as the chart is
  * built again when they change. A kind's builder loads with the first chart of that kind, beside the engine.
  */
-export function Chart({ kind, label, hidden, hovered, handle, animate, className, ...spec }: ChartProps) {
+export function Chart({ kind, label, hidden, hovered, handle, windowed: _windowed, animate, className, ...spec }: ChartProps) {
     const kept = useSpec(spec)
     useFrameData(kind, kept)
     const build = useBuilder(kind)
-    const option = useMemo(() => (build === undefined ? null : (look: ChartLook) => build(kept, look, hidden)), [build, kept, hidden])
+    const reads = readsHidden(kind) ? hidden : undefined
+    const option = useMemo(() => (build === undefined ? null : (look: ChartLook) => build(kept, look, reads)), [build, kept, reads])
     return (
         <EChart option={option} label={label} hidden={hidden} hovered={hovered} handle={handle} animate={animate} className={className} />
     )

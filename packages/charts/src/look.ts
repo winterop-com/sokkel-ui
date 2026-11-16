@@ -67,7 +67,8 @@ const WATCHED = ['class', 'data-theme', 'data-theme-scope', 'style']
  * and those of the `data-theme-scope` around the element, where there is one.
  */
 function useLookKey(element: RefObject<HTMLElement | null>): { key: string; scope: HTMLElement | null } {
-    const [held, setHeld] = useState(() => ({ key: readKey(), scope: null as HTMLElement | null }))
+    // Read in the effect, so a server, with no document, renders the chart's box alone.
+    const [held, setHeld] = useState({ key: '', scope: null as HTMLElement | null })
     useEffect(() => {
         const scope = scopeOf(element.current)
         const update = () =>
@@ -128,8 +129,9 @@ function makeHex(where: () => HTMLElement | null): (css: string) => string {
         context.clearRect(0, 0, 1, 1)
         context.fillStyle = computed
         context.fillRect(0, 0, 1, 1)
-        const [r, g, b] = context.getImageData(0, 0, 1, 1).data
-        const hex = `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+        const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data
+        // A color with an alpha of its own, as an app's override may give a token, keeps it.
+        const hex = `#${(a < 255 ? [r, g, b, a] : [r, g, b]).map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
         cache.set(css, hex)
         return hex
     }
@@ -218,11 +220,13 @@ export function useChartLook(element: RefObject<HTMLElement | null>): ChartLook 
     return useMemo(() => (fonts ? readLook(key, scope) : null), [fonts, key, scope])
 }
 
-/** A hex color with an alpha. */
-export const withAlpha = (hex: string, alpha: number) =>
-    `${hex}${Math.round(alpha * 255)
+/** A hex color with an alpha, times the alpha it already has where it is written `#rrggbbaa`. */
+export const withAlpha = (hex: string, alpha: number) => {
+    const own = hex.length === 9 ? Number.parseInt(hex.slice(7), 16) / 255 : 1
+    return `${hex.slice(0, 7)}${Math.round(alpha * own * 255)
         .toString(16)
         .padStart(2, '0')}`
+}
 
 /** One row of a chart tooltip. */
 export interface TooltipRow {

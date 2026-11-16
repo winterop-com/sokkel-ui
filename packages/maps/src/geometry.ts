@@ -233,20 +233,24 @@ function lineMiddle(line: Position[]): LngLat {
 
 /**
  * Where a popup about a feature points: a point's own position, a spot inside the largest
- * part of a polygon, near its centroid, or halfway along the longest part of a line.
+ * part of a polygon, near its centroid, or halfway along the longest part of a line; null for a
+ * geometry with no positions.
  */
 export function anchorOf(feature: Feature): LngLat | null {
     const geometry = feature.geometry
     if (geometry === null) return null
-    if (geometry.type === 'Point') return [geometry.coordinates[0], geometry.coordinates[1]]
-    if (geometry.type === 'Polygon') return polygonAnchor(geometry.coordinates)
-    if (geometry.type === 'MultiPolygon') {
-        const largest = geometry.coordinates.reduce((best, polygon) => (ringArea(polygon[0]) > ringArea(best[0]) ? polygon : best))
-        return polygonAnchor(largest)
+    if (geometry.type === 'Point') return geometry.coordinates.length < 2 ? null : [geometry.coordinates[0], geometry.coordinates[1]]
+    if (geometry.type === 'Polygon' || geometry.type === 'MultiPolygon') {
+        const polygons = (geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates).filter(
+            (polygon) => (polygon[0]?.length ?? 0) > 0,
+        )
+        if (polygons.length === 0) return null
+        return polygonAnchor(polygons.reduce((best, polygon) => (ringArea(polygon[0]) > ringArea(best[0]) ? polygon : best)))
     }
-    if (geometry.type === 'LineString') return lineMiddle(geometry.coordinates)
-    if (geometry.type === 'MultiLineString' && geometry.coordinates.length > 0) {
-        return lineMiddle(geometry.coordinates.reduce((best, line) => (lineLength(line) > lineLength(best) ? line : best)))
+    if (geometry.type === 'LineString' || geometry.type === 'MultiLineString') {
+        const lines = (geometry.type === 'LineString' ? [geometry.coordinates] : geometry.coordinates).filter((line) => line.length > 0)
+        if (lines.length === 0) return null
+        return lineMiddle(lines.reduce((best, line) => (lineLength(line) > lineLength(best) ? line : best)))
     }
     const extent = boundsOf([{ type: 'FeatureCollection', features: [feature] }])
     return extent === null ? null : [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2]

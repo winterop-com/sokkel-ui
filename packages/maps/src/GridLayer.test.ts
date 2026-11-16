@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { gridValueAt, imageRows, mercatorRows } from './GridLayer'
+import { gridImageSize, gridValueAt, imageRows, mercatorRows } from './GridLayer'
 
 describe('a grid drawn on the map', () => {
     test('places each row at its latitude in Web Mercator', () => {
@@ -22,5 +22,11 @@ describe('a grid drawn on the map', () => {
 
     test('draws rows at four pixels each, up to a limit', () => {
         expect([imageRows(1), imageRows(100), imageRows(2000), imageRows(5000)]).toEqual([4, 400, 4096, 5000])
+    })
+
+    test('draws a grid with no cells as one clear pixel, as a canvas holds no image of none', () => {
+        expect(gridImageSize({ columns: 0, rows: 4 })).toEqual([1, 1])
+        expect(gridImageSize({ columns: 3, rows: 0 })).toEqual([1, 1])
+        expect(gridImageSize({ columns: 3, rows: 2 })).toEqual([3, imageRows(2)])
     })
 })

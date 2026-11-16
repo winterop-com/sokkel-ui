@@ -1,7 +1,7 @@
 import type { LegendItem } from '../ChartLegend'
 import { asShares, distinct, pivot } from '../data'
 import { SERIES_ORDER, tokenColor } from '../look'
-import { legendColor, type ChartSpec } from './spec'
+import { legendColor, wordsOf, type ChartSpec } from './spec'
 
 /** The rows as categories and series, as shares when the spec stacks them to 100%. */
 export function shaped(spec: ChartSpec) {
@@ -14,6 +14,7 @@ export function shaped(spec: ChartSpec) {
         aggregate: spec.aggregate,
         order: spec.order,
         seriesOrder: spec.seriesOrder,
+        count: spec.words?.count,
     })
     return spec.stack === 'percent' ? { ...data, series: asShares(data.series) } : data
 }
@@ -29,6 +30,7 @@ export function seriesLegend(spec: ChartSpec): LegendItem[] {
         aggregate: spec.aggregate,
         order: spec.order,
         seriesOrder: spec.seriesOrder,
+        count: spec.words?.count,
     })
     return data.series.map((entry, index) => ({
         key: entry.name,
@@ -78,7 +80,7 @@ export function funnelLegend(spec: ChartSpec): LegendItem[] {
 
 /** A scatter's or a parallel chart's legend: its groups of `series`, or one for all. */
 export function scatterLegend(spec: ChartSpec): LegendItem[] {
-    const groups = spec.series === undefined ? ['All'] : distinct(spec.rows, spec.series, spec.seriesOrder)
+    const groups = spec.series === undefined ? [wordsOf(spec).all] : distinct(spec.rows, spec.series, spec.seriesOrder)
     return groups.map((name, index) => ({ key: name, label: name, color: legendColor(spec, name, index, SERIES_ORDER) }))
 }
 

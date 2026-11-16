@@ -39,6 +39,11 @@ const mercatorY = (lat: number) => {
 /** How many pixel rows the image of a grid of this many rows is drawn in, so each row's edges land near where they are. */
 export const imageRows = (rows: number) => Math.max(rows, Math.min(rows * 4, 4096))
 
+/** The width and height in pixels of a grid's image: one clear pixel for a grid with no cells, as a canvas cannot hold an image of none. */
+export function gridImageSize(grid: Pick<Grid, 'columns' | 'rows'>): [width: number, height: number] {
+    return grid.columns < 1 || grid.rows < 1 ? [1, 1] : [grid.columns, imageRows(grid.rows)]
+}
+
 /**
  * Which of a grid's rows each pixel row of its image shows, northernmost first. The map stretches
  * the image evenly in Web Mercator between the grid's north and south, while the rows are even in
@@ -84,18 +89,19 @@ export function GridLayer({ id, grid, scale, opacity = 0.85, visible = true, smo
             return [parts[0], parts[1], parts[2], parts[3] === undefined ? 255 : Math.round(parts[3] * 255)]
         })
         const canvas = document.createElement('canvas')
-        const height = imageRows(grid.rows)
-        canvas.width = grid.columns
+        const [width, height] = gridImageSize(grid)
+        canvas.width = width
         canvas.height = height
         const context = canvas.getContext('2d')
         if (context === null) return ''
-        const pixels = context.createImageData(grid.columns, height)
-        mercatorRows(grid, height).forEach((row, pixel) => {
-            for (let column = 0; column < grid.columns; column += 1) {
-                const index = classOf(scale, grid.values[row * grid.columns + column] ?? null)
-                if (index !== null) pixels.data.set(bytes[index], (pixel * grid.columns + column) * 4)
-            }
-        })
+        const pixels = context.createImageData(width, height)
+        if (grid.columns >= 1 && grid.rows >= 1)
+            mercatorRows(grid, height).forEach((row, pixel) => {
+                for (let column = 0; column < grid.columns; column += 1) {
+                    const index = classOf(scale, grid.values[row * grid.columns + column] ?? null)
+                    if (index !== null) pixels.data.set(bytes[index], (pixel * grid.columns + column) * 4)
+                }
+            })
         context.putImageData(pixels, 0, 0)
         return canvas.toDataURL('image/png')
         // `reading` advances when the theme changes, which is when the same colors resolve anew.

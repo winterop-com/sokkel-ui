@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { aggregateAt, pivot } from './data'
-import { binCounts, binOf, binsFor, edgeDecimals, niceCeil, niceStep, runningTotals, spreadOf, stepAt } from './stats'
+import { binCounts, binOf, binsFor, edgeDecimals, MOST_BINS, niceCeil, niceStep, runningTotals, shareOn, spreadOf, stepAt } from './stats'
 
 describe('the chart statistics', () => {
     it('steps and rounds up in numbers a reader counts in', () => {
@@ -84,5 +84,20 @@ describe('the chart statistics', () => {
         ])
         expect(aggregateAt('avg', 1)).toBe('avg')
         expect(aggregateAt(['count'], 1)).toBe('sum')
+    })
+})
+
+describe('edge inputs', () => {
+    it('widens bins a width asks far narrower than the range', () => {
+        const bins = binsFor([0, 10_000_000], { width: 1 })
+        expect(bins.count).toBeLessThanOrEqual(MOST_BINS)
+        expect(bins.start + bins.width * bins.count).toBeGreaterThanOrEqual(10_000_000)
+    })
+
+    it('places a value on a scale with no length without dividing by zero', () => {
+        expect(shareOn(5, 5, 5)).toBe(1)
+        expect(shareOn(4, 5, 5)).toBe(0)
+        expect(shareOn(50, 0, 100)).toBe(0.5)
+        expect(shareOn(150, 0, 100)).toBe(1)
     })
 })

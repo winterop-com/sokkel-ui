@@ -146,3 +146,14 @@ describe('extent', () => {
         expect(aggregate(many, 'min')).toBe(-1000)
     })
 })
+
+describe('asShares with negative figures', () => {
+    it('keeps every share within 100 percent', () => {
+        const [up, down] = asShares([
+            { name: 'up', values: [100] },
+            { name: 'down', values: [-50] },
+        ])
+        expect(up.values[0]).toBeCloseTo(66.67, 1)
+        expect(down.values[0]).toBeCloseTo(-33.33, 1)
+    })
+})

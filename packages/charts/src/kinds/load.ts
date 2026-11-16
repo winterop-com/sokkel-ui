@@ -38,6 +38,12 @@ const FILES: Record<ChartKind, Load | [Load, string]> = {
     linked: () => import('./linked'),
 }
 
+/** The kinds whose builder reads what the legend hides; the others are hidden by series name in the drawn chart, so a toggle builds nothing again. */
+const READS_HIDDEN: ReadonlySet<ChartKind> = new Set(['fan', 'linked', 'rings', 'treemap', 'sunburst', 'sankey'])
+
+/** Whether a kind's builder draws what the legend hides itself, and so is built again when it changes. */
+export const readsHidden = (kind: ChartKind): boolean => READS_HIDDEN.has(kind)
+
 /**
  * Fetches a kind's builder from its own file, the first time a chart of that kind is drawn, so a
  * page that draws bars loads the bar's builder and never a gauge's or a sankey's. Kinds in one file

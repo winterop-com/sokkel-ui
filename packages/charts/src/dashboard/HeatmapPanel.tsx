@@ -5,7 +5,7 @@ import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../C
 import { Chart } from '../Chart'
 import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { CATEGORY, FIGURE, heatmapRows, panelFormat, SERIES } from './series'
+import { CATEGORY, FIGURE, heatmapRows, panelFormat, SERIES, usePanelFields, type PanelWords } from './series'
 
 /** One heatmap cell: the x index, the y index and its value. */
 export type HeatCell = readonly [x: number, y: number, value: number]
@@ -36,7 +36,8 @@ export interface HeatmapPanelProps extends ChartFrameViewProps {
     /** Whether the panel is in its window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
     expanded?: boolean
     onExpandedChange?: (expanded: boolean) => void
-    words?: Partial<ChartFrameWords>
+    /** The frame's words, and the heads of its data view's columns. */
+    words?: Partial<ChartFrameWords & PanelWords>
     className?: string
 }
 
@@ -75,6 +76,7 @@ export function HeatmapPanel({
     onViewChange,
     className,
 }: HeatmapPanelProps) {
+    const fieldNames = usePanelFields(words)
     const spec = useMemo<ChartSpec>(
         () => ({
             rows: heatmapRows(x, y, cells),
@@ -84,14 +86,14 @@ export function HeatmapPanel({
             order: x,
             // The first of y is drawn at the bottom, as on a chart's value axis.
             seriesOrder: [...y].reverse(),
-            fieldNames: { [FIGURE]: '' },
+            fieldNames,
             ...panelFormat(unit, decimals, format),
             min: 0,
             scale,
             labelEvery,
             showScale,
         }),
-        [x, y, cells, unit, decimals, format, scale, labelEvery, showScale],
+        [x, y, cells, fieldNames, unit, decimals, format, scale, labelEvery, showScale],
     )
     return (
         <ChartFrame

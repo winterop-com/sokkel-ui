@@ -203,14 +203,24 @@ export function classCounts(scale: ColorScale, values: readonly unknown[]): { co
     return { counts, noData }
 }
 
+/** The words a scale's classes are written in: the one class of a scale with no breaks, and what stands before the first break and after the last. */
+export interface ClassWords {
+    all: string
+    below: string
+    above: string
+}
+
+const CLASS_WORDS: ClassWords = { all: 'All values', below: 'Below', above: 'and above' }
+
 /** Each class written out: "Below 200", "200 – 260", "380 and above", or a category's label. */
-export function classLabels(scale: ColorScale): string[] {
+export function classLabels(scale: ColorScale, words?: Partial<ClassWords>): string[] {
     if (scale.kind === 'categorical') return scale.categories.map((category) => category.label)
+    const said = { ...CLASS_WORDS, ...words }
     const { breaks, format } = scale
-    if (breaks.length === 0) return ['All values']
+    if (breaks.length === 0) return [said.all]
     return [
-        `Below ${format(breaks[0])}`,
+        `${said.below} ${format(breaks[0])}`,
         ...breaks.slice(1).map((value, index) => `${format(breaks[index])} – ${format(value)}`),
-        `${format(breaks[breaks.length - 1])} and above`,
+        `${format(breaks[breaks.length - 1])} ${said.above}`,
     ]
 }
