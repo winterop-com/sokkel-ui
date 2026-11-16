@@ -120,8 +120,9 @@ bun add @winterop-com/sokkel-ui-dhis2@0.22.2    # only for DHIS2's expression la
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
-installs it itself; the packages do not bring it. Each package's `styles.css` is Tailwind source,
-not finished CSS. The core's carries Tailwind, the fonts, the tokens and base styles, with Tailwind
+installs it itself; the packages do not bring it. Every package that draws components has a
+`styles.css` of Tailwind source, not finished CSS; the domain add-ons (`fhir`, `dhis2`) draw none
+and have none. The core's carries Tailwind, the fonts, the tokens and base styles, with Tailwind
 pointed at the core's components; an add-on's points Tailwind at its own components only. So the
 app's CSS carries the classes of the packages it imports and no others (the stories are not in any
 package, and none of their classes reach an app). A Vite app installs Tailwind and its plugin and
@@ -131,9 +132,9 @@ adds `tailwindcss()` from `@tailwindcss/vite` to its plugins:
 bun add -d tailwindcss @tailwindcss/vite
 ```
 
-It then imports the core's `styles.css` and, after it, the `styles.css` of each add-on it uses, all
-in one stylesheet, so Tailwind reads them together. That stylesheet is imported once from the
-entry:
+It then imports the core's `styles.css` and, after it, the `styles.css` of each add-on it uses that
+has one, all in one stylesheet, so Tailwind reads them together. That stylesheet is imported once
+from the entry:
 
 ```css
 /* app.css */
