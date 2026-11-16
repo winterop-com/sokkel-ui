@@ -326,6 +326,10 @@
             "types": "./dist/components/Inspector.d.ts",
             "import": "./dist/components/Inspector.js"
         },
+        "./ErrorBoundary": {
+            "types": "./dist/components/ErrorBoundary.d.ts",
+            "import": "./dist/components/ErrorBoundary.js"
+        },
         "./ExampleList": {
             "types": "./dist/components/ExampleList.d.ts",
             "import": "./dist/components/ExampleList.js"
