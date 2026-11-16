@@ -1,3 +1,4 @@
+import { extent } from '../data'
 import type { ChartLook } from '../look'
 import { tooltipMarkup } from '../look'
 import { niceCeil } from '../stats'
@@ -70,7 +71,7 @@ function radarPolygon({
  */
 export const radar: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped({ ...spec, stack: undefined })
-    const largest = Math.max(0, ...series.flatMap((entry) => entry.values.map((value) => value ?? 0)))
+    const largest = Math.max(0, extent(series.flatMap((entry) => entry.values.map((value) => value ?? 0)))?.[1] ?? 0)
     const rim = spec.max ?? niceCeil(largest)
     return {
         tooltip: {

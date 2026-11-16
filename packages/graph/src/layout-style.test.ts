@@ -238,6 +238,14 @@ describe('node width from words', () => {
         expect(graphNodeSize({ code: 'transform' }, tens).width).toBeLessThan(plain.width)
     })
 
+    test('keeps room for a status, so a state machine moving its current state moves no box', () => {
+        for (const state of [{ code: 'queued', name: 'Queued' }, { code: 'queued' }]) {
+            const idle = graphNodeSize({ ...state, reserveStatus: true }, tens)
+            expect(graphNodeSize({ ...state, reserveStatus: true, status: 'running' }, tens)).toEqual(idle)
+            expect(graphNodeSize(state, tens).width).toBeLessThan(idle.width)
+        }
+    })
+
     test('keeps room for a count and its glyph on the line it is placed on', () => {
         const Glyph = () => null
         const titled = graphNodeSize({ code: 'split', kind: 'python', count: '×4' }, tens)

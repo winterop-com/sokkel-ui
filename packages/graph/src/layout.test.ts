@@ -7,6 +7,7 @@ import {
     fittedHeight,
     fittedZoom,
     fromElk,
+    LayoutAbandoned,
     layoutGraph,
     layoutNetwork,
     MAX_ZOOM,
@@ -109,6 +110,24 @@ describe('the elk conversation', () => {
         expect((await layoutGraph(PIPELINE, 'right', fake)).nodes.map((node) => node.x)).toEqual([0, 200, 400, 600, 800])
         expect(await layoutGraph({ nodes: [], edges: [] }, 'right', fake)).toEqual({ nodes: [], edges: [] })
         expect(asked).toBe(1)
+    })
+
+    test('starts no further try of a cut into rows once it is given up on', async () => {
+        let asked = 0
+        const abandon = new AbortController()
+        // One long row every time, so a cut to 300 wide keeps trying.
+        const wide: ElkEngine = {
+            layout: (graph) => {
+                asked += 1
+                if (asked === 2) abandon.abort()
+                return Promise.resolve({ children: graph.children.map((child, index) => ({ id: child.id, x: index * 200, y: 0 })) })
+            },
+        }
+        await expect(layoutGraph(PIPELINE, 'right', wide, { wrapWidth: 300 }, abandon.signal)).rejects.toBeInstanceOf(LayoutAbandoned)
+        expect(asked).toBe(2)
+        asked = 0
+        await layoutGraph(PIPELINE, 'right', wide, { wrapWidth: 300 })
+        expect(asked).toBeGreaterThan(2)
     })
 
     test('places a real graph left to right with elk itself', async () => {

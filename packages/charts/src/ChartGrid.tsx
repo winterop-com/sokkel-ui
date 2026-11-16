@@ -8,7 +8,7 @@ import { EChart } from './EChart'
 import { useFrameData } from './frame-data'
 import type { ChartKind, ChartSpec } from './kinds'
 import { SERIES_ORDER, type ChartLook } from './look'
-import { shareScales } from './scales'
+import { buildShared } from './scales'
 import { useBuilder } from './use-builder'
 
 export type ChartGridProps = ChartSpec & {
@@ -33,7 +33,8 @@ export type ChartGridProps = ChartSpec & {
 /**
  * Small multiples: the same chart once per label of `facet`, each drawn from that label's rows,
  * headed by the label and laid out in `Columns`. The charts share one scale, so a bar of the same
- * height is the same figure in each, and one set of colors and orders, so a series keeps its color
+ * height is the same figure in each (each value axis by its place, a histogram's bins, a radar's and
+ * a bullet chart's ends), and one set of colors and orders, so a series keeps its color
  * and a category its place in every chart and one legend serves them all. Inside a `ChartFrame`
  * with `fit`, pass the frame's state through and give the frame `chartLegend` for the same spec.
  * Keep `rows` stable between renders, as the charts are built again when they change.
@@ -76,11 +77,20 @@ export function ChartGrid({
         let built: { key: string; options: EChartsCoreOption[] } | null = null
         const all = (look: ChartLook) => {
             if (built?.key !== look.key)
-                built = { key: look.key, options: shareScales(panels.map((panel) => build(panel.spec, look, hidden))) }
+                built = {
+                    key: look.key,
+                    options: buildShared(
+                        kind,
+                        panels.map((panel) => panel.spec),
+                        build,
+                        look,
+                        hidden,
+                    ),
+                }
             return built.options
         }
         return panels.map((_, index) => (look: ChartLook) => all(look)[index])
-    }, [build, panels, hidden])
+    }, [kind, build, panels, hidden])
     return (
         <Columns count={columns} min={narrowest} gap="md" className={className}>
             {panels.map((panel, index) => (

@@ -1,4 +1,4 @@
-import { distinct, labelOf, numberOf } from '../data'
+import { distinct, extent, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
 import { tickWriter, valueLabels } from './axes'
 import { written, colorOf, type ChartBuilder } from './spec'
@@ -14,7 +14,7 @@ export const scatter: ChartBuilder = (spec, look) => {
     if (x === undefined || y === undefined) throw new Error('A scatter chart needs x and y fields.')
     const groups = spec.series === undefined ? ['All'] : distinct(spec.rows, spec.series, spec.seriesOrder)
     const sizes = spec.value === undefined ? [] : spec.rows.map((row) => numberOf(row[spec.value as string]) ?? 0)
-    const biggest = Math.max(1, ...sizes)
+    const biggest = Math.max(1, extent(sizes)?.[1] ?? 1)
     const named = (field: string) => spec.fieldNames?.[field] ?? field
     const xName = spec.fieldNames?.[x]
     const yName = spec.fieldNames?.[y]

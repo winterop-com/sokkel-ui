@@ -1,4 +1,4 @@
-import { quantile } from './data'
+import { extent, quantile } from './data'
 
 /** The step nearest to `raw` of 1, 2, 2.5, 5 and 10 times a power of ten: a step a reader counts in. */
 export function niceStep(raw: number): number {
@@ -28,16 +28,28 @@ export interface Bins {
 
 /**
  * Bins for these values on nice edges: about `how` of them when it is a number (by default one more
- * than the base-2 log of how many values there are, from 5 to 30), or each `how.width` wide.
+ * than the base-2 log of how many values there are, from 5 to 30), or each `how.width` wide, from
+ * `how.start` and `how.count` of them where it gives them.
  */
-export function binsFor(values: readonly number[], how?: number | { width: number }): Bins {
-    if (values.length === 0) return { start: 0, width: 1, count: 0 }
-    const low = Math.min(...values)
-    const high = Math.max(...values)
+export function binsFor(values: readonly number[], how?: number | { width: number; start?: number; count?: number }): Bins {
+    const fixed = typeof how === 'object' && how.width > 0 && how.start !== undefined && how.count !== undefined
+    if (fixed) return { start: how.start as number, width: how.width, count: how.count as number }
+    const span = extent(values)
+    if (span === null) return { start: 0, width: 1, count: 0 }
+    const [low, high] = span
     const wanted = typeof how === 'number' ? how : Math.min(30, Math.max(5, Math.ceil(Math.log2(values.length) + 1)))
     const width = typeof how === 'object' && how.width > 0 ? how.width : niceStep((high - low || Math.abs(high) || 1) / Math.max(1, wanted))
-    const start = Math.floor(low / width + 1e-9) * width
+    const start = typeof how === 'object' && how.start !== undefined ? how.start : Math.floor(low / width + 1e-9) * width
     return { start, width, count: Math.max(1, Math.ceil((high - start) / width - 1e-9)) }
+}
+
+/** How many decimals the edges of bins this wide need to read apart: none for 5, one for 2.5, three for 0.002. */
+export function edgeDecimals(width: number): number {
+    for (let decimals = 0; decimals < 12; decimals += 1) {
+        const scaled = width * 10 ** decimals
+        if (Math.abs(scaled - Math.round(scaled)) < 1e-6 * Math.max(1, scaled)) return decimals
+    }
+    return 12
 }
 
 /** The bin a value falls in: each bin holds its start and not its end, and the last holds its end too. */

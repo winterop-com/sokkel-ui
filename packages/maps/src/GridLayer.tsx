@@ -27,6 +27,35 @@ export function gridValueAt(grid: Grid, [lng, lat]: [number, number]): number | 
     return grid.values[row * grid.columns + column] ?? null
 }
 
+/** The furthest latitude Web Mercator draws. */
+const MERCATOR_LIMIT = 85.051129
+
+/** A latitude's height in Web Mercator, unscaled. */
+const mercatorY = (lat: number) => {
+    const clamped = (Math.max(-MERCATOR_LIMIT, Math.min(MERCATOR_LIMIT, lat)) * Math.PI) / 180
+    return Math.log(Math.tan(Math.PI / 4 + clamped / 2))
+}
+
+/** How many pixel rows the image of a grid of this many rows is drawn in, so each row's edges land near where they are. */
+export const imageRows = (rows: number) => Math.max(rows, Math.min(rows * 4, 4096))
+
+/**
+ * Which of a grid's rows each pixel row of its image shows, northernmost first. The map stretches
+ * the image evenly in Web Mercator between the grid's north and south, while the rows are even in
+ * latitude, so the pixel rows are spaced evenly in Mercator and each takes the row its latitude
+ * falls in.
+ */
+export function mercatorRows(grid: Pick<Grid, 'bounds' | 'rows'>, height: number): number[] {
+    const [, south, , north] = grid.bounds
+    const top = mercatorY(north)
+    const bottom = mercatorY(south)
+    return Array.from({ length: height }, (_, pixel) => {
+        const y = top - ((pixel + 0.5) / height) * (top - bottom)
+        const lat = (Math.atan(Math.sinh(y)) * 180) / Math.PI
+        return Math.min(grid.rows - 1, Math.max(0, Math.floor(((north - lat) / (north - south)) * grid.rows)))
+    })
+}
+
 export interface GridLayerProps {
     /** Unique among the map's layers. */
     id: string
@@ -40,8 +69,8 @@ export interface GridLayerProps {
 
 /**
  * Gridded values, such as rainfall or temperature, drawn as one image over the grid's bounds with
- * every cell in its class color and cells without a value left clear. It redraws when the grid,
- * the scale or the theme changes.
+ * every cell in its class color and cells without a value left clear, its rows placed at their
+ * latitudes in Web Mercator. It redraws when the grid, the scale or the theme changes.
  */
 export function GridLayer({ id, grid, scale, opacity = 0.85, visible = true, smooth = false }: GridLayerProps) {
     const { map, scope, reading, register } = useMapContext()
@@ -55,15 +84,17 @@ export function GridLayer({ id, grid, scale, opacity = 0.85, visible = true, smo
             return [parts[0], parts[1], parts[2], parts[3] === undefined ? 255 : Math.round(parts[3] * 255)]
         })
         const canvas = document.createElement('canvas')
+        const height = imageRows(grid.rows)
         canvas.width = grid.columns
-        canvas.height = grid.rows
+        canvas.height = height
         const context = canvas.getContext('2d')
         if (context === null) return ''
-        const pixels = context.createImageData(grid.columns, grid.rows)
-        grid.values.forEach((value, cell) => {
-            const index = classOf(scale, value)
-            if (index === null) return
-            pixels.data.set(bytes[index], cell * 4)
+        const pixels = context.createImageData(grid.columns, height)
+        mercatorRows(grid, height).forEach((row, pixel) => {
+            for (let column = 0; column < grid.columns; column += 1) {
+                const index = classOf(scale, grid.values[row * grid.columns + column] ?? null)
+                if (index !== null) pixels.data.set(bytes[index], (pixel * grid.columns + column) * 4)
+            }
         })
         context.putImageData(pixels, 0, 0)
         return canvas.toDataURL('image/png')

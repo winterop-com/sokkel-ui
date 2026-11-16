@@ -395,15 +395,34 @@ export function loadElk(): Promise<ElkEngine> {
     return engine
 }
 
-/** Place a graph with elk, loading it first unless an engine is given. */
+/** The error a layout given up on rejects with, once its signal is aborted. */
+export class LayoutAbandoned extends Error {
+    constructor() {
+        super('The graph layout was given up on.')
+        this.name = 'LayoutAbandoned'
+    }
+}
+
+/** An engine that asks for no more layouts once the signal is aborted, so a run of tries given up on stops at the next. */
+function abandonable(engine: ElkEngine, signal: AbortSignal | undefined): ElkEngine {
+    if (signal === undefined) return engine
+    return { layout: (graph) => (signal.aborted ? Promise.reject(new LayoutAbandoned()) : engine.layout(graph)) }
+}
+
+/**
+ * Place a graph with elk, loading it first unless an engine is given. A cut into rows may take
+ * several layouts; once `signal` is aborted, as when a newer shape supersedes this one, no further
+ * layout is started and the placement rejects with `LayoutAbandoned`.
+ */
 export async function layoutGraph(
     shape: GraphShape,
     direction: GraphDirection = 'right',
     elk?: ElkEngine,
     style: GraphLayoutStyle = {},
+    signal?: AbortSignal,
 ): Promise<PlacedGraph> {
     if (shape.nodes.length === 0) return { nodes: [], edges: [] }
-    const using = elk ?? (await loadElk())
+    const using = abandonable(elk ?? (await loadElk()), signal)
     const flat = fromElk(shape, await using.layout(toElk(shape, direction, style)))
     if (!mayWrap(shape, direction, style)) return flat
     if (direction === 'down') return narrowed(shape, style, using, flat)

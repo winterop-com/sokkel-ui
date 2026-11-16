@@ -193,8 +193,8 @@ export interface EChartProps {
  * `option` stable between renders, at module level or memoized, or the chart redraws on each one.
  */
 export function EChart({ option, label, hidden = EMPTY, hovered = null, animate = false, handle, className }: EChartProps) {
-    const look = useChartLook()
     const element = useRef<HTMLDivElement>(null)
+    const look = useChartLook(element)
     const chart = useRef<EChartsType | null>(null)
     const [ready, setReady] = useState(false)
     // Whether the current option is drawn; marked on the element, so a screenshot waits for it.

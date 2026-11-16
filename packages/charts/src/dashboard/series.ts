@@ -73,3 +73,28 @@ export function seriesSpec(x: readonly string[], series: readonly PanelSeries[])
         ...(dashed.length === 0 ? {} : { dashed }),
     }
 }
+
+/**
+ * A heatmap's cells as rows a `Chart` reads: a row for every pair of x and y, in y's order and then
+ * x's, holding its cells' figures or none, so a column or row with no cells still keeps its place.
+ */
+export function heatmapRows(
+    x: readonly string[],
+    y: readonly string[],
+    cells: readonly (readonly [x: number, y: number, value: number])[],
+): Record<string, string | number | null>[] {
+    const figures = new Map<string, number[]>()
+    for (const [column, row, figure] of cells) {
+        const key = `${String(column)}:${String(row)}`
+        figures.set(key, [...(figures.get(key) ?? []), figure])
+    }
+    return y.flatMap((series, row) =>
+        x.flatMap((category, column) =>
+            (figures.get(`${String(column)}:${String(row)}`) ?? [null]).map((figure) => ({
+                [CATEGORY]: category,
+                [SERIES]: series,
+                [FIGURE]: figure,
+            })),
+        ),
+    )
+}
