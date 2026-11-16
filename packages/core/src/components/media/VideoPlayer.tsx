@@ -823,6 +823,7 @@ export function VideoPlayer({
         started.current = false
         resuming.current = false
         setTrouble(null)
+        setState((previous) => (previous.started ? { ...previous, started: false } : previous))
         seek.current = 'start'
         const feed = latest.current.source
         if (feed === undefined) {

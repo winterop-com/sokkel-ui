@@ -1,5 +1,17 @@
 import { CircleAlert, Info, Lightbulb, MessageSquareWarning, TriangleAlert, type LucideIcon } from 'lucide-react'
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import {
+    createContext,
+    memo,
+    useCallback,
+    useContext,
+    useDeferredValue,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ComponentType,
+    type ReactNode,
+} from 'react'
 import ReactMarkdown, { defaultUrlTransform, type Components, type Options, type UrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -47,20 +59,54 @@ export interface MarkdownHeading {
     level: number
 }
 
-/** The headings of a markdown text at the given levels, outside fenced code, in order. */
+/**
+ * Gives each heading id once: the first heading of a text keeps it, and each later one with the
+ * same text takes `-1`, `-2` and so on after it, as GitHub numbers them.
+ */
+function uniqueIds(): (id: string) => string {
+    const taken = new Map<string, number>()
+    return (id) => {
+        let out = id
+        while (taken.has(out)) {
+            const count = (taken.get(id) ?? 0) + 1
+            taken.set(id, count)
+            out = `${id}-${String(count)}`
+        }
+        taken.set(out, 0)
+        return out
+    }
+}
+
+/** A setext heading's underline: `===` under a level 1 heading, `---` under a level 2 one. */
+const SETEXT = /^ {0,3}(=+|-+)\s*$/
+
+/**
+ * The headings of a markdown text at the given levels, outside fenced code, in order: those written
+ * with `#` and those underlined with `===` or `---`. Their ids are those `anchors` gives, a repeated
+ * heading numbered after the first.
+ */
 export function markdownHeadings(content: string, levels: readonly number[] = [2, 3]): MarkdownHeading[] {
     const out: MarkdownHeading[] = []
+    const unique = uniqueIds()
     let fenced = false
-    for (const line of content.split('\n')) {
+    const lines = content.split('\n')
+    for (const [index, line] of lines.entries()) {
         if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
         if (fenced) continue
-        const match = /^(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line)
-        if (match === null || !levels.includes(match[1].length)) continue
-        const label = match[2]
+        const atx = /^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line)
+        const under = SETEXT.exec(lines[index + 1] ?? '')
+        const before = lines[index - 1] ?? ''
+        // A setext heading is one line of text after a blank one, never a list item, a quote or a table row.
+        const setext =
+            atx === null && under !== null && line.trim() !== '' && before.trim() === '' && !/^\s*([-*+>|]|\d+[.)])(\s|$)/.test(line)
+        if (atx === null && !setext) continue
+        const level = atx === null ? (under?.[1].startsWith('=') === true ? 1 : 2) : atx[1].length
+        const label = (atx === null ? line : atx[2])
             .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
             .replace(/[`*_~]/g, '')
             .trim()
-        out.push({ id: headingId(label), label, level: match[1].length })
+        const id = unique(headingId(label))
+        if (levels.includes(level)) out.push({ id, label, level })
     }
     return out
 }
@@ -218,12 +264,13 @@ function partFor(parts: MarkdownParts | undefined, id: string): ReactNode {
     return typeof parts === 'function' ? parts(id) : parts?.[id]
 }
 
-/** Marks `[!KIND]` quotes as callouts with the marker removed, and gives headings ids when `anchors` is set. */
+/** Marks `[!KIND]` quotes as callouts with the marker removed, and gives headings ids when `anchors` is set, each once. */
 function rehypeDocument(anchors: boolean) {
     return () => (tree: HastNode) => {
+        const unique = uniqueIds()
         const visit = (node: HastNode) => {
             if (anchors && node.tagName !== undefined && /^h[1-6]$/.test(node.tagName)) {
-                node.properties = { ...node.properties, id: headingId(hastText(node)) }
+                node.properties = { ...node.properties, id: unique(headingId(hastText(node))) }
             }
             if (node.tagName === 'blockquote') {
                 const first = node.children?.find((child) => child.type === 'element')
@@ -565,11 +612,13 @@ export interface MarkdownProps {
 
 /**
  * GitHub-flavored markdown, as an assistant or a description writes it: fenced code highlighted
- * with a copy button, mermaid fences drawn as diagrams, links opening in a new tab, and a quote
+ * with a copy button, mermaid fences drawn as diagrams, links opening in a new tab (a link to a
+ * place in the page, `#…`, staying in it), and a quote
  * whose first line is `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` drawn as
  * a callout. Raw HTML is escaped and shown as typed unless `allowHtml` is set; then it is read and
  * sanitized, with rehype-raw and rehype-sanitize loaded the first time a text allows it. While
- * `streaming`, a mermaid fence shows its source until the message completes.
+ * `streaming`, a mermaid fence shows its source until the message completes, and a `$$` block its
+ * source until it closes.
  *
  * `math` (on by default) draws LaTeX with KaTeX: `$…$` and `\(…\)` inline, `$$…$$`, `\[…\]` and a
  * `math` fence on a line of their own. KaTeX loads the first time a message holds math, its
@@ -579,7 +628,8 @@ export interface MarkdownProps {
  * its source in the error color.
  *
  * `anchors` gives each heading the id `headingId` makes of its text, for a table of contents to
- * link to; `markdownHeadings` lists the same ids from the source.
+ * link to, a repeated heading numbered after the first (`-1`, `-2`); `markdownHeadings` lists the
+ * same ids from the source.
  *
  * `parts` embeds an app's own parts in the text without splitting it, so headings, anchors and
  * the flow stay one document's. The text marks where each goes with an HTML comment,
@@ -622,6 +672,152 @@ export type MarkdownViewProps = MarkdownProps & {
     Diagram?: DiagramRenderer
 }
 
+/** What the renderers read from the view drawing them, so they stay the same components as it changes. */
+interface ViewContext {
+    streaming: boolean
+    words: MarkdownWords
+    parts: MarkdownParts | undefined
+    links: MarkdownLinks | undefined
+    /** The latest `onLink`, read on a press. */
+    follow: { readonly current: ((href: string) => boolean) | undefined }
+    following: boolean
+    Diagram: DiagramRenderer | undefined
+}
+
+const View = createContext<ViewContext>({
+    streaming: false,
+    words: WORDS,
+    parts: undefined,
+    links: undefined,
+    follow: { current: undefined },
+    following: false,
+    Diagram: undefined,
+})
+
+/**
+ * How each element is drawn. One map for every view: what changes between views and renders comes
+ * through `View`, so a code block, a diagram or a part keeps its place in the tree as a reply
+ * finishes streaming or the parent hands new `parts` or `links`.
+ */
+export const MARKDOWN_COMPONENTS: Components = {
+    blockquote: function Blockquote({ children, node: _node, ...props }) {
+        const { words } = useContext(View)
+        const kind = (props as Record<string, unknown>)['data-callout'] as CalloutKind | undefined
+        const callout = kind === undefined ? undefined : CALLOUTS[kind]
+        if (kind === undefined || callout === undefined) return <blockquote {...props}>{children}</blockquote>
+        const label = words[kind]
+        const Icon = callout.icon
+        return (
+            <div
+                data-callout={kind}
+                className={cn('my-3 flex gap-2.5 rounded-surface border px-3 py-2.5 [&_p]:my-1 [&>div>*:last-child]:mb-0', callout.frame)}
+            >
+                <Icon aria-hidden className={cn('mt-0.5 size-4 shrink-0', callout.ink)} />
+                <div className="min-w-0 flex-1">
+                    <p className={cn('!mt-0 font-medium', callout.ink)}>{label}</p>
+                    {children}
+                </div>
+            </div>
+        )
+    },
+    div: function Div({ children, node: _node, ...props }) {
+        const { parts } = useContext(View)
+        const part = (props as Record<string, unknown>)['data-part'] as string | undefined
+        if (part === undefined) return <div {...props}>{children}</div>
+        const drawn = partFor(parts, part)
+        if (drawn === undefined || drawn === null) return null
+        return (
+            <div data-part={part} className="my-3">
+                {drawn}
+            </div>
+        )
+    },
+    span: function Span({ children, node: _node, ...props }) {
+        const { parts } = useContext(View)
+        const part = (props as Record<string, unknown>)['data-part'] as string | undefined
+        if (part === undefined) return <span {...props}>{children}</span>
+        const drawn = partFor(parts, part)
+        if (drawn === undefined || drawn === null) return null
+        return <span data-part={part}>{drawn}</span>
+    },
+    th: ({ children, node: _node, className, ...props }) => (
+        <th {...props} className={cn(TABLE_HEAD_TEXT, className)}>
+            {children}
+        </th>
+    ),
+    a: function Anchor({ children, node: _node, ...props }) {
+        const { links, follow, following } = useContext(View)
+        const record = props as Record<string, unknown>
+        const target = record['data-wiki-link'] as string | undefined
+        const tag = record['data-tag'] as string | undefined
+        if (target !== undefined && links !== undefined) {
+            const heading = record['data-heading'] as string | undefined
+            return (
+                <a
+                    {...props}
+                    className={cn(links.exists?.(target) === false && 'opacity-60')}
+                    onClick={(event) => {
+                        event.preventDefault()
+                        links.onOpen(target, heading)
+                    }}
+                >
+                    {children}
+                </a>
+            )
+        }
+        if (tag !== undefined && links?.onTag !== undefined) {
+            const onTag = links.onTag
+            return (
+                <a
+                    {...props}
+                    // The chip carries no underline, which the text's links take from the block around them.
+                    style={{ textDecorationLine: 'none' }}
+                    className="rounded-sm bg-primary/12 px-1"
+                    onClick={(event) => {
+                        event.preventDefault()
+                        onTag(tag)
+                    }}
+                >
+                    {children}
+                </a>
+            )
+        }
+        if (typeof props.href !== 'string' || props.href === '') return <>{children}</>
+        // A link to a place in the page stays in it; any other opens in a new tab.
+        const away = !props.href.startsWith('#')
+        return (
+            <Link
+                {...props}
+                target={away ? '_blank' : undefined}
+                rel={away ? 'noreferrer noopener' : undefined}
+                onClick={
+                    following
+                        ? (event) => {
+                              const href = event.currentTarget.getAttribute('href')
+                              const plain = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+                              if (plain && href !== null && follow.current?.(href) === true) event.preventDefault()
+                          }
+                        : undefined
+                }
+            >
+                {children}
+            </Link>
+        )
+    },
+    pre: function Pre({ children }) {
+        const { streaming, words, Diagram } = useContext(View)
+        const { language, value } = fence(children)
+        if (language === 'mermaid' && Diagram !== undefined) {
+            return (
+                <div className="mermaid-block">
+                    <Diagram code={value} streaming={streaming} words={words.diagram} />
+                </div>
+            )
+        }
+        return <Code value={value} language={language} words={words.code} />
+    },
+}
+
 /**
  * `Markdown` as drawn, given its engines: `useMath` loads math when a text needs it, `Diagram` draws
  * a `mermaid` fence. Without them math stays text and a `mermaid` fence is code, and nothing of
@@ -650,135 +846,28 @@ export const MarkdownView = memo(function MarkdownView({
     className,
     words: given,
 }: MarkdownViewProps) {
-    // The words are held by their text, so an object made anew each render keeps the renderers.
+    // The words are held by their text, so an object made anew each render keeps the context.
     const said = JSON.stringify(given ?? null)
     const words = useMemo<MarkdownWords>(() => ({ ...WORDS, ...(JSON.parse(said) as Partial<MarkdownWords> | null) }), [said])
-    // The latest handler, read on a press, so a handler made anew each render keeps the renderers.
+    // The latest handler, read on a press, so a handler made anew each render keeps the context.
     const follow = useRef(onLink)
     follow.current = onLink
     const following = onLink !== undefined
-    const components = useMemo<Components>(
-        () => ({
-            blockquote: ({ children, node: _node, ...props }) => {
-                const kind = (props as Record<string, unknown>)['data-callout'] as CalloutKind | undefined
-                const callout = kind === undefined ? undefined : CALLOUTS[kind]
-                if (kind === undefined || callout === undefined) return <blockquote {...props}>{children}</blockquote>
-                const label = words[kind]
-                const Icon = callout.icon
-                return (
-                    <div
-                        data-callout={kind}
-                        className={cn(
-                            'my-3 flex gap-2.5 rounded-surface border px-3 py-2.5 [&_p]:my-1 [&>div>*:last-child]:mb-0',
-                            callout.frame,
-                        )}
-                    >
-                        <Icon aria-hidden className={cn('mt-0.5 size-4 shrink-0', callout.ink)} />
-                        <div className="min-w-0 flex-1">
-                            <p className={cn('!mt-0 font-medium', callout.ink)}>{label}</p>
-                            {children}
-                        </div>
-                    </div>
-                )
-            },
-            div: ({ children, node: _node, ...props }) => {
-                const part = (props as Record<string, unknown>)['data-part'] as string | undefined
-                if (part === undefined) return <div {...props}>{children}</div>
-                const drawn = partFor(parts, part)
-                if (drawn === undefined || drawn === null) return null
-                return (
-                    <div data-part={part} className="my-3">
-                        {drawn}
-                    </div>
-                )
-            },
-            span: ({ children, node: _node, ...props }) => {
-                const part = (props as Record<string, unknown>)['data-part'] as string | undefined
-                if (part === undefined) return <span {...props}>{children}</span>
-                const drawn = partFor(parts, part)
-                if (drawn === undefined || drawn === null) return null
-                return <span data-part={part}>{drawn}</span>
-            },
-            th: ({ children, node: _node, className, ...props }) => (
-                <th {...props} className={cn(TABLE_HEAD_TEXT, className)}>
-                    {children}
-                </th>
-            ),
-            a: ({ children, node: _node, ...props }) => {
-                const record = props as Record<string, unknown>
-                const target = record['data-wiki-link'] as string | undefined
-                const tag = record['data-tag'] as string | undefined
-                if (target !== undefined && links !== undefined) {
-                    const heading = record['data-heading'] as string | undefined
-                    return (
-                        <a
-                            {...props}
-                            className={cn(links.exists?.(target) === false && 'opacity-60')}
-                            onClick={(event) => {
-                                event.preventDefault()
-                                links.onOpen(target, heading)
-                            }}
-                        >
-                            {children}
-                        </a>
-                    )
-                }
-                if (tag !== undefined && links?.onTag !== undefined) {
-                    const onTag = links.onTag
-                    return (
-                        <a
-                            {...props}
-                            // The chip carries no underline, which the text's links take from the block around them.
-                            style={{ textDecorationLine: 'none' }}
-                            className="rounded-sm bg-primary/12 px-1"
-                            onClick={(event) => {
-                                event.preventDefault()
-                                onTag(tag)
-                            }}
-                        >
-                            {children}
-                        </a>
-                    )
-                }
-                if (typeof props.href !== 'string' || props.href === '') return <>{children}</>
-                return (
-                    <Link
-                        {...props}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        onClick={
-                            following
-                                ? (event) => {
-                                      const href = event.currentTarget.getAttribute('href')
-                                      const plain =
-                                          event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
-                                      if (plain && href !== null && follow.current?.(href) === true) event.preventDefault()
-                                  }
-                                : undefined
-                        }
-                    >
-                        {children}
-                    </Link>
-                )
-            },
-            pre: ({ children }) => {
-                const { language, value } = fence(children)
-                if (language === 'mermaid' && Diagram !== undefined) {
-                    return (
-                        <div className="mermaid-block">
-                            <Diagram code={value} streaming={streaming} words={words.diagram} />
-                        </div>
-                    )
-                }
-                return <Code value={value} language={language} words={words.code} />
-            },
-        }),
+    const view = useMemo<ViewContext>(
+        () => ({ streaming, words, parts, links, follow, following, Diagram }),
         [streaming, words, parts, links, following, Diagram],
     )
-    const needsMath = useMemo(() => math && useMath !== undefined && hasMath(content), [math, useMath, content])
+    // While streaming, the text drawn trails the text given when React is busy, so tokens that land
+    // faster than a parse are drawn together rather than one parse each.
+    const deferred = useDeferredValue(content)
+    const shown = streaming ? deferred : content
+    const needsMath = useMemo(() => math && useMath !== undefined && hasMath(shown), [math, useMath, shown])
     // The same hook every render of a view: `Markdown` always passes one, `PlainMarkdown` never does.
     const katex = useMath?.(needsMath)
-    const source = useMemo(() => (math && useMath !== undefined ? normalizeMath(content) : content), [math, useMath, content])
+    const source = useMemo(
+        () => (math && useMath !== undefined ? normalizeMath(shown, { streaming }) : shown),
+        [math, useMath, shown, streaming],
+    )
     const linked = links !== undefined
     const tagged = links?.onTag !== undefined
     const remark: Options['remarkPlugins'] = useMemo(() => {
@@ -811,6 +900,24 @@ export const MarkdownView = memo(function MarkdownView({
         },
         [schemes],
     )
+    const skipHtml = allowHtml && htmlEngine === undefined
+    // Held while the text and its plugins stand, so a render for anything else (a deferred token, a
+    // caret) draws no parse.
+    const drawn = useMemo(
+        () => (
+            <ReactMarkdown
+                remarkPlugins={remark}
+                rehypePlugins={rehype}
+                components={MARKDOWN_COMPONENTS}
+                urlTransform={urlTransform}
+                // Until the HTML engine loads, the tags are left out rather than shown as typed.
+                skipHtml={skipHtml}
+            >
+                {source}
+            </ReactMarkdown>
+        ),
+        [remark, rehype, urlTransform, skipHtml, source],
+    )
     const Root = inline ? 'span' : 'div'
     return (
         <Root
@@ -825,16 +932,7 @@ export const MarkdownView = memo(function MarkdownView({
                 className,
             )}
         >
-            <ReactMarkdown
-                remarkPlugins={remark}
-                rehypePlugins={rehype}
-                components={components}
-                urlTransform={urlTransform}
-                // Until the HTML engine loads, the tags are left out rather than shown as typed.
-                skipHtml={allowHtml && htmlEngine === undefined}
-            >
-                {source}
-            </ReactMarkdown>
+            <View.Provider value={view}>{drawn}</View.Provider>
         </Root>
     )
 })

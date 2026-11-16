@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { insertMention, matchPeople, mentionQuery, mentionsIn, type MentionPerson } from './mentions'
+import { insertMention, matchPeople, mentionKey, mentionQuery, mentionsIn, type MentionPerson } from './mentions'
 
 const PEOPLE: MentionPerson[] = [
     { id: 'u-ada', name: 'Ada Berg', handle: 'ada' },
@@ -84,5 +84,26 @@ describe('matchPeople', () => {
 
     it('gives no one for a query nobody matches', () => {
         expect(matchPeople(PEOPLE, 'zz')).toEqual([])
+    })
+})
+
+describe('mentionKey', () => {
+    it('moves through the people shown and picks the one chosen', () => {
+        expect(mentionKey('ArrowDown', 3, false)).toBe('down')
+        expect(mentionKey('ArrowUp', 3, false)).toBe('up')
+        expect(mentionKey('Enter', 3, false)).toBe('pick')
+        expect(mentionKey('Tab', 3, false)).toBe('pick')
+        expect(mentionKey('Escape', 0, false)).toBe('close')
+    })
+
+    it('picks no one from an older query while the search answers, and keeps Enter from sending', () => {
+        expect(mentionKey('Enter', 3, true)).toBe('hold')
+        expect(mentionKey('Tab', 3, true)).toBe('hold')
+        expect(mentionKey('Enter', 0, true)).toBe('hold')
+    })
+
+    it('leaves Enter to the field when the answer holds no one', () => {
+        expect(mentionKey('Enter', 0, false)).toBeUndefined()
+        expect(mentionKey('a', 3, false)).toBeUndefined()
     })
 })

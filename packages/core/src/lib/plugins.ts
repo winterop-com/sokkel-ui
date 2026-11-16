@@ -38,16 +38,29 @@ export interface SokkelPlugin {
 
 const languages = new Map<string, PluginLanguage>()
 
+/** The plugin each installed language came from, so a plugin installed again takes back what it no longer gives. */
+const owners = new Map<string, string>()
+
 const listeners = new Set<() => void>()
 
 /**
  * Installs plugins, once as the app starts and before anything that uses them draws. A plugin
  * installed again, or a language named again, replaces the one before, and every part showing it
- * takes the new one: an app installs a plugin again when what it was built from changes, such as
+ * takes the new one; a language a plugin installed again no longer gives is gone: an app installs a plugin again when what it was built from changes, such as
  * the names a server of another version knows.
  */
 export function registerPlugins(plugins: readonly SokkelPlugin[]): void {
-    for (const plugin of plugins) for (const language of plugin.languages ?? []) languages.set(language.name, language)
+    for (const plugin of plugins) {
+        for (const [name, owner] of owners)
+            if (owner === plugin.name) {
+                owners.delete(name)
+                languages.delete(name)
+            }
+        for (const language of plugin.languages ?? []) {
+            languages.set(language.name, language)
+            owners.set(language.name, plugin.name)
+        }
+    }
     for (const listener of listeners) listener()
 }
 
@@ -67,7 +80,7 @@ export function pluginLanguage(name: string): PluginLanguage | undefined {
 /** The installed language a media type (lower case, without parameters) is written in, for `languageForMediaType`. */
 export function pluginLanguageForMediaType(type: string): string | undefined {
     for (const language of languages.values())
-        if (language.mediaTypes?.some((given) => (typeof given === 'string' ? given.toLowerCase() === type : given.test(type))))
+        if (language.mediaTypes?.some((given) => (typeof given === 'string' ? given.toLowerCase() === type : type.search(given) !== -1)))
             return language.name
     return undefined
 }

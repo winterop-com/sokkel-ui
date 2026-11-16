@@ -164,6 +164,15 @@ describe('CQL', () => {
         ])
     })
 
+    it('reads less, more and external as keywords', () => {
+        const read = oneLine(cqlParser, 'A starts 3 days or less before B or more external')
+        expect(read.filter(([text]) => ['less', 'more', 'external'].includes(text))).toEqual([
+            ['less', 'keyword'],
+            ['more', 'keyword'],
+            ['external', 'keyword'],
+        ])
+    })
+
     it('reads a function, a keyword before a parenthesis, a member and a number', () => {
         expect(oneLine(cqlParser, 'define "Adult": exists (O where AgeInYears() >= 18.5 and O.code is not null)')).toEqual([
             ['define', 'keyword'],
