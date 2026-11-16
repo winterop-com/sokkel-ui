@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
@@ -391,5 +391,20 @@ describe("a schema form's secret words", () => {
         const html = renderToStaticMarkup(<Words />)
         expect(html).toContain('>Kept<')
         expect(html).toContain('>Change<')
+    })
+})
+
+describe("the server's issues", () => {
+    const schema: JsonSchema = { type: 'object', properties: { code: { type: 'string', title: 'Code' } } }
+
+    it('are read by what they say, so an array made anew each render draws once', () => {
+        function Inline() {
+            // Drawn a second time, as any later render is, with an equal array of a new identity.
+            const [again, setAgain] = useState(false)
+            if (!again) setAgain(true)
+            const form = useSchemaForm(schema, { initial: { code: 'x' }, issues: [{ path: ['code'], text: 'Taken' }] })
+            return <SchemaForm form={form} marks={false} />
+        }
+        expect(renderToStaticMarkup(<Inline />)).toContain('aria-label="Error: Taken"')
     })
 })

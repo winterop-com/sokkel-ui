@@ -341,12 +341,14 @@ export function useSchemaForm(
     const [touched, setTouched] = useState<ReadonlySet<string>>(new Set())
     const [submitted, setSubmitted] = useState(defaultSubmitted)
     const [open, setOpen] = useState<string | null>(defaultOpen === undefined ? null : pointer(defaultOpen))
-    const [seen, setSeen] = useState(server)
+    // The server's issues by what they say, so an equal array made anew each render counts as the same.
+    const serverKey = JSON.stringify(server.map((issue) => [pointer(issue.path), issue.text, issue.detail ?? null, issue.tone ?? null]))
+    const [seen, setSeen] = useState(serverKey)
     const [changed, setChanged] = useState<ReadonlySet<string>>(new Set())
     // The removals and moves made since the server's issues came, which carry each issue to its item's place now.
     const [moves, setMoves] = useState<readonly { list: string; map: (index: number) => number | null }[]>([])
-    if (seen !== server) {
-        setSeen(server)
+    if (seen !== serverKey) {
+        setSeen(serverKey)
         setChanged(new Set())
         setMoves([])
     }
