@@ -1082,6 +1082,28 @@ export interface PageShown {
     view: string
 }
 
+/**
+ * What client pages count among the rows as drawn: each row, or in a tree each top-level row with
+ * the open rows under it, so a page never parts a row from its children. `count` is how many there
+ * are, and `startOf` where the one at a place starts among the rows as drawn.
+ */
+export function clientPages<T>(all: readonly FlatRow<T>[], tree: boolean): { count: number; startOf: (unit: number) => number } {
+    if (!tree) return { count: all.length, startOf: (unit) => Math.min(unit, all.length) }
+    const roots: number[] = []
+    all.forEach((entry, index) => {
+        if (entry.depth === 0) roots.push(index)
+    })
+    return { count: roots.length, startOf: (unit) => roots[unit] ?? all.length }
+}
+
+/** The client page a row drawn at `index` among `all` is on. */
+export function pageOfRow<T>(all: readonly FlatRow<T>[], index: number, pageSize: number, tree: boolean): number {
+    if (!tree) return Math.floor(index / pageSize)
+    let roots = -1
+    for (let at = 0; at <= index && at < all.length; at++) if (all[at].depth === 0) roots += 1
+    return Math.floor(Math.max(0, roots) / pageSize)
+}
+
 /** Whether a table turned to another page, page size or view since `before`, which starts it at the top; not on its first drawing. */
 export function turnedPage(before: PageShown | undefined, now: PageShown): boolean {
     return before !== undefined && (before.page !== now.page || before.pageSize !== now.pageSize || before.view !== now.view)
@@ -1815,7 +1837,8 @@ export function DataTable<T>({
     // A page of the rows, or all of them; everything below draws and moves through `flat`.
     const [page, setPage] = useHeld(pageValue, defaultPage, onPageChange)
     const [pageSize, setPageSize] = useHeld(pageSizeValue, defaultPageSize, onPageSizeChange)
-    const pageCount = paging === 'server' ? (total ?? all.length) : all.length
+    const units = useMemo(() => clientPages(all, tree), [all, tree])
+    const pageCount = paging === 'server' ? (total ?? all.length) : units.count
     const pages = paging === undefined ? 1 : Math.max(1, Math.ceil(pageCount / pageSize))
     const current = Math.min(page, pages - 1)
     // A page held past the last, once a filter or a smaller total leaves it there, moves to the last, and its owner hears so.
@@ -1824,8 +1847,8 @@ export function DataTable<T>({
         if (inRange !== undefined) setPage(inRange)
     }, [inRange, setPage])
     const flat = useMemo(
-        () => (paging === 'client' ? all.slice(current * pageSize, (current + 1) * pageSize) : all),
-        [paging, all, current, pageSize],
+        () => (paging === 'client' ? all.slice(units.startOf(current * pageSize), units.startOf((current + 1) * pageSize)) : all),
+        [paging, all, current, pageSize, units],
     )
     // The table's lines: the rows, with the group heads among them when grouped, and a line under each branch that did not load.
     const drawn = useMemo(() => withRefusedLines(groupedLines ?? flat, refusedNow), [groupedLines, flat, refusedNow])
@@ -2412,8 +2435,8 @@ export function DataTable<T>({
     useEffect(() => {
         if (revealing.current === undefined) return
         const at = all.findIndex((entry) => entry.key === revealing.current)
-        const on = Math.floor(at / pageSize)
         if (at < 0) return
+        const on = pageOfRow(all, at, pageSize, tree)
         if (paging === 'client' && on !== current) return setPage(on)
         revealing.current = undefined
         gridBox.current?.focus({ preventScroll: true })

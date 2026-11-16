@@ -214,6 +214,48 @@ describe('every row on every server page', () => {
     })
 })
 
+describe('a tree in client pages', () => {
+    it('pages its top-level rows, each with the open rows under it', async () => {
+        interface Step {
+            id: string
+            name: string
+            steps?: Step[]
+        }
+        const step = (job: string, name: string): Step => ({ id: `${job}/${name}`, name })
+        const runs: Step[] = [
+            {
+                id: 'nightly-export',
+                name: 'nightly-export',
+                steps: ['fetch', 'transform', 'upload'].map((name) => step('nightly-export', name)),
+            },
+            { id: 'sync-inventory', name: 'sync-inventory' },
+            { id: 'send-digest', name: 'send-digest' },
+        ]
+        const at = await mount(
+            <div style={{ height: 400, overflow: 'auto' }}>
+                <DataTable
+                    columns={[{ id: 'name', header: 'Name', width: '1fr', cell: (row: Step) => row.name }]}
+                    rows={runs}
+                    rowKey={(row) => row.id}
+                    childRows={(row) => row.steps}
+                    defaultExpanded={new Set(['nightly-export'])}
+                    paging="client"
+                    pageSize={2}
+                />
+            </div>,
+        )
+        const keys = [...at.querySelectorAll('[data-row]')].map((row) => row.getAttribute('data-row'))
+        expect(keys).toEqual([
+            'nightly-export',
+            'nightly-export/fetch',
+            'nightly-export/transform',
+            'nightly-export/upload',
+            'sync-inventory',
+        ])
+        expect(at.textContent).toContain('1–2 of 3')
+    })
+})
+
 describe('a press on a row', () => {
     it('opens it, unless it ends a drag that selected its words', async () => {
         const opened = vi.fn()
