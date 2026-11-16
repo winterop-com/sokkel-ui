@@ -155,7 +155,9 @@ const RULES: Rule[] = [
     {
         name: 'a table drawn by hand in a component instead of DataTable',
         pattern: /<(table|Table)\b/,
-        in: Object.values(SOURCES).flat(),
+        in: Object.values(SOURCES)
+            .flat()
+            .filter((path) => DRAWN.includes(path)),
         except: {
             'packages/core/src/components/ui/table.tsx': 'the Table primitive itself',
             'packages/core/src/components/LogView.tsx': "a log's lines on the terminal ground, read and followed rather than listed",

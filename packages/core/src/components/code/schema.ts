@@ -122,7 +122,11 @@ function readJson(state: EditorState, node: SyntaxNode, path: Path, spans: Map<s
                 const value = children(property).find((child) => child.name !== 'PropertyName' && child.name !== ':')
                 if (name === null) continue
                 const label = parseString(text(state, name))
-                own(out, label, value === undefined ? null : readJson(state, value, [...path, label], spans, { from: name.from, to: name.to }))
+                own(
+                    out,
+                    label,
+                    value === undefined ? null : readJson(state, value, [...path, label], spans, { from: name.from, to: name.to }),
+                )
             }
             return out
         }

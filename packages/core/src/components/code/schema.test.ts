@@ -126,7 +126,10 @@ describe('schema diagnostics', () => {
         expect(keys(jsonState('{"code": "a", "__proto__": {"code": 1}}'), 'json')).toEqual(['"__proto__"'])
         expect(keys(jsonState('{"code": "a", "constructor": 2}'), 'json')).toEqual(['"constructor"'])
         expect(keys(yamlState('code: a\n__proto__:\n  code: 1\n'), 'yaml')).toEqual(['__proto__'])
-        const merged = readDocument(yamlState('base: &base\n  __proto__: 1\nuse:\n  <<: *base\n'), 'yaml')?.value as Record<string, Record<string, unknown>>
+        const merged = readDocument(yamlState('base: &base\n  __proto__: 1\nuse:\n  <<: *base\n'), 'yaml')?.value as Record<
+            string,
+            Record<string, unknown>
+        >
         expect(Object.hasOwn(merged.use, '__proto__')).toBe(true)
         expect(Object.getPrototypeOf(merged.use)).toBe(Object.prototype)
     })
