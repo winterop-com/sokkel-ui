@@ -72,6 +72,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The select disabled, invalid with a placeholder, and empty with nothing to choose. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="end" wrap>
@@ -123,6 +124,7 @@ export const Quiet: StoryObj = {
     ),
 }
 
+/** The select open over the page with the chosen value marked. */
 export const Open: StoryObj = {
     render: () => (
         <div className="h-80 pt-16">
@@ -138,6 +140,7 @@ const SOURCES = [
     { value: 'harbor-exports', label: 'harbor-exports', kind: 'bucket' },
 ]
 
+/** An open select with its options in labeled groups, the source for a step chosen from services and others. */
 export const StepSource: StoryObj = {
     render: () => (
         <Stack gap="sm" className="h-96 max-w-md">

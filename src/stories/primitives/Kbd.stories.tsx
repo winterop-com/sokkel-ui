@@ -8,6 +8,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Actions/Kbd', parameters: { frame: 'column' } }
 export default meta
 
+/** A key, a word, an icon, and keys grouped with and without a plus between them. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="end" wrap>
@@ -49,6 +50,7 @@ const SHORTCUTS = [
     { keys: ['Esc'], does: 'Close the side panel' },
 ]
 
+/** A list of what each shortcut does beside its keys. */
 export const Shortcuts: StoryObj = {
     render: () => (
         <Stack className="max-w-md">

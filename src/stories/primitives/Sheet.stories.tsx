@@ -94,6 +94,9 @@ function Bottom() {
     )
 }
 
+/** A button for each side the sheet slides in from, every sheet closed. */
 export const Triggers: StoryObj = { render: () => <Closed /> }
+/** A run's detail in a sheet open on the right. */
 export const RightRunDetail: StoryObj = { render: () => <RunDetail /> }
+/** A sheet open at the bottom, offering the steps that can come next. */
 export const BottomPicker: StoryObj = { render: () => <Bottom /> }

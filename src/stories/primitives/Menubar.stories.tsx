@@ -63,6 +63,9 @@ function EditorMenubar({ open }: { open?: 'job' | 'view' }) {
     )
 }
 
+/** A menubar of three menus, every menu closed. */
 export const Closed: StoryObj = { render: () => <EditorMenubar /> }
+/** The Job menu open: actions with their keys, a disabled one and a destructive one. */
 export const JobOpen: StoryObj = { render: () => <EditorMenubar open="job" /> }
+/** The View menu open: checks and a radio group under a label. */
 export const ViewOpen: StoryObj = { render: () => <EditorMenubar open="view" /> }

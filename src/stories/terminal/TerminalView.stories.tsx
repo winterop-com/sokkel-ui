@@ -248,5 +248,7 @@ function FullScreen() {
 const meta: Meta = { title: 'Terminal/Terminal view' }
 export default meta
 
+/** A small shell: type a command and press Enter, Backspace edits the line, Ctrl+C drops it and Ctrl+L clears the screen. */
 export const Shell_: StoryObj = { name: 'Shell', render: () => <Shell /> }
+/** A full-screen job monitor drawn on the alternate screen, redrawn when the size changes; q leaves it. */
 export const FullScreen_: StoryObj = { name: 'Full screen', render: () => <FullScreen /> }

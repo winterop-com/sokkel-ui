@@ -37,6 +37,7 @@ function Panel({ children }: { children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Chat/Questionnaire', parameters: { frame: 'column' } }
 export default meta
 
+/** A single choice with letter keys, several choices with descriptions, and a typed answer. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -112,6 +113,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A required answer missing, a disabled choice and a disabled input. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -178,6 +180,7 @@ const STEPS = [
     { name: 'note' },
 ]
 
+/** The questions in an assistant's message, asked one at a time with their progress above. */
 export const FollowUp: StoryObj = {
     render: () => (
         <div className="max-w-2xl">

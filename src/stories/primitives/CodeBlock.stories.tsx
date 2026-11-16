@@ -69,6 +69,7 @@ function Highlighted({
 const meta: Meta = { title: 'Primitives/Code/CodeBlock', parameters: { frame: 'column' } }
 export default meta
 
+/** Code blocks plain, destructive, small with a header and copy, with line numbers and a footer, wrapped and not, and marked lines. */
 export const Variants: StoryObj = {
     render: () => (
         <Columns>
@@ -149,6 +150,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** An empty code block, and one in a language the highlighter does not know, shown plain. */
 export const States: StoryObj = {
     render: () => (
         <Columns>
@@ -173,6 +175,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** A job's file with line numbers, its header and copy button, the line where a step failed marked. */
 export const FailingStep: StoryObj = {
     render: () => (
         <div>

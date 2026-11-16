@@ -430,6 +430,21 @@ describe('the components', () => {
 })
 
 describe('the stories', () => {
+    it('say what each one shows in a doc comment above its export', () => {
+        const bare: string[] = []
+        for (const path of files(join(ROOT, 'src/stories')).filter((file) => file.endsWith('.stories.tsx'))) {
+            const lines = text(path).split('\n')
+            lines.forEach((line, index) => {
+                const name = /^export const (\w+)\b/.exec(line)?.[1]
+                if (name === undefined) return
+                let above = index - 1
+                while (above >= 0 && lines[above].trim().startsWith('//')) above -= 1
+                if (above < 0 || !lines[above].trim().endsWith('*/')) bare.push(`${relative(ROOT, path)}:${String(index + 1)}: ${name}`)
+            })
+        }
+        expect(bare, bare.join('\n')).toEqual([])
+    })
+
     it('show every component, itself or through the component it is a part of', () => {
         // Every package path a story names in quotes, and every module name a component file imports by its last segment.
         const named = new Set(

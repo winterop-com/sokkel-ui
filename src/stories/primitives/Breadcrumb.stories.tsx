@@ -20,6 +20,7 @@ function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** The default separator, one of its own, and a trail collapsed to an ellipsis. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -75,6 +76,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The trail to a run over the run's page header. */
 export const RunPath: StoryObj = {
     render: () => (
         <Stack>

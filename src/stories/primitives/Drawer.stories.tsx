@@ -80,6 +80,9 @@ function Right() {
     )
 }
 
+/** The button that opens a schedule's drawer, closed. */
 export const Trigger: StoryObj = { render: () => <Closed /> }
+/** A drawer open from the bottom with its handle, listing a schedule's job, timing and runs. */
 export const BottomWithHandle: StoryObj = { render: () => <ScheduleDetail /> }
+/** A drawer open from the right edge, showing a service's last check. */
 export const FromRight: StoryObj = { render: () => <Right /> }

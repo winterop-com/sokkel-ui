@@ -102,6 +102,7 @@ export default meta
 
 /** Population density by region, with one region selected and its popup open. */
 export const WithPopup: StoryObj = { name: 'Popup', render: () => <Density open={regions.features[0].id as string} /> }
+/** Population density by region in one hue from sparse to dense, with its legend; a press on a region opens its figures. */
 export const Sequential: StoryObj = { name: 'Sequential', render: () => <Density open={null} /> }
 /** Population change in two hues out from a neutral class, with one region hatched for no data. */
 export const Diverging: StoryObj = { name: 'Diverging', render: () => <Change /> }

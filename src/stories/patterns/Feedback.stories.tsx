@@ -169,8 +169,16 @@ function Problems() {
 const meta: Meta = { title: 'Patterns/Feedback' }
 export default meta
 
+/**
+ * Banners across the top of a page in each tone: a server that does not answer, with Retry and a
+ * dismiss, a read-only upgrade, a new version to reload, and all jobs running.
+ */
 export const Banners_: StoryObj = { name: 'Banner', render: () => <Banners /> }
+/** Boxed notes in the content in each tone, from a failed run with Retry to a neutral note without its icon. */
 export const Callouts_: StoryObj = { name: 'Callout', render: () => <Callouts /> }
+/** What is still coming: row and card skeletons standing in for lists, and a pending graph with its label. */
 export const Skeletons: StoryObj = { name: 'Loading', render: () => <Loading /> }
+/** A health check list: checks that pass, a group of workers with one a version behind and its hint, and a scheduler that failed. */
 export const Checks: StoryObj = { name: 'Check list', render: () => <Health /> }
+/** A failure said for a person with the raw message folded away, and a warning with a way forward. */
 export const Problems_: StoryObj = { name: 'Problem', render: () => <Problems /> }

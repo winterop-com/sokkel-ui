@@ -29,6 +29,7 @@ function Steps() {
     )
 }
 
+/** One item open at a time, and several open at once. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -48,6 +49,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Every item closed, and one item disabled. */
 export const States: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-lg">
@@ -77,6 +79,7 @@ function StepTrigger({ code, detail, tone }: { code: string; detail: string; ton
     )
 }
 
+/** A run's steps as an accordion, the failed one open with what it read, and a step that never ran disabled. */
 export const RunSteps: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-2xl">

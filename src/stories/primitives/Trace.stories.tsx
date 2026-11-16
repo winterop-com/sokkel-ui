@@ -23,6 +23,7 @@ function Caption({ children }: { children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Chat/Trace', parameters: { frame: 'column' } }
 export default meta
 
+/** A trace's lines: plain, with an icon, a title and a description, and a collapsible line closed and open. */
 export const Variants: StoryObj = {
     render: () => (
         <Stack gap="xl" className="max-w-2xl">
@@ -76,6 +77,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A trace line done, running, failed and pending. */
 export const States: StoryObj = {
     render: () => (
         <Stack gap="xl" className="max-w-2xl">
@@ -102,6 +104,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** The steps an assistant took to answer, one opened to show the log line it read. */
 export const ToolCalls: StoryObj = {
     render: () => (
         <div className="max-w-2xl">

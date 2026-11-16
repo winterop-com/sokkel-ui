@@ -14,6 +14,7 @@ const TODAY = new Date(2026, 10, 4)
 const meta: Meta = { title: 'Primitives/Inputs/Calendar', parameters: { frame: 'column' } }
 export default meta
 
+/** The calendar picking one day and a range, with month and year menus in its caption, and with week numbers. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -48,6 +49,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Days shut (the future and weekends), nothing chosen yet, and the month without the days around it. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -116,4 +118,5 @@ function Backfill() {
     )
 }
 
+/** A range of past days to backfill a job over, said under the calendar, with the verb shut until both ends are chosen. */
 export const BackfillRange: StoryObj = { render: () => <Backfill /> }

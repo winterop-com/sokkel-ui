@@ -82,16 +82,22 @@ function Picker({
     )
 }
 
+/** A dataset already chosen, the picker closed. */
 export const Closed: StoryObj = { name: 'Closed', render: () => <Picker chosen={DATASETS[0]} /> }
 
+/** Open on a query, the matching datasets listed with their codes and row counts. */
 export const Results: StoryObj = { name: 'Results', render: () => <Picker open query="harbor" /> }
 
+/** Open while the search is still loading, which never ends here. */
 export const Searching: StoryObj = { name: 'Searching', render: () => <Picker open query="har" load={never} /> }
 
+/** Open on a query nothing matches, which says so. */
 export const NoMatch: StoryObj = { name: 'No match', render: () => <Picker open query="ferry" /> }
 
+/** Open on a search the server refused, which says so. */
 export const Failed: StoryObj = { name: 'Failed', render: () => <Picker open query="harbor" load={refuse} /> }
 
+/** Open with fewer letters typed than `minQuery` asks for, so it asks for more before it searches. */
 export const TypeMore: StoryObj = { name: 'Type more', render: () => <Picker open minQuery={2} /> }
 
 interface Job {

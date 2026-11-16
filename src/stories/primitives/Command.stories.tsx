@@ -68,6 +68,7 @@ function Palette({ search = '' }: { search?: string }) {
     )
 }
 
+/** The command list drawn in the page: a search, jobs and places to go in groups, apart by a separator. */
 export const Inline: StoryObj = {
     render: () => (
         <Command className="max-w-md rounded-xl border">
@@ -76,6 +77,7 @@ export const Inline: StoryObj = {
     ),
 }
 
+/** The command list searched for something it does not hold, saying nothing matches. */
 export const Empty: StoryObj = {
     render: () => (
         <Command className="max-w-md rounded-xl border">
@@ -84,6 +86,7 @@ export const Empty: StoryObj = {
     ),
 }
 
+/** The command list open in its dialog, with a title and a description for screen readers. */
 export const InDialog: StoryObj = {
     render: () => (
         <CommandDialog defaultOpen title="Go to" description="Search jobs, services and webhooks.">

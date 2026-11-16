@@ -486,6 +486,7 @@ function InDialog() {
 const meta: Meta = { title: 'Patterns/Editor', parameters: { frame: 'padded' } }
 export default meta
 
+/** Code editors in fields: YAML with a line that fails the check, a read-only JSON record, and plain text with no line numbers. */
 export const Editors_: StoryObj = { name: 'Code editor', render: () => <Editors /> }
 /** Prose in the editor with its long lines folded at the edge rather than scrolling sideways. */
 export const Wrapped: StoryObj = { name: 'Wrapped text', render: () => <WrappedText /> }
@@ -535,4 +536,5 @@ export const NamedSchema: StoryObj = { name: 'Named schema', render: () => <Name
 export const Markdown: StoryObj = { name: 'Markdown', render: () => <MarkdownNote /> }
 /** A read-only record in a dialog: the field and its line numbers one ground over the dialog's surface. */
 export const InADialog: StoryObj = { name: 'In a dialog', render: () => <InDialog /> }
+/** A job's stored record in the source sheet, open beside the button that opens it. */
 export const SourceOpen: StoryObj = { name: 'Source sheet, open', render: () => <Source open /> }

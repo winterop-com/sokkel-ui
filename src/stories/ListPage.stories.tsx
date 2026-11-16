@@ -333,5 +333,7 @@ function ServiceForm() {
 const meta: Meta = { title: 'Patterns/Pages' }
 export default meta
 
+/** A list of runs with search and filters, and the chosen run in a side panel. */
 export const RunsList: StoryObj = { render: () => <RunsListPage /> }
+/** A form for a new service in sections, with its bar of actions. */
 export const Form: StoryObj = { render: () => <ServiceForm /> }

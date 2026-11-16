@@ -9,6 +9,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Inputs/Label', parameters: { frame: 'column' } }
 export default meta
 
+/** Over an input, beside a checkbox, and with a hint. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -33,6 +34,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Dimmed beside a disabled checkbox, and in a disabled group. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>

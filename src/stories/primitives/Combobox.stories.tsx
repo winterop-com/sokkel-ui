@@ -93,6 +93,7 @@ function TagChips() {
 const meta: Meta = { title: 'Primitives/Inputs/Combobox', parameters: { frame: 'column' } }
 export default meta
 
+/** Empty, with a job picked, with a clear button, and many picked as chips. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -112,6 +113,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Disabled and invalid. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -125,6 +127,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** Open, its list showing the picked job. */
 export const Open: StoryObj = {
     render: () => (
         <div className="h-80 max-w-xs">
@@ -133,6 +136,7 @@ export const Open: StoryObj = {
     ),
 }
 
+/** Open on text no job matches, the list saying so. */
 export const OpenNoMatch: StoryObj = {
     render: () => (
         <div className="h-40 max-w-xs">
@@ -147,6 +151,7 @@ const ACTIONS = [
     { group: 'Store', items: ['bucket.put', 'files.write', 'api.post'] },
 ]
 
+/** Picking the action of a new step from grouped actions, the list open. */
 export const AddStep: StoryObj = {
     render: () => (
         <Stack gap="sm" className="h-[28rem] max-w-sm">

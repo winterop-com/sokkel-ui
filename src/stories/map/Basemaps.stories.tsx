@@ -78,12 +78,15 @@ export default meta
 
 /** The light street map in the light scheme and the dark one in the dark scheme, until one is picked. */
 export const ByScheme: StoryObj = { parameters: { frame: 'none' }, name: 'By scheme', render: () => <Over title="Street map" /> }
+/** The pale street map, chosen. */
 export const Light: StoryObj = {
     parameters: { frame: 'none' },
     name: 'Light',
     render: () => <Over title="Light" basemap={LIGHT_BASEMAP} />,
 }
+/** The dark street map, chosen. */
 export const Dark: StoryObj = { parameters: { frame: 'none' }, name: 'Dark', render: () => <Over title="Dark" basemap={DARK_BASEMAP} /> }
+/** The street map in color, with roads, water, parks and buildings. */
 export const Streets: StoryObj = {
     parameters: { frame: 'none' },
     name: 'Streets',
@@ -103,6 +106,7 @@ export const Blank: StoryObj = {
 }
 /** An app that offers no basemap: whatever the default, the map draws the ground alone and reaches no network. */
 export const NoneOffered: StoryObj = { parameters: { frame: 'none' }, name: 'None offered', render: () => <Unoffered /> }
+/** The basemap switcher open in the map's corner, each basemap with its preview. */
 export const Switcher: StoryObj = { parameters: { frame: 'none' }, name: 'Switcher', render: () => <SwitcherOpen /> }
 /** The previews laid out in a panel, as the layer panel's basemap card shows them. */
 export const Previews: StoryObj = { name: 'Gallery', render: () => <Gallery /> }

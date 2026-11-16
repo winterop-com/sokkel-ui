@@ -44,6 +44,7 @@ function Sample({ dir }: { dir: 'ltr' | 'rtl' }) {
 const meta: Meta = { title: 'Primitives/Layout/Direction', parameters: { frame: 'column' } }
 export default meta
 
+/** The same controls under a left-to-right and a right-to-left provider, each saying the direction it reads. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="start" wrap>
@@ -59,6 +60,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A right-to-left page holding a left-to-right island for code. */
 export const NestedLtrIsland: StoryObj = {
     render: () => (
         <DirectionProvider direction="rtl">

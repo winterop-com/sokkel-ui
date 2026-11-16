@@ -107,7 +107,11 @@ function RunJob() {
     )
 }
 
+/** The button that opens the Rename job dialog, closed. */
 export const Trigger: StoryObj = { render: () => <Closed /> }
+/** The Rename job dialog open: a title, a description, one field, and a footer with its close button. */
 export const Opened: StoryObj = { render: () => <Open /> }
+/** A dialog that only says something, without the close button in its footer. */
 export const NoCloseButton: StoryObj = { render: () => <WithoutCloseButton /> }
+/** A dialog to run a job outside its schedule, with two fields, Cancel and the run verb. */
 export const RunNow: StoryObj = { render: () => <RunJob /> }

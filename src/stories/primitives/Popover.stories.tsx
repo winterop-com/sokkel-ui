@@ -77,6 +77,9 @@ function FilterRuns() {
     )
 }
 
+/** The popover's button, closed. */
 export const Trigger: StoryObj = { render: () => <Closed /> }
+/** The popover open under its button, with a title and a line about a schedule. */
 export const Opened: StoryObj = { render: () => <Open /> }
+/** A popover holding a small form that filters runs, one field refused, with Clear and Apply. */
 export const RunFilter: StoryObj = { render: () => <FilterRuns /> }

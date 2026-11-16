@@ -36,10 +36,12 @@ function ServiceLink({ open }: { open?: boolean }) {
     )
 }
 
+/** A service's name as a link in a sentence, its card closed until the pointer rests on it. */
 export const Trigger: StoryObj = {
     render: () => <ServiceLink />,
 }
 
+/** The same link with its card open: the service, its code, how many jobs use it and its last check. */
 export const Opened: StoryObj = {
     render: () => <ServiceLink open />,
 }

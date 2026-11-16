@@ -101,6 +101,7 @@ function States() {
 const meta: Meta = { title: 'Patterns/Composer' }
 export default meta
 
+/** Empty, holding text with files and a picture attached, busy, and disabled. */
 export const States_: StoryObj = { name: 'States', render: () => <States /> }
 
 /**

@@ -16,6 +16,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Inputs/InputGroup', parameters: { frame: 'column' } }
 export default meta
 
+/** An input with an icon or text before it, text, a button or a key after it, and a text area with a bar under it. */
 export const Variants: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -79,6 +80,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** An input group disabled, invalid, and loading. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="xl" align="stretch" wrap>
@@ -110,6 +112,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** A webhook's address read only, with Copy and Rotate buttons inside the field and when it was last called. */
 export const WebhookUrl: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-lg">

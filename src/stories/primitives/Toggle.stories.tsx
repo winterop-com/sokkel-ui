@@ -8,6 +8,7 @@ import { Specimen } from '../fixtures/Specimen'
 const meta: Meta = { title: 'Primitives/Actions/Toggle', parameters: { frame: 'column' } }
 export default meta
 
+/** The toggle in each variant and size, off and on, with an icon alone and with words. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -40,6 +41,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** The toggle disabled, disabled while on, and invalid. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="lg" align="stretch" wrap>
@@ -62,6 +64,7 @@ export const States: StoryObj = {
     ),
 }
 
+/** Wrap and Follow toggles in the bar over a run's log, Wrap on. */
 export const LogToolbar: StoryObj = {
     render: () => (
         <Stack gap="none" className="overflow-hidden rounded-lg border border-border">

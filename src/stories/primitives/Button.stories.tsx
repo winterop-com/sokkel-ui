@@ -34,6 +34,7 @@ export const Playground: StoryObj<{
     ),
 }
 
+/** Every variant, every size, the icon-only sizes, and an icon at the start or at the end. */
 export const Variants: StoryObj = {
     render: () => (
         <>
@@ -78,6 +79,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** Disabled, disabled outline, invalid and busy. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="md" align="stretch" wrap>
@@ -171,6 +173,7 @@ export const DestructiveHover: StoryObj = {
     ),
 }
 
+/** A job's actions beside its name and last run: Retry failed, Edit, Run now, and an icon-only Delete. */
 export const RunActions: StoryObj = {
     render: () => (
         <Stack gap="lg" className="rounded-lg border border-border p-4">

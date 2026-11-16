@@ -226,8 +226,11 @@ export default meta
 
 type Story = StoryObj<typeof Overview>
 
+/** Flat sections: headings over a rule, content on the page's ground. */
 export const Flat: Story = { args: { layout: 'flat' } }
+/** Boxed panels: every section a bordered surface with a head bar. */
 export const Boxed: Story = { args: { layout: 'boxed' } }
+/** Flat headings, with a box only around content that is a surface of its own. */
 export const Hybrid: Story = { args: { layout: 'hybrid' } }
 
 /** The steps of nightly-export, one after another. */

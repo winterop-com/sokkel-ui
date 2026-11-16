@@ -26,6 +26,7 @@ const FILES = [
     ['orders-2026-10.csv', '11,006', '2.4 MB'],
 ] as const
 
+/** A plain table with its caption and footer, and one with its middle row selected. */
 export const Variants: StoryObj = {
     render: () => (
         <Stack gap="sm" className="max-w-xl">
@@ -61,6 +62,7 @@ export const Variants: StoryObj = {
     ),
 }
 
+/** A table with no rows, one line across it saying so. */
 export const Empty: StoryObj = {
     render: () => (
         <Stack gap="sm">
@@ -95,6 +97,7 @@ const RUNS = [
     ['nightly-export', 'succeeded', 'schedule', '2026-11-03 02:00', '12.0s'],
 ] as const
 
+/** Runs in a table: job, state, who started each, when and how long it took. */
 export const Runs: StoryObj = {
     render: () => (
         <Table>
