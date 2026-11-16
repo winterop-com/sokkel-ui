@@ -504,6 +504,52 @@ describe('text typed over a value that then changes from elsewhere', () => {
     })
 })
 
+describe('sealed secrets in a list', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        properties: {
+            hooks: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    required: ['token'],
+                    properties: { name: { type: 'string' }, token: { type: 'string', writeOnly: true } },
+                },
+            },
+        },
+    }
+
+    function after(act: (form: SchemaFormState) => void): SchemaFormState | undefined {
+        let state: SchemaFormState | undefined
+        function Hooks() {
+            const form = useSchemaForm(schema, {
+                initial: { hooks: [{ name: 'api' }, { name: 'worker' }, { name: 'scheduler' }] },
+                sealed: [{ path: ['hooks', 0, 'token'] }, { path: ['hooks', 2, 'token'] }],
+            })
+            const once = useRef(false)
+            if (!once.current) {
+                once.current = true
+                act(form)
+            }
+            state = form
+            return null
+        }
+        renderToStaticMarkup(<Hooks />)
+        return state
+    }
+    const sealedAt = (state: SchemaFormState | undefined) => [0, 1, 2].map((index) => state?.sealed(['hooks', index, 'token']) !== undefined)
+
+    it('move with their items when one is removed', () => {
+        const state = after((form) => form.removeItem(['hooks'], 0))
+        expect(state?.value).toEqual({ hooks: [{ name: 'worker' }, { name: 'scheduler' }] })
+        expect(sealedAt(state)).toEqual([false, true, false])
+    })
+
+    it('move with their items when one is moved', () => {
+        expect(sealedAt(after((form) => form.moveItem(['hooks'], 0, 1)))).toEqual([false, true, true])
+    })
+})
+
 describe("the server's issues", () => {
     const schema: JsonSchema = { type: 'object', properties: { code: { type: 'string', title: 'Code' } } }
 

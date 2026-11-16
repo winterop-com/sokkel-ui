@@ -201,6 +201,19 @@ function setAt(value: unknown, path: Path, next: unknown): unknown {
     return copy
 }
 
+/** A list's removal or move: the list's place and each old index's new one, or null for taken out. */
+interface Move {
+    list: string
+    map: (index: number) => number | null
+}
+
+/** A place carried through removals and moves to where its item is now, or null once its item was taken out. */
+function shifted(at: string, moves: readonly Move[]): string | null {
+    let now: string | null = at
+    for (const move of moves) now = now === null ? null : shiftKey(now, move.list, move.map)
+    return now
+}
+
 const NONE: readonly ServerIssue[] = []
 const NO_SECRETS: readonly SealedSecret[] = []
 
@@ -344,7 +357,8 @@ export function useSchemaForm(
         /**
          * The secrets already set, by path: each `writeOnly` property among them shows as set and
          * stays out of the value until it is replaced, so what is sent leaves it as it is. A
-         * required secret that is set asks for nothing more.
+         * required secret that is set asks for nothing more. Removing or moving a list's item carries
+         * its secrets with it, until `sealed` says something new.
          */
         sealed?: readonly SealedSecret[]
         /** The moment a sealed secret's `setAt` is counted from; without it, the clock. */
@@ -380,11 +394,19 @@ export function useSchemaForm(
     const [seen, setSeen] = useState(serverKey)
     const [changed, setChanged] = useState<ReadonlySet<string>>(new Set())
     // The removals and moves made since the server's issues came, which carry each issue to its item's place now.
-    const [moves, setMoves] = useState<readonly { list: string; map: (index: number) => number | null }[]>([])
+    const [moves, setMoves] = useState<readonly Move[]>([])
     if (seen !== serverKey) {
         setSeen(serverKey)
         setChanged(new Set())
         setMoves([])
+    }
+    // The removals and moves made since the sealed secrets came, which carry each to its item's place now.
+    const sealedKey = JSON.stringify(sealed.map((secret) => [pointer(secret.path), secret.setAt ?? null]))
+    const [sealedSeen, setSealedSeen] = useState(sealedKey)
+    const [sealedMoves, setSealedMoves] = useState<readonly Move[]>([])
+    if (sealedSeen !== sealedKey) {
+        setSealedSeen(sealedKey)
+        setSealedMoves([])
     }
 
     const rowKeys = useRef(new Map<string, string[]>())
@@ -417,6 +439,7 @@ export function useSchemaForm(
         nextRows.set(at, nextKeys)
         rowKeys.current = nextRows
         setMoves((current) => [...current, { list: at, map }])
+        setSealedMoves((current) => [...current, { list: at, map }])
         setValue((current: unknown) => setAt(current, path, nextItems))
         setTouched((current) => shiftSet(current, at, map))
         setUnread((current) => shiftSet(current, at, map))
@@ -456,7 +479,12 @@ export function useSchemaForm(
         return { tone: issue.tone, ...said, actions }
     }
 
-    const sealedAt = new Map(sealed.map((secret) => [pointer(secret.path), secret]))
+    const sealedAt = new Map(
+        sealed.flatMap((secret) => {
+            const at = shifted(pointer(secret.path), sealedMoves)
+            return at === null ? [] : [[at, secret] as const]
+        }),
+    )
     const all = new Map<string, Issue[]>()
     const add = (at: string, issue: Issue) => all.set(at, [...(all.get(at) ?? []), issue])
     for (const issue of found) {
@@ -481,8 +509,7 @@ export function useSchemaForm(
     }
     // Each refusal at its item's place now, gone with an item that was taken out.
     const refused = server.flatMap((issue) => {
-        let at: string | null = pointer(issue.path)
-        for (const move of moves) at = at === null ? null : shiftKey(at, move.list, move.map)
+        const at = shifted(pointer(issue.path), moves)
         return at === null ? [] : [{ issue, at }]
     })
     const refusedAt = (at: string): Issue[] =>
