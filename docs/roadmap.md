@@ -445,7 +445,6 @@ to `plan.md` when it ships.
 - **Gaps the examples found (2026-11-09)**, still open:
     - **Frame:**
         - a rail that shows its places above its body, not behind a row
-        - ⌘K refused while a closing dialog still counts as a layer
     - **Tables:**
         - a list variant with its own search
         - `stack: 'lead'` passing a press on a non-control through to the row

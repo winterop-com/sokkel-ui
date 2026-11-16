@@ -21,7 +21,10 @@ export interface PluginLanguageNames {}
 
 /** A language a plugin gives `CodeEditor`, by its name and the media types it is written in. */
 export interface PluginLanguage {
-    /** What `CodeEditor`'s `language` calls it. */
+    /**
+     * What `CodeEditor`'s `language` calls it. A name the editor knows already (`json`, `sql`) takes
+     * the plugin's language in place of its own, as a media type the plugin names does.
+     */
     name: string
     /** A CodeMirror `LanguageSupport`, or a stream parser `CodeEditor` builds one from. */
     language: LanguageSupport | (StreamParser<unknown> & { name: string })

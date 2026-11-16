@@ -1,10 +1,10 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 /** A route drawn as an overlay over a page: the page to draw, whether the overlay shows, and its way back. */
 export interface OverlayRoute {
     /** The page to draw: the one the overlay was opened from while it shows, else the route itself. */
     route: readonly string[]
-    /** Whether the overlay's route is the current one. */
+    /** Whether the overlay's route is the current one, and `close` has not been called on it. */
     open: boolean
     /** Goes back to the page under the overlay. */
     close: () => void
@@ -94,7 +94,9 @@ const replaceHash = (route: readonly string[]) => window.location.replace(`#/${r
  *
  * The library has no router: it reads the route the app hands it and goes back through the
  * history and the hash, which a hash router follows as they are; an app with a client router passes
- * its own `back` and `replace`.
+ * its own `back` and `replace`. Going back in the history lands later, so `open` is false from the
+ * moment `close` is called, and the overlay no longer stands over the page (refusing the command
+ * palette's key) while the route catches up.
  */
 export function useOverlayRoute(
     route: readonly string[],
@@ -104,5 +106,17 @@ export function useOverlayRoute(
     const tracker = useRef<OverlayTracker | null>(null)
     tracker.current ??= overlayTracker(overlay, route, fallback)
     const held = tracker.current
-    return { ...held.step(route), close: () => held.close(back, replace) }
+    // The route `close` was called on, until the route moves on from it.
+    const [closed, setClosed] = useState<readonly string[] | null>(null)
+    const step = held.step(route)
+    const closing = closed !== null && same(closed, route)
+    if (closed !== null && !closing) setClosed(null)
+    return {
+        route: step.route,
+        open: step.open && !closing,
+        close: () => {
+            setClosed(route)
+            held.close(back, replace)
+        },
+    }
 }
