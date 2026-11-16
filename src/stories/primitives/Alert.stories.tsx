@@ -10,7 +10,7 @@ export default meta
 
 function Ground({ children }: { children: React.ReactNode }) {
     return (
-        <Stack gap="xl" className="mx-auto max-w-[1100px]">
+        <Stack gap="xl" className="mx-auto max-w-275">
             {children}
         </Stack>
     )

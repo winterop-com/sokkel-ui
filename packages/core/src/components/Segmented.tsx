@@ -35,7 +35,7 @@ const LINE: Record<SegmentedVariant, string> = {
 }
 
 const CHOSEN: Record<SegmentedVariant, string> = {
-    track: 'bg-card font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.10)] ring-1 ring-border-strong dark:bg-input/70 dark:shadow-none dark:ring-input',
+    track: 'bg-card font-medium text-foreground shadow-node ring-1 ring-border-strong dark:bg-input/70 dark:shadow-none dark:ring-input',
     tint: 'bg-primary/15 font-medium text-primary-ink',
     outline: 'bg-secondary font-medium text-foreground',
     solid: 'bg-primary font-medium text-primary-foreground',

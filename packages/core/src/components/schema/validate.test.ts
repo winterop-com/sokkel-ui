@@ -119,6 +119,16 @@ describe('a decimal multipleOf', () => {
     })
 })
 
+describe('a key made of digits', () => {
+    it('stays a key in a map, and is an index only in a list', () => {
+        const ports: JsonSchema = { type: 'object', additionalProperties: { type: 'integer' } }
+        expect(validate(ports, { '8080': 'web' }).map((issue) => issue.path)).toEqual([['8080']])
+        const nested: JsonSchema = { type: 'array', items: ports }
+        expect(validate(nested, [{ '443': 'tls' }]).map((issue) => issue.path)).toEqual([[0, '443']])
+        expect(validate({ type: 'array', items: { type: 'integer' } }, [1, 'two']).map((issue) => issue.path)).toEqual([[1]])
+    })
+})
+
 describe("a list's empty item", () => {
     it('is said to be empty, not of the wrong type', () => {
         expect(validate({ type: 'array', items: { type: 'integer' } }, [1, undefined])).toEqual([

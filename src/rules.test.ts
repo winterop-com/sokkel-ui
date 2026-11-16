@@ -46,23 +46,34 @@ const SOURCES: Record<string, string[]> = Object.fromEntries(PACKAGES.map((name)
 
 const ALL = [...files(join(ROOT, 'src')), ...Object.values(SOURCES).flat()]
 const STORIES = ALL.filter((path) => path.includes('/src/stories/'))
+/** What is drawn: every file but the DOM tests, which feed a literal color, size or markup in as data. */
+const DRAWN = ALL.filter((path) => !path.endsWith('.test.tsx'))
 
 interface Rule {
     name: string
     pattern: RegExp
     /** Where the rule holds. */
     in: string[]
-    /** A line the rule does not judge, such as a picture drawn as SVG data. */
-    skipLine?: (line: string) => boolean
+    /** A line the rule does not judge, such as a picture drawn as SVG data, by the line and its file's path from the root. */
+    skipLine?: (line: string, file: string) => boolean
     /** Files the rule does not judge, each with the reason. */
     except?: Record<string, string>
 }
 
-const picture = (line: string) => /data:|<svg|<rect|<circle|<path|<g |<text |<line|<polyline|stop-color|fill=|stroke=/.test(line)
+/** A line of a picture drawn as SVG in the stories' data; a package draws in tokens, its pictures included. */
+const picture = (line: string, file: string) =>
+    file.startsWith('src/') && /data:|<svg|<rect|<circle|<path|<g |<text |<line|<polyline|stop-color|fill=|stroke=/.test(line)
 
 const RULES: Rule[] = [
     { name: 'a text size set by hand instead of a text token', pattern: /text-\[[0-9.]+(px|rem|em)\]/, in: ALL },
-    { name: 'a font size set by hand', pattern: /fontSize:\s*[0-9]/, in: ALL },
+    { name: 'a font size set by hand', pattern: /fontSize:\s*['"`]?[0-9]/, in: ALL },
+    {
+        name: 'a length in pixels set by hand instead of the spacing scale or a token',
+        // An arbitrary value that is a bare length (`p-[3px]`, `top-[-5px]`); a length worked out from a
+        // token or the spacing scale (`calc(var(--radius)-2px)`) is derived, not set by hand.
+        pattern: /-\[-?[0-9.]+px\]/,
+        in: DRAWN,
+    },
     { name: 'raw black or white instead of a color token', pattern: /\b(text|bg|border|fill|stroke|ring)-(white|black)\b/, in: ALL },
     {
         name: 'an invalid ring drawn at rest instead of on focus',
@@ -106,14 +117,23 @@ const RULES: Rule[] = [
     },
     {
         name: 'a hex color outside a picture',
-        pattern: /#[0-9a-fA-F]{6}\b/,
-        in: ALL,
+        // Three, six and eight digits; four is left out, as a run's number (`#4812`) reads the same.
+        pattern: /(?<![\w&])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![\w-])/,
+        in: DRAWN,
         skipLine: picture,
         except: {
             'packages/charts/src/look.ts': 'the gray a chart falls back to when a canvas cannot resolve a token',
             'src/stories/fixtures/photos.ts': 'pictures drawn as SVG data',
             'src/stories/fixtures/portraits.ts': 'portraits drawn as SVG data',
         },
+    },
+    {
+        name: 'a color function with fixed values instead of a color token',
+        // `rgb(0 0 0 / 0.1)` or `oklch(0.7 0.15 30)`; a color worked out from a token (`oklch(from var(--primary) ...)`)
+        // or from numbers the code computed (`rgb(${red} ...)`) is not set by hand.
+        pattern: /(?<![a-z-])(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(\s*[0-9.]/,
+        in: DRAWN,
+        skipLine: (line, file) => picture(line, file) || /^\s*(?:\*|\/\/)/.test(line),
     },
     {
         name: 'a selector reaching into a component from a story',
@@ -135,7 +155,9 @@ const RULES: Rule[] = [
     {
         name: 'a table drawn by hand in a component instead of DataTable',
         pattern: /<(table|Table)\b/,
-        in: Object.values(SOURCES).flat(),
+        in: Object.values(SOURCES)
+            .flat()
+            .filter((path) => DRAWN.includes(path)),
         except: {
             'packages/core/src/components/ui/table.tsx': 'the Table primitive itself',
             'packages/core/src/components/LogView.tsx': "a log's lines on the terminal ground, read and followed rather than listed",
@@ -429,6 +451,14 @@ describe('the workflows', () => {
     })
 })
 
+describe('the Storybook candidates', () => {
+    // scripts/import-candidates.ts names each theme it writes for the app it was taken from, and an app is never named here.
+    it('are committed empty', () => {
+        expect(JSON.parse(text(join(ROOT, '.storybook/candidates.json')))).toEqual([])
+        expect(text(join(ROOT, '.storybook/candidates.css'))).not.toMatch(/[{}]/)
+    })
+})
+
 describe('the examples', () => {
     it('name themselves before their own modules load', () => {
         const wrong = readdirSync(join(ROOT, 'examples'))
@@ -534,7 +564,7 @@ describe('the library rules', () => {
                 text(path)
                     .split('\n')
                     .forEach((line, index) => {
-                        if (rule.skipLine?.(line) === true) return
+                        if (rule.skipLine?.(line, file) === true) return
                         if (rule.pattern.test(line)) found.push(`${file}:${String(index + 1)}: ${line.trim().slice(0, 140)}`)
                     })
             }

@@ -17,17 +17,21 @@ concurrency:
     group: ci-${{ (github.head_ref || github.ref_name) == 'main' && github.run_id || (github.head_ref || github.ref_name) }}
     cancel-in-progress: true
 
+permissions:
+    contents: read
+
 jobs:
     # Whether anything a story draws changed; a change to docs, Markdown or the Makefile alone skips
     # the layout job. Pushes to main always run them.
     changes:
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         outputs:
             drawn: ${{ github.event_name != 'pull_request' || steps.filter.outputs.drawn == 'true' }}
         steps:
             - uses: actions/checkout@v5
             - id: filter
-              uses: dorny/paths-filter@v3
+              uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
               with:
                   predicate-quantifier: every
                   filters: |
@@ -39,6 +43,7 @@ jobs:
 
     check:
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         steps:
             - uses: actions/checkout@v5
             - run: npm install -g "bun@$(cat .bun-version)"
@@ -61,6 +66,7 @@ jobs:
         needs: changes
         if: needs.changes.outputs.drawn == 'true'
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         strategy:
             fail-fast: false
             matrix:

@@ -33,6 +33,7 @@ concurrency:
 jobs:
     update:
         runs-on: ubuntu-latest
+        timeout-minutes: 60
         container:
             image: mcr.microsoft.com/playwright:v1.64.1-noble
             options: --ipc=host
@@ -62,6 +63,7 @@ jobs:
     rerun-ci:
         needs: update
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         steps:
             # The commit's own ci run, from its PR or from its push to main, is run again (stopped
             # first if it is still going), so the commit's check ends on the new baselines rather than

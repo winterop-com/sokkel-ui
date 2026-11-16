@@ -177,7 +177,9 @@ export function MapPopup({
                 aria-hidden
                 className={cn(
                     'absolute size-2.5 -translate-x-1/2 rotate-45 border-foreground/10 bg-popover',
-                    place?.side === 'below' ? '-top-[5.5px] border-t border-l' : '-bottom-[5.5px] border-r border-b',
+                    place?.side === 'below'
+                        ? '-top-[calc(--spacing(1.25)+0.5px)] border-t border-l'
+                        : '-bottom-[calc(--spacing(1.25)+0.5px)] border-r border-b',
                 )}
                 style={{ left: place?.tip ?? 0 }}
             />

@@ -256,7 +256,7 @@ export function DropZone({ onFiles, accept, maxSize, maxFiles, held = 0, open, c
         <div className={cn('relative', className)} {...drop.handlers}>
             {children}
             {shown && (
-                <div className="pointer-events-none absolute inset-2 z-20 flex flex-col items-center justify-center gap-2 rounded-surface border-2 border-dashed border-primary bg-primary/8 text-center backdrop-blur-[1px]">
+                <div className="pointer-events-none absolute inset-2 z-20 flex flex-col items-center justify-center gap-2 rounded-surface border-2 border-dashed border-primary bg-primary/8 text-center backdrop-blur-xs">
                     <CloudUpload aria-hidden className="size-8 text-primary-ink" />
                     <p className="text-sm font-medium">{words.title}</p>
                     <p className="text-xs text-muted-foreground">{words.detail}</p>

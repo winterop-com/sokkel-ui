@@ -8,7 +8,8 @@
 #   scripts/baselines.sh checkout [branch] [dir]  write the branch's baselines into dir
 #   scripts/baselines.sh commit [branch] [dir]    push dir as the branch's baselines
 #   scripts/baselines.sh promote <branch>         lay the branch's changes onto `baselines`, then
-#                                                 delete its baselines branch
+#                                                 delete its baselines branch; run by hand once the
+#                                                 branch has merged, as no workflow runs it
 # branch defaults to the current one (main when detached), and dir to e2e/__screenshots__.
 set -euo pipefail
 

@@ -73,7 +73,8 @@ function sourceLists(src: string, name: (module: string) => string): Plugin {
                 const fileName = `sources/${name(chunk.fileName.replace(/\.js$/, ''))}.css`
                 const own = [...reached]
                     .map((file) => chunks.get(file)?.facadeModuleId)
-                    .filter((id): id is string => id?.startsWith(src) === true)
+                    // Scripts only: a picture or a stylesheet a module imports holds no classes, only bytes Tailwind would read as some.
+                    .filter((id): id is string => id?.startsWith(src) === true && /\.[cm]?[jt]sx?$/.test(id))
                 const lines = [
                     ...[...core].map((module) => `@import '${CORE}sources/${module}.css';`).sort(),
                     ...inlineSources(scanner, own),

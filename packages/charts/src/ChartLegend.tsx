@@ -59,7 +59,7 @@ function Swatch({ color, off }: { color: string; off: boolean }) {
 }
 
 const ITEM =
-    'outline-none focus-visible:outline-focus focus-visible:outline-offset-[-2px] focus-visible:outline-solid focus-visible:outline-ring'
+    'outline-none focus-visible:outline-focus focus-visible:outline-offset-focus-inset focus-visible:outline-solid focus-visible:outline-ring'
 
 export interface ChartLegendProps {
     /** The entries, or the legend of a kind and spec that `chartLegend` names, listed once that kind's legend has loaded. */

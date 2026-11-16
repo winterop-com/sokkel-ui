@@ -47,7 +47,7 @@ function TimelineItem({ event, last }: { event: TimelineEvent; last: boolean }) 
     const ink = tone === 'neutral' ? undefined : look.css
     return (
         <li className="relative flex gap-3 pb-4 last:pb-0">
-            {!last && <span className="absolute top-5 bottom-1 left-[7.5px] w-px bg-border" aria-hidden />}
+            {!last && <span className="absolute top-5 bottom-1 left-[calc(--spacing(2)-0.5px)] w-px bg-border" aria-hidden />}
             <span
                 className={cn(
                     'relative mt-0.5 flex size-4 shrink-0 items-center justify-center',

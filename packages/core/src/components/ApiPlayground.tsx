@@ -164,7 +164,9 @@ const quoted = (text: string) => `'${text.replaceAll("'", "'\\''")}'`
 
 /** The request as a curl command, with the headers every request carries and its body, sent as written (a leading `@` names no file). */
 export function curlOf(base: string, request: ApiRequest, headers: Readonly<Record<string, string>> = {}): string {
-    const parts = [`curl -X ${request.method}`, quoted(requestAddress(base, request))]
+    // A method that is not a plain word is quoted too, so a preset's method cannot run as a second command.
+    const method = /^[A-Za-z]+$/.test(request.method) ? request.method : quoted(request.method)
+    const parts = [`curl -X ${method}`, quoted(requestAddress(base, request))]
     for (const [name, value] of Object.entries(headers)) parts.push(`-H ${quoted(`${name}: ${value}`)}`)
     if (request.body !== undefined && request.body.trim() !== '' && request.method !== 'GET')
         parts.push(`--data-raw ${quoted(request.body)}`)

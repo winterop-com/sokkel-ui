@@ -145,3 +145,57 @@ describe('Markdown streaming', () => {
         expect(html).toContain('class="katex-display"')
     })
 })
+
+/** Raw HTML that would run script, fetch an address, restyle the page or leave it, as a text could be sent it. */
+const PAYLOADS = [
+    '<img src="x" onerror="alert(1)">',
+    '<svg><script>alert(1)</script></svg>',
+    '<a href="javascript:alert(1)">run</a>',
+    '<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">run</a>',
+    '<iframe src="https://example.org/frame"></iframe>',
+    '<object data="https://example.org/x.swf"></object>',
+    '<embed src="https://example.org/x.swf">',
+    '<form action="https://example.org/steal"><input name="token"><button>Send</button></form>',
+    '<div style="background:url(https://example.org/track.png)">styled</div>',
+    '<style>body { display: none }</style>',
+    '<link rel="stylesheet" href="https://example.org/x.css">',
+    '<meta http-equiv="refresh" content="0;url=https://example.org">',
+    '<base href="https://example.org/">',
+    '<details open ontoggle="alert(1)"><summary>more</summary></details>',
+    '<math><mtext><table><mglyph><style><img src=x onerror=alert(1)></style></mglyph></table></mtext></math>',
+    '<p onclick="alert(1)" onmouseover="alert(1)">hover</p>',
+    '<video src="https://example.org/v.mp4" autoplay></video>',
+]
+
+describe('Markdown raw HTML', () => {
+    it.each(PAYLOADS)('draws %s with nothing live in it', (payload) => {
+        // React hints an image it draws ahead with a preload link; images are on, so that one is expected.
+        const html = renderToStaticMarkup(<Markdown content={`Before.\n\n${payload}\n\nAfter.`} allowHtml />).replace(
+            /^<link rel="preload" as="image" [^>]*>/,
+            '',
+        )
+        expect(html).toContain('After.')
+        expect(html).not.toMatch(/<[^>]*\son[a-z]+=/i)
+        expect(html).not.toMatch(/<(script|iframe|object|embed|form|style|link|meta|base|video)\b/i)
+        expect(html).not.toMatch(/(?:href|src|action|data)="\s*(?:javascript|data|vbscript):/i)
+        expect(html).not.toMatch(/style="[^"]*url\(/i)
+    })
+})
+
+describe('Markdown math', () => {
+    it('draws no link, class, style or picture a formula asks for', () => {
+        const html = renderToStaticMarkup(
+            <Markdown
+                content={
+                    'Inline $\\href{javascript:alert(1)}{run}$ and $\\url{javascript:alert(1)}$, then $\\htmlStyle{color: red}{x}$, $\\htmlClass{evil}{y}$ and $\\includegraphics{https://example.org/x.png}$.'
+                }
+            />,
+        )
+        expect(html).toContain('class="katex')
+        expect(html).not.toMatch(/<a\b/)
+        expect(html).not.toContain('<img')
+        expect(html).not.toMatch(/href="\s*javascript:/i)
+        expect(html).not.toMatch(/class="[^"]*evil/)
+        expect(html).not.toMatch(/style="[^"]*red/)
+    })
+})
