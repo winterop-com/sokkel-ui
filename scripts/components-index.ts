@@ -58,6 +58,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             "the captions button and menu `VideoPlayer` draws; its words are `VideoPlayer`'s and its options are in `media/captions`",
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
+        'components/mermaid-config': "the config `MermaidDiagram` hands mermaid, with the keys a diagram's own text may not set",
         'components/pickers': 'the popup the date and time fields pick in, and the list of times',
         'components/reasoning':
             "a model's thinking folded behind a line, which `AssistantReply` and `AnswerColumn` draw; `wordCount` is exported by `AssistantReply`",

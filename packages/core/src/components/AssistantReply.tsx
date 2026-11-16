@@ -186,6 +186,19 @@ export interface AssistantReplyProps {
     speak?: (options: { signal: AbortSignal }) => Promise<SpeakAudio>
     /** Draws the answer's LaTeX math, as `Markdown` does: on by default; off where every `$` is a dollar. */
     math?: boolean
+    /**
+     * Draws the images the answer and its thinking hold. Off by default: an image is its alt text and
+     * address as plain text, and nothing is fetched. On, every image address the model writes is
+     * fetched as it is drawn.
+     */
+    images?: boolean
+    /**
+     * The schemes a link in the answer and its thinking may have to be live, as `Markdown` takes them,
+     * such as `['https']`; any other link is drawn as its words. `Markdown`'s safe schemes by default.
+     */
+    linkSchemes?: readonly string[]
+    /** Follows a link in the answer inside the app, as `Markdown` does: it stays in the page when this answers true. */
+    onLink?: (href: string) => boolean
     /** More under the answer, such as a chart or files it made. */
     children?: ReactNode
     state?: AssistantReplyState
@@ -226,6 +239,9 @@ export interface AssistantReplyProps {
  * instead of an empty card. `speech` puts the answer read aloud in a player under it; `speak`
  * instead fetches it on demand from Read aloud in the footer.
  *
+ * The answer is model output, so its images are off by default and drawn as their alt text and
+ * address; `images` turns them on, and `linkSchemes` narrows which links are live.
+ *
  * The `card` layout (the default) holds the turn in one quiet card, inline code washed and the
  * held change as a section of it. The `steps` layout sets it on a rail: Checked holds the tools,
  * Found the answer, and Next the held change and the actions, inline code in the code face alone.
@@ -243,6 +259,9 @@ export function AssistantReply({
     speech,
     speak,
     math = true,
+    images = false,
+    linkSchemes,
+    onLink,
     children,
     state = 'done',
     problem,
@@ -300,6 +319,9 @@ export function AssistantReply({
                     text={reasoning}
                     thinking={streaming && !written}
                     math={math}
+                    images={images}
+                    linkSchemes={linkSchemes}
+                    onLink={onLink}
                     words={{ thinking: words.thinking, thoughtFor: words.thoughtFor, markdown: words.markdown }}
                 />
             )}
@@ -310,6 +332,9 @@ export function AssistantReply({
                     streaming={streaming}
                     caret={streaming}
                     math={math}
+                    images={images}
+                    linkSchemes={linkSchemes}
+                    onLink={onLink}
                     words={words.markdown}
                 />
             )}
