@@ -69,7 +69,12 @@ export interface ThemePickerProps {
     densities?: readonly ThemeOption[]
     /** The corner radii; the row shows only when given. */
     corners?: readonly ThemeOption[]
-    /** The typefaces; the row shows only when given. */
+    /**
+     * The typefaces; the row shows only when given. `TYPEFACES` offers Geist, whose fonts are optional
+     * peers: an app that offers it installs `@fontsource-variable/geist` and
+     * `@fontsource-variable/geist-mono` and imports both, or passes the list without `geist`, or a
+     * reader who picks it gets the system font.
+     */
     typefaces?: readonly ThemeOption[]
     /** Offers the system's scheme beside dark and light, which follows the device until one is chosen. */
     system?: boolean
