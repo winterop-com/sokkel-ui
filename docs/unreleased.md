@@ -18,6 +18,11 @@ release and empties it.
   ripples). The command key with the wheel, or a pinch, zooms around the pointer (`zoom`,
   `onZoomChange`, `onFitChange`). Helpers: `formatTimecode`, `snapTime`, `placeClip`, `zoomStep`,
   `clipTickStep`. Its words are `CLIP_TIMELINE_WORDS`.
+- `ClipTimeline` takes drops from other parts in the same `DragDrop`, such as a media bin's
+  `MediaCard`s: `onDrop({ data, track, at })` hears a thing let go on a track, `accepts(drag, track)`
+  says which things a track takes (a locked track takes none), and `dropDuration(drag)` (by default
+  `value.duration`) gives the outline its length, snapped as a move and kept off other clips. From
+  the keyboard a thing lands at the playhead.
 
 ## Fixed
 

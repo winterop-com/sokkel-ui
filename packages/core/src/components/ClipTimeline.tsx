@@ -1,6 +1,7 @@
 import { AudioLines, Eye, EyeOff, Film, Lock, LockOpen, Type, Volume2, VolumeX, type LucideIcon } from 'lucide-react'
 import {
     useEffect,
+    useId,
     useLayoutEffect,
     useMemo,
     useRef,
@@ -14,7 +15,8 @@ import {
 
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
-import type { ClipCarry, ClipGrip } from './clip-timeline-drag'
+import type { ClipArrival, ClipCarry, ClipGrip } from './clip-timeline-drag'
+import type { DragData } from './DragDrop'
 import { IconButton } from './IconButton'
 
 /** What a track holds. */
@@ -62,6 +64,16 @@ export interface ClipChange {
     track?: string
 }
 
+/** A thing from elsewhere in the same `DragDrop`, let go on a track. */
+export interface ClipDrop {
+    /** What the thing carries: its kind, its label and the app's own value. */
+    data: DragData
+    /** The id of the track it was let go on. */
+    track: string
+    /** Where it lands, in seconds: snapped, and clear of the track's clips when its length is known. */
+    at: number
+}
+
 export interface ClipTimelineWords {
     /** What a screen reader calls the timeline. */
     label: string
@@ -86,6 +98,8 @@ export interface ClipTimelineWords {
     deleted: (count: number, ripple: boolean) => string
     /** Said when a move would land on another clip or a locked track. */
     blocked: (clip: string) => string
+    /** Said once a thing from elsewhere landed on a track. */
+    dropped: (item: string, track: string, at: string) => string
     /** Said as the playhead moves by a key. */
     at: (at: string) => string
     /** For the zoom buttons an app draws beside the timeline. */
@@ -109,6 +123,7 @@ export const CLIP_TIMELINE_WORDS: ClipTimelineWords = {
     split: (clip, at) => `${clip} split at ${at}`,
     deleted: (count, ripple) => `${count === 1 ? 'Clip' : `${String(count)} clips`} deleted${ripple ? ', the gap closed' : ''}`,
     blocked: (clip) => `${clip} cannot go there`,
+    dropped: (item, track, at) => `${item} added to ${track} at ${at}`,
     at: (at) => `Playhead at ${at}`,
     zoomIn: 'Zoom in',
     zoomOut: 'Zoom out',
@@ -137,6 +152,20 @@ export interface ClipTimelineProps {
     onSplit?: (id: string, at: number) => void
     /** Hears Delete or Backspace on the chosen clips; with Shift, `ripple` closes the gap they leave. */
     onDelete?: (ids: string[], ripple: boolean) => void
+    /**
+     * Takes things dragged from another part inside the same `DragDrop`, such as a media bin's tiles,
+     * let go on a track: the thing's data, the track and the time it lands at. While one is carried
+     * over a track that takes it, an outline shows where it lands, snapped as a move is, as long as
+     * `dropDuration` says; from the keyboard it lands at the playhead.
+     */
+    onDrop?: (drop: ClipDrop) => void
+    /** Which things from outside a track takes, such as only video onto a video track; every one without it. A locked track takes none. */
+    accepts?: (drag: DragData, track: TimelineTrack) => boolean
+    /**
+     * How long a thing from outside lasts once dropped, in seconds, for its outline, its snapping at
+     * both ends and keeping it off the track's clips; by default its `value.duration` when that is a number.
+     */
+    dropDuration?: (drag: DragData) => number | undefined
     /** Hears a track's header toggles; without it the header draws none. */
     onTrackChange?: (id: string, patch: Partial<Pick<TimelineTrack, 'muted' | 'locked' | 'hidden'>>) => void
     /**
@@ -305,6 +334,22 @@ function proposalStore(): ProposalStore {
 
 const end = (clip: { start: number; duration: number }) => clip.start + clip.duration
 
+/** A dragged thing's `value.duration`, when it is a length in seconds. */
+function durationOf(drag: DragData): number | undefined {
+    const value = drag.value as { duration?: unknown } | null | undefined
+    return typeof value?.duration === 'number' && value.duration > 0 ? value.duration : undefined
+}
+
+/** Where a thing from outside would land. */
+interface Landing {
+    track: string
+    start: number
+    /** Its length, when known; a mark at `start` without it. */
+    duration?: number
+    fits: boolean
+    snapped?: number
+}
+
 /**
  * The multi-track timeline of a video editor. Each track is a row with its header at the start (its
  * kind, its name, and with `onTrackChange` toggles to mute or hide it and to lock it), which stays
@@ -335,6 +380,9 @@ export function ClipTimeline({
     onClipsChange,
     onSplit,
     onDelete,
+    onDrop,
+    accepts,
+    dropDuration = durationOf,
     onTrackChange,
     zoom,
     onZoomChange,
@@ -377,7 +425,9 @@ export function ClipTimeline({
     const chosen = clips.filter((clip) => selected.includes(clip.id))
 
     const [said, setSaid] = useState('')
-    const layer = useDragLayer(onClipsChange !== undefined)
+    const layer = useDragLayer(onClipsChange !== undefined || onDrop !== undefined)
+    const scope = useId()
+    const [landing, setLanding] = useState<Landing | null>(null)
     const [proposal, setProposalState] = useState<Proposal | null>(null)
     const carried = useMemo(() => proposalStore(), [])
     const setProposal = (value: Proposal | null) => {
@@ -447,16 +497,59 @@ export function ClipTimeline({
     const targetsFor = (id: string) =>
         snap ? [0, playhead, ...clips.filter((clip) => clip.id !== id).flatMap((clip) => [clip.start, end(clip)])] : []
 
-    /** The track under a point, if it takes a clip of `kind`. */
-    const laneAt = (y: number, kind: ClipTrackKind): TimelineTrack | undefined => {
+    /** The track whose lane holds a point on the page, its lanes' visible part only. */
+    const laneUnder = (point: { x: number; y: number }): TimelineTrack | undefined => {
+        const shown = scroller?.getBoundingClientRect()
+        if (shown === undefined || point.x < shown.left || point.x > shown.right) return undefined
         const lanes = root.current?.querySelectorAll<HTMLElement>('[data-track-lane]') ?? []
         for (const lane of lanes) {
             const box = lane.getBoundingClientRect()
-            if (y < box.top || y >= box.bottom) continue
-            const track = trackOf(lane.dataset.trackLane ?? '')
-            return track !== undefined && track.kind === kind && track.locked !== true ? track : undefined
+            if (point.y >= box.top && point.y < box.bottom) return trackOf(lane.dataset.trackLane ?? '')
         }
         return undefined
+    }
+
+    /** The track under a point, if it takes a clip of `kind`. */
+    const laneAt = (point: { x: number; y: number }, kind: ClipTrackKind): TimelineTrack | undefined => {
+        const track = laneUnder(point)
+        return track !== undefined && track.kind === kind && track.locked !== true ? track : undefined
+    }
+
+    /** A span asked to start at `asked`, snapped by whichever end comes nearer a target, else to a frame. */
+    const snapSpan = (asked: number, length: number, targets: readonly number[]): { start: number; snapped?: number } => {
+        const near = SNAP_REACH / pps
+        const byStart = nearest(asked, targets, near)
+        const byEnd = length > 0 ? nearest(asked + length, targets, near) : undefined
+        if (byStart !== undefined && (byEnd === undefined || Math.abs(byStart - asked) <= Math.abs(byEnd - asked - length)))
+            return { start: byStart, snapped: byStart }
+        if (byEnd !== undefined) return { start: byEnd - length, snapped: byEnd }
+        return { start: toFrame(asked) }
+    }
+
+    /** Whether a track takes a thing dragged from outside. */
+    const trackTakes = (track: TimelineTrack, drag: DragData) => track.locked !== true && (accepts?.(drag, track) ?? true)
+
+    /** Where a thing from outside would land, or null over no track that takes it. */
+    const landingFor = (from: ClipArrival): Landing | null => {
+        const track = from.point === null ? (from.over === null ? undefined : trackOf(from.over)) : laneUnder(from.point)
+        if (track === undefined || !trackTakes(track, from.data)) return null
+        const length = dropDuration(from.data)
+        const asked = from.point === null ? playhead : timeAt(from.point.x)
+        const { start, snapped } = snapSpan(asked, length ?? 0, targetsFor(''))
+        const at = Math.max(start, 0)
+        if (length === undefined) return { track: track.id, start: at, fits: true, snapped }
+        const placed = placeClip(
+            at,
+            length,
+            clips.filter((clip) => clip.track === track.id),
+        )
+        return {
+            track: track.id,
+            start: placed ?? at,
+            duration: length,
+            fits: placed !== null,
+            snapped: placed !== null && Math.abs(placed - start) < NEAR ? snapped : undefined,
+        }
     }
 
     /** Where the drag in `carry` would put its clip. */
@@ -473,18 +566,8 @@ export function ClipTimeline({
         const neighbors = (track: string) => clips.filter((other) => other.track === track && other.id !== clip.id)
 
         if (carry.grip === 'move') {
-            const track = laneAt(carry.point.y, home.kind) ?? home
-            const byStart = nearest(asked, targets, near)
-            const byEnd = nearest(asked + clip.duration, targets, near)
-            let start = toFrame(asked)
-            let snapped: number | undefined
-            if (byStart !== undefined && (byEnd === undefined || Math.abs(byStart - asked) <= Math.abs(byEnd - asked - clip.duration))) {
-                start = byStart
-                snapped = byStart
-            } else if (byEnd !== undefined) {
-                start = byEnd - clip.duration
-                snapped = byEnd
-            }
+            const track = laneAt(carry.point, home.kind) ?? home
+            const { start, snapped } = snapSpan(asked, clip.duration, targets)
             const placed = placeClip(Math.max(start, 0), clip.duration, neighbors(track.id))
             return {
                 id: clip.id,
@@ -714,54 +797,87 @@ export function ClipTimeline({
                                 style={{ left: `${String(head)}px` }}
                             />
                         </div>
-                        {tracks.map((track, index) => (
-                            <div
-                                key={track.id}
-                                data-track-lane={track.id}
-                                onClick={(event: ReactMouseEvent) => {
-                                    if (event.target === event.currentTarget && selected.length > 0) onSelectedChange?.([])
-                                }}
-                                className={cn(
-                                    'relative h-14',
-                                    index < tracks.length - 1 && 'border-b border-border',
-                                    track.locked === true && 'bg-muted/50',
-                                )}
-                            >
-                                {clips
-                                    .filter((clip) => clip.track === track.id)
-                                    .map((clip) => (
-                                        <ClipBlock
-                                            key={clip.id}
-                                            clip={clip}
-                                            track={track}
-                                            pps={pps}
-                                            fps={fps}
-                                            words={words}
-                                            chosen={selected.includes(clip.id)}
-                                            faded={proposal?.id === clip.id}
-                                            layer={changing && track.locked !== true ? layer : undefined}
-                                            store={carried}
-                                            onChoose={choose}
+                        {tracks.map((track, index) => {
+                            const lane = (ref?: (element: HTMLElement | null) => void) => (
+                                <div
+                                    key={track.id}
+                                    ref={ref}
+                                    data-track-lane={track.id}
+                                    onClick={(event: ReactMouseEvent) => {
+                                        if (event.target === event.currentTarget && selected.length > 0) onSelectedChange?.([])
+                                    }}
+                                    className={cn(
+                                        'relative h-14',
+                                        index < tracks.length - 1 && 'border-b border-border',
+                                        track.locked === true && 'bg-muted/50',
+                                    )}
+                                >
+                                    {clips
+                                        .filter((clip) => clip.track === track.id)
+                                        .map((clip) => (
+                                            <ClipBlock
+                                                key={clip.id}
+                                                clip={clip}
+                                                track={track}
+                                                pps={pps}
+                                                fps={fps}
+                                                words={words}
+                                                chosen={selected.includes(clip.id)}
+                                                faded={proposal?.id === clip.id}
+                                                layer={changing && track.locked !== true ? layer : undefined}
+                                                store={carried}
+                                                onChoose={choose}
+                                            />
+                                        ))}
+                                    {proposal !== null && proposal.track === track.id && (
+                                        <span
+                                            aria-hidden
+                                            data-landing
+                                            className={cn(
+                                                'pointer-events-none absolute inset-y-1 z-2 rounded-control border-2 border-dashed',
+                                                proposal.fits ? 'border-primary' : 'border-destructive',
+                                            )}
+                                            style={{
+                                                left: `${String(proposal.start * pps)}px`,
+                                                width: `${String(proposal.duration * pps)}px`,
+                                            }}
                                         />
-                                    ))}
-                                {proposal !== null && proposal.track === track.id && (
-                                    <span
-                                        aria-hidden
-                                        data-landing
-                                        className={cn(
-                                            'pointer-events-none absolute inset-y-1 z-2 rounded-control border-2 border-dashed',
-                                            proposal.fits ? 'border-primary' : 'border-destructive',
-                                        )}
-                                        style={{ left: `${String(proposal.start * pps)}px`, width: `${String(proposal.duration * pps)}px` }}
-                                    />
-                                )}
-                            </div>
-                        ))}
-                        {proposal?.snapped !== undefined && (
+                                    )}
+                                    {landing !== null && landing.track === track.id && (
+                                        <span
+                                            aria-hidden
+                                            data-landing
+                                            className={cn(
+                                                'pointer-events-none absolute inset-y-1 z-2 rounded-control border-2 border-dashed',
+                                                landing.duration === undefined && '-translate-x-1/2',
+                                                landing.fits ? 'border-primary bg-primary/10' : 'border-destructive',
+                                            )}
+                                            style={{
+                                                left: `${String(landing.start * pps)}px`,
+                                                width: landing.duration === undefined ? undefined : `${String(landing.duration * pps)}px`,
+                                            }}
+                                        />
+                                    )}
+                                </div>
+                            )
+                            if (layer === undefined || onDrop === undefined) return lane()
+                            return (
+                                <layer.ClipLane
+                                    key={track.id}
+                                    scope={scope}
+                                    track={track.id}
+                                    label={track.name}
+                                    accepts={(drag) => trackTakes(track, drag)}
+                                >
+                                    {lane}
+                                </layer.ClipLane>
+                            )
+                        })}
+                        {(proposal?.snapped ?? landing?.snapped) !== undefined && (
                             <span
                                 aria-hidden
                                 className="pointer-events-none absolute top-8 bottom-0 z-2 w-px bg-ring"
-                                style={{ left: `${String(proposal.snapped * pps)}px` }}
+                                style={{ left: `${String((proposal?.snapped ?? landing?.snapped ?? 0) * pps)}px` }}
                             />
                         )}
                         <span
@@ -778,15 +894,26 @@ export function ClipTimeline({
         </div>
     )
 
-    if (layer === undefined || onClipsChange === undefined) return body
+    if (layer === undefined) return body
     return (
         <layer.ClipDragArea
             onMove={(carry) => setProposal(propose(carry))}
+            onArrive={(from) => setLanding(from === null || onDrop === undefined ? null : landingFor(from))}
+            onLand={(from) => {
+                const to = onDrop === undefined ? null : landingFor(from)
+                if (to === null) return
+                if (!to.fits) {
+                    setSaid(words.blocked(from.data.label))
+                    return
+                }
+                onDrop?.({ data: from.data, track: to.track, at: to.start })
+                setSaid(words.dropped(from.data.label, trackOf(to.track)?.name ?? to.track, formatTimecode(to.start, fps)))
+            }}
             onEnd={(carry) => {
                 const to = propose(carry)
                 settle()
                 const clip = clipOf(carry.id)
-                if (to === null || clip === undefined) return
+                if (to === null || clip === undefined || onClipsChange === undefined) return
                 if (!to.fits) {
                     setSaid(words.blocked(clip.label))
                     return
