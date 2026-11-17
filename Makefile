@@ -38,9 +38,10 @@ test: ## Run the unit tests and the library rules
 
 check: typecheck lint fmt-check test generated-check ## The fast gates to run before pushing, as CI runs them
 
-generated-check: ## Check the generated tokens, the components index and the design pin
+generated-check: ## Check the generated tokens, the components index, the emoji list and the design pin
 	bun scripts/build-tokens.ts --check
 	bun run components -- --check
+	bun run emoji-data -- --check
 	bun run design --check
 
 storybook-build: ## Build the static Storybook into storybook-static/
