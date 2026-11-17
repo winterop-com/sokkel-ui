@@ -18,3 +18,9 @@ release and empties it.
   ripples). The command key with the wheel, or a pinch, zooms around the pointer (`zoom`,
   `onZoomChange`, `onFitChange`). Helpers: `formatTimecode`, `snapTime`, `placeClip`, `zoomStep`,
   `clipTickStep`. Its words are `CLIP_TIMELINE_WORDS`.
+
+## Fixed
+
+- `RunTimeline` draws the chosen lane's shift handle at rest, a dashed band with a grip from the
+  current time to past the last upcoming run, so a person sees what to drag; it was drawn only
+  under the pointer, and began at the first upcoming run.
