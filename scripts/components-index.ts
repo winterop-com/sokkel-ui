@@ -630,7 +630,8 @@ export function pickStory(module: string, name: string, stories: (StoryFile & { 
     const showing = stories.filter((story) => story.imports.has(module))
     const score = (story: StoryFile & { file: string }) => {
         const leaf = story.title.split('/').pop() ?? story.title
-        if (key(leaf) === key(name)) return 0
+        // A title may join the words a module runs together with "and": Drag and drop shows DragDrop.
+        if (key(leaf) === key(name) || key(leaf.replace(/\band\b/gi, '')) === key(name)) return 0
         if (key(basename(story.file).replace(/\.stories\.tsx?$/, '')) === key(name)) return 1
         if (key(name).includes(key(leaf)) || key(leaf).includes(key(name))) return 2
         if (story.title.startsWith('Apps/')) return 4
