@@ -3,6 +3,11 @@
     "id": "dialog",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "A box over the page that asks or shows one thing: a title and an optional line under it, a body that scrolls when it is taller than the window allows, and a footer with Cancel and the one confirming verb at its end. The page under it is shaded and out of reach. From 768 it is a box edged in border-strong on elevation-dialog; below 768 any dialog but a ConfirmDialog is a full-screen sheet. ConfirmDialog is this dialog at its narrowest (sm, 384) and stays a box sized to its words at every width: its title is the question, its line the detail, its confirm the answer.",
     "sources": {
         "sokkel-ui": [
@@ -32,6 +37,7 @@
         "confirm": "The one confirming verb (parts/button): default, or destructive. With a reason (why) it is shut but stays focusable, at half opacity, the reason in the library's tooltip; busy, a spinner stands before its busy label.",
         "nestedShade": "A shade over the whole box while another dialog is open over it."
     },
+    "standsOn": {"default": "popover", "backdrop": "background", "box": "background"},
     "options": {
         "open": {"type": "boolean", "does": "Shown over the page.", "sokkel-ui": "open, onOpenChange"},
         "width": {

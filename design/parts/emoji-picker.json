@@ -3,6 +3,11 @@
     "id": "emoji-picker",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "missing", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "The full list of emoji to pick one from, in a box 320 wide and 384 tall on the popover's ground: a search over the emoji's English names and keywords with a skin tone button beside it, a grid of 8 to a row grouped by kind under headings that stay at the top as it scrolls, Recent first when there are recent emoji, and a tab per group along the foot that scrolls to its group and marks the one in view. The arrow keys move through the grid. A picked emoji goes to onPick in the chosen skin tone with its English name and joins the recent ones. The list loads the first time a picker is drawn, a spinner meanwhile, and keeps only the emoji the fonts draw. EmojiPickerPopover holds it in a popover opened from a trigger.",
     "sources": {
         "sokkel-ui": [
@@ -31,6 +36,7 @@
         "failed": "When the list could not be loaded: words.failed, centered, and parts/button's outline button at sm saying words.retry under it, which loads it again.",
         "empty": "When a search finds nothing: words.empty, centered in the grid's place."
     },
+    "standsOn": {"default": "popover", "box": "background"},
     "options": {
         "onPick": {"type": "callback", "does": "Hears the emoji picked, in the chosen skin tone, and its English name."},
         "recent": {

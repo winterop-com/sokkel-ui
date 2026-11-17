@@ -3,6 +3,11 @@
     "id": "tooltip",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "The library's one tooltip: a short line about a control, in a small inverted box beside it with an arrow toward it, shown once the pointer has rested on the control for 500 ms or at once while it has keyboard focus, and gone when both leave. It names an icon button, says why a control is off (a button's reason), names a collapsed rail's entries, and can add the key that does the same. A touch screen has no hover: there a tap on a shut button shows its reason (tap), held tip-hold or until the next press.",
     "sources": {
         "sokkel-ui": [
@@ -22,6 +27,7 @@
         "arrow": "A 10 square turned 45 degrees at the box's edge toward the trigger, in the box's ground.",
         "keys": "The key that does the same, after the words: a small key cap on a wash of the background over the box's ground."
     },
+    "standsOn": {"default": "background", "keys": "foreground"},
     "options": {
         "side": {
             "values": ["top", "bottom", "left", "right", "inline-start", "inline-end"],
@@ -90,6 +96,12 @@
             "value": "tip-hold",
             "note": "How long a box a tap showed stays up (4000 ms), unless the next press anywhere, or a tap on the trigger again, closes it first."
         }
+    },
+    "cells": {
+        "rows": 0,
+        "width": "No box: the tooltip's words, then its keys after 2 columns, in the status line's note.",
+        "density": "Nothing changes.",
+        "note": "A renderer without floating boxes says a tooltip in the status line while its trigger has keyboard focus, and on hover where the terminal reports the pointer (principle 23)."
     },
     "states": {
         "rest": {"means": "Not shown."},
