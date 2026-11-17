@@ -388,7 +388,15 @@ export function RunTimeline({
                         ) : (
                             <div className="w-28 shrink-0 border-s-2 border-transparent px-3 py-2 sm:w-48">{name}</div>
                         )}
-                        <div className="relative min-h-12 min-w-0 flex-1 overflow-hidden">
+                        {/* A press anywhere in another lane chooses it, as its name does; the name stays the control a keyboard uses. */}
+                        <div
+                            data-lane-track
+                            onClick={onSelect !== undefined && lane.total !== true && !chosenLane ? () => onSelect(lane.id) : undefined}
+                            className={cn(
+                                'relative min-h-12 min-w-0 flex-1 overflow-hidden',
+                                onSelect !== undefined && lane.total !== true && !chosenLane && 'cursor-pointer hover:bg-muted/50',
+                            )}
+                        >
                             {grid}
                             {lane.runs.map((run) => {
                                 const isUpcoming = now !== undefined && timelineMs(run.at) > now

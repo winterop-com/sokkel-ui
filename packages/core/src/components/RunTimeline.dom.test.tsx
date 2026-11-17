@@ -97,6 +97,26 @@ describe('RunTimeline', () => {
         expect(chosen).toEqual(['nightly-export'])
     })
 
+    it('chooses a lane by a press anywhere in its track, never the chosen one again or the total', () => {
+        const chosen: string[] = []
+        const lanes: RunTimelineLane[] = [LANES[0], { ...LANES[0], id: 'sync-inventory', name: 'sync-inventory' }, LANES[1]]
+        const page = draw(
+            <RunTimeline
+                lanes={lanes}
+                from={NOW - 7 * DAY}
+                to={NOW + 7 * DAY}
+                now={NOW}
+                selected="nightly-export"
+                onSelect={(lane) => chosen.push(lane)}
+            />,
+        )
+        const track = (id: string) => page.querySelector<HTMLElement>(`[data-lane="${id}"] [data-lane-track]`)
+        act(() => track('sync-inventory')?.click())
+        act(() => track('nightly-export')?.click())
+        act(() => track('running')?.click())
+        expect(chosen).toEqual(['sync-inventory'])
+    })
+
     it("shifts the chosen lane's upcoming runs with the arrows, never before now", () => {
         const heard: RunTimelineShift[] = []
         const page = draw(
