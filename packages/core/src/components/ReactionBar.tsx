@@ -123,7 +123,7 @@ export function ReactionBar({
 }: ReactionBarProps) {
     const words = { ...REACTION_BAR_WORDS, ...given }
     const button = cn(
-        'flex shrink-0 items-center justify-center rounded-full font-emoji outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring/50 aria-pressed:bg-primary/12 aria-pressed:ring-1 aria-pressed:ring-primary/60',
+        'flex shrink-0 items-center justify-center rounded-full font-emoji outline-none hover:bg-hover focus-visible:outline-focus focus-visible:outline-offset-focus-inset focus-visible:outline-ring focus-visible:outline-solid aria-pressed:bg-primary/12 aria-pressed:ring-1 aria-pressed:ring-primary/60',
         size === 'md' ? 'size-9 text-emoji' : 'size-7 text-base',
     )
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -133,7 +133,8 @@ export function ReactionBar({
         const at = buttons.indexOf(event.target as HTMLButtonElement)
         if (at < 0) return
         event.preventDefault()
-        buttons[(at + step + buttons.length) % buttons.length]?.focus()
+        // Like every list of choices, the row stops at its first and last button.
+        buttons[Math.min(Math.max(at + step, 0), buttons.length - 1)]?.focus()
     }
     return (
         <div

@@ -26,6 +26,11 @@ release and empties it.
   the chosen lane leaves it chosen, and the total lane is never chosen.
 - `RunTimeline`'s lane names and shift handle wear the library's keyboard focus outline (`ring`,
   `focus-ring-width`, drawn inside), not the browser's own.
+- `EmojiPicker`'s group tabs and `ReactionBar`'s buttons stop at their first and last under the
+  arrow keys, as every list of choices does, instead of wrapping.
+- A `ReactionBar` reaction with keyboard focus wears the library's focus outline (`ring`, drawn
+  inside the circle), so a reaction already given still shows its focus beside its pressed ring;
+  the more button too.
 
 ## Design contract
 

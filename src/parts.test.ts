@@ -3190,6 +3190,8 @@ const DRAG_FROM = () => numberIn(DRAG_DROP, /const DISTANCE = (\d+)\b/)
 /** The icon a class sizes through its children (`[&_svg]:size-4`). */
 const SVG_ON = ['[&_svg]']
 const noop = () => undefined
+/** A row of buttons the arrows move along, stopping at its first and last as every list of choices does. */
+const STOPS_AT_ENDS = /buttons\[Math\.min\(Math\.max\(at \+ step, 0\), buttons\.length - 1\)\]\?\.focus\(\)/
 
 // Run timeline
 
@@ -3802,10 +3804,9 @@ const EMOJI_PICKER_ADAPTER: Adapter = {
                 ? true
                 : 'a cell is not a native button that picks',
         'ArrowLeft, ArrowRight (a tab has focus)': () =>
-            /buttons\[\(at \+ step \+ buttons\.length\) % buttons\.length\]\?\.focus\(\)/.test(EMOJI_PICKER) &&
-            /onKeyDown=\{onTabsKey\}/.test(EMOJI_PICKER)
+            STOPS_AT_ENDS.test(EMOJI_PICKER) && /onKeyDown=\{onTabsKey\}/.test(EMOJI_PICKER)
                 ? true
-                : 'the arrows do not move between the tabs, wrapping',
+                : 'the arrows do not move between the tabs, stopping at the ends',
         'Enter, Space (a tab has focus)': () =>
             emojiTab(emojiPicker(), false)?.attrs.type === 'button' &&
             /const showGroup = \(group: EmojiSection\) => \{\s+setQuery\(''\)/.test(EMOJI_PICKER)
@@ -3916,10 +3917,10 @@ const REACTION_BAR_ADAPTER: Adapter = {
     keys: {
         'ArrowLeft, ArrowRight (a button of the bar has focus)': () =>
             /querySelectorAll<HTMLButtonElement>\('\[data-reaction\]'\)/.test(REACTION_BAR) &&
-            /buttons\[\(at \+ step \+ buttons\.length\) % buttons\.length\]\?\.focus\(\)/.test(REACTION_BAR) &&
+            STOPS_AT_ENDS.test(REACTION_BAR) &&
             byLabel(REACTION_BARS().md, REACTION_BAR_WORDS.more)?.attrs['data-reaction'] !== undefined
                 ? true
-                : "the arrows do not move between the bar's buttons, the more button included, wrapping",
+                : "the arrows do not move between the bar's buttons, the more button included, stopping at the ends",
         'Enter, Space (a button of the bar has focus)': () =>
             byLabel(REACTION_BARS().md, 'thumbs up')?.attrs.type === 'button' ? true : 'a reaction is not a native button',
         'Enter, Space (a chip or the add button has focus)': () =>
@@ -3941,7 +3942,12 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {}
+const PENDING: Record<string, Record<string, string>> = {
+    'reaction-bar': {
+        'pieces.reaction.focus.ring.color': 'a focused reaction wears the focus outline in ring, given or not',
+        'pieces.more.focus.ring.color': 'the more button wears the focus outline in ring',
+    },
+}
 
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
