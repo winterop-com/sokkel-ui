@@ -184,11 +184,20 @@ export function Schedules() {
                 timeZone="UTC"
                 selected={chosen}
                 onSelect={(id) => setChosen((current) => (current === id ? null : id))}
-                snap={15 * MINUTE}
+                snap={5 * MINUTE}
                 onShift={({ lane, by }) => {
                     const job = jobs.find((entry) => entry.id === lane)
                     if (job?.schedule == null) return
-                    saveJob(job, { schedule: shiftSchedule(job.schedule, by) }).then(
+                    const schedule = shiftSchedule(job.schedule, by)
+                    // A schedule that fires every hour or quarter keeps only its minute, so a shift by whole periods leaves it as it was.
+                    if (schedule.at === job.schedule.at && schedule.starts === job.schedule.starts) {
+                        toast.add({
+                            title: `${job.id} stays as it is`,
+                            description: `${saySchedule(job.schedule)}: a shift by whole periods lands on the same times.`,
+                        })
+                        return
+                    }
+                    saveJob(job, { schedule }).then(
                         (saved) => toast.add({ title: `${job.id} moved`, description: saySchedule(saved.schedule) }),
                         (error: unknown) =>
                             toast.add({
