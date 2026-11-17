@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.29.0** is the latest release (2026-11-17): the 2026-11-16 review's fixes (#602 to #629),
+- **0.29.1** is the latest release (2026-11-17): `RunTimeline`, jobs and their runs along one
+  time axis, the chosen job's upcoming runs dragged to shift them.
+- **0.29.0** (2026-11-17): the 2026-11-16 review's fixes (#602 to #629),
   among them model replies show images only when asked, KaTeX 0.18 and `tailwindcss` as peers,
   required booleans start false, cron days follow cron's rule, `Shell` catches a failed page,
   and a DataTable branch that fails to load offers Try again; sokkel-design's contract at 0.29.0.
