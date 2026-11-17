@@ -69,6 +69,7 @@ html[data-theme='phosphor'],
     --surface-radius: var(--radius);
     --table-head-transform: uppercase;
     --table-head-tracking: 0.06em;
+    --table-head-size: var(--text-sm);
     --section-head-ink: var(--primary-ink);
     --page-title-ink: var(--primary-ink);
     --table-head-ink: var(--primary-ink);
@@ -185,6 +186,7 @@ html.dark[data-theme='phosphor'],
     --surface-radius: var(--radius);
     --table-head-transform: uppercase;
     --table-head-tracking: 0.06em;
+    --table-head-size: var(--text-sm);
     --section-head-ink: var(--primary-ink);
     --page-title-ink: var(--primary-ink);
     --table-head-ink: var(--primary-ink);
