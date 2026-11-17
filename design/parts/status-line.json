@@ -4,13 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {
-            "state": "missing",
-            "as_of": "a592dfb",
-            "note": "The spike draws the status line by hand inside its frame, not from the spec."
-        }
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "built", "as_of": "7bf2ece"}
     },
     "summary": "The foot strip across the window's bottom edge: a short note at its start in its tone, short facts at its end, on one row of fixed height that never grows. Level with the rail's foot cell, so the account and the status read as one bar.",
     "sources": {
@@ -19,7 +15,7 @@
             "packages/core/src/components/Shell.tsx",
             "packages/core/src/components/Rail.tsx"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/frame.rs (StatusLine, StatusTone)",
             "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
         ]
@@ -127,32 +123,26 @@
             "StatusLine draws the strip (its ground, rule, height, pad and ink) and the note and the facts in it; Shell's footer only gives it its room in the frame. A shell with a bottom strip and a rail foot but no foot draws an empty StatusLine, so the foot cell has a bar to stand beside.",
             "The live dot's pulse is animate-ping; motion.css stills it when motion is reduced."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "StatusLine draws the strip and its contents itself, in the rect the Shell gives its foot.",
             "The note and the facts are laid out as galleys cut short with an ellipsis; nothing wraps."
         ]
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "padding and gaps",
             "spec": "12 at each end; the facts 12 apart.",
             "today": "As of 267236c: 16 at each end; the facts and items 16 apart."
         },
         {
-            "renderer": "sokkel-ui-egui",
-            "what": "the dot",
-            "spec": "A dot only with live, pulsing, in the note's ink.",
-            "today": "A still dot before the note in every tone but quiet; there is no live option."
-        },
-        {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "item value",
             "spec": "A value in the foot's ink; an identifier (code) in the code face, in foreground.",
             "today": "Every item's value in foreground, in the body face."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "room for the facts",
             "spec": "The facts keep up to 70 percent of the row; the note is cut short first.",
             "today": "The note takes up to half the row; facts and items have fixed widths of their own."

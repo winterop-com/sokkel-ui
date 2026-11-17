@@ -28,7 +28,7 @@
             "additionalProperties": false,
             "properties": {
                 "sokkel-ui": {"$ref": "#/$defs/paths"},
-                "sokkel-ui-egui": {"$ref": "#/$defs/paths"},
+                "sokkel-egui": {"$ref": "#/$defs/paths"},
                 "sokkel-tui": {"$ref": "#/$defs/paths"}
             }
         },
@@ -38,6 +38,11 @@
             "type": "object",
             "required": ["default"],
             "additionalProperties": {"$ref": "#/$defs/colorName"}
+        },
+        "alsoStandsOn": {
+            "description": "The other surfaces a piece (or variant) may stand on, by piece, with `default` for the rest: each a color token opaque in every theme and scheme. The resolver lays each paint over each of them as over standsOn, into the paint's `flatOn` and `fadedOn` by surface, so a translucent ground (a ghost button's hover in a section's head) has an opaque form wherever the part stands.",
+            "type": "object",
+            "additionalProperties": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/colorName"}}
         },
         "options": {"type": "object", "additionalProperties": {"$ref": "#/$defs/option"}},
         "sizes": {"type": "object", "additionalProperties": {"$ref": "#/$defs/size"}},
@@ -102,7 +107,7 @@
             "additionalProperties": false,
             "properties": {
                 "sokkel-ui": {"type": "array", "items": {"type": "string"}},
-                "sokkel-ui-egui": {"type": "array", "items": {"type": "string"}},
+                "sokkel-egui": {"type": "array", "items": {"type": "string"}},
                 "sokkel-tui": {"type": "array", "items": {"type": "string"}}
             }
         },
@@ -113,7 +118,7 @@
                 "required": ["renderer", "what", "spec", "today"],
                 "additionalProperties": false,
                 "properties": {
-                    "renderer": {"enum": ["sokkel-ui", "sokkel-ui-egui", "sokkel-tui"]},
+                    "renderer": {"enum": ["sokkel-ui", "sokkel-egui", "sokkel-tui"]},
                     "what": {"type": "string"},
                     "spec": {"type": "string"},
                     "today": {"type": "string"}

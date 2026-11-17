@@ -6,11 +6,11 @@
     "renderers": {
         "sokkel-ui": {
             "state": "partial",
-            "as_of": "6b8fdfd",
+            "as_of": "97f92d8",
             "note": "The busy state is proposed: TextField has none yet (QuickAdd and the inline edit draw it)."
         },
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "A labeled text input: the field frame every field shares (label, hint, description, control, help, fallback, the issue mark) around a one-line input or a growing text area. A problem is said by a mark at the control's end, so a form never changes height.",
     "sources": {
@@ -22,7 +22,7 @@
             "packages/core/src/components/ui/textarea.tsx",
             "packages/core/src/components/ui/label.tsx"
         ],
-        "sokkel-ui-egui": ["crates/core/src/widgets/text_field.rs"]
+        "sokkel-egui": ["crates/core/src/widgets/text_field.rs"]
     },
     "anatomy": {
         "label": "Names the control; a press on it focuses the control.",
@@ -149,10 +149,19 @@
             "issuePopover": {
                 "note": "Its issues are said in the status line while the control has focus, in a renderer without floating boxes (principle 23)."
             },
-            "help": {"rows": 1, "note": "Under the control, wrapped; never replaced by an issue."}
+            "help": {"rows": 1, "note": "Under the control, wrapped; never replaced by an issue."},
+            "control": {"rows": 1}
         },
-        "glyphs": ["circle-alert", "triangle-alert", "spinner"],
-        "note": "rows counts the label and the control; a description and help add their own lines."
+        "glyphs": [
+            "circle-alert",
+            "triangle-alert",
+            "spinner",
+            "edge-start",
+            "edge-end",
+            "focus-ring-start",
+            "focus-ring-end"
+        ],
+        "note": "rows counts the label and the control; a description and help add their own lines. The control's edge is edge-start and edge-end at its ends, inside its padding, in the edge's flat color for its state (the focus edge, the invalid edge), [ and ] in ASCII (T3, decided); focus-ring-start and focus-ring-end beside it only where the control has no focus edge of its own (T4)."
     },
     "states": {
         "rest": {"means": "Empty with its placeholder, or holding a value."},
@@ -298,7 +307,7 @@
             "describedBy() points the control at its description, help and fallback; an issue speaks from its mark.",
             "A row of fields lines up through CSS subgrid (Columns with fields)."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "TextEdit has no frame of its own here: the widget draws the frame and sets the inner margin so the text is centered in the control height.",
             "The phone text size (16px below 768) is a browser zoom guard; a native renderer may keep text.body.",
             "Lining fields up in a row needs the row to measure every field's label and description first (two passes, or a Grid)."
@@ -306,22 +315,23 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "where an error is said",
             "spec": "An issue mark at the control's end with a popover; nothing is inserted under the field.",
             "today": "The error is a line under the field in critical-ink, in place of the help, so the form changes height."
         },
+        {"renderer": "sokkel-egui", "what": "width", "spec": "Fills the room it is given.", "today": "280 unless set."},
         {
-            "renderer": "sokkel-ui-egui",
-            "what": "width",
-            "spec": "Fills the room it is given.",
-            "today": "280 unless set."
-        },
-        {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "missing",
             "spec": "hint, keyHint, description, fallback, required marks, warning tone, issue actions, multiline, mono, numeric, readOnly, phone sizes.",
             "today": "Not built."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with no multiline, inRow or busy."
         }
     ]
 }

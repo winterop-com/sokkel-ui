@@ -4,15 +4,16 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "One search over everything an app can do, over the page on Mod+K, which closes it again: a dialog box a third of the way down the window with the search at its top, the commands in groups under their titles (each row its icon, its label, a quiet hint or code after it, and at its end a summary, its kind or the keys that run it), the app's own search results under them, and an optional strip at its foot. Its active row wears the highlight every list of choices does. Choosing a row runs it and closes the palette. A command whose onSelect answers a promise holds the palette open and its row busy until it settles: fulfilled, the palette closes; rejected, it stays and says why under the rows. Once it has run busy-release (5 seconds) a Stop waiting row appears, and it or Escape lets the palette go, the command left to settle unheard.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/CommandPalette.tsx",
             "packages/core/src/components/ui/command.tsx",
+            "packages/core/src/components/ui/cmdk.tsx",
             "packages/core/src/components/ui/dialog.tsx",
             "packages/core/src/components/ui/input-group.tsx",
             "packages/core/src/components/Search.tsx",
@@ -24,7 +25,7 @@
             "packages/core/src/lib/search.ts",
             "packages/core/src/hooks/use-palette-shortcut.ts"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/menu.rs (CommandPalette, CommandGroup, PaletteOutcome, PaletteWords, palette_shortcut, action_row)",
             "crates/core/src/widgets/commands.rs (place_commands, appearance_commands)",
             "examples/storybook/src/stories/menus.rs (Patterns/Command palette)"
@@ -193,6 +194,34 @@
             "note": "How long the app's search waits for an answer (300 ms) before Searching shows or the earlier results dim; a quicker answer draws neither."
         }
     },
+    "cells": {
+        "padX": 1,
+        "width": "The dialog's box, 46 columns (384 px) at md and wider at lg as its width says, centered a third of the way down; below md (90 columns) the window less 4 columns, a row from the top.",
+        "density": "Nothing changes: the search, a group's title and every command are one row.",
+        "sizes": {"md": {"width": "46 columns"}, "lg": {"width": "By its width, round(px / 8.4) columns."}},
+        "pieces": {
+            "box": {"note": "The dialog's box: a box in border-strong, corners by radius-surface, on popover."},
+            "search": {
+                "rows": 1,
+                "padX": 1,
+                "note": "One row on its tint, the search icon then the query; a rule row under it."
+            },
+            "list": {"note": "At most 60 percent of the window's rows, then it scrolls."},
+            "groupTitle": {"rows": 1, "padX": 1, "note": "A row in the head role."},
+            "separator": {"rows": 1, "note": "A row of the rule glyph."},
+            "row": {
+                "rows": 1,
+                "padX": 1,
+                "note": "Its icon, its label, its meta, then its keys as caps at the end (a sequence as G then R); the active row on accent in accent-foreground."
+            },
+            "twoLineRow": {"rows": 2, "note": "Its label, then its hint or meta on a row of its own."},
+            "keys": {"width": "Each key in its own caps, 1 column apart."},
+            "spinner": {"width": "1 column, in the running row's icon place."},
+            "foot": {"rows": 2, "note": "A rule row, then its keys and hints."}
+        },
+        "glyphs": ["box", "rule", "search", "spinner", "chevron-right", "ellipsis"],
+        "note": "What lies under it is drawn as it is until the scrim in cells is decided (open-questions.md, T2). From sokkel-tui's proposal, section c3."
+    },
     "states": {
         "rest": {
             "means": "Open: the search holds defaultQuery, every command is listed by group, and the first row is active."
@@ -200,7 +229,7 @@
         "active": {
             "means": "The row the arrows or the pointer are on: washed in the accent, as every list of choices is; Enter runs it. The first row drawn becomes active whenever the active one is gone.",
             "reached": "the arrows, the pointer, or the rows changing",
-            "sokkel-ui": "data-selected (cmdk)"
+            "sokkel-ui": "data-selected (ui/cmdk)"
         },
         "disabled": {
             "means": "A command that cannot run now: listed, passed over by the arrows, never run, its reason in its hint's place.",
@@ -366,18 +395,18 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "cmdk's Command inside the library's dialog (ui/command): the box is Base UI's Dialog, a portal over the page it makes inert; its title and description are read to a screen reader only.",
-            "cmdk's own Ctrl+N, Ctrl+J, Ctrl+P and Ctrl+K are off (vimBindings false, the Command primitive's default), so Ctrl+K is the palette's key alone. The open palette binds Mod+K itself (useShortcuts, before the shell's own), closing through the same hold a running command keeps.",
-            "fuzzy is cmdk's own matching; terms and an app's function score the commands themselves (filterCommands), the order then theirs.",
+            "The library's own list (ui/cmdk, taken from cmdk 1.1.1 without its dialog and Radix helpers, with cmdk's keys, filtering, cmdk-* attributes and props) inside the library's dialog (ui/command): the box is Base UI's Dialog, a portal over the page it makes inert; its title and description are read to a screen reader only. Since sokkel-ui af7eaf5 the palette no longer depends on cmdk; what this spec says of its keys, matching and rows holds as before.",
+            "The list's own Ctrl+N (cmdk's), Ctrl+J, Ctrl+P and Ctrl+K are off (vimBindings false, the Command primitive's default), so Ctrl+K is the palette's key alone. The open palette binds Mod+K itself (useShortcuts, before the shell's own), closing through the same hold a running command keeps.",
+            "fuzzy is the list's own matching (cmdk's commandScore); terms and an app's function score the commands themselves (filterCommands), the order then theirs.",
             "In a Shell the palette takes the app's groups and each screen's (useCommands), ranked, a screen's first at equal rank.",
-            "The active row is held as cmdk's value, so the foot can say its verb.",
+            "The active row is held as the list's value, so the foot can say its verb.",
             "A command that settles after the palette closed, or opened again, is let go.",
             "pointer-coarse decides the touch screen's Close; max-md the finger heights and, with md:max-w, the width; max-sm the meta's fold.",
             "The list fades at its foot (scroll-fade-b), and keeps the see-all row in sight under the scrolling rows.",
             "The wait is BUSY_RELEASE, generated from the busy-release token (lib/durations); useBusyRelease releases the palette once it has run, and only Escape (escape-key, close-watcher) and the Close (close-press) are heeded then. A command settling after the palette closed is let go (runCommand's current).",
             "useSearch says slow once a query has waited WAIT_SHOWN (lib/durations, from wait-shown), timed as useBusyRelease times its wait, and searchWait (lib/search) turns it into the Searching line and the dimmed results; an earlier query's results are out of reach from the wait's first moment, a choice of one ignored."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "CommandPalette::new(id, groups, &mut query, &mut highlight).words(..).show(ctx) returns PaletteOutcome { run, close }; the app runs the command it names by group and index.",
             "palette_shortcut(ctx) is Mod+K, consumed.",
             "A row is the dropdown menu's MenuItem::Action, drawn in the palette's look (action_row with RowLook::Palette).",
@@ -386,52 +415,58 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "highlight at the ends",
             "spec": "ArrowDown and ArrowUp stop at the first and the last row.",
             "today": "As of 26b411f (menu.rs unchanged since 5dd7c34): they wrap around."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "rows",
             "spec": "radius-lg; the group's foreground ink; the active row on accent, its ink and icon accent-foreground.",
             "today": "radius-md; popover-foreground ink; the active row on muted, its icon muted-foreground."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "search icon",
             "spec": "muted-foreground at half strength.",
             "today": "popover-foreground at half strength."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "empty",
             "spec": "words.empty in the box's ink (popover-foreground), 24 over and under.",
             "today": "muted-foreground, 24 over and under."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "edge and shadow",
             "spec": "parts/dialog's: a 1px border-strong edge, and elevation-dialog under it.",
             "today": "The menu's popover frame: a foreground/10 stroke inside the box and a shadow 0 4 blur 12, black at 9 percent (35 in dark)."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "list",
             "spec": "At most 384 or 60 percent of the window, 6 under the last group.",
             "today": "At most 384 and at least 384 once it scrolls, 4 under the last group."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "matching",
             "spec": "fuzzy by default (the letters typed in their order, best first), terms, or the app's score.",
             "today": "A label or a keyword holding the query, in the groups' order."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of 26b411f, CommandPalette draws the box 384 wide a third of the way down over a shade/10 backdrop, padded by palette-inset, the search a control tall on input/30, group titles 32 tall at text.badge, rows 34 tall with an icon and keys or a hint, the active row on muted, rules between groups, words.placeholder and words.empty, ArrowDown, ArrowUp, Enter and Escape. Not yet: a command's promise (busy, held open, and refused, words.running and words.refused), meta and metaTone, hint tones, code, mono, sequences and words.sequence, kind, verbs, the foot and words.palette and words.open, two-line rows, disabled commands, the app's search and its results, width, description, wrap, ranks, the touch screen's Close, finger rows below 768, Home, End, Mod+K closing the open palette, and words.title and words.close."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with no app search or results, two-line rows or foot."
         }
     ]
 }

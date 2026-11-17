@@ -61,7 +61,7 @@ export const dual: ChartBuilder = (spec, look) => {
             min: own.min,
             max: own.max,
             write: (value: number | null) =>
-                value === null ? '-' : own.format !== undefined ? own.format(value) : written({ ...spec, unit }, value),
+                value === null ? '—' : own.format !== undefined ? own.format(value) : written({ ...spec, unit }, value),
         }
     })
     const sideOf = (index: number) => sides[layers[index].axis === 'right' && twoAxes ? 1 : 0]

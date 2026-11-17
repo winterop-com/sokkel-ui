@@ -4,9 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "built", "as_of": "7bf2ece"}
     },
     "summary": "An app's preferences as one large dialog over the page it was opened from, on its own route (principle 9): a head with the title and a close; the sections in a column under their group titles, with a search over every setting at its top; the shown section's rows beside it, scrolling on their own; and a footer with Reset to defaults for the shown section, a note that changes are kept as they are made, and Done. Below 768 it fills the screen, and the column is a list of sections to go into.",
     "sources": {
@@ -19,7 +19,7 @@
             "packages/core/src/components/ui/dialog.tsx",
             "packages/core/src/hooks/use-overlay-route.ts"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/settings.rs (SettingsDialog, SettingsSection, SettingsWords, SettingsOutcome, setting_row, setting_row_found_by)",
             "examples/storybook/src/stories/settings.rs (Patterns/Settings dialog)"
         ]
@@ -174,6 +174,34 @@
     "routes": {
         "settings": "#/settings: the dialog over the page it was opened from (principle 9). Back, Done, the close or Escape returns to that page; a link opening the app on #/settings draws the app's home under it."
     },
+    "cells": {
+        "padX": {"regular": 2, "compact": 1},
+        "width": "107 columns (896 px), as tall as its tallest pane and at most the window less 4 across and 2 down. Below md (90 columns) a list of sections filling the window, then a section with Back, filling it too.",
+        "density": "The pane's side padding is 2 columns at regular and 1 at compact; settings a blank row apart at regular, a rule row at both.",
+        "sizes": {"box": {"width": "107 columns"}, "column": {"width": "27 columns (224 px)"}},
+        "pieces": {
+            "box": {"note": "The dialog's box: border-strong, corners by radius-surface, on popover."},
+            "head": {"rows": 2, "note": "The title row, its close at the end, then a rule row."},
+            "column": {
+                "width": "27 columns, a rule down its end (the box's down glyph).",
+                "note": "Its search row, then the groups' titles and entries, one row each."
+            },
+            "entry": {
+                "rows": 1,
+                "padX": 1,
+                "note": "The active entry on accent, focus-mark at its start for keyboard focus as a list's row (index.json cells)."
+            },
+            "pane": {"padX": {"regular": 2, "compact": 1}, "note": "The section's heading row, then its settings."},
+            "row": {
+                "note": "A setting: its title and description on the start; its control at the row's end from 61 columns of pane (512 px), under its words below that."
+            },
+            "rowRule": {"rows": 1, "note": "A row of the rule glyph between settings."},
+            "back": {"rows": 1, "note": "Below md: chevron-left and the word Back at the section's top."},
+            "footer": {"rows": 2, "note": "The dialog's footer: a rule row and a row of verbs."}
+        },
+        "glyphs": ["box", "rule", "x", "search", "chevron-right", "chevron-left", "focus-mark", "check"],
+        "note": "What lies under it is drawn as it is until the scrim in cells is decided (open-questions.md, T2). From sokkel-tui's proposal, section c3."
+    },
     "states": {
         "rest": {"means": "Open over the page on the shown section."},
         "searching": {
@@ -298,7 +326,7 @@
             "On a phone the footer pads its foot by the home indicator's inset (env(safe-area-inset-bottom)).",
             "SettingsNavList draws the same sections beside a settings page on the rail's ground (ground sidebar), the shown one in the rail's accent; that page is not this part."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "SettingsDialog::new(id, sections, &mut active).words(..).show(ctx, rows) returns SettingsOutcome { close, reset }; rows draws a section's rows with setting_row or setting_row_found_by.",
             "Settings is open state the app holds, not a route: egui has no URL, and Back is the app's back stack.",
             "The dialog holds its search itself and clears it on closing.",
@@ -307,67 +335,67 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "column ground",
             "spec": "No ground of its own: the popover's.",
             "today": "As of 26b411f (settings.rs unchanged since bee2a97): muted at 30 percent."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "edge and shadow",
             "spec": "parts/dialog's: a 1px border-strong edge, and elevation-dialog under it.",
             "today": "A 1px foreground/10 stroke inside the box, and a shadow 0 14 blur 44, black at 18 percent (47 in dark)."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "height",
             "spec": "704, at most the window less 64.",
             "today": "704, at most the window less 96."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "search",
             "spec": "The column keeps only the sections with a match, the shown one marked; the pane shows the shown section's matching rows, or the first section left.",
             "today": "The column keeps every section, none marked; the pane lists every section's matching rows under their headings."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "group titles",
             "spec": "16 under the search or the last entry, 20 tall, then 4 and 2 to the first entry.",
             "today": "12 under the search, 14 under the last entry, 20 tall, then 10 to the first entry: the title 4 higher and later groups 2 lower."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "entry hover and focus",
             "spec": "Under the pointer the hover ground and the foreground ink; with keyboard focus a 2px ring.",
             "today": "The hover ground with the ink left muted; no focus ring."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "rows",
             "spec": "The control at the end while the row is 512 wide, else under the words; a note under both; a rule between rows, none under the last.",
             "today": "The control always at the end, 32 from the words; no note; a rule under every row, the last too."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "reset",
             "spec": "Asks once more (a ConfirmDialog with words.resetSection, words.resetSectionDetail, words.resetConfirm and words.cancel) before it resets the shown section.",
             "today": "SettingsOutcome.reset at once; an app that asks draws its own ConfirmDialog."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "words",
             "spec": "noMatch \"No setting matches the search.\", and searchLabel, clear, resetSection, resetSectionDetail, resetAll, resetAllDetail, resetConfirm, cancel and back.",
             "today": "no_match \"No setting matches\"; the other words are missing."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "story path",
             "spec": "Specimens pair by sokkel-ui's Apps/Settings.",
             "today": "The egui story is at Patterns/Settings dialog."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of 26b411f, SettingsDialog draws the box at 896 by 704, the head (48, the title, a 28 close 16 from the end), the column (224, padded 12, the search, group titles, entries 34 tall and 2 apart with the shown one on secondary at text.action), the pane padded 32 by 20 with the section's title and its rows (16 down, title text.action, description text.body muted), and the footer (65, muted/50 under a rule, Reset to defaults while the section has reset, words.saved, Done); reset false and the search over every setting's words and keywords. Not yet: the phone (the full-screen sheet below 768, the list and the section with Back, phoneStart), resetScope all, the app's own footer note, a section's heading, lead and foot, the nested shade under the reset's question, Enter and Space on an entry, and the route."

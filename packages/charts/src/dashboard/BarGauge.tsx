@@ -120,7 +120,7 @@ export function BarGauge({
                                     />
                                 </span>
                                 <span className="min-w-10 text-right font-mono font-medium text-(--tone) tabular-nums">
-                                    {bar.value === null ? '-' : write(bar.value)}
+                                    {bar.value === null ? '—' : write(bar.value)}
                                 </span>
                             </li>
                         )

@@ -54,7 +54,7 @@ export function CheckboxField({
     return (
         <label
             className={cn(
-                'flex cursor-pointer items-start gap-2.5 rounded-control px-2 py-1.5 text-sm has-disabled:cursor-not-allowed has-disabled:opacity-60',
+                'flex cursor-pointer items-start gap-2.5 rounded-control px-2 py-1.5 text-sm has-disabled:cursor-not-allowed has-disabled:opacity-disabled',
                 tone === 'critical' ? 'border border-critical/30 bg-critical/4 px-3 py-2.5' : 'hover:bg-hover',
                 className,
             )}
@@ -67,7 +67,7 @@ export function CheckboxField({
                 }}
                 indeterminate={indeterminate}
                 disabled={disabled}
-                className="mt-0.5"
+                className="mt-0.5 disabled:opacity-100"
             />
             <span className="flex min-w-0 flex-col">
                 <span className={cn('leading-5', hushed && 'text-muted-foreground', hushed && quiet === 'checked' && 'line-through')}>

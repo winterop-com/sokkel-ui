@@ -5,7 +5,7 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import { CheckboxField } from '../CheckboxField'
 import { DetailPane } from '../DetailPane'
-import { BoardItemPanel, type ChecklistStep } from './BoardItemPanel'
+import { BOARD_CHECKLIST_WORDS, BoardItemPanel, type ChecklistStep } from './BoardItemPanel'
 
 declare global {
     var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
@@ -67,6 +67,22 @@ describe('BoardItemPanel', () => {
         expect(boxes(page)[1].getAttribute('aria-checked')).toBe('true')
         expect(page.querySelectorAll('.line-through')).toHaveLength(2)
         expect(page.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('100')
+    })
+
+    it("says the checklist's heading with its count as its words give it", () => {
+        expect([0, 1, 1200].map((done) => BOARD_CHECKLIST_WORDS.title(done, 1200))).toEqual([
+            'Checklist 0/1200',
+            'Checklist 1/1200',
+            'Checklist 1200/1200',
+        ])
+        const page = draw(
+            <BoardItemPanel
+                title="Rename the metrics"
+                checklist={[{ text: 'Reproduce it', done: true }]}
+                words={{ checklist: { title: (done, total) => `Sjekkliste ${done} av ${total}` } }}
+            />,
+        )
+        expect(page.textContent).toContain('Sjekkliste 1 av 1')
     })
 
     it('leaves out the sections it is not given, and says its headings as given', () => {

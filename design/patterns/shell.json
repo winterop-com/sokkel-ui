@@ -4,18 +4,14 @@
     "kind": "pattern",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {
-            "state": "missing",
-            "as_of": "a592dfb",
-            "note": "The spike (examples/spike) draws the frame by hand from the paints, not from the spec."
-        }
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "The frame every sokkel app has, on every target: the rail of places on the left, a thin top bar with the trail, search and palette, the page with its header as the one thing that scrolls, the settings dialog on its own route over the page, the status foot, and the states a page's read lands in.",
     "sources": {
         "sokkel-ui": ["packages/core/src/components/Shell.tsx", "packages/core/src/hooks/use-overlay-route.ts"],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/frame.rs (Shell; Rail, TopBar and StatusLine have their own specs, as PageHeader and PageState in page.rs do)",
             "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
         ]
@@ -230,7 +226,7 @@
             "Shell's routeKey moves focus to the new page's first visible h1 after a route change, waiting up to 3000 ms while the page loads and until the reader presses a key or the pointer.",
             "Every control of the frame (the rail's entries, its mark, home link and head control, the top bar's menu button, crumbs and palette's button, the panel toggle, the account control) wears the button's own focus look: a 2px ring outline 2 off, on keyboard focus only."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "The window's width is the available rect; the page inset picks wide or narrow by the content rect, since a cqi clamp is CSS-only.",
             "There are no URLs: a route is app state with a back stack; #/settings is the state settings-open with the page under it kept.",
             "Overlays: egui's Modal for dialogs and the drawer, Popup for menus; the page under them must refuse input.",
@@ -240,10 +236,16 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "still to build",
             "spec": "This spec.",
-            "today": "As of sokkel-ui-egui 267236c: Shell lays out the Rail, the TopBar and the StatusLine (each with its own spec and drift) with the rail's foot cell level with the status line, PageHeader and PageState (each with its own spec and drift), SettingsDialog with appearance settings and setting rows, Dialog, Select and the tooltip, DropdownMenu, and CommandPalette on Mod+K. Working apps run on it (examples/runs, examples/tasks), with settings over the page on Mod+comma and from the rail. Not yet: the drawer below 768, the panel and its toggle, the banner, Section (parts/section), and settings as a route: egui has no URL, so the dialog is open state the app holds. The page's scroll gutter is 11, where the spec proposes 10."
+            "today": "As of sokkel-egui 9038006: Shell lays out the Rail, the TopBar and the StatusLine (each with its own spec and drift) with the rail's foot cell level with the status line, PageHeader and PageState (each with its own spec and drift), Section, SettingsDialog with appearance settings and setting rows, Dialog, Select and the tooltip, DropdownMenu, CommandPalette on Mod+K, and the drawer on a phone; since egui 0.37 (24af75f) every widget names itself to a screen reader. Working apps run on it (examples/runs, examples/tasks), with settings over the page on Mod+comma and from the rail. Not yet: the panel and its toggle, the banner, and settings as a route: egui has no URL, so the dialog is open state the app holds. The page's scroll gutter is 11, where the spec proposes 10."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with no panel."
         }
     ]
 }

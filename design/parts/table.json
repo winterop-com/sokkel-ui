@@ -6,15 +6,11 @@
     "renderers": {
         "sokkel-ui": {
             "state": "partial",
-            "as_of": "6b8fdfd",
+            "as_of": "97f92d8",
             "note": "Counts in words are formatted for en-US, not the app's locale (drift)."
         },
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {
-            "state": "missing",
-            "as_of": "a592dfb",
-            "note": "The spike (examples/spike) draws a table by hand from the paints, not from the spec."
-        }
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "The one table: every listing and table, five rows or fifty thousand, flat, grouped or a tree. Rows at the density's row height, drawing only those in view; heads that sort and resize; selection with a bar; one row picked for a detail beside it; rows stacked as cards when its own box is narrow.",
     "sources": {
@@ -24,7 +20,7 @@
             "packages/core/src/components/PageState.tsx",
             "packages/core/src/components/ui/skeleton.tsx"
         ],
-        "sokkel-ui-egui": []
+        "sokkel-egui": []
     },
     "anatomy": {
         "frame": "The table's own box: edge and corners; off when the table sits in a panel that frames it.",
@@ -34,7 +30,7 @@
         "row": "One line at the row height: an optional select box, the cells, an optional menu button at the end; the first cell stays put while rows scroll sideways.",
         "groupHead": "A row over each group: fold control, select box, label, count, each column's aggregate.",
         "detail": "A row's own detail, under it across the table's width.",
-        "card": "A row stacked as a card on a narrow box: leads, the title, a labeled line per column, the secondary facts on its last line, its box and its menu.",
+        "card": "A row stacked as a card on a narrow box: leads, the title, a labeled line per column, the secondary facts on its last line, its box and its menu. A press anywhere on it opens the row (onOpen), the leads included, unless it lands on a control in them. A card whose primary value may take more than one line (stackLines), or whose title is free (stackTitle free), is as tall as its values take.",
         "cardDetail": "A stacked card's detail, under its card.",
         "dropLine": "The line where a dragged row lands, 2 tall.",
         "placeholder": "A skeleton row while rows load.",
@@ -46,13 +42,13 @@
     "options": {
         "columns": {
             "type": "columns",
-            "does": "Each column: id, header, width (a track such as 8rem or minmax(12rem,1fr), or content: as wide as its widest cell up to maxWidth), cell, align (start, center, end), sortValue, hideable, resizable, stack (lead, line, primary, secondary, none), band, aggregate, fill, edit."
+            "does": "Each column: id, header, width (a track such as 8rem or minmax(12rem,1fr), or content: as wide as its widest cell up to maxWidth), cell, align (start, center, end), sortValue, hideable, resizable, stack (lead, line, primary, secondary, none; a primary value takes up to stackLines lines, two by default), band, aggregate, fill, edit."
         },
         "rows": {"type": "rows", "does": "The rows, with rowKey giving each a stable key."},
         "variant": {
             "values": ["table", "list"],
             "default": "table",
-            "does": "list: a short listing's look: no bar unless it has a search or tools, columns set apart by a gap, the head row at density.panel-head, stacking whenever the columns no longer fit (minWidth auto)."
+            "does": "list: a short listing's look: no bar unless it has a search (search or searchBy) or tools, columns set apart by a gap, the head row at density.panel-head, stacking whenever the columns no longer fit (minWidth auto)."
         },
         "selectable": {
             "type": "boolean",
@@ -84,6 +80,16 @@
         },
         "rowTone": {"type": "callback", "does": "muted dims a row; critical and warning tint its ground."},
         "search": {"type": "node", "does": "The search field, first in the bar."},
+        "searchBy": {
+            "type": "callback",
+            "does": "A search of the table's own: the field first in the bar, and the rows cut to those whose text (what searchBy reads from a row) holds every word typed, ignoring case. An app that keeps the query itself passes search instead.",
+            "sokkel-ui": "DataTableProps searchBy"
+        },
+        "searchField": {
+            "type": "node",
+            "does": "With searchBy: the field's placeholder (Search by default), its label, its words and its / key; its words are the search field's own.",
+            "sokkel-ui": "DataTableProps searchField (SearchFieldProps without value and onChange)"
+        },
         "toolbar": {"type": "node", "does": "Tools in the bar, such as filters."},
         "paging": {
             "values": ["none", "client", "server"],
@@ -231,7 +237,7 @@
             },
             "row": {
                 "rows": 1,
-                "note": "Drawn only while visible; a missing value is the missing glyph in faint (principle 10)."
+                "note": "Drawn only while visible; a missing value is the missing glyph in faint (principle 10). A row with keyboard focus takes focus-mark in ring at its start, its paints unchanged, so a focused row and a selected one stay apart (T4, decided)."
             },
             "card": {
                 "padX": 1,
@@ -253,7 +259,8 @@
             "ellipsis",
             "chevron-right",
             "chevron-down",
-            "grip-vertical"
+            "grip-vertical",
+            "focus-mark"
         ],
         "note": "The select column is 4 columns: the box glyph and a gap (40 px rounds to 5; the box is 3 wide in ASCII)."
     },
@@ -533,10 +540,11 @@
             "A CSS grid per row; the head and the first column are sticky.",
             "In the head row the focus is on the chosen head's sort button, which is no tab stop of its own (tabindex -1), so its own focus look marks it and assistive technology reads its name and order; Down, Tab back or a press on the table gives the focus back to the table.",
             "Content columns are measured in the DOM and again once fonts load.",
-            "Base UI's checkbox and the menus load after first paint; the boxes are drawn the same until then.",
-            "Numbers in words are formatted for en-US until a locale arrives (roadmap)."
+            "Base UI's checkbox and the menus load after first paint; the boxes are drawn the same until then. The pager's page size select, the rows' right-click menus and the own search's field and finding load the first time a table that pages, has row actions or has a searchBy is drawn: until then the pager shows the page size as text, a right click on a row is the browser's, and the bar keeps the field's place.",
+            "Numbers in words are formatted for en-US until a locale arrives (roadmap).",
+            "Stacked cards are windowed: only those in view and a half view either side are drawn. Cards that grow with their values (a primary value over more lines, a free title) are placed by their measured heights, each at the least it takes until it is measured, and the view stays put as cards above it are measured."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "Reads paints (table.base.<state>.<piece>) for every color; the row tones are resolved mixes, never mixed by the widget.",
             "Only the rows in view: ScrollArea::show_rows at density.row.",
             "Content columns measured from laid-out galleys; nothing to wait for.",
@@ -546,16 +554,22 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "the parts not built yet",
             "spec": "This spec.",
-            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-ui-egui 38693ff). Has: rows at density.row, drawing only those in view; heads in table-head-* that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); words as fields. Not yet: grouping, trees, detail rows, the stacked cards below 576, row actions and menus, paging, cell editing, row reorder, its own loading and failed states (it is wrapped in PageState), keyboard row navigation, and the head row by keys."
+            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-egui 9038006). Has: rows at density.row, drawing only those in view; heads in table-head-* that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); stacked cards below its width (compact and labeled); row actions as a menu; paging with a page size; cell editing (text, date, select); row reorder by its grip; keyboard row navigation and the head row by keys; the toolbar line and the foot; words as fields. Not yet: grouping, trees, detail rows, and its own loading and failed states (it is wrapped in PageState)."
         },
         {
             "renderer": "sokkel-ui",
             "what": "words formatted for one locale",
             "spec": "Counts in words are formatted by the app's locale.",
             "today": "toLocaleString('en-US') in WORDS."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with the table variant only: no bar, list variant, groups, trees, details, row actions, paging, editing, resize, reorder or grid."
         }
     ]
 }

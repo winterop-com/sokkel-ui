@@ -35,6 +35,8 @@ release and empties it.
   item in the side panel, its code, title, column chip, labels, description, fields, checklist and
   activity; the checklist counts its steps done, fills a bar and ticks each step through
   `onChecklistChange` (`onStepChange`).
+- `LETTER_WORDS`, `BOARD_ITEM_PANEL_WORDS` and `BOARD_CHECKLIST_WORDS`: the English defaults of
+  `Letter`'s, `BoardItemPanel`'s and `BoardChecklist`'s words, exported as every other part's are.
 - `CheckboxField` takes `dot`, a kind color drawn as a dot before the label (calendar toggles), and
   `quiet`, which sets the label quiet while `unchecked`, or struck through while `checked` (a
   checklist's done step).
@@ -115,6 +117,15 @@ release and empties it.
 
 ## Fixed
 
+- `CallBar`: a muted microphone or a camera that is off keeps its critical ink under the pointer,
+  where the ghost button's hover ink turned it to the foreground's.
+- `BoardChecklist`: its heading is a word, `words.title(done, total)` ("Checklist 2/4" by default,
+  `BOARD_CHECKLIST_WORDS`), so an app can translate and reorder the count.
+- `CheckboxField`: a disabled row fades once, at `disabled-opacity`, its box with it, where the row
+  faded to a literal 60 percent and its box again on its own.
+- A missing value is drawn as the dash, `—`, as everywhere else: in `DescriptionList` (and so
+  `DetailPane` and `BoardItemPanel`), a chart's data table, the gauge, `BarGauge`, the dual axis
+  and parallel charts' tooltips, and `ChartLegend`, which drew a hyphen.
 - Text an app or a person gives is read in time in step with its length, where a long run of one
   character (spaces, zeros, dashes, backticks, brackets) took seconds before: `readNumber` and a
   schema field's number, `readTime` and `readDateTime`, `fileName`, `mentionsIn`, `withoutCode`

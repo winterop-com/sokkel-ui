@@ -103,7 +103,7 @@ export function DescriptionList({
                                 empty && 'text-faint',
                             )}
                         >
-                            {empty ? '-' : item.value}
+                            {empty ? '—' : item.value}
                         </dd>
                     </div>
                 )
