@@ -20,3 +20,6 @@ updates:
           # on purpose, with a note for apps.
           - dependency-name: 'katex'
             update-types: ['version-update:semver-minor', 'version-update:semver-major']
+          # CI runs in Playwright's image pinned by tag and digest; the package moves with it, by hand
+          # (src/rules.test.ts fails when they differ).
+          - dependency-name: '@playwright/test'

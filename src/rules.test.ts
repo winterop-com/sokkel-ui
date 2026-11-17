@@ -572,3 +572,22 @@ describe('the library rules', () => {
         })
     }
 })
+
+describe('the Playwright image CI runs in', () => {
+    it('is the version of @playwright/test, so its browsers are the ones the tests expect', () => {
+        const installed = (
+            JSON.parse(readFileSync(join(ROOT, 'node_modules/@playwright/test/package.json'), 'utf8')) as { version: string }
+        ).version
+        const found: string[] = []
+        for (const file of ['ci.yaml', 'screenshots.yaml']) {
+            const text = readFileSync(join(ROOT, '.github/workflows', file), 'utf8')
+            for (const [, version] of text.matchAll(/mcr\.microsoft\.com\/playwright:v([\d.]+)-/g)) {
+                if (version !== installed)
+                    found.push(
+                        `.github/workflows/${file} runs Playwright's v${version} image, but @playwright/test is ${installed}: move the image's tag and digest with it`,
+                    )
+            }
+        }
+        expect(found, found.join('\n')).toEqual([])
+    })
+})
