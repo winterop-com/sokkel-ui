@@ -295,6 +295,7 @@ export function Studio({ frame }: { frame: Frame }) {
                     groups={groups}
                     body={{
                         title: 'Workspace',
+                        places: 'above',
                         search: (
                             <Row gap="2xs">
                                 <SearchField value={filter} onChange={setFilter} placeholder="Filter" className="min-w-0 flex-1" />
