@@ -5,7 +5,6 @@ import { NumberField } from '@winterop-com/sokkel-ui/NumberField'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
-import { SwitchField } from '@winterop-com/sokkel-ui/SwitchField'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { Scissors, Trash2 } from 'lucide-react'
 
@@ -170,7 +169,7 @@ function ClipFields({
     )
 }
 
-function ProjectFields({ edit, onTrack }: { edit: Edit; onTrack: (id: string, patch: Partial<Track>) => void }) {
+function ProjectFields({ edit }: { edit: Edit }) {
     return (
         <Stack gap="lg">
             <InspectorSection title="Summary">
@@ -182,45 +181,19 @@ function ProjectFields({ edit, onTrack }: { edit: Edit; onTrack: (id: string, pa
                     ]}
                 />
             </InspectorSection>
-            {edit.tracks.map((track) => (
-                <InspectorSection key={track.id} title={`${track.name} (${track.id})`}>
-                    {track.kind === 'audio' ? (
-                        <SwitchField
-                            id={`track-${track.id}-muted`}
-                            label="Muted"
-                            checked={track.muted === true}
-                            onCheckedChange={(muted) => onTrack(track.id, { muted })}
-                        />
-                    ) : (
-                        <SwitchField
-                            id={`track-${track.id}-hidden`}
-                            label="Hidden"
-                            checked={track.hidden === true}
-                            onCheckedChange={(hidden) => onTrack(track.id, { hidden })}
-                        />
-                    )}
-                    <SwitchField
-                        id={`track-${track.id}-locked`}
-                        label="Locked"
-                        checked={track.locked === true}
-                        onCheckedChange={(locked) => onTrack(track.id, { locked })}
-                    />
-                </InspectorSection>
-            ))}
         </Stack>
     )
 }
 
 /**
  * The inspector beside the preview: the chosen clip's name, text, in and out points, start,
- * duration and volume, each change one step of undo; with none chosen, the edit and its tracks.
+ * duration and volume, each change one step of undo; with none chosen, a summary of the edit.
  */
 export function ClipInspector({
     edit,
     selected,
     playhead,
     onPatch,
-    onTrack,
     onSplit,
     onDelete,
 }: {
@@ -228,7 +201,6 @@ export function ClipInspector({
     selected: readonly string[]
     playhead: number
     onPatch: (id: string, patch: Partial<Omit<Clip, 'id'>>, field: string) => void
-    onTrack: (id: string, patch: Partial<Track>) => void
     onSplit: () => void
     onDelete: (ripple: boolean) => void
 }) {
@@ -272,7 +244,7 @@ export function ClipInspector({
                         }))}
                     />
                 ) : (
-                    <ProjectFields edit={edit} onTrack={onTrack} />
+                    <ProjectFields edit={edit} />
                 )}
             </div>
         </div>

@@ -5,6 +5,8 @@
  * the next, so undo and redo hold whole edits.
  */
 
+import { formatTimecode } from '@winterop-com/sokkel-ui/ClipTimeline'
+
 import { sourceOf, type Source } from './media'
 
 export type TrackKind = 'video' | 'audio' | 'title'
@@ -247,13 +249,8 @@ export function copyEdit(edit: Edit): Edit {
     return { tracks: edit.tracks.map((track) => ({ ...track })), clips: edit.clips.map((clip) => ({ ...clip, id: clipId() })) }
 }
 
-/** A time as an editor writes it: hours, minutes, seconds and frames, 00:01:24:12. */
-export function timecode(seconds: number, fps = FPS): string {
-    const frames = Math.round(Math.max(0, seconds) * fps)
-    const whole = Math.floor(frames / fps)
-    const pad = (value: number) => String(value).padStart(2, '0')
-    return `${pad(Math.floor(whole / 3600))}:${pad(Math.floor((whole % 3600) / 60))}:${pad(whole % 60)}:${pad(frames % fps)}`
-}
+/** A time as an editor writes it, at the edit's frame rate: 00:01:24:12. */
+export const timecode = (seconds: number) => formatTimecode(seconds, FPS)
 
 /** A length in words a person reads: 1:24, or 0:08. */
 export function lengthText(seconds: number): string {

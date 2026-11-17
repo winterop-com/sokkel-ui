@@ -1,3 +1,4 @@
+import { CLIP_TIMELINE_WORDS, CLIP_TIMELINE_ZOOM, ClipTimeline, zoomStep, type TimelineClip } from '@winterop-com/sokkel-ui/ClipTimeline'
 import { useShortcuts } from '@winterop-com/sokkel-ui/hooks/use-shortcuts'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
@@ -6,19 +7,23 @@ import { useRailMode } from '@winterop-com/sokkel-ui/Shell'
 import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Copy, Download, PencilLine, Redo2, Scissors, Trash2, Undo2, ZoomIn, ZoomOut, Maximize2, ListX } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { saveEdit } from '../actions'
-import type { Source } from '../media'
+import { peaksOf, sourceOf, type Source } from '../media'
 import {
     addSource,
     addTitle,
+    applyChanges,
     deleteClips,
     end,
+    FPS,
     firstTrack,
     lengthOf,
     patchClip,
     splitAll,
+    splitClip,
+    nameOf,
     type Clip,
     type Edit,
     type Prefs,
@@ -31,14 +36,26 @@ import { Bin } from './Bin'
 import { ClipInspector } from './ClipInspector'
 import { ExportDialog } from './ExportDialog'
 import { Preview } from './Preview'
-import { TimelinePlaceholder } from './TimelinePlaceholder'
 import { usePlayback } from './use-playback'
+
+/** A clip as the timeline draws it: its name, its source's color and length, and a sound's peaks. */
+function timelineClip(clip: Clip): TimelineClip {
+    const source = sourceOf(clip.source)
+    return {
+        id: clip.id,
+        track: clip.track,
+        start: clip.start,
+        duration: clip.duration,
+        inPoint: clip.inPoint,
+        sourceDuration: source?.duration,
+        label: nameOf(clip),
+        color: source?.color,
+        waveform: source?.kind === 'audio' ? peaksOf(source) : undefined,
+    }
+}
 
 /** How long the edit waits after the last change before it is saved, in milliseconds. */
 const SAVE_AFTER = 600
-
-/** The zoom's bounds and each step, in pixels a second. */
-const ZOOM = { least: 4, most: 400, step: 1.5 }
 
 /** Keeps the edit on the backend a moment after it last changed, and once more as the editor closes. */
 function useAutosave(id: string, edit: Edit, initial: Edit) {
@@ -96,23 +113,12 @@ export function EditorPage({
     const [exporting, setExporting] = useState(false)
     const [level, setLevel] = useState(1)
     const [muted, setMuted] = useState(false)
-    const [zoom, setZoom] = useState<number | null>(null)
-    const area = useRef<HTMLDivElement>(null)
-    const [room, setRoom] = useState(0)
+    // Undefined fits the edit to the timeline's width, which `fit` follows for the zoom buttons.
+    const [zoom, setZoom] = useState<number | undefined>(undefined)
+    const [fit, setFit] = useState(40)
 
     useEffect(() => setSoundLevel(muted ? 0 : level), [level, muted])
 
-    // The timeline's width, which a fit zoom shares out over the edit's length.
-    useLayoutEffect(() => {
-        const element = area.current
-        if (element === null) return
-        const measure = () => setRoom(element.clientWidth)
-        measure()
-        const observer = new ResizeObserver(measure)
-        observer.observe(element)
-        return () => observer.disconnect()
-    }, [])
-    const fit = Math.max(ZOOM.least, Math.min(ZOOM.most, (room - 160) / Math.max(length, 1)))
     const pixels = zoom ?? fit
 
     // A clip deleted or undone away is no longer chosen.
@@ -156,7 +162,8 @@ export function EditorPage({
         apply((current) => patchClip(current, id, change), `${id}:${field}`)
     const setTrack = (id: string, change: Partial<Track>) =>
         apply((current) => ({ ...current, tracks: current.tracks.map((track) => (track.id === id ? { ...track, ...change } : track)) }))
-    const zoomBy = (factor: number) => setZoom(Math.max(ZOOM.least, Math.min(ZOOM.most, pixels * factor)))
+    const zoomBy = (steps: number) => setZoom(zoomStep(pixels, steps))
+    const timelineClips = useMemo(() => edit.clips.map((clip) => timelineClip(clip)), [edit.clips])
 
     const group = 'Editing'
     useShortcuts(
@@ -194,9 +201,9 @@ export function EditorPage({
             { id: 'backspace', key: 'Backspace', group, run: () => remove(prefs.rippleByDefault) },
             { id: 'ripple', key: 'Delete', shift: true, label: 'Ripple delete', group, run: () => remove(true) },
             { id: 'title', key: 't', label: 'Add a title at the playhead', group, run: title },
-            { id: 'zoom-in', key: '=', label: 'Zoom in', group: 'Timeline', run: () => zoomBy(ZOOM.step) },
-            { id: 'zoom-out', key: '-', label: 'Zoom out', group: 'Timeline', run: () => zoomBy(1 / ZOOM.step) },
-            { id: 'zoom-fit', key: '0', label: 'Fit the edit', group: 'Timeline', run: () => setZoom(null) },
+            { id: 'zoom-in', key: '=', label: 'Zoom in', group: 'Timeline', run: () => zoomBy(1) },
+            { id: 'zoom-out', key: '-', label: 'Zoom out', group: 'Timeline', run: () => zoomBy(-1) },
+            { id: 'zoom-fit', key: '0', label: 'Fit the edit', group: 'Timeline', run: () => setZoom(undefined) },
             { id: 'none', key: 'Escape', label: 'Choose no clip', group, run: () => setSelected([]) },
         ],
         [playback, history, length, selected, playhead, prefs, pixels, edit],
@@ -206,7 +213,7 @@ export function EditorPage({
         (clip) => (selected.length === 0 || selected.includes(clip.id)) && clip.start < playhead && playhead < end(clip),
     )
     const timeline = (
-        <div ref={area} className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
             <PaneHeader
                 title="Timeline"
                 variant="panel"
@@ -234,37 +241,58 @@ export function EditorPage({
                             <ListX aria-hidden />
                         </IconButton>
                         <IconButton
-                            label="Zoom out"
+                            label={CLIP_TIMELINE_WORDS.zoomOut}
                             variant="ghost"
                             size="icon-sm"
-                            disabled={pixels <= ZOOM.least}
-                            onClick={() => zoomBy(1 / ZOOM.step)}
+                            disabled={pixels <= CLIP_TIMELINE_ZOOM.min}
+                            onClick={() => zoomBy(-1)}
                         >
                             <ZoomOut aria-hidden />
                         </IconButton>
                         <IconButton
-                            label="Zoom in"
+                            label={CLIP_TIMELINE_WORDS.zoomIn}
                             variant="ghost"
                             size="icon-sm"
-                            disabled={pixels >= ZOOM.most}
-                            onClick={() => zoomBy(ZOOM.step)}
+                            disabled={pixels >= CLIP_TIMELINE_ZOOM.max}
+                            onClick={() => zoomBy(1)}
                         >
                             <ZoomIn aria-hidden />
                         </IconButton>
                         <IconButton
-                            label="Fit the edit"
+                            label={CLIP_TIMELINE_WORDS.zoomFit}
                             variant="ghost"
                             size="icon-sm"
-                            disabled={zoom === null}
-                            onClick={() => setZoom(null)}
+                            disabled={zoom === undefined}
+                            onClick={() => setZoom(undefined)}
                         >
                             <Maximize2 aria-hidden />
                         </IconButton>
                     </>
                 }
             />
-            <div className="min-h-0 flex-1 overflow-auto">
-                <TimelinePlaceholder edit={edit} selected={selected} onSelectedChange={setSelected} />
+            <div className="flex min-h-0 flex-1 flex-col p-2">
+                <ClipTimeline
+                    className="min-h-0 flex-1"
+                    tracks={edit.tracks}
+                    clips={timelineClips}
+                    duration={Math.max(length + 5, 30)}
+                    playhead={playhead}
+                    onPlayheadChange={playback.seek}
+                    selected={selected}
+                    onSelectedChange={setSelected}
+                    onClipsChange={(changes) => apply((current) => applyChanges(current, changes))}
+                    onSplit={(id, at) => apply((current) => splitClip(current, id, at)?.edit, `split:${String(at)}`)}
+                    onDelete={(ids, ripple) => {
+                        apply((current) => deleteClips(current, ids, ripple || prefs.rippleByDefault))
+                        setSelected([])
+                    }}
+                    onTrackChange={setTrack}
+                    zoom={zoom}
+                    onZoomChange={setZoom}
+                    onFitChange={setFit}
+                    fps={FPS}
+                    snap={prefs.snap}
+                />
             </div>
         </div>
     )
@@ -304,7 +332,7 @@ export function EditorPage({
                 direction="down"
                 id="cut-rows"
                 className="min-h-0 flex-1"
-                defaultShare={0.62}
+                defaultShare={0.56}
                 minShare={0.35}
                 maxShare={0.8}
                 first={
@@ -346,7 +374,6 @@ export function EditorPage({
                                         selected={selected}
                                         playhead={playhead}
                                         onPatch={patch}
-                                        onTrack={setTrack}
                                         onSplit={split}
                                         onDelete={remove}
                                     />
