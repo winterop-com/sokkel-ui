@@ -5525,11 +5525,7 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {
-    chart: { 'pieces.legendItem.hidden.opacity': 'a hidden entry fades at disabled-opacity' },
-    'stat-panel': { 'pieces.tile.rest.edge': "the tile wears the dashboard panel's border-strong edge" },
-    table: { 'pieces.groupHead.rest.text': "a group's head is never louder than its rows: the column heads' text.head" },
-}
+const PENDING: Record<string, Record<string, string>> = {}
 
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
