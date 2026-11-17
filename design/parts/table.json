@@ -314,8 +314,8 @@
                 "ground": "table-head-ground",
                 "rule": "table-head-line",
                 "ink": "table-head-ink",
-                "text": "text.head",
-                "note": "text.head reads table-head-size, table-head-weight and table-head-tracking; the case is table-head-transform."
+                "text": "text.column-head",
+                "note": "text.column-head reads table-head-size (one text step above the cells' text.body), table-head-weight and table-head-tracking; the case is table-head-transform. table-head-ink is foreground unless a theme sets one: a head never reads weaker than its rows."
             },
             "hover": {"ink": "foreground", "note": "A sortable head under the pointer."},
             "sorted": {"ink": "foreground"},
@@ -346,8 +346,8 @@
                 "ground": "panel-ground",
                 "rule": "border",
                 "ink": "table-head-ink",
-                "text": "text.head",
-                "note": "The column heads' role and ink, in the group's own case (a group is named by its value): a head is never louder than the rows it heads."
+                "text": "text.column-head",
+                "note": "The column heads' role and ink, one text step above the rows it heads, in the group's own case (a group is named by its value)."
             }
         },
         "card": {

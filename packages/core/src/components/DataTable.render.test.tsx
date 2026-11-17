@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
@@ -535,14 +537,54 @@ describe('cards drawn every one', () => {
     })
 })
 
-describe("a group's head", () => {
+describe("a column head and a group's head", () => {
+    const tokens = JSON.parse(readFileSync(join(__dirname, '..', '..', 'tokens', 'tokens.json'), 'utf8')) as {
+        theme: Record<string, string>
+        themes: { tidevann: Record<'light' | 'dark', Record<string, string>> }
+    }
+    const base = tokens.themes.tidevann.light
+    /** A value with its `var(--x)` references settled through the roles and the base theme. */
+    const settle = (value: string): string => {
+        const named = /^var\(--([\w-]+)\)$/.exec(value)?.[1]
+        if (named === undefined) return value
+        return settle(tokens.theme[named] ?? base[named] ?? value)
+    }
+    /** The text sizes from the smallest up: a step is one place along it. */
+    const ladder = ['text-2xs', 'text-xs', 'text-sm', 'text-base'].map((size) => tokens.theme[size])
+    const step = (role: string) => ladder.indexOf(settle(tokens.theme[role]))
+
     const rows = [
         { id: 'nightly-export', team: 'harbor' },
         { id: 'sync-inventory', team: 'juniper' },
     ]
     const columns: DataColumn<(typeof rows)[number]>[] = [{ id: 'job', header: 'Job', width: '1fr', cell: (job) => job.id }]
 
-    it("is never louder than its rows: the column heads' size, weight and ink, in its own case, as a table, a list and a grid", () => {
+    it('sets the column head role one text step above the body text of the cells, in a weight and ink no weaker than theirs', () => {
+        expect(step('text-body')).toBe(ladder.indexOf(tokens.theme['text-sm']))
+        expect(step('text-column-head')).toBe(step('text-body') + 1)
+        expect(Number(settle(tokens.theme['text-column-head--font-weight']))).toBeGreaterThan(
+            Number(tokens.theme['text-body--font-weight']),
+        )
+        for (const scheme of ['light', 'dark'] as const) expect(tokens.themes.tidevann[scheme]['table-head-ink']).toBe('var(--foreground)')
+    })
+
+    it('draws the head row in the column head role over cells in body text, as a table and a list, at either density', () => {
+        for (const props of [{}, { variant: 'list' as const }])
+            for (const density of ['regular', 'compact']) {
+                const html = renderToStaticMarkup(
+                    <div data-density-scope={density}>
+                        <DataTable columns={columns} rows={rows} rowKey={(job) => job.id} {...props} />
+                    </div>,
+                )
+                const head = /role="row" aria-rowindex="1" class="([^"]*)"/.exec(html)?.[1].split(' ') ?? []
+                expect(head).toContain('text-column-head')
+                expect(head).toContain('text-table-head-ink')
+                const row = /class="([^"]*)"[^>]*data-row="nightly-export"|data-row="nightly-export"[^>]*class="([^"]*)"/.exec(html)
+                expect((row?.[1] ?? row?.[2] ?? '').split(' ')).toContain('text-sm')
+            }
+    })
+
+    it("sets a group's head as the column heads, one step above its rows, in its own case, as a table, a list and a grid", () => {
         for (const props of [
             {},
             { variant: 'list' as const },
@@ -556,8 +598,8 @@ describe("a group's head", () => {
                 (match) => match[1] ?? match[2],
             )
             const drawn = [...classes, ...heads.map((match) => match[1] ?? '')].join(' ').split(' ')
-            expect(drawn).toContain('text-head')
-            expect(drawn).not.toContain('text-sm')
+            expect(drawn).toContain('text-column-head')
+            expect(drawn).toContain('text-table-head-ink')
             expect(drawn).not.toContain('[text-transform:var(--table-head-transform)]')
         }
     })
