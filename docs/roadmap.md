@@ -408,13 +408,23 @@ to `plan.md` when it ships.
 
 ## Next
 
+- **A call bar.** The controls of a call: microphone and camera with their device menus, sharing the
+  screen, reactions (`ReactionBar`), raising a hand, more, and leaving; the quick reactions row
+  standing over it.
+- **The renderers, side by side.** sokkel-design names three renderers: sokkel-ui (React),
+  sokkel-egui (egui) and sokkel-tui (ratatui, started 2026-11-17). Each part's spec says how far
+  each renderer has drawn it, in a field a script reads (`renderers.<name>.state`: missing, partial
+  or built, with the commit it was checked at), so a renderer can check its own coverage.
+- **The Cut example's desktop shells on screen.** `make check` builds its Electron and Tauri shells
+  (2026-11-17); neither window has been opened.
+
 - **The reviews of 2026-11-09.** A visual review of the published catalog and a review of the
   twelve example apps on the web; every round of fixes from them shipped in 0.10.13 to 0.10.16.
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
       touch devices. Run that pass before calling the examples checked on every platform.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
-  206.8 kB and forms at 194.7 kB start and 79.9 kB lazy (2026-11-16); the forms lazy one is full. A
+  210.5 kB and forms at 197 kB start and 80.3 kB lazy (2026-11-17); the forms start one is full. A
   change trims what it adds itself; when it is worth its size, its PR raises the budget it needs
   with the reason, rather than reworking unrelated parts to fit. A loader that lets `DataTable`
   register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the
