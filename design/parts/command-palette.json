@@ -3,6 +3,11 @@
     "id": "command-palette",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "One search over everything an app can do, over the page on Mod+K, which closes it again: a dialog box a third of the way down the window with the search at its top, the commands in groups under their titles (each row its icon, its label, a quiet hint or code after it, and at its end a summary, its kind or the keys that run it), the app's own search results under them, and an optional strip at its foot. Its active row wears the highlight every list of choices does. Choosing a row runs it and closes the palette. A command whose onSelect answers a promise holds the palette open and its row busy until it settles: fulfilled, the palette closes; rejected, it stays and says why under the rows. Once it has run busy-release (5 seconds) a Stop waiting row appears, and it or Escape lets the palette go, the command left to settle unheard.",
     "sources": {
         "sokkel-ui": [
@@ -49,6 +54,7 @@
         "foot": "An optional strip at the box's foot (foot): the app's mark and name at its start, and at its end the active row's verb beside Enter and words.palette beside the keys that open it.",
         "close": "On a touch screen, which has no Escape: words.close, a small ghost button at the foot, in the keys' place or in a strip of its own."
     },
+    "standsOn": {"default": "popover", "box": "background"},
     "options": {
         "open": {"type": "boolean", "does": "Shown over the page.", "sokkel-ui": "open, onOpenChange"},
         "groups": {

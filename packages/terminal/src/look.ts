@@ -13,8 +13,8 @@ export interface TerminalLook {
 }
 
 /**
- * The token each of xterm's colors takes. The sixteen ANSI colors come from the terminal tokens and
- * the kind colors; a bright color shares its plain one, as the terminal ground has one set of each.
+ * The token each of xterm's colors takes. The sixteen ANSI colors are the `ansi-*` tokens, the
+ * contract's sixteen-color map, which a renderer in a sixteen-color terminal shares.
  */
 export const TERMINAL_COLORS: { [K in Exclude<keyof ITheme, 'extendedAnsi'>]?: string } = {
     background: 'var(--terminal)',
@@ -26,22 +26,22 @@ export const TERMINAL_COLORS: { [K in Exclude<keyof ITheme, 'extendedAnsi'>]?: s
     scrollbarSliderBackground: 'color-mix(in oklab, var(--terminal-foreground) 15%, transparent)',
     scrollbarSliderHoverBackground: 'color-mix(in oklab, var(--terminal-foreground) 25%, transparent)',
     scrollbarSliderActiveBackground: 'color-mix(in oklab, var(--terminal-foreground) 32%, transparent)',
-    black: 'var(--terminal-faint)',
-    red: 'var(--terminal-critical)',
-    green: 'var(--status-succeeded)',
-    yellow: 'var(--terminal-warning)',
-    blue: 'var(--terminal-accent)',
-    magenta: 'var(--kind-violet)',
-    cyan: 'var(--kind-teal)',
-    white: 'var(--terminal-foreground)',
-    brightBlack: 'var(--terminal-muted)',
-    brightRed: 'var(--terminal-critical)',
-    brightGreen: 'var(--status-succeeded)',
-    brightYellow: 'var(--terminal-warning)',
-    brightBlue: 'var(--terminal-accent)',
-    brightMagenta: 'var(--kind-violet)',
-    brightCyan: 'var(--kind-teal)',
-    brightWhite: 'var(--terminal-foreground)',
+    black: 'var(--ansi-black)',
+    red: 'var(--ansi-red)',
+    green: 'var(--ansi-green)',
+    yellow: 'var(--ansi-yellow)',
+    blue: 'var(--ansi-blue)',
+    magenta: 'var(--ansi-magenta)',
+    cyan: 'var(--ansi-cyan)',
+    white: 'var(--ansi-white)',
+    brightBlack: 'var(--ansi-bright-black)',
+    brightRed: 'var(--ansi-bright-red)',
+    brightGreen: 'var(--ansi-bright-green)',
+    brightYellow: 'var(--ansi-bright-yellow)',
+    brightBlue: 'var(--ansi-bright-blue)',
+    brightMagenta: 'var(--ansi-bright-magenta)',
+    brightCyan: 'var(--ansi-bright-cyan)',
+    brightWhite: 'var(--ansi-bright-white)',
 }
 
 /** A CSS color written as xterm reads it: `rgb()` or `rgba()`, resolved by painting it on a one-pixel canvas. */

@@ -98,6 +98,10 @@
             "types": "./dist/components/BarList.d.ts",
             "import": "./dist/components/BarList.js"
         },
+        "./CallBar": {
+            "types": "./dist/components/CallBar.d.ts",
+            "import": "./dist/components/CallBar.js"
+        },
         "./Callout": {
             "types": "./dist/components/Callout.d.ts",
             "import": "./dist/components/Callout.js"
@@ -213,6 +217,10 @@
         "./DetailSheet": {
             "types": "./dist/components/DetailSheet.d.ts",
             "import": "./dist/components/DetailSheet.js"
+        },
+        "./DetailPane": {
+            "types": "./dist/components/DetailPane.d.ts",
+            "import": "./dist/components/DetailPane.js"
         },
         "./DialogShell": {
             "types": "./dist/components/DialogShell.d.ts",
@@ -369,6 +377,10 @@
         "./Layout": {
             "types": "./dist/components/Layout.d.ts",
             "import": "./dist/components/Layout.js"
+        },
+        "./Letter": {
+            "types": "./dist/components/Letter.d.ts",
+            "import": "./dist/components/Letter.js"
         },
         "./Link": {
             "types": "./dist/components/Link.d.ts",
@@ -745,6 +757,10 @@
         "./board/BoardCard": {
             "types": "./dist/components/board/BoardCard.d.ts",
             "import": "./dist/components/board/BoardCard.js"
+        },
+        "./board/BoardItemPanel": {
+            "types": "./dist/components/board/BoardItemPanel.d.ts",
+            "import": "./dist/components/board/BoardItemPanel.js"
         },
         "./board/BoardColumn": {
             "types": "./dist/components/board/BoardColumn.d.ts",

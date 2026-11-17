@@ -1,6 +1,27 @@
 {
-    "$description": "The sokkel-design contract: its version, which moves in lockstep with sokkel-ui before 1.0, the foundations every part refers to, and every part and pattern with its status. A stable part is drawn by both renderers from its spec and compared side by side, or is a part as it landed in sokkel-ui, specified in the same round, whose drift says what egui has not built yet; a draft one is not yet. CHANGELOG.md says what each version changed.",
+    "$description": "The sokkel-design contract: its version, which moves in lockstep with sokkel-ui before 1.0, the foundations every part refers to, and every part and pattern with its status. A stable part is a part as it landed in sokkel-ui, specified in the same round, or one drawn from its spec and compared side by side; a draft one may still change shape. How far each renderer has built a part is its own field, `renderers`, in the part's file. CHANGELOG.md says what each version changed.",
     "version": "0.29.3",
+    "renderers": [
+        {
+            "id": "sokkel-ui",
+            "repo": "winterop-com/sokkel-ui",
+            "toolkit": "React, CSS",
+            "reads": "tokens.json, which it defines, and a pinned copy of the specs (design/)"
+        },
+        {
+            "id": "sokkel-egui",
+            "repo": "winterop-com/sokkel-egui",
+            "toolkit": "egui",
+            "reads": "tokens/tokens.resolved.json and the specs",
+            "alsoNamed": "sokkel-ui-egui, in sources, rendererSpecific and drift"
+        },
+        {
+            "id": "sokkel-tui",
+            "repo": "winterop-com/sokkel-tui",
+            "toolkit": "ratatui, in a terminal",
+            "reads": "tokens/tokens.resolved.json (paints with their flat and faded forms), the specs with their cells, and glyphs.json"
+        }
+    ],
     "tokens": {
         "source": "sokkel-ui: packages/core/tokens/tokens.json, at the commit sokkel-ui.json pins",
         "pin": "sokkel-ui.json",
@@ -27,6 +48,90 @@
         "foldable open": 690,
         "tablet": [768, 1024],
         "desktop": [1280, 1440, 1920]
+    },
+    "cells": {
+        "$description": "The cell grid, for a renderer drawn in a terminal: a column stands for about pxPerColumn px at a 14 px glyph, and a row holds one line of text. Each part's own `cells` says its rows, padding and width.",
+        "pxPerColumn": 8.4,
+        "breakpoints": {
+            "md": {
+                "token": "breakpoint-md",
+                "columns": 90,
+                "means": "Below it the frame is drawn as a phone draws it: the rail as a drawer, dialogs filling the screen. An 80 by 24 terminal is below it."
+            },
+            "lg": {"token": "breakpoint-lg", "columns": 120, "means": "From it the shell's side panel is a column."}
+        },
+        "checkSizes": [
+            {"columns": 60, "rows": 20, "means": "a tmux split, or a phone over SSH"},
+            {"columns": 80, "rows": 24, "means": "the classic terminal: below md"},
+            {"columns": 120, "rows": 40, "means": "from lg: the panel a column"},
+            {"columns": 200, "rows": 50, "means": "a wide window"}
+        ],
+        "rules": [
+            "A horizontal px length is round(px / pxPerColumn) columns, and at least 1 where it is not 0.",
+            "A vertical length is never divided: a control, a row of a table or a list, a bar and a head is one row whatever its px height. Room between is whole blank rows.",
+            "Room between stacked pieces is whole blank rows: under 12 px none; from 12 px one blank row at regular and none at compact, unless the part's cells say otherwise.",
+            "Density changes blank rows and side padding, never a row's height; a part's cells say what compact drops.",
+            "Finger sizes do not apply.",
+            "The radius ladder is one bit: a corner role above 0 draws rounded box corners, 0 square (glyphs.json, box).",
+            "No shadows or elevations: a popup or a dialog is its edge, drawn with the box glyphs.",
+            "Text is one size; a role keeps what textRoles gives it."
+        ],
+        "textRoles": {
+            "$description": "What a cell shows of each text role: bold or not, italic or not, and its ink. Size, line height and tracking are not drawn. No role carries an ink of its own (sokkel-ui sets none): the piece's paint gives it. `head` takes the theme's table-head-transform (uppercase in some themes).",
+            "2xs": {"bold": false, "italic": false, "ink": "piece"},
+            "xs": {"bold": false, "italic": false, "ink": "piece"},
+            "sm": {"bold": false, "italic": false, "ink": "piece"},
+            "base": {"bold": false, "italic": false, "ink": "piece"},
+            "title": {"bold": false, "italic": false, "ink": "piece"},
+            "page": {"bold": false, "italic": false, "ink": "piece"},
+            "stat": {"bold": false, "italic": false, "ink": "piece"},
+            "display": {"bold": false, "italic": false, "ink": "piece"},
+            "emoji": {"bold": false, "italic": false, "ink": "piece"},
+            "graph-title": {"bold": false, "italic": false, "ink": "piece"},
+            "graph-small": {"bold": false, "italic": false, "ink": "piece"},
+            "page-title": {"bold": true, "italic": false, "ink": "piece"},
+            "detail-title": {"bold": true, "italic": false, "ink": "piece"},
+            "section-title": {"bold": true, "italic": false, "ink": "piece"},
+            "head": {"bold": true, "italic": false, "ink": "piece"},
+            "body": {"bold": false, "italic": false, "ink": "piece"},
+            "action": {"bold": true, "italic": false, "ink": "piece"},
+            "label": {"bold": true, "italic": false, "ink": "piece"},
+            "help": {"bold": false, "italic": false, "ink": "piece"},
+            "badge": {"bold": true, "italic": false, "ink": "piece"},
+            "statistic": {"bold": true, "italic": false, "ink": "piece"},
+            "statistic-hero": {"bold": true, "italic": false, "ink": "piece"},
+            "media-title": {"bold": true, "italic": false, "ink": "piece"},
+            "brand-name": {"bold": true, "italic": false, "ink": "piece"},
+            "welcome-title": {"bold": true, "italic": false, "ink": "piece"},
+            "eyebrow": {"bold": true, "italic": false, "ink": "piece"}
+        }
+    },
+    "colorDepth": {
+        "$description": "How a renderer that cannot draw every color (a terminal) draws the resolved ones, by the depth the terminal shows.",
+        "truecolor": "The resolved colors. A renderer that cannot blend reads each paint's flat form (paints, flat), and a faded state's (paints, faded); colors outside the paints are opaque tokens already.",
+        "ansi256": "Each opaque color is drawn as the nearest of xterm's indices 16 to 255, by distance in OKLab, the lower index on a tie: the cube (16 + 36r + 6g + b, each channel 0, 95, 135, 175, 215 or 255) and the grays (232 to 255, 8 + 10i). Never 0 to 15, whose colors the terminal's own theme sets.",
+        "ansi16": {
+            "means": "The colors the sixteen indices stand for in a sokkel terminal: the ansi-* tokens, which TerminalView gives xterm, resolved per theme and scheme. How a part's paints map onto these sixteen is open (open-questions.md, T1).",
+            "tokens": [
+                "ansi-black",
+                "ansi-red",
+                "ansi-green",
+                "ansi-yellow",
+                "ansi-blue",
+                "ansi-magenta",
+                "ansi-cyan",
+                "ansi-white",
+                "ansi-bright-black",
+                "ansi-bright-red",
+                "ansi-bright-green",
+                "ansi-bright-yellow",
+                "ansi-bright-blue",
+                "ansi-bright-magenta",
+                "ansi-bright-cyan",
+                "ansi-bright-white"
+            ]
+        },
+        "none": "NO_COLOR set: no color at all, only bold, reverse and underline. Every state is carried by its words and its glyphs (glyphs.json): a state's word beside its dot, the sort arrows, the check, the issue mark (principle 22)."
     },
     "themes": {"base": "tidevann", "specimens": ["tidevann", "paper", "contrast"]},
     "densities": ["regular", "compact"],
@@ -55,6 +160,7 @@
     ],
     "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "stable"}],
     "principles": "principles.md",
+    "glyphs": "glyphs.json",
     "specimens": "specimens.json",
     "changelog": "CHANGELOG.md"
 }

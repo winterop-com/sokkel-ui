@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "sokkel-design/paints.schema.json",
     "title": "The resolved paints",
-    "description": "The `paints` section of tokens.resolved.json: every paint the part and pattern specs name, resolved by the resolver for every theme and scheme into plain colors, so no renderer mixes colors. Keyed by theme, then scheme, then `<part>.<variant>.<state>.<piece>`: variant is `base` for a part without variants, piece is `container` for a variant's own paint, and state is a stateKey (`hover`, `invalid+focus`). Each paint is complete, laid in order: rest, each state the key joins, then the joined key; in each step the part-wide piece, then the variant's or piece's own paint, each with its dark layer in dark, then the state's effect ring. A ring with an offset is an `outline`, drawn outside the box and stacking with a `ring`; every other ring replaces the ring before it. Only rest and the states a spec paints are present; a renderer asked for another state takes rest. Colors do not vary by density, so density is not a key; lengths per density stay where they are in the resolved file.",
+    "description": "The `paints` section of tokens.resolved.json: every paint the part and pattern specs name, resolved by the resolver for every theme and scheme into plain colors, so no renderer mixes colors. Keyed by theme, then scheme, then `<part>.<variant>.<state>.<piece>`: variant is `base` for a part without variants, piece is `container` for a variant's own paint, and state is a stateKey (`hover`, `invalid+focus`). Each paint is complete, laid in order: rest, each state the key joins, then the joined key; in each step the part-wide piece, then the variant's or piece's own paint, each with its dark layer in dark, then the state's effect ring. A ring with an offset is an `outline`, drawn outside the box and stacking with a `ring`; every other ring replaces the ring before it. Only rest and the states a spec paints are present; a renderer asked for another state takes rest. Colors do not vary by density, so density is not a key; lengths per density stay where they are in the resolved file. For a renderer that cannot blend, `flat` holds each field that is not opaque (or is `inherit`) laid over the surface the piece stands on (`paintSources`' `standsOn`), and `faded` the whole paint drawn at a fading state's opacity; a renderer reads `flat[field]`, else the field.",
     "type": "object",
     "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$", "$comment": "A theme."},
     "additionalProperties": {
@@ -48,7 +48,17 @@
                 "source": {
                     "type": "object",
                     "additionalProperties": {"type": "string"},
-                    "description": "Each field's authoring expression (`primary/80`, `mix(secondary, foreground 5%)`), the ring's and the outline's color under `ring` and `outline`, kept so verify-colors can draw the same expression in Chromium and compare."
+                    "description": "Each field's authoring expression (`primary/80`, `mix(secondary, foreground 5%)`), the ring's and the outline's color under `ring` and `outline`, kept so verify-colors can draw the same expression in Chromium and compare. `standsOn` names the surface the piece stands on, which `flat` and `faded` are laid over."
+                },
+                "flat": {
+                    "$ref": "#/$defs/flat",
+                    "description": "Each field that is not opaque, or is `inherit`, laid over what it stands on in sRGB, as a browser composites: the ground over the piece's surface (`standsOn`); the edge, ink, rule, mark, placeholder and an inset ring over that flat ground, or the surface where there is no ground; a ring or outline drawn outside the box over the surface. `inherit` is the surface's own ink. A field left out is opaque already."
+                },
+                "faded": {
+                    "type": "object",
+                    "propertyNames": {"pattern": "^[a-zA-Z]+$"},
+                    "additionalProperties": {"$ref": "#/$defs/flat"},
+                    "description": "By state (`disabled`): every color field of the paint, opaque, drawn at the opacity that state's effect sets, over the surface, as CSS draws a part at opacity. On the state's own key where the spec paints it, else on rest."
                 }
             }
         },
@@ -61,6 +71,21 @@
                 "width": {"type": "number"},
                 "offset": {"type": "number"},
                 "inset": {"enum": ["start", "all"]}
+            }
+        },
+        "opaque": {"$comment": "An opaque sRGB hex.", "type": "string", "pattern": "^#[0-9a-f]{6}$"},
+        "flat": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ground": {"$ref": "#/$defs/opaque"},
+                "edge": {"$ref": "#/$defs/opaque"},
+                "ink": {"$ref": "#/$defs/opaque"},
+                "rule": {"$ref": "#/$defs/opaque"},
+                "mark": {"$ref": "#/$defs/opaque"},
+                "placeholder": {"$ref": "#/$defs/opaque"},
+                "ring": {"$ref": "#/$defs/opaque"},
+                "outline": {"$ref": "#/$defs/opaque"}
             }
         }
     }
