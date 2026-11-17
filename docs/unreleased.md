@@ -20,3 +20,7 @@ release and empties it.
   (Ctrl elsewhere, `CALL_BAR_SHORTCUTS`, or the app's own chords) for the microphone and the camera.
   Under 36rem of room the share and hand buttons move into more, and under 26rem the device lists
   follow as submenus there. Words are `words` (`CALL_BAR_WORDS`).
+- Tokens `ansi-black` to `ansi-white` and `ansi-bright-black` to `ansi-bright-white`: the sixteen
+  ANSI colors on the terminal ground, the contract's sixteen-color map. `TerminalView` gives xterm
+  these (the same colors as before), so a theme or an app that overrides one changes what a
+  terminal shows for that index.
