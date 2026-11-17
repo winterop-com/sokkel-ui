@@ -69,7 +69,9 @@ export function mentionsIn(text: string, people: readonly Pick<MentionPerson, 'i
         const at = match.index
         if (!opens(text[at - 1])) continue
         // A sentence's full stop or a dash after a handle is not part of it.
-        const handle = match[1].replace(/[._-]+$/u, '').toLowerCase()
+        let end = match[1].length
+        while (end > 0 && '._-'.includes(match[1][end - 1])) end -= 1
+        const handle = match[1].slice(0, end).toLowerCase()
         const id = byHandle.get(handle)
         if (id !== undefined && !found.includes(id)) found.push(id)
     }

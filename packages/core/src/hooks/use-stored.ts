@@ -15,6 +15,9 @@ export { createStore, setStoredPrefix, type Store, type StoredOptions } from '..
  * The key takes the app's prefix, set once with `setStoredPrefix('tidevann.')`, or `prefix` here.
  * The setter takes a value or a function of the current one; `reset` forgets the kept value, so
  * `initial` shows again.
+ *
+ * Not for secrets: the value is kept as plain text that any script on the page can read, so a
+ * token, a password or a key never goes in it.
  */
 export function useStored<V>(
     key: string,

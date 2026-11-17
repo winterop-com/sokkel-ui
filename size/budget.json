@@ -13,11 +13,11 @@
     },
     "dashboard": {
         "engines": ["echarts", "dnd-kit"],
-        "start": 212.9,
-        "lazy": 467.2,
+        "start": 213.0,
+        "lazy": 467.3,
         "css": 52.8,
         "first": {
-            "budget": 410.4,
+            "budget": 410.5,
             "fetches": [
                 "packages/charts/dist/engine.js",
                 "packages/charts/dist/kinds/categories.js",

@@ -639,15 +639,15 @@ const GRIP = '1.375rem'
  * fraction or `auto` is left, having room to give.
  */
 export function widenTrack(width: string, by: string): string {
-    const range = /^minmax\(\s*([^,]+?)\s*,(.*)\)$/.exec(width)
-    if (range !== null) return `minmax(calc(${range[1]} + ${by}),${range[2]})`
-    return /^\d*\.?\d+(px|rem|em|ch)$/.test(width) ? `calc(${width} + ${by})` : width
+    const [, floor, max] = /^minmax\(([^,]*),(.*)\)$/.exec(width) ?? []
+    if (floor?.trim()) return `minmax(calc(${floor.trim()} + ${by}),${max})`
+    return /^\d*(\.\d+|\d)(px|rem|em|ch)$/.test(width) ? `calc(${width} + ${by})` : width
 }
 
 /** The least width of a grid track: its own length, a `minmax` floor, or nothing for a fraction or `auto`. */
 function trackMin(width: string): string {
-    const floor = /^minmax\(\s*([^,]+?)\s*,/.exec(width)?.[1] ?? width
-    return /^\d*\.?\d+(px|rem|em|ch)$/.test(floor) ? floor : '0px'
+    const floor = /^minmax\(([^,]*),/.exec(width)?.[1].trim() ?? width
+    return /^\d*(\.\d+|\d)(px|rem|em|ch)$/.test(floor) ? floor : '0px'
 }
 
 /**

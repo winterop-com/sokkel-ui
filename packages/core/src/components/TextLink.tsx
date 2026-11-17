@@ -42,13 +42,13 @@ const WORD_JOINER = '\u2060'
 function withMark(children: ReactNode, mark: ReactNode): ReactNode {
     if (typeof children === 'string' || typeof children === 'number') {
         const text = String(children)
-        const cut = text.search(/\S+\s*$/)
-        const head = cut <= 0 ? '' : text.slice(0, cut)
+        // Where the last word starts: after the space before it, or 0 when no space comes before it.
+        const cut = text.search(/\s\S+\s*$/) + 1
         return (
             <>
-                {head}
+                {text.slice(0, cut)}
                 <span className="whitespace-nowrap">
-                    {text.slice(Math.max(cut, 0))}
+                    {text.slice(cut)}
                     {mark}
                 </span>
             </>

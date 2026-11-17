@@ -82,6 +82,42 @@ function uniqueIds(): (id: string) => string {
 const SETEXT = /^ {0,3}(=+|-+)\s*$/
 
 /**
+ * A line written as a `#` heading: its level and its text without the closing `#`s, or null. Read
+ * by hand rather than by one pattern, so a long line takes time in step with its length.
+ */
+function atxHeading(line: string): { level: number; text: string } | null {
+    const open = /^ {0,3}(#{1,6})\s/.exec(line)
+    if (open === null) return null
+    const rest = line.slice(open[0].length)
+    const body = rest.trimStart()
+    let text = body === '' ? rest.slice(-1) : body
+    let end = text.trimEnd().length
+    while (end > 0 && text[end - 1] === '#') end -= 1
+    end = text.slice(0, end).trimEnd().length
+    text = text.slice(0, Math.max(end, 1))
+    return text === '' || /[\n\r\u2028\u2029]/.test(text) ? null : { level: open[1].length, text }
+}
+
+/** The text with each `[words](address)` link written as its words alone. */
+function linkWords(text: string): string {
+    let out = ''
+    let at = 0
+    let close = -1
+    let end = -1
+    for (let open = text.indexOf('['); open >= 0; open = text.indexOf('[', open + 1)) {
+        if (open < at) continue
+        if (close <= open) close = text.indexOf(']', open + 1)
+        if (close < 0) break
+        if (text[close + 1] !== '(') continue
+        if (end <= close) end = text.indexOf(')', close + 2)
+        if (end < 0) break
+        out += text.slice(at, open) + text.slice(open + 1, close)
+        at = end + 1
+    }
+    return out + text.slice(at)
+}
+
+/**
  * The headings of a markdown text at the given levels, outside fenced code, in order: those written
  * with `#` and those underlined with `===` or `---`. Their ids are those `anchors` gives, a repeated
  * heading numbered after the first.
@@ -94,16 +130,15 @@ export function markdownHeadings(content: string, levels: readonly number[] = [2
     for (const [index, line] of lines.entries()) {
         if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
         if (fenced) continue
-        const atx = /^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line)
+        const atx = atxHeading(line)
         const under = SETEXT.exec(lines[index + 1] ?? '')
         const before = lines[index - 1] ?? ''
         // A setext heading is one line of text after a blank one, never a list item, a quote or a table row.
         const setext =
             atx === null && under !== null && line.trim() !== '' && before.trim() === '' && !/^\s*([-*+>|]|\d+[.)])(\s|$)/.test(line)
         if (atx === null && !setext) continue
-        const level = atx === null ? (under?.[1].startsWith('=') === true ? 1 : 2) : atx[1].length
-        const label = (atx === null ? line : atx[2])
-            .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+        const level = atx === null ? (under?.[1].startsWith('=') === true ? 1 : 2) : atx.level
+        const label = linkWords(atx === null ? line : atx.text)
             .replace(/[`*_~]/g, '')
             .trim()
         const id = unique(headingId(label))

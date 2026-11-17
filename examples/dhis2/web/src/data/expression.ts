@@ -547,6 +547,19 @@ export function evaluate(node: Node, scope: Scope): { value: Value; items: numbe
     return { value: typeof value === 'number' && !Number.isFinite(value) ? null : value, items, missing }
 }
 
+/** The text with each closed block comment replaced by what `by` makes of it (nothing by default); an unclosed one stays. */
+export function withoutBlockComments(text: string, by: (comment: string) => string = () => ''): string {
+    let out = ''
+    let at = 0
+    for (let open = text.indexOf('/*'); open >= 0; open = text.indexOf('/*', at)) {
+        const close = text.indexOf('*/', open + 2)
+        if (close < 0) break
+        out += text.slice(at, open) + by(text.slice(open, close + 2))
+        at = close + 2
+    }
+    return out + text.slice(at)
+}
+
 /** The source with each item written by `name`, as the server describes an expression in words. */
 export function describe(source: string, name: (kind: ItemKind, body: string) => string | undefined): string {
     let tokens: Token[]
@@ -564,8 +577,7 @@ export function describe(source: string, name: (kind: ItemKind, body: string) =>
         out += source.slice(at, token.from) + said
         at = token.to
     }
-    return (out + source.slice(at))
-        .replace(/\/\*[\s\S]*?\*\//g, '')
+    return withoutBlockComments(out + source.slice(at))
         .replace(/\/\/[^\n]*/g, '')
         .replace(/\s+/g, ' ')
         .trim()

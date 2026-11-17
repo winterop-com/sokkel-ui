@@ -30,9 +30,29 @@ const WORDS: AddressInputWords = {
     ...ISSUE_WORDS,
 }
 
+/** What an address may hold on either side of its `@`: no spaces and none of `@<>,;`. */
+const ADDRESS_PART = /^[^\s@<>,;]+$/
+
 /** Whether the text is shaped like an email address. */
 export function isAddress(text: string): boolean {
-    return /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(text)
+    const at = text.indexOf('@')
+    const domain = text.slice(at + 1)
+    return at > 0 && ADDRESS_PART.test(text.slice(0, at)) && ADDRESS_PART.test(domain) && domain.slice(1, -1).includes('.')
+}
+
+/**
+ * A recipient written `Name <address>` or `"Name" <address>`: its name, untrimmed, and its address;
+ * null for text of another shape.
+ */
+function namedAddress(part: string): { name: string; address: string } | null {
+    const open = part.indexOf('<')
+    const address = part.slice(open + 1, -1)
+    if (open < 0 || !part.endsWith('>') || address === '' || address.includes('>')) return null
+    let name = part.slice(0, open)
+    if (name.startsWith('"')) name = name.slice(1)
+    name = name.trimEnd()
+    if (name.endsWith('"')) name = name.slice(0, -1)
+    return name.includes('"') ? null : { name, address }
 }
 
 /** The recipients in pasted or typed text, separated by commas, semicolons or line breaks; `Name <address>` keeps the name. */
@@ -42,10 +62,10 @@ export function parseAddresses(text: string): Address[] {
         .map((part) => part.trim())
         .filter((part) => part !== '')
         .map((part) => {
-            const named = /^"?([^"<]*?)"?\s*<([^>]+)>$/.exec(part)
+            const named = namedAddress(part)
             if (named === null) return { address: part }
-            const name = named[1].trim()
-            return name === '' ? { address: named[2].trim() } : { address: named[2].trim(), name }
+            const name = named.name.trim()
+            return name === '' ? { address: named.address.trim() } : { address: named.address.trim(), name }
         })
 }
 

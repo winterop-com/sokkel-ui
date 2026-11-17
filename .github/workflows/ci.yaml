@@ -29,7 +29,7 @@ jobs:
         outputs:
             drawn: ${{ github.event_name != 'pull_request' || steps.filter.outputs.drawn == 'true' }}
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
             - id: filter
               uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
               with:
@@ -45,7 +45,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 30
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
             - run: npm install -g "bun@$(cat .bun-version)"
             - run: bun install --frozen-lockfile
             - run: bun scripts/build-tokens.ts --check
@@ -77,12 +77,12 @@ jobs:
             matrix:
                 shard: [1, 2, 3, 4]
         container:
-            image: mcr.microsoft.com/playwright:v1.65.1-noble
+            image: mcr.microsoft.com/playwright:v1.65.1-noble@sha256:1507cbfc550a63a6b7396791ca4f00df17beb56342d2447b3f106c306f525579
             options: --ipc=host
         env:
             CI: '1'
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
             - run: npm install -g "bun@$(cat .bun-version)"
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook

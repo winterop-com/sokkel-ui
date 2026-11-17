@@ -24,7 +24,8 @@ export interface Fan {
 /** A band's name: its own label, or its fields' figures, `10-90` for `q10` and `q90`, or the fields where they have none. */
 export function bandLabel(band: ChartBand): string {
     if (band.label !== undefined) return band.label
-    const figure = (field: string) => /(\d+(?:\.\d+)?)$/.exec(field)?.[1]
+    // Tried only where a run of digits starts, so a long field is read once.
+    const figure = (field: string) => /(?<!\d)\d+(\.\d+)?$/.exec(field)?.[0]
     const low = figure(band.low)
     const high = figure(band.high)
     return low === undefined || high === undefined ? `${band.low}-${band.high}` : `${low}-${high}`

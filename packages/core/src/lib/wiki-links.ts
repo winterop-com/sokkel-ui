@@ -45,9 +45,31 @@ export function withoutCode(text: string): string {
                 if (marker !== undefined && marker[0] === fence[0] && marker.length >= fence.length && line.trim() === marker) fence = null
                 return blank(line)
             }
-            return line.replace(/(`+)[^`]+?\1/g, blank)
+            return withoutSpans(line)
         })
         .join('\n')
+}
+
+/**
+ * A line with each span between backticks blanked: a run of backticks, text with none, and as
+ * many again, the longer run's extra backticks left outside the span.
+ */
+function withoutSpans(line: string): string {
+    let out = ''
+    let at = 0
+    for (let open = line.indexOf('`'); open >= 0;) {
+        let opened = open
+        while (line[opened] === '`') opened += 1
+        const close = line.indexOf('`', opened)
+        if (close < 0) break
+        let closed = close
+        while (line[closed] === '`') closed += 1
+        const ticks = Math.min(opened - open, closed - close)
+        out += line.slice(at, opened - ticks) + blank(line.slice(opened - ticks, close + ticks))
+        at = close + ticks
+        open = line.indexOf('`', at)
+    }
+    return out + line.slice(at)
 }
 
 /** One link's inside, `Note#Heading|words`, read into its parts. */

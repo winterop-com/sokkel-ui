@@ -8,7 +8,7 @@ import { useCollection } from 'tidevann-shared/backend'
 
 import { indicators as indicatorRows } from './data/backend'
 import { check, itemName, type CheckContext, type Checked } from './data/check'
-import { describe as describeExpression, EVALUATED, type Language } from './data/expression'
+import { describe as describeExpression, EVALUATED, withoutBlockComments, type Language } from './data/expression'
 import { CONSTANTS, DATA_ELEMENTS, DATA_SET, dataElement, optionCombo, REPORTING_METRICS } from './data/metadata'
 import { LATEST, namesOf, type Version } from './data/versions'
 
@@ -193,13 +193,7 @@ export function ExpressionField({
         [checked],
     )
     const said = useMemo(
-        () =>
-            language === 'expression'
-                ? describeItems(value)
-                : value
-                      .replace(/\/\*[\s\S]*?\*\//g, '')
-                      .replace(/\s+/g, ' ')
-                      .trim(),
+        () => (language === 'expression' ? describeItems(value) : withoutBlockComments(value).replace(/\s+/g, ' ').trim()),
         [language, value],
     )
     return (

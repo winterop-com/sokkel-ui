@@ -2,7 +2,7 @@
  * Values kept in `localStorage` by key, safe when storage is missing or refused (a private window,
  * blocked site data): what cannot be kept there is held in memory until the page is left. Every
  * write tells the listeners of its key in this tab, and a write in another tab reaches them through
- * the window's `storage` event.
+ * the window's `storage` event. Values are plain text any script on the page can read: never a secret.
  */
 
 // What could not be kept in `localStorage`, so the value holds until the page is left.

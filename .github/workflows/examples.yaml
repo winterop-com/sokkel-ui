@@ -26,7 +26,7 @@ jobs:
             # One Cargo target folder for every example's Tauri shell, as the Makefiles use.
             CARGO_TARGET_DIR: ${{ github.workspace }}/examples/.cargo-target
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
             - run: npm install -g "bun@$(cat .bun-version)"
             - run: bun install --frozen-lockfile
             - run: bun run build

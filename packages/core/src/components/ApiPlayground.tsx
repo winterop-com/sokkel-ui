@@ -157,7 +157,9 @@ export function requestTarget(request: ApiRequest): string {
 
 /** The whole address a request goes to: the base, then the request's target. */
 export function requestAddress(base: string, request: ApiRequest): string {
-    return `${base.replace(/\/+$/, '')}${requestTarget(request)}`
+    let end = base.length
+    while (end > 0 && base[end - 1] === '/') end -= 1
+    return `${base.slice(0, end)}${requestTarget(request)}`
 }
 
 const quoted = (text: string) => `'${text.replaceAll("'", "'\\''")}'`
