@@ -1019,6 +1019,16 @@ the recent emoji and the skin tone are kept per person through `useStored`. `Cha
 with their counts (`ReactionChips`); `toggleReaction` gives or takes back one in the app's list.
 `MessageComposer`'s emoji button opens the picker and puts the emoji at the caret (`emojiPicker`).
 
+A call's controls are `CallBar`, round and floating over the call's picture or docked at its foot:
+the microphone and the camera, each with a chevron opening the app's devices under their headings
+(the chosen one checked), sharing the screen, reactions (a toggle standing the `ReactionBar` over
+the bar), raising a hand, more (the app's rows, such as captions) and Leave in the critical tone. A
+muted microphone and a camera turned off wear the critical tone, as a chip in it does; what is on
+(sharing, a raised hand, open reactions) is drawn pressed as a chosen reaction is. The bar measures
+its room rather than the window: under 36rem the share and hand buttons go into more, under 26rem
+the device lists follow as submenus, so it never widens the page. The arrows move between its
+buttons, and `shortcuts` binds ⌘D and ⌘E through `useShortcuts`, listed in the shortcuts dialog.
+
 CodeEditor is the one code editor, on CodeMirror 6. It carries JSON, YAML, jq (a stream language
 written from the jq manual) and markdown (a stream language of its own, with `[[links]]` between
 notes and `#tags`) by name, SQL, shell and Jinja too, each loaded the first time an editor shows it,
