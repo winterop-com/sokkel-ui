@@ -10,6 +10,7 @@ import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
+import { ReactionChips } from '@winterop-com/sokkel-ui/ReactionBar'
 import { Bubble, BubbleContent } from '@winterop-com/sokkel-ui/primitives/bubble'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
@@ -28,7 +29,7 @@ import { conversations as talks } from '../data/backend'
 import { bytes, clock } from '../data/format'
 import type { AssistantMessage, Attachment, Conversation as Talk, Model, UserMessage, Version } from '../data/model'
 import { newId } from '../data/seed'
-import { chatKey, giveFeedback, regenerate, send, showVersion, stopConversation } from '../engine/chat'
+import { chatKey, giveFeedback, react, regenerate, send, showVersion, stopConversation } from '../engine/chat'
 import { live, usageOf, writing, type Live } from '../engine/stream'
 import { useApp } from '../state'
 import { ModelSelect } from './ChatSettings'
@@ -40,8 +41,10 @@ const SUGGESTIONS = [
     { title: 'Summarize a week', prompt: 'Summarize this week for the harbor project: failures, timeouts and anything slow.' },
 ]
 
-/** A question as the person sent it: the files with it, then the text in a bubble. */
-function Question({ message }: { message: UserMessage }) {
+/** A question as the person sent it: the files with it, then the text in a bubble, and the reactions given to it. */
+function Question({ talk, message }: { talk: string; message: UserMessage }) {
+    const reactions = (message.reactions ?? []).map((reaction) => ({ ...reaction, icon: reaction.id }))
+    const give = (emoji: string, name?: string) => react(talk, message.id, emoji, name ?? emoji)
     return (
         <Message align="end">
             <MessageContent>
@@ -62,6 +65,7 @@ function Question({ message }: { message: UserMessage }) {
                         <BubbleContent>{message.text}</BubbleContent>
                     </Bubble>
                 )}
+                <ReactionChips reactions={reactions} onReact={(id) => give(id)} onReaction={give} />
             </MessageContent>
         </Message>
     )
@@ -343,7 +347,7 @@ export function ChatPage({ id }: { id: string | undefined }) {
                 <Stack gap="xl" className="mx-auto w-full max-w-3xl px-4 py-6">
                     {talk.messages.map((message) =>
                         message.role === 'user' ? (
-                            <Question key={message.id} message={message} />
+                            <Question key={message.id} talk={talk.id} message={message} />
                         ) : (
                             <Reply key={message.id} talk={talk} message={message} models={models} />
                         ),

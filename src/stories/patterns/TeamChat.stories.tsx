@@ -3,7 +3,7 @@ import { Check, Ellipsis, FileText, Hash, MessageSquare, Pin, Rocket, Search, Us
 import { useState, type ReactNode } from 'react'
 
 import { ChannelHeader, type ChannelHeaderAction, type ChannelHeaderTab } from '@winterop-com/sokkel-ui/ChannelHeader'
-import { ChatDay, ChatMessage, ChatNewDivider, type ChatPerson, type ChatReaction } from '@winterop-com/sokkel-ui/ChatMessage'
+import { ChatDay, ChatMessage, ChatNewDivider, type ChatPerson } from '@winterop-com/sokkel-ui/ChatMessage'
 import { Conversation, ConversationStart, ThreadView } from '@winterop-com/sokkel-ui/Conversation'
 import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
 import { MessageComposer } from '@winterop-com/sokkel-ui/MessageComposer'
@@ -13,6 +13,7 @@ import { DropdownMenuItem, DropdownMenuSeparator } from '@winterop-com/sokkel-ui
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { pictureOf } from '../fixtures/portraits'
+import { useReactionState } from '../fixtures/reactions'
 import clip from '../media/fixtures/clip.webm?url'
 import { tuneUrl } from '../media/fixtures/tune'
 import { waveformOf } from '../media/fixtures/waveform'
@@ -47,26 +48,13 @@ const MENU = (
     </>
 )
 
-/** What every message offers on hover: react, reply in thread, and the menu. */
-const BAR = { onAddReaction: noop, onReply: noop, menu: MENU }
+/** What every message offers on hover: react (the reaction bar), reply in thread, and the menu. */
+const BAR = { onReaction: noop, onReply: noop, menu: MENU }
 
 const GRACE: ChatPerson = { name: 'grace', image: pictureOf('grace') }
 const LINUS: ChatPerson = { name: 'linus', image: pictureOf('linus') }
 const MARGARET: ChatPerson = { name: 'margaret', image: pictureOf('margaret') }
 const ADA: ChatPerson = { name: 'ada', image: pictureOf('ada') }
-
-/** Reactions with the reader's own taken from `mine`, so pressing one adds or takes it back. */
-function useReactions(start: Record<string, boolean>) {
-    const [mine, setMine] = useState(start)
-    const flip = (id: string) => setMine((current) => ({ ...current, [id]: current[id] !== true }))
-    const of = (base: Omit<ChatReaction, 'mine'>[]): ChatReaction[] =>
-        base.map((reaction) => ({
-            ...reaction,
-            mine: mine[reaction.id] === true,
-            count: reaction.count + (mine[reaction.id] === true ? 1 : 0),
-        }))
-    return { of, flip }
-}
 
 /** One message: the author's picture, name and time on one line, and the body right under it. */
 export const Message: StoryObj = {
@@ -103,34 +91,23 @@ export const Grouped: StoryObj = {
 }
 
 function ReactionsStory() {
-    const { of, flip } = useReactions({ party: true, done: true })
+    const { of } = useReactionState({
+        deploy: [
+            { id: 'party', icon: '🎉', label: 'Party', count: 4, mine: true },
+            { id: 'eyes', icon: '👀', label: 'Looking', count: 1 },
+            { id: 'heart', icon: '❤️', label: 'Love', count: 2 },
+        ],
+        bucket: [
+            { id: 'done', icon: <Check aria-hidden />, label: 'Done', count: 2, mine: true },
+            { id: 'shipped', icon: <Rocket aria-hidden />, label: 'Shipped', count: 4 },
+        ],
+    })
     return (
         <Ground>
-            <ChatMessage
-                author="grace"
-                image={GRACE.image}
-                time="16:02"
-                {...BAR}
-                reactions={of([
-                    { id: 'party', icon: '🎉', label: 'Party', count: 3 },
-                    { id: 'eyes', icon: '👀', label: 'Looking', count: 1 },
-                    { id: 'heart', icon: '❤️', label: 'Love', count: 2 },
-                ])}
-                onReact={flip}
-            >
+            <ChatMessage author="grace" image={GRACE.image} time="16:02" {...BAR} {...of('deploy')}>
                 <Markdown content="The deploy of **harbor-api 1.4.0** is done. The rollout took 6 minutes and no run was interrupted." />
             </ChatMessage>
-            <ChatMessage
-                author="linus"
-                image={LINUS.image}
-                time="16:05"
-                {...BAR}
-                reactions={of([
-                    { id: 'done', icon: <Check aria-hidden />, label: 'Done', count: 1 },
-                    { id: 'shipped', icon: <Rocket aria-hidden />, label: 'Shipped', count: 4 },
-                ])}
-                onReact={flip}
-            >
+            <ChatMessage author="linus" image={LINUS.image} time="16:05" {...BAR} {...of('bucket')}>
                 <Markdown content="`nightly-export` writes to the new bucket now." />
             </ChatMessage>
         </Ground>
@@ -241,22 +218,28 @@ export const Media: StoryObj = {
 
 /** The days of the Day dividers and Channel stories, oldest first. */
 function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
-    const { of, flip } = useReactions({ done: true })
+    const { of } = useReactionState({
+        deploy: [
+            { id: 'done', icon: <Check aria-hidden />, label: 'Done', count: 3, mine: true },
+            { id: 'party', icon: '🎉', label: 'Party', count: 2 },
+        ],
+        failed: [{ id: 'eyes', icon: '👀', label: 'Looking', count: 2 }],
+    })
     return (
         <>
             <ChatDay label="Tuesday, November 3">
-                <ChatMessage author="linus" image={LINUS.image} time="14:10" {...BAR}>
+                <ChatMessage author="linus" image={LINUS.image} time="14:10" {...BAR} {...of('m1')}>
                     <Markdown content="`sync-inventory` is moving to the new scheduler this week." />
                 </ChatMessage>
-                <ChatMessage author="linus" time="14:11" continued {...BAR}>
+                <ChatMessage author="linus" time="14:11" continued {...BAR} {...of('m2')}>
                     <Markdown content="It runs every 15 minutes there, same as before." />
                 </ChatMessage>
-                <ChatMessage author="margaret" image={MARGARET.image} time="15:30" {...BAR}>
+                <ChatMessage author="margaret" image={MARGARET.image} time="15:30" {...BAR} {...of('m3')}>
                     <Markdown content="Good. Keep the old one around until Friday in case we need to roll back." />
                 </ChatMessage>
             </ChatDay>
             <ChatDay label="Wednesday, November 4">
-                <ChatMessage author="ada" image={ADA.image} time="10:02" {...BAR}>
+                <ChatMessage author="ada" image={ADA.image} time="10:02" {...BAR} {...of('m4')}>
                     <Markdown content="`rebuild-index` took 41 minutes last night, up from 12." />
                 </ChatMessage>
                 <ChatMessage
@@ -264,33 +247,24 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
                     image={GRACE.image}
                     time="10:15"
                     {...BAR}
+                    {...of('m5')}
                     thread={{ count: 2, people: [LINUS, ADA], last: 'Wednesday at 10:40' }}
                     onOpenThread={noop}
                 >
                     <Markdown content="That is the new larkspur projects. I will look at the batch size." />
                 </ChatMessage>
-                <ChatMessage author="grace" image={GRACE.image} time="16:48" {...BAR}>
+                <ChatMessage author="grace" image={GRACE.image} time="16:48" {...BAR} {...of('m6')}>
                     <Markdown content="Batch size is back to 500. Tonight's run will tell." />
                 </ChatMessage>
             </ChatDay>
             <ChatDay label="Yesterday">
-                <ChatMessage
-                    author="grace"
-                    image={GRACE.image}
-                    time="16:02"
-                    {...BAR}
-                    reactions={of([
-                        { id: 'done', icon: <Check aria-hidden />, label: 'Done', count: 2 },
-                        { id: 'party', icon: '🎉', label: 'Party', count: 2 },
-                    ])}
-                    onReact={flip}
-                >
+                <ChatMessage author="grace" image={GRACE.image} time="16:02" {...BAR} {...of('deploy')}>
                     <Markdown content="The deploy of **harbor-api 1.4.0** is done. The rollout took 6 minutes and no run was interrupted." />
                 </ChatMessage>
-                <ChatMessage author="linus" image={LINUS.image} time="16:05" {...BAR}>
+                <ChatMessage author="linus" image={LINUS.image} time="16:05" {...BAR} {...of('m7')}>
                     <Markdown content="Nice. `nightly-export` still writes to the old bucket; I will move it tomorrow." />
                 </ChatMessage>
-                <ChatMessage author="linus" time="16:06" continued {...BAR}>
+                <ChatMessage author="linus" time="16:06" continued {...BAR} {...of('m8')}>
                     <Markdown content="It needs a new key for the bucket first: [the request](https://tickets.example.org/harbor/88)." />
                 </ChatMessage>
             </ChatDay>
@@ -302,12 +276,11 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
                     {...BAR}
                     thread={{ count: 3, people: [GRACE, LINUS], last: 'today at 09:40' }}
                     onOpenThread={noop}
-                    reactions={of([{ id: 'eyes', icon: '👀', label: 'Looking', count: 2 }])}
-                    onReact={flip}
+                    {...of('failed')}
                 >
                     <Markdown content="Morning. `nightly-export` failed at **validate** again: 37 rows carry an amount that is not a number." />
                 </ChatMessage>
-                <ChatMessage author="ada" time="09:13" continued {...BAR}>
+                <ChatMessage author="ada" time="09:13" continued {...BAR} {...of('m9')}>
                     <Markdown
                         content={
                             '```\nvalidate: 37 rows failed\n  row 112  A-20431  amount: "n/a" is not a number\n  row 340  A-20659  amount: "12,50" is not a number\n```'
@@ -321,13 +294,14 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
                     time="09:41"
                     files={[{ id: 'f1', name: 'orders-failed.csv', kind: 'file', detail: 'CSV, 4 KB' }]}
                     {...BAR}
+                    {...of('m10')}
                 >
                     <Markdown content="Here are the rows that failed, from the run's output." />
                 </ChatMessage>
-                <ChatMessage author="margaret" time="09:42" continued editedAt="today at 09:44" {...BAR}>
+                <ChatMessage author="margaret" time="09:42" continued editedAt="today at 09:44" {...BAR} {...of('m11')}>
                     <Markdown content="**@ada** is `12,50` a decimal comma? Then the locale fixes most of them." />
                 </ChatMessage>
-                <ChatMessage author="grace" image={GRACE.image} time="09:47" {...BAR}>
+                <ChatMessage author="grace" image={GRACE.image} time="09:47" {...BAR} {...of('m12')}>
                     <Markdown content="Probably. juniper switched its export to `nb-NO` on Monday." />
                 </ChatMessage>
             </ChatDay>
@@ -445,7 +419,7 @@ function Reply({ placeholder, thread = false }: { placeholder: string; thread?: 
             onChange={setDraft}
             onSend={() => setDraft('')}
             onAttach={noop}
-            onEmoji={noop}
+            emojiPicker
             onMention={noop}
             defaultFormatting={!thread}
             alsoSendTo={

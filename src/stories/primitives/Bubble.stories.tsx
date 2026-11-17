@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CheckIcon, RotateCcwIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { CheckIcon, RotateCcwIcon, SmilePlus } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
+import { ReactionPopover, toggleReaction, type ChatReaction } from '@winterop-com/sokkel-ui/ReactionBar'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 
 import { Bubble, BubbleContent, BubbleGroup, BubbleReactions } from '@winterop-com/sokkel-ui/primitives/bubble'
 import { Message, MessageContent } from '@winterop-com/sokkel-ui/primitives/message'
@@ -111,3 +114,37 @@ export const Exchange: StoryObj = {
         </Stack>
     ),
 }
+
+/** A bubble whose reactions sit on its corner, and the react button beside it with the reaction bar open. */
+function Reacting() {
+    const [reactions, setReactions] = useState<ChatReaction[]>([
+        { id: '\u{1F44D}', icon: '\u{1F44D}', label: 'thumbs up', count: 1, mine: true },
+    ])
+    return (
+        <TooltipProvider>
+            <Row gap="sm" className="max-w-2xl pt-16 pb-4">
+                <Bubble variant="muted">
+                    <BubbleContent>Run 01a1a4f0 of sync-inventory succeeded in 3.8s.</BubbleContent>
+                    {reactions.length > 0 && (
+                        <BubbleReactions>
+                            <span className="font-emoji">{reactions.map((reaction) => reaction.icon)}</span>
+                        </BubbleReactions>
+                    )}
+                </Bubble>
+                <ReactionPopover
+                    defaultOpen
+                    selected={reactions.filter((reaction) => reaction.mine === true).map((reaction) => reaction.id)}
+                    onReact={(emoji, name) => setReactions((now) => toggleReaction(now, emoji, name))}
+                    trigger={
+                        <IconButton label="Add a reaction" size="icon-xs">
+                            <SmilePlus aria-hidden />
+                        </IconButton>
+                    }
+                />
+            </Row>
+        </TooltipProvider>
+    )
+}
+
+/** The reactions given to a bubble on its corner, and the reaction bar opened from the button beside it. */
+export const Reactions: StoryObj = { render: () => <Reacting /> }

@@ -56,6 +56,16 @@ export interface Comment extends Row {
     pinned: boolean
     /** Reported by the viewer, and so hidden from them. */
     reported: boolean
+    /** The emoji people reacted with, each with its name, how many gave it and whether the viewer did. */
+    reactions?: CommentReaction[]
+}
+
+/** A reaction to a comment, under the emoji as its id. */
+export interface CommentReaction {
+    id: string
+    label: string
+    count: number
+    mine: boolean
 }
 
 /** A video kept on this device to watch without the site, under the video's id. */
@@ -256,6 +266,12 @@ function seedComments(): Comment[] {
                     true,
                 ),
             )
+            const pinned = out[out.length - 1]
+            if (pinned !== undefined)
+                pinned.reactions = [
+                    { id: '\u2764\uFE0F', label: 'red heart', count: 8 + (index % 5), mine: false },
+                    { id: '\u{1F389}', label: 'party popper', count: 3, mine: false },
+                ]
         }
         const others = people.filter((person) => person !== owner && person !== VIEWER)
         for (let n = 0; n < 2 + (index % 3); n += 1) {

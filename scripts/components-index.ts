@@ -53,6 +53,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
             "the strip of a `SidePanel`'s tabs `Shell` draws on a phone with `panelStrip` and the types the context names",
         'components/option-list':
             'the searchable list `FilterChip`, `FilterBar` and their menus draw values in; `FilterOption` is exported by `FilterChip`',
+        'components/emoji-data':
+            'the emoji data set as `EmojiPicker` loads and searches it; `loadEmojiData`, `searchEmoji` and the types are exported by `EmojiPicker`',
         'components/Mentions':
             'the suggestions at the caret both composers share; `ComposerMentions` and the types it names are exported by `Composer` and `MessageComposer`',
         'components/media/CaptionsMenu':
@@ -402,6 +404,8 @@ const CORE_AREAS: Record<string, string> = {
     Conversation: 'Chat and messaging',
     ConversationHistory: 'Chat and messaging',
     MessageComposer: 'Chat and messaging',
+    EmojiPicker: 'Chat and messaging',
+    ReactionBar: 'Chat and messaging',
     MessageRow: 'Chat and messaging',
     ToolCall: 'Chat and messaging',
     UsageLine: 'Chat and messaging',

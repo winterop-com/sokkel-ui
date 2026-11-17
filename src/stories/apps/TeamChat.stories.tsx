@@ -25,7 +25,7 @@ import {
     UserPlus,
     Users,
 } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 
 import { ChannelHeader, type ChannelHeaderAction, type ChannelHeaderTab } from '@winterop-com/sokkel-ui/ChannelHeader'
 import { ChannelList, type ChannelEntry, type ChannelSection } from '@winterop-com/sokkel-ui/ChannelList'
@@ -60,6 +60,7 @@ import {
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { pictureOf } from '../fixtures/portraits'
+import { useReactionState } from '../fixtures/reactions'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
@@ -222,9 +223,8 @@ const MENU = (
     </>
 )
 
-/** What every message offers on hover: react, reply in thread, and the menu; its files drag onto a conversation. */
+/** What every message offers on hover, beside react: reply in thread, and the menu; its files drag onto a conversation. */
 const BAR = {
-    onAddReaction: noop,
     onReply: noop,
     menu: MENU,
     fileDrag: (file: ChatFile): DragData => ({ kind: SHARED_FILE, label: file.name, value: file }),
@@ -232,9 +232,10 @@ const BAR = {
 
 /** What ada shared into a conversation by dragging a file onto it. */
 function SharedFiles({ files }: { files: readonly ChatFile[] }) {
+    const of = useContext(Reactions)
     if (files.length === 0) return null
     return (
-        <ChatMessage author="ada" image={ADA.image} time="10:41" files={files} {...BAR}>
+        <ChatMessage author="ada" image={ADA.image} time="10:41" files={files} {...BAR} {...of('sharedfiles-1')}>
             <Markdown content="Shared from #harbor-ops." />
         </ChatMessage>
     )
@@ -267,7 +268,7 @@ function Composer({ placeholder, thread = false }: { placeholder: string; thread
             onChange={setDraft}
             onSend={() => setDraft('')}
             onAttach={noop}
-            onEmoji={noop}
+            emojiPicker
             onMention={noop}
             onSendLater={noop}
             schedule={SCHEDULE}
@@ -295,17 +296,22 @@ const QUEUE_PICTURE = `data:image/svg+xml;utf8,${encodeURIComponent(
 const CSV: ChatFile = { id: 'f1', name: 'orders-failed.csv', kind: 'file', detail: 'CSV, 4 KB' }
 const CHART: ChatFile = { id: 'f2', name: 'queue-depth.svg', kind: 'image', url: QUEUE_PICTURE }
 
-/** Reactions with the reader's own taken from `mine`, so pressing one adds or takes it back. */
-function useReactions(start: Record<string, boolean>) {
-    const [mine, setMine] = useState(start)
-    const flip = (id: string) => setMine((current) => ({ ...current, [id]: current[id] !== true }))
-    const of = (base: Omit<ChatReaction, 'mine'>[]): ChatReaction[] =>
-        base.map((reaction) => ({
-            ...reaction,
-            mine: mine[reaction.id] === true,
-            count: reaction.count + (mine[reaction.id] === true ? 1 : 0),
-        }))
-    return { of, flip }
+/** The reactions of every message in the chat, held by the chat so they outlast a change of channel. */
+const Reactions = createContext<ReturnType<typeof useReactionState>['of']>(() => ({
+    reactions: [],
+    onReact: noop,
+    onReaction: noop,
+    reactionBar: { picker: { recent: [], onRecentChange: noop } },
+}))
+
+/** Every message's reactions as the chat starts: the reader's own among them. */
+const START_REACTIONS: Record<string, ChatReaction[]> = {
+    deploy: [
+        { id: 'check', icon: <Check aria-hidden />, label: 'Done', count: 3, mine: true },
+        { id: 'rocket', icon: <Rocket aria-hidden />, label: 'Shipped', count: 2 },
+    ],
+    starter: [{ id: 'eye', icon: <Eye aria-hidden />, label: 'Looking', count: 2 }],
+    queue: [{ id: 'thumbs', icon: <ThumbsUp aria-hidden />, label: 'Agree', count: 1 }],
 }
 
 const ERROR =
@@ -356,7 +362,7 @@ function ChannelPage({
     startTab?: string
     shared?: readonly ChatFile[]
 }) {
-    const { of, flip } = useReactions({ check: true })
+    const of = useContext(Reactions)
     const [tab, setTab] = useState(startTab)
     const header = (
         <ChannelHeader
@@ -382,23 +388,13 @@ function ChannelPage({
     return (
         <Conversation header={header} typing="linus is typing" composer={<Composer placeholder="Message #harbor-ops" />}>
             <ChatDay label="Yesterday">
-                <ChatMessage
-                    author="grace"
-                    image={GRACE.image}
-                    time="16:02"
-                    {...BAR}
-                    reactions={of([
-                        { id: 'check', icon: <Check aria-hidden />, label: 'Done', count: 2 },
-                        { id: 'rocket', icon: <Rocket aria-hidden />, label: 'Shipped', count: 2 },
-                    ])}
-                    onReact={flip}
-                >
+                <ChatMessage author="grace" image={GRACE.image} time="16:02" {...BAR} {...of('deploy')}>
                     <Markdown content="The deploy of **harbor-api 1.4.0** is done. The rollout took 6 minutes and no run was interrupted." />
                 </ChatMessage>
-                <ChatMessage author="linus" image={LINUS.image} time="16:05" {...BAR}>
+                <ChatMessage author="linus" image={LINUS.image} time="16:05" {...BAR} {...of('channelpage-2')}>
                     <Markdown content="Nice. `nightly-export` still writes to the old bucket; I will move it tomorrow." />
                 </ChatMessage>
-                <ChatMessage author="linus" time="16:06" continued editedAt="yesterday at 16:09" {...BAR}>
+                <ChatMessage author="linus" time="16:06" continued editedAt="yesterday at 16:09" {...BAR} {...of('channelpage-3')}>
                     <Markdown content="It needs a new key for the bucket first: [the request](https://tickets.example.org/harbor/88)." />
                 </ChatMessage>
             </ChatDay>
@@ -412,30 +408,21 @@ function ChannelPage({
                     highlighted={threadOpen}
                     thread={{ count: 4, people: [LINUS, GRACE], last: 'today at 09:40' }}
                     onOpenThread={onThread}
-                    reactions={of([{ id: 'eye', icon: <Eye aria-hidden />, label: 'Looking', count: 2 }])}
-                    onReact={flip}
+                    {...of('starter')}
                 >
                     <Markdown content={STARTER} />
                 </ChatMessage>
-                <ChatMessage author="ada" time="09:13" continued {...BAR}>
+                <ChatMessage author="ada" time="09:13" continued {...BAR} {...of('channelpage-4')}>
                     <Markdown content={ERROR} />
                 </ChatMessage>
                 <ChatNewDivider />
-                <ChatMessage author="margaret" image={MARGARET.image} time="09:41" files={[CSV]} {...BAR}>
+                <ChatMessage author="margaret" image={MARGARET.image} time="09:41" files={[CSV]} {...BAR} {...of('channelpage-5')}>
                     <Markdown content="Here are the rows that failed, from the run's output." />
                 </ChatMessage>
-                <ChatMessage author="margaret" time="09:42" continued editedAt="today at 09:44" {...BAR}>
+                <ChatMessage author="margaret" time="09:42" continued editedAt="today at 09:44" {...BAR} {...of('channelpage-6')}>
                     <Markdown content="**@ada** is `12,50` a decimal comma? Then the locale fixes most of them." />
                 </ChatMessage>
-                <ChatMessage
-                    author="grace"
-                    image={GRACE.image}
-                    time="09:44"
-                    files={[CHART]}
-                    {...BAR}
-                    reactions={of([{ id: 'thumbs', icon: <ThumbsUp aria-hidden />, label: 'Agree', count: 1 }])}
-                    onReact={flip}
-                >
+                <ChatMessage author="grace" image={GRACE.image} time="09:44" files={[CHART]} {...BAR} {...of('queue')}>
                     <Markdown content="The queue backed up while it retried. It drained by 08:10." />
                 </ChatMessage>
                 <SharedFiles files={shared} />
@@ -446,25 +433,26 @@ function ChannelPage({
 
 /** The thread under ada's message: her message, then the replies, one run per author. */
 function Thread() {
+    const of = useContext(Reactions)
     return (
         <ThreadView
             parent={
-                <ChatMessage author="ada" image={ADA.image} time="09:12" {...BAR}>
+                <ChatMessage author="ada" image={ADA.image} time="09:12" {...BAR} {...of('thread-7')}>
                     <Markdown content={STARTER} />
                 </ChatMessage>
             }
             composer={<Composer placeholder="Reply" thread />}
         >
-            <ChatMessage author="grace" image={GRACE.image} time="09:20" {...BAR}>
+            <ChatMessage author="grace" image={GRACE.image} time="09:20" {...BAR} {...of('thread-8')}>
                 <Markdown content="Same file as last week? The export from juniper changed its number format on Monday." />
             </ChatMessage>
-            <ChatMessage author="linus" image={LINUS.image} time="09:31" editedAt="today at 09:33" {...BAR}>
+            <ChatMessage author="linus" image={LINUS.image} time="09:31" editedAt="today at 09:33" {...BAR} {...of('thread-9')}>
                 <Markdown content="Yes, juniper switched to `nb-NO`. I can parse with the locale in `transform`." />
             </ChatMessage>
-            <ChatMessage author="linus" time="09:32" continued {...BAR}>
+            <ChatMessage author="linus" time="09:32" continued {...BAR} {...of('thread-10')}>
                 <Markdown content="Then `validate` can stay strict for the empty amounts." />
             </ChatMessage>
-            <ChatMessage author="linus" time="09:40" continued {...BAR}>
+            <ChatMessage author="linus" time="09:40" continued {...BAR} {...of('thread-11')}>
                 <Markdown content="The change is up: [harbor#412](https://code.example.org/harbor/412)." />
             </ChatMessage>
         </ThreadView>
@@ -472,6 +460,7 @@ function Thread() {
 }
 
 function Direct({ shared = [] }: { shared?: readonly ChatFile[] }) {
+    const of = useContext(Reactions)
     return (
         <Conversation
             header={
@@ -490,17 +479,17 @@ function Direct({ shared = [] }: { shared?: readonly ChatFile[] }) {
                 Platform, on call this week. This is the start of your conversation with grace.
             </ConversationStart>
             <ChatDay label="Today">
-                <ChatMessage author="grace" image={GRACE.image} time="08:55" {...BAR}>
+                <ChatMessage author="grace" image={GRACE.image} time="08:55" {...BAR} {...of('direct-12')}>
                     <Markdown content="Could you take the juniper release review at 14:00? I am stuck in the incident review." />
                 </ChatMessage>
-                <ChatMessage author="ada" image={ADA.image} time="09:02" {...BAR}>
+                <ChatMessage author="ada" image={ADA.image} time="09:02" {...BAR} {...of('direct-13')}>
                     <Markdown content="Sure. Anything I should look at first?" />
                 </ChatMessage>
                 <ChatNewDivider />
-                <ChatMessage author="grace" image={GRACE.image} time="09:05" editedAt="today at 09:06" {...BAR}>
+                <ChatMessage author="grace" image={GRACE.image} time="09:05" editedAt="today at 09:06" {...BAR} {...of('direct-14')}>
                     <Markdown content="The migration in step 3. **@ada** it renames a column the larkspur dashboards read." />
                 </ChatMessage>
-                <ChatMessage author="grace" time="09:06" continued {...BAR}>
+                <ChatMessage author="grace" time="09:06" continued {...BAR} {...of('direct-15')}>
                     <Markdown content="The notes are in [the release checklist](https://docs.example.org/juniper/release)." />
                 </ChatMessage>
                 <SharedFiles files={shared} />
@@ -545,6 +534,7 @@ function TeamChat({ start = 'harbor-ops', thread = false, tab }: { start?: strin
     const [starred, setStarred] = useState(STARRED)
     const [channels, setChannels] = useState(CHANNELS)
     const [shared, setShared] = useState<Record<string, ChatFile[]>>({})
+    const { of } = useReactionState(START_REACTIONS)
     const order: Order = {
         starred,
         channels,
@@ -564,27 +554,29 @@ function TeamChat({ start = 'harbor-ops', thread = false, tab }: { start?: strin
             <ChannelPage key={active} threadOpen={panel} onThread={() => setPanel(true)} startTab={tab} shared={shared[active]} />
         )
     return (
-        <TooltipProvider>
-            <RailDrops>
-                <Shell
-                    rail={<Sidebar active={active} onSelect={setActive} order={order} />}
-                    top={<TopBar onSearch={noop} words={{ search: 'Search Tidevann', trail: 'Where you are' }} />}
-                    panelOpen={panel}
-                    onPanelOpenChange={setPanel}
-                    panel={
-                        active === 'harbor-ops' ? (
-                            <SidePanel
-                                tabs={[{ id: 'thread', label: 'Thread in #harbor-ops', content: <Thread /> }]}
-                                defaultSize={384}
-                                words={{ resize: 'Resize the thread' }}
-                            />
-                        ) : undefined
-                    }
-                >
-                    {body}
-                </Shell>
-            </RailDrops>
-        </TooltipProvider>
+        <Reactions.Provider value={of}>
+            <TooltipProvider>
+                <RailDrops>
+                    <Shell
+                        rail={<Sidebar active={active} onSelect={setActive} order={order} />}
+                        top={<TopBar onSearch={noop} words={{ search: 'Search Tidevann', trail: 'Where you are' }} />}
+                        panelOpen={panel}
+                        onPanelOpenChange={setPanel}
+                        panel={
+                            active === 'harbor-ops' ? (
+                                <SidePanel
+                                    tabs={[{ id: 'thread', label: 'Thread in #harbor-ops', content: <Thread /> }]}
+                                    defaultSize={384}
+                                    words={{ resize: 'Resize the thread' }}
+                                />
+                            ) : undefined
+                        }
+                    >
+                        {body}
+                    </Shell>
+                </RailDrops>
+            </TooltipProvider>
+        </Reactions.Provider>
     )
 }
 

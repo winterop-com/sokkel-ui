@@ -1,5 +1,6 @@
 import { CommentComposer, CommentThread, type ThreadComment } from '@winterop-com/sokkel-ui/CommentThread'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { toggleReaction } from '@winterop-com/sokkel-ui/ReactionBar'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { Toolbar, ToolbarTitle } from '@winterop-com/sokkel-ui/Toolbar'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
@@ -36,6 +37,7 @@ function threadOf(comment: Comment, all: readonly Comment[], owner: string): Thr
         disliked: comment.disliked,
         pinned: comment.pinned,
         creator: comment.author === owner,
+        reactions: (comment.reactions ?? []).map((reaction) => ({ ...reaction, icon: reaction.id })),
         replies: replies.map((reply) => threadOf(reply, all, owner)),
     }
 }
@@ -45,7 +47,7 @@ function branch(id: string, all: readonly Comment[]): string[] {
     return [id, ...all.filter((one) => one.parent === id).flatMap((one) => branch(one.id, all))]
 }
 
-/** What people say under the video: add, reply, like and dislike, sort, and delete one's own or report another's. */
+/** What people say under the video: add, reply, like and dislike, react, sort, and delete one's own or report another's. */
 export function Comments({ video, channel }: { video: Video; channel: Channel }) {
     const [order, setOrder] = useState<Order>('top')
     const { rows } = useRows(comments)
@@ -81,6 +83,19 @@ export function Comments({ video, channel }: { video: Video; channel: Channel })
         const disliked = field === 'disliked' ? on : on ? false : comment.disliked
         const likes = Math.max(0, comment.likes + (liked ? 1 : 0) - (comment.liked ? 1 : 0))
         void comments.update(comment.id, { liked, disliked, likes })
+    }
+
+    const react = (thread: ThreadComment, emoji: string, name: string) => {
+        const comment = byId.get(thread.id)
+        if (comment === undefined) return
+        const next = toggleReaction(
+            (comment.reactions ?? []).map((reaction) => ({ ...reaction, icon: reaction.id })),
+            emoji,
+            name,
+        )
+        void comments.update(comment.id, {
+            reactions: next.map(({ id, label, count, mine }) => ({ id, label, count, mine: mine === true })),
+        })
     }
 
     const remove = (id: string) => {
@@ -125,6 +140,7 @@ export function Comments({ video, channel }: { video: Video; channel: Channel })
                 onLike={(comment) => rate(comment, 'liked')}
                 onDislike={(comment) => rate(comment, 'disliked')}
                 onReply={(comment, text) => add(text, comment.id)}
+                onReaction={react}
                 menu={(comment) =>
                     comment.author === VIEWER ? (
                         <DropdownMenuItem variant="destructive" onClick={() => remove(comment.id)}>

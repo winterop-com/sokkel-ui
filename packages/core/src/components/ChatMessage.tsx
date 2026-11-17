@@ -8,20 +8,12 @@ import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSou
 import { AudioPlayer } from './media/AudioPlayer'
 import { VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { PersonAvatar } from './PersonAvatar'
+import { ReactionChips, ReactionPopover, mineOf, type ChatReaction, type ReactionBarProps } from './ReactionBar'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
-/** A reaction to a message: what it is, how many gave it, and whether you are one of them. */
-export interface ChatReaction {
-    id: string
-    /** An emoji, or an icon. */
-    icon: ReactNode
-    /** What the reaction means, said on hover and to a screen reader. */
-    label: string
-    count: number
-    mine?: boolean
-}
+export type { ChatReaction } from './ReactionBar'
 
 /** A person by name, drawn as their initials on their color, or as their picture when it is given. */
 export interface ChatPerson {
@@ -156,7 +148,15 @@ export interface ChatMessageProps {
     fileDrag?: (file: ChatFile) => DragData | undefined
     reactions?: readonly ChatReaction[]
     onReact?: (id: string) => void
-    /** Offers the add-reaction button after the reactions and in the hover bar. */
+    /**
+     * Offers the add-reaction button after the reactions and in the hover bar, each opening the
+     * reaction bar (quick reactions and the full list); called with the emoji given.
+     * `toggleReaction` from `ReactionBar` applies it to the reactions.
+     */
+    onReaction?: (emoji: string, name: string) => void
+    /** The reaction bar's options: its quick reactions, words and full list. */
+    reactionBar?: Omit<ReactionBarProps, 'onReact' | 'selected' | 'framed' | 'className'>
+    /** Offers the add-reaction button after the reactions and in the hover bar, which the app answers itself; `onReaction` opens the reaction bar instead. */
     onAddReaction?: () => void
     thread?: ChatThread
     onOpenThread?: () => void
@@ -198,6 +198,8 @@ export const ChatMessage = memo(function ChatMessage({
     fileDrag,
     reactions,
     onReact,
+    onReaction,
+    reactionBar,
     onAddReaction,
     thread,
     onOpenThread,
@@ -210,9 +212,11 @@ export const ChatMessage = memo(function ChatMessage({
 }: ChatMessageProps) {
     const words = { ...WORDS, ...given }
     const [menuOpen, setMenuOpen] = useState(false)
-    const lit = active || menuOpen
+    const [reacting, setReacting] = useState(false)
+    const lit = active || menuOpen || reacting
     const isEdited = edited || editedAt !== undefined
-    const hasBar = onAddReaction !== undefined || onReply !== undefined || menu !== undefined || actions !== undefined
+    const canReact = onReaction !== undefined || onAddReaction !== undefined
+    const hasBar = canReact || onReply !== undefined || menu !== undefined || actions !== undefined
     return (
         <article
             data-active={lit || undefined}
@@ -341,44 +345,15 @@ export const ChatMessage = memo(function ChatMessage({
                     </div>
                 )}
                 {reactions !== undefined && reactions.length > 0 && (
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                        {reactions.map((reaction) => (
-                            <button
-                                key={reaction.id}
-                                type="button"
-                                aria-pressed={reaction.mine === true}
-                                title={reaction.label}
-                                aria-label={`${reaction.label}, ${String(reaction.count)}`}
-                                onClick={() => onReact?.(reaction.id)}
-                                className={cn(
-                                    'flex h-6 items-center gap-1 rounded-control border px-1.5 text-sm leading-none outline-none focus-visible:ring-focus focus-visible:ring-ring/50 [&_svg]:size-3.5',
-                                    reaction.mine === true
-                                        ? 'border-primary/60 bg-primary/12 text-primary-ink'
-                                        : 'border-transparent bg-muted text-muted-foreground hover:border-border-strong',
-                                )}
-                            >
-                                {reaction.icon}
-                                <span className="text-xs font-medium tabular-nums">{reaction.count}</span>
-                            </button>
-                        ))}
-                        {onAddReaction !== undefined && (
-                            <Tooltip>
-                                <TooltipTrigger
-                                    render={
-                                        <button
-                                            type="button"
-                                            aria-label={words.react}
-                                            onClick={onAddReaction}
-                                            className="flex h-6 items-center rounded-control border border-transparent bg-muted px-1.5 text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-focus focus-visible:ring-ring/50"
-                                        />
-                                    }
-                                >
-                                    <SmilePlus className="size-3.5" aria-hidden />
-                                </TooltipTrigger>
-                                <TooltipContent>{words.react}</TooltipContent>
-                            </Tooltip>
-                        )}
-                    </div>
+                    <ReactionChips
+                        reactions={reactions}
+                        onReact={onReact}
+                        onReaction={onReaction}
+                        onAddReaction={onAddReaction}
+                        bar={reactionBar}
+                        words={{ react: words.react }}
+                        className="mt-1.5"
+                    />
                 )}
                 {thread !== undefined && (
                     <button
@@ -419,10 +394,27 @@ export const ChatMessage = memo(function ChatMessage({
                         lit && 'flex',
                     )}
                 >
-                    {onAddReaction !== undefined && (
-                        <BarButton label={words.react} onClick={onAddReaction}>
-                            <SmilePlus className="size-4" aria-hidden />
-                        </BarButton>
+                    {onReaction !== undefined ? (
+                        <ReactionPopover
+                            {...reactionBar}
+                            open={reacting}
+                            onOpenChange={setReacting}
+                            selected={reactions === undefined ? [] : mineOf(reactions)}
+                            onReact={onReaction}
+                            side="top"
+                            align="end"
+                            trigger={
+                                <IconButton label={words.react} size="icon-xs">
+                                    <SmilePlus className="size-4" aria-hidden />
+                                </IconButton>
+                            }
+                        />
+                    ) : (
+                        onAddReaction !== undefined && (
+                            <BarButton label={words.react} onClick={onAddReaction}>
+                                <SmilePlus className="size-4" aria-hidden />
+                            </BarButton>
+                        )
                     )}
                     {onReply !== undefined && (
                         <BarButton label={words.reply} onClick={onReply}>

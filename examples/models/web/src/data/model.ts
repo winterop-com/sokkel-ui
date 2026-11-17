@@ -136,6 +136,16 @@ export interface UserMessage {
     text: string
     time: number
     attachments: Attachment[]
+    /** The emoji given to the question, each with its name and count, the person's own marked. */
+    reactions?: MessageReaction[]
+}
+
+/** A reaction to a message, under the emoji as its id. */
+export interface MessageReaction {
+    id: string
+    label: string
+    count: number
+    mine: boolean
 }
 
 export interface AssistantMessage {

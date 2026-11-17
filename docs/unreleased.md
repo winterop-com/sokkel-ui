@@ -24,6 +24,33 @@ release and empties it.
   `value.duration`) gives the outline its length, snapped as a move and kept off other clips. From
   the keyboard a thing lands at the playhead.
 
+- `EmojiPicker` (`@winterop-com/sokkel-ui/EmojiPicker`): the full list of emoji to pick one from, a
+  search over names and keywords on top, the grid grouped by kind under headings that stay in view
+  with Recent first, and a tab per group along the bottom that scrolls to it and shows which group is
+  in view. The arrow keys move through the grid (one tab stop), Enter picks, Escape clears the
+  search, then closes. The recent emoji (`recent`, `onRecentChange`) and the skin tone (`skinTone`,
+  `onSkinToneChange`) are kept per person through `useStored` under `storeKey` unless the app holds
+  them. `EmojiPickerPopover` opens it from a `trigger`. The list comes from `emojibase-data`, a new
+  dependency of the core package, loaded the first time a picker opens (`loadEmojiData` loads it
+  ahead), and keeps only the emoji the page's fonts draw. Its words are `EMOJI_PICKER_WORDS`.
+- `ReactionBar` (`@winterop-com/sokkel-ui/ReactionBar`): a row of quick reactions (`QUICK_REACTIONS`
+  by default) as round buttons with the emoji large, the ones given drawn pressed (`selected`), and a
+  more button that opens the full `EmojiPicker`; either way the emoji goes to `onReact(emoji, name)`.
+  It floats on a popup's ground (`framed`) or sits in a toolbar, and scrolls inside itself in a
+  narrow room. `ReactionPopover` opens it from a button, `ReactionChips` draws the reactions given
+  with their counts and a button that opens it, and `toggleReaction(reactions, emoji, name)` gives
+  or takes back one. Its words are `REACTION_BAR_WORDS`. `ChatReaction` now lives here; `ChatMessage`
+  still exports it.
+- `ChatMessage` and `CommentThread` take `onReaction(…, emoji, name)`: their react buttons open the
+  reaction bar, and the reactions given are drawn with their counts, a press giving or taking back
+  one (`reactionBar` passes the bar its options). `ThreadComment` takes `reactions`, and
+  `CommentThreadWords` a `react` word.
+- `MessageComposer` takes `emojiPicker` (`true` or the picker's options): the emoji button opens
+  `EmojiPicker` and puts the emoji picked in at the caret. `onEmoji` still hands the button to the
+  app.
+- Tokens: `--typeface-emoji` (`font-emoji`), the color emoji faces, and `--text-emoji` (`text-emoji`),
+  the size an emoji is drawn at in a picker and a reaction bar.
+
 ## Fixed
 
 - A drag begun in a list that is scrolled, or that scrolls under it, lands under the pointer:

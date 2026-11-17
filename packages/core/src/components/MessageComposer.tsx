@@ -23,6 +23,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } f
 import { cn } from '../lib/cn'
 import { returnFocusOnKeyboard } from '../lib/focus'
 import { composing, touchTyping } from '../lib/keys'
+import { EmojiPickerPopover, type EmojiPickerPopoverProps } from './EmojiPicker'
 import { Markdown, type MarkdownWords } from './Markdown'
 import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { Segmented } from './Segmented'
@@ -219,12 +220,21 @@ export function MessageComposerAction({ label, onClick, children, pressed, disab
     )
 }
 
+/** The emoji picker's options in a composer: its recent emoji, skin tone and words, and whether it starts open. */
+export type MessageComposerEmojiPicker = Omit<EmojiPickerPopoverProps, 'onPick' | 'trigger' | 'anchor'>
+
 export interface MessageComposerProps {
     value: string
     onChange: (value: string) => void
     onSend: () => void
     onAttach?: () => void
+    /** Called by the emoji button, which the app answers itself; `emojiPicker` opens the picker instead. */
     onEmoji?: () => void
+    /**
+     * Offers the emoji button, which opens `EmojiPicker` and puts the emoji picked in at the caret;
+     * `true`, or the picker's options.
+     */
+    emojiPicker?: boolean | MessageComposerEmojiPicker
     /** Called by the mention button; with `mentions` the button puts an `@` in and opens the suggestions instead. */
     onMention?: () => void
     /** Suggests people at the caret as an `@` is typed, from the app's list or its search, and puts the one picked in as `@handle`. */
@@ -293,6 +303,7 @@ export function MessageComposer({
     onSend,
     onAttach,
     onEmoji,
+    emojiPicker,
     onMention,
     mentions,
     onMore,
@@ -399,6 +410,20 @@ export function MessageComposer({
     }
 
     const wrap = (format: Exclude<MessageFormat, 'codeBlock'>) => replace(...MARK[format])
+
+    // Where the emoji picked goes: the selection as it was when the picker opened.
+    const caret = useRef<[number, number] | null>(null)
+    const insertEmoji = (emoji: string) => {
+        const area = text.current
+        const [start, end] = caret.current ?? [value.length, value.length]
+        onChange(`${value.slice(0, start)}${emoji}${value.slice(end)}`)
+        const at = start + emoji.length
+        caret.current = [at, at]
+        setTimeout(() => {
+            area?.focus()
+            area?.setSelectionRange(at, at)
+        })
+    }
 
     /** Puts the selection in a fence named for `language`, on lines of its own. */
     const fence = (language: string) => {
@@ -665,10 +690,34 @@ export function MessageComposer({
                 >
                     <CaseSensitive aria-hidden />
                 </MessageComposerAction>
-                {onEmoji !== undefined && (
-                    <MessageComposerAction label={words.emoji} onClick={onEmoji}>
-                        <Smile aria-hidden />
-                    </MessageComposerAction>
+                {emojiPicker !== undefined && emojiPicker !== false ? (
+                    <EmojiPickerPopover
+                        {...(emojiPicker === true ? {} : emojiPicker)}
+                        side={(emojiPicker === true ? undefined : emojiPicker.side) ?? 'top'}
+                        onOpenChange={(open) => {
+                            const area = text.current
+                            if (open && area !== null) caret.current = [area.selectionStart, area.selectionEnd]
+                            if (emojiPicker !== true) emojiPicker.onOpenChange?.(open)
+                        }}
+                        onPick={insertEmoji}
+                        trigger={
+                            <button
+                                type="button"
+                                aria-label={words.emoji}
+                                title={words.emoji}
+                                disabled={disabled || previewing}
+                                className={ACTION}
+                            >
+                                <Smile aria-hidden />
+                            </button>
+                        }
+                    />
+                ) : (
+                    onEmoji !== undefined && (
+                        <MessageComposerAction label={words.emoji} onClick={onEmoji}>
+                            <Smile aria-hidden />
+                        </MessageComposerAction>
+                    )
                 )}
                 {(onMention !== undefined || mentions !== undefined) && (
                     <MessageComposerAction

@@ -4,6 +4,8 @@
  * written by the stream engine and kept in its conversation or comparison once it ends.
  */
 
+import { toggleReaction } from '@winterop-com/sokkel-ui/ReactionBar'
+
 import { comparisons, conversations, models } from '../data/backend'
 import {
     type AssistantMessage,
@@ -88,6 +90,24 @@ export function giveFeedback(conversation: string, message: string, feedback: 'g
         ...one,
         versions: one.versions.map((version, index) => (index === one.at ? { ...version, feedback } : version)),
     }))
+}
+
+/** Gives or takes back the person's reaction `emoji` on one of their questions. */
+export function react(conversation: string, message: string, emoji: string, name: string): void {
+    void serially(conversation, async () => {
+        const now = conversationNow(conversation)
+        if (now === undefined) return
+        const messages = now.messages.map((one): Message => {
+            if (one.id !== message || one.role !== 'user') return one
+            const given = toggleReaction(
+                (one.reactions ?? []).map((reaction) => ({ ...reaction, icon: reaction.id })),
+                emoji,
+                name,
+            )
+            return { ...one, reactions: given.map(({ id, label, count, mine }) => ({ id, label, count, mine: mine === true })) }
+        })
+        await conversations.update(conversation, { messages })
+    })
 }
 
 /** Tokens of the conversation before message `upTo`, as the model reads them again. */

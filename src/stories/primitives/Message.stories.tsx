@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BotIcon, FileSpreadsheetIcon, FileTextIcon, TriangleAlertIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { ReactionChips, toggleReaction, type ChatReaction } from '@winterop-com/sokkel-ui/ReactionBar'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 
 import {
     Attachment,
@@ -262,3 +264,31 @@ export const States: StoryObj = {
 export const Conversation: StoryObj = {
     render: () => <ConversationView />,
 }
+
+/** A person's message with the reactions given to it in its footer, the button at their end opening the reaction bar. */
+function Reacted() {
+    const [reactions, setReactions] = useState<ChatReaction[]>([
+        { id: '\u{1F389}', icon: '\u{1F389}', label: 'party popper', count: 2, mine: true },
+        { id: '\u{1F440}', icon: '\u{1F440}', label: 'eyes', count: 1 },
+    ])
+    const toggle = (emoji: string, name?: string) => setReactions((now) => toggleReaction(now, emoji, name))
+    return (
+        <TooltipProvider>
+            <Message>
+                <MessageAvatar className="size-8">gr</MessageAvatar>
+                <MessageContent>
+                    <MessageHeader>grace</MessageHeader>
+                    <Bubble variant="muted">
+                        <BubbleContent>The deploy of harbor-api 1.4.0 is done, and no run was interrupted.</BubbleContent>
+                    </Bubble>
+                    <MessageFooter>
+                        <ReactionChips reactions={reactions} onReact={(id) => toggle(id)} onReaction={toggle} />
+                    </MessageFooter>
+                </MessageContent>
+            </Message>
+        </TooltipProvider>
+    )
+}
+
+/** Reactions under a message, given and taken back with a press, and new ones from the reaction bar. */
+export const Reactions: StoryObj = { render: () => <Reacted /> }

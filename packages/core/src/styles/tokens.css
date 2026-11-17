@@ -7,6 +7,7 @@
     --font-sans: var(--typeface-sans);
     --font-mono: var(--typeface-mono);
     --font-terminal: var(--typeface-terminal);
+    --font-emoji: var(--typeface-emoji);
     --text-2xs: 0.6875rem;
     --text-2xs--line-height: 1rem;
     --text-xs: 0.8125rem;
@@ -23,6 +24,8 @@
     --text-stat--line-height: 2.25rem;
     --text-display: 3rem;
     --text-display--line-height: 3.5rem;
+    --text-emoji: 1.5rem;
+    --text-emoji--line-height: 1;
     --text-graph-title: 0.75rem;
     --text-graph-title--line-height: 0.9375rem;
     --text-graph-small: 0.6875rem;
@@ -262,6 +265,7 @@
     --typeface-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
     --typeface-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
     --typeface-terminal: 'JetBrainsMonoNL Nerd Font Mono', var(--typeface-mono);
+    --typeface-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif;
     --background: oklch(0.985 0.002 255);
     --foreground: oklch(0.18 0.012 255);
     --card: oklch(1 0 0);
