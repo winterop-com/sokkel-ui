@@ -130,6 +130,34 @@ export function resumeAt(position: number, window: { start: number; end: number 
     return position
 }
 
+/** How far short of where a try was to resume the playhead may land before it is moved on there, in seconds. */
+export const RESUME_SLACK = 0.5
+
+/**
+ * Where to move a playhead that a try picked up short of where it was to resume, or null to leave it:
+ * a browser's own HLS (Apple's) lands a seek made as the media loads at the start of the segment it
+ * falls in, so up to a segment would play again. A target the media cannot seek to yet is left.
+ */
+export function resumeCorrection(at: number, target: number, window: { start: number; end: number } | null): number | null {
+    if (at >= target - RESUME_SLACK) return null
+    if (window === null || target < window.start || target > window.end) return null
+    return target
+}
+
+/**
+ * How far the playhead must move between two readings to count as playing on, in seconds: less is
+ * a hair a browser moves it as it starts on a buffer that runs out at once; more than the most is a seek.
+ */
+const PLAYED_STEP = { least: 0.1, most: 1 }
+
+/**
+ * Whether the playhead played on between two readings: it moved forward by a step playback takes,
+ * not standing and not jumping as a seek does. A try is over once it has, not once the media loads.
+ */
+export function playedOn(previous: number | null, at: number): boolean {
+    return previous !== null && at - previous >= PLAYED_STEP.least && at - previous <= PLAYED_STEP.most
+}
+
 /** `HTMLMediaElement.HAVE_FUTURE_DATA`: from here the element can play on from where it is. */
 const HAVE_FUTURE_DATA = 3
 

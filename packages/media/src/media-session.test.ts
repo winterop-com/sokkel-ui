@@ -1,8 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+    artworkKey,
     artworkOf,
     bindActions,
+    drawArtwork,
+    MEDIA_ARTWORK_SIZES,
+    type ArtworkCanvas,
+    type MediaSessionDrawing,
     describeMedia,
     mediaSession,
     needsPosition,
@@ -97,6 +102,35 @@ describe('the media session', () => {
         const sizes = [{ src: 'https://example.org/96.png', sizes: '96x96' }]
         expect(artworkOf(sizes)).toEqual(sizes)
         expect(artworkOf(sizes)).not.toBe(sizes)
+    })
+
+    it('hands a picture drawn on a canvas over at each size the system asks for, as JPEG data', () => {
+        const drawnAt: number[] = []
+        const drawing: MediaSessionDrawing = { key: 'harbor', draw: (_context, size) => drawnAt.push(size) }
+        const canvas = (size: number): ArtworkCanvas => ({
+            getContext: () => ({}) as CanvasRenderingContext2D,
+            toDataURL: (type) => `data:${type};base64,${String(size)}`,
+        })
+        const images = drawArtwork(drawing, canvas)
+        expect(drawnAt).toEqual([...MEDIA_ARTWORK_SIZES])
+        expect(images[0]).toEqual({ src: 'data:image/jpeg;base64,96', sizes: '96x96', type: 'image/jpeg' })
+        expect(images.at(-1)).toEqual({ src: 'data:image/jpeg;base64,512', sizes: '512x512', type: 'image/jpeg' })
+        expect(drawArtwork({ ...drawing, sizes: [256] }, canvas).map((image) => image.sizes)).toEqual(['256x256'])
+    })
+
+    it('hands no drawn picture over where there is no canvas to draw it on', () => {
+        const drawing: MediaSessionDrawing = { key: 'juniper', draw: () => undefined }
+        expect(drawArtwork(drawing, () => null)).toEqual([])
+        expect(drawArtwork(drawing, () => ({ getContext: () => null, toDataURL: () => '' }))).toEqual([])
+        expect(artworkOf(drawing)).toEqual([])
+    })
+
+    it('tells the system again only when the artwork changes, a drawing by its key', () => {
+        const draw = () => undefined
+        expect(artworkKey({ key: 'harbor', draw })).toBe(artworkKey({ key: 'harbor', draw: () => undefined }))
+        expect(artworkKey({ key: 'harbor', draw })).not.toBe(artworkKey({ key: 'larkspur', draw }))
+        expect(artworkKey('https://example.org/cover.png')).toBe('https://example.org/cover.png')
+        expect(artworkKey(undefined)).toBeUndefined()
     })
 
     it('places the position on the length, and has none on a live stream', () => {

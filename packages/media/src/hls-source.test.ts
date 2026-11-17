@@ -1,8 +1,19 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+import type { HlsConfig } from 'hls.js'
+
 import type { VideoError } from '@winterop-com/sokkel-ui/media/video-source'
 
-import { hasMediaSource, hlsSource, hlsStats, isAppleWebKit, playsHlsNatively, type HlsModule } from './hls-source'
+import {
+    hasMediaSource,
+    hlsSource,
+    hlsStats,
+    isAppleWebKit,
+    playsHlsNatively,
+    retriesMissing,
+    waitingConfig,
+    type HlsModule,
+} from './hls-source'
 
 const STREAM = 'https://media.example.org/harbor/stream.m3u8'
 
@@ -29,6 +40,17 @@ type Listener = (event: string, data: unknown) => void
 class FakeHls {
     static Events = { ERROR: 'hlsError', FRAG_BUFFERED: 'hlsFragBuffered', FRAG_LOADED: 'hlsFragLoaded' }
     static made: FakeHls[] = []
+    /** hls.js's fragment policy as it ships. */
+    static DefaultConfig = {
+        fragLoadPolicy: {
+            default: {
+                maxTimeToFirstByteMs: 10000,
+                maxLoadTimeMs: 120000,
+                timeoutRetry: { maxNumRetry: 4, retryDelayMs: 0, maxRetryDelayMs: 0 },
+                errorRetry: { maxNumRetry: 6, retryDelayMs: 1000, maxRetryDelayMs: 8000 },
+            },
+        },
+    }
     readonly calls: string[] = []
     readonly listeners = new Map<string, Listener[]>()
     media: unknown = null
@@ -68,6 +90,16 @@ class FakeHls {
 
     startLoad() {
         this.calls.push('startLoad')
+    }
+
+    stopLoad() {
+        this.calls.push('stopLoad')
+    }
+
+    /** Asks the fragment policy hls.js was given whether to fetch a fragment again, as hls.js does after it fails. */
+    shouldRetry(retryCount: number, code: number, retry = false): boolean | undefined {
+        const errorRetry = (this.config as Partial<HlsConfig> | undefined)?.fragLoadPolicy?.default.errorRetry
+        return errorRetry?.shouldRetry?.(errorRetry, retryCount, false, { code, data: '', url: STREAM }, retry)
     }
 
     recoverMediaError() {
@@ -128,6 +160,12 @@ async function attached(options: Parameters<typeof hlsSource>[1] = {}, startAt?:
     return { hls: FakeHls.made[0], reports, detach, video, engine, source }
 }
 
+/** The settings hls.js was given, without the fragment policy the source adds for missing live segments. */
+function given(hls: FakeHls): object {
+    const { fragLoadPolicy: _policy, ...rest } = (hls.config ?? {}) as { fragLoadPolicy?: unknown }
+    return rest
+}
+
 describe('an HLS source', () => {
     afterEach(() => {
         vi.unstubAllGlobals()
@@ -150,7 +188,7 @@ describe('an HLS source', () => {
     test('plays through hls.js, given its settings, where the browser does not play HLS', async () => {
         const { hls, video, engine } = await attached({ config: { lowLatencyMode: true } })
         expect(engine.loads()).toBe(1)
-        expect(hls.config).toEqual({ lowLatencyMode: true })
+        expect(given(hls)).toEqual({ lowLatencyMode: true })
         expect(hls.calls).toEqual([`loadSource ${STREAM}`, 'attachMedia'])
         expect(hls.media).toBe(video)
     })
@@ -275,12 +313,12 @@ describe('an HLS source', () => {
     })
 
     test('starts hls.js loading where the player picks up, so the first fragment fetched is the one played', async () => {
-        expect((await attached({}, 312.4)).hls.config).toEqual({ startPosition: 312.4 })
-        expect((await attached({ config: { lowLatencyMode: true } }, 40)).hls.config).toEqual({ lowLatencyMode: true, startPosition: 40 })
+        expect(given((await attached({}, 312.4)).hls)).toEqual({ startPosition: 312.4 })
+        expect(given((await attached({ config: { lowLatencyMode: true } }, 40)).hls)).toEqual({ lowLatencyMode: true, startPosition: 40 })
     })
 
     test("keeps the app's own start position over the player's", async () => {
-        expect((await attached({ config: { startPosition: -1 } }, 312.4)).hls.config).toEqual({ startPosition: -1 })
+        expect(given((await attached({ config: { startPosition: -1 } }, 312.4)).hls)).toEqual({ startPosition: -1 })
     })
 
     test("tells hls.js's bandwidth estimate, the rendition playing and the buffer ahead while attached", async () => {
@@ -351,5 +389,97 @@ describe('an HLS source', () => {
         expect(hasMediaSource({ ManagedMediaSource: class {} })).toBe(true)
         expect(hasMediaSource({})).toBe(false)
         expect(hlsSource(STREAM).canPlay?.(plain)).toBe(hasMediaSource())
+    })
+
+    test("waits on a live stream's missing segment, fetching it again rather than skipping past it", async () => {
+        const { hls, reports } = await attached()
+        // hls.js retries no 4xx itself, and skips such a fragment on a live stream.
+        expect(hls.shouldRetry(0, 404)).toBe(true)
+        expect(hls.shouldRetry(5, 404)).toBe(true)
+        expect(hls.shouldRetry(0, 503, true)).toBe(true)
+        hls.latestLevelDetails = { live: false }
+        expect(hls.shouldRetry(0, 404)).toBe(false)
+        expect(reports).toEqual([])
+    })
+
+    test("gives up for the player to try again once a missing segment's fetches are spent, rather than skip it", async () => {
+        const { hls, reports } = await attached()
+        expect(hls.shouldRetry(6, 404)).toBe(false)
+        // hls.js then marks the fragment a gap and tells the error, recovered.
+        hls.fail('networkError', false, 'fragLoadError')
+        expect(hls.calls.at(-1)).toBe('stopLoad')
+        expect(reports).toEqual([{ kind: 'network', message: 'fragLoadError', fatal: true }])
+        hls.fail('networkError', false, 'fragLoadError')
+        expect(reports).toHaveLength(1)
+    })
+
+    test('skips missing segments as hls.js does when told to', async () => {
+        const { hls } = await attached({ skipMissing: true })
+        expect(hls.config).toBeUndefined()
+        expect(hls.shouldRetry(0, 404)).toBeUndefined()
+    })
+
+    test("keeps the app's own retry decision and a policy that never retries", () => {
+        const own = () => false
+        const policy = {
+            ...FakeHls.DefaultConfig.fragLoadPolicy.default,
+            errorRetry: { maxNumRetry: 2, retryDelayMs: 1, maxRetryDelayMs: 1, shouldRetry: own },
+        }
+        const config = { fragLoadPolicy: { default: policy } }
+        expect(
+            waitingConfig(
+                config,
+                FakeHls.DefaultConfig as never,
+                () => true,
+                () => undefined,
+            ),
+        ).toBe(config)
+        const never = { fragLoadPolicy: { default: { ...policy, errorRetry: null } } }
+        expect(
+            waitingConfig(
+                never,
+                FakeHls.DefaultConfig as never,
+                () => true,
+                () => undefined,
+            ),
+        ).toBe(never)
+    })
+
+    test("builds on the app's own fragment policy", () => {
+        const errorRetry = { maxNumRetry: 2, retryDelayMs: 500, maxRetryDelayMs: 4000 }
+        const config = {
+            lowLatencyMode: true,
+            fragLoadPolicy: { default: { ...FakeHls.DefaultConfig.fragLoadPolicy.default, errorRetry } },
+        }
+        const made = waitingConfig(
+            config,
+            FakeHls.DefaultConfig as never,
+            () => true,
+            () => undefined,
+        )
+        expect(made?.lowLatencyMode).toBe(true)
+        expect(made?.fragLoadPolicy?.default.errorRetry).toMatchObject(errorRetry)
+        expect(made?.fragLoadPolicy?.default.errorRetry?.shouldRetry).toBeTypeOf('function')
+    })
+})
+
+describe('a missing fragment fetched again', () => {
+    const policy = { maxNumRetry: 6 }
+
+    test('is any hls.js would fetch again itself', () => {
+        expect(retriesMissing(true, 0, policy, { code: 503 }, false)).toBe(true)
+    })
+
+    test("is one a live stream's server answers missing, while the policy's tries last", () => {
+        expect(retriesMissing(false, 0, policy, { code: 404 }, true)).toBe(true)
+        expect(retriesMissing(false, 5, policy, { code: 410 }, true)).toBe(true)
+        expect(retriesMissing(false, 6, policy, { code: 404 }, true)).toBe(false)
+    })
+
+    test('is none of a stream that is not live, nor an error that is no 4xx, nor without a policy', () => {
+        expect(retriesMissing(false, 0, policy, { code: 404 }, false)).toBe(false)
+        expect(retriesMissing(false, 0, policy, { code: 0 }, true)).toBe(false)
+        expect(retriesMissing(false, 0, policy, undefined, true)).toBe(false)
+        expect(retriesMissing(false, 0, null, { code: 404 }, true)).toBe(false)
     })
 })

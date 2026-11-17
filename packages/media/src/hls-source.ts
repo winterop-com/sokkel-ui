@@ -1,5 +1,5 @@
 import type Hls from 'hls.js'
-import type { ErrorData, FragLoadedData, HlsConfig } from 'hls.js'
+import type { ErrorData, FragLoadedData, HlsConfig, LoaderConfig, LoaderResponse, RetryConfig } from 'hls.js'
 
 import type { VideoErrorKind, VideoSource, VideoSourceStats } from '@winterop-com/sokkel-ui/media/video-source'
 
@@ -25,6 +25,14 @@ export interface HlsSourceOptions {
      * fragment is buffered.
      */
     recoveries?: number
+    /**
+     * Whether hls.js skips a segment a live stream lists but its server answers missing (a 4xx), as
+     * hls.js does by itself. Off by default: the segment is fetched again as hls.js backs off, the
+     * player waits on it and its own tries take over when it stands too long, and playback goes on
+     * from where it stood once the segment is there. An app's own `shouldRetry` in
+     * `config.fragLoadPolicy` stands over this.
+     */
+    skipMissing?: boolean
     /** Loads hls.js: by default a dynamic import of `hls.js`, fetched only when a stream needs it. */
     load?: () => Promise<HlsModule>
 }
@@ -94,6 +102,51 @@ export function hlsRecovery(
     return 'give-up'
 }
 
+/**
+ * Whether hls.js fetches a fragment again after an error: its own answer (`retry`), or, on a live
+ * stream, yes for a fragment its server answers missing (a 4xx, as a segment listed before it is
+ * written), while `retryCount` is under the policy's `maxNumRetry`. hls.js retries no 4xx and skips
+ * such a fragment on a live stream, so playback jumps past what was not there yet.
+ */
+export function retriesMissing(
+    retry: boolean,
+    retryCount: number,
+    retryConfig: Pick<RetryConfig, 'maxNumRetry'> | null | undefined,
+    response: Pick<LoaderResponse, 'code'> | undefined,
+    live: boolean,
+): boolean {
+    if (retry) return true
+    return missingLive(response, live) && retryConfig !== null && retryConfig !== undefined && retryCount < retryConfig.maxNumRetry
+}
+
+/** Whether a fragment's answer says a live stream's server has it not: a 4xx. */
+function missingLive(response: Pick<LoaderResponse, 'code'> | undefined, live: boolean): boolean {
+    const code = response?.code ?? 0
+    return live && code >= 400 && code < 500
+}
+
+/**
+ * hls.js's settings with its fragment policy answering through `retriesMissing`, from the app's own
+ * policy or hls.js's default. An app's own `shouldRetry`, or a policy that never retries, is kept.
+ * `exhausted` hears of a missing live fragment whose tries are spent.
+ */
+export function waitingConfig(
+    config: Partial<HlsConfig> | undefined,
+    defaults: Pick<HlsConfig, 'fragLoadPolicy'>,
+    live: () => boolean,
+    exhausted: () => void,
+): Partial<HlsConfig> | undefined {
+    const policy: LoaderConfig = config?.fragLoadPolicy?.default ?? defaults.fragLoadPolicy.default
+    const errorRetry = policy.errorRetry
+    if (errorRetry === null || errorRetry.shouldRetry !== undefined) return config
+    const shouldRetry: RetryConfig['shouldRetry'] = (retryConfig, retryCount, _isTimeout, response, retry) => {
+        const again = retriesMissing(retry, retryCount, retryConfig, response, live())
+        if (!again && missingLive(response, live())) exhausted()
+        return again
+    }
+    return { ...config, fragLoadPolicy: { default: { ...policy, errorRetry: { ...errorRetry, shouldRetry } } } }
+}
+
 /** A number hls.js reports, when it is one: its estimates are `NaN` until it has measured. */
 const measured = (value: number | undefined): number | undefined =>
     value !== undefined && Number.isFinite(value) && value > 0 ? value : undefined
@@ -146,12 +199,18 @@ export function hlsStats(
  * the one played, and a live stream with no such point starts at its live edge. A fatal network
  * error loads again (the playlist itself when it was the playlist that failed) and a fatal media
  * error recovers the decoder, `recoveries` times each, before the source gives up and the player's
- * own tries take over; a playlist that cannot be parsed is given up on at once (`hlsRecovery`).
+ * own tries take over; a playlist that cannot be parsed is given up on at once (`hlsRecovery`). A
+ * live stream's segment its server answers missing is fetched again rather than skipped
+ * (`retriesMissing`), so the player waits on it, as on any stall, and plays on from where it stood
+ * once it is there; with its fetches spent the source gives up for the player to try again.
  * Every fatal error is told to the player's `onError`, and the errors hls.js recovers from by
  * itself are not. Its `stats` give the player's handle hls.js's bandwidth estimate, the rendition
  * playing and the buffer ahead.
  */
-export function hlsSource(url: string, { config, native = true, recoveries = 3, load = loadHls }: HlsSourceOptions = {}): VideoSource {
+export function hlsSource(
+    url: string,
+    { config, native = true, recoveries = 3, skipMissing = false, load = loadHls }: HlsSourceOptions = {},
+): VideoSource {
     // The engine playing each element this source is attached to, with what it has loaded, for its stats; `native` where the browser plays it.
     const engines = new WeakMap<HTMLVideoElement, { hls: Hls; loaded: HlsLoaded } | 'native'>()
     return {
@@ -177,8 +236,20 @@ export function hlsSource(url: string, { config, native = true, recoveries = 3, 
             void load().then(
                 ({ default: Engine }) => {
                     if (gone) return
+                    // Set once a missing live fragment's fetches are spent, so the error hls.js then skips it on is a give-up instead.
+                    let spent = false
+                    const given = skipMissing
+                        ? config
+                        : waitingConfig(
+                              config,
+                              Engine.DefaultConfig,
+                              () => engine?.latestLevelDetails?.live === true,
+                              () => {
+                                  spent = true
+                              },
+                          )
                     const hls = new Engine(
-                        startAt === undefined || config?.startPosition !== undefined ? config : { ...config, startPosition: startAt },
+                        startAt === undefined || given?.startPosition !== undefined ? given : { ...given, startPosition: startAt },
                     )
                     engine = hls
                     const loaded: HlsLoaded = { bytes: 0, duration: 0 }
@@ -193,6 +264,13 @@ export function hlsSource(url: string, { config, native = true, recoveries = 3, 
                         tries.media = 0
                     })
                     hls.on(Engine.Events.ERROR, (_event: string, data: ErrorData) => {
+                        if (spent && !data.fatal) {
+                            // hls.js has marked the missing fragment a gap to skip; stop before it loads past it.
+                            spent = false
+                            hls.stopLoad()
+                            report({ kind: 'network', message: data.error?.message ?? data.details, fatal: true })
+                            return
+                        }
                         if (!data.fatal) return
                         const kind = kindOf(data.type)
                         const message = data.error?.message ?? data.details

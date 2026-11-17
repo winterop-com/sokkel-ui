@@ -1342,8 +1342,9 @@ Chromium's own player failed the live stream when it was played after loading pa
 error, which the player takes for media it cannot play), kept no seekable window, so a try could
 only rejoin at the live edge and play the last segments over, and told no bandwidth or rendition;
 hls.js played it, picked a stall up where it stood and told its stats. Apple's own player, tried
-the same way in WebKit, played the stream, its `startAt` and its stalls as hls.js does, a try
-picking up at the start of the segment it stood in. Apple's WebKit is told by its user agent
+the same way in WebKit, played the stream, its `startAt` and its stalls as hls.js does, save that a
+try at a live stream's edge lands at the start of the segment it stood in and seeks no further than
+the window it says it has, which the player meets (below). Apple's WebKit is told by its user agent
 (`isAppleWebKit`), since a WKWebView's names no Safari. hls.js is an optional peer dependency of
 the media package, so only an app that plays streams installs it, and it never enters the core. hls.js draws
 every HTTP live stream. The player hands `attach` where playback picks up (`startAt`, or where a
@@ -1351,10 +1352,17 @@ try resumes) and hls.js starts loading there (`startPosition`), so the first fra
 the one played. The source recovers from a fatal network error by loading again and from a
 fatal media error by recovering the decoder (swapping the audio codec from the second time),
 `recoveries` times each, counting from zero once a fragment is buffered, and then leaves the next
-try to the player; every error goes on to `onError`. A source's `stats(video)` tells what its
-engine knows: hls.js's bandwidth estimate, the rendition playing and its bitrate (weighed from the
-fragments loaded when a lone media playlist declares none), the buffer ahead and whether the
-stream is live. The Storybook serves a stream cut from the clip (`src/stories/media/fixtures/stream`,
+try to the player; every error goes on to `onError`. A segment a live stream lists but its server
+answers missing (a 4xx, as one listed before it is written) hls.js would skip, jumping the playhead
+past it; the source has hls.js fetch it again as it backs off (`retriesMissing`, through the
+fragment policy's `shouldRetry`, unless the app gives its own or `skipMissing`), so the player waits
+on it as on any stall, its own tries taking over, and plays on from where it stood once it is
+there; with hls.js's fetches spent the source gives up for the player's next try rather than skip.
+Tried headless in Chromium against an event playlist whose ninth segment was missing for 16
+seconds, hls.js jumped from 15.98 to 18.39 before and waited at 15.98 and played the segment after.
+A source's `stats(video)` tells what its engine knows: hls.js's bandwidth estimate, the rendition
+playing and its bitrate (weighed from the fragments loaded when a lone media playlist declares
+none), the buffer ahead and whether the stream is live. The Storybook serves a stream cut from the clip (`src/stories/media/fixtures/stream`,
 about 90 kB) as a static folder, and a fake hls.js in the tests drives the recoveries.
 
 The player starts at `startAt`, taken when the media has its length, for resuming; tells where it
@@ -1366,8 +1374,14 @@ does not land (a stream whose encoder fell behind or stopped, a segment that is 
 meets a stall, or a network or decoding error, by loading the media again where it was, or at a
 live stream's live edge once its window has moved past that point or it can seek nowhere,
 `retries` times, a second before the first try and twice as long before each next, saying "Trying
-again" over the picture meanwhile; tried against an event playlist ffmpeg was still writing, it
-picked the stream up again once the encoder wrote on. Once the tries are spent it says the video
+again" over the picture meanwhile, until the playhead plays on again (not once the media loads, as
+a try at a stall loads it and still waits for data), or, for a video that was paused, until it
+loads. A try that picks up short of where it stood is moved on there: Apple's own HLS lands a try
+at a live stream's edge at the start of the segment it stood in and clamps a seek to a window that
+ends segments before it, so the player holds that try paused under "Trying again" and loads it
+again where it stood once the stream has grown, or meets it as a stall after `stallAfter`, so no
+segment plays twice. Tried against an event playlist ffmpeg was still writing, it picked the stream
+up again once the encoder wrote on. Once the tries are spent it says the video
 could not be played, with Retry; media the browser cannot play is said at once. `onError` hears
 each with `fatal` false while it tries and true once it gives up. When the page is shown again
 after being hidden, a video that was playing plays on (a browser pauses a page put away) and one
@@ -1469,7 +1483,12 @@ handler, and `timeline="chapter"` measures the scrubber and its times within the
 `live` is for a stream with no length, such as a radio station: a Live mark stands where the
 position would, and seeking, skipping and the speed are off. `useMediaSession` tells the operating
 system what plays (title, artist, album, artwork), whether it plays and where along its length at
-its speed, and answers its media keys and lock screen through the app's handlers. It tells the
+its speed, and answers its media keys and lock screen through the app's handlers. Artwork is an
+address, pictures at several sizes, or a picture drawn on a canvas (`MediaSessionDrawing`), drawn
+as the system is told what plays, at the sizes systems ask for (`MEDIA_ARTWORK_SIZES`, 96 to 512
+pixels), and handed over as JPEG data addresses; `coverArtwork` in `Artwork` makes one of a drawn
+cover, from the same shapes the SVG draws (`coverShapes`, `drawCover`) in the colors the theme gives
+its tokens. It tells the
 position again only when it strays from where the system runs it, takes everything away on unmount,
 and does nothing where the browser has no media session.
 
