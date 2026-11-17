@@ -457,18 +457,12 @@ to `plan.md` when it ships.
   an `examples/tauri-cef` shell on `tauri-runtime-cef` beside the examples' Tauri shells, built by the
   examples workflow; until then, nothing to build.
 
-- **Parts the app stories still build.** A letter header (avatar, sender, address, time, the
-  attachment mark, folding over its body) for Mail;
-  one detail sheet for the Workspace, Files and Admin detail panes;
-  the board item's panel with its checklist; checkboxes with a color dot for calendar toggles.
 - **The records app's conversion.** `examples/records/GAPS.md` maps every screen of the records app
   onto the library; every item in it is closed. One question is left: a `--color-*` name exists
   only once a class uses it, so a prop that takes a CSS color takes the raw token
   (`var(--status-running)`); decide whether every color is emitted.
 
 - **Gaps the examples found (2026-11-09)**, still open:
-    - **Frame:**
-        - a rail that shows its places above its body, not behind a row
     - **Tables:**
         - a list variant with its own search
         - `stack: 'lead'` passing a press on a non-control through to the row

@@ -50,6 +50,54 @@ export const List: StoryObj = {
     },
 }
 
+/** Calendar toggles: each box with its calendar's color dot, the label quiet while the calendar is hidden. */
+export const Colored: StoryObj = {
+    render: function Render() {
+        const [shown, setShown] = useState(['runs', 'releases'])
+        const toggle = (id: string) => (on: boolean) => setShown((now) => (on ? [...now, id] : now.filter((each) => each !== id)))
+        return (
+            <Stack gap="2xs" className="max-w-xs">
+                <CheckboxField
+                    label="Runs"
+                    dot="blue"
+                    quiet="unchecked"
+                    checked={shown.includes('runs')}
+                    onCheckedChange={toggle('runs')}
+                />
+                <CheckboxField
+                    label="Releases"
+                    dot="violet"
+                    quiet="unchecked"
+                    checked={shown.includes('releases')}
+                    onCheckedChange={toggle('releases')}
+                />
+                <CheckboxField
+                    label="On call"
+                    dot="green"
+                    quiet="unchecked"
+                    checked={shown.includes('call')}
+                    onCheckedChange={toggle('call')}
+                />
+            </Stack>
+        )
+    },
+}
+
+/** A checklist: a done step's label struck through and quiet. */
+export const Steps: StoryObj = {
+    render: function Render() {
+        const [done, setDone] = useState(['fetch'])
+        const toggle = (id: string) => (on: boolean) => setDone((now) => (on ? [...now, id] : now.filter((each) => each !== id)))
+        return (
+            <Stack gap="2xs" className="max-w-md">
+                {['fetch', 'transform', 'validate'].map((step) => (
+                    <CheckboxField key={step} label={step} quiet="checked" checked={done.includes(step)} onCheckedChange={toggle(step)} />
+                ))}
+            </Stack>
+        )
+    },
+}
+
 /** The acknowledgement a destructive step waits on, framed in the critical tone. */
 export const Critical: StoryObj = {
     render: function Render() {

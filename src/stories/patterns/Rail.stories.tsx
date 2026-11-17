@@ -219,7 +219,7 @@ const navAt = (place: string): RailGroup[] =>
  * search, in place of the places, under All places, which shows the places again. A place chosen
  * there leaves Jobs, and Jobs brings the tree back.
  */
-function BodyRail() {
+function BodyRail({ above = false }: { above?: boolean }) {
     const [place, setPlace] = useState('jobs')
     const [query, setQuery] = useState('')
     const [job, setJob] = useState('harbor/rebuild-index')
@@ -235,6 +235,7 @@ function BodyRail() {
                         place === 'jobs'
                             ? {
                                   title: 'Jobs',
+                                  places: above ? 'above' : 'behind',
                                   search: <SearchField value={query} onChange={setQuery} />,
                                   content: (
                                       <Tree
@@ -432,3 +433,9 @@ export const Reordered: StoryObj = {
  * icons, since a tree has no icon form.
  */
 export const Body: StoryObj = { render: () => <BodyRail /> }
+
+/**
+ * The same tree under the places rather than in their place: every place stays in view over the
+ * tree, with no row between them, as an app with a few places and one tree keeps them.
+ */
+export const PlacesAbove: StoryObj = { name: 'Places above', render: () => <BodyRail above /> }

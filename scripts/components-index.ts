@@ -274,6 +274,7 @@ const CORE_AREAS: Record<string, string> = {
     FoldingRail: 'Page layout',
     ExampleList: 'Page layout',
     DetailSheet: 'Page layout',
+    DetailPane: 'Page layout',
     Layout: 'Page layout',
     PageHeader: 'Page layout',
     PaneHeader: 'Page layout',
@@ -407,6 +408,7 @@ const CORE_AREAS: Record<string, string> = {
     EmojiPicker: 'Chat and messaging',
     ReactionBar: 'Chat and messaging',
     MessageRow: 'Chat and messaging',
+    Letter: 'Chat and messaging',
     ToolCall: 'Chat and messaging',
     UsageLine: 'Chat and messaging',
     // Files and attachments.

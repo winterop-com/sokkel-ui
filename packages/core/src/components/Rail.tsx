@@ -95,6 +95,11 @@ export interface RailBody {
     title?: string
     /** What stands over the content without scrolling with it, such as the search over a tree. */
     search?: ReactNode
+    /**
+     * Where the places are while the body shows: `behind` a row at the top that shows them in its
+     * place (the default), or `above` the body, both shown at once, for an app with a few places.
+     */
+    places?: 'behind' | 'above'
 }
 
 /** What the expanded rail shows between its head and its foot: its places, or its `body`. */
@@ -244,6 +249,8 @@ export interface RailProps {
  * top ("All places", `words.places`) shows the places, its `title` under that row, its `search`
  * standing still over the content as the content scrolls. Shown the places, a place chosen there
  * brings the body back, and so does a body given anew, as a page that holds one is reached again.
+ * With `places: 'above'` the places stand over the body instead, both shown at once with no row
+ * between them, for an app with a few places beside one tree.
  * Collapsed, the rail draws the places' icons, since a body has no icon form, and expanding it
  * shows the body. The body stays mounted while the places or the icons show, so it comes back as
  * it was left, a tree's open levels and its scroll with it. The shell's drawer draws the body, as
@@ -320,9 +327,32 @@ export function Rail({
         const target = list.querySelector<HTMLElement>('[aria-current="page"]') ?? list.querySelector<HTMLElement>('a, button')
         target?.focus()
     })
+    const words = { ...RAIL_WORDS, ...given }
+    const above = body?.places === 'above'
+    // Places above a body show with it whenever the rail is expanded.
+    const both = above && shows !== 'icons'
+    // Kept while the places or the icons show, so the body comes back as it was left.
+    const bodyView = body !== undefined && (
+        <div data-rail-body="" hidden={shows !== 'body' && !both} className="flex min-h-0 flex-1 flex-col">
+            <div className="flex shrink-0 flex-col px-2 pb-2">
+                {!above && (
+                    <button type="button" className={rowClass('idle')} onClick={() => setView('places')}>
+                        <ChevronLeft className="size-4 shrink-0" aria-hidden />
+                        <span className="truncate">{words.places}</span>
+                    </button>
+                )}
+                {body.title !== undefined && (
+                    <GroupLabel as="h2" className="truncate px-2 pt-4 pb-1.5">
+                        {body.title}
+                    </GroupLabel>
+                )}
+                {body.search !== undefined && <div className="pt-1">{body.search}</div>}
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">{body.content}</div>
+        </div>
+    )
     const lights = useTrafficLights(desktop)
     const drag = desktop === undefined ? undefined : ''
-    const words = { ...RAIL_WORDS, ...given }
     const SortGroup = useContext(DragPartsContext).railGroup
     const unread = words.unread
     const [ownOpen, setOwnOpen] = useState<string[]>(() => [
@@ -436,29 +466,12 @@ export function Rail({
                     )}
                 </div>
                 {under && <div className="flex shrink-0 justify-center py-1">{expand}</div>}
-                {body !== undefined && (
-                    // Kept while the places or the icons show, so the body comes back as it was left.
-                    <div data-rail-body="" hidden={shows !== 'body'} className="flex min-h-0 flex-1 flex-col">
-                        <div className="flex shrink-0 flex-col px-2 pb-2">
-                            <button type="button" className={rowClass('idle')} onClick={() => setView('places')}>
-                                <ChevronLeft className="size-4 shrink-0" aria-hidden />
-                                <span className="truncate">{words.places}</span>
-                            </button>
-                            {body.title !== undefined && (
-                                <GroupLabel as="h2" className="truncate px-2 pt-4 pb-1.5">
-                                    {body.title}
-                                </GroupLabel>
-                            )}
-                            {body.search !== undefined && <div className="pt-1">{body.search}</div>}
-                        </div>
-                        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">{body.content}</div>
-                    </div>
-                )}
+                {!above && bodyView}
                 <div
                     ref={places}
                     data-rail-places=""
-                    hidden={shows === 'body'}
-                    className="min-h-0 flex-1 overflow-y-auto pb-3"
+                    hidden={shows === 'body' && !both}
+                    className={cn('overflow-y-auto', both ? 'max-h-1/2 shrink-0 pb-1' : 'min-h-0 flex-1 pb-3')}
                     // A place chosen while a body waits brings the body back, as the page that holds it is reached again.
                     onClick={
                         body === undefined
@@ -512,6 +525,7 @@ export function Rail({
                         </nav>
                     ))}
                 </div>
+                {above && bodyView}
                 {foot !== undefined && footCell === null && (
                     <div className="flex h-shell-foot shrink-0 items-stretch border-t border-border-strong">{foot}</div>
                 )}
