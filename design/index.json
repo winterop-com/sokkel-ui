@@ -79,7 +79,7 @@
             "Text is one size; a role keeps what textRoles gives it."
         ],
         "textRoles": {
-            "$description": "What a cell shows of each text role: bold or not, italic or not, and its ink. Size, line height and tracking are not drawn. No role carries an ink of its own (sokkel-ui sets none): the piece's paint gives it. `head` takes the theme's table-head-transform (uppercase in some themes).",
+            "$description": "What a cell shows of each text role: bold or not, italic or not, and its ink. Size, line height and tracking are not drawn. No role carries an ink of its own (sokkel-ui sets none): the piece's paint gives it. `column-head` takes the theme's table-head-transform (uppercase in some themes) on a column head, never on a group head.",
             "2xs": {"bold": false, "italic": false, "ink": "piece"},
             "xs": {"bold": false, "italic": false, "ink": "piece"},
             "sm": {"bold": false, "italic": false, "ink": "piece"},
@@ -95,6 +95,7 @@
             "detail-title": {"bold": true, "italic": false, "ink": "piece"},
             "section-title": {"bold": true, "italic": false, "ink": "piece"},
             "head": {"bold": true, "italic": false, "ink": "piece"},
+            "column-head": {"bold": true, "italic": false, "ink": "piece"},
             "body": {"bold": false, "italic": false, "ink": "piece"},
             "action": {"bold": true, "italic": false, "ink": "piece"},
             "label": {"bold": true, "italic": false, "ink": "piece"},
