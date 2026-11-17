@@ -109,12 +109,12 @@
             "reached": "the pointer"
         },
         "focus": {
-            "means": "Keyboard focus on a reaction, the more button, a chip or the add button: a focus-ring-width ring in ring at half strength around it, with no offset.",
+            "means": "Keyboard focus on a reaction or the more button: the frame's focus outline in ring, focus-ring-width wide, drawn focus-ring-offset inside the circle, so a reaction already given shows it beside its pressed ring. On a chip or the add button: a focus-ring-width ring in ring at half strength around it, with no offset.",
             "on": "keyboard",
             "reached": "Tab, the arrows"
         },
         "pressed": {
-            "means": "A quick reaction the person has given: washed primary at 12 percent, a 1 wide ring in primary at 60 percent.",
+            "means": "A quick reaction the person has given: washed primary at 12 percent, a 1 wide ring in primary at 60 percent outside it; with keyboard focus too, the focus outline inside it as well, both read.",
             "reached": "selected"
         },
         "open": {
@@ -140,7 +140,9 @@
         "reaction": {
             "rest": {"text": "text.emoji", "note": "A circle; no ground at rest."},
             "hover": {"ground": "hover"},
-            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}},
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"}
+            },
             "pressed": {"ground": "primary/12", "ring": {"color": "primary/60", "width": 1}},
             "sm": {"text": "text.base"}
         },
@@ -148,7 +150,9 @@
             "rest": {"ink": "muted-foreground"},
             "hover": {"ground": "hover", "ink": "foreground"},
             "open": {"ground": "hover"},
-            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"}
+            }
         },
         "chip": {
             "rest": {
@@ -173,7 +177,7 @@
     "keyboard": [
         {
             "keys": ["ArrowLeft", "ArrowRight"],
-            "does": "Moves to the bar's button before or after, the more button included, wrapping at the ends.",
+            "does": "Moves to the bar's button before or after, the more button included; it stops at the first and the last, as every list of choices does.",
             "when": "a button of the bar has focus"
         },
         {

@@ -69,7 +69,7 @@ export interface ComposerDictationWords {
     failed: string
 }
 
-const DICTATION_WORDS: ComposerDictationWords = {
+export const COMPOSER_DICTATION_WORDS: ComposerDictationWords = {
     dictate: 'Dictate',
     finish: 'Finish dictating',
     cancel: 'Cancel dictation',
@@ -111,7 +111,7 @@ export interface ComposerWords {
     mentions: Partial<MentionWords>
 }
 
-const WORDS: ComposerWords = {
+export const COMPOSER_WORDS: ComposerWords = {
     placeholder: 'Ask anything',
     send: 'Send',
     stop: 'Stop',
@@ -348,8 +348,8 @@ export function Composer({
     words: given,
     className,
 }: ComposerProps) {
-    const words = { ...WORDS, ...given }
-    const said = { ...DICTATION_WORDS, ...words.dictation }
+    const words = { ...COMPOSER_WORDS, ...given }
+    const said = { ...COMPOSER_DICTATION_WORDS, ...words.dictation }
     const picker = useRef<HTMLInputElement>(null)
     const root = useRef<HTMLDivElement>(null)
     const text = useRef<HTMLTextAreaElement>(null)

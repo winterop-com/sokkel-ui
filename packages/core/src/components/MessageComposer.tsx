@@ -117,7 +117,7 @@ export interface MessageComposerWords {
     mentions?: Partial<MentionWords>
 }
 
-const WORDS: MessageComposerWords = {
+export const MESSAGE_COMPOSER_WORDS: MessageComposerWords = {
     placeholder: 'Message',
     send: 'Send',
     sendLater: 'Schedule for later',
@@ -326,7 +326,7 @@ export function MessageComposer({
     className,
     words: given,
 }: MessageComposerProps) {
-    const words = { ...WORDS, ...given, format: { ...WORDS.format, ...given?.format } }
+    const words = { ...MESSAGE_COMPOSER_WORDS, ...given, format: { ...MESSAGE_COMPOSER_WORDS.format, ...given?.format } }
     const [formatting, setFormatting] = useState(defaultFormatting)
     const [ownMode, setOwnMode] = useState<MessageComposerMode>(defaultMode)
     const mode = preview ? (givenMode ?? ownMode) : 'write'

@@ -1,0 +1,286 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "message-composer",
+    "kind": "part",
+    "status": "stable",
+    "summary": "Where a message to people is written, as at the foot of a team chat's channel: a box on the field's ground, rounded by radius-composer, with the formatting toolbar on top (its groups as its width has room for, the rest behind More, and Write and Preview at its end), the text that grows with what is typed, and a row under it with add, the text style toggle, emoji and mention at the start, then the app's actions, and a round Send at the end with an optional schedule menu. Enter sends and Shift+Enter breaks the line; on a touch screen Enter breaks the line and only Send sends. A toolbar button wraps the selection in markdown; the code block button puts it in a fence named for the language chosen. Preview draws the message as a sent one is.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/MessageComposer.tsx",
+            "packages/core/src/components/Mentions.tsx",
+            "packages/core/src/components/EmojiPicker.tsx",
+            "packages/core/src/components/Segmented.tsx",
+            "packages/core/src/components/Markdown.tsx",
+            "packages/core/src/components/TagChips.tsx",
+            "packages/core/src/components/ui/dropdown-menu.tsx",
+            "packages/core/src/lib/keys.ts"
+        ]
+    },
+    "anatomy": {
+        "box": "The composer: a 1px border-strong edge on the field's ground, rounded by radius-composer, its text the body role; while anything in it has focus its edge is ring.",
+        "toolbarRow": "With the formatting shown: the toolbar and Write and Preview in a row at the top, 6 in and 4 down, 8 apart.",
+        "toolbar": "A toolbar named words.formatting: the groups (bold, italic, underline, strikethrough; link, numbered and bulleted lists; code and code block), 2 apart and padded 2, a 16 rule between groups. Those its width has no room for go behind words.moreFormatting at its end, a menu of the same groups, the code block's languages in a submenu.",
+        "groupRule": "A rule 1 wide and 16 tall between two groups, 4 either side.",
+        "action": "A button of the toolbar or the row: a 28 round icon button, its icon 16 in muted-foreground, named and titled by its words. Pressed (the text style toggle while the toolbar shows, Preview while previewing) its icon is foreground; while its menu is open it is washed hover.",
+        "codeMenu": "The code block's menu (parts/dropdown-menu), over the button and 208 wide: words.codeLanguage, words.plainText, then each language with its fence name in the code face at the row's end.",
+        "mode": "With preview: Write and Preview as a segmented choice named words.mode at the toolbar's end, from previewFrom wide; narrower, one Preview action that stays pressed while previewing.",
+        "text": "The text, with no frame of its own, at least 40 tall, 12 across and 8 down on a 24 line, growing to textMaxHeight; words.placeholder in muted-foreground while empty. Hidden, keeping its height, while previewing.",
+        "preview": "While previewing: the message drawn by the library's markdown as a sent message is, in the text's place, at least as tall as the text was, scrolling past previewMaxHeight; words.nothingToPreview in muted-foreground for a draft with no text.",
+        "alsoSend": "With alsoSendTo: a checkbox and words.alsoSend with the channel's name and mark, 12 in, in muted-foreground at the help role, the name in foreground at 500.",
+        "row": "The row under the text, 8 in and 6 under, 2 apart: add, the text style toggle, emoji, mention, the app's actions, More, then Send at the end.",
+        "add": "words.attach, with onAttach: a 28 round button on secondary with a plus 16 in muted-foreground, 2 before the next.",
+        "emoji": "words.emoji: an action that opens the emoji picker (parts/emoji-picker) over the composer, its pick going in at the caret; or, with onEmoji, the app's own.",
+        "mention": "words.mention: an action that puts an @ in at the caret and opens the suggestions (with mentions), or the app's own (onMention).",
+        "send": "words.send: a 28 round button with a send arrow 16; with something written on primary in primary-foreground, empty in faint with no ground and shut. With a schedule it is the left of a pair, its start round.",
+        "chevron": "With schedule or onSendLater: words.sendLater, a chevron 14 beside Send, its end round, ruled from Send in primary-foreground at 25 percent; it opens the times (words.sendLater over them, each with its detail at the row's end) and words.customTime last, or calls onSendLater at once with no schedule.",
+        "mentionList": "With mentions: the people suggested at the caret, as parts/composer's suggestion list draws them."
+    },
+    "options": {
+        "value": {"type": "text", "does": "The text; onChange hears every change."},
+        "onSend": {
+            "type": "callback",
+            "does": "Hears Enter or Send while the text holds something; a preview goes back to Write."
+        },
+        "onAttach": {"type": "callback", "does": "Offers add."},
+        "emojiPicker": {
+            "type": "node",
+            "does": "Offers the emoji button with the picker: true, or the picker's options."
+        },
+        "onEmoji": {"type": "callback", "does": "Offers the emoji button, which the app answers itself."},
+        "mentions": {
+            "type": "node",
+            "does": "Suggests people at the caret as an @ is typed or the mention button is pressed."
+        },
+        "onMention": {"type": "callback", "does": "Offers the mention button, which the app answers itself."},
+        "actions": {"type": "node", "does": "More buttons after mention, such as MessageComposerAction."},
+        "onMore": {"type": "callback", "does": "Offers More after the actions."},
+        "schedule": {
+            "type": "rows",
+            "does": "The times the send menu offers: { id, label, detail? }; onSchedule hears the one chosen."
+        },
+        "onSendLater": {"type": "callback", "does": "Offers the chevron; with schedule, the menu's last entry."},
+        "alsoSendTo": {
+            "type": "node",
+            "does": "Where a thread reply can be sent as well; alsoSend and onAlsoSendChange hold the checkbox."
+        },
+        "defaultFormatting": {"type": "boolean", "default": true, "does": "Whether the toolbar starts shown."},
+        "preview": {"type": "boolean", "default": true, "does": "Offers Write and Preview."},
+        "math": {"type": "boolean", "default": true, "does": "Draws LaTeX math in the preview."},
+        "mode": {
+            "values": ["write", "preview"],
+            "default": "write",
+            "does": "The mode shown, when the app holds it (mode, defaultMode, onModeChange).",
+            "sokkel-ui": "MessageComposerMode"
+        },
+        "format": {
+            "values": ["bold", "italic", "underline", "strike", "link", "ordered", "bullets", "code", "codeBlock"],
+            "does": "The formats the toolbar offers, in order, each wrapping the selection in its markdown (** **, _ _, __ __, ~~ ~~, [ ](https://), 1. , - , ` `) or, for the code block, a fence.",
+            "sokkel-ui": "MessageFormat"
+        },
+        "codeLanguages": {
+            "type": "rows",
+            "does": "The languages the code block menu lists after Plain text: { id, label }; the highlighter's and mermaid by default."
+        },
+        "disabled": {
+            "type": "boolean",
+            "default": false,
+            "does": "Shuts the text and the controls; the box at 60 percent."
+        }
+    },
+    "sizes": {
+        "toolbarRow": {"padX": 6, "gap": 8, "note": "4 over it."},
+        "toolbar": {"padX": 2, "padY": 2, "gap": 2},
+        "groupRule": {"height": 16, "width": 1},
+        "action": {"height": 28, "width": 28, "icon": 16},
+        "text": {"height": 40, "padX": 12, "padY": 8, "note": "At least; on a 24 line."},
+        "preview": {"padX": 12, "padY": 8, "text": "text.body", "note": "On a 24 line."},
+        "alsoSend": {"padX": 12, "gap": 8, "text": "text.help"},
+        "row": {"padX": 8, "gap": 2, "note": "6 under it."},
+        "add": {"height": 28, "width": 28},
+        "send": {
+            "height": 28,
+            "width": 28,
+            "note": "With a schedule its width is its icon's and 8 at its start, 6 at its end."
+        },
+        "chevron": {"height": 28}
+    },
+    "layout": {
+        "groupGap": {
+            "value": 2,
+            "note": "Between the toolbar's groups, which it fits by measuring them against its width, More taking its own room."
+        },
+        "textMaxHeight": {"value": 240, "note": "The text grows to this, then scrolls."},
+        "previewMaxHeight": {"value": 384, "note": "The preview scrolls past this."},
+        "previewFrom": {
+            "value": 448,
+            "note": "The composer's own width from which Write and Preview are a segmented choice; narrower, one Preview action."
+        }
+    },
+    "states": {
+        "rest": {"means": "Empty, the toolbar shown: the placeholder, Send shut and faint."},
+        "within": {
+            "means": "Anything in the composer has focus, by any means: the box's edge ring.",
+            "on": "any",
+            "reached": "focus inside the box"
+        },
+        "hover": {
+            "means": "The pointer over an action: washed hover, its icon foreground; over add, its icon foreground; over Send or the chevron with something written, primary at 90 percent.",
+            "reached": "the pointer"
+        },
+        "focus": {
+            "means": "Keyboard focus on an action, add, Send or the chevron: a focus-ring-width ring in ring at half strength around it.",
+            "on": "keyboard",
+            "reached": "Tab"
+        },
+        "pressed": {
+            "means": "The text style toggle while the toolbar shows, Preview while previewing: the icon foreground.",
+            "reached": "the toolbar shown, or previewing"
+        },
+        "open": {
+            "means": "An action whose menu is open: washed hover, its icon foreground.",
+            "reached": "the code block or More menu, or the emoji picker, open"
+        },
+        "disabled": {
+            "means": "An action that cannot act now (a format while previewing, every control while disabled): disabled-opacity, not pressed.",
+            "reached": "previewing, or disabled",
+            "effect": {"piece": "action", "opacity": "disabled-opacity"}
+        },
+        "empty": {
+            "means": "Nothing written: Send and the chevron shut, faint, with no ground; Enter does nothing.",
+            "reached": "a text with nothing but spaces"
+        },
+        "previewing": {"means": "The preview in the text's place; the formats shut.", "reached": "Preview"},
+        "narrow": {
+            "means": "Narrower than previewFrom: one Preview action; groups the toolbar has no room for go behind More.",
+            "reached": "a narrow composer"
+        },
+        "touch": {
+            "means": "A touch screen with no hover: Enter breaks the line, only Send sends.",
+            "reached": "a coarse pointer with no hover, read once"
+        }
+    },
+    "pieces": {
+        "box": {
+            "rest": {"ground": "field", "edge": "border-strong", "radius": "radius-composer", "text": "text.body"},
+            "within": {"edge": "ring"}
+        },
+        "groupRule": {"rest": {"ground": "border"}},
+        "action": {
+            "rest": {"ink": "muted-foreground", "note": "Round."},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}},
+            "pressed": {"ink": "foreground"},
+            "open": {"ground": "hover", "ink": "foreground"},
+            "disabled": {"opacity": "disabled-opacity"}
+        },
+        "text": {"rest": {"placeholder": "muted-foreground"}},
+        "preview": {"rest": {"text": "text.body", "note": "The empty preview's words in muted-foreground."}},
+        "alsoSend": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "add": {
+            "rest": {"ground": "secondary", "ink": "muted-foreground", "note": "Round."},
+            "hover": {"ink": "foreground"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "send": {
+            "rest": {
+                "ground": "primary",
+                "ink": "primary-foreground",
+                "note": "Round; with a schedule, its start only."
+            },
+            "hover": {"ground": "primary/90"},
+            "empty": {"ground": "none", "ink": "faint"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "chevron": {
+            "rest": {
+                "ground": "primary",
+                "ink": "primary-foreground",
+                "edge": "primary-foreground/25",
+                "note": "A rule at its start only; its end round."
+            },
+            "hover": {"ground": "primary/90"},
+            "empty": {"ground": "none", "edge": "none", "ink": "faint"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Enter"],
+            "does": "Sends, when the text holds something; otherwise does nothing. Not while an input method composes.",
+            "when": "the text has focus, no suggestion list is open, and the screen is not a touch screen"
+        },
+        {"keys": ["Shift+Enter"], "does": "Breaks the line.", "when": "the text has focus"},
+        {"keys": ["Enter"], "does": "Breaks the line; only Send sends.", "when": "the text has focus on a touch screen"},
+        {
+            "keys": ["ArrowDown", "ArrowUp"],
+            "does": "Moves through the people suggested; it stops at the first and the last.",
+            "when": "the suggestion list is open"
+        },
+        {
+            "keys": ["Enter", "Tab"],
+            "does": "Puts the person chosen in as @handle; Enter does not send. While the app's search answers, it waits.",
+            "when": "the suggestion list is open"
+        },
+        {"keys": ["Escape"], "does": "Closes the suggestions, until the next @.", "when": "the suggestion list is open"},
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Presses the action: wraps the selection, opens its menu or the emoji picker.",
+            "when": "an action has focus"
+        }
+    ],
+    "words": {
+        "placeholder": "Message",
+        "send": "Send",
+        "sendLater": "Schedule for later",
+        "customTime": "Custom time",
+        "alsoSend": "Also send to",
+        "attach": "Attach",
+        "formatting": "Show or hide formatting",
+        "emoji": "Emoji",
+        "mention": "Mention someone",
+        "more": "More",
+        "moreFormatting": "More formatting",
+        "mode": "Write or preview",
+        "write": "Write",
+        "preview": "Preview",
+        "nothingToPreview": "Nothing to preview",
+        "codeLanguage": "Language",
+        "plainText": "Plain text",
+        "format.bold": "Bold",
+        "format.italic": "Italic",
+        "format.underline": "Underline",
+        "format.strike": "Strikethrough",
+        "format.link": "Link",
+        "format.ordered": "Numbered list",
+        "format.bullets": "Bulleted list",
+        "format.code": "Code",
+        "format.codeBlock": "Code block",
+        "mentions.label": "People to mention",
+        "mentions.empty": "No one by that name",
+        "mentions.searching": "Searching"
+    },
+    "appText": {
+        "actions": "The app's actions and their labels.",
+        "schedule": "Each time's label and detail.",
+        "alsoSendTo": "The channel's name and mark.",
+        "codeLanguages": "Each language's label and fence name.",
+        "preview": "The preview's markdown says the library's markdown words, passed through words.markdown."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The toolbar fits its groups by measuring a hidden row of empty buttons of the same sizes against its width (fitCount), again as it resizes.",
+            "Write and Preview switch by a container query on the composer (@md, 448).",
+            "Whether the screen is a touch screen is read once, from (pointer: coarse) and (hover: none).",
+            "The menus and the emoji picker's popover are Base UI's; a menu closed after a choice puts focus back in the text, otherwise on its button after a keyboard close.",
+            "The text's selection is kept across Preview and restored on Write; an emoji goes in where the selection was when the picker opened."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 48f51ce there is no message composer."
+        }
+    ]
+}
