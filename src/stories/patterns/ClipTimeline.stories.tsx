@@ -14,9 +14,10 @@ import {
 import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
 import { DragDrop } from '@winterop-com/sokkel-ui/DragDrop'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
-import { Row, Split, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Fill, Row, Split, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { MediaCard } from '@winterop-com/sokkel-ui-media/MediaCard'
 import { Section } from '@winterop-com/sokkel-ui/Section'
+import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 
 /**
  * The multi-track timeline of a video editor: a row a track with its header at the start, clips as
@@ -307,6 +308,76 @@ export const MediaBin: StoryObj = {
                     />
                 </Split>
             </DragDrop>
+        )
+    },
+}
+
+const MORE_TRACKS: TimelineTrack[] = [
+    ...TRACKS.slice(0, 2),
+    { id: 'broll', name: 'B-roll', kind: 'video' },
+    ...TRACKS.slice(2),
+    { id: 'music', name: 'Music', kind: 'audio' },
+]
+
+const MORE_CLIPS: TimelineClip[] = [
+    ...CLIPS,
+    { id: 'harbor-close', track: 'broll', start: 14, duration: 6, sourceDuration: 6, label: 'harbor-close' },
+    { id: 'juniper-gulls', track: 'broll', start: 28, duration: 5, sourceDuration: 9, label: 'juniper-gulls' },
+    { id: 'theme', track: 'music', start: 4, duration: 40, sourceDuration: 90, label: 'theme', color: 'violet', waveform: peaks(500, 7) },
+]
+
+/**
+ * The timeline in the short pane under a bin, given less height than its tracks need: the lanes
+ * scroll down and sideways, the ruler staying at the top, the headers at the start and the playhead's
+ * timecode over both. Clips still drag and trim where they are scrolled to.
+ */
+export const ShortRoom: StoryObj = {
+    name: 'Short room',
+    parameters: { frame: 'none' },
+    decorators: [
+        (Story) => (
+            <Stack gap="none" className="h-svh bg-background text-foreground">
+                <Story />
+            </Stack>
+        ),
+    ],
+    render: function Render() {
+        const [playhead, setPlayhead] = useState(16)
+        const [clips, setClips] = useState(MORE_CLIPS)
+        const [selected, setSelected] = useState<string[]>([])
+        return (
+            <SplitPane
+                direction="down"
+                defaultShare={0.72}
+                first={
+                    <Fill scroll>
+                        <Row wrap gap="sm" className="p-4">
+                            {BIN.map((source) => (
+                                <MediaCard
+                                    key={source.id}
+                                    layout="row"
+                                    shape="wide"
+                                    title={source.label}
+                                    subtitle={`${CLIP_TIMELINE_WORDS.kinds[source.kind]}, ${String(source.duration)} s`}
+                                    placeholderSeed={source.id}
+                                />
+                            ))}
+                        </Row>
+                    </Fill>
+                }
+                second={
+                    <ClipTimeline
+                        tracks={MORE_TRACKS}
+                        clips={clips}
+                        duration={60}
+                        playhead={playhead}
+                        onPlayheadChange={setPlayhead}
+                        selected={selected}
+                        onSelectedChange={setSelected}
+                        onClipsChange={(changes) => setClips((current) => applied(current, changes))}
+                    />
+                }
+            />
         )
     },
 }

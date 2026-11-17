@@ -60,3 +60,9 @@ release and empties it.
 - `RunTimeline` draws the chosen lane's shift handle at rest, a dashed band with a grip from the
   current time to past the last upcoming run, so a person sees what to drag; it was drawn only
   under the pointer, and began at the first upcoming run.
+- `ClipTimeline` stays readable in a narrow room: a fitted view (no `zoom`) never draws a second
+  tighter than `clipFitZoom` allows (`CLIP_TIMELINE_FIT`: 16 pixels a second, or the whole length in
+  960 pixels when that is tighter), and the lanes scroll sideways inside the timeline when the length
+  needs more room, the page never; `onFitChange` hears the zoom the fit really draws at. A desktop's
+  fit is as it was. Given less height than its tracks need, the lanes scroll both ways under a ruler
+  held at the top and headers held at the start, the playhead's timecode over both.
