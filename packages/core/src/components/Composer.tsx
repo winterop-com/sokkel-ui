@@ -11,6 +11,7 @@ import { DialogShell } from './DialogShell'
 import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { AudioPlayer } from './media/AudioPlayer'
 import { formatTime } from './media/time'
+import { wantsFirstFrame } from './media/video-source'
 import { VIDEO_PLAYER_WORDS, VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
 import { Spinner } from './ui/spinner'
@@ -212,7 +213,18 @@ function Chip({ attachment, words, onPlay }: { attachment: ComposerAttachment; w
                 onClick={onPlay}
                 className="relative block size-14 overflow-hidden rounded-md border border-border bg-terminal outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-                <video src={url} muted playsInline preload="metadata" aria-hidden className="size-full object-cover" />
+                <video
+                    src={url}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-hidden
+                    // A seek to the start makes WebKit fetch the first frame, which it leaves empty under `preload="metadata"`.
+                    onLoadedMetadata={(event) => {
+                        if (wantsFirstFrame(event.currentTarget)) event.currentTarget.currentTime = 0
+                    }}
+                    className="size-full object-cover"
+                />
                 <span className="absolute inset-0 flex items-center justify-center bg-terminal/30 text-terminal-foreground">
                     <Play className="size-4 fill-current" aria-hidden />
                 </span>

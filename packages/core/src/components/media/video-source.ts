@@ -130,6 +130,25 @@ export function resumeAt(position: number, window: { start: number; end: number 
     return position
 }
 
+/** `HTMLMediaElement.HAVE_CURRENT_DATA`: the element has the frame at its playhead to show. */
+const HAVE_CURRENT_DATA = 2
+
+/**
+ * Whether a paused video that has its length but no picture yet should seek to where it stands, so
+ * the engine fetches that frame. WebKit stops at the length when `preload` is `metadata` and shows
+ * an empty frame until the video plays; Chromium and Firefox fetch the first frame on their own. A
+ * poster stands in for the frame, and `preload="none"` asks for nothing.
+ */
+export function wantsFirstFrame(video: {
+    paused: boolean
+    readyState: number
+    seeking: boolean
+    poster: string
+    preload: string
+}): boolean {
+    return video.paused && !video.seeking && video.poster === '' && video.preload !== 'none' && video.readyState < HAVE_CURRENT_DATA
+}
+
 /** How far short of where a try was to resume the playhead may land before it is moved on there, in seconds. */
 export const RESUME_SLACK = 0.5
 

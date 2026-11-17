@@ -107,3 +107,8 @@ release and empties it.
   stream's edge at the start of the segment it stood in and played up to a segment again: a try
   that picks up short is moved on there, or held paused under "Trying again" until the stream has
   grown and loaded again there.
+- `VideoPlayer` (and so `AttachmentList`'s videos) and the `Composer`'s video thumbnails show the
+  first frame in WebKit. Under `preload="metadata"` WebKit stopped at the video's length and drew
+  an empty picture until it played; a paused video with no poster now seeks to where it stands once
+  it has its length, which makes WebKit fetch that frame. `media/video-source` exports the check,
+  `wantsFirstFrame`.

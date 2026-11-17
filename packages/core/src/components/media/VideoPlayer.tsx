@@ -56,6 +56,7 @@ import {
     resumeCorrection,
     RESUME_SLACK,
     trackProgress,
+    wantsFirstFrame,
     type Progress,
     type VideoError,
     type VideoSource,
@@ -796,6 +797,12 @@ export function VideoPlayer({
         if (element === null) return
         const metadata = () => {
             takeHeldSeek(element)
+            // A seek to where it stands makes WebKit fetch the frame there, which it leaves empty under
+            // `preload="metadata"`. Media an engine feeds through `source` keeps its own position.
+            if (latest.current.source === undefined && wantsFirstFrame(element)) {
+                const at = element.currentTime
+                element.currentTime = at
+            }
         }
         /**
          * Moves a playhead that a try picked up short of where it was back there, as a browser's own
