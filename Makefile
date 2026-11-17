@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check generated-check storybook-build baselines visual visual-update screenshots-ci layout examples examples-web examples-list examples-site clean
+.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check generated-check storybook-build baselines visual visual-update screenshots-ci layout layout-engines examples examples-web examples-list examples-site clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -61,6 +61,9 @@ screenshots-ci: ## Retake the screenshots on GitHub into the current branch's ba
 
 layout: storybook-build ## Check that no story scrolls sideways at the narrow widths
 	bunx playwright test e2e/layout.spec.ts
+
+layout-engines: storybook-build ## The layout check in WebKit and Firefox, which CI does not run (bunx playwright install webkit firefox first)
+	ENGINES=webkit,firefox bunx playwright test e2e/layout.spec.ts
 
 # Every folder in examples/ with a Makefile is an example: a web app and its Electron and Tauri shells.
 EXAMPLES := $(sort $(patsubst examples/%/Makefile,%,$(wildcard examples/*/Makefile)))

@@ -53,6 +53,7 @@ import {
     onReturn,
     resumeAt,
     trackProgress,
+    wantsFirstFrame,
     type Progress,
     type VideoError,
     type VideoSource,
@@ -728,6 +729,12 @@ export function VideoPlayer({
         if (element === null) return
         const metadata = () => {
             takeHeldSeek(element)
+            // A seek to where it stands makes WebKit fetch the frame there, which it leaves empty under
+            // `preload="metadata"`. Media an engine feeds through `source` keeps its own position.
+            if (latest.current.source === undefined && wantsFirstFrame(element)) {
+                const at = element.currentTime
+                element.currentTime = at
+            }
         }
         const time = () => {
             if (tries.current > 0 && element.currentTime > resumedFrom.current + RECOVERED_AFTER) tries.current = 0

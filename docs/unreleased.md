@@ -86,3 +86,11 @@ release and empties it.
 - `DataTable` loads the pager's page size select and the rows' right-click menus the first time a
   table that pages or has row actions is drawn; until then the pager shows the page size as text and
   a right click on a row is the browser's.
+
+## Fixed
+
+- `VideoPlayer` (and so `AttachmentList`'s videos) and the `Composer`'s video thumbnails show the
+  first frame in WebKit. Under `preload="metadata"` WebKit stopped at the video's length and drew
+  an empty picture until it played; a paused video with no poster now seeks to where it stands once
+  it has its length, which makes WebKit fetch that frame. `media/video-source` exports the check,
+  `wantsFirstFrame`.

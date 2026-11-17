@@ -1,6 +1,16 @@
 import { describe, expect, test } from 'vitest'
 
-import { isStalled, mediaError, nextTry, onReturn, resumeAt, RETRY_DELAY, trackProgress, type Progress } from './video-source'
+import {
+    isStalled,
+    mediaError,
+    nextTry,
+    onReturn,
+    resumeAt,
+    RETRY_DELAY,
+    trackProgress,
+    wantsFirstFrame,
+    type Progress,
+} from './video-source'
 
 describe("a media element's error", () => {
     test('reads its kind from the code', () => {
@@ -117,5 +127,21 @@ describe('a page shown again', () => {
     test('leaves alone a video that was not playing, or whose pause was asked for', () => {
         expect(onReturn(false, true, 4)).toBeNull()
         expect(onReturn(false, false, 1)).toBeNull()
+    })
+})
+
+describe('the first frame of a paused video', () => {
+    const video = { paused: true, readyState: 1, seeking: false, poster: '', preload: 'metadata' }
+
+    test('is fetched when the video has its length but no picture, as WebKit leaves it', () => {
+        expect(wantsFirstFrame(video)).toBe(true)
+    })
+
+    test('is left alone once shown, while playing or seeking, under a poster, or with nothing to preload', () => {
+        expect(wantsFirstFrame({ ...video, readyState: 2 })).toBe(false)
+        expect(wantsFirstFrame({ ...video, paused: false })).toBe(false)
+        expect(wantsFirstFrame({ ...video, seeking: true })).toBe(false)
+        expect(wantsFirstFrame({ ...video, poster: 'https://example.org/still.jpg' })).toBe(false)
+        expect(wantsFirstFrame({ ...video, preload: 'none' })).toBe(false)
     })
 })
