@@ -54,7 +54,11 @@ export const CORNERS: readonly ThemeOption[] = [
     { value: '10px', label: '10px' },
 ]
 
-/** The typefaces offered over the theme's own, by the value `typeface` takes. Geist needs its optional fonts installed. */
+/**
+ * The typefaces offered over the theme's own, by the value `typeface` takes. Geist's fonts are
+ * optional peers the library does not load: an app that offers this list installs and imports
+ * `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`, or leaves `geist` out.
+ */
 export const FACES: Readonly<Record<string, Face>> = {
     geist: {
         label: 'Geist and Geist Mono',
