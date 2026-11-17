@@ -6,8 +6,9 @@
  *
  * The apps import the packages by their names, which resolve through the workspace's links and each
  * package's own `exports`, so each bundles what an installed copy would give it. The forms app
- * imports only the core package, on its styles.css; forms-lean is the same app on styles-base.css
- * and its modules' lists of sources. Every size is gzipped, in kB: `start` is the
+ * imports only the core package, on its styles.css; forms-lean is the same app built with the
+ * core's `sokkelStyles()` Vite plugin, which puts styles-base.css and its modules' lists of sources in
+ * place of styles.css. Every size is gzipped, in kB: `start` is the
  * JavaScript loaded with the page, `lazy` what is fetched later by a dynamic import, and `css` the
  * stylesheet. An app whose budget names `first` is held to one more: the JavaScript a page fetches
  * before its first drawing, the start and the lazy chunks holding the modules `first.fetches` names
@@ -21,6 +22,8 @@ import { gzipSync } from 'node:zlib'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { build, type Rolldown } from 'vite'
+
+import { sokkelStyles } from '@winterop-com/sokkel-ui/vite'
 
 import { PACKAGES } from './components-index'
 
@@ -66,7 +69,8 @@ async function measure(name: string, fetches: readonly string[]): Promise<Record
         configFile: false,
         root,
         logLevel: 'error',
-        plugins: [react(), tailwindcss()],
+        // An app named `-lean` is built with the core's plugin that points Tailwind at the modules it imports.
+        plugins: [react(), ...(name.endsWith('-lean') ? [sokkelStyles()] : []), tailwindcss()],
         build: { write: false, reportCompressedSize: false, rolldownOptions: { input: join(root, 'main.tsx') } },
     })
     const output = (Array.isArray(result) ? result : [result as Rolldown.RolldownOutput]).flatMap((out) => out.output)

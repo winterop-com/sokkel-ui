@@ -49,6 +49,11 @@ const MARK: Record<HighlightTone, string> = {
     terminal: 'bg-terminal-accent/30 text-terminal-foreground',
 }
 
+/** The classes of a mark in a tone, for a part that marks words itself, such as `Markdown`'s `highlight`. */
+export function highlightMark(tone: HighlightTone = 'accent'): string {
+    return cn('rounded-mini box-decoration-clone', MARK[tone])
+}
+
 export interface HighlightProps {
     text: string
     /** Where the one marked span starts, with `end`. */
@@ -73,7 +78,7 @@ export function Highlight({ text, start, end, ranges = [], tone = 'accent', clas
         <span className={className}>
             {highlightParts(text, all).map((part, index) =>
                 part.marked ? (
-                    <mark key={index} className={cn('rounded-mini box-decoration-clone', MARK[tone])}>
+                    <mark key={index} className={highlightMark(tone)}>
                         {part.text}
                     </mark>
                 ) : (

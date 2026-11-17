@@ -18,6 +18,7 @@
             "@winterop-com/sokkel-ui/primitives/*": ["./packages/core/src/components/ui/*"],
             "@winterop-com/sokkel-ui/hooks/*": ["./packages/core/src/hooks/*"],
             "@winterop-com/sokkel-ui/lib/*": ["./packages/core/src/lib/*"],
+            "@winterop-com/sokkel-ui/vite": ["./packages/core/src/lib/vite"],
             "@winterop-com/sokkel-ui/*": ["./packages/core/src/components/*"],
             "@winterop-com/sokkel-ui-charts/*": ["./packages/charts/src/*"],
             "@winterop-com/sokkel-ui-maps/*": ["./packages/maps/src/*"],

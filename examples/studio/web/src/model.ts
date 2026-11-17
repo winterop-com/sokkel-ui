@@ -91,6 +91,8 @@ export interface Prefs {
     folding: boolean
     indentGuides: boolean
     bracketColors: boolean
+    /** The caret's line stays shaded while the focus is elsewhere. */
+    lineWash: boolean
     pipelineView: PipelineView
 }
 
@@ -104,6 +106,7 @@ export const DEFAULT_PREFS: Prefs = {
     folding: true,
     indentGuides: true,
     bracketColors: false,
+    lineWash: false,
     pipelineView: 'split',
 }
 

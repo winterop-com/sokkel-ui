@@ -1,4 +1,4 @@
-import type { Completion, CompletionContext, CompletionResult } from '@codemirror/autocomplete'
+import { snippet, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete'
 import { ensureSyntaxTree, type syntaxTree } from '@codemirror/language'
 import type { Diagnostic } from '@codemirror/lint'
 import type { EditorState } from '@codemirror/state'
@@ -739,6 +739,8 @@ interface Option extends Completion {
     deprecated?: boolean
     /** Offsets into `insert` to select, or the one place to leave the cursor. */
     select?: [number, number]
+    /** A CodeMirror snippet put in instead of `insert`, its fields reached in turn with Tab. */
+    template?: string
 }
 
 function types(schema: JsonSchema): string[] {
@@ -746,6 +748,57 @@ function types(schema: JsonSchema): string[] {
     if (schema.type !== undefined) return [schema.type]
     if (schema.properties !== undefined) return ['object']
     return []
+}
+
+/** Text put in a snippet as written: its braces escaped, so none starts a field. */
+const snippetText = (text: string) => text.replace(/[{}]/g, '\\$&')
+
+/** A snippet field holding `text`, numbered so two fields with the same text stay apart; a text with braces is put in as written. */
+const field = (seq: number, text = '') =>
+    /[{}]/.test(text) ? snippetText(text) : text === '' ? `\${${String(seq)}}` : `\${${String(seq)}:${text}}`
+
+/** The value a required key is put in with: its default, its constant or first choice, or a field for the type it takes. */
+function requiredValue(property: JsonSchema | undefined, root: JsonSchema, language: SchemaLanguage, seq: number): string {
+    const resolved = property === undefined ? {} : resolve(property, root)
+    const write = (value: unknown) => (language === 'json' ? literal(value) : quoteYaml(value))
+    const given = resolved.default !== undefined ? resolved.default : resolved.const !== undefined ? resolved.const : resolved.enum?.[0]
+    if (given !== undefined) return field(seq, write(given))
+    const kinds = types(resolved)
+    const kind = kinds.length === 1 ? kinds[0] : undefined
+    if (kind === 'string') return language === 'json' ? `"${field(seq)}"` : field(seq)
+    if (kind === 'number' || kind === 'integer') return field(seq, '0')
+    if (kind === 'boolean') return field(seq, 'false')
+    if (kind === 'object') return `${snippetText('{')}${field(seq)}${snippetText('}')}`
+    if (kind === 'array') return `[${field(seq)}]`
+    if (kind === 'null') return 'null'
+    return field(seq)
+}
+
+/**
+ * A key whose object has `required` keys, as a CodeMirror snippet that puts in the whole object
+ * with each required key and a field for its value, reached in turn with Tab; undefined for an
+ * object that requires nothing. `column` is where the key starts on its line and `indent` the
+ * line's own indent, which the snippet adds to each line after the first.
+ */
+export function requiredSnippet(
+    name: string,
+    property: JsonSchema,
+    root: JsonSchema,
+    language: SchemaLanguage,
+    column: number,
+    indent: number,
+): string | undefined {
+    const resolved = resolve(property, root)
+    const kinds = types(resolved)
+    const required = (resolved.required ?? []).filter((key, index, all) => all.indexOf(key) === index)
+    if (kinds.length !== 1 || kinds[0] !== 'object' || required.length === 0) return undefined
+    const value = (key: string, index: number) => requiredValue(resolved.properties?.[key], root, language, index + 1)
+    if (language === 'json') {
+        const lines = required.map((key, index) => `\t${snippetText(JSON.stringify(key))}: ${value(key, index)}`)
+        return `${snippetText(JSON.stringify(name))}: ${snippetText('{')}\n${lines.join(',\n')}\n${snippetText('}')}`
+    }
+    const pad = ' '.repeat(Math.max(0, column + 2 - indent))
+    return [`${snippetText(name)}:`, ...required.map((key, index) => `${pad}${snippetText(key)}: ${value(key, index)}`)].join('\n')
 }
 
 /** A property's key as completed: with its default when it has one, else opened for the value it takes. */
@@ -757,6 +810,7 @@ function keyOption(
     column: number,
     required: boolean,
     words: CodeSchemaWords,
+    indent = 0,
 ): Option {
     const resolved = resolve(property, root)
     const kinds = types(resolved)
@@ -769,6 +823,8 @@ function keyOption(
         boost: deprecated ? -99 : required ? 1 : 0,
         ...(deprecated ? { deprecated } : {}),
     }
+    const template = resolved.default === undefined ? requiredSnippet(name, property, root, language, column, indent) : undefined
+    if (template !== undefined) return { ...option, insert: '', template }
     if (language === 'json') {
         const head = `${JSON.stringify(name)}: `
         if (resolved.default !== undefined) {
@@ -808,6 +864,7 @@ function schemaOptions(
     column: number,
     document?: { value: unknown },
     words: CodeSchemaWords = SCHEMA_WORDS,
+    indent = 0,
 ): Option[] {
     const json = language === 'json'
     if (slot.at === 'key') {
@@ -816,7 +873,7 @@ function schemaOptions(
             Object.entries(each.properties ?? {})
                 .filter(([name]) => !seen.has(name) && seen.add(name) !== undefined)
                 .map(([name, property]) =>
-                    keyOption(name, property, schema, language, column, each.required?.includes(name) ?? false, words),
+                    keyOption(name, property, schema, language, column, each.required?.includes(name) ?? false, words, indent),
                 ),
         )
     }
@@ -837,7 +894,9 @@ function schemaOptions(
  * Completes property names and enum values from a schema, for JSON or YAML. A key already in its
  * object is not offered again, a required one is listed first and a deprecated one last, marked
  * `deprecated`; a key is put in with its default
- * selected, or opened for the object, list or string it takes.
+ * selected, or opened for the object, list or string it takes. A key whose object requires keys is
+ * put in whole, as a snippet: each required key with its default or a field for its value, Tab
+ * going from one field to the next.
  */
 export function schemaCompletion(
     schema: () => JsonSchema | undefined,
@@ -851,7 +910,9 @@ export function schemaCompletion(
         const slot = language === 'json' ? jsonSlot(source, context.pos) : yamlSlot(context.state, context.pos)
         if (slot === null) return null
         if (slot.from === context.pos && !context.explicit && !(language === 'json' && slot.quoted)) return null
-        const column = slot.from - context.state.doc.lineAt(slot.from).from
+        const line = context.state.doc.lineAt(slot.from)
+        const column = slot.from - line.from
+        const indent = /^\s*/.exec(line.text)?.[0].length ?? 0
         const present =
             slot.at !== 'key'
                 ? new Set<string>()
@@ -860,16 +921,26 @@ export function schemaCompletion(
                   : yamlKeys(context.state, context.pos, column)
         // The document as written so far, so a conditional schema offers the keys of the branch that applies.
         const read = readDocument(context.state, language, 100)
-        const options = schemaOptions(current, language, slot, present, column, read === null ? undefined : { value: read.value }, words())
+        const options = schemaOptions(
+            current,
+            language,
+            slot,
+            present,
+            column,
+            read === null ? undefined : { value: read.value },
+            words(),
+            indent,
+        )
         if (options.length === 0) return null
         // Inside a JSON string an option replaces the whole string, its quotes included.
         const after = slot.quoted && context.state.sliceDoc(context.pos, context.pos + 1) === '"' ? 1 : 0
         return {
             from: slot.from,
-            options: options.map(({ insert, select, ...option }) => ({
+            options: options.map(({ insert, select, template, ...option }) => ({
                 ...option,
-                apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+                apply: (view: EditorView, completion: Completion, from: number, to: number) => {
                     const start = slot.quoted ? from - 1 : from
+                    if (template !== undefined) return snippet(template)(view, completion, start, to + after)
                     const [anchor, head] = select ?? [insert.length, insert.length]
                     view.dispatch({
                         changes: { from: start, to: to + after, insert },

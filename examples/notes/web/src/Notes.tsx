@@ -346,6 +346,7 @@ export function Notes({ frame }: { frame: Frame }) {
                                         else open(id)
                                     }}
                                     defaultExpanded={['folder:runbooks', 'folder:jobs']}
+                                    openOnChoose
                                     actions={rowActions}
                                     onMove={placeAt}
                                     order={treeOrder}

@@ -3,6 +3,15 @@
     "id": "text-field",
     "kind": "part",
     "status": "draft",
+    "renderers": {
+        "sokkel-ui": {
+            "state": "partial",
+            "as_of": "6b8fdfd",
+            "note": "The busy state is proposed: TextField has none yet (QuickAdd and the inline edit draw it)."
+        },
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "A labeled text input: the field frame every field shares (label, hint, description, control, help, fallback, the issue mark) around a one-line input or a growing text area. A problem is said by a mark at the control's end, so a form never changes height.",
     "sources": {
         "sokkel-ui": [
@@ -28,6 +37,7 @@
         "help": "A sentence under the control: what a right answer looks like.",
         "fallback": "A line under the help: what applies when the field is left empty."
     },
+    "standsOn": {"default": "background", "issuePopover": "background", "control": "background", "issueMark": "field"},
     "options": {
         "label": {"type": "text", "does": "Required. Names the control."},
         "hint": {"type": "text", "does": "Beside the label."},
@@ -116,6 +126,33 @@
             "note": "min(320, window width - 32); opens below the mark, aligned to its end, 6 away; padding 12, 12 between issues."
         },
         "phoneBelow": "breakpoint-md"
+    },
+    "cells": {
+        "rows": 2,
+        "padX": 1,
+        "width": "The width its column gives it; else 280 px by the rule (33 columns).",
+        "density": "Nothing changes: the label, the control and the help are one row each; the room between them is under 12 px, so no blank rows.",
+        "sizes": {
+            "default": {"rows": 1, "padX": 1, "note": "The control: one row on the field ground."},
+            "multiline": {
+                "rows": 5,
+                "padX": 1,
+                "note": "At least 5 rows (112 px of 22 px lines), growing with its text up to maxRows."
+            }
+        },
+        "pieces": {
+            "label": {"rows": 1, "note": "The label row: the label, the required star or word, the hint at its end."},
+            "description": {"note": "Under the label, its lines wrapped to the field's width."},
+            "issueMark": {
+                "width": "1 column, 1 from the control's end, in the issue's tone; the value's room ends 3 columns before the end while an issue shows, so the form never changes height (principle 12)."
+            },
+            "issuePopover": {
+                "note": "Its issues are said in the status line while the control has focus, in a renderer without floating boxes (principle 23)."
+            },
+            "help": {"rows": 1, "note": "Under the control, wrapped; never replaced by an issue."}
+        },
+        "glyphs": ["circle-alert", "triangle-alert", "spinner"],
+        "note": "rows counts the label and the control; a description and help add their own lines."
     },
     "states": {
         "rest": {"means": "Empty with its placeholder, or holding a value."},

@@ -3,6 +3,11 @@
     "id": "dropdown-menu",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "A menu of actions opened from a trigger: rows a control tall with an icon, a label and the keys that do the same, groups under labels, separators, check and radio rows with their marks in a gutter at the start, rows that open a submenu beside them, and destructive rows in the destructive ink. As wide as its widest row; every row a finger tall on a phone; the arrows stop at its first and last rows.",
     "sources": {
         "sokkel-ui": [
@@ -31,6 +36,7 @@
         "subTrigger": "A row that opens a submenu: a chevron at its end; washed while its submenu is open.",
         "submenu": "A popup beside its row, at the row's end, its first row level with it, in the menu's own look; at least 96 wide."
     },
+    "standsOn": {"default": "popover", "popup": "background"},
     "options": {
         "align": {
             "values": ["start", "center", "end"],

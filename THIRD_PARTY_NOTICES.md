@@ -48,6 +48,9 @@ package manager rather than redistributed with it, so they are not listed.
   registry on top of Base UI, and since modified: Copyright (c) 2023 shadcn.
 - `src/styles/shadcn.css` is `dist/tailwind.css` from the `shadcn` package, version 4.23.0:
   Copyright (c) 2023 shadcn.
+- `src/components/ui/cmdk.tsx` of the core package is cmdk, version 1.1.1, with its scoring
+  (`command-score.ts`), without its dialog and its Radix helpers, and since modified: Copyright (c)
+  2022 Paco Coursey.
 - `src/components/ui/waveform.tsx` and `src/components/ui/bar-visualizer.tsx` come from the
   ElevenLabs UI registry, and since modified: Copyright (c) 2025 Eleven Labs Inc.
 - The emoji list the core package carries for `EmojiPicker` (`src/data/emoji-en.json`, built into

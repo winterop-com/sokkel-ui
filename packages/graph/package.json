@@ -116,6 +116,7 @@
     },
     "dependencies": {
         "@xyflow/react": "^12.12.1",
+        "d3-force": "^3.0.1",
         "elkjs": "^0.12.1",
         "lucide-react": "^1.68.0"
     },
