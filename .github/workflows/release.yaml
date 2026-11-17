@@ -46,6 +46,8 @@ jobs:
             - run: bun run emoji-data -- --check
             # The pinned copy of the sokkel-design contract that src/parts.test.ts reads; skipped when GitHub cannot be reached.
             - run: bun run design --check
+            # A release never ships tokens the design contract was not resolved from.
+            - run: bun run design --tokens
             - run: bun run build
             # The size budgets, as CI checks them: a release never ships over budget while main is red on it.
             - run: bun run size
