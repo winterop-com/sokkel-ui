@@ -427,6 +427,9 @@ to `plan.md` when it ships.
   register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the
   dashboard's start chunks.
 
+- **The dashboard's 1.3 kB for lazy time fields.** `TimeRangePicker`'s `times` fields load with the
+  calendar, yet splitting them into a chunk of their own added about 1.3 kB of shared-chunk
+  overhead to the dashboard's start (2026-11-17); find the split that costs nothing.
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. The palette's list is the
   library's own (cmdk without its dialog and Radix), `DataTable` loads its pager select and row
