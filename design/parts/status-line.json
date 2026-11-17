@@ -3,6 +3,15 @@
     "id": "status-line",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "a592dfb",
+            "note": "The spike draws the status line by hand inside its frame, not from the spec."
+        }
+    },
     "summary": "The foot strip across the window's bottom edge: a short note at its start in its tone, short facts at its end, on one row of fixed height that never grows. Level with the rail's foot cell, so the account and the status read as one bar.",
     "sources": {
         "sokkel-ui": [
@@ -23,6 +32,7 @@
         "item": "One fact: an optional label, then its value; an identifier in the code face.",
         "itemLabel": "A fact's label before its value."
     },
+    "standsOn": {"default": "page-foot-ground", "strip": "background"},
     "options": {
         "note": {"type": "node", "does": "The short note at the start: never a sentence that wraps."},
         "tone": {
@@ -53,6 +63,21 @@
         "liveDot": {"height": 8, "width": 8},
         "facts": {"gap": 12, "note": "At most 70 percent of the row."},
         "item": {"gap": 6}
+    },
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "gap": 2,
+        "width": "The window's width. The facts take at most 70 percent of it, from the end; the note the rest, cut short with an ellipsis.",
+        "density": "The rule over the strip is a row of the rule glyph in page-foot-line at regular; at compact the strip's ground alone sets it apart.",
+        "pieces": {
+            "note": {
+                "gap": 1,
+                "note": "The live dot, a gap, the words. A tooltip's words and a disabled control's reason take the note's place while their control has focus (principle 23)."
+            },
+            "item": {"gap": 1}
+        },
+        "glyphs": ["status-dot", "rule", "ellipsis"]
     },
     "states": {
         "rest": {"means": "A quiet note: the foot's own ink."},

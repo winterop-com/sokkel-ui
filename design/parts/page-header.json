@@ -3,6 +3,11 @@
     "id": "page-header",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "A page's head: its title (the name, else the code) with a count beside it, the code, a description and a line of facts under it, an optional back button and picture before it, and the page's actions at the row's end with the primary one last. The actions stay on the title's row while there is room and wrap under it otherwise; actions given as items fold into More instead.",
     "sources": {
         "sokkel-ui": [
@@ -37,6 +42,7 @@
         "primary": "The primary action given as an item: filled, after the items, never folding; its related ways under a chevron.",
         "more": "The icon button that holds the items the row has no room for, named by words.more; an item's related ways are named by words.moreWays."
     },
+    "standsOn": {"default": "background"},
     "options": {
         "title": {
             "type": "node",
@@ -143,6 +149,23 @@
             "value": 256,
             "note": "A title with a description or meta takes a fair share of the row: it asks for this before the actions wrap under it."
         }
+    },
+    "cells": {
+        "gap": 1,
+        "width": "Fills its container: the title block takes the room the actions leave, the actions at the row's end.",
+        "density": "The blank row between the title block and actions wrapped under it is there at regular, gone at compact.",
+        "pieces": {
+            "title": {"rows": 1, "note": "The title, then its count 1 column after it (8 px)."},
+            "description": {"note": "Its lines under the title, wrapped."},
+            "meta": {
+                "rows": 1,
+                "gap": 2,
+                "note": "Facts 2 columns apart (12 px rounds to 1; a fact needs a visible gap)."
+            },
+            "back": {"width": "3 columns: the chevron with a column at each side, 1 before the title block."},
+            "actions": {"rows": 1, "gap": 1, "note": "Buttons 1 apart (8 px); those that do not fit fold into More."}
+        },
+        "glyphs": ["chevron-left", "chevron-right", "ellipsis"]
     },
     "states": {
         "rest": {"means": "The header drawn, nothing over its controls."},

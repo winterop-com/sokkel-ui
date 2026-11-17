@@ -3,6 +3,11 @@
     "id": "clip-timeline",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "missing", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "The multi-track timeline of a video editor, in a box on the card: a row per track, its header at the start (its kind's icon, its name, and with onTrackChange toggles to mute or hide it and to lock it), and its lane after it, under a ruler of timecode that fits the zoom. Clips are blocks in their color with their label, an audio clip drawing its waveform and a title dashed; the chosen ones are outlined. A press or a drag on the ruler moves the playhead, a line across every track. With onClipsChange a clip drags along its track or onto another of the same kind and either end trims it, snapped to the playhead, other clips' edges and 0, a card at the pointer saying the new start or length, never landing on another clip. With onDrop a thing dragged from another part of the same drag area lands on a track that takes it, an outline showing where. The lanes scroll sideways and down while the ruler stays at the top, the headers at the start and the playhead's timecode over both. The clips stay where they are until the app moves them.",
     "sources": {
         "sokkel-ui": [
@@ -34,6 +39,7 @@
         "snapLine": "While an edge snaps: a line 1 wide in ring at the time it snapped to, down every lane under the ruler.",
         "card": "While a pointer drags a clip or a grip: words.start with the new start, or words.length with the new length, on a card that follows the pointer, cardOffset right of and below it."
     },
+    "standsOn": {"default": "card", "box": "background"},
     "options": {
         "tracks": {
             "type": "rows",

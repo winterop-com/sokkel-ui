@@ -3,6 +3,11 @@
     "id": "composer",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "missing", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "Where a message to an assistant is written: a box on the field's ground, rounded by radius-composer, holding a text that grows with what is typed up to textMaxHeight, the files waiting to go, and the controls: attach, the app's tools, the microphone and a round Send, which becomes Stop while an answer streams. Enter sends and Shift+Enter breaks the line; on a touch screen Enter breaks the line and only Send sends. Files come in by the attach button, a paste or a drop; Send waits while a file uploads or a dictation runs. Stacked, the text is on top and the controls in a row under it. Inline, it is one line, a pill, until the text (or the placeholder, while there is none) does not fit there or files, dictation or a failure show: then it opens into the box, and it closes back once the text fits again, its corners easing between the two.",
     "sources": {
         "sokkel-ui": [
@@ -36,6 +41,7 @@
         "dictationStrip": "In the tools' place while a dictation hears: a pulsing critical mark 8 round, the voice's level (or, with the browser's recognition, the words heard so far, the latest kept in view) named words.dictation.level, and the time in the code face; while it transcribes, a spinner and words.dictation.transcribing. 32 tall, 8 apart.",
         "mentionList": "With mentions: the people suggested at the caret as an @ is typed, 256 wide and at most 256 tall, 4 from the caret's line, named words.mentions.label; words.mentions.empty when no one matches, words.mentions.searching while the app's search answers."
     },
+    "standsOn": {"default": "field", "box": "background", "remove": "card"},
     "options": {
         "value": {"type": "text", "does": "The text; onChange hears every change."},
         "onSend": {"type": "callback", "does": "Hears Enter or Send while the composer is ready."},

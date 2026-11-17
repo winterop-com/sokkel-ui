@@ -408,9 +408,6 @@ to `plan.md` when it ships.
 
 ## Next
 
-- **A call bar.** The controls of a call: microphone and camera with their device menus, sharing the
-  screen, reactions (`ReactionBar`), raising a hand, more, and leaving; the quick reactions row
-  standing over it.
 - **The renderers, side by side.** sokkel-design names three renderers: sokkel-ui (React),
   sokkel-egui (egui) and sokkel-tui (ratatui, started 2026-11-17). Each part's spec says how far
   each renderer has drawn it, in a field a script reads (`renderers.<name>.state`: missing, partial

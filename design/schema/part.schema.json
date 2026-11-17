@@ -4,20 +4,41 @@
     "title": "A sokkel-design part or pattern",
     "description": "One part (button, text-field, table) or pattern (shell), in its authoring form. Token names are resolved names, and each key takes one kind of name: color keys take color names, length keys take length or density names, text keys take text roles, radius keys take radius names, an opacity takes a number or a number token (disabled-opacity), and a layout value a length or a duration token (motion-fast). `check` verifies that each name is in its group in tokens.resolved.json, which is made from tokens.json at the sokkel-ui commit sokkel-ui.json pins, and that every state painted is a state listed. The resolver turns every color expression here into plain colors in the resolved output's `paints`, which is what renderers read (see paints.schema.json).",
     "type": "object",
-    "required": ["id", "kind", "status", "summary", "sources", "anatomy", "states", "keyboard", "words"],
+    "required": ["id", "kind", "status", "summary", "sources", "anatomy", "states", "keyboard", "words", "renderers"],
     "additionalProperties": false,
     "properties": {
         "$schema": {"type": "string"},
         "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
         "kind": {"enum": ["part", "pattern"]},
         "status": {"enum": ["draft", "stable"]},
+        "renderers": {
+            "description": "How far each renderer has built the part from its spec, and at which commit of its own repository that was read. `status` is the contract's; this is each renderer's, so a third renderer neither blocks a stable part nor is left out of it. The prose of what differs stays in `drift`.",
+            "type": "object",
+            "required": ["sokkel-ui", "sokkel-egui", "sokkel-tui"],
+            "additionalProperties": false,
+            "properties": {
+                "sokkel-ui": {"$ref": "#/$defs/rendererState"},
+                "sokkel-egui": {"$ref": "#/$defs/rendererState"},
+                "sokkel-tui": {"$ref": "#/$defs/rendererState"}
+            }
+        },
         "summary": {"type": "string"},
         "sources": {
             "type": "object",
             "additionalProperties": false,
-            "properties": {"sokkel-ui": {"$ref": "#/$defs/paths"}, "sokkel-ui-egui": {"$ref": "#/$defs/paths"}}
+            "properties": {
+                "sokkel-ui": {"$ref": "#/$defs/paths"},
+                "sokkel-ui-egui": {"$ref": "#/$defs/paths"},
+                "sokkel-tui": {"$ref": "#/$defs/paths"}
+            }
         },
         "anatomy": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string"}},
+        "standsOn": {
+            "description": "The surface each piece stands on, a color token that is opaque in every theme and scheme: by piece (or by variant, for a part with variants), and `default` for the rest. The resolver lays each paint that is not opaque over it into the paint's `flat`, for a renderer that cannot blend; `inherit` there is the surface's own ink.",
+            "type": "object",
+            "required": ["default"],
+            "additionalProperties": {"$ref": "#/$defs/colorName"}
+        },
         "options": {"type": "object", "additionalProperties": {"$ref": "#/$defs/option"}},
         "sizes": {"type": "object", "additionalProperties": {"$ref": "#/$defs/size"}},
         "layout": {
@@ -81,7 +102,8 @@
             "additionalProperties": false,
             "properties": {
                 "sokkel-ui": {"type": "array", "items": {"type": "string"}},
-                "sokkel-ui-egui": {"type": "array", "items": {"type": "string"}}
+                "sokkel-ui-egui": {"type": "array", "items": {"type": "string"}},
+                "sokkel-tui": {"type": "array", "items": {"type": "string"}}
             }
         },
         "drift": {
@@ -91,11 +113,32 @@
                 "required": ["renderer", "what", "spec", "today"],
                 "additionalProperties": false,
                 "properties": {
-                    "renderer": {"enum": ["sokkel-ui", "sokkel-ui-egui"]},
+                    "renderer": {"enum": ["sokkel-ui", "sokkel-ui-egui", "sokkel-tui"]},
                     "what": {"type": "string"},
                     "spec": {"type": "string"},
                     "today": {"type": "string"}
                 }
+            }
+        },
+        "cells": {
+            "description": "How the part is laid out in a cell grid (a terminal): rows, side padding in columns, how its width is found, and the glyphs it draws (glyphs.json). A row holds one line of text whatever the part's px height; density changes blank rows and padding, never a row's height. index.json's `cells` holds the grid's foundations.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rows": {"$ref": "#/$defs/cellCount"},
+                "padX": {"$ref": "#/$defs/cellCount"},
+                "padY": {"$ref": "#/$defs/cellCount"},
+                "gap": {"$ref": "#/$defs/cellCount"},
+                "width": {"type": "string", "description": "How the width is found, in columns."},
+                "density": {"type": "string", "description": "What compact changes: blank rows and padding."},
+                "sizes": {"type": "object", "additionalProperties": {"$ref": "#/$defs/cellBox"}},
+                "pieces": {"type": "object", "additionalProperties": {"$ref": "#/$defs/cellBox"}},
+                "glyphs": {
+                    "type": "array",
+                    "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+                    "description": "The glyphs and icons the part draws, by their names in glyphs.json."
+                },
+                "note": {"type": "string"}
             }
         }
     },
@@ -298,6 +341,50 @@
                     "additionalProperties": {"type": ["string", "number", "boolean"]}
                 },
                 "says": {"type": "string"}
+            }
+        },
+        "rendererState": {
+            "type": "object",
+            "required": ["state", "as_of"],
+            "additionalProperties": false,
+            "properties": {
+                "state": {
+                    "enum": ["missing", "partial", "built"],
+                    "description": "missing: no widget for the part; partial: a widget that draws some of the spec (its drift says what is left); built: drawn from the spec, nothing left in drift."
+                },
+                "as_of": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{7,40}$",
+                    "description": "The commit of the renderer's own repository the state was read at."
+                },
+                "note": {"type": "string"}
+            }
+        },
+        "cellCount": {
+            "$comment": "Rows or columns: a whole number, or one per density level.",
+            "oneOf": [
+                {"type": "integer", "minimum": 0},
+                {
+                    "type": "object",
+                    "required": ["regular", "compact"],
+                    "additionalProperties": false,
+                    "properties": {
+                        "regular": {"type": "integer", "minimum": 0},
+                        "compact": {"type": "integer", "minimum": 0}
+                    }
+                }
+            ]
+        },
+        "cellBox": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rows": {"$ref": "#/$defs/cellCount"},
+                "padX": {"$ref": "#/$defs/cellCount"},
+                "padY": {"$ref": "#/$defs/cellCount"},
+                "gap": {"$ref": "#/$defs/cellCount"},
+                "width": {"type": "string"},
+                "note": {"type": "string"}
             }
         }
     }
