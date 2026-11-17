@@ -41,7 +41,7 @@ function Rainfall() {
     const [basemapOpacity, setBasemapOpacity] = useState(1)
     const [shown, setShown] = useState<Record<LayerId, boolean>>({ rainfall: true, sites: true, regions: true })
     const [opacity, setOpacity] = useState<Record<LayerId, number>>({ rainfall: 0.85, sites: 1, regions: 1 })
-    const [reading, setReading] = useState<LngLat | null>([-11.75, 8.45])
+    const [reading, setReading] = useState<LngLat | null>([-9.6, 6.9])
     const grid = rainfall[month]
     const period = MONTHS.find((candidate) => candidate.id === month)?.label ?? month
     const value = reading === null ? null : gridValueAt(grid, reading)

@@ -56,16 +56,16 @@ const GROUPS: RailGroup[] = [
     { id: 'system', title: 'System', entries: [{ id: 'settings', label: 'Settings', icon: Settings, href: '#' }] },
 ]
 
-const COUNTRY = 'sierra-leone'
+const COUNTRY = 'liberia'
 const PROJECTS = ['harbor', 'juniper', 'larkspur']
 const JOBS = ['nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest', 'import-orders']
 
 /** One site whose position came back unreadable, as data from the field sometimes does. */
 const UNPLACED: Feature<Point, { name: string; region: string }> = {
     type: 'Feature',
-    id: 'bo/gerihun',
-    properties: { name: 'Gerihun', region: 'bo' },
-    geometry: { type: 'Point', coordinates: [Number.NaN, 7.9] },
+    id: 'bong/tern-landing',
+    properties: { name: 'Tern Landing', region: 'bong' },
+    geometry: { type: 'Point', coordinates: [Number.NaN, 7] },
 }
 
 const SITES: FeatureCollection<Point, { name: string; region: string }> = {
@@ -91,7 +91,7 @@ const LEVEL = { country: 'Country', region: 'Region', site: 'Site' }
 const TREE: TreeNode[] = [
     {
         id: COUNTRY,
-        label: 'Sierra Leone',
+        label: 'Liberia',
         meta: LEVEL.country,
         children: [...regions.features]
             .sort((a, b) => a.properties.name.localeCompare(b.properties.name))
@@ -133,7 +133,7 @@ function placeOf(id: string): Place {
 }
 
 function nameOf(place: Place): string {
-    if (place.kind === 'country') return 'Sierra Leone'
+    if (place.kind === 'country') return 'Liberia'
     if (place.kind === 'region') return regionName[String(place.region.id)]
     return place.site.properties.name
 }
@@ -150,7 +150,7 @@ function framing(place: Place): { highlighted: string[]; bounds: Bounds | undefi
         return {
             highlighted: regions.features.map((region) => String(region.id)),
             bounds: undefined,
-            note: 'Sierra Leone has no boundary of its own here, so the map frames the regions under it.',
+            note: 'Liberia has no boundary of its own here, so the map frames the regions under it.',
         }
     }
     if (place.kind === 'region') {
@@ -214,10 +214,10 @@ function Facts({ id, place }: { id: string; place: Place }) {
                 ]
     const path =
         place.kind === 'country'
-            ? 'Sierra Leone'
+            ? 'Liberia'
             : place.kind === 'region'
-              ? `Sierra Leone / ${nameOf(place)}`
-              : `Sierra Leone / ${regionName[place.site.properties.region]} / ${nameOf(place)}`
+              ? `Liberia / ${nameOf(place)}`
+              : `Liberia / ${regionName[place.site.properties.region]} / ${nameOf(place)}`
     return (
         <>
             <PanelSection title={LEVEL[place.kind]}>
@@ -284,7 +284,7 @@ function SitesApp({ initial = COUNTRY, offerBasemaps = true }: { initial?: strin
                 }
                 top={
                     <TopBar
-                        trail={[{ label: 'Sites', href: '#' }, { label: 'Sierra Leone', href: '#' }, ...trail.map((label) => ({ label }))]}
+                        trail={[{ label: 'Sites', href: '#' }, { label: 'Liberia', href: '#' }, ...trail.map((label) => ({ label }))]}
                         onSearch={() => undefined}
                     />
                 }
@@ -396,6 +396,6 @@ export default meta
 /** The whole country selected: no boundary of its own, so the map frames the regions under it and says so. */
 export const Country: StoryObj = { name: 'Country', render: () => <SitesApp /> }
 /** One region selected in the tree: filled in the selection color, its sites highlighted, and framed. */
-export const Region: StoryObj = { name: 'Region', render: () => <SitesApp initial="bo" /> }
+export const Region: StoryObj = { name: 'Region', render: () => <SitesApp initial="bong" /> }
 /** No basemap offered: the map draws on the ground alone and reaches no network; a site whose position cannot be read is noted. */
-export const NoBasemap: StoryObj = { name: 'No basemap', render: () => <SitesApp initial="bo/gerihun" offerBasemaps={false} /> }
+export const NoBasemap: StoryObj = { name: 'No basemap', render: () => <SitesApp initial="bong/tern-landing" offerBasemaps={false} /> }

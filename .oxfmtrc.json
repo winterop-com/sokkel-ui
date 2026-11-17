@@ -21,6 +21,9 @@
         "e2e/tiles",
         "packages/core/src/styles/shadcn.css",
         "packages/core/src/data/emoji-en.json",
-        "packages/maps/src/data/countries-110m.json"
+        "packages/maps/src/data/countries-110m.json",
+        "examples/shared/geo/*.json",
+        "src/stories/map/fixtures/regions.json",
+        "src/stories/map/fixtures/places.json"
     ]
 }

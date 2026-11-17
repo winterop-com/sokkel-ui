@@ -122,14 +122,14 @@ function householdIdentifier(seed: number): string {
 
 function seedHouseholds(): Household[] {
     const rows: [string, string, number, number, string, boolean | null, number, 'active' | 'completed'][] = [
-        ['bo', 'bo/baomahun', 1985, 4, 'well', true, -40, 'active'],
-        ['bo', 'bo/bumpe', 1991, 6, 'river', false, -38, 'active'],
-        ['kenema', 'kenema/baama', 1978, 3, 'standpipe', null, -35, 'completed'],
-        ['kono', 'kono/baiama', 1969, 8, 'well', true, -30, 'active'],
-        ['bombali', 'bombali/kamabai', 1994, 2, 'rain', false, -21, 'active'],
-        ['port-loko', 'port-loko/lunsar', 1988, 5, 'tap', true, -12, 'active'],
+        ['bong', 'bong/alder-crossing', 1985, 4, 'well', true, -40, 'active'],
+        ['bong', 'bong/amber-creek', 1991, 6, 'river', false, -38, 'active'],
+        ['nimba', 'nimba/amber-bridge', 1978, 3, 'standpipe', null, -35, 'completed'],
+        ['lofa', 'lofa/alder-falls', 1969, 8, 'well', true, -30, 'active'],
+        ['margibi', 'margibi/alder-ford', 1994, 2, 'rain', false, -21, 'active'],
+        ['grand-bassa', 'grand-bassa/alder-brook', 1988, 5, 'tap', true, -12, 'active'],
         // The first household registered a second time by mistake, which the metadata check finds.
-        ['bo', 'bo/bumpe', 1985, 4, 'well', true, -6, 'active'],
+        ['bong', 'bong/amber-creek', 1985, 4, 'well', true, -6, 'active'],
     ]
     return rows.map(([region, site, born, size, source, treats, offset, status], index) => ({
         id: `household-${String(index + 1)}`,
@@ -161,7 +161,7 @@ function seedReceipts(): Receipt[] {
         { form: 'FRM-SITE', offset: 0, state: 'received', by: 'grace', seed: 9104 },
         { form: 'FRM-SITE', offset: 0, state: 'received', by: 'linus', seed: 9105 },
         { form: 'FRM-HOME', offset: -1, state: 'received', by: 'margaret', seed: 9106, household: 0 },
-        { form: 'FRM-MONTH', offset: -2, state: 'forwarded', by: 'ada', seed: 9101, place: 'bo/baomahun' },
+        { form: 'FRM-MONTH', offset: -2, state: 'forwarded', by: 'ada', seed: 9101, place: 'bong/alder-crossing' },
         { form: 'FRM-SAMPLE', offset: -2, state: 'forwarded', by: 'grace', seed: 9107 },
         {
             form: 'FRM-SITE',
@@ -172,12 +172,12 @@ function seedReceipts(): Receipt[] {
             refusal: 'The register takes a water level over 5 m only with a photo of the gauge.',
         },
         { form: 'FRM-HOME', offset: -4, state: 'forwarded', by: 'margaret', seed: 9109, household: 1 },
-        { form: 'FRM-STOCK', offset: -5, state: 'forwarded', by: 'ada', seed: 9110, place: 'kenema' },
+        { form: 'FRM-STOCK', offset: -5, state: 'forwarded', by: 'ada', seed: 9110, place: 'nimba' },
         { form: 'FRM-SITE', offset: -6, state: 'withdrawn', by: 'grace', seed: 9111 },
         { form: 'FRM-HOME', offset: -8, state: 'forwarded', by: 'margaret', seed: 9112, household: 0 },
         { form: 'FRM-EXIT', offset: -9, state: 'forwarded', by: 'linus', seed: 9113, household: 2 },
         { form: 'FRM-SAMPLE', offset: -11, state: 'forwarded', by: 'ada', seed: 9114 },
-        { form: 'FRM-MONTH', offset: -33, state: 'forwarded', by: 'grace', seed: 9115, place: 'kono/baiama' },
+        { form: 'FRM-MONTH', offset: -33, state: 'forwarded', by: 'grace', seed: 9115, place: 'lofa/alder-falls' },
     ]
     const registrations = households.map((household, index): Seed => ({
         form: 'FRM-ENROLL',

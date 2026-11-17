@@ -2,13 +2,13 @@ import type { Feature, FeatureCollection, MultiPolygon, Point, Polygon } from 'g
 
 import type { Bounds } from '@winterop-com/sokkel-ui-maps/geometry'
 import type { Grid } from '@winterop-com/sokkel-ui-maps/GridLayer'
-import placeFixture from './fixtures/sierra-leone-places.json'
-import regionFixture from './fixtures/sierra-leone-regions.json'
+import placeFixture from './fixtures/places.json'
+import regionFixture from './fixtures/regions.json'
 
-/** Thirteen regions of Sierra Leone, simplified to about a hundred meters. */
+/** Liberia's fifteen counties from Natural Earth, rounded to about a hundred meters. */
 export const regions = regionFixture as unknown as FeatureCollection<Polygon | MultiPolygon, { name: string }>
 
-/** Some five hundred places, each in a region. */
+/** Some five hundred invented places, each in a region. */
 export const places = placeFixture as unknown as FeatureCollection<Point, { name: string; region: string }>
 
 export const NUMBER = new Intl.NumberFormat('en-US')
@@ -25,19 +25,21 @@ export interface RegionFigures {
 }
 
 const BY_NAME: Record<string, Omit<RegionFigures, 'density'>> = {
-    Bo: { population: 575_478, area: 5_473, change: 18.4 },
-    Bombali: { population: 606_544, area: 7_985, change: 9.1 },
-    Bonthe: { population: 200_781, area: 3_468, change: null },
-    Kailahun: { population: 526_379, area: 3_859, change: -3.2 },
-    Kambia: { population: 345_474, area: 3_108, change: 6.5 },
-    Kenema: { population: 609_891, area: 6_053, change: 12.0 },
-    Koinadugu: { population: 409_372, area: 12_121, change: -8.7 },
-    Kono: { population: 506_100, area: 5_641, change: -1.4 },
-    Moyamba: { population: 318_588, area: 6_902, change: 4.0 },
-    'Port Loko': { population: 615_376, area: 5_719, change: 14.2 },
-    Pujehun: { population: 346_461, area: 4_105, change: 0.8 },
-    Tonkolili: { population: 531_435, area: 7_003, change: 2.6 },
-    'Western Area': { population: 1_500_234, area: 557, change: 24.5 },
+    Bomi: { population: 133_668, area: 1_932, change: 6.1 },
+    Bong: { population: 467_502, area: 8_772, change: 11.8 },
+    Gbapolu: { population: 95_995, area: 9_689, change: -4.3 },
+    'Grand Bassa': { population: 293_689, area: 7_936, change: 9.4 },
+    'Grand Cape Mount': { population: 178_867, area: 5_162, change: 3.2 },
+    'Grand Gedeh': { population: 216_692, area: 10_484, change: 14.7 },
+    'Grand Kru': { population: 109_342, area: 3_895, change: null },
+    Lofa: { population: 367_376, area: 9_982, change: 5.5 },
+    Margibi: { population: 304_946, area: 2_616, change: 18.9 },
+    Maryland: { population: 172_202, area: 2_297, change: 2.4 },
+    Montserrado: { population: 1_920_914, area: 1_909, change: 26.3 },
+    Nimba: { population: 621_841, area: 11_551, change: 8.0 },
+    'River Cess': { population: 90_777, area: 5_594, change: -1.6 },
+    'River Gee': { population: 124_653, area: 5_113, change: 0.7 },
+    Sinoe: { population: 150_358, area: 10_137, change: -7.2 },
 }
 
 /** Each region's figures, by its id. */
@@ -82,7 +84,7 @@ export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', '
 /** How wet each month is across the country, as a share of the wettest. */
 const SEASON = [0.01, 0.02, 0.06, 0.14, 0.32, 0.6, 0.92, 1, 0.78, 0.46, 0.18, 0.04]
 
-const GRID_BOUNDS: Bounds = [-13.4, 6.85, -10.2, 10.05]
+const GRID_BOUNDS: Bounds = [-11.55, 4.3, -7.35, 8.6]
 const CELL = 0.05
 
 function insideRing(lng: number, lat: number, ring: number[][]): boolean {
@@ -125,8 +127,9 @@ for (let row = 0; row < rows; row += 1) {
         const lng = GRID_BOUNDS[0] + (column + 0.5) * CELL
         const lat = GRID_BOUNDS[3] - (row + 0.5) * CELL
         land.push(onLand(lng, lat))
-        // Wettest on the southwest coast, drier toward the northeast, with local variation.
-        const coast = Math.min(1, Math.max(0, ((-10.2 - lng) / 3.2) * 0.55 + ((10.05 - lat) / 3.2) * 0.45))
+        // Wettest on the coast, which runs from the northwest to the southeast, drier inland, with local variation.
+        const inland = ((lng + 11.5) * 2.5 + (lat - 6.9) * 4) / 4.72
+        const coast = Math.min(1, Math.max(0, 1 - inland / 3))
         wetness.push(0.45 + 0.4 * coast + 0.25 * (noise(lng * 2.2, lat * 2.2) - 0.5) + 0.1 * (noise(lng * 7, lat * 7) - 0.5))
     }
 }
@@ -145,7 +148,7 @@ export const rainfall: Record<string, Grid> = Object.fromEntries(
 )
 
 /** How far apart neighboring hexagons' centers lie across, in degrees. */
-const HEX = 0.034
+const HEX = 0.039
 
 let hexagonCells: FeatureCollection<Polygon, { name: string; reached: number }> | null = null
 
