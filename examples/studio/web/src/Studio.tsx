@@ -32,7 +32,7 @@ import {
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -97,7 +97,6 @@ function placeOf(id: string): { project: Project; kind?: FileKind } | undefined 
 export function Studio({ frame }: { frame: Frame }) {
     const state = useStudio()
     const { files, byId, runs, prefs, dirty, saving, open, ask, saveAll, moveFile } = state
-    const { settings: look, setSettings: setLook } = frame.appearance
     const settings = useOverlayRoute(frame.route, 'settings')
     const [first, second] = settings.route
     const [filter, setFilter] = useState('')
@@ -347,8 +346,7 @@ export function Studio({ frame }: { frame: Frame }) {
                             name="ada"
                             where="tidevann.example.org"
                             onSettings={() => go('/settings')}
-                            scheme={look.scheme}
-                            onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                            onAppearance={() => go(APPEARANCE)}
                         />
                     }
                 />

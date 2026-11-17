@@ -41,12 +41,23 @@ const SECTION_KEYS: Record<string, (keyof Options)[]> = {
 const rateLabel = (rate: number) => `${String(rate)}x`
 
 /** The player's settings as a dialog: playback, the bar, the visualizer, the library kept here, and the look. */
-export function Settings({ appearance, open, onClose }: { appearance: AppearanceState; open: boolean; onClose: () => void }) {
+export function Settings({
+    appearance,
+    section,
+    open,
+    onClose,
+}: {
+    appearance: AppearanceState
+    /** The section shown first, as the account menu's Appearance names; Playback when none. */
+    section?: string
+    open: boolean
+    onClose: () => void
+}) {
     const options = useSettings()
     const kept = useRows(downloads)
     const played = useRows(history)
     const made = useRows(stations)
-    const [active, setActive] = useState('playback')
+    const [active, setActive] = useState(section ?? 'playback')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const bytes = kept.reduce((sum, row) => sum + row.bytes, 0)

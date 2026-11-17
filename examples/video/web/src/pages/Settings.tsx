@@ -22,7 +22,7 @@ import { Captions, Database, HardDrive, History, Palette, Play } from 'lucide-re
 import { useEffect, useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { go } from 'tidevann-shared/router'
 import { forgetClips, keptClipsSize, RENDITIONS, useClipCache } from '../clips'
 import { DEFAULT_PREFS, downloads, setPrefs, usePrefs, useRows, watched, type Prefs, type Quality } from '../data'
@@ -62,7 +62,7 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
 export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const prefs = usePrefs()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [active, setActive] = useState('playback')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'playback')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const [busy, setBusy] = useState(false)

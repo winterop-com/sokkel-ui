@@ -11,7 +11,7 @@ import { Bell, Database, Palette, Radio, Settings2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { LIVE_LIMIT } from '../backend'
 import { DEFAULT_PREFS, RATES, type Currency, type Pace, type Prefs } from '../model'
 import { useLoaded } from '../state'
@@ -33,7 +33,7 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
 export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const { prefs, setPrefs, world, money } = useLoaded()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [active, setActive] = useState('general')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'general')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const [busy, setBusy] = useState(false)

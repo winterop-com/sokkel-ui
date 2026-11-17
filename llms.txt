@@ -107,7 +107,8 @@ place. It has four parts, and an app has all four from its first screen:
 - **An `AccountMenu`** in the rail's foot, always there, before the app has sign-in too: then it is
   `local`, named for the local user or "Local", with a neutral avatar, settings and appearance, and
   no sign-out (`onSignIn` offers Sign in there). The place is held, and the frame looks the same in
-  every app. `scheme` with `onSchemeChange` puts Light, Dark and System in the menu itself, and
+  every app. `onAppearance` adds Appearance, which opens Settings at Appearance: the scheme is
+  chosen there and in the palette (`appearanceCommands`), never in the menu or the top bar, and
   `extra` adds the app's own rows, each `{ id, label, icon, onSelect }`.
 - **A `StatusLine` as `Shell`'s `foot`**, the strip along the window's bottom edge: the connection
   or the server's state, the active model or project, background work, the version. With it, the
@@ -141,7 +142,6 @@ import { useAppearance } from '@winterop-com/sokkel-ui/hooks/use-appearance'
 import { CORNERS, THEMES, TYPEFACES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { appearanceCommands, placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
-import { SchemeToggle } from '@winterop-com/sokkel-ui/SchemeToggle'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
@@ -166,7 +166,7 @@ export function App() {
                     foot={<AccountMenu name="Local" local onSettings={() => navigate('/settings')} onAppearance={() => navigate('/settings')} />}
                 />
             }
-            top={<TopBar trail={[{ label: 'Runs' }]} actions={<SchemeToggle />} />}
+            top={<TopBar trail={[{ label: 'Runs' }]} />}
             foot={
                 <StatusLine note="Connected to api.example.org">
                     <StatusItem label="project">harbor</StatusItem>

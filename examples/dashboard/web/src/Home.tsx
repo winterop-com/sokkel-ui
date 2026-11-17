@@ -16,7 +16,7 @@ import { Copy, LayoutDashboard, LayoutGrid, Pause, PencilLine, Play, Plus, Setti
 import { useEffect, useMemo, useState } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -213,8 +213,7 @@ export function Home({ frame }: { frame: Frame }) {
                                 where="tidevann.example.org"
                                 local
                                 onSettings={() => go('/settings')}
-                                scheme={frame.appearance.settings.scheme}
-                                onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
+                                onAppearance={() => go(APPEARANCE)}
                             />
                         }
                     />

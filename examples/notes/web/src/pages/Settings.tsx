@@ -11,7 +11,7 @@ import { CalendarDays, Database, Palette, PenLine } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { DEFAULT_PREFS, TEMPLATE, type FontSize, type Order, type View } from '../model'
 import { useVault } from '../state'
 
@@ -56,7 +56,7 @@ function TemplateEditor() {
 export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const { prefs, setPrefs, vault, order } = useVault()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [active, setActive] = useState('editor')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'editor')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const [busy, setBusy] = useState(false)

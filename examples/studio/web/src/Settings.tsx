@@ -9,7 +9,7 @@ import { Database, Palette, SquareCode } from 'lucide-react'
 import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { counted, DEFAULT_PREFS, type Prefs, type TextSize } from './model'
 import { useStudio } from './state'
 
@@ -28,7 +28,7 @@ function Toggle({ flag, label }: { flag: Flag; label: string }) {
 export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const { prefs, setPrefs, files, runs, dirty, close } = useStudio()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [active, setActive] = useState('editor')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'editor')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const [busy, setBusy] = useState(false)

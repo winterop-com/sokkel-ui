@@ -3,6 +3,13 @@
 What changed since 0.30.1, for the next release's notes. A release copies this into its GitHub
 release and empties it.
 
+## Breaking
+
+- `AccountMenu` no longer takes `scheme` and `onSchemeChange`, nor the words `scheme`, `light`,
+  `dark` and `system`: the menu has no Light, Dark and System rows. Put the scheme in Settings ›
+  Appearance (`themeSettings`) and in the palette (`appearanceCommands`), and give the menu
+  `onAppearance` to open Settings at Appearance.
+
 ## Fixed
 
 - `ThemePicker`'s `typefaces` and `TYPEFACES` say that Geist's fonts are optional peers an app installs

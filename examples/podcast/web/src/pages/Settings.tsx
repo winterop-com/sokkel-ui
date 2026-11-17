@@ -10,7 +10,7 @@ import { Database, Download, Palette, PlayCircle } from 'lucide-react'
 import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { DEFAULT_PREFS } from '../backend'
 import { RATES } from '../Player'
 import { usePodcasts } from '../state'
@@ -27,7 +27,7 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
     const state = usePodcasts()
     const { prefs, setPrefs } = state
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [active, setActive] = useState('playback')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'playback')
     const [search, setSearch] = useState('')
     const [asking, setAsking] = useState<'stats' | 'reset' | null>(null)
     const [busy, setBusy] = useState(false)

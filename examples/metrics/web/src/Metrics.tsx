@@ -16,7 +16,7 @@ import { Bell, BellPlus, LayoutDashboard, LayoutGrid, Pause, Play, Plus, Refresh
 import { useMemo, useState } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { readings, type RuleReading, useAlerting } from './alerting'
@@ -258,8 +258,7 @@ export function MetricsApp({ frame }: { frame: Frame }) {
                                     name="ada"
                                     where="tidevann.example.org"
                                     onSettings={() => go('/settings')}
-                                    scheme={frame.appearance.settings.scheme}
-                                    onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
+                                    onAppearance={() => go(APPEARANCE)}
                                 />
                             }
                         />

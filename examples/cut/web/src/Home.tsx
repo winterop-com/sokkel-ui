@@ -14,7 +14,7 @@ import { Clapperboard, Copy, Film, PencilLine, Plus, Settings2 } from 'lucide-re
 import { useEffect, useState } from 'react'
 
 import { savingNote, useCollection, useSaving } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { byUpdated, createProject, deleteProject, duplicateProject, renameProject } from './actions'
@@ -153,8 +153,7 @@ export function Home({ frame }: { frame: Frame }) {
                             where="tidevann.example.org"
                             local
                             onSettings={() => go('/settings')}
-                            scheme={frame.appearance.settings.scheme}
-                            onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
+                            onAppearance={() => go(APPEARANCE)}
                         />
                     }
                 />

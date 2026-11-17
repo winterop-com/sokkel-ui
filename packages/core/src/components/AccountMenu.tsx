@@ -1,9 +1,8 @@
 import { Avatar } from '@base-ui/react/avatar'
-import { Check, ChevronsUpDown, Keyboard, LogIn, LogOut, Monitor, Moon, Palette, Settings, Sun, User, type LucideIcon } from 'lucide-react'
+import { ChevronsUpDown, Keyboard, LogIn, LogOut, Palette, Settings, User, type LucideIcon } from 'lucide-react'
 import { useContext } from 'react'
 
 import { ShortcutRegistry, useShortcuts } from '../hooks/use-shortcuts'
-import type { Scheme } from '../lib/appearance'
 import { cn } from '../lib/cn'
 import { POPUP } from '../lib/popup'
 import { RailCollapsed, ShellDrawer, ShellShortcuts } from './shell-context'
@@ -36,11 +35,11 @@ export interface AccountMenuProps {
     /** No one is signed in: the avatar is a neutral figure in place of an initial or picture, and there is no sign-out. */
     local?: boolean
     onSettings?: () => void
-    /** Opens the appearance settings: the theme, the scheme, the density. */
+    /**
+     * Opens the appearance settings: the theme, the scheme, the density. The menu has no scheme of
+     * its own; light and dark are chosen in Settings and the command palette.
+     */
     onAppearance?: () => void
-    /** The scheme in use; with `onSchemeChange` the menu offers Light, Dark and System in itself. */
-    scheme?: Scheme
-    onSchemeChange?: (scheme: Scheme) => void
     /**
      * Opens the app's own keyboard shortcuts from the menu, and outside a `Shell` on `?` outside a
      * field too. In a `Shell` given `shortcuts`, the menu opens the shell's without it, and the shell
@@ -67,9 +66,9 @@ export interface AccountMenuProps {
  * the shell's drawer on a narrow window it is drawn expanded, as the rail there is, and a row
  * chosen in its menu closes the drawer as well.
  *
- * With `scheme` and `onSchemeChange` the menu offers Light, Dark and System as rows of its own, the
- * one in use checked, and stays open as one is chosen, so the change is seen. On a phone its rows
- * are as tall as a finger needs, and Keyboard shortcuts is left out, a phone having no keyboard.
+ * Appearance (`onAppearance`) opens the appearance settings; the scheme is chosen there and in the
+ * command palette, never in the menu itself. On a phone its rows are as tall as a finger needs, and
+ * Keyboard shortcuts is left out, a phone having no keyboard.
  *
  * Every app has it in the rail's foot, before it has sign-in too: then it is `local`, named for
  * the local user or as "Local", with a neutral figure for the avatar and no sign-out, so the place
@@ -84,8 +83,6 @@ export function AccountMenu({
     local = false,
     onSettings,
     onAppearance,
-    scheme,
-    onSchemeChange,
     onShortcuts,
     onSignOut,
     onSignIn,
@@ -128,11 +125,6 @@ export function AccountMenu({
         : onSignIn !== undefined && (local || onSignOut === undefined)
           ? { label: words.signIn, icon: LogIn, onSelect: onSignIn }
           : undefined
-    const schemes = [
-        { value: 'light', label: words.light, icon: Sun },
-        { value: 'dark', label: words.dark, icon: Moon },
-        { value: 'system', label: words.system, icon: Monitor },
-    ] as const
     return (
         <Menu.Root
             defaultOpen={defaultOpen}
@@ -189,27 +181,6 @@ export function AccountMenu({
                         {extra.map((row) => (
                             <Row key={row.id} icon={row.icon} label={row.label} keys={row.keys} onSelect={row.onSelect} />
                         ))}
-                        {scheme !== undefined && onSchemeChange !== undefined && (
-                            <>
-                                <Separator />
-                                <Menu.Group>
-                                    <Menu.GroupLabel className="px-2 pt-1 pb-1 text-xs font-medium text-muted-foreground">
-                                        {words.scheme}
-                                    </Menu.GroupLabel>
-                                    <Menu.RadioGroup value={scheme} onValueChange={(value: Scheme) => onSchemeChange(value)}>
-                                        {schemes.map((one) => (
-                                            <Menu.RadioItem key={one.value} value={one.value} className={ITEM}>
-                                                <one.icon className="size-4 text-muted-foreground" aria-hidden />
-                                                {one.label}
-                                                <Menu.RadioItemIndicator className="ml-auto flex">
-                                                    <Check className="size-4" aria-hidden />
-                                                </Menu.RadioItemIndicator>
-                                            </Menu.RadioItem>
-                                        ))}
-                                    </Menu.RadioGroup>
-                                </Menu.Group>
-                            </>
-                        )}
                         {leave !== undefined && (
                             <>
                                 <Separator />
@@ -261,11 +232,6 @@ export interface AccountMenuWords {
     settings: string
     appearance: string
     shortcuts: string
-    /** The heading over Light, Dark and System. */
-    scheme: string
-    light: string
-    dark: string
-    system: string
     signOut: string
     signIn: string
     account: string
@@ -275,10 +241,6 @@ const WORDS: AccountMenuWords = {
     settings: 'Settings',
     appearance: 'Appearance',
     shortcuts: 'Keyboard shortcuts',
-    scheme: 'Scheme',
-    light: 'Light',
-    dark: 'Dark',
-    system: 'System',
     signOut: 'Sign out',
     signIn: 'Sign in',
     account: 'Account',
