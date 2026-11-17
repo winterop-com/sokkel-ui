@@ -53,6 +53,10 @@ jobs:
             - run: bun run emoji-data -- --check
             # The pinned copy of the sokkel-design contract that src/parts.test.ts reads; skipped when GitHub cannot be reached.
             - run: bun run design --check
+            # Tokens the design contract does not know yet: a warning here, since sokkel-design follows the
+            # change, and a failure at release.
+            - run: bun run design --tokens
+              continue-on-error: true
             - run: bun run fmt:check
             - run: bun run lint
             - run: bun run typecheck
