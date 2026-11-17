@@ -31,7 +31,7 @@ export interface LegendWords {
     current: string
 }
 
-const WORDS: LegendWords = { series: 'Series', min: 'Min', max: 'Max', avg: 'Avg', current: 'Current' }
+export const CHART_LEGEND_WORDS: LegendWords = { series: 'Series', min: 'Min', max: 'Max', avg: 'Avg', current: 'Current' }
 
 /** The min, max, mean and last of a series' values, leaving out gaps. */
 export function legendStats(values: readonly (number | null | undefined)[]): Record<LegendStat, number | null> {
@@ -99,7 +99,7 @@ export function ChartLegend({
     words: given,
     className,
 }: ChartLegendProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...CHART_LEGEND_WORDS, ...given }
     const items = useLegendEntries(entries) ?? NONE
     const handlers = (key: string, off: boolean) => ({
         onClick: () => onToggle?.(key),

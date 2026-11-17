@@ -11,7 +11,12 @@ export interface ThresholdWords {
     noData: string
 }
 
-const WORDS: ThresholdWords = { below: 'Below {value}', range: '{from} to {to}', atLeast: '{value} and up', noData: 'No data' }
+export const THRESHOLD_LEGEND_WORDS: ThresholdWords = {
+    below: 'Below {value}',
+    range: '{from} to {to}',
+    atLeast: '{value} and up',
+    noData: 'No data',
+}
 
 const fill = (template: string, values: Record<string, string>) =>
     template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole)
@@ -20,7 +25,7 @@ const fill = (template: string, values: Record<string, string>) =>
 export function thresholdBands(
     thresholds: readonly Threshold[],
     write: (value: number) => string,
-    words: ThresholdWords = WORDS,
+    words: ThresholdWords = THRESHOLD_LEGEND_WORDS,
 ): { color: string; range: string }[] {
     return thresholds.map((step, index) => {
         const next = thresholds[index + 1]?.value
@@ -68,7 +73,7 @@ export function ThresholdLegend({
     words: given,
     className,
 }: ThresholdLegendProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...THRESHOLD_LEGEND_WORDS, ...given }
     const write = (value: number) => (format !== undefined ? format(value) : `${formatValue(value, decimals)}${unit}`)
     const bands = thresholdBands(thresholds, write, words)
     const missing = noData === false ? undefined : noData === true ? words.noData : noData

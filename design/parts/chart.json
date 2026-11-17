@@ -1,0 +1,346 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "chart",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "8567f05"},
+        "sokkel-egui": {"state": "missing", "as_of": "b7e1763"},
+        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+    },
+    "summary": "The look every chart kind shares, drawn from rows: a chart takes rows, a kind that says how to draw them and the fields to read, and draws in the theme it sits in. Quiet axes in border with their labels in muted-foreground, grid lines across the value axis a step lighter than the border, series in the theme's categorical order (or the colors a spec names, or each run state's status color with statuses), a line one and a half wide, bars at most 28 wide, a tooltip on the popover's look with a swatch, a label and a figure per series, dashed lines across at a scale's steps and down at marked categories, and a legend beside the chart whose entries hide or emphasize their series. A figure that is not there is the dash, and is left out of a tooltip. This spec is the look and the shared behavior; the kinds (bar, line, area, donut and the rest) are not specified one by one yet, and the frame around a chart (title, menu, export, expand, data view, loading, empty and failed) is parts/dashboard-panel's.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/charts/src/look.ts",
+            "packages/charts/src/theme.ts",
+            "packages/charts/src/Chart.tsx",
+            "packages/charts/src/EChart.tsx",
+            "packages/charts/src/ChartLegend.tsx",
+            "packages/charts/src/legend-table.tsx",
+            "packages/charts/src/kinds/spec.ts",
+            "packages/charts/src/kinds/axes.ts",
+            "packages/charts/src/kinds/index.ts",
+            "packages/core/src/lib/status.ts",
+            "docs/charts.md"
+        ]
+    },
+    "anatomy": {
+        "plot": "The chart's box: it fills the box it is given (an app or a frame gives it a size) and draws on what is under it, with no ground of its own (backgroundColor transparent). The grid inside it keeps 4 at the start and the foot, 10 at the end and the top (more at the top while a marked category's label needs the room), and grows to hold the axis labels.",
+        "axisLine": "The category or time axis' line along the plot's foot, 1 wide in border; a value axis draws none. No ticks.",
+        "axisLabel": "An axis' labels, in the sans face at chart-text-size, in muted-foreground; a value axis hides labels that would overlap and writes its figures short, by the spec's format and unit. An axis' name at chart-text-size-small.",
+        "gridLine": "A line across the plot at each value-axis step, 1 wide, in the border mixed 65 percent into the card (oklab); category and time axes draw none.",
+        "series": "A series' marks in its color: the spec's colors for that name, else the spec's palette in order, else the theme's order (palette). A line 1.5 wide with its points hidden until hovered (5 across); an area under it fading from the color at 40 percent of the card to 4 percent (55 to 30 stacked), or solid; a bar at most 28 wide, its far corners rounded by a share of the radius; a point 7 across at 85 percent. A slice or a heatmap cell is edged in card.",
+        "reference": "A series the spec draws dashed: a reference, such as a target or the period before, as a dashed line 1.25 wide with no area or points.",
+        "stepLine": "Each step of the spec's scale after the first, a dashed line 1 wide across the plot at its value in the step's color (muted-foreground when it names none), its figure written at its end over the line at chart-text-size-small.",
+        "markLine": "Each of the spec's marks, a dashed line 1 wide down the plot at its category in the mark's color (muted-foreground when it names none), its label at its top at chart-text-size-small.",
+        "axisPointer": "While the pointer is over the plot: a dashed line 1 wide in muted-foreground at the hovered category, or a shade of muted-foreground at 14 percent behind its bars.",
+        "tooltip": "The hovered category's figures on the popover's look: popover ground, a 1 wide border edge, radius-md, elevation-pop, padded 10 across and 6 down, text.xs. The category over its rows at weight 500; a row per series with a figure: its swatch, its name, its figure at the end.",
+        "tooltipSwatch": "A row's swatch, 10 square, rounded radius-mini, in its series' color.",
+        "tooltipLabel": "A row's series name, in muted-foreground.",
+        "tooltipValue": "A row's figure at its end, 16 after the name at least, in the code face at weight 500 with tabular figures, in popover-foreground.",
+        "legend": "ChartLegend, beside the chart rather than in it: a wrapping row of entries 4 apart (list), or a list table of each series with its min, max, mean and current figure (table, parts/table's list variant, unframed).",
+        "legendItem": "An entry: a button holding its swatch and label (and its figure with figures), 24 tall, padded 6 across, 6 between swatch and label, radius-md, text.xs in muted-foreground; a finger tall below md. A press, Enter or Space hides or shows its series; hover or focus emphasizes it.",
+        "legendSwatch": "An entry's swatch, 10 square, rounded radius-mini, in its series' color; hollow (a 1 wide inset ring in the entry's ink) while its series is hidden.",
+        "legendFigure": "An entry's figure after its label, in the code face with tabular figures, in foreground.",
+        "missing": "A figure that is not there: left out of a tooltip (a null, or ECharts' own '-'), and drawn as the dash, —, where a figure is written: the data view's cells, a gauge's figure, a dual axis' tooltip, a legend table's figures."
+    },
+    "standsOn": {
+        "default": "card",
+        "tooltip": "card",
+        "tooltipLabel": "popover",
+        "tooltipValue": "popover",
+        "tooltipSwatch": "popover"
+    },
+    "options": {
+        "kind": {
+            "values": [
+                "bar",
+                "line",
+                "area",
+                "donut",
+                "pie",
+                "heatmap",
+                "scatter",
+                "histogram",
+                "boxplot",
+                "waterfall",
+                "funnel",
+                "bullet",
+                "radar",
+                "rose",
+                "gauge",
+                "rings",
+                "dual",
+                "treemap",
+                "sunburst",
+                "sankey",
+                "calendar",
+                "parallel",
+                "stream",
+                "step",
+                "range",
+                "fan",
+                "linked"
+            ],
+            "does": "How the rows are drawn. The same rows draw as any kind that reads their fields; a chart no kind draws becomes a new kind or an option on one, never a hand-built option.",
+            "sokkel-ui": "ChartProps kind, the keys of KINDS (kinds/index.ts)"
+        },
+        "label": {"type": "text", "does": "What the chart shows, for a screen reader."},
+        "rows": {
+            "type": "rows",
+            "does": "The rows to draw; kept stable between renders, since a change builds the chart again."
+        },
+        "fields": {
+            "type": "text",
+            "does": "The fields to read, as a table's columns are picked: x, y, series, value, facet, path and the rest a kind reads; fieldNames names them for a reader."
+        },
+        "palette": {
+            "type": "rows",
+            "default": ["chart-2", "chart-3", "chart-4", "kind-teal", "kind-pink", "kind-green", "kind-blue", "chart-5"],
+            "does": "The color tokens series take in order when the spec names no color for them; the theme's order (SERIES_ORDER) by default, an app's own palette in its place.",
+            "sokkel-ui": "ChartSpec palette; SERIES_ORDER in look.ts"
+        },
+        "colors": {
+            "type": "rows",
+            "does": "A color token per series or category name, over the palette; a token may carry an alpha (name/45)."
+        },
+        "statuses": {
+            "type": "boolean",
+            "does": "true: every series or category named for a run state (succeeded, failed, running, queued, pending, waiting, cancelled, skipped, completed_with_errors) in its status color (status-<state>); or the app's own StatusMap, its colors good (good), critical (critical), warning (warning), info (info) and neutral (faint) or a run state's. A name in colors keeps its own token.",
+            "sokkel-ui": "ChartSpec statuses (withStatuses in kinds/spec.ts, STATUS_CSS in lib/status.ts)"
+        },
+        "steps": {
+            "type": "rows",
+            "does": "A threshold scale ({ value?, color }): the steps after the first drawn as dashed lines across (stepLine)."
+        },
+        "marks": {
+            "type": "rows",
+            "does": "Lines down the chart at categories of x ({ x, label?, color? }): where a forecast starts, a release (markLine)."
+        },
+        "format": {
+            "type": "callback",
+            "does": "How a figure is written, in ticks, tooltips, the legend and the data view; unit is written after it."
+        },
+        "hidden": {
+            "type": "rows",
+            "does": "The series hidden, held by the legend (or a frame) around the chart; hovered emphasizes one."
+        },
+        "words": {"type": "node", "does": "The chart's words over the English defaults (ChartSpec words)."}
+    },
+    "sizes": {
+        "legend": {"gap": 4, "note": "The list: entries 4 apart across, 2 down."},
+        "legendItem": {
+            "height": 24,
+            "padX": 6,
+            "gap": 6,
+            "radius": "radius-md",
+            "text": "text.xs",
+            "phoneMinHeight": "spacing-finger"
+        },
+        "legendSwatch": {"height": 10, "width": 10, "radius": "radius-mini"},
+        "tooltip": {
+            "padX": 10,
+            "padY": 6,
+            "gap": 4,
+            "radius": "radius-md",
+            "text": "text.xs",
+            "note": "At least 144 wide; rows 4 apart."
+        },
+        "tooltipRow": {"gap": 8},
+        "tooltipSwatch": {"height": 10, "width": 10, "radius": "radius-mini"}
+    },
+    "layout": {
+        "axisText": {
+            "value": "chart-text-size",
+            "note": "Axis labels, legend text drawn by ECharts, a tooltip's axis label (look.size.label)."
+        },
+        "axisNameText": {
+            "value": "chart-text-size-small",
+            "note": "An axis' name, a step's or a mark's label (look.size.small)."
+        },
+        "statText": {
+            "value": "chart-stat-size",
+            "note": "A figure in a chart's middle, such as a gauge's or a ring's (look.size.stat)."
+        },
+        "statTextSmall": {
+            "value": "chart-stat-size-small",
+            "note": "That figure in a small chart, a gauge on a phone (look.size.statSmall)."
+        },
+        "gridStart": {"value": 4, "note": "The grid's room at the start (theme.ts grid.left)."},
+        "gridEnd": {"value": 10, "note": "The grid's room at the end (grid.right)."},
+        "gridTop": {
+            "value": 10,
+            "note": "The grid's room at the top (grid.top); with a labeled mark, chart-text-size-small and 12 (markRoom)."
+        },
+        "gridFoot": {
+            "value": 4,
+            "note": "The grid's room at the foot (grid.bottom); it grows to hold the axis labels (outerBoundsContain axisLabel)."
+        },
+        "lineWidth": {"value": 1.5, "note": "A line series (theme.ts line.lineStyle.width)."},
+        "referenceWidth": {"value": 1.25, "note": "A dashed reference series (kinds/categories.ts)."},
+        "pointSize": {"value": 5, "note": "A line's point, shown on hover (line.symbolSize)."},
+        "scatterSize": {"value": 7, "note": "A scatter's point (scatter.symbolSize)."},
+        "barMaxWidth": {"value": 28, "note": "A bar at most this wide (bar.barMaxWidth)."},
+        "markCorner": {
+            "value": 0.4,
+            "note": "A bar's or a cell's corner: this share of the radius token (look.corner)."
+        },
+        "chartLegendIcon": {
+            "value": 10,
+            "note": "The swatch of the legend ECharts draws in a chart (legend.itemWidth, itemHeight); 14 between its entries (legend.itemGap)."
+        },
+        "sliceEdge": {
+            "value": 2,
+            "note": "A pie or ring slice's edge in card (pie.itemStyle.borderWidth); a heatmap cell's is 1."
+        }
+    },
+    "states": {
+        "rest": {"means": "The series drawn in their colors, the axes, grid and lines quiet."},
+        "hover": {
+            "means": "The pointer over the plot: the axis pointer at the hovered category and the tooltip with its figures; over a series, it is emphasized (its points shown) and the others blurred. Over a legend entry: the entry on hover in foreground, its series emphasized.",
+            "reached": "the pointer"
+        },
+        "blurred": {
+            "means": "Another series is emphasized: a line at 20 percent, an area at 4, a bar or point at 25.",
+            "reached": "hover or focus on another series or its legend entry",
+            "effect": {"piece": "series", "opacity": 0.25}
+        },
+        "focus": {
+            "means": "Keyboard focus on a legend entry: the focus outline in ring, focus-ring-width wide, drawn inside the entry; its series emphasized.",
+            "on": "keyboard",
+            "reached": "Tab"
+        },
+        "hidden": {
+            "means": "A series switched off by its legend entry: not drawn, its entry at 60 percent with its label struck through and its swatch hollow; in ECharts' own legend, faint.",
+            "reached": "a press, Enter or Space on its entry; hidden"
+        }
+    },
+    "pieces": {
+        "axisLine": {
+            "rest": {
+                "rule": "border",
+                "note": "theme.ts chartTheme axisLine.lineStyle.color, look.border (look.ts readLook: token('border'))."
+            }
+        },
+        "axisLabel": {
+            "rest": {
+                "ink": "muted-foreground",
+                "note": "theme.ts axisLabel.color and nameTextStyle.color, look.muted (token('muted-foreground'))."
+            }
+        },
+        "gridLine": {
+            "rest": {
+                "rule": "mix-oklab(border 65%, card)",
+                "note": "theme.ts splitLine.lineStyle.color, look.grid (mix('var(--border)', 65), over var(--card))."
+            }
+        },
+        "series": {
+            "rest": {
+                "ground": "chart-2",
+                "note": "The first of the theme's order (SERIES_ORDER in look.ts): chart-2, chart-3, chart-4, kind-teal, kind-pink, kind-green, kind-blue, chart-5. A spec's colors, palette or statuses stand over it."
+            }
+        },
+        "stepLine": {
+            "rest": {
+                "rule": "muted-foreground",
+                "ink": "muted-foreground",
+                "note": "When the step names no color (kinds/axes.ts stepMarks, look.muted); dashed."
+            }
+        },
+        "markLine": {
+            "rest": {
+                "rule": "muted-foreground",
+                "ink": "muted-foreground",
+                "note": "When the mark names no color (kinds/axes.ts categoryMarks, look.muted); dashed."
+            }
+        },
+        "axisPointer": {
+            "rest": {
+                "rule": "muted-foreground",
+                "note": "theme.ts tooltip.axisPointer: a dashed line, or a shade of muted-foreground at 14 percent behind bars."
+            }
+        },
+        "tooltip": {
+            "rest": {
+                "ground": "popover",
+                "edge": "border",
+                "ink": "popover-foreground",
+                "radius": "radius-md",
+                "text": "text.xs",
+                "note": "tooltipMarkup in look.ts; elevation-pop under it. The category at weight 500."
+            }
+        },
+        "tooltipLabel": {"rest": {"ink": "muted-foreground"}},
+        "tooltipValue": {
+            "rest": {"ink": "popover-foreground", "weight": 500, "note": "In the code face, tabular figures."}
+        },
+        "tooltipSwatch": {"rest": {"radius": "radius-mini", "note": "In the series' color."}},
+        "legendItem": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md", "text": "text.xs"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"}
+            },
+            "hidden": {"opacity": 0.6, "note": "The label struck through."}
+        },
+        "legendSwatch": {
+            "rest": {"radius": "radius-mini", "note": "In the series' color."},
+            "hidden": {"ground": "none", "note": "Hollow: a 1 wide inset ring in the entry's ink."}
+        },
+        "legendFigure": {"rest": {"ink": "foreground", "note": "The code face, tabular figures."}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Moves between the legend's entries, each a button.", "when": "a legend is drawn"},
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Hides or shows the entry's series; focus on an entry emphasizes its series.",
+            "when": "a legend entry has focus"
+        }
+    ],
+    "words": {
+        "count": "Count",
+        "total": "Total",
+        "rise": "Rise",
+        "fall": "Fall",
+        "change": "Change",
+        "low": "Low",
+        "lower": "Lower quartile",
+        "median": "Median",
+        "upper": "Upper quartile",
+        "high": "High",
+        "outlier": "Outlier",
+        "ofFirst": "of first",
+        "target": "Target",
+        "observed": "Observed",
+        "all": "All",
+        "to": "to",
+        "legend.series": "Series",
+        "legend.min": "Min",
+        "legend.max": "Max",
+        "legend.avg": "Avg",
+        "legend.current": "Current"
+    },
+    "appText": {
+        "label": "What the chart shows, for a screen reader.",
+        "fieldNames": "What each field is called in a tooltip, an axis' name, the legend and the data view.",
+        "marks": "Each mark's label."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "ECharts draws every chart (the library's one chart engine), on its canvas renderer; its core loads with the first chart, each chart type and component the first time an option draws with it, a kind's builder with the first chart of that kind, and the SVG renderer only for an export to SVG.",
+            "ECharts takes no CSS: useChartLook reads the theme the chart sits in (the page's, or a data-theme-scope's) and resolves each token to hex on a one-pixel canvas (readLook in look.ts), again when the scheme, the theme or a token override changes, once fonts have loaded. A server draws the chart's box alone.",
+            "The words are a private default object in kinds/spec.ts (WORDS, ChartWords), merged under the spec's words; the legend's in ChartLegend.tsx (WORDS, LegendWords).",
+            "The legend's table mode is a DataTable, loaded the first time a legend is drawn as a table.",
+            "Figures in the legend are written with en-US grouping until a locale arrives."
+        ],
+        "sokkel-egui": ["Draws charts with its painter (principle 15): no second engine."]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b7e1763 the chart look is not built as a whole; StatPanel and TimeSeriesPanel draw their own (parts/time-series-panel)."
+        }
+    ]
+}

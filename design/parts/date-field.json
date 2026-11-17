@@ -1,0 +1,339 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "date-field",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "8567f05"},
+        "sokkel-egui": {"state": "partial", "as_of": "b7e1763"},
+        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+    },
+    "summary": "A date typed in one format, with a calendar beside it to pick from. The value is a day with no time and no zone, YYYY-MM-DD, whatever format the field is written in. What is typed is read by that format alone (a pasted ISO date always reads) and written in it again once the field is left; text that is not a date keeps the value as it was and is said by the field's issue mark once the field is left. A date outside min and max is kept and said at once, with an action that puts in the bound, and the calendar offers none. An optional field that holds a date empties with a clear button. The field's label, help and issue mark are parts/text-field's: a form never changes height (principle 12).",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/DateField.tsx",
+            "packages/core/src/components/entry.tsx",
+            "packages/core/src/components/pickers.tsx",
+            "packages/core/src/components/day-pick.tsx",
+            "packages/core/src/components/ui/calendar.tsx",
+            "packages/core/src/components/Field.tsx",
+            "packages/core/src/lib/dates.ts",
+            "packages/core/src/lib/issue-edge.ts"
+        ],
+        "sokkel-egui": ["crates/core/src/widgets/date_field.rs (DateField, the date-only form)"]
+    },
+    "anatomy": {
+        "field": "parts/text-field's frame around the control: the label with its hint and required mark, the description, the help and the fallback under it, and the issue mark with its popover.",
+        "control": "The frame: the input with the date as text, then the frame's buttons at its end, 4 apart; focusing anywhere in it but a button focuses the input.",
+        "input": "The date written in the field's format, in tabular figures; the format in lower case (yyyy-mm-dd) as its placeholder unless one is given.",
+        "clear": "With an optional field that holds text and can be changed: a frame button with an x, named words.clear; it empties the field and puts focus back in the input.",
+        "pick": "While the field can be changed: a frame button with a calendar, named and titled words.pick, that opens the calendar under the frame.",
+        "calendar": "The popup under the frame, lined up with its start, on the popup's look (parts/select's popup): one month, the chosen day's (else today's, kept within the bounds), with the chosen day focused; the months beyond the bounds are not offered.",
+        "day": "One day of the month: a square cell, the chosen day filled, today marked, a day outside the bounds shut.",
+        "spinner": "In the calendar's place while it loads, the first time: a spinner in muted-foreground, 224 by 288."
+    },
+    "standsOn": {
+        "default": "background",
+        "control": "background",
+        "clear": "field",
+        "pick": "field",
+        "calendar": "popover",
+        "day": "popover"
+    },
+    "options": {
+        "value": {
+            "type": "text",
+            "does": "The day, as YYYY-MM-DD, or null for none; held from outside with onValueChange, or started at defaultValue.",
+            "sokkel-ui": "value, defaultValue, onValueChange"
+        },
+        "format": {
+            "type": "text",
+            "default": "YYYY-MM-DD",
+            "does": "How the date is written and read: YYYY-MM-DD, or such as DD.MM.YYYY or MM/DD/YYYY. The value stays YYYY-MM-DD in every format."
+        },
+        "min": {
+            "type": "text",
+            "does": "The first day allowed, as YYYY-MM-DD: a date before it is kept and said, with an action that puts it in, and the calendar shuts the days before it."
+        },
+        "max": {"type": "text", "does": "The last day allowed, as min is the first."},
+        "today": {
+            "type": "text",
+            "does": "The day the calendar marks as today, as YYYY-MM-DD; the clock's day when not given."
+        },
+        "weekStartsOn": {
+            "values": ["0", "1"],
+            "default": "1",
+            "does": "The weekday the calendar's weeks start on: 1 Monday, 0 Sunday."
+        },
+        "open": {
+            "type": "boolean",
+            "does": "Whether the calendar is open, held from outside with onOpenChange; it starts at defaultOpen otherwise.",
+            "sokkel-ui": "open, defaultOpen, onOpenChange"
+        },
+        "placeholder": {"type": "text", "does": "The input's placeholder; the format in lower case when not given."},
+        "required": {
+            "type": "boolean",
+            "default": false,
+            "does": "Marks the label (parts/text-field) and takes away the clear button."
+        },
+        "disabled": {"type": "boolean", "default": false, "does": "Cannot be used: faded, no buttons."},
+        "readOnly": {
+            "type": "boolean",
+            "default": false,
+            "does": "Shows the date with no buttons; focusable and selectable."
+        },
+        "error": {
+            "type": "text",
+            "does": "Why the value is refused, as one critical issue beside the field's own (parts/text-field's issues)."
+        },
+        "issues": {
+            "type": "rows",
+            "does": "The app's issues, with the field's own: parts/text-field's issue mark says the worst."
+        },
+        "onIssueChange": {
+            "type": "callback",
+            "does": "Hears the field's own issue (a date it cannot read, a date out of bounds) each time it changes, and null once it is gone."
+        },
+        "mono": {"type": "boolean", "default": false, "does": "The date in the code face."},
+        "words": {"type": "node", "does": "The words below, with parts/text-field's."}
+    },
+    "sizes": {
+        "control": {
+            "height": "density.control",
+            "padX": 10,
+            "gap": 4,
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "note": "density.control: 32 regular, 28 compact; the end padding 4 while it holds buttons. The text 16 below 768 and text.sm from it, so a phone does not zoom the page on focus."
+        },
+        "frameButton": {
+            "height": "density.control-xs",
+            "width": "density.control-xs",
+            "icon": 14,
+            "radius": "radius-sm",
+            "note": "The clear and the pick buttons: control-xs square (24, 20 compact)."
+        },
+        "calendar": {
+            "padX": 8,
+            "padY": 8,
+            "note": "The calendar's own padding inside the popup, which has none of its own."
+        },
+        "day": {
+            "height": 28,
+            "width": 28,
+            "note": "A cell is 28 square (--cell-size), 32 below 768, its corners radius-md (--cell-radius)."
+        }
+    },
+    "layout": {"calendarLoading": {"value": 224, "note": "The width of the calendar's place while it loads, 288 tall."}},
+    "states": {
+        "rest": {"means": "Empty with its placeholder, or holding a date written in the field's format."},
+        "hover": {
+            "means": "The pointer is over a frame button: washed hover, its icon in foreground. The control itself has no hover look.",
+            "reached": "pointer over"
+        },
+        "focus": {
+            "means": "Focus anywhere in the frame: the ring edge and a 1px ring, however the focus came (a text input's focus shows on any focus).",
+            "reached": "Tab, or a press anywhere in the frame",
+            "on": "any",
+            "sokkel-ui": "focus-within:border-ring focus-within:ring-1 focus-within:ring-ring on the frame",
+            "effect": {"piece": "control", "ring": {"color": "ring", "width": 1}}
+        },
+        "keyFocus": {
+            "means": "Keyboard focus on a frame button: a focus-ring-width ring in ring at half strength.",
+            "reached": "Tab",
+            "on": "keyboard"
+        },
+        "disabled": {
+            "means": "Cannot be used: faded, no buttons, the cursor not-allowed.",
+            "reached": "disabled",
+            "effect": {"piece": "control", "opacity": "disabled-opacity", "cursor": "not-allowed"}
+        },
+        "readOnly": {
+            "means": "The date shown with no buttons; focusable and selectable. No look of its own.",
+            "reached": "readOnly"
+        },
+        "invalid": {
+            "means": "The worst issue is critical: a date it cannot read (once the field is left), a date outside the bounds, or the app's error. The edge alone at rest.",
+            "reached": "an unreadable date left, a date out of bounds, error, or a critical issue"
+        },
+        "invalid+focus": {
+            "means": "An invalid field with focus: the critical edge and the invalid ring.",
+            "reached": "focus in an invalid field",
+            "on": "any",
+            "effect": {"piece": "control", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}}
+        },
+        "warning": {"means": "The worst issue is a warning.", "reached": "a warning issue"},
+        "warning+focus": {
+            "means": "A field with a warning, focused: the warning edge and a 1px ring in warning at a quarter.",
+            "reached": "focus in a field with a warning",
+            "on": "any",
+            "effect": {"piece": "control", "ring": {"color": "warning/25", "width": 1}}
+        },
+        "open": {
+            "means": "The calendar is open: its button washed hover.",
+            "reached": "a press on the pick button, Alt+ArrowDown in the input, or open"
+        },
+        "chosen": {
+            "means": "The chosen day in the calendar: filled primary in primary-foreground.",
+            "reached": "the field's value"
+        },
+        "today": {
+            "means": "Today in the calendar, when it is not the chosen day: on muted in foreground.",
+            "reached": "today"
+        },
+        "shut": {
+            "means": "A day outside min and max: muted-foreground at disabled-opacity, not picked.",
+            "reached": "min, max"
+        },
+        "dayFocus": {
+            "means": "The calendar's focused day: the focus outline in ring, focus-ring-width, focus-ring-offset off.",
+            "reached": "the arrows in the calendar, or the calendar opening on its day",
+            "on": "keyboard"
+        }
+    },
+    "pieces": {
+        "control": {
+            "rest": {
+                "ground": "field",
+                "edge": "input",
+                "ink": "inherit",
+                "radius": "radius-control",
+                "note": "The page's ink: neither the frame nor its bare input sets one."
+            },
+            "focus": {"edge": "ring"},
+            "disabled": {"ground": "input/50", "opacity": "disabled-opacity"},
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {"edge": "critical"},
+            "warning": {"edge": "warning/80"},
+            "warning+focus": {"edge": "warning"}
+        },
+        "clear": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-sm"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "keyFocus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "pick": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-sm"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "keyFocus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}},
+            "open": {"ground": "hover"}
+        },
+        "calendar": {
+            "rest": {
+                "ground": "popover",
+                "edge": "border-strong",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "note": "The popup's look (lib/popup), elevation-pop under it; the calendar's own ground is none inside a popover."
+            }
+        },
+        "day": {
+            "rest": {"note": "parts/button's ghost: no ground, hover on hover."},
+            "chosen": {"ground": "primary", "ink": "primary-foreground"},
+            "today": {"ground": "muted", "ink": "foreground"},
+            "shut": {"ink": "muted-foreground", "opacity": "disabled-opacity"},
+            "dayFocus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Focuses the input, then the clear and the pick buttons, then the issue mark when there is one."
+        },
+        {
+            "keys": ["Alt+ArrowDown"],
+            "does": "Opens the calendar.",
+            "when": "the input has focus and the field can be changed"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Opens the calendar, or empties the field.",
+            "when": "the pick or the clear button has focus"
+        },
+        {
+            "keys": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+            "does": "Moves to the day before or after, or the same weekday a week before or after, past the shut days; into the month before or after at its edge.",
+            "when": "the calendar is open"
+        },
+        {
+            "keys": ["PageUp", "PageDown"],
+            "does": "Moves to the same day a month before or after.",
+            "when": "the calendar is open"
+        },
+        {
+            "keys": ["Home", "End"],
+            "does": "Moves to the first or the last day of the week.",
+            "when": "the calendar is open"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Picks the focused day, closes the calendar and puts focus back on the pick button.",
+            "when": "the calendar is open"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the calendar, focus back on the pick button.",
+            "when": "the calendar is open"
+        }
+    ],
+    "words": {
+        "required": "required",
+        "issueCritical": "Error: ",
+        "issueWarning": "Warning: ",
+        "errors": {"one": "{count} error", "other": "{count} errors"},
+        "warnings": {"one": "{count} warning", "other": "{count} warnings"},
+        "unreadable": "Enter a date",
+        "example": "As in {sample}.",
+        "under": "Enter {min} or later",
+        "over": "Enter {max} or earlier",
+        "use": "Use {bound}",
+        "pick": "Choose a date",
+        "clear": "Clear"
+    },
+    "samples": {
+        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 3}, "says": "3 errors"}],
+        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 3}, "says": "3 warnings"}],
+        "example": [
+            {"with": {"sample": "2026-11-09"}, "says": "As in 2026-11-09."},
+            {"with": {"sample": "09.11.2026"}, "says": "As in 09.11.2026."}
+        ],
+        "under": [{"with": {"min": "2026-11-09"}, "says": "Enter 2026-11-09 or later"}],
+        "over": [{"with": {"max": "12/09/2026"}, "says": "Enter 12/09/2026 or earlier"}],
+        "use": [{"with": {"bound": "2026-11-09"}, "says": "Use 2026-11-09"}]
+    },
+    "appText": {
+        "label": "The field's label, hint, description, help and fallback, as parts/text-field takes them.",
+        "error": "Why the app refuses the value."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The calendar is react-day-picker (ui/calendar), loaded with its date library the first time the field is pointed at or focused (prefetchCalendar), a spinner in its place until then.",
+            "The popup is Base UI's Popover anchored to the frame; it takes Escape and a press outside and puts focus back on its trigger.",
+            "Each bound and example is written in the field's format (formatDate); the example is the bound's day, else today's.",
+            "The field and its date-time sibling share the typed field (entry.tsx, TypedField): reading, writing, bounds and issues."
+        ],
+        "sokkel-egui": [
+            "The date-only form: a text input read as YYYY-MM-DD, a calendar picker, and an error said under the field."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b7e1763, DateField draws the date-only form: YYYY-MM-DD typed or picked from a calendar. Not yet: other formats, min and max with their issue and its action, the clear button, today and weekStartsOn, Alt+ArrowDown, and the issue mark."
+        },
+        {
+            "renderer": "sokkel-egui",
+            "what": "where a problem is said",
+            "spec": "parts/text-field's issue mark at the control's end; nothing under the field (principle 12).",
+            "today": "The error is a line under the field, so the form changes height."
+        },
+        {
+            "renderer": "sokkel-egui",
+            "what": "control height",
+            "spec": "density.control: 32 at regular, 28 at compact.",
+            "today": "33 at regular since egui 0.37 (b7e1763): the text input's own height."
+        }
+    ]
+}

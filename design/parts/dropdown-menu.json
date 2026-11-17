@@ -168,7 +168,7 @@
             }
         },
         "glyphs": ["box", "check", "rule", "chevron-right", "status-dot"],
-        "note": "A radio row's mark is the status dot in the gutter, a check row's the check. What lies under it is drawn as it is until the scrim in cells is decided (open-questions.md, T2). From sokkel-tui's proposal, section c3."
+        "note": "A radio row's mark is the status dot in the gutter, a check row's the check. What lies under it is drawn as it is: a popup has no scrim. From sokkel-tui's proposal, section c3."
     },
     "states": {
         "rest": {"means": "A row with nothing over it."},

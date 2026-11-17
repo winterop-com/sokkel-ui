@@ -26,7 +26,7 @@ export interface DateFieldWords extends FieldWords {
     clear: string
 }
 
-const WORDS: DateFieldWords = {
+export const DATE_FIELD_WORDS: DateFieldWords = {
     ...FIELD_WORDS,
     unreadable: 'Enter a date',
     example: (sample) => `As in ${sample}.`,
@@ -75,7 +75,7 @@ export function DateField({
     placeholder,
     ...field
 }: DateFieldProps) {
-    const words = { ...WORDS, ...said }
+    const words = { ...DATE_FIELD_WORDS, ...said }
     const [opened, setOpened] = useOpen(open, defaultOpen, onOpenChange)
     return (
         <TypedField

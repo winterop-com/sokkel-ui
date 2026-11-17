@@ -200,7 +200,7 @@
             "footer": {"rows": 2, "note": "The dialog's footer: a rule row and a row of verbs."}
         },
         "glyphs": ["box", "rule", "x", "search", "chevron-right", "chevron-left", "focus-mark", "check"],
-        "note": "What lies under it is drawn as it is until the scrim in cells is decided (open-questions.md, T2). From sokkel-tui's proposal, section c3."
+        "note": "What lies under it follows index.json's colorDepth.underLayer (open-questions.md, T2, decided). From sokkel-tui's proposal, section c3."
     },
     "states": {
         "rest": {"means": "Open over the page on the shown section."},

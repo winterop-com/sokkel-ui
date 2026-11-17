@@ -21,7 +21,7 @@ export interface StatWords {
     target: string
 }
 
-const WORDS: StatWords & PanelStateWords = {
+export const STAT_PANEL_WORDS: StatWords & PanelStateWords = {
     noData: 'No data',
     info: 'About this panel',
     menu: 'Panel actions',
@@ -182,7 +182,7 @@ export function StatPanel({
     words: given,
     className,
 }: StatPanelProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...STAT_PANEL_WORDS, ...given }
     const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     const tone = value === null ? undefined : (thresholdColor(value, thresholds) ?? color)
     const filled = colorMode === 'background' && tone !== undefined

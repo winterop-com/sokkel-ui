@@ -226,7 +226,7 @@
             "focus-ring-start",
             "focus-ring-end"
         ],
-        "note": "What lies under it is drawn as it is until the scrim in cells is decided (open-questions.md, T2). From sokkel-tui's proposal, section c3."
+        "note": "What lies under it is drawn as it is: a popup has no scrim. From sokkel-tui's proposal, section c3."
     },
     "states": {
         "rest": {"means": "Holding a value; nothing over it."},

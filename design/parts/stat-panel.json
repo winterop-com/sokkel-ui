@@ -1,0 +1,266 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "stat-panel",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "8567f05"},
+        "sokkel-egui": {"state": "partial", "as_of": "b7e1763"},
+        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+    },
+    "summary": "One reading as a dashboard tile: a small title, the value written large with its unit, and optionally a trend drawn faintly behind it, a change against an earlier period in its tone, a note, and a meter toward a target. A threshold scale (or a fixed color token) picks the reading's color, which inks the value or fills the whole tile. A null value says there is no data, in neutral ink and without its trend. It shares the dashboard panel's states (parts/dashboard-panel): loading, failed in the value's place with Retry, stale marked under the value. A tile with href or onSelect is one link or button, its info and menu still their own.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/dashboard/StatPanel.tsx",
+            "packages/core/src/components/dashboard/thresholds.ts",
+            "packages/core/src/components/dashboard/ThresholdLegend.tsx",
+            "packages/core/src/components/dashboard/DashboardGrid.tsx"
+        ]
+    },
+    "anatomy": {
+        "tile": "The box: at least 112 tall (144 with a target meter), radius-surface, a 1px border edge on card in card-foreground, clipping. Filled by its tone (colorMode background): the tone as a diagonal gradient, no edge, in on-fill. It takes its span's columns (parts/dashboard-panel), a sixth by default.",
+        "spark": "With sparkline and a value: the values as an area under a line, stretched across the tile's foot, 45 percent of its height (a quarter with a target), behind everything, in the value's ink (muted-foreground, the tone when inked, on-fill when filled) faded: the line at 70 percent, the area from 32 to 4 percent.",
+        "head": "The head row: at least 28 tall, 10 across, 4 over, its pieces 4 apart: the title, the change, info, the menu's button and an arranged grid's tools.",
+        "title": "The title in text.xs at weight 500, muted-foreground, at most two lines; one cut short gives its whole text on hover.",
+        "delta": "With delta and a value: an arrow (up unless the change starts with a minus, 14), the change in tabular figures at text.xs and 500, then what it is against (compared) at weight 400, cut short; titled with both. Its tone: good, critical when good is false, muted-foreground when good is not given.",
+        "tool": "info (a 12 info icon opening the tooltip with info, named words.info) and the menu's button (a 14 ellipsis, named and titled words.menu): 20 square, radius-md, in muted-foreground.",
+        "value": "The reading, centered in the room under the head, 10 across and 28 under: written by format, else with decimals and grouped thousands (en-US), in text.statistic with tabular figures; the unit 4 after it at text.sm and 500, in muted-foreground unless inked or filled. A null value says words.noData in text.detail-title and muted-foreground, with no unit.",
+        "unit": "With unit and a value: the unit 4 after the value on its baseline, at text.sm and weight 500, in muted-foreground unless inked or filled, when it takes the value's ink.",
+        "note": "With note: a line under the value in text.xs, muted-foreground, cut short.",
+        "stale": "With stale: parts/dashboard-panel's stale mark, under the value.",
+        "meter": "With target and a value: a meter under the value, 8 below it and 12 above the tile's foot, at most 192 wide, its pieces 4 apart: the track, then the target written out.",
+        "track": "The meter's track: 6 tall, radius-mini, in the value's ink at 15 percent; filled from its start in the value's ink as far as target(value, range) puts the reading (range from targetRange, else 0 to the larger of the reading and the target).",
+        "tick": "A mark at the target across the track: 2 wide, reaching 4 above and below it, radius-mini, in foreground (on-fill when filled).",
+        "targetLabel": "words.target, then the target written as the value is with a string unit after it (Target 99.5%), centered, at text.xs, the figure in the code face with tabular figures, in muted-foreground (on-fill at 85 percent when filled).",
+        "failure": "With error: what failed (error's own words, else words.failed) at text.xs in critical-ink, centered in the value's place, then Retry with onRetry: a 12 turning arrow and words.retry, a tool as wide as its words.",
+        "cover": "With href or onSelect: the whole tile is one link or button under the head and body, named the title and the value (Success rate: 99.3); info and the menu stay their own buttons over it."
+    },
+    "standsOn": {"default": "card", "tile": "background"},
+    "options": {
+        "title": {"type": "node", "does": "The tile's title."},
+        "value": {"type": "number", "does": "The reading; null says there is no data."},
+        "unit": {"type": "node", "does": "Written after the value: %, ms, /min."},
+        "decimals": {
+            "type": "number",
+            "does": "Decimals the value is written with; when omitted, none for an integer or a value of 100 or more, else one. Thousands grouped (formatValue, en-US)."
+        },
+        "format": {"type": "callback", "does": "Writes the value and the target, in place of decimals."},
+        "thresholds": {
+            "type": "rows",
+            "does": "A threshold scale: [{ value?, color }], from each step's value up a reading takes its color token (good, warning, critical, chart-2); the first step covers everything below the second. A null value takes the first step's color, which a null value never draws."
+        },
+        "color": {"type": "text", "does": "A fixed color token, when the tile has no thresholds."},
+        "colorMode": {
+            "values": ["value", "background", "none"],
+            "default": "value",
+            "does": "value inks the value, its unit and its trend in the reading's color; background fills the tile with it, every ink on-fill; none leaves the color out.",
+            "sokkel-ui": "StatPanelProps colorMode"
+        },
+        "sparkline": {
+            "type": "rows",
+            "does": "The values behind the reading, drawn as a faint area across the tile's foot."
+        },
+        "delta": {
+            "type": "text",
+            "does": "The change written for a reader: +12%, -0.4s. An arrow down when it starts with a minus, else up."
+        },
+        "compared": {"type": "text", "does": "What the change is against (vs yesterday), said after it."},
+        "good": {
+            "type": "boolean",
+            "does": "Whether the change is an improvement: good or critical; neutral when omitted."
+        },
+        "target": {
+            "type": "number",
+            "does": "The value the reading aims for: a meter under the value with the target written out."
+        },
+        "targetRange": {
+            "type": "rows",
+            "does": "The meter's ends [low, high]; from 0 to the larger of the reading and the target when omitted."
+        },
+        "note": {"type": "node", "does": "A line under the value."},
+        "info": {"type": "node", "does": "What the tile measures, in the info button's tooltip."},
+        "menu": {"type": "node", "does": "The tile menu's items, as parts/dashboard-panel's menu."},
+        "href": {"type": "text", "does": "Makes the whole tile one link, such as to the records its figure counts."},
+        "onSelect": {"type": "callback", "does": "Makes the whole tile one button, in place of href."},
+        "span": {
+            "values": ["sixth", "quarter", "third", "half", "two-thirds", "full"],
+            "default": "sixth",
+            "does": "parts/dashboard-panel's span; a sixth by default, so tiles stand two to a row on a phone.",
+            "sokkel-ui": "StatPanelProps span (PanelSpan)"
+        },
+        "loading": {
+            "type": "boolean",
+            "default": false,
+            "does": "parts/dashboard-panel's loading, named words.loading."
+        },
+        "error": {
+            "type": "text",
+            "does": "true, or what failed: the failure with Retry in the value's place; onRetry offers Retry."
+        },
+        "stale": {"type": "text", "does": "true, or since when: the value kept, the stale mark under it."},
+        "words": {"type": "node", "does": "The tile's words, by key."}
+    },
+    "sizes": {
+        "tile": {
+            "height": 112,
+            "radius": "radius-surface",
+            "note": "At least 112; at least 144 with a target meter and a value."
+        },
+        "head": {"height": 28, "padX": 10, "gap": 4, "note": "At least 28 tall, 4 over its pieces."},
+        "title": {"note": "text.xs at weight 500, as its paint says; at most two lines."},
+        "delta": {"gap": 2, "icon": 14, "note": "text.xs at weight 500, as its paint says."},
+        "tool": {"height": 20, "width": 20, "radius": "radius-md", "note": "info's icon 12, the menu's 14."},
+        "value": {"gap": 4, "padX": 10, "text": "text.statistic", "note": "28 under the value's room."},
+        "unit": {"note": "text.sm at weight 500, as its paint says."},
+        "note": {"text": "text.xs"},
+        "meter": {"gap": 4, "note": "At most layout.meterMaxWidth wide."},
+        "track": {"height": 6, "radius": "radius-mini"},
+        "tick": {"width": 2, "radius": "radius-mini", "note": "4 above and below the track."},
+        "targetLabel": {"gap": 4, "text": "text.xs"},
+        "failure": {"gap": 6, "padX": 10, "text": "text.xs"}
+    },
+    "layout": {
+        "valueFoot": {"value": 28, "note": "Under the value's room (pb-7)."},
+        "meterTop": {"value": 8, "note": "Between the value and the meter."},
+        "meterFoot": {"value": 12, "note": "Under the meter."},
+        "tickOverhang": {"value": 4, "note": "The tick reaches this far above and below the track."},
+        "sparkHeight": {"value": 0.45, "note": "The trend's share of the tile's height; a quarter with a target meter."},
+        "meterMaxWidth": {"value": 192, "note": "The target meter is at most this wide (max-w-48)."}
+    },
+    "states": {
+        "rest": {"means": "The title, the value with its unit, in card-foreground on card."},
+        "hover": {
+            "means": "The pointer over a tile that is a link or a button: the hover wash and an edge in foreground at 25 percent; over a tool, its icon in foreground.",
+            "reached": "the pointer, with href or onSelect"
+        },
+        "focus": {
+            "means": "Keyboard focus on the tile's cover: the frame's focus outline in ring, focus-ring-width wide, drawn focus-ring-offset inside the tile's edge. On a tool: the outline in ring, focus-ring-width wide, with no offset.",
+            "on": "keyboard",
+            "reached": "Tab"
+        },
+        "inked": {
+            "means": "The reading has a color (thresholds or color) and colorMode is value: the value, its unit and its trend in that color, set at run time from the token the scale picks.",
+            "reached": "thresholds or color, colorMode value"
+        },
+        "filled": {
+            "means": "colorMode background: the tile filled by the reading's color, no edge, every ink on-fill (the title, the change and the tools at 90 percent, the note and the target at 85).",
+            "reached": "thresholds or color, colorMode background"
+        },
+        "good": {"means": "A change that is an improvement: in good.", "reached": "good true"},
+        "bad": {"means": "A change that is not: in critical.", "reached": "good false"},
+        "noData": {
+            "means": "A null value: words.noData in text.detail-title and muted-foreground, no unit, no trend, no change, no meter, no color.",
+            "reached": "value null"
+        },
+        "loading": {
+            "means": "parts/dashboard-panel's loading: after 300 ms the body at half strength under the loading bar.",
+            "reached": "loading",
+            "effect": {"piece": "value", "opacity": 0.5}
+        },
+        "failed": {
+            "means": "The failure and Retry in the value's place, in critical-ink (on-fill at 90 percent when filled).",
+            "reached": "error true or a string"
+        },
+        "stale": {"means": "The value kept, the stale mark under it.", "reached": "stale true or a string"}
+    },
+    "pieces": {
+        "tile": {
+            "rest": {"ground": "card", "edge": "border", "ink": "card-foreground", "radius": "radius-surface"},
+            "hover": {"ground": "hover", "edge": "foreground/25"},
+            "filled": {
+                "edge": "none",
+                "ink": "on-fill",
+                "note": "The ground is the reading's color token as a gradient (92 percent of it mixed with on-fill, to it at 70 percent; in dark, mixed with background at 80 and 62 percent), set at run time."
+            }
+        },
+        "title": {
+            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 500},
+            "filled": {"ink": "on-fill/90"}
+        },
+        "delta": {
+            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 500},
+            "good": {"ink": "good"},
+            "bad": {"ink": "critical"},
+            "filled": {"ink": "on-fill/90"}
+        },
+        "tool": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md"},
+            "hover": {"ink": "foreground"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}},
+            "filled": {"ink": "on-fill/80"}
+        },
+        "value": {
+            "rest": {"text": "text.statistic", "note": "Tabular figures; inked, the reading's color."},
+            "noData": {"ink": "muted-foreground", "text": "text.detail-title"}
+        },
+        "unit": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.sm",
+                "weight": 500,
+                "note": "Inked or filled, the value's ink."
+            }
+        },
+        "note": {"rest": {"ink": "muted-foreground", "text": "text.xs"}, "filled": {"ink": "on-fill/85"}},
+        "tick": {"rest": {"ground": "foreground", "radius": "radius-mini"}, "filled": {"ground": "on-fill"}},
+        "targetLabel": {"rest": {"ink": "muted-foreground", "text": "text.xs"}, "filled": {"ink": "on-fill/85"}},
+        "failure": {"rest": {"ink": "critical-ink", "text": "text.xs"}, "filled": {"ink": "on-fill/90"}},
+        "cover": {
+            "rest": {"radius": "radius-surface"},
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"}
+            }
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the tile's cover, then info, the menu's button and an arranged grid's tools."
+        },
+        {
+            "keys": ["Enter"],
+            "does": "Follows the tile's link, or presses its button (Space too).",
+            "when": "the cover has focus"
+        },
+        {
+            "keys": ["Enter", "Space", "ArrowDown"],
+            "does": "Opens the tile menu, its keys then parts/dropdown-menu's.",
+            "when": "the menu's button has focus"
+        },
+        {"keys": ["Escape"], "does": "Closes the menu, focus back on its button.", "when": "the menu is open"}
+    ],
+    "words": {
+        "noData": "No data",
+        "info": "About this panel",
+        "menu": "Panel actions",
+        "loading": "Loading",
+        "target": "Target",
+        "failed": "This panel could not load.",
+        "retry": "Retry",
+        "stale": "Not up to date"
+    },
+    "appText": {
+        "title": "The tile's title; its unit, change, what the change is against, note, info and menu items.",
+        "value": "The reading, written by format or formatValue (decimals, grouped thousands, en-US): 3526 as 3,526, 99.3 as 99.3.",
+        "error": "What failed, in place of words.failed.",
+        "stale": "Since when, in place of words.stale."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The reading's color is set at run time as the CSS variable --tone from the token the scale picks (tokenVar); text-(--tone) inks, and the filled ground is a gradient of it, so neither is a resolved paint.",
+            "The track's ground and fill are bg-current at 15 percent and in full, following the value's ink.",
+            "The trend is an SVG area (SparkArea), its stroke not scaled with the box.",
+            "A title cut short sets its title attribute only while it is clamped (useClamped).",
+            "The words are a module-private object (WORDS: noData, info, menu, loading, target, and PANEL_STATE_WORDS spread in), merged under words.",
+            "formatValue writes en-US until a locale arrives (roadmap), as the table's counts do."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not all built",
+            "spec": "This spec.",
+            "today": "As of b7e1763 StatPanel draws the target meter (target(value, range), a 6 tall track, a tick at the target, Target and its value under it, the tile 144 tall). Not yet: the rest of the tile as specified here."
+        }
+    ]
+}

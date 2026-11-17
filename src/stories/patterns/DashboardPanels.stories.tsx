@@ -148,6 +148,24 @@ export const StatTiles: StoryObj = {
     ),
 }
 
+/**
+ * Readings toward a target (`target`): a meter under each value, the reading filled in and a tick
+ * at the target, its value written out under it; one over its target, one with its own range
+ * (`targetRange`), and one with no data, which draws no meter.
+ */
+export const Targets: StoryObj = {
+    render: () => (
+        <Ground title="Targets">
+            <DashboardGrid dense>
+                <StatPanel title="Success rate" value={97.4} unit="%" decimals={1} target={99} targetRange={[90, 100]} />
+                <StatPanel title="Runs today" value={3526} target={3000} />
+                <StatPanel title="Exports sent" value={412} target={600} color="chart-2" />
+                <StatPanel title="Digests sent" value={null} target={120} />
+            </DashboardGrid>
+        </Ground>
+    ),
+}
+
 /** Gauges and bar gauges colored by where their readings fall among thresholds. */
 export const Gauges: StoryObj = {
     render: () => (
