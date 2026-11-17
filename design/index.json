@@ -1,6 +1,6 @@
 {
     "$description": "The sokkel-design contract: its version, which moves in lockstep with sokkel-ui before 1.0, the foundations every part refers to, and every part and pattern with its status. A stable part is a part as it landed in sokkel-ui, specified in the same round, or one drawn from its spec and compared side by side; a draft one may still change shape. How far each renderer has built a part is its own field, `renderers`, in the part's file. CHANGELOG.md says what each version changed.",
-    "version": "0.30.0",
+    "version": "0.30.1",
     "renderers": [
         {
             "id": "sokkel-ui",
