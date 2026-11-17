@@ -35,6 +35,11 @@ release and empties it.
   item in the side panel, its code, title, column chip, labels, description, fields, checklist and
   activity; the checklist counts its steps done, fills a bar and ticks each step through
   `onChecklistChange` (`onStepChange`).
+- The English defaults of more parts' words, exported as every other part's are: `DATE_FIELD_WORDS`
+  (`DateField`), `SCHEMA_WORDS` from `@winterop-com/sokkel-ui/CodeEditor` (a schema check's words),
+  `DASHBOARD_PANEL_WORDS` (`dashboard/DashboardGrid`), `STAT_PANEL_WORDS` (`dashboard/StatPanel`),
+  `THRESHOLD_LEGEND_WORDS` (`dashboard/ThresholdLegend`), and in the charts package
+  `CHART_LEGEND_WORDS` (`ChartLegend`) and `CHART_WORDS` (`kinds`, a chart's own words).
 - `LETTER_WORDS`, `BOARD_ITEM_PANEL_WORDS` and `BOARD_CHECKLIST_WORDS`: the English defaults of
   `Letter`'s, `BoardItemPanel`'s and `BoardChecklist`'s words, exported as every other part's are.
 - `CheckboxField` takes `dot`, a kind color drawn as a dot before the label (calendar toggles), and

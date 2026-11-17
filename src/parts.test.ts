@@ -8,6 +8,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { BOARD_CHECKLIST_WORDS, BOARD_ITEM_PANEL_WORDS, BoardChecklist, BoardItemPanel } from '@winterop-com/sokkel-ui/board/BoardItemPanel'
 import { CALL_BAR_SHORTCUTS, CALL_BAR_WORDS, CallBar, type CallBarProps } from '@winterop-com/sokkel-ui/CallBar'
+import { CHART_LEGEND_WORDS, ChartLegend } from '@winterop-com/sokkel-ui-charts/ChartLegend'
+import { CHART_WORDS, KINDS } from '@winterop-com/sokkel-ui-charts/kinds'
 import {
     COMMAND_PALETTE_WORDS,
     CommandPalette,
@@ -32,6 +34,11 @@ import {
     type TimelineTrack,
 } from '@winterop-com/sokkel-ui/ClipTimeline'
 import { DataTable, DATA_TABLE_WORDS, headEntered, headStep, type DataColumn, type DataTableProps } from '@winterop-com/sokkel-ui/DataTable'
+import { DASHBOARD_PANEL_WORDS, DashboardPanel, SPAN, type DashboardPanelProps } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { STAT_PANEL_WORDS, StatPanel, type StatPanelProps } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
+import { THRESHOLD_LEGEND_WORDS, ThresholdLegend } from '@winterop-com/sokkel-ui/dashboard/ThresholdLegend'
+import { CodeEditor, SCHEMA_WORDS, type CodeEditorProps } from '@winterop-com/sokkel-ui/CodeEditor'
+import { DATE_FIELD_WORDS, DateField } from '@winterop-com/sokkel-ui/DateField'
 import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
 import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
 import { EMOJI_PICKER_WORDS, EmojiPicker } from '@winterop-com/sokkel-ui/EmojiPicker'
@@ -417,7 +424,7 @@ const RING_WIDTHS: Record<string, string> = { focus: 'focus-ring-width', invalid
 const READ = {
     ground: prefixed('bg-'),
     edge: prefixed('border-'),
-    rule: prefixed('border-b-', 'border-t-', 'border-', 'divide-'),
+    rule: prefixed('border-b-', 'border-t-', 'border-l-', 'border-', 'divide-'),
     /** A rule drawn with no color class of its own: its width alone. */
     ruleWidth: (name: string) => (/^(?:border|border-[tblrxy]|divide-[xy])$/.test(name) ? '1' : undefined),
     ink: prefixed('text-'),
@@ -432,10 +439,14 @@ const READ = {
         return /^(?:ring|outline)-(\d+)$/.exec(name)?.[1]
     },
     ringOffset: (name: string) =>
-        /^(?:ring|outline)-offset-focus(?:-inset)?$/.test(name) ? 'focus-ring-offset' : /^(?:ring|outline)-offset-(\d+)$/.exec(name)?.[1],
-    /** Whether an outline is drawn inside the box (`outline-offset-focus-inset`, its offset inward) or outside it. */
+        /^-?(?:ring|outline)-offset-focus(?:-inset)?$/.test(name) ? 'focus-ring-offset' : /^(?:ring|outline)-offset-(\d+)$/.exec(name)?.[1],
+    /** Whether an outline is drawn inside the box (`outline-offset-focus-inset`, or a negative `-outline-offset-focus`) or outside it. */
     ringInset: (name: string) =>
-        /^(?:ring|outline)-offset-focus-inset$/.test(name) ? 'all' : /^(?:ring|outline)-offset-/.test(name) ? 'outside' : undefined,
+        /^(?:(?:ring|outline)-offset-focus-inset|-(?:ring|outline)-offset-focus)$/.test(name)
+            ? 'all'
+            : /^(?:ring|outline)-offset-/.test(name)
+              ? 'outside'
+              : undefined,
     opacity: (name: string) => {
         if (name === 'opacity-disabled') return 'disabled-opacity'
         const match = /^opacity-(\d+)$/.exec(name)
@@ -630,6 +641,20 @@ const FILL: Record<string, string | number> = {
     section: 'General',
     query: 'harbor',
     reason: 'The search timed out',
+    property: 'schedule',
+    a: 'an',
+    expected: 'object',
+    values: '"daily", "weekly"',
+    value: '"harbor"',
+    limit: '1',
+    pattern: '^[a-z-]+$',
+    format: 'date',
+    message: 'Must not be empty',
+    language: 'JSON',
+    sample: '2026-11-09',
+    min: '2026-11-09',
+    max: '2026-12-31',
+    bound: '2026-11-09',
     lane: 'sync-inventory',
     amount: '+2h',
     label: 'harbor-wide',
@@ -4589,6 +4614,891 @@ const BOARD_ITEM_PANEL_ADAPTER: Adapter = {
         }),
 }
 
+// The chart family: the look every chart shares, the dashboard panel's frame, the stat tile and the time series panel
+
+const DASHBOARD_GRID = source('components/dashboard/DashboardGrid.tsx')
+const STAT_PANEL = source('components/dashboard/StatPanel.tsx')
+const THRESHOLD_LEGEND = source('components/dashboard/ThresholdLegend.tsx')
+const LOADERS = source('components/Loaders.tsx')
+const CHARTS = join(ROOT, 'packages', 'charts', 'src')
+const chartSource = (path: string) => readFileSync(join(CHARTS, path), 'utf8')
+const CHART_LOOK = chartSource('look.ts')
+const CHART_THEME = chartSource('theme.ts')
+const CHART_AXES = chartSource('kinds/axes.ts')
+const CHART_CATEGORIES = chartSource('kinds/categories.ts')
+const TIME_SERIES_PANEL = chartSource('dashboard/TimeSeriesPanel.tsx')
+const PANEL_SERIES = chartSource('dashboard/series.ts')
+
+/** The classes a panel's content takes while it loads long enough to dim (`LoadingOverlay`, after its delay). */
+const DIMMED = literalAfter(LOADERS, 'long &&')
+
+/**
+ * The color each field of the chart look stands for, read from `readLook`: `token('name')` is the
+ * token, `mix('var(--a)', n)` a mix in oklab over the card. Written as the class a utility would
+ * take for it, so the paint readers read ECharts' colors as they read a class.
+ */
+const LOOK_COLORS: Record<string, string> = Object.fromEntries([
+    ...[...CHART_LOOK.matchAll(/^\s+(\w+): token\('([a-z0-9-]+)'\),$/gm)].map((match) => [match[1], match[2]]),
+    ...[...CHART_LOOK.matchAll(/^\s+(\w+): mix\('var\(--([a-z0-9-]+)\)', (\d+)\),$/gm)].map((match) => [
+        match[1],
+        `[color-mix(in_oklab,var(--${match[2]})_${match[3]}%,var(--card))]`,
+    ]),
+])
+/** A color the chart theme or a kind draws from the look, as the class that would draw it: `prefix` is bg-, border- or text-. */
+const lookClass = (text: string, pattern: RegExp, prefix: string) => {
+    const field = pattern.exec(text)?.[1]
+    const color = field === undefined ? undefined : LOOK_COLORS[field]
+    return color === undefined ? '' : `${prefix}${color}`
+}
+/** A piece ECharts draws, as the classes its colors would take. */
+const drawnAs = (...classes: string[]): Where => ({ layers: [classes.filter((one) => one !== '').join(' ')], on: [] })
+
+const STEP_COLOR = /const color = step\.color === undefined \? look\.(\w+) :/
+const MARK_COLOR = /const color = mark\.color === undefined \? look\.(\w+) :/
+/** A tooltip's markup (`tooltipMarkup`): its box, a row, a row's swatch, its label and its value, by their literal classes. */
+const TOOLTIP_MARKUP = /export function tooltipMarkup[\s\S]*?\n}/.exec(CHART_LOOK)?.[0] ?? ''
+const tooltipClasses = (pattern: RegExp) => ({ layers: [pattern.exec(TOOLTIP_MARKUP)?.[1] ?? ''], on: [] })
+const TOOLTIP_PIECES: Record<string, () => Where> = {
+    tooltip: () => tooltipClasses(/<div class="(grid [^"]+)">/),
+    tooltipRow: () => tooltipClasses(/<div class="(flex items-center[^"]+)">/),
+    tooltipSwatch: () => tooltipClasses(/<span class="(size-[^"]+)" style=/),
+    tooltipLabel: () => tooltipClasses(/<span class="(text-muted-foreground)">/),
+    tooltipValue: () => tooltipClasses(/<span class="(ml-auto [^"]+)">/),
+}
+
+const LEGEND_ITEMS = [
+    { key: 'runs', label: 'Runs', color: 'var(--chart-2)', value: '3,526' },
+    { key: 'failed', label: 'Failed', color: 'var(--chart-3)' },
+]
+const legendOf = (hidden: readonly string[] = []) => draw(ChartLegend, { items: LEGEND_ITEMS, hidden: new Set(hidden), onToggle: noop })
+const LEGENDS = once(() => ({ shown: legendOf(), hidden: legendOf(['failed']) }))
+const legendButton = (elements: El[], label: string) => elements.find((element) => element.tag === 'button' && element.text.includes(label))
+const legendSwatchOf = (elements: El[], label: string) => {
+    const button = legendButton(elements, label)
+    return button === undefined
+        ? undefined
+        : elements.find((element) => element.parent === button && element.attrs['aria-hidden'] !== undefined)
+}
+const CHART_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'] }
+
+/** A literal number after a pattern in a source, as a string. */
+const literalIn = (text: string, pattern: RegExp) => pattern.exec(text)?.[1]
+
+const CHART_ADAPTER: Adapter = {
+    wordObjects: { CHART_WORDS, CHART_LEGEND_WORDS },
+    complete: ['CHART_WORDS', 'CHART_LEGEND_WORDS'],
+    words: Object.fromEntries([
+        ...Object.keys(CHART_WORDS).map((key) => [key, `CHART_WORDS.${key}`]),
+        ...Object.keys(CHART_LEGEND_WORDS).map((key) => [`legend.${key}`, `CHART_LEGEND_WORDS.${key}`]),
+    ]),
+    options: { kind: Object.keys(KINDS) },
+    size: (size) => {
+        const { shown } = LEGENDS()
+        if (size in TOOLTIP_PIECES) return TOOLTIP_PIECES[size]()
+        const read: Record<string, Where | undefined> = {
+            legend: pieceWhere(byTag(shown, 'ul')),
+            legendItem: pieceWhere(legendButton(shown, 'Runs')),
+            legendSwatch: pieceWhere(legendSwatchOf(shown, 'Runs')),
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const { shown, hidden } = LEGENDS()
+        const on = CHART_ON[state] ?? []
+        if (name in TOOLTIP_PIECES) return TOOLTIP_PIECES[name]()
+        switch (name) {
+            case 'axisLine':
+                return drawnAs(lookClass(CHART_THEME, /axisLine: \{ show: true, lineStyle: \{ color: look\.(\w+) \} \}/, 'border-'))
+            case 'axisLabel':
+                return drawnAs(lookClass(CHART_THEME, /axisLabel: \{ color: look\.(\w+),/, 'text-'))
+            case 'gridLine':
+                return drawnAs(
+                    lookClass(CHART_THEME, /splitLine: \{ show: true, lineStyle: \{ color: look\.(\w+), width: 1 \} \}/, 'border-'),
+                )
+            case 'series': {
+                const first = /export const SERIES_ORDER = \['([a-z0-9-]+)'/.exec(CHART_LOOK)?.[1]
+                return drawnAs(/series: SERIES_ORDER\.map\(token\)/.test(CHART_LOOK) && first !== undefined ? `bg-${first}` : '')
+            }
+            case 'stepLine':
+                return drawnAs(lookClass(CHART_AXES, STEP_COLOR, 'border-'), lookClass(CHART_AXES, STEP_COLOR, 'text-'))
+            case 'markLine':
+                return drawnAs(lookClass(CHART_AXES, MARK_COLOR, 'border-'), lookClass(CHART_AXES, MARK_COLOR, 'text-'))
+            case 'axisPointer':
+                return drawnAs(lookClass(CHART_THEME, /axisPointer: \{\s*lineStyle: \{ color: look\.(\w+),/, 'border-'))
+            case 'legendItem':
+                return pieceWhere(legendButton(state === 'hidden' ? hidden : shown, state === 'hidden' ? 'Failed' : 'Runs'), on)
+            case 'legendSwatch':
+                return pieceWhere(legendSwatchOf(state === 'hidden' ? hidden : shown, state === 'hidden' ? 'Failed' : 'Runs'))
+            case 'legendFigure':
+                return pieceWhere(shown.find((element) => element.text === '3,526' && element.tag === 'span'))
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => {
+        if (state !== 'blurred') return undefined
+        const opacity = /blur: \{.*itemStyle: \{ opacity: (0\.\d+) \} \}/.exec(CHART_THEME)?.[1]
+        return drawnAs(opacity === undefined ? '' : `opacity-${String(Math.round(Number(opacity) * 100))}`)
+    },
+    keys: {
+        'Tab (a legend is drawn)': () => (focusable(legendButton(LEGENDS().shown, 'Runs')) ? true : 'a legend entry takes no focus'),
+        'Enter, Space (a legend entry has focus)': () =>
+            legendButton(LEGENDS().shown, 'Runs')?.attrs['aria-pressed'] !== undefined ? true : 'a legend entry is not a toggle button',
+    },
+    more: () =>
+        layoutChecks('chart', {
+            axisText: () => (/label: pixels\('chart-text-size', \d+\)/.test(CHART_LOOK) ? 'chart-text-size' : undefined),
+            axisNameText: () => (/small: pixels\('chart-text-size-small', \d+\)/.test(CHART_LOOK) ? 'chart-text-size-small' : undefined),
+            statText: () => (/stat: pixels\('chart-stat-size', \d+\)/.test(CHART_LOOK) ? 'chart-stat-size' : undefined),
+            statTextSmall: () =>
+                /statSmall: pixels\('chart-stat-size-small', \d+\)/.test(CHART_LOOK) ? 'chart-stat-size-small' : undefined,
+            gridStart: () => literalIn(CHART_THEME, /grid: \{ left: (\d+),/),
+            gridEnd: () => literalIn(CHART_THEME, /grid: \{[^}]*right: (\d+),/),
+            gridTop: () => literalIn(CHART_THEME, /grid: \{[^}]*top: (\d+),/),
+            gridFoot: () => literalIn(CHART_THEME, /grid: \{[^}]*bottom: (\d+),/),
+            lineWidth: () => literalIn(CHART_THEME, /line: \{[^\n]*lineStyle: \{ width: ([\d.]+) \}/),
+            referenceWidth: () => literalIn(CHART_CATEGORIES, /dashed \? \{ color, width: ([\d.]+), type: 'dashed' \}/),
+            pointSize: () => literalIn(CHART_THEME, /line: \{ symbol: 'circle', symbolSize: (\d+),/),
+            scatterSize: () => literalIn(CHART_THEME, /scatter: \{ symbolSize: (\d+),/),
+            barMaxWidth: () => literalIn(CHART_THEME, /bar: \{ barMaxWidth: (\d+),/),
+            markCorner: () => literalIn(CHART_LOOK, /corner: Math\.max\(0, pixels\('radius', [\d.]+\) \* ([\d.]+)\)/),
+            chartLegendIcon: () => literalIn(CHART_THEME, /itemWidth: (\d+),/),
+            sliceEdge: () => literalIn(CHART_THEME, /pie: \{\s*itemStyle: \{ borderColor: look\.card, borderWidth: (\d+) \}/),
+        }),
+}
+
+const PANEL_MENU = createElement(DropdownMenuItem, {}, 'Download')
+const dashboardPanel = (props: Partial<DashboardPanelProps> = {}) =>
+    draw(
+        DashboardPanel,
+        { title: 'Runs', subtitle: 'Last 24 hours', expandable: true, menu: PANEL_MENU, footer: 'harbor', ...props },
+        createElement('p', {}, 'nightly-export'),
+    )
+const DASHBOARD_PANELS = once(() => ({
+    plain: dashboardPanel(),
+    empty: dashboardPanel({ empty: true }),
+    stale: dashboardPanel({ stale: true }),
+}))
+/** Each piece of a dashboard panel, by its name in the spec. */
+const panelPieces = (panel: El[]): Record<string, El | undefined> => {
+    const expand = byLabel(panel, DASHBOARD_PANEL_WORDS.expand)
+    const section = byTag(panel, 'section')
+    return {
+        panel: section,
+        head: byTag(panel, 'header'),
+        title: byTag(panel, 'h3'),
+        subtitle: panel.find((element) => element.tag === 'span' && element.text === 'Last 24 hours'),
+        stale: startingWith(panel, 'flex min-w-0 shrink items-center gap-1 text-xs'),
+        tools: expand?.parent,
+        tool: expand,
+        body: panel.find((element) => element.tag === 'div' && classesOf(element).includes(' p-4')),
+        empty: panel.find((element) => element.tag === 'p' && element.text === DASHBOARD_PANEL_WORDS.empty),
+        foot: byTag(panel, 'footer'),
+    }
+}
+
+const DASHBOARD_PANEL_ADAPTER: Adapter = {
+    wordObjects: { DASHBOARD_PANEL_WORDS },
+    complete: ['DASHBOARD_PANEL_WORDS'],
+    words: Object.fromEntries(Object.keys(DASHBOARD_PANEL_WORDS).map((key) => [key, `DASHBOARD_PANEL_WORDS.${key}`])),
+    options: { span: Object.keys(SPAN) },
+    size: (size, key) => {
+        const { plain, empty, stale } = DASHBOARD_PANELS()
+        const panel = size === 'empty' ? empty : size === 'stale' ? stale : plain
+        const piece = panelPieces(panel)[size]
+        return pieceWhere(key === 'icon' ? iconOf(panel, piece) : piece)
+    },
+    paint: (_, name, state) => {
+        const { plain, empty, stale } = DASHBOARD_PANELS()
+        const panel = state === 'empty' ? empty : name === 'stale' ? stale : plain
+        return pieceWhere(panelPieces(panel)[name], CHART_ON[state] ?? [])
+    },
+    effect: (state) => (state === 'loading' ? { layers: [DIMMED], on: [] } : undefined),
+    keys: {
+        Tab: () => (focusable(panelPieces(DASHBOARD_PANELS().plain).tool) ? true : "the panel's tools take no focus"),
+        'Enter, Space (expand has focus)': () =>
+            panelPieces(DASHBOARD_PANELS().plain).tool?.attrs.type === 'button' ? true : 'expand is not a native button',
+        "Enter, Space, ArrowDown (the menu's button has focus)": BASE_UI('Menu', 'opens from its trigger on these keys'),
+        'Escape (the menu or the expanded content is open)': BASE_UI(
+            'Menu and Dialog',
+            'close on Escape and put focus back on their trigger',
+        ),
+    },
+    more: () =>
+        layoutChecks('dashboard-panel', {
+            menuWidth: () => numberIn(DASHBOARD_GRID, /<DropdownMenuContent align="end" className="w-(\d+)">/, 'step'),
+            loadingDelay: () => numberIn(LOADERS, /export function LoadingOverlay\(\{ loading, delay = (\d+)/),
+            denseGap: () => numberIn(DASHBOARD_GRID, /dense \? 'gap-(\d+(?:\.\d+)?)'/, 'step'),
+        }),
+}
+
+const statPanel = (props: Partial<StatPanelProps> = {}) =>
+    draw(
+        TooltipProvider,
+        {},
+        createElement(StatPanel, {
+            title: 'Success rate',
+            value: 97.4,
+            unit: '%',
+            decimals: 1,
+            delta: '+2%',
+            note: 'harbor',
+            target: 99,
+            menu: PANEL_MENU,
+            onSelect: noop,
+            ...props,
+        }),
+    )
+const STAT_PANELS = once(() => ({
+    plain: statPanel(),
+    untargeted: statPanel({ target: undefined }),
+    good: statPanel({ good: true }),
+    bad: statPanel({ good: false }),
+    filled: statPanel({ color: 'chart-2', colorMode: 'background' }),
+    noData: statPanel({ value: null }),
+    failed: statPanel({ error: true }),
+    filledFailed: statPanel({ error: true, color: 'chart-2', colorMode: 'background' }),
+}))
+/** Each piece of a stat tile, by its name in the spec. */
+const statPieces = (tile: El[]): Record<string, El | undefined> => {
+    const value = startingWith(tile, 'flex items-baseline gap-1')
+    const meter = startingWith(tile, 'mt-2 mb-3')
+    const failure = tile.find((element) => element.tag === 'p' && element.text === STAT_PANEL_WORDS.failed)
+    return {
+        tile: byTag(tile, 'section'),
+        cover: byTag(tile, 'button'),
+        head: byTag(tile, 'header'),
+        title: byTag(tile, 'h3'),
+        delta: startingWith(tile, 'flex min-w-0 shrink items-center gap-0.5'),
+        tool: byLabel(tile, STAT_PANEL_WORDS.menu),
+        value,
+        valueRoom: value?.parent,
+        unit: tile.find((element) => element.parent === value && element.text === '%'),
+        note: startingWith(tile, 'truncate text-xs'),
+        meter,
+        track: startingWith(tile, 'relative h-1.5'),
+        tick: tile.find((element) => classesOf(element).includes('-inset-y-1')),
+        targetLabel: startingWith(tile, 'flex justify-center gap-1'),
+        failure,
+        failureRoom: failure?.parent,
+    }
+}
+const STAT_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'] }
+
+const STAT_PANEL_ADAPTER: Adapter = {
+    wordObjects: { STAT_PANEL_WORDS },
+    complete: ['STAT_PANEL_WORDS'],
+    words: Object.fromEntries(Object.keys(STAT_PANEL_WORDS).map((key) => [key, `STAT_PANEL_WORDS.${key}`])),
+    options: { colorMode: propValues(STAT_PANEL, 'StatPanelProps', 'colorMode'), span: Object.keys(SPAN) },
+    size: (size, key) => {
+        const { plain, untargeted, failed } = STAT_PANELS()
+        // A tile is taller with a target meter: its least height is read from one without.
+        const tile = size === 'failure' ? failed : size === 'tile' ? untargeted : plain
+        const pieces = statPieces(tile)
+        // The value's and the failure's room across is their column's; their text is their own.
+        if (size === 'value' && key === 'padX') return pieceWhere(pieces.valueRoom)
+        if (size === 'failure' && key !== 'text') return pieceWhere(pieces.failureRoom)
+        return pieceWhere(key === 'icon' ? iconOf(tile, pieces[size]) : pieces[size])
+    },
+    paint: (_, name, state) => {
+        const tiles = STAT_PANELS()
+        const tile =
+            state === 'filled'
+                ? name === 'failure'
+                    ? tiles.filledFailed
+                    : tiles.filled
+                : state === 'good'
+                  ? tiles.good
+                  : state === 'bad'
+                    ? tiles.bad
+                    : state === 'noData'
+                      ? tiles.noData
+                      : name === 'failure'
+                        ? tiles.failed
+                        : tiles.plain
+        return pieceWhere(statPieces(tile)[name], STAT_ON[state] ?? [])
+    },
+    effect: (state) => (state === 'loading' ? { layers: [DIMMED], on: [] } : undefined),
+    keys: {
+        Tab: () => (focusable(statPieces(STAT_PANELS().plain).cover) ? true : 'the tile takes no focus'),
+        'Enter (the cover has focus)': () =>
+            statPieces(STAT_PANELS().plain).cover?.attrs.type === 'button' ? true : "the tile's cover is not a native button",
+        "Enter, Space, ArrowDown (the menu's button has focus)": BASE_UI('Menu', 'opens from its trigger on these keys'),
+        'Escape (the menu is open)': BASE_UI('Menu', 'closes on Escape and puts focus back on its trigger'),
+    },
+    more: () =>
+        layoutChecks('stat-panel', {
+            meterMaxWidth: () => numberIn(STAT_PANEL, /flex w-full max-w-(\d+) flex-col/, 'step'),
+            valueFoot: () => numberIn(STAT_PANEL, /justify-center px-2\.5 pb-(\d+)/, 'step'),
+            meterTop: () => numberIn(STAT_PANEL, /className="mt-(\d+) mb-\d+ flex/, 'step'),
+            meterFoot: () => numberIn(STAT_PANEL, /className="mt-\d+ mb-(\d+) flex/, 'step'),
+            tickOverhang: () => numberIn(STAT_PANEL, /'absolute -inset-y-(\d+(?:\.\d+)?) /, 'step'),
+            sparkHeight: () => {
+                const share = /bottom-0 h-\[(\d+)%\]/.exec(STAT_PANEL)?.[1]
+                return share === undefined ? undefined : String(Number(share) / 100)
+            },
+        }),
+}
+
+const THRESHOLDS = [{ color: 'good' }, { value: 90, color: 'warning' }, { value: 95, color: 'critical' }]
+const thresholdLegend = (layout: 'list' | 'bar') =>
+    draw(ThresholdLegend, { thresholds: THRESHOLDS, title: 'Success rate', layout, noData: true })
+const THRESHOLD_LEGENDS = once(() => ({ list: thresholdLegend('list'), bar: thresholdLegend('bar') }))
+/** Each piece of a time series panel's threshold legend, by its name in the spec. */
+const thresholdPieces = (list: El[], bar: El[]): Record<string, El | undefined> => {
+    const band = byTag(list, 'li')
+    return {
+        thresholdLegend: byTag(list, 'figure'),
+        thresholdList: byTag(list, 'ul'),
+        thresholdBand: band,
+        thresholdSwatch: list.find((element) => element.parent === band && element.attrs['aria-hidden'] !== undefined),
+        noDataBand: list.findLast((element) => element.tag === 'li'),
+        noDataSwatch: list.findLast((element) => element.tag === 'span' && element.attrs['aria-hidden'] !== undefined),
+        thresholdBar: startingWith(bar, 'flex h-2'),
+    }
+}
+/** A threshold word, a template, filled as `thresholdBands` fills it. */
+const thresholdWord = (said: string, fill: Record<string, string | number>) =>
+    said.replace(/\{(\w+)\}/g, (whole, key: string) => (fill[key] === undefined ? whole : String(fill[key])))
+/** The panel's field names, the defaults `usePanelFields` gives its words. */
+const PANEL_FIELD_WORDS = Object.fromEntries(
+    [...(/const \{ ([^}]+) \} = words \?\? \{\}/.exec(PANEL_SERIES)?.[1] ?? '').matchAll(/(\w+) = '([^']+)'/g)].map((match) => [
+        match[1],
+        match[2],
+    ]),
+)
+
+const TIME_SERIES_PANEL_ADAPTER: Adapter = {
+    wordObjects: { PANEL_FIELD_WORDS, THRESHOLD_LEGEND_WORDS },
+    complete: ['PANEL_FIELD_WORDS', 'THRESHOLD_LEGEND_WORDS'],
+    words: {
+        category: 'PANEL_FIELD_WORDS.category',
+        series: 'PANEL_FIELD_WORDS.series',
+        value: 'PANEL_FIELD_WORDS.value',
+        'threshold.below': ['THRESHOLD_LEGEND_WORDS.below', thresholdWord],
+        'threshold.range': ['THRESHOLD_LEGEND_WORDS.range', thresholdWord],
+        'threshold.atLeast': ['THRESHOLD_LEGEND_WORDS.atLeast', thresholdWord],
+        'threshold.noData': 'THRESHOLD_LEGEND_WORDS.noData',
+    },
+    options: {
+        fill: unionOf(TIME_SERIES_PANEL, 'SeriesFill'),
+        legend: propValues(TIME_SERIES_PANEL, 'TimeSeriesPanelProps', 'legend'),
+        span: Object.keys(SPAN),
+        thresholdLayout: propValues(THRESHOLD_LEGEND, 'ThresholdLegendProps', 'layout'),
+    },
+    size: (size) => {
+        if (size === 'chart') return { layers: [/bodyClassName = '([^']+)'/.exec(TIME_SERIES_PANEL)?.[1] ?? ''], on: [] }
+        const { list, bar } = THRESHOLD_LEGENDS()
+        return pieceWhere(thresholdPieces(list, bar)[size])
+    },
+    paint: (_, name, state) => {
+        const { list, bar } = THRESHOLD_LEGENDS()
+        const pieces = thresholdPieces(list, bar)
+        if (name === 'thresholdLine')
+            return drawnAs(lookClass(CHART_AXES, STEP_COLOR, 'border-'), lookClass(CHART_AXES, STEP_COLOR, 'text-'))
+        if (state === 'noData') return pieceWhere(name === 'thresholdSwatch' ? pieces.noDataSwatch : pieces.noDataBand)
+        return pieceWhere(pieces[name])
+    },
+    effect: () => skip('the time series panel states no effects'),
+    keys: {
+        'Enter, Space (a legend entry has focus)': () =>
+            legendButton(LEGENDS().shown, 'Runs')?.attrs['aria-pressed'] !== undefined ? true : 'a legend entry is not a toggle button',
+    },
+    more: () =>
+        layoutChecks('time-series-panel', {
+            thresholdLineWidth: () => literalIn(CHART_AXES, /lineStyle: \{ color, type: 'dashed', width: ([\d.]+) \}/),
+            referenceWidth: () => literalIn(CHART_CATEGORIES, /dashed \? \{ color, width: ([\d.]+), type: 'dashed' \}/),
+            solidFill: () => literalIn(CHART_CATEGORIES, /opacity: stack === undefined \? ([\d.]+) :/),
+        }),
+}
+
+// Code editor
+
+const CODE_EDITOR = source('components/CodeEditor.tsx')
+const codeEditor = (props: Partial<CodeEditorProps> = {}) =>
+    draw(CodeEditor, { label: 'Definition', value: 'job: nightly-export', ...props })
+const CODE_EDITORS = once(() => ({
+    field: codeEditor(),
+    line: codeEditor({ variant: 'line' }),
+    invalid: codeEditor({ invalid: true }),
+    readOnly: codeEditor({ readOnly: true }),
+}))
+const editorBox = (elements: El[]) => byData(elements, 'data-slot', 'code-editor')
+
+/** A rem length as the spacing step a utility class names it by: 0.75rem is 3. */
+const remStep = (value: string) => {
+    const rem = /^(-?\d*\.?\d+)rem$/.exec(value)?.[1]
+    if (rem !== undefined) return String(Number(rem) * 4)
+    return value === '0' ? '0' : undefined
+}
+
+/** A CSS color in the editor's theme as the class that draws it: `var(--x)` is x, a mix with transparent is x at its share. */
+function cssColor(value: string): string | undefined {
+    const plain = value.replace(/\s*!important$/, '').trim()
+    if (plain === 'transparent') return 'transparent'
+    const token = /^var\(--([a-z0-9-]+)\)$/.exec(plain)?.[1]
+    if (token !== undefined) return token
+    const mix = /^color-mix\(in oklab, var\(--([a-z0-9-]+)\) (\d+)%, transparent\)$/.exec(plain)
+    return mix === null ? undefined : `${mix[1]}/${mix[2]}`
+}
+
+/** The tone colors the theme's `underline(tone)` and `dot(tone)` draw in, read from `TONES`. */
+const TONE_COLORS = Object.fromEntries(
+    [...(/const TONES = \{([^}]+)\}/.exec(CODE_EDITOR)?.[1] ?? '').matchAll(/(\w+): 'var\(--([a-z0-9-]+)\)'/g)].map((match) => [
+        match[1],
+        match[2],
+    ]),
+)
+
+/** Padding as classes: one, two or four rem lengths, a pair of sides as one class where they are equal. */
+function paddingClasses(value: string): string[] {
+    const parts = value.split(/\s+/).map(remStep)
+    if (parts.some((part) => part === undefined)) return []
+    const [top, right = top, bottom = top, left = right] = parts as string[]
+    const classes: string[] = []
+    if (top === bottom) classes.push(`py-${top}`)
+    else classes.push(`pt-${top}`, `pb-${bottom}`)
+    if (left === right) classes.push(`px-${left}`)
+    else classes.push(`pl-${left}`, `pr-${right}`)
+    // A side at 0 says nothing a class need hold, and would stand over a piece's other padding.
+    return classes.filter((one) => !one.endsWith('-0'))
+}
+
+/**
+ * A style object of the editor's theme (`THEME`, `SIZES`) as the utility classes that draw the same:
+ * read from the source object under its selector, each property turned into the class it equals.
+ */
+function themeClasses(selector: string, text = CODE_EDITOR): string {
+    // The selector alone, or one of a list of selectors that share their style.
+    const key = [...text.matchAll(/\n\s+'([^'\n]+)': /g)].find((match) => match[1] === selector || match[1].split(', ').includes(selector))
+    if (key === undefined) return ''
+    const rest = text.slice(key.index + key[0].length)
+    const helper = /^(underline|dot)\('(\w+)'\)/.exec(rest)
+    if (helper !== null) {
+        const tone = TONE_COLORS[helper[2]]
+        return helper[1] === 'underline' ? `underline mark-${tone}` : `bg-${tone} size-2`
+    }
+    const body = /^\{([^{}]*)\}/.exec(rest)?.[1] ?? ''
+    const classes: string[] = []
+    for (const [, key, value] of body.matchAll(/(\w+):\s*\n?\s*'([^']*)'/g)) {
+        const shade = cssColor(value)
+        if (key === 'color' && shade !== undefined) classes.push(`text-${shade}`)
+        else if (key === 'backgroundColor' && shade !== undefined) classes.push(`bg-${shade}`)
+        else if (key === 'background') {
+            // A stack of washes: the top one is the color the piece shows over the rest.
+            const top = /linear-gradient\(var\(--([a-z0-9-]+)\)/.exec(value)?.[1]
+            if (top !== undefined) classes.push(`bg-${top}`)
+        } else if (key === 'border' && value !== 'none') {
+            const edge = /^1px solid (.+)$/.exec(value)
+            const shown = edge === null ? undefined : cssColor(edge[1])
+            if (shown !== undefined) classes.push('border', `border-${shown}`)
+        } else if (key === 'borderTop' || key === 'borderBottom') {
+            const edge = /^1px solid (.+)$/.exec(value)
+            const shown = edge === null ? undefined : cssColor(edge[1])
+            if (shown !== undefined)
+                classes.push(`border-${key === 'borderTop' ? 't' : 'b'}`, `border-${key === 'borderTop' ? 't' : 'b'}-${shown}`)
+        } else if (key === 'borderLeftColor' && shade !== undefined) classes.push(`border-l-${shade}`)
+        else if (key === 'borderRadius' && value === 'var(--control-radius)') classes.push('rounded-control')
+        else if (key === 'fontSize') {
+            const size = /^var\(--text-([a-z0-9-]+)\)$/.exec(value)?.[1]
+            if (size !== undefined) classes.push(`text-${size}`)
+        } else if (key === 'fontWeight') classes.push(Object.entries(WEIGHTS).find(([, weight]) => String(weight) === value)?.[0] ?? '')
+        else if (key === 'padding') classes.push(...paddingClasses(value))
+        else if (key === 'width' && remStep(value) !== undefined) classes.push(`w-${remStep(value)}`)
+        else if (key === 'minWidth' && remStep(value) !== undefined) classes.push(`min-w-${remStep(value)}`)
+        else if (key === 'gap') {
+            const [down, across = down] = value.split(/\s+/).map(remStep)
+            if (down !== undefined && across !== undefined) classes.push(`gap-y-${down}`, `gap-x-${across}`)
+        } else if (key === 'outline') {
+            const ring = /^(\d+)px solid (.+)$/.exec(value)
+            const shown = ring === null ? undefined : cssColor(ring[2])
+            if (ring !== null && shown !== undefined) classes.push(`outline-${ring[1]}`, `outline-${shown}`)
+        } else if (key === 'textDecoration' && value === 'underline') classes.push('underline')
+        else if (key === 'backgroundImage') {
+            // The indent guide: a 1px line drawn as a gradient in a color.
+            const line = /^linear-gradient\(to right, var\(--([a-z0-9-]+)\) 1px/.exec(value)?.[1]
+            if (line !== undefined) classes.push('border-l', `border-l-${line}`)
+        }
+    }
+    return classes.filter(Boolean).join(' ')
+}
+
+/** The highlight style's entry that draws a token in its `code-*` color, as classes. */
+const highlightClasses = (token: string) => {
+    const entry = new RegExp(`\\{ tag: [^\\n]*color: 'var\\(--${token}\\)'([^\\n]*)\\}`).exec(CODE_EDITOR)
+    if (entry === null) return ''
+    const weight = /fontWeight: '(\d+)'/.exec(entry[1])?.[1]
+    return [`text-${token}`, weight === undefined ? '' : (Object.entries(WEIGHTS).find(([, one]) => String(one) === weight)?.[0] ?? '')]
+        .filter(Boolean)
+        .join(' ')
+}
+
+/** A piece of the editor drawn by its theme, its states laid in order over its rest. */
+const themed = (...selectors: string[]): Where => ({ layers: selectors.map((one) => themeClasses(one)), on: [] })
+
+const FOCUSED_LINE = '&.cm-focused .cm-activeLine, &.cm-activeLine-always .cm-activeLine'
+const FOCUSED_GUTTER = '&.cm-focused .cm-activeLineGutter, &.cm-activeLine-always .cm-activeLineGutter'
+const SELECTION = '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection'
+const COMPLETION_ROW = '.cm-tooltip.cm-tooltip-autocomplete > ul > li'
+
+/** Where each piece of the editor is drawn, by piece and state. */
+function editorPiece(name: string, state: string): Where | Skip | undefined {
+    const { field, invalid, readOnly } = CODE_EDITORS()
+    const box = (elements: El[], on: string[] = []) => pieceWhere(editorBox(elements), on)
+    if (name === 'box') {
+        if (state === 'rest') return box(field)
+        if (state === 'focus') return box(field, ['focus-within'])
+        if (state === 'invalid') return box(invalid)
+        if (state === 'invalid+focus') return box(invalid, ['focus-within'])
+        if (state === 'readOnly') {
+            // The read-only ground is the editor's paper, a variable the class sets: its value read from that class.
+            const paper = /\[--editor-paper:(color-mix\(in_oklab,var\(--[a-z0-9-]+\)_\d+%,var\(--[a-z0-9-]+\)\))\]/.exec(
+                classesOf(editorBox(readOnly)),
+            )?.[1]
+            const where = box(readOnly)
+            return where === undefined || paper === undefined ? where : { ...where, layers: [...where.layers, `bg-[${paper}]`] }
+        }
+        return undefined
+    }
+    if (name.startsWith('syntax-')) return { layers: [highlightClasses(`code-${name.slice('syntax-'.length)}`)], on: [] }
+    const lineOf = (tone: string) => `.cm-mark-${tone}`
+    switch (name) {
+        case 'text':
+            return themed('&')
+        case 'gutter':
+            return state === 'rest' ? themed('.cm-gutters') : themed('.cm-gutters', FOCUSED_GUTTER)
+        case 'activeLine':
+            return state === 'rest' ? themed('.cm-activeLine') : themed('.cm-activeLine', FOCUSED_LINE)
+        case 'selection':
+            return state === 'rest' ? themed(SELECTION) : themed(SELECTION, '&.cm-focused .cm-matchingBracket')
+        case 'lineMark':
+            return themed(lineOf(state))
+        case 'rangeMark': {
+            if (state === 'selected') return themed('.cm-lintRange-active')
+            const classes = themeClasses(`.cm-lintRange-${state}`)
+            return {
+                layers: [classes],
+                on: [],
+                mark: classes
+                    .split(' ')
+                    .find((one) => one.startsWith('mark-'))
+                    ?.replace('mark-', 'text-'),
+            }
+        }
+        case 'lintDot':
+            return themed(`.cm-lint-marker-${state}`)
+        case 'tooltip':
+            return state === 'rest' ? themed('.cm-tooltip') : themed('.cm-tooltip', `.cm-diagnostic-${state}`)
+        case 'completion':
+            return state === 'selected'
+                ? themed('.cm-tooltip', COMPLETION_ROW, `${COMPLETION_ROW}[aria-selected]`)
+                : themed('.cm-tooltip', COMPLETION_ROW)
+        case 'foldGutter':
+            return state === 'hover' ? themed('.cm-gutters', '.cm-foldGutter .cm-gutterElement:hover') : themed('.cm-gutters')
+        case 'foldPlaceholder':
+            return themed('.cm-foldPlaceholder')
+        case 'searchPanel':
+            return themed('.cm-panels', '.cm-panels-top')
+        case 'bracket':
+            return themed('.cm-bracket-0')
+        case 'indentGuide':
+            return themed('.cm-indent-guides')
+        case 'placeholder':
+            return themed('.cm-placeholder')
+        case 'wikiLink':
+            return themed('&.cm-follow-held .cm-wikiLink')
+        default:
+            return undefined
+    }
+}
+
+/** A key the editor binds through a CodeMirror keymap it installs: the keymap's name in its source. */
+const installs = (keymapName: string, when: RegExp) => () =>
+    new RegExp(`keymap\\.of\\(\\[?[^\\n]*\\b${keymapName}\\b`).test(CODE_EDITOR) && when.test(CODE_EDITOR)
+        ? true
+        : `${keymapName} is not installed as the spec says`
+
+/** Says a schema issue of a kind as the words do, from a sample's values. */
+const sayIssue = (kind: string) => (say: typeof SCHEMA_WORDS.say, fill: Record<string, string | number>) => {
+    // A counted rule (a length, a number of items) says its count; a bound says its limit.
+    const limit = Number(/^(min|max)(Length|Items)$/.test(kind) ? fill.count : fill.limit)
+    const issues: Record<string, object> = {
+        required: { kind: 'required', path: ['job', String(fill.property)] },
+        additional: { kind: 'additional', property: String(fill.property) },
+        type: { kind: 'type', expected: String(fill.expected) },
+        enum: {
+            kind: 'enum',
+            values: String(fill.values)
+                .split(', ')
+                .map((one) => JSON.parse(one) as unknown),
+        },
+        const: { kind: 'const', value: JSON.parse(String(fill.value)) as unknown },
+        minimum: { kind: 'minimum', limit, exclusive: false },
+        exclusiveMinimum: { kind: 'minimum', limit, exclusive: true },
+        maximum: { kind: 'maximum', limit, exclusive: false },
+        exclusiveMaximum: { kind: 'maximum', limit, exclusive: true },
+        minLength: { kind: 'minLength', limit },
+        maxLength: { kind: 'maxLength', limit },
+        pattern: { kind: 'pattern', pattern: String(fill.pattern) },
+        format: { kind: 'format', format: String(fill.format) },
+        minItems: { kind: 'minItems', limit },
+        maxItems: { kind: 'maxItems', limit },
+        uniqueItems: { kind: 'uniqueItems' },
+        deprecated: { kind: 'deprecated' },
+        unchecked: { kind: 'unchecked', reason: String(fill.reason) },
+        other: { kind: 'other', keyword: 'minLength', message: String(fill.message) },
+    }
+    return say({ path: [], tone: 'critical', ...issues[kind] } as unknown as Parameters<typeof SCHEMA_WORDS.say>[0])
+}
+const ISSUE_KINDS = [
+    'required',
+    'additional',
+    'type',
+    'enum',
+    'const',
+    'minimum',
+    'exclusiveMinimum',
+    'maximum',
+    'exclusiveMaximum',
+    'minLength',
+    'maxLength',
+    'pattern',
+    'format',
+    'minItems',
+    'maxItems',
+    'uniqueItems',
+    'deprecated',
+    'unchecked',
+    'other',
+]
+
+/** A prop's values where its type is a union of strings and maybe boolean: the strings, and true and false. */
+const withBoolean = (text: string, props: string, prop: string) => {
+    const declared = new RegExp(`\\n\\s+${prop}\\?: ([^\\n]+)`).exec(text.slice(text.indexOf(`export interface ${props}`)))?.[1] ?? ''
+    return [...(/\bboolean\b/.test(declared) ? ['true', 'false'] : []), ...propValues(text, props, prop)]
+}
+
+const CODE_EDITOR_ADAPTER: Adapter = {
+    wordObjects: { SCHEMA_WORDS },
+    complete: ['SCHEMA_WORDS'],
+    words: {
+        ...Object.fromEntries(ISSUE_KINDS.map((kind) => [`issue.${kind}`, ['SCHEMA_WORDS.say', sayIssue(kind)] as WordSource])),
+        // The slot is the language's name as said (JSON); the function takes the language (json).
+        syntax: [
+            'SCHEMA_WORDS.syntax',
+            (said: (language: 'json' | 'yaml') => string, fill) => said(String(fill.language).toLowerCase() as 'json'),
+        ],
+        deprecated: 'SCHEMA_WORDS.deprecated',
+    },
+    options: {
+        language: (() => {
+            const named = /type BuiltInLanguage = ([^\n]+)/.exec(CODE_EDITOR)?.[1] ?? ''
+            return [...named.matchAll(/'([^']+)'/g)].map((match) => match[1])
+        })(),
+        variant: propValues(CODE_EDITOR, 'CodeEditorProps', 'variant'),
+        size: propValues(CODE_EDITOR, 'CodeEditorProps', 'size'),
+        activeLine: withBoolean(CODE_EDITOR, 'CodeEditorProps', 'activeLine'),
+    },
+    size: (size, key) => {
+        const { field, line } = CODE_EDITORS()
+        if (size === 'field') return pieceWhere(editorBox(field))
+        if (size === 'line') return pieceWhere(editorBox(line))
+        if (size === 'sm' || size === 'md' || size === 'lg') {
+            const sized = /const SIZES = \{([\s\S]*?)\n\}/.exec(CODE_EDITOR)?.[1] ?? ''
+            const font = new RegExp(`${size}: EditorView\\.theme\\(\\{ '&': \\{ fontSize: 'var\\(--text-([a-z0-9-]+)\\)' \\}`).exec(
+                sized,
+            )?.[1]
+            return font === undefined ? undefined : { layers: [`text-${font}`], on: [] }
+        }
+        const read: Record<string, Where> = {
+            text: themed('.cm-content', '.cm-line'),
+            gutter: themed('.cm-lineNumbers .cm-gutterElement'),
+            lintDot: key === 'icon' ? { ...themed('.cm-lint-marker-error'), on: SIZE_ON.icon } : themed('.cm-gutter-lint'),
+            tooltip: themed('.cm-tooltip', '.cm-tooltip-hover .cm-hover'),
+            completion: themed(COMPLETION_ROW),
+            foldPlaceholder: themed('.cm-foldPlaceholder'),
+            searchPanel: themed('.cm-panels', '.cm-panel.cm-search'),
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => editorPiece(name, state),
+    effect: () => skip('the code editor states no effects'),
+    keys: {
+        'Mod+Enter (onRun)': () =>
+            /\.\.\.\(onRun === undefined \? \[\] : \['Mod-Enter'\]\)/.test(CODE_EDITOR) ? true : 'Mod-Enter is not bound with onRun',
+        'Enter (variant line, with onRun)': () =>
+            /\.\.\.\(oneLine \? \['Enter'\] : \[\]\)/.test(CODE_EDITOR) && /key === 'Enter' && oneLine/.test(CODE_EDITOR)
+                ? true
+                : 'Enter does not run in the line variant',
+        'Tab, Shift+Tab (the editor has focus and is not read only)': installs('indentWithTab', /indentWithTab/),
+        'Mod+Z, Mod+Y, Mod+Shift+Z (the editor has focus)': installs('historyKeymap', /history\(\)/),
+        'Ctrl+Space (the editor has focus)': installs('completionKeymap', /autocompletion\(/),
+        'ArrowDown, ArrowUp, PageDown, PageUp (the completion list is open)': installs('completionKeymap', /autocompletion\(/),
+        'Enter (the completion list is open)': installs('completionKeymap', /autocompletion\(/),
+        'Escape (the completion list is open)': installs('completionKeymap', /autocompletion\(/),
+        "Tab, Shift+Tab (a snippet's fields are active)": () =>
+            /import \{[^}]*\bsnippet\b[^}]*\} from '@codemirror\/autocomplete'/.test(source('components/code/schema.ts'))
+                ? true
+                : 'no snippet put in by the schema completion',
+        'Mod+F (search)': installs('searchKeymap', /searchPanel\(/),
+        'F3, Mod+G, Shift+F3, Mod+Shift+G (search)': installs('searchKeymap', /searchPanel\(/),
+        'Escape (the find bar has focus)': installs('searchKeymap', /searchPanel\(/),
+        'Mod+D, Mod+Shift+L, Mod+Alt+G (search)': installs('searchKeymap', /searchPanel\(/),
+        'Ctrl+Shift+[, Ctrl+Shift+] (folding)': installs('foldKeymap', /codeFolding\(\)/),
+        'Ctrl+Alt+[, Ctrl+Alt+] (folding)': installs('foldKeymap', /codeFolding\(\)/),
+        'Mod+Click (markdown with onFollowLink)': () =>
+            /classList\.toggle\('cm-follow-held', held\)/.test(CODE_EDITOR) && /followLinks\(/.test(CODE_EDITOR)
+                ? true
+                : 'no link followed on Mod and a click',
+    },
+    more: () =>
+        layoutChecks('code-editor', {
+            large: () => /export const LARGE_DOCUMENT = ([\d_]+)\b/.exec(CODE_EDITOR)?.[1].replace(/_/g, ''),
+            hoverWait: () => numberIn(CODE_EDITOR, /hoverTooltip\(describe, \{ hoverTime: (\d+) \}\)/),
+            lintWait: () => numberIn(CODE_EDITOR, /linter\([^\n]*\{ delay: (\d+) \}\)/),
+            resolveWait: () => numberIn(CODE_EDITOR, /const RESOLVE_PAUSE = (\d+)\b/),
+        }),
+}
+
+// Date field
+
+const DATE_FIELD = source('components/DateField.tsx')
+const PICKERS = source('components/pickers.tsx')
+const CALENDAR = source('components/ui/calendar.tsx')
+const DAY_PICK = source('components/day-pick.tsx')
+const dateField = (props: Partial<Parameters<typeof DateField>[0]> = {}) =>
+    draw(DateField, { id: 'first-run', label: 'First run', value: '2026-11-09', onValueChange: noop, ...props })
+const DATE_FIELDS = once(() => ({
+    plain: dateField(),
+    disabled: dateField({ disabled: true }),
+    invalid: dateField({ error: 'Pick a later day' }),
+    warning: dateField({ issues: [{ tone: 'warning', text: 'A Sunday' }] }),
+}))
+const dateFrame = (elements: El[]) => elements.find((element) => classesOf(element).includes('h-(--density-control)'))
+const DATE_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-within'],
+    keyFocus: ['focus-visible'],
+    open: ['data-popup-open'],
+    'invalid+focus': ['focus-within'],
+    'warning+focus': ['focus-within'],
+}
+/** The calendar's day button, chosen (`selected-single`) or focused. */
+const DAY_BUTTON = literalAfter(CALENDAR, 'function CalendarDayButton(', 'className={cn(')
+/** The calendar's own classes for a kind of day (`today`, `disabled`), from its class names. */
+const dayClasses = (kind: string) => literalAfter(CALENDAR, `${kind}: cn(`)
+/** A day's size: the cell size the calendar sets, as a class of that many spacing steps. */
+const CELL = /\[--cell-size:--spacing\((\d+)\)\]/.exec(literalAfter(CALENDAR, 'className={cn('))?.[1]
+/** The calendar in its popover, which a server drawing leaves closed: its classes from the sources. */
+const CALENDAR_BOX = [
+    POPUP_LOOK,
+    literalAfter(source('components/ui/popover.tsx'), 'data-slot="popover-content"'),
+    literalAfter(PICKERS, '<PopoverContent', 'className={cn('),
+]
+
+const DATE_FIELD_ADAPTER: Adapter = {
+    wordObjects: { DATE_FIELD_WORDS },
+    complete: ['DATE_FIELD_WORDS'],
+    words: {
+        required: 'DATE_FIELD_WORDS.required',
+        issueCritical: 'DATE_FIELD_WORDS.issueCritical',
+        issueWarning: 'DATE_FIELD_WORDS.issueWarning',
+        errors: [
+            'IssueCount.errors',
+            (_: never, fill) => draw(IssueCount, { critical: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+        ],
+        warnings: [
+            'IssueCount.warnings',
+            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+        ],
+        unreadable: 'DATE_FIELD_WORDS.unreadable',
+        example: ['DATE_FIELD_WORDS.example', (said: (sample: string) => string, fill) => said(String(fill.sample))],
+        under: ['DATE_FIELD_WORDS.under', (said: (min: string) => string, fill) => said(String(fill.min))],
+        over: ['DATE_FIELD_WORDS.over', (said: (max: string) => string, fill) => said(String(fill.max))],
+        use: ['DATE_FIELD_WORDS.use', (said: (bound: string) => string, fill) => said(String(fill.bound))],
+        pick: 'DATE_FIELD_WORDS.pick',
+        clear: 'DATE_FIELD_WORDS.clear',
+    },
+    options: {
+        weekStartsOn: [...(/\n\s+weekStartsOn\?: ([^\n]+)/.exec(DATE_FIELD)?.[1] ?? '').matchAll(/\b(\d)\b/g)].map((match) => match[1]),
+    },
+    size: (size, key) => {
+        const { plain } = DATE_FIELDS()
+        if (size === 'control') return pieceWhere(dateFrame(plain))
+        if (size === 'frameButton') {
+            const clear = byLabel(plain, DATE_FIELD_WORDS.clear)
+            return key === 'icon' ? pieceWhere(iconOf(plain, clear)) : pieceWhere(clear)
+        }
+        if (size === 'calendar') return { layers: [literalAfter(CALENDAR, 'className={cn(')], on: [] }
+        if (size === 'day') return CELL === undefined ? undefined : { layers: [`size-${CELL}`], on: [] }
+        return undefined
+    },
+    paint: (_, name, state) => {
+        const { plain, disabled, invalid, warning } = DATE_FIELDS()
+        const on = state.split('+').flatMap((one) => DATE_ON[one] ?? [])
+        if (name === 'control') {
+            const drawn = state.startsWith('invalid')
+                ? invalid
+                : state.startsWith('warning')
+                  ? warning
+                  : state === 'disabled'
+                    ? disabled
+                    : plain
+            return pieceWhere(dateFrame(drawn), state.endsWith('focus') ? ['focus-within'] : on)
+        }
+        if (name === 'clear') return pieceWhere(byLabel(plain, DATE_FIELD_WORDS.clear), on)
+        if (name === 'pick') return pieceWhere(byLabel(plain, DATE_FIELD_WORDS.pick), on)
+        if (name === 'calendar') return { layers: CALENDAR_BOX, on: [] }
+        if (name === 'day') {
+            if (state === 'chosen') return { layers: [DAY_BUTTON], on: ['data-[selected-single=true]'] }
+            if (state === 'dayFocus') return { layers: [DAY_BUTTON], on: ['group-data-[focused=true]/day'] }
+            if (state === 'today') return { layers: [dayClasses('today')], on: [] }
+            if (state === 'shut') return { layers: [dayClasses('disabled')], on: [] }
+        }
+        return undefined
+    },
+    effect: (state) => {
+        const { plain, disabled, invalid, warning } = DATE_FIELDS()
+        if (state === 'focus') return pieceWhere(dateFrame(plain), ['focus-within'])
+        if (state === 'invalid+focus') return pieceWhere(dateFrame(invalid), ['focus-within'])
+        if (state === 'warning+focus') return pieceWhere(dateFrame(warning), ['focus-within'])
+        if (state === 'disabled') return pieceWhere(dateFrame(disabled))
+        return undefined
+    },
+    keys: {
+        Tab: () => {
+            const { plain } = DATE_FIELDS()
+            const input = plain.find((element) => element.tag === 'input')
+            const clear = byLabel(plain, DATE_FIELD_WORDS.clear)
+            const pick = byLabel(plain, DATE_FIELD_WORDS.pick)
+            return focusable(input) && focusable(clear) && focusable(pick)
+                ? true
+                : 'the input, the clear or the pick button is out of the tab order'
+        },
+        'Alt+ArrowDown (the input has focus and the field can be changed)': () =>
+            /if \(!event\.altKey \|\| event\.key !== 'ArrowDown'\) return/.test(DATE_FIELD) && /setOpened\(true\)/.test(DATE_FIELD)
+                ? true
+                : 'Alt+ArrowDown does not open the calendar',
+        'Enter, Space (the pick or the clear button has focus)': () => {
+            const { plain } = DATE_FIELDS()
+            return byLabel(plain, DATE_FIELD_WORDS.clear)?.tag === 'button' && byLabel(plain, DATE_FIELD_WORDS.pick)?.tag === 'button'
+                ? true
+                : 'the clear or the pick button is not a native button'
+        },
+        'ArrowLeft, ArrowRight, ArrowUp, ArrowDown (the calendar is open)': skip(
+            "react-day-picker's grid moves by these keys in a browser; the server draws the calendar closed",
+        ),
+        'PageUp, PageDown (the calendar is open)': skip("react-day-picker's grid moves by these keys in a browser"),
+        'Home, End (the calendar is open)': skip("react-day-picker's grid moves by these keys in a browser"),
+        'Enter, Space (the calendar is open)': () =>
+            /onPick=\{\(day\) => \{\s*entry\.set\(day\)\s*setOpened\(false\)/.test(DATE_FIELD)
+                ? true
+                : 'picking a day does not close the calendar',
+        'Escape (the calendar is open)': BASE_UI('Popover', 'closes on Escape and puts focus back on its trigger'),
+    },
+    more: () => layoutChecks('date-field', { calendarLoading: () => numberIn(DAY_PICK, /flex h-72 w-(\d+) items-center/, 'step') }),
+}
+
 /**
  * Each sokkel-ui drift entry in a spec, by its `what`, with the checks it covers: they may differ,
  * and must, or the entry is stale. A function instead says whether the difference is still there,
@@ -4630,6 +5540,12 @@ const ADAPTERS: Record<string, Adapter> = {
     letter: LETTER_ADAPTER,
     'detail-pane': DETAIL_PANE_ADAPTER,
     'board-item-panel': BOARD_ITEM_PANEL_ADAPTER,
+    chart: CHART_ADAPTER,
+    'dashboard-panel': DASHBOARD_PANEL_ADAPTER,
+    'stat-panel': STAT_PANEL_ADAPTER,
+    'time-series-panel': TIME_SERIES_PANEL_ADAPTER,
+    'code-editor': CODE_EDITOR_ADAPTER,
+    'date-field': DATE_FIELD_ADAPTER,
 }
 
 // The checks, walked from each spec
@@ -4767,6 +5683,7 @@ function sizeChecks(spec: Spec, adapter: Adapter): Check[] {
             } else if (key in PHONE_READERS) found = resolve(under(where.layers, 'max-md'), [...where.on, 'max-md'], PHONE_READERS[key])
             else if (key === 'height')
                 found = resolve(where.layers, where.on, READ.height) ?? resolve(where.layers, where.on, READ.minHeight)
+            else if (key === 'width') found = resolve(where.layers, where.on, READ.width) ?? resolve(where.layers, where.on, READ.minWidth)
             else if (key === 'padX') {
                 // Across: px, else the same pl and pr, else a pad all round.
                 found =

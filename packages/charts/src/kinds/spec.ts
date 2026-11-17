@@ -307,7 +307,7 @@ export interface ChartWords {
     to: string
 }
 
-const WORDS: ChartWords = {
+export const CHART_WORDS: ChartWords = {
     count: 'Count',
     total: 'Total',
     rise: 'Rise',
@@ -327,7 +327,7 @@ const WORDS: ChartWords = {
 }
 
 /** The spec's words over the English defaults. */
-export const wordsOf = (spec: ChartSpec): ChartWords => ({ ...WORDS, ...spec.words })
+export const wordsOf = (spec: ChartSpec): ChartWords => ({ ...CHART_WORDS, ...spec.words })
 
 /** What a measured field is called in a tooltip: its name from `fieldNames`, the field itself, or the count word where rows are counted. */
 export const measureName = (spec: ChartSpec, field: string | undefined): string =>

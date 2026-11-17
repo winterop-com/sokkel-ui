@@ -220,7 +220,7 @@
             "foot": {"rows": 2, "note": "A rule row, then its keys and hints."}
         },
         "glyphs": ["box", "rule", "search", "spinner", "chevron-right", "ellipsis"],
-        "note": "What lies under it is drawn as it is until the scrim in cells is decided (open-questions.md, T2). From sokkel-tui's proposal, section c3."
+        "note": "What lies under it follows index.json's colorDepth.underLayer (open-questions.md, T2, decided). From sokkel-tui's proposal, section c3."
     },
     "states": {
         "rest": {

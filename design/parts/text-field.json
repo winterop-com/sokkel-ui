@@ -9,7 +9,7 @@
             "as_of": "97f92d8",
             "note": "The busy state is proposed: TextField has none yet (QuickAdd and the inline edit draw it)."
         },
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-egui": {"state": "partial", "as_of": "b7e1763"},
         "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "A labeled text input: the field frame every field shares (label, hint, description, control, help, fallback, the issue mark) around a one-line input or a growing text area. A problem is said by a mark at the control's end, so a form never changes height.",
@@ -332,6 +332,12 @@
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of 7bf2ece, drawn from the spec in cells, with no multiline, inRow or busy."
+        },
+        {
+            "renderer": "sokkel-egui",
+            "what": "control height",
+            "spec": "density.control: 32 at regular, 28 at compact.",
+            "today": "As of b7e1763 (egui 0.37), a text input is 33 tall at regular."
         }
     ]
 }

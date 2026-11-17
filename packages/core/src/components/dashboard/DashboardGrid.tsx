@@ -122,7 +122,12 @@ export interface PanelWords extends PanelStateWords {
     empty: string
 }
 
-const WORDS: PanelWords = { expand: 'Expand', menu: 'Panel actions', empty: 'No data for this range.', ...PANEL_STATE_WORDS }
+export const DASHBOARD_PANEL_WORDS: PanelWords = {
+    expand: 'Expand',
+    menu: 'Panel actions',
+    empty: 'No data for this range.',
+    ...PANEL_STATE_WORDS,
+}
 
 export interface DashboardPanelProps extends PanelStateProps {
     title: ReactNode
@@ -175,7 +180,7 @@ export function DashboardPanel({
     className,
     children,
 }: DashboardPanelProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...DASHBOARD_PANEL_WORDS, ...given }
     const [ownExpanded, setOwnExpanded] = useState(false)
     const expanded = expandedProp ?? ownExpanded
     const setExpanded = (next: boolean) => {

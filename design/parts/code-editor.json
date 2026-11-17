@@ -1,0 +1,604 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "code-editor",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "8567f05"},
+        "sokkel-egui": {"state": "missing", "as_of": "b7e1763"},
+        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+    },
+    "summary": "The code editor: a document in a language, colored by its tokens in the code-* colors, with line numbers, the caret's line shaded, bracket matching, undo and Tab indenting. Marks wash a line or underline a range (in JSON or YAML the value at a path) in a tone, a message on hover and a dot in the gutter; a JSON Schema checks a JSON or YAML document as it is typed and completes its keys and values, a key whose object requires keys going in whole as a snippet; the app's words are offered while typing and described on hover. A find and replace bar, a fold gutter, brackets colored by depth and indent guides are options, dropped past a megabyte. Boxed like a field, filling a pane, or one line at a control's height as a query bar. In markdown it completes [[links]] to other notes and follows one clicked with Mod held.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/CodeEditor.tsx",
+            "packages/core/src/components/code/schema.ts",
+            "packages/core/src/components/code/guides.ts",
+            "packages/core/src/components/code/jq.ts",
+            "packages/core/src/components/code/markdown.ts",
+            "packages/core/src/components/code/shared.ts",
+            "packages/core/src/components/code/steady.ts",
+            "packages/core/src/lib/issue-edge.ts",
+            "packages/core/src/lib/wiki-links.ts",
+            "packages/core/src/lib/plugins.ts"
+        ]
+    },
+    "anatomy": {
+        "box": "The editor's own box (data-slot code-editor). field: boxed like an input, field ground, a 1px input edge, radius-control, at least 96 tall; pane: fills the pane it is in edge to edge on the background, no edge; line: one line at density.control, as a query bar.",
+        "text": "The document in the mono face (typeface-mono, not adjusted to the sans), in foreground, 8 over and under, each line padded 12 at its sides; the caret in foreground.",
+        "gutter": "With lineNumbers (on, off in the line variant): the line numbers in editor-gutter-ink on the editor-gutter wash over the editor's ground and the box's, opaque so text scrolled sideways never shows through; each number padded 12 before and 8 after, at least 40 wide. The caret's line number in foreground while the caret line is shown.",
+        "activeLine": "activeLine (on by default): the caret's line washed foreground at 5 percent while the editor has focus, and always with activeLine always; never in the line variant.",
+        "selection": "The selection, primary at 28 percent; the bracket matching the one at the caret washed primary at 22 percent with a 1px primary/50 outline while focused.",
+        "lineMark": "A mark with only a line: the whole line washed in its tone, critical at 14, warning at 14 or info at 12 percent.",
+        "rangeMark": "A mark with a range or a path, and every problem the checks find: a wavy underline in the tone (critical, warning, info), skipping no ink, 0.2em under the text. With a message, a dot in its tone in the lint gutter and the message on hover.",
+        "lintDot": "The lint gutter, 16 wide, shown while any mark carries a message or a schema checks the document: a 8 round dot in the tone on each line with a problem.",
+        "tooltip": "Hover tooltips (a word's description, a schema key's type and description, a problem's message) and the completion list: popover ground and ink, a 1px border edge, radius-control, elevation-pop, the sans at text.xs. A problem's message starts with a 3 wide rule in its tone.",
+        "completion": "The words offered while typing, in the mono face, at most 256 tall, each row 8 across and 2 down with its kind's icon in muted-foreground, the matched letters at 600, its detail 12 after in muted-foreground; the chosen row on accent in accent-foreground. A deprecated one struck through in muted-foreground, saying words.deprecated. Its docs in a box beside the list.",
+        "foldGutter": "With folding: a gutter of fold marks beside the numbers, each padded 4, foreground under the pointer; a folded block's placeholder on muted in muted-foreground, radius-control, 6 across.",
+        "foldPlaceholder": "A folded block's placeholder in the text: muted ground, muted-foreground ink, radius-control, 6 across.",
+        "searchPanel": "With search: the find and replace bar over the text, on muted in foreground, the sans at text.xs, a 1px border rule under it; its fields on field with a 1px input edge and radius-control (ring edge on focus) and its buttons on background with a border edge (accent under the pointer). Matches washed warning at 24 percent, the current one at 48, corners half of radius.",
+        "bracket": "With bracketColors: brackets by depth in code-bracket-1, code-bracket-2 and code-bracket-3, round again.",
+        "indentGuide": "With indentGuides: a 1px rule in border at each indent step.",
+        "wikiLink": "In markdown with onFollowLink: each [[link]] underlined 0.2em under and the pointer a hand while Mod is held over the editor; a click with Mod held follows it.",
+        "placeholder": "placeholder, in muted-foreground while the document is empty.",
+        "syntax-keyword": "Syntax tokens: keywords, definition, modifier, control and module keywords, in code-keyword.",
+        "syntax-operator": "Syntax tokens: operators, in code-operator.",
+        "syntax-punctuation": "Syntax tokens: punctuation, separators, brackets; markdown list marks, content separators and processing instructions, in code-punctuation.",
+        "syntax-string": "Syntax tokens: strings, special strings, characters; markdown inline code, in code-string.",
+        "syntax-regexp": "Syntax tokens: regular expressions and escapes, in code-regexp.",
+        "syntax-number": "Syntax tokens: numbers, in code-number.",
+        "syntax-constant": "Syntax tokens: booleans, null, atoms, named constants, in code-constant.",
+        "syntax-comment": "Syntax tokens: comments (italic); markdown quotes, in code-comment.",
+        "syntax-function": "Syntax tokens: function names (as variables and properties) and macros, in code-function.",
+        "syntax-variable": "Syntax tokens: special variables and self ($ and @ names in jq), in code-variable.",
+        "syntax-type": "Syntax tokens: type, class and namespace names, in code-type.",
+        "syntax-property": "Syntax tokens: property names and their definitions (JSON and YAML keys), in code-property.",
+        "syntax-tag": "Syntax tokens: tag names, in code-tag.",
+        "syntax-attribute": "Syntax tokens: attribute names and labels, in code-attribute.",
+        "syntax-heading": "Syntax tokens: headings, at weight 600, in code-heading.",
+        "syntax-link": "Syntax tokens: links and addresses, [[links]] and #tags in markdown, in code-link.",
+        "syntax-inserted": "Syntax tokens: inserted lines of a diff, in code-inserted.",
+        "syntax-deleted": "Syntax tokens: deleted lines of a diff, in code-deleted.",
+        "syntax-invalid": "Syntax tokens: what the language marks invalid, in code-invalid."
+    },
+    "standsOn": {
+        "default": "field",
+        "box": "background",
+        "tooltip": "popover",
+        "completion": "popover",
+        "searchPanel": "muted"
+    },
+    "options": {
+        "language": {
+            "type": "text",
+            "values": ["json", "yaml", "jq", "markdown", "sql", "shell", "jinja", "text"],
+            "default": "text",
+            "does": "The language the document is read and colored in: one the editor carries by name (sql, shell and jinja loaded the first time an editor shows one, loadCodeLanguage), one an installed plugin gives by name (lib/plugins; an installed language wins over a built-in one of the same name), a CodeMirror LanguageSupport, or a stream parser with a name (defineLanguage). languageForMediaType picks one by media type. json and yaml are read for schema checks, path marks and onDocument; markdown highlights headings, strong and emphasized words, code, quotes, lists, links, [[links]] and #tags; jq its keywords, strings and interpolation, fields, variables, formats and built-ins."
+        },
+        "value": {
+            "type": "text",
+            "does": "The document, held from outside with onChange; a new value replaces it without calling onChange."
+        },
+        "doc": {
+            "type": "node",
+            "does": "A document shared with other editors (useSharedDocument) in place of value: one text and one undo history, each editor its own caret; opens at the caret the last one left."
+        },
+        "variant": {
+            "values": ["field", "pane", "line"],
+            "default": "field",
+            "does": "field: boxed like an input; pane: fills its pane edge to edge under the pane's own header; line: one line at an input's height, Enter runs onRun, a pasted line break becomes a space, no line numbers and no caret line."
+        },
+        "size": {
+            "values": ["sm", "md", "lg"],
+            "default": "md",
+            "does": "md at the body's size on the code line height (text.sm, leading-code), sm at text.xs for a dense pane, lg at text.base for long writing."
+        },
+        "readOnly": {
+            "type": "boolean",
+            "default": false,
+            "does": "Not editable, still focusable (a click or Tab puts the caret in and its line is shaded); outside a pane the box's ground turns muted at 40 percent over the background."
+        },
+        "lineNumbers": {
+            "type": "boolean",
+            "default": true,
+            "does": "The line numbers' gutter; never in the line variant."
+        },
+        "activeLine": {
+            "values": ["true", "false", "always"],
+            "default": "true",
+            "does": "Shades the caret's line while the editor has focus; false for a reader who turns it off; always keeps it shaded while the focus is elsewhere.",
+            "sokkel-ui": "activeLine: boolean | 'always'; always adds the cm-activeLine-always class"
+        },
+        "wrap": {
+            "type": "boolean",
+            "default": false,
+            "does": "Folds long lines at the editor's edge instead of scrolling sideways."
+        },
+        "marks": {
+            "type": "rows",
+            "does": "Places to mark, { line?, from?, to?, path?, tone: error | warning | info, message? }: a line alone is washed in its tone; a range (columns on line from 1, or offsets from 0) or, in JSON or YAML, the value at path with its key, is underlined, following the value as it is edited. A message puts a dot in the lint gutter and says itself on hover."
+        },
+        "completions": {
+            "type": "callback",
+            "does": "Words offered while typing, beside the language's own: a list, or a function of the word being typed (a leading $ or @ included, a . not) and the text before it on its line; each { label, detail?, docs?, kind?, apply? }. An app's word replaces the language's or the schema's of the same label."
+        },
+        "languageWords": {
+            "type": "boolean",
+            "default": true,
+            "does": "Whether the language's own words (jq's built-ins) are offered beside completions."
+        },
+        "links": {
+            "type": "rows",
+            "does": "The names a [[link]] completes from as it is typed: a list, or a function of what follows the brackets; the one chosen goes in with its closing ]] unless they follow already."
+        },
+        "onFollowLink": {
+            "type": "callback",
+            "does": "Follows a [[link]] clicked with Mod held (Cmd on a Mac, Ctrl elsewhere); while the key is held over the editor the links are underlined and the pointer is a hand. Off past a megabyte."
+        },
+        "hover": {
+            "type": "callback",
+            "does": "What a word is (letters, digits, _, a leading $ or @), shown in a tooltip after the pointer rests 300 ms on it; nothing shows nothing."
+        },
+        "onRun": {"type": "callback", "does": "Runs the document on Mod+Enter, and on Enter in the line variant."},
+        "keys": {
+            "type": "callback",
+            "does": "More bindings by CodeMirror's key names ({ 'Mod-s': save }), each given the document; they stand over the editor's own."
+        },
+        "search": {
+            "type": "boolean",
+            "default": false,
+            "does": "A find and replace bar over the text, opened with Mod+F; defaultSearch opens it at once with a query."
+        },
+        "folding": {
+            "type": "boolean",
+            "default": false,
+            "does": "A fold gutter and the fold keys, for the languages that know their blocks. Off past a megabyte (LARGE_DOCUMENT, 1,000,000 characters)."
+        },
+        "bracketColors": {
+            "type": "boolean",
+            "default": false,
+            "does": "Brackets colored by depth. Off past a megabyte."
+        },
+        "indentGuides": {
+            "type": "boolean",
+            "default": false,
+            "does": "Faint rules at each indent step. Off past a megabyte."
+        },
+        "schema": {
+            "type": "node",
+            "does": "A JSON Schema (2020-12) a JSON or YAML document is checked against as it is typed (each issue underlined on the value or key it is about, its message on hover) and completed from: property names and enum values, required ones first, a key with a default put in with it selected, and a key whose object requires keys put in whole as a snippet, each required key with its default, constant or first choice or a field for its value, Tab going from field to field. A key's type and description show on hover. deferred leaves a value unchecked."
+        },
+        "resolveSchema": {
+            "type": "callback",
+            "does": "Finds the schema a document names for itself when schema is not given (a top-level $schema, or a # yaml-language-server: $schema= line), at the start and again 500 ms after typing in the address pauses; a document in the JSON Schema 2020-12 dialect is checked without it. The editor fetches nothing."
+        },
+        "reveal": {
+            "type": "node",
+            "does": "Selects a range (a line, columns, offsets, or a JSON or YAML path) and scrolls it to the middle, focusing the editor; a new object moves there again."
+        },
+        "onProblems": {
+            "type": "callback",
+            "does": "Hears every problem the editor shows (the schema's findings and the marks with a message) as { line, column, endLine, endColumn, from, to, tone, message, path? } in document order each time they change, an empty list once there are none; with a schema it waits for the checker to load, and one that cannot load is one error."
+        },
+        "onDocument": {
+            "type": "callback",
+            "does": "Hears a JSON or YAML document read into a value 300 ms after each edit and once at the start; a YAML stream gives every document too."
+        },
+        "invalid": {
+            "type": "boolean",
+            "default": false,
+            "does": "The critical edge outside a pane, and the invalid ring while focused, as a field's control has."
+        },
+        "placeholder": {"type": "text", "does": "Shown in muted-foreground while the document is empty."},
+        "label": {
+            "type": "text",
+            "does": "What the editor holds, for a screen reader; id gives the editable text an id for a form's label."
+        },
+        "phrases": {
+            "type": "node",
+            "does": "CodeMirror's own words (the find bar, the fold marks) by their English text, to translate them."
+        }
+    },
+    "sizes": {
+        "field": {
+            "height": 96,
+            "radius": "radius-control",
+            "note": "variant field: at least 96 tall (min-h-24), radius-control, a 1px edge."
+        },
+        "line": {
+            "height": "density.control",
+            "phoneMinHeight": "spacing-finger",
+            "radius": "radius-control",
+            "note": "variant line: h-(--density-control), a finger tall below md (max-md:min-h-finger); the text centered, no padding over or under."
+        },
+        "sm": {"text": "text.xs", "note": "SIZES.sm (EditorView.theme): font-size text-xs on its line height."},
+        "md": {"text": "text.sm", "note": "SIZES.md: font-size text-sm on leading-code, not text.sm's own line height."},
+        "lg": {"text": "text.base", "note": "SIZES.lg: font-size text-base on its line height."},
+        "text": {"padX": 12, "padY": 8, "note": "THEME .cm-line padding 0 0.75rem; .cm-content padding 0.5rem 0."},
+        "gutter": {
+            "width": 40,
+            "note": "THEME .cm-lineNumbers .cm-gutterElement: padding 0 0.5rem 0 0.75rem (12 before, 8 after), min-width 2.5rem."
+        },
+        "lintDot": {"width": 16, "icon": 8, "note": "THEME .cm-gutter-lint width 1rem; the dot 0.5rem round."},
+        "tooltip": {
+            "padX": 10,
+            "padY": 6,
+            "radius": "radius-control",
+            "text": "text.xs",
+            "note": "THEME .cm-tooltip-hover .cm-hover and .cm-diagnostic padding 0.375rem 0.625rem; at most 28rem (80vw) wide for a hover, 24rem (60vw) for completion docs."
+        },
+        "completion": {
+            "padX": 8,
+            "padY": 2,
+            "note": "THEME .cm-tooltip-autocomplete > ul > li padding 0.125rem 0.5rem; the list at most 16rem tall; the detail 0.75rem after the label."
+        },
+        "foldPlaceholder": {
+            "padX": 6,
+            "radius": "radius-control",
+            "note": "THEME .cm-foldPlaceholder padding 0 0.375rem."
+        },
+        "searchPanel": {
+            "padY": 6,
+            "gap": 8,
+            "text": "text.xs",
+            "note": "THEME .cm-panel.cm-search padding 0.375rem 2rem 0.375rem 0.5rem: 8 at its start and 32 at its end, for the close; gap 0.25rem 0.5rem; THEME .cm-panel.cm-search padding 0.375rem 2rem 0.375rem 0.5rem (32 at its end for the close), gap 0.25rem 0.5rem; fields and buttons padded 2 by 8, radius-control."
+        }
+    },
+    "layout": {
+        "large": {
+            "value": 1000000,
+            "note": "LARGE_DOCUMENT: past this many characters folding, bracket colors, indent guides and link following are dropped."
+        },
+        "hoverWait": {
+            "value": 300,
+            "note": "hoverTooltip hoverTime: the pointer rests this many ms on a word before its tooltip shows."
+        },
+        "lintWait": {"value": 300, "note": "linter delay: the checks run this many ms after the last edit."},
+        "resolveWait": {
+            "value": 500,
+            "note": "RESOLVE_PAUSE: typing in a $schema address pauses this many ms before it is resolved."
+        }
+    },
+    "states": {
+        "rest": {"means": "The document at rest: its colors, its gutter, no caret line."},
+        "focus": {
+            "means": "The editor has focus: the box's edge in ring at 80 percent outside a pane, the caret's line shaded and its number in foreground (with activeLine), the matching bracket washed. A browser shows a text input's focus however it came, so this is any focus.",
+            "reached": "Tab or a press",
+            "on": "any",
+            "sokkel-ui": "focus-within:border-ring/80; &.cm-focused .cm-activeLine"
+        },
+        "invalid": {
+            "means": "invalid: the box's edge critical at 80 percent; with focus, critical and the invalid ring.",
+            "reached": "invalid",
+            "sokkel-ui": "ISSUE_WITHIN_EDGE.critical"
+        },
+        "readOnly": {
+            "means": "readOnly outside a pane: the box's ground muted at 40 percent over the background; editable no more, still focusable.",
+            "reached": "readOnly"
+        },
+        "always": {
+            "means": "activeLine always: the caret's line shaded and its number in foreground while the focus is elsewhere too.",
+            "reached": "activeLine always",
+            "sokkel-ui": "cm-activeLine-always on the editor"
+        },
+        "held": {
+            "means": "Mod held over a markdown editor with onFollowLink: each [[link]] underlined, the pointer a hand.",
+            "reached": "Mod (Cmd on a Mac, Ctrl elsewhere) held",
+            "sokkel-ui": "cm-follow-held on the editor"
+        },
+        "hover": {
+            "means": "The pointer over a fold mark, a completion row or a search button.",
+            "reached": "the pointer"
+        },
+        "selected": {
+            "means": "The chosen completion row; the current search match.",
+            "reached": "the arrows in the list; Mod+G in the search"
+        },
+        "error": {"means": "A mark or problem in the critical tone.", "reached": "tone error"},
+        "warning": {"means": "A mark or problem in the warning tone.", "reached": "tone warning"},
+        "info": {"means": "A mark or problem in the info tone.", "reached": "tone info"}
+    },
+    "pieces": {
+        "box": {
+            "rest": {
+                "ground": "field",
+                "edge": "input",
+                "radius": "radius-control",
+                "note": "Outside a pane (bg-field border border-input rounded-control); in a pane bg-background with no edge."
+            },
+            "focus": {"edge": "ring/80"},
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {"edge": "critical", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}},
+            "readOnly": {
+                "ground": "mix-oklab(muted 40%, background)",
+                "note": "bg-(--editor-paper) with --editor-paper: color-mix(in oklab, var(--muted) 40%, var(--background))."
+            }
+        },
+        "text": {
+            "rest": {
+                "ground": "editor-ground",
+                "ink": "foreground",
+                "note": "THEME '&': the editor-ground wash (transparent unless a theme sets it) over the box's ground; the caret in foreground."
+            }
+        },
+        "gutter": {
+            "rest": {
+                "ground": "editor-gutter",
+                "ink": "editor-gutter-ink",
+                "note": "THEME .cm-gutters: the editor-gutter wash over editor-ground over the box's own ground (--editor-paper), no edge."
+            },
+            "focus": {"ink": "foreground", "note": "The caret's line number (.cm-activeLineGutter)."},
+            "always": {"ink": "foreground"}
+        },
+        "activeLine": {
+            "rest": {"ground": "none"},
+            "focus": {
+                "ground": "foreground/5",
+                "note": "&.cm-focused .cm-activeLine: color-mix(in oklab, var(--foreground) 5%, transparent)."
+            },
+            "always": {"ground": "foreground/5"}
+        },
+        "selection": {
+            "rest": {"ground": "primary/28", "note": ".cm-selectionBackground and ::selection."},
+            "focus": {
+                "ring": {"color": "primary/50", "width": 1},
+                "note": "The matching bracket: ground primary/22 and a 1px primary/50 outline (&.cm-focused .cm-matchingBracket)."
+            }
+        },
+        "lineMark": {
+            "rest": {"note": "Drawn only with a mark's tone."},
+            "error": {"ground": "critical/14"},
+            "warning": {"ground": "warning/14"},
+            "info": {"ground": "info/12"}
+        },
+        "rangeMark": {
+            "rest": {"note": "A wavy underline in the tone (.cm-lintRange-<tone>), drawn as mark."},
+            "error": {"mark": "critical"},
+            "warning": {"mark": "warning"},
+            "info": {"mark": "info"},
+            "selected": {"ground": "warning/18", "note": ".cm-lintRange-active: the problem the caret stands in."}
+        },
+        "lintDot": {
+            "rest": {"note": "A dot in the tone (.cm-lint-marker-<tone>)."},
+            "error": {"ground": "critical"},
+            "warning": {"ground": "warning"},
+            "info": {"ground": "info"}
+        },
+        "tooltip": {
+            "rest": {
+                "ground": "popover",
+                "edge": "border",
+                "ink": "popover-foreground",
+                "radius": "radius-control",
+                "text": "text.xs",
+                "note": "THEME .cm-tooltip, elevation-pop (--shadow-pop); a hover's detail in muted-foreground in the mono face. A problem's message has a 3 wide start rule in its tone (.cm-diagnostic-<tone>)."
+            },
+            "error": {"rule": "critical"},
+            "warning": {"rule": "warning"},
+            "info": {"rule": "info"}
+        },
+        "completion": {
+            "rest": {
+                "ink": "popover-foreground",
+                "note": "Rows in the mono face; the icon and the detail in muted-foreground (.cm-completionIcon, .cm-completionDetail); the matched letters at 600."
+            },
+            "selected": {"ground": "accent", "ink": "accent-foreground", "note": "li[aria-selected]."}
+        },
+        "foldGutter": {
+            "rest": {"ink": "editor-gutter-ink"},
+            "hover": {"ink": "foreground", "note": ".cm-foldGutter .cm-gutterElement:hover."}
+        },
+        "foldPlaceholder": {
+            "rest": {"ground": "muted", "edge": "none", "ink": "muted-foreground", "radius": "radius-control"}
+        },
+        "searchPanel": {
+            "rest": {
+                "ground": "muted",
+                "ink": "foreground",
+                "rule": "border",
+                "text": "text.xs",
+                "note": ".cm-panels and .cm-panels-top: a 1px border rule under it. Its fields (.cm-textfield) on field with a 1px input edge and radius-control, the edge ring on focus; its buttons (.cm-button) on background with a 1px border edge, accent under the pointer."
+            },
+            "selected": {
+                "note": "Matches: .cm-searchMatch warning/24, the current .cm-searchMatch-selected warning/48."
+            }
+        },
+        "bracket": {
+            "rest": {
+                "ink": "code-bracket-1",
+                "note": ".cm-bracket-0, -1 and -2 in code-bracket-1, -2 and -3, by depth."
+            }
+        },
+        "indentGuide": {
+            "rest": {"rule": "border", "note": ".cm-indent-guides: a 1px gradient rule in border at each step."}
+        },
+        "placeholder": {"rest": {"ink": "muted-foreground", "note": ".cm-placeholder."}},
+        "wikiLink": {
+            "rest": {"note": "Colored as a link (code-link) by the markdown language."},
+            "held": {
+                "underline": true,
+                "note": "&.cm-follow-held .cm-wikiLink: underlined 0.2em under, cursor pointer."
+            }
+        },
+        "syntax-keyword": {"rest": {"ink": "code-keyword"}},
+        "syntax-operator": {"rest": {"ink": "code-operator"}},
+        "syntax-punctuation": {"rest": {"ink": "code-punctuation"}},
+        "syntax-string": {"rest": {"ink": "code-string"}},
+        "syntax-regexp": {"rest": {"ink": "code-regexp"}},
+        "syntax-number": {"rest": {"ink": "code-number"}},
+        "syntax-constant": {"rest": {"ink": "code-constant"}},
+        "syntax-comment": {"rest": {"ink": "code-comment", "note": "HIGHLIGHT: italic."}},
+        "syntax-function": {"rest": {"ink": "code-function"}},
+        "syntax-variable": {"rest": {"ink": "code-variable"}},
+        "syntax-type": {"rest": {"ink": "code-type"}},
+        "syntax-property": {"rest": {"ink": "code-property"}},
+        "syntax-tag": {"rest": {"ink": "code-tag"}},
+        "syntax-attribute": {"rest": {"ink": "code-attribute"}},
+        "syntax-heading": {"rest": {"ink": "code-heading", "weight": 600}},
+        "syntax-link": {"rest": {"ink": "code-link"}},
+        "syntax-inserted": {"rest": {"ink": "code-inserted"}},
+        "syntax-deleted": {"rest": {"ink": "code-deleted"}},
+        "syntax-invalid": {"rest": {"ink": "code-invalid"}}
+    },
+    "keyboard": [
+        {"keys": ["Mod+Enter"], "does": "Runs the document (onRun), given its text.", "when": "onRun"},
+        {
+            "keys": ["Enter"],
+            "does": "Runs the document rather than breaking the line.",
+            "when": "variant line, with onRun"
+        },
+        {
+            "keys": ["Tab", "Shift+Tab"],
+            "does": "Indents or outdents the line or the selection (indentWithTab); Escape, then Tab, leaves the editor.",
+            "when": "the editor has focus and is not read only"
+        },
+        {
+            "keys": ["Mod+Z", "Mod+Y", "Mod+Shift+Z"],
+            "does": "Undoes and redoes; one history across the editors of a shared document.",
+            "when": "the editor has focus"
+        },
+        {"keys": ["Ctrl+Space"], "does": "Opens the words offered here.", "when": "the editor has focus"},
+        {
+            "keys": ["ArrowDown", "ArrowUp", "PageDown", "PageUp"],
+            "does": "Moves the chosen word in the list.",
+            "when": "the completion list is open"
+        },
+        {
+            "keys": ["Enter"],
+            "does": "Puts in the chosen word (a snippet's whole object for a key whose object requires keys).",
+            "when": "the completion list is open"
+        },
+        {"keys": ["Escape"], "does": "Closes the completion list.", "when": "the completion list is open"},
+        {
+            "keys": ["Tab", "Shift+Tab"],
+            "does": "Goes to the next or the previous field of a snippet put in by a completion.",
+            "when": "a snippet's fields are active"
+        },
+        {"keys": ["Mod+F"], "does": "Opens the find and replace bar, its query field focused.", "when": "search"},
+        {
+            "keys": ["F3", "Mod+G", "Shift+F3", "Mod+Shift+G"],
+            "does": "Goes to the next or the previous match.",
+            "when": "search"
+        },
+        {"keys": ["Escape"], "does": "Closes the find bar, focus back in the text.", "when": "the find bar has focus"},
+        {
+            "keys": ["Mod+D", "Mod+Shift+L", "Mod+Alt+G"],
+            "does": "Selects the next occurrence of the selection, selects every occurrence, or goes to a line (CodeMirror's search keymap).",
+            "when": "search"
+        },
+        {
+            "keys": ["Ctrl+Shift+[", "Ctrl+Shift+]"],
+            "does": "Folds or unfolds the block at the caret (Cmd+Alt+[ and Cmd+Alt+] on a Mac).",
+            "when": "folding"
+        },
+        {"keys": ["Ctrl+Alt+[", "Ctrl+Alt+]"], "does": "Folds or unfolds every block.", "when": "folding"},
+        {
+            "keys": ["Mod+Click"],
+            "does": "Follows the [[link]] clicked (onFollowLink); while Mod is held the links are underlined and the pointer is a hand.",
+            "when": "markdown with onFollowLink"
+        }
+    ],
+    "words": {
+        "issue.required": "Missing the property {property}",
+        "issue.additional": "{property} is not a known property",
+        "issue.type": "Expected {a} {expected}",
+        "issue.enum": "Expected one of {values}",
+        "issue.const": "Expected {value}",
+        "issue.minimum": "Must be at least {limit}",
+        "issue.exclusiveMinimum": "Must be more than {limit}",
+        "issue.maximum": "Must be at most {limit}",
+        "issue.exclusiveMaximum": "Must be less than {limit}",
+        "issue.minLength": {"one": "Use at least {count} character", "other": "Use at least {count} characters"},
+        "issue.maxLength": {"one": "Use at most {count} character", "other": "Use at most {count} characters"},
+        "issue.pattern": "Must match {pattern}",
+        "issue.format": "Expected the {format} format",
+        "issue.minItems": {"one": "Needs at least {count} item", "other": "Needs at least {count} items"},
+        "issue.maxItems": {"one": "Holds at most {count} item", "other": "Holds at most {count} items"},
+        "issue.uniqueItems": "Each item only once",
+        "issue.deprecated": "Deprecated: still accepted, and may be removed in a later version",
+        "issue.unchecked": "The schema cannot be checked: {reason}",
+        "issue.other": "{message}",
+        "syntax": "Not valid {language}",
+        "deprecated": "deprecated"
+    },
+    "samples": {
+        "issue.required": [{"with": {"property": "schedule"}, "says": "Missing the property schedule"}],
+        "issue.additional": [{"with": {"property": "retries"}, "says": "retries is not a known property"}],
+        "issue.type": [
+            {"with": {"a": "an", "expected": "object"}, "says": "Expected an object"},
+            {"with": {"a": "a", "expected": "string"}, "says": "Expected a string"}
+        ],
+        "issue.enum": [{"with": {"values": "\"daily\", \"weekly\""}, "says": "Expected one of \"daily\", \"weekly\""}],
+        "issue.const": [
+            {"with": {"value": "\"harbor\""}, "says": "Expected \"harbor\""},
+            {"with": {"value": "3"}, "says": "Expected 3"}
+        ],
+        "issue.minimum": [{"with": {"limit": "1"}, "says": "Must be at least 1"}],
+        "issue.exclusiveMinimum": [{"with": {"limit": "0"}, "says": "Must be more than 0"}],
+        "issue.maximum": [{"with": {"limit": "10"}, "says": "Must be at most 10"}],
+        "issue.exclusiveMaximum": [{"with": {"limit": "100"}, "says": "Must be less than 100"}],
+        "issue.minLength": [
+            {"with": {"count": 0}, "says": "Use at least 0 characters"},
+            {"with": {"count": 1}, "says": "Use at least 1 character"},
+            {"with": {"count": 1200}, "says": "Use at least 1200 characters"}
+        ],
+        "issue.maxLength": [
+            {"with": {"count": 0}, "says": "Use at most 0 characters"},
+            {"with": {"count": 1}, "says": "Use at most 1 character"},
+            {"with": {"count": 1200}, "says": "Use at most 1200 characters"}
+        ],
+        "issue.minItems": [
+            {"with": {"count": 0}, "says": "Needs at least 0 items"},
+            {"with": {"count": 1}, "says": "Needs at least 1 item"},
+            {"with": {"count": 1200}, "says": "Needs at least 1200 items"}
+        ],
+        "issue.maxItems": [
+            {"with": {"count": 0}, "says": "Holds at most 0 items"},
+            {"with": {"count": 1}, "says": "Holds at most 1 item"},
+            {"with": {"count": 1200}, "says": "Holds at most 1200 items"}
+        ],
+        "issue.pattern": [{"with": {"pattern": "^[a-z-]+$"}, "says": "Must match ^[a-z-]+$"}],
+        "issue.format": [{"with": {"format": "date"}, "says": "Expected the date format"}],
+        "issue.unchecked": [
+            {
+                "with": {"reason": "the checker did not load"},
+                "says": "The schema cannot be checked: the checker did not load"
+            }
+        ],
+        "issue.other": [{"with": {"message": "must not be empty"}, "says": "Must not be empty"}],
+        "syntax": [
+            {"with": {"language": "json"}, "says": "Not valid JSON"},
+            {"with": {"language": "yaml"}, "says": "Not valid YAML"}
+        ]
+    },
+    "appText": {
+        "label": "What the editor holds, for a screen reader.",
+        "placeholder": "Shown while the document is empty.",
+        "phrases": "CodeMirror's own words (the find bar's labels and buttons, the fold marks), in CodeMirror's English unless the app passes phrases.",
+        "completions": "Each word, its detail and its docs; jq's built-ins and their docs are the language's own.",
+        "hover": "What a word is.",
+        "marks": "A mark's message."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "CodeMirror 6 is the engine (one engine per job): the colors are its HighlightStyle (HIGHLIGHT, each tag in a code-* token) and its chrome an EditorView.theme (THEME) in the tokens' variables, so a change of theme or scheme repaints without a rebuild; only the box's own look is Tailwind classes on the host (data-slot code-editor).",
+            "sql, shell and jinja are fetched the first time an editor shows one; the schema checker loads the first time a schema is given, a checker that cannot load being one error that is tried again as the document is edited.",
+            "Languages from installed domain plugins (lib/plugins, registerPlugins) are known by name and by media type.",
+            "Settings that change (language, read only, gutter, keys, search, folding, size, schema) are CodeMirror compartments reconfigured in place, keeping the document, the caret and the history.",
+            "A value, marks, words or a language spec built afresh each render are the same props while they say the same (useSteady).",
+            "The editable text is read only by EditorState.readOnly and EditorView.editable, and keeps tabindex 0 so it stays focusable.",
+            "A document's $schema address is untrusted: the editor fetches nothing, and resolveSchema decides what to fetch."
+        ],
+        "sokkel-egui": [
+            "egui keeps its own text editing; it draws the code-* colors, the marks and the problems from this spec with an engine of its own choice."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b7e1763 there is no code editor."
+        }
+    ]
+}
