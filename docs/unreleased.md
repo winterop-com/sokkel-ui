@@ -26,6 +26,10 @@ release and empties it.
 
 ## Fixed
 
+- A drag begun in a list that is scrolled, or that scrolls under it, lands under the pointer:
+  `dragPoint` reads the pointer itself rather than the engine's offset, which is corrected for the
+  scrolling of the dragged thing's boxes. Every drag that places by the pointer gains it (calendar,
+  board, tree, table reorder, dashboard arrange, `RunTimeline`, `ClipTimeline`).
 - `RunTimeline` draws the chosen lane's shift handle at rest, a dashed band with a grip from the
   current time to past the last upcoming run, so a person sees what to drag; it was drawn only
   under the pointer, and began at the first upcoming run.
