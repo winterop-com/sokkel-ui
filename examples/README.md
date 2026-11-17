@@ -7,7 +7,8 @@ reaches into a package's `src/`. Each is a Tidevann product, in a folder of its 
 
 ```
 examples/
-  shared/        the fake backend, the window frame, the hash route and the Tidevann mark
+  shared/        the fake backend, the window frame, the hash route, the Tidevann mark, and the
+                 scenes and sounds the video clips are drawn and made from, with their WebM encoding
   tasks/         lists, a quick add and tasks edited in place, put in your own order by drag, and a
                  board whose cards move between To do, Doing and Done
   runs/          a jobs console: an overview arranged by drag, runs, a run's page, jobs, schedules and settings
@@ -68,6 +69,11 @@ examples/
                  what is coming up, uptime and on call; Edit moves, resizes, configures, removes and
                  adds them from a palette by drag, Cancel throws the edits away and Reset puts the
                  dashboard back; dashboards made, renamed, duplicated, deleted and ordered by drag
+  cut/           a linear video editor: projects of clips cut from a media bin drawn in the page,
+                 a preview drawn straight from the scenes with play, scrub, frame steps and J/K/L,
+                 titles written over the picture and sound mixed under it, split, delete and ripple
+                 delete, an inspector for the chosen clip, undo and redo over every edit, saved as it
+                 is made, and an export drawn and encoded to WebM in the page
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -104,7 +110,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195, Cut on 4196)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri

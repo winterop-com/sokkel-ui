@@ -4,9 +4,10 @@
  * and writes them into a WebM file the page plays from memory.
  */
 
-import { drawFrame, type SceneSpec } from './scenes'
-import { SOUND_RATE, synthesize } from './sound'
-import { opusHead, writeWebm, type Packet } from './webm'
+import { drained, encodeOpus } from 'tidevann-shared/clips/encode'
+import { drawFrame, type SceneSpec } from 'tidevann-shared/clips/scenes'
+import { SOUND_RATE, synthesize } from 'tidevann-shared/clips/sound'
+import { writeWebm, type Packet } from 'tidevann-shared/clips/webm'
 
 export interface ClipJob {
     id: number
@@ -24,13 +25,6 @@ export type ClipReply =
 
 /** The worker's own scope, as far as this file speaks to it. */
 const scope = self as unknown as { postMessage: (reply: ClipReply) => void; onmessage: ((event: MessageEvent<ClipJob>) => void) | null }
-
-/** Waits until the encoder has taken some of its queue. */
-function drained(encoder: VideoEncoder | AudioEncoder): Promise<void> {
-    return new Promise((resolve) => {
-        encoder.addEventListener('dequeue', () => resolve(), { once: true })
-    })
-}
 
 async function encodeVideo(job: ClipJob, packets: Packet[], tell: (share: number) => void): Promise<void> {
     const canvas = new OffscreenCanvas(job.width, job.height)
@@ -76,56 +70,9 @@ async function encodeVideo(job: ClipJob, packets: Packet[], tell: (share: number
 }
 
 /** The sound as Opus packets, and the header its track carries; none where this browser has no Opus encoder. */
-async function encodeSound(spec: SceneSpec, packets: Packet[]): Promise<{ head: Uint8Array; delay: number } | undefined> {
-    if (typeof AudioEncoder === 'undefined') return undefined
-    const config: AudioEncoderConfig = { codec: 'opus', sampleRate: SOUND_RATE, numberOfChannels: 2, bitrate: 96_000 }
-    const support = await AudioEncoder.isConfigSupported(config).catch(() => undefined)
-    if (support?.supported !== true) return undefined
-    let description: Uint8Array | undefined
-    let failure: Error | undefined
-    const encoder = new AudioEncoder({
-        output: (chunk, metadata) => {
-            const data = new Uint8Array(chunk.byteLength)
-            chunk.copyTo(data)
-            packets.push({ track: 'audio', time: chunk.timestamp, key: true, data })
-            const given = metadata?.decoderConfig?.description
-            if (description === undefined && given !== undefined) {
-                description = ArrayBuffer.isView(given)
-                    ? new Uint8Array(given.buffer, given.byteOffset, given.byteLength).slice()
-                    : new Uint8Array(given).slice()
-            }
-        },
-        error: (error) => {
-            failure = error
-        },
-    })
-    encoder.configure(config)
+function encodeSound(spec: SceneSpec, packets: Packet[]): Promise<{ head: Uint8Array; delay: number } | undefined> {
     const [left, right] = synthesize(spec)
-    const block = SOUND_RATE / 10
-    for (let start = 0; start < left.length; start += block) {
-        const count = Math.min(block, left.length - start)
-        const planes = new Float32Array(count * 2)
-        planes.set(left.subarray(start, start + count), 0)
-        planes.set(right.subarray(start, start + count), count)
-        const data = new AudioData({
-            format: 'f32-planar',
-            sampleRate: SOUND_RATE,
-            numberOfFrames: count,
-            numberOfChannels: 2,
-            timestamp: Math.round((start / SOUND_RATE) * 1_000_000),
-            data: planes,
-        })
-        encoder.encode(data)
-        data.close()
-        if (encoder.encodeQueueSize > 12) await drained(encoder)
-    }
-    await encoder.flush()
-    encoder.close()
-    if (failure !== undefined) throw failure
-    // The encoder's lookahead, 312 samples for libopus at 48 kHz, skipped by the decoder.
-    const preSkip = 312
-    const head = description !== undefined && description.length >= 19 ? description : opusHead(2, SOUND_RATE, preSkip)
-    return { head, delay: Math.round((preSkip / SOUND_RATE) * 1_000_000_000) }
+    return encodeOpus(left, right, SOUND_RATE, packets)
 }
 
 scope.onmessage = (event: MessageEvent<ClipJob>) => {
