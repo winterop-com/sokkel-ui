@@ -7,11 +7,15 @@ import {
     ClipTimeline,
     zoomStep,
     type ClipChange,
+    type ClipTrackKind,
     type TimelineClip,
     type TimelineTrack,
 } from '@winterop-com/sokkel-ui/ClipTimeline'
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
+import { DragDrop } from '@winterop-com/sokkel-ui/DragDrop'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
-import { Row } from '@winterop-com/sokkel-ui/Layout'
+import { Row, Split, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { MediaCard } from '@winterop-com/sokkel-ui-media/MediaCard'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 
 /**
@@ -220,6 +224,89 @@ export const LockedTracks: StoryObj = {
                     setTracks((current) => current.map((track) => (track.id === id ? { ...track, ...patch } : track)))
                 }
             />
+        )
+    },
+}
+
+/** A source in the bin: what it is and how long. */
+interface Source {
+    id: string
+    label: string
+    kind: ClipTrackKind
+    duration: number
+    waveform?: number[]
+}
+
+const BIN: Source[] = [
+    { id: 'harbor-close', label: 'harbor-close', kind: 'video', duration: 6 },
+    { id: 'interview-grace', label: 'interview-grace', kind: 'video', duration: 12 },
+    { id: 'gulls', label: 'gulls', kind: 'audio', duration: 9, waveform: peaks(200, 5) },
+    { id: 'closing-title', label: 'Closing title', kind: 'title', duration: 4 },
+]
+
+const dragOf = (source: Source): DragData => ({ kind: 'media', label: source.label, value: source })
+
+/**
+ * A bin of sources beside the timeline in one `DragDrop`: a source dragged onto a track of its kind
+ * shows where it lands, as long as it lasts, and is added there; the locked track and tracks of
+ * another kind take nothing.
+ */
+export const MediaBin: StoryObj = {
+    name: 'Media bin',
+    render: function Render() {
+        const [playhead, setPlayhead] = useState(4)
+        const [clips, setClips] = useState(CLIPS.filter((clip) => clip.track !== 'ambience'))
+        const tracks = TRACKS.map((track) => (track.id === 'ambience' ? { ...track, locked: true } : track))
+        const made = useRef(0)
+        return (
+            <DragDrop>
+                <Split
+                    side="start"
+                    width="md"
+                    gap="md"
+                    aside={
+                        <Stack gap="sm">
+                            {BIN.map((source) => (
+                                <MediaCard
+                                    key={source.id}
+                                    layout="row"
+                                    shape="wide"
+                                    title={source.label}
+                                    subtitle={`${CLIP_TIMELINE_WORDS.kinds[source.kind]}, ${String(source.duration)} s`}
+                                    placeholderSeed={source.id}
+                                    drag={dragOf(source)}
+                                />
+                            ))}
+                        </Stack>
+                    }
+                >
+                    <ClipTimeline
+                        tracks={tracks}
+                        clips={clips}
+                        duration={60}
+                        playhead={playhead}
+                        onPlayheadChange={setPlayhead}
+                        onClipsChange={(changes) => setClips((current) => applied(current, changes))}
+                        accepts={(drag, track) => drag.kind === 'media' && (drag.value as Source).kind === track.kind}
+                        onDrop={({ data, track, at }) => {
+                            const source = data.value as Source
+                            made.current += 1
+                            setClips((current) => [
+                                ...current,
+                                {
+                                    id: `${source.id}-${String(made.current)}`,
+                                    track,
+                                    start: at,
+                                    duration: source.duration,
+                                    sourceDuration: source.duration,
+                                    label: source.label,
+                                    waveform: source.waveform,
+                                },
+                            ])
+                        }}
+                    />
+                </Split>
+            </DragDrop>
         )
     },
 }

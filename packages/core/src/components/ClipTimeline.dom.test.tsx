@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
+import { DragDrop } from './DragDrop'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
@@ -192,5 +193,27 @@ describe('ClipTimeline', () => {
             ['voice', { muted: true }],
             ['voice', { locked: false }],
         ])
+    })
+
+    it('takes drops inside a DragDrop the app shares with other parts, its lanes still drawn once the drag layer is here', async () => {
+        const page = draw(
+            <DragDrop>
+                <ClipTimeline
+                    tracks={TRACKS}
+                    clips={CLIPS}
+                    duration={30}
+                    playhead={0}
+                    onPlayheadChange={() => undefined}
+                    onDrop={() => undefined}
+                    accepts={(drag, track) => drag.kind === 'media' && track.kind === 'video'}
+                />
+            </DragDrop>,
+        )
+        await act(async () => {
+            await import('./clip-timeline-drag')
+            await new Promise((resolve) => setTimeout(resolve, 0))
+        })
+        expect(page.querySelectorAll('[data-track-lane]')).toHaveLength(3)
+        expect(page.querySelectorAll('[data-clip]')).toHaveLength(4)
     })
 })
