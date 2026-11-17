@@ -12,6 +12,8 @@ release and empties it.
   default.
 - The `radius-composer` token (`rounded-composer`): a composer's corners, twice the control radius,
   so it follows every theme's `--radius`.
+- `COMPOSER_WORDS`, `COMPOSER_DICTATION_WORDS` (`Composer`) and `MESSAGE_COMPOSER_WORDS`
+  (`MessageComposer`): the composers' English defaults, exported as every other part's are.
 
 ## Changed
 
@@ -37,3 +39,6 @@ release and empties it.
 - The pin moves to sokkel-design 81b201f: `RunTimeline`, `ClipTimeline`, `EmojiPicker` and
   `ReactionBar` with `ReactionChips` are specified there (`run-timeline`, `clip-timeline`,
   `emoji-picker`, `reaction-bar`), and `src/parts.test.ts` checks them.
+- The pin moves to sokkel-design 49f30b2: `Composer` and `MessageComposer` are specified there
+  (`composer`, `message-composer`), and `emoji-picker` and `reaction-bar` describe the fixed ends
+  and focus outline.

@@ -14,6 +14,13 @@ import {
     type PaletteCommand,
 } from '@winterop-com/sokkel-ui/CommandPalette'
 import {
+    COMPOSER_DICTATION_WORDS,
+    COMPOSER_WORDS,
+    Composer,
+    type ComposerAttachment,
+    type ComposerProps,
+} from '@winterop-com/sokkel-ui/Composer'
+import {
     CLIP_TIMELINE_FIT,
     CLIP_TIMELINE_WORDS,
     CLIP_TIMELINE_ZOOM,
@@ -29,6 +36,7 @@ import { FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
+import { MESSAGE_COMPOSER_WORDS, MessageComposer, type MessageComposerProps } from '@winterop-com/sokkel-ui/MessageComposer'
 import { PageHeader, PAGE_HEADER_WORDS, type PageHeaderProps } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState, PAGE_STATE_WORDS, type PageStateProps } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -432,7 +440,7 @@ const READ = {
     underline: (name: string) => (name === 'underline' ? 'true' : name === 'no-underline' ? 'false' : undefined),
     radius: (name: string) => {
         if (name.startsWith('rounded-[min(var(--control-radius),')) return 'radius-control'
-        const match = /^rounded-(control|surface|mini|xs|sm|md|lg|xl|none|full)$/.exec(name)
+        const match = /^rounded-(control|surface|composer|mini|xs|sm|md|lg|xl|none|full)$/.exec(name)
         return match === null ? undefined : `radius-${match[1]}`
     },
     radiusMax: (name: string) => /^rounded-\[min\(var\(--control-radius\),(\d+)px\)\]$/.exec(name)?.[1],
@@ -3930,6 +3938,304 @@ const REACTION_BAR_ADAPTER: Adapter = {
     more: () => layoutChecks('reaction-bar', { popoverEdge: () => numberIn(REACTION_BAR, /collisionPadding=\{(\d+)\}/) }),
 }
 
+// The suggestions both composers share: their keys, read from the hook and the key map.
+
+const MENTIONS = source('components/Mentions.tsx')
+/** The suggestions' English defaults, read from their private module, which both composers spread under their own `mentions`. */
+const MENTION_WORDS = Object.fromEntries(
+    [...(/export const MENTION_WORDS: MentionWords = \{([^}]+)\}/.exec(MENTIONS)?.[1] ?? '').matchAll(/(\w+): '([^']*)'/g)].map((match) => [
+        match[1],
+        match[2],
+    ]),
+)
+const MENTION_KEYS = source('lib/mentions.ts')
+const TOUCH_READ_ONCE = /const \[touch\] = useState\(touchTyping\)/
+const touchScreen = () => /'\(pointer: coarse\) and \(hover: none\)'/.test(source('lib/keys.ts'))
+const MENTION_PROBES: Adapter['keys'] = {
+    'ArrowDown, ArrowUp (the suggestion list is open)': () =>
+        /setActive\(\(current\) => Math\.min\(current \+ 1, found\.length - 1\)\)/.test(MENTIONS) &&
+        /setActive\(\(current\) => Math\.max\(current - 1, 0\)\)/.test(MENTIONS)
+            ? true
+            : 'the arrows do not move through the people, stopping at the ends',
+    'Enter, Tab (the suggestion list is open)': () =>
+        /const choose = key === 'Enter' \|\| key === 'Tab'/.test(MENTION_KEYS) &&
+        /if \(choose && searching\) return 'hold'/.test(MENTION_KEYS)
+            ? true
+            : 'Enter and Tab do not put the person in, waiting on a search',
+    'Escape (the suggestion list is open)': () =>
+        /if \(key === 'Escape'\) return 'close'/.test(MENTION_KEYS) ? true : 'Escape does not close the suggestions',
+}
+const MENTION_WORD_SOURCES: Record<string, WordSource> = {
+    'mentions.label': 'MENTION_WORDS.label',
+    'mentions.empty': 'MENTION_WORDS.empty',
+    'mentions.searching': 'MENTION_WORDS.searching',
+}
+
+// Composer
+
+const COMPOSER = source('components/Composer.tsx')
+/** The composer's own words: its players', dictation's and mentions' are other objects, checked on their own. */
+const { player: _composerPlayer, dictation: _composerDictation, mentions: _composerMentions, ...COMPOSER_OWN } = COMPOSER_WORDS
+const COMPOSER_FILES: ComposerAttachment[] = [{ id: 'log', name: 'validate.log', kind: 'file', detail: '14 KB' }]
+const composer = (props: Partial<ComposerProps> = {}) =>
+    draw(Composer, {
+        value: 'Why did nightly-export fail?',
+        onChange: noop,
+        onSend: noop,
+        onAttach: noop,
+        onRemove: noop,
+        attachments: COMPOSER_FILES,
+        ...props,
+    })
+const COMPOSERS = once(() => ({
+    full: composer(),
+    empty: composer({ value: '', attachments: [] }),
+    busy: composer({ busy: true, onStop: noop }),
+    inline: composer({ value: '', attachments: [], layout: 'inline' }),
+    disabled: composer({ disabled: true }),
+}))
+const COMPOSER_OVER = /over && '([^']+)'/.exec(COMPOSER)?.[1] ?? ''
+const COMPOSER_FAILURE = literalAfter(COMPOSER, 'role="alert"', 'className={cn(')
+const COMPOSER_STRIP = literalAfter(COMPOSER, 'aria-label={words.recording} className=')
+const COMPOSER_DROP = literalAfter(COMPOSER, '{over && (', 'className=')
+const textArea = (elements: El[]) => elements.find((element) => element.tag === 'textarea')
+const fileChip = (elements: El[]) => elements.find((element) => classesOf(element).startsWith('flex h-14'))
+const removeButton = (elements: El[]) =>
+    elements.find((element) => element.tag === 'button' && element.attrs['aria-label']?.startsWith(COMPOSER_WORDS.remove) === true)
+const COMPOSER_ON: Record<string, string[]> = { hover: ['hover'], within: ['focus-within'] }
+
+const COMPOSER_ADAPTER: Adapter = {
+    wordObjects: { COMPOSER_OWN, COMPOSER_DICTATION_WORDS, MENTION_WORDS },
+    complete: ['COMPOSER_OWN', 'COMPOSER_DICTATION_WORDS', 'MENTION_WORDS'],
+    words: {
+        ...Object.fromEntries(Object.keys(COMPOSER_OWN).map((key) => [key, `COMPOSER_OWN.${key}`])),
+        ...Object.fromEntries(Object.keys(COMPOSER_DICTATION_WORDS).map((key) => [`dictation.${key}`, `COMPOSER_DICTATION_WORDS.${key}`])),
+        ...MENTION_WORD_SOURCES,
+    },
+    options: {
+        kind: [...(/\n\s+kind: ([^\n]+)/.exec(COMPOSER)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1]),
+        layout: kindsIn(COMPOSER, 'ComposerLayout'),
+    },
+    size: (size, key) => {
+        const { full, inline } = COMPOSERS()
+        const read: Record<string, Where | undefined> = {
+            text: pieceWhere(textArea(full)),
+            textInline: pieceWhere(textArea(inline)),
+            inline: pieceWhere(inline[0]),
+            row: pieceWhere(full.find((element) => classesOf(element) === 'flex items-center gap-1 px-2 pb-2')),
+            button: pieceWhere(byLabel(full, COMPOSER_WORDS.send)),
+            buttonInline: pieceWhere(byLabel(inline, COMPOSER_WORDS.send)),
+            attachments: pieceWhere(full.find((element) => element.tag === 'ul')),
+            fileChip: pieceWhere(fileChip(full)),
+            remove: pieceWhere(removeButton(full)),
+            failure: { layers: [COMPOSER_FAILURE], on: [] },
+            dictationStrip: { layers: [COMPOSER_STRIP], on: [] },
+            dropOverlay: { layers: [COMPOSER_DROP], on: [] },
+        }
+        // The remove button's X has a size of its own.
+        if (size === 'remove' && key === 'icon') return pieceWhere(iconOf(full, removeButton(full)))
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const { full, empty, busy } = COMPOSERS()
+        const on = COMPOSER_ON[state] ?? []
+        switch (name) {
+            case 'box':
+                return state === 'over' ? { layers: [classesOf(full[0]), COMPOSER_OVER], on: [] } : pieceWhere(full[0], on)
+            case 'text':
+                return pieceWhere(textArea(full))
+            case 'attach':
+                return pieceWhere(byLabel(full, COMPOSER_WORDS.attach), on)
+            case 'send':
+                return pieceWhere(byLabel(state === 'notReady' ? empty : full, COMPOSER_WORDS.send), on)
+            case 'stop':
+                return pieceWhere(byLabel(busy, COMPOSER_WORDS.stop))
+            case 'fileChip':
+                return pieceWhere(fileChip(full))
+            case 'remove':
+                return pieceWhere(removeButton(full), on)
+            case 'dropOverlay':
+                return { layers: [COMPOSER_DROP], on: [] }
+            case 'failure':
+                return { layers: [COMPOSER_FAILURE], on: [] }
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => {
+        const { empty, disabled } = COMPOSERS()
+        if (state === 'notReady') return pieceWhere(byLabel(empty, COMPOSER_WORDS.send))
+        if (state === 'disabled') return pieceWhere(disabled[0])
+        return skip(`no effect of ${state}`)
+    },
+    keys: {
+        'Enter (the text has focus, no suggestion list is open, and the screen is not a touch screen)': () =>
+            /if \(mention\.onKeyDown\(event\)\) return\s+if \(event\.key !== 'Enter' \|\| event\.shiftKey \|\| touch \|\| composing\(event\)\) return\s+event\.preventDefault\(\)\s+if \(ready\) onSend\(\)/.test(
+                COMPOSER,
+            )
+                ? true
+                : 'Enter does not send when ready, past the suggestions, a touch screen and an input method',
+        'Shift+Enter (the text has focus)': () =>
+            /event\.key !== 'Enter' \|\| event\.shiftKey/.test(COMPOSER) ? true : 'Shift+Enter does not leave the line break to the text',
+        'Enter (the text has focus on a touch screen)': () =>
+            TOUCH_READ_ONCE.test(COMPOSER) && touchScreen() ? true : 'a touch screen is not read once from a coarse pointer with no hover',
+        ...MENTION_PROBES,
+        'Escape (a dictation hears, transcribes or has failed)': () =>
+            /if \(event\.key !== 'Escape' \|\| \(!hearing && dictation\.state !== 'error'\)\) return[\s\S]{0,160}dictation\.cancel\(\)/.test(
+                COMPOSER,
+            )
+                ? true
+                : 'Escape does not cancel the dictation',
+    },
+    more: () => {
+        const { full } = COMPOSERS()
+        return layoutChecks('composer', {
+            textMaxHeight: () => lengthOn(textArea(full), lengthOf('max-h-')),
+            inlineSpare: () => numberIn(COMPOSER, /const INLINE_SPARE = (\d+)\b/),
+            cornerEase: () => (/ease-motion/.test(classesOf(full[0])) ? durationIn(classesOf(full[0]), /duration-([a-z0-9]+)/) : undefined),
+            mentionListWidth: () => numberIn(MENTIONS, /const LIST_WIDTH = (\d+)\b/),
+            mentionListMaxHeight: () => numberIn(MENTIONS, /const LIST_HEIGHT = (\d+)\b/),
+            mentionOffset: () => numberIn(MENTIONS, /const OFFSET = (\d+)\b/),
+        })
+    },
+}
+
+// Message composer
+
+const MESSAGE_COMPOSER = source('components/MessageComposer.tsx')
+const { markdown: _messageMarkdown, mentions: _messageMentions, format: _messageFormats, ...MESSAGE_COMPOSER_OWN } = MESSAGE_COMPOSER_WORDS
+const messageComposer = (props: Partial<MessageComposerProps> = {}) =>
+    draw(MessageComposer, {
+        value: 'Ship **it**',
+        onChange: noop,
+        onSend: noop,
+        onAttach: noop,
+        onMention: noop,
+        alsoSendTo: 'harbor',
+        ...props,
+    })
+const MESSAGE_COMPOSERS = once(() => ({
+    full: messageComposer(),
+    empty: messageComposer({ value: '' }),
+    scheduled: messageComposer({ schedule: [{ id: 'tomorrow', label: 'Tomorrow', detail: '09:00' }], onSendLater: noop }),
+    emptyScheduled: messageComposer({ value: '', schedule: [{ id: 'tomorrow', label: 'Tomorrow' }], onSendLater: noop }),
+    previewing: messageComposer({ value: '', mode: 'preview' }),
+}))
+const toolbarRow = (elements: El[]) => elements.find((element) => classesOf(element).startsWith('relative flex items-center gap-2'))
+const groupRule = (elements: El[]) => elements.find((element) => classesOf(element) === 'mx-1 h-4 w-px bg-border')
+const actionsRow = (elements: El[]) => elements.find((element) => classesOf(element) === 'flex items-center gap-0.5 px-2 pb-1.5')
+const previewBox = (elements: El[]) => elements.find((element) => classesOf(element).includes('max-h-96'))
+const MESSAGE_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+    pressed: ['aria-pressed'],
+    open: ['data-popup-open'],
+    disabled: ['disabled'],
+    within: ['focus-within'],
+}
+
+const MESSAGE_COMPOSER_ADAPTER: Adapter = {
+    wordObjects: { MESSAGE_COMPOSER_OWN, MESSAGE_COMPOSER_WORDS, MENTION_WORDS },
+    complete: ['MESSAGE_COMPOSER_OWN'],
+    words: {
+        ...Object.fromEntries(Object.keys(MESSAGE_COMPOSER_OWN).map((key) => [key, `MESSAGE_COMPOSER_OWN.${key}`])),
+        ...Object.fromEntries(
+            Object.keys(MESSAGE_COMPOSER_WORDS.format).map((format) => [
+                `format.${format}`,
+                ['MESSAGE_COMPOSER_WORDS.format', (said: Record<string, string>) => said[format]] as WordSource,
+            ]),
+        ),
+        ...MENTION_WORD_SOURCES,
+    },
+    options: { mode: kindsIn(MESSAGE_COMPOSER, 'MessageComposerMode'), format: kindsIn(MESSAGE_COMPOSER, 'MessageFormat') },
+    size: (size, key) => {
+        const { full, previewing, scheduled } = MESSAGE_COMPOSERS()
+        const read: Record<string, Where | undefined> = {
+            toolbarRow: pieceWhere(toolbarRow(full)),
+            toolbar: pieceWhere(full.find((element) => element.attrs.role === 'toolbar')),
+            groupRule: pieceWhere(groupRule(full)),
+            action: pieceWhere(byLabel(full, MESSAGE_COMPOSER_WORDS.format.bold), key === 'icon' ? SVG_ON : []),
+            text: pieceWhere(textArea(full)),
+            preview: pieceWhere(previewBox(previewing)),
+            alsoSend: pieceWhere(full.find((element) => element.tag === 'label')),
+            row: pieceWhere(actionsRow(full)),
+            add: pieceWhere(byLabel(full, MESSAGE_COMPOSER_WORDS.attach)),
+            send: pieceWhere(byLabel(full, MESSAGE_COMPOSER_WORDS.send)),
+            chevron: pieceWhere(byLabel(scheduled, MESSAGE_COMPOSER_WORDS.sendLater)),
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const { full, empty, previewing, scheduled, emptyScheduled } = MESSAGE_COMPOSERS()
+        const on = MESSAGE_ON[state] ?? []
+        switch (name) {
+            case 'box':
+                return pieceWhere(full[0], on)
+            case 'groupRule':
+                return pieceWhere(groupRule(full))
+            case 'action':
+                return pieceWhere(byLabel(full, MESSAGE_COMPOSER_WORDS.format.bold), on)
+            case 'text':
+                return pieceWhere(textArea(full))
+            case 'preview':
+                return pieceWhere(previewBox(previewing))
+            case 'alsoSend':
+                return pieceWhere(full.find((element) => element.tag === 'label'))
+            case 'add':
+                return pieceWhere(byLabel(full, MESSAGE_COMPOSER_WORDS.attach), on)
+            case 'send':
+                return pieceWhere(byLabel(state === 'empty' ? empty : full, MESSAGE_COMPOSER_WORDS.send), on)
+            case 'chevron':
+                return pieceWhere(byLabel(state === 'empty' ? emptyScheduled : scheduled, MESSAGE_COMPOSER_WORDS.sendLater), on)
+            default:
+                return undefined
+        }
+    },
+    effect: (state) =>
+        state === 'disabled'
+            ? pieceWhere(byLabel(MESSAGE_COMPOSERS().full, MESSAGE_COMPOSER_WORDS.format.bold), ['disabled'])
+            : skip(`no effect of ${state}`),
+    keys: {
+        'Enter (the text has focus, no suggestion list is open, and the screen is not a touch screen)': () =>
+            /if \(mention\.onKeyDown\(event\)\) return\s+if \(event\.key === 'Enter' && !event\.shiftKey && !touch && !composing\(event\)\) \{\s+event\.preventDefault\(\)\s+if \(!empty\) send\(\)/.test(
+                MESSAGE_COMPOSER,
+            )
+                ? true
+                : 'Enter does not send a text that holds something, past the suggestions, a touch screen and an input method',
+        'Shift+Enter (the text has focus)': () =>
+            /event\.key === 'Enter' && !event\.shiftKey/.test(MESSAGE_COMPOSER)
+                ? true
+                : 'Shift+Enter does not leave the line break to the text',
+        'Enter (the text has focus on a touch screen)': () =>
+            TOUCH_READ_ONCE.test(MESSAGE_COMPOSER) && touchScreen()
+                ? true
+                : 'a touch screen is not read once from a coarse pointer with no hover',
+        ...MENTION_PROBES,
+        'Enter, Space (an action has focus)': () =>
+            byLabel(MESSAGE_COMPOSERS().full, MESSAGE_COMPOSER_WORDS.format.bold)?.attrs.type === 'button'
+                ? true
+                : 'an action is not a native button',
+    },
+    more: () => {
+        const { full, previewing } = MESSAGE_COMPOSERS()
+        const containers = readFileSync(join(ROOT, 'node_modules', 'tailwindcss', 'theme.css'), 'utf8')
+        const md = /--container-md: ([\d.]+)rem;/.exec(containers)?.[1]
+        return layoutChecks('message-composer', {
+            groupGap: () =>
+                lengthOn(
+                    full.find((element) => element.attrs.role === 'toolbar'),
+                    READ.gap,
+                ) === numberIn(MESSAGE_COMPOSER, /const GROUP_GAP = (\d+)\b/)
+                    ? numberIn(MESSAGE_COMPOSER, /const GROUP_GAP = (\d+)\b/)
+                    : undefined,
+            textMaxHeight: () => lengthOn(textArea(full), lengthOf('max-h-')),
+            previewMaxHeight: () => lengthOn(previewBox(previewing), lengthOf('max-h-')),
+            previewFrom: () =>
+                /@md\/composer:inline-flex/.test(MESSAGE_COMPOSER) && md !== undefined ? String(Number(md) * 16) : undefined,
+        })
+    },
+}
+
 /**
  * Each sokkel-ui drift entry in a spec, by its `what`, with the checks it covers: they may differ,
  * and must, or the entry is stale. A function instead says whether the difference is still there,
@@ -3942,12 +4248,7 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {
-    'reaction-bar': {
-        'pieces.reaction.focus.ring.color': 'a focused reaction wears the focus outline in ring, given or not',
-        'pieces.more.focus.ring.color': 'the more button wears the focus outline in ring',
-    },
-}
+const PENDING: Record<string, Record<string, string>> = {}
 
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
@@ -3970,6 +4271,8 @@ const ADAPTERS: Record<string, Adapter> = {
     'clip-timeline': CLIP_TIMELINE_ADAPTER,
     'emoji-picker': EMOJI_PICKER_ADAPTER,
     'reaction-bar': REACTION_BAR_ADAPTER,
+    composer: COMPOSER_ADAPTER,
+    'message-composer': MESSAGE_COMPOSER_ADAPTER,
 }
 
 // The checks, walked from each spec

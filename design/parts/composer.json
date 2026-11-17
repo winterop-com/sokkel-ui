@@ -1,0 +1,297 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "composer",
+    "kind": "part",
+    "status": "stable",
+    "summary": "Where a message to an assistant is written: a box on the field's ground, rounded by radius-composer, holding a text that grows with what is typed up to textMaxHeight, the files waiting to go, and the controls: attach, the app's tools, the microphone and a round Send, which becomes Stop while an answer streams. Enter sends and Shift+Enter breaks the line; on a touch screen Enter breaks the line and only Send sends. Files come in by the attach button, a paste or a drop; Send waits while a file uploads or a dictation runs. Stacked, the text is on top and the controls in a row under it. Inline, it is one line, a pill, until the text (or the placeholder, while there is none) does not fit there or files, dictation or a failure show: then it opens into the box, and it closes back once the text fits again, its corners easing between the two.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/Composer.tsx",
+            "packages/core/src/components/Mentions.tsx",
+            "packages/core/src/components/IconButton.tsx",
+            "packages/core/src/components/ui/textarea.tsx",
+            "packages/core/src/lib/keys.ts",
+            "packages/core/src/lib/mentions.ts",
+            "packages/core/src/hooks/use-dictation.ts",
+            "packages/core/src/hooks/use-file-drop.ts"
+        ]
+    },
+    "anatomy": {
+        "box": "The composer: a 1px border-strong edge on the field's ground with elevation-surface under it, rounded by radius-composer (twice the control radius). While text in it has focus its edge and a 1 wide ring are ring; while files are dragged over it, primary and primary/30. Inline as a pill, its corners are half its height plus 12 instead (half of density.control, or of a finger below 768, plus 12), easing to radius-composer over motion-base as it opens.",
+        "text": "The text, with no frame of its own, one line at first and growing to textMaxHeight, then scrolling; words.placeholder in muted-foreground while empty, and its name. Stacked: at least 48 tall, 12 in, 12 over and 4 under. Inline: 6 across and 4 down on a 24 line, between the attach button and the tools as a pill, on a line of its own over them as the box.",
+        "row": "Stacked: the controls in a row under the text, 8 in at the sides and the foot, 4 apart: attach, the tools, a gap, the microphone and Send.",
+        "attach": "words.attach, with onAttach: a round icon button that opens the file picker. Stacked, a ghost button with a paper clip at icon-sm; inline, a secondary button with a plus at icon. While a dictation hears it gives way to words.dictation.cancel, an X.",
+        "tools": "The app's controls after attach (a model picker, a toggle), 4 apart, their buttons, toggles and selects drawn round.",
+        "dictate": "With dictation, where the page can dictate with what the app gave: a round ghost icon button with a microphone before Send, named words.dictation.dictate; while it hears, a secondary one with a check named words.dictation.finish; while it transcribes, named words.dictation.transcribing and shut.",
+        "send": "words.send: a round filled icon button (parts/button default) with an arrow up, at icon-sm stacked and icon inline. While the composer is not ready to send (nothing written and no file, a file uploading, a dictation running, busy or disabled) it is shut, at disabled-opacity, and named words.waiting while a file uploads.",
+        "stop": "In Send's place while busy, with onStop: words.stop, a round icon button with a filled square, secondary stacked and filled inline.",
+        "attachments": "The files waiting to go, over the text, wrapping, 8 apart: 12 in and 12 over stacked, 6 in and 6 over inline.",
+        "fileChip": "A file: 56 tall, at most 224 wide, on the card with a border edge, radius-md, 10 across: its icon (or the upload's spinner, or a ring filled to its progress), then its name in text.badge and its detail, or Uploading and its share, in muted-foreground.",
+        "imageChip": "An image: a 56 square of it, radius-md, edged in border; at half strength with the spinner or ring over it while it uploads.",
+        "audioChip": "A recording: its name and a player with its waveform, 288 wide at most, on the card.",
+        "videoChip": "A video: a 56 square of its first frame with a play mark; pressed, it plays in a dialog (parts/dialog) named by the file, closed by words.close.",
+        "remove": "On a file, with onRemove (or onCancel while it uploads): a 20 round button at its top end corner, on the popover's ground, edged border-strong, with elevation-surface, an X 12 in muted-foreground; shown while the pointer is over the file or it holds focus, always on a touch screen. Named words.remove (or words.cancel) and the file's name.",
+        "dropOverlay": "While files are dragged over the composer: words.drop, centered over it on background at 80 percent, in the action role.",
+        "failure": "When a dictation failed: why (words.dictation.refused, missing or failed) on a line of its own over the row, a circled alert 14 before it, in critical-ink at the help role, wrapping as far as it needs, until the next press or Escape.",
+        "dictationStrip": "In the tools' place while a dictation hears: a pulsing critical mark 8 round, the voice's level (or, with the browser's recognition, the words heard so far, the latest kept in view) named words.dictation.level, and the time in the code face; while it transcribes, a spinner and words.dictation.transcribing. 32 tall, 8 apart.",
+        "mentionList": "With mentions: the people suggested at the caret as an @ is typed, 256 wide and at most 256 tall, 4 from the caret's line, named words.mentions.label; words.mentions.empty when no one matches, words.mentions.searching while the app's search answers."
+    },
+    "options": {
+        "value": {"type": "text", "does": "The text; onChange hears every change."},
+        "onSend": {"type": "callback", "does": "Hears Enter or Send while the composer is ready."},
+        "busy": {
+            "type": "boolean",
+            "default": false,
+            "does": "An answer is streaming: Send becomes Stop (with onStop) or stays shut."
+        },
+        "onStop": {"type": "callback", "does": "Hears Stop while busy."},
+        "attachments": {
+            "type": "rows",
+            "does": "The files waiting to go: { id, name, kind, url?, detail?, uploading?, progress?, waveform?, duration? }."
+        },
+        "kind": {
+            "values": ["image", "file", "audio", "video"],
+            "does": "What a file is, which sets how its chip draws it.",
+            "sokkel-ui": "ComposerAttachment kind"
+        },
+        "onAttach": {
+            "type": "callback",
+            "does": "Takes files from the attach button, a paste or a drop; the composer accepts none without it."
+        },
+        "onRemove": {"type": "callback", "does": "Hears a file's remove button."},
+        "onCancel": {
+            "type": "callback",
+            "does": "Stops a file's upload and drops it; a file still uploading cannot be taken off without it."
+        },
+        "accept": {
+            "type": "text",
+            "does": "The file types taken, as an accept attribute: what the picker offers and what a drop or a paste hands to onAttach."
+        },
+        "onRefuse": {"type": "callback", "does": "Hears the files a drop or a paste brought that accept does not take."},
+        "tools": {"type": "node", "does": "Controls beside attach; their buttons, toggles and selects are drawn round."},
+        "dictation": {
+            "type": "node",
+            "does": "Adds the microphone: the app's transcribe, which turns a recording into text, and recognition, the browser's own speech recognition used ahead of it where there is one. What is heard goes in where the caret was, or at the end."
+        },
+        "mentions": {
+            "type": "node",
+            "does": "Suggests people at the caret as an @ is typed, from the app's list or its search, and puts the one picked in as @handle; onChange hears the ids the text mentions."
+        },
+        "layout": {
+            "values": ["stacked", "inline"],
+            "default": "stacked",
+            "does": "stacked puts the text on top and the controls in a row under it; inline puts them on one line, a pill, until the text needs a line of its own.",
+            "sokkel-ui": "ComposerProps layout (ComposerLayout)"
+        },
+        "disabled": {
+            "type": "boolean",
+            "default": false,
+            "does": "Shuts the text and every control; the box at 60 percent."
+        }
+    },
+    "sizes": {
+        "text": {
+            "height": 48,
+            "padX": 12,
+            "text": "text.body",
+            "note": "Stacked: at least 48 tall, 12 over and 4 under the text."
+        },
+        "textInline": {"padX": 6, "padY": 4, "text": "text.body", "note": "On a 24 line."},
+        "inline": {"padX": 6, "padY": 6, "gap": 6, "note": "The inline box's pad and the room between its pieces."},
+        "row": {"padX": 8, "gap": 4, "note": "8 under it."},
+        "button": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "Stacked: attach, the microphone, Send and Stop, round."
+        },
+        "buttonInline": {
+            "height": "density.control",
+            "width": "density.control",
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "Inline: the same buttons, round."
+        },
+        "attachments": {"padX": 12, "gap": 8, "note": "Stacked; inline 6 in."},
+        "fileChip": {"height": 56, "padX": 10, "gap": 8, "radius": "radius-md", "note": "At most 224 wide."},
+        "remove": {"height": 20, "width": 20, "icon": 12},
+        "failure": {"gap": 6, "text": "text.help", "note": "Its icon 14."},
+        "dictationStrip": {"height": 32, "padX": 4, "gap": 8},
+        "dropOverlay": {"text": "text.action"}
+    },
+    "layout": {
+        "textMaxHeight": {"value": 240, "note": "The text grows to this, then scrolls."},
+        "inlineSpare": {
+            "value": 8,
+            "note": "Room an opened inline composer's text must leave beside the controls before it goes back to one line, so it does not flip at the edge. It opens once the text, or the placeholder, is wider than the room the controls leave, or breaks a line, or wraps past a line and a half."
+        },
+        "cornerEase": {
+            "value": "motion-base",
+            "note": "How long the corners take between the pill's and the box's, on motion-ease; stilled when motion is reduced."
+        },
+        "mentionListWidth": {"value": 256},
+        "mentionListMaxHeight": {"value": 256},
+        "mentionOffset": {"value": 4, "note": "The room between the caret's line and the suggestions."}
+    },
+    "states": {
+        "rest": {"means": "Stacked and empty: the text with its placeholder, attach, and Send shut."},
+        "within": {
+            "means": "The text or a control in the composer has focus, by any means: the box's edge and a 1 wide ring in ring.",
+            "on": "any",
+            "reached": "focus inside the box"
+        },
+        "hover": {
+            "means": "The pointer over a button: as parts/button's variant draws it; over the remove button, its X in foreground.",
+            "reached": "the pointer"
+        },
+        "over": {
+            "means": "Files are dragged over the composer: the edge primary, a 2 wide primary/30 ring, words.drop over it.",
+            "reached": "a drag of files from outside the page"
+        },
+        "notReady": {
+            "means": "Nothing to send, or not now: Send shut at disabled-opacity, with the not-allowed cursor; Enter does nothing.",
+            "reached": "an empty composer, a file uploading, a dictation running, busy or disabled",
+            "effect": {"piece": "send", "opacity": "disabled-opacity"}
+        },
+        "busy": {"means": "An answer streams: Stop in Send's place.", "reached": "busy with onStop"},
+        "uploading": {
+            "means": "A file is on its way up: its chip's spinner or ring, no remove without onCancel, Send named words.waiting and shut.",
+            "reached": "uploading on a file"
+        },
+        "dictating": {
+            "means": "A dictation hears or transcribes: the strip in the tools' place, attach turned into its cancel, Send shut.",
+            "reached": "the microphone pressed"
+        },
+        "failed": {
+            "means": "A dictation failed: the failure's line over the row.",
+            "reached": "a refused microphone, none, or a failed transcription"
+        },
+        "disabled": {
+            "means": "The composer is shut: every control off, the box at 60 percent.",
+            "reached": "disabled",
+            "effect": {"piece": "box", "opacity": 0.6}
+        },
+        "pill": {
+            "means": "Inline on one line: attach, the text, the tools and Send in a row; corners half the box's height plus 12.",
+            "reached": "layout inline, while the text fits and no file, dictation or failure shows"
+        },
+        "boxed": {
+            "means": "Inline opened: the files and the failure over the text, the text on a line of its own, the controls under it; corners radius-composer.",
+            "reached": "layout inline, once the text needs a line of its own or a file, a dictation or a failure shows"
+        },
+        "touch": {
+            "means": "A touch screen with no hover: Enter breaks the line, only Send sends; the remove buttons always show.",
+            "reached": "a coarse pointer with no hover, read once"
+        },
+        "phone": {"means": "Below 768 the buttons are finger squares.", "reached": "a window below 768"}
+    },
+    "pieces": {
+        "box": {
+            "rest": {
+                "ground": "field",
+                "edge": "border-strong",
+                "radius": "radius-composer",
+                "note": "elevation-surface under it. Inline as a pill, its corners half its height plus 12."
+            },
+            "within": {"edge": "ring", "ring": {"color": "ring", "width": 1}},
+            "over": {"edge": "primary", "ring": {"color": "primary/30", "width": 2}}
+        },
+        "text": {"rest": {"placeholder": "muted-foreground", "text": "text.body"}},
+        "attach": {
+            "rest": {"ground": "none", "note": "Stacked: parts/button's ghost; inline: its secondary."},
+            "hover": {"ground": "hover", "ink": "foreground"}
+        },
+        "send": {
+            "rest": {"ground": "primary", "ink": "primary-foreground", "note": "Round."},
+            "hover": {"ground": "primary/80"}
+        },
+        "stop": {
+            "rest": {
+                "ground": "secondary",
+                "ink": "secondary-foreground",
+                "note": "Stacked; inline it is filled as Send is."
+            }
+        },
+        "fileChip": {"rest": {"ground": "card", "edge": "border", "radius": "radius-md"}},
+        "remove": {
+            "rest": {"ground": "popover", "edge": "border-strong", "ink": "muted-foreground"},
+            "hover": {"ink": "foreground"}
+        },
+        "dropOverlay": {"rest": {"ground": "background/80", "text": "text.action"}},
+        "failure": {"rest": {"ink": "critical-ink", "text": "text.help"}},
+        "dictationStrip": {"rest": {"note": "The mark critical, pulsing; the time muted-foreground in the code face."}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Enter"],
+            "does": "Sends, when the composer is ready; otherwise does nothing. Not while an input method composes.",
+            "when": "the text has focus, no suggestion list is open, and the screen is not a touch screen"
+        },
+        {"keys": ["Shift+Enter"], "does": "Breaks the line.", "when": "the text has focus"},
+        {"keys": ["Enter"], "does": "Breaks the line; only Send sends.", "when": "the text has focus on a touch screen"},
+        {
+            "keys": ["ArrowDown", "ArrowUp"],
+            "does": "Moves through the people suggested; it stops at the first and the last.",
+            "when": "the suggestion list is open"
+        },
+        {
+            "keys": ["Enter", "Tab"],
+            "does": "Puts the person chosen in as @handle; Enter does not send. While the app's search answers, it waits.",
+            "when": "the suggestion list is open"
+        },
+        {"keys": ["Escape"], "does": "Closes the suggestions, until the next @.", "when": "the suggestion list is open"},
+        {
+            "keys": ["Escape"],
+            "does": "Cancels the dictation, or clears its failure.",
+            "when": "a dictation hears, transcribes or has failed"
+        }
+    ],
+    "words": {
+        "placeholder": "Ask anything",
+        "send": "Send",
+        "stop": "Stop",
+        "attach": "Attach files",
+        "remove": "Remove",
+        "drop": "Drop files to attach them",
+        "cancel": "Cancel upload",
+        "uploading": "Uploading",
+        "waiting": "Waiting for files to upload",
+        "close": "Close",
+        "dictation.dictate": "Dictate",
+        "dictation.finish": "Finish dictating",
+        "dictation.cancel": "Cancel dictation",
+        "dictation.recording": "Listening",
+        "dictation.transcribing": "Transcribing",
+        "dictation.level": "Voice level",
+        "dictation.refused": "The microphone is not allowed. Allow it for this site to dictate.",
+        "dictation.missing": "No microphone was found.",
+        "dictation.failed": "What was said could not be turned into text. Try again.",
+        "mentions.label": "People to mention",
+        "mentions.empty": "No one by that name",
+        "mentions.searching": "Searching"
+    },
+    "appText": {
+        "tools": "The app's tools and their names.",
+        "files": "Each file's name and detail; a remove or cancel button says words.remove or words.cancel with the file's name, an uploading file words.uploading with its share (Uploading · 40%).",
+        "people": "The people a mention suggests: their picture, name, role and handle.",
+        "player": "A recording's and a video's players say the media players' words, passed through words.player."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The text is a textarea sized by field-sizing: content; an inline composer measures its text (or placeholder) on a hidden line against the room the controls leave, again as the box resizes.",
+            "Whether the screen is a touch screen is read once, from (pointer: coarse) and (hover: none) (touchTyping).",
+            "A drop of files from the desktop stays on the browser's own events (useFileDrop); a paste of files takes them unless it also brought text.",
+            "Dictation runs in useDictation; the level's bars load with the first recording.",
+            "The suggestions are useMentions with MentionList, placed at the caret with a mirror of the text."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 48f51ce there is no composer."
+        }
+    ]
+}

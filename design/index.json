@@ -49,7 +49,9 @@
         {"id": "run-timeline", "file": "parts/run-timeline.json", "status": "stable"},
         {"id": "clip-timeline", "file": "parts/clip-timeline.json", "status": "stable"},
         {"id": "emoji-picker", "file": "parts/emoji-picker.json", "status": "stable"},
-        {"id": "reaction-bar", "file": "parts/reaction-bar.json", "status": "stable"}
+        {"id": "reaction-bar", "file": "parts/reaction-bar.json", "status": "stable"},
+        {"id": "composer", "file": "parts/composer.json", "status": "stable"},
+        {"id": "message-composer", "file": "parts/message-composer.json", "status": "stable"}
     ],
     "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "stable"}],
     "principles": "principles.md",

@@ -219,7 +219,7 @@
         {"keys": ["Enter", "Space"], "does": "Picks the emoji.", "when": "a cell has focus"},
         {
             "keys": ["ArrowLeft", "ArrowRight"],
-            "does": "Moves to the tab before or after, wrapping at the ends.",
+            "does": "Moves to the tab before or after; it stops at the first and the last, as every list of choices does.",
             "when": "a tab has focus"
         },
         {
