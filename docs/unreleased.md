@@ -94,17 +94,6 @@ release and empties it.
 - `DataTable` loads the pager's page size select and the rows' right-click menus the first time a
   table that pages or has row actions is drawn; until then the pager shows the page size as text and
   a right click on a row is the browser's.
-  <<<<<<< HEAD
-
-## Fixed
-
-- `VideoPlayer` (and so `AttachmentList`'s videos) and the `Composer`'s video thumbnails show the
-  first frame in WebKit. Under `preload="metadata"` WebKit stopped at the video's length and drew
-  an empty picture until it played; a paused video with no poster now seeks to where it stands once
-  it has its length, which makes WebKit fetch that frame. `media/video-source` exports the check,
-  `wantsFirstFrame`.
-  ||||||| 2717524a
-  \=======
 - `hlsSource` waits on a segment a live stream lists but its server answers missing (a 4xx) rather
   than letting hls.js skip past it: hls.js fetches it again as it backs off, the player waits on it
   as on any stall, its tries taking over, and plays on from where it stood once the segment is
@@ -118,5 +107,8 @@ release and empties it.
   stream's edge at the start of the segment it stood in and played up to a segment again: a try
   that picks up short is moved on there, or held paused under "Trying again" until the stream has
   grown and loaded again there.
-
-> > > > > > > origin/main
+- `VideoPlayer` (and so `AttachmentList`'s videos) and the `Composer`'s video thumbnails show the
+  first frame in WebKit. Under `preload="metadata"` WebKit stopped at the video's length and drew
+  an empty picture until it played; a paused video with no poster now seeks to where it stands once
+  it has its length, which makes WebKit fetch that frame. `media/video-source` exports the check,
+  `wantsFirstFrame`.
