@@ -1,10 +1,12 @@
 import { Handle, Position, type Edge, type Node, type NodeProps, type NodeTypes } from '@xyflow/react'
 import { createContext, useContext, useEffect, useMemo, useState, type CSSProperties } from 'react'
 
+import { useReducedMotion } from '@winterop-com/sokkel-ui/hooks/use-reduced-motion'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { KIND_FILL, kindOf, type KindColor } from '@winterop-com/sokkel-ui/lib/kind'
+import { useForceLayout } from './force'
 import { GraphCanvas, type GraphViewProps } from './GraphCanvas'
-import { layoutNetwork, spiralLayout, type GraphShape, type PlacedGraph } from './layout'
+import { layoutNetwork, spiralLayout, type GraphShape, type LayoutNode, type PlacedGraph } from './layout'
 
 /** One thing in a network: a note, a person, a service. */
 export interface NetworkNode {
@@ -29,7 +31,16 @@ export type NetworkGraphProps = Omit<GraphViewProps, 'direction'> & {
     links: readonly NetworkLink[]
     /** The node the reader stands on, such as the note open now: ringed, its name set strong. */
     current?: string | null
+    /**
+     * `stress` lays the network out once, by elk; `force` keeps it live, by a force simulation: the
+     * dots settle as linked ones pull together and all push apart, and a dot dragged pulls its
+     * neighbors after it, the rest settling again once it is let go.
+     */
+    layout?: NetworkLayout
 }
+
+/** How a network is laid out: once by stress, or live by forces a dragged dot moves. */
+export type NetworkLayout = 'stress' | 'force'
 
 interface DotData extends Record<string, unknown> {
     label: string
@@ -96,11 +107,23 @@ function NetworkDot({ id, data, selected }: NodeProps<Node<DotData>>) {
 
 const NODE_TYPES: NodeTypes = { dot: NetworkDot }
 
-/** A network's placement: a spiral at once, then where elk puts it once it answers. */
-function useNetworkLayout(shape: GraphShape): PlacedGraph & { settled: boolean } {
-    const signature = `${shape.nodes.map((node) => `${node.id}:${String(node.height)}`).join(',')}|${shape.edges.map((edge) => edge.id).join(',')}`
+/** The middle of a node's dot, from its top-left corner: the point a force layout moves. */
+const dotMiddle = (node: LayoutNode) => ({ x: node.width / 2, y: (node.height - NAME_GAP - NAME_LINE) / 2 })
+
+/** How far a dot keeps the others from its middle in a force layout, with room for the names under them. */
+const dotRoom = (node: LayoutNode) => (node.height - NAME_GAP - NAME_LINE) / 2 + 38
+
+/** What a network's placement is a function of: its nodes, their sizes and its links. */
+function networkSignature(shape: GraphShape): string {
+    return `${shape.nodes.map((node) => `${node.id}:${String(node.height)}`).join(',')}|${shape.edges.map((edge) => edge.id).join(',')}`
+}
+
+/** A network's placement: a spiral at once, then where elk puts it once it answers; nothing is asked of elk while `enabled` is false. */
+function useNetworkLayout(shape: GraphShape, enabled: boolean): PlacedGraph & { settled: boolean } {
+    const signature = networkSignature(shape)
     const [answer, setAnswer] = useState<{ signature: string; placed: PlacedGraph | null } | null>(null)
     useEffect(() => {
+        if (!enabled) return
         let current = true
         layoutNetwork(shape).then(
             (placed) => {
@@ -115,7 +138,7 @@ function useNetworkLayout(shape: GraphShape): PlacedGraph & { settled: boolean }
         }
         // The placement is a function of the signature alone.
         // oxlint-disable-next-line react/exhaustive-deps
-    }, [signature])
+    }, [signature, enabled])
     // oxlint-disable-next-line react/exhaustive-deps
     const rough = useMemo(() => spiralLayout(shape), [signature])
     const settled = answer?.signature === signature
@@ -132,11 +155,17 @@ function useNetworkLayout(shape: GraphShape): PlacedGraph & { settled: boolean }
  * to show the whole of it. Pointing at a dot lights it, its links
  * and its neighbors, and fades the rest. `current` rings the node the reader stands on, and
  * choosing a dot calls `onSelect`, as opening the note it is.
+ *
+ * `layout="force"` keeps the network live instead, on d3-force, loaded the first time one is drawn:
+ * linked dots pull together, every dot pushes the others away, and the network settles in place
+ * (at once with motion reduced). A dot can be dragged, its neighbors following and the rest making
+ * room, and settles back among them once let go; dragging one stops the view's fit, as a pan does.
  */
 export function NetworkGraph({
     nodes,
     links,
     current = null,
+    layout = 'stress',
     selected = null,
     onSelect,
     frame = 'stage',
@@ -181,7 +210,17 @@ export function NetworkGraph({
         }),
         [nodes, kept, degree],
     )
-    const placed = useNetworkLayout(shape)
+    const force = layout === 'force'
+    const reduced = useReducedMotion()
+    const stressed = useNetworkLayout(shape, !force)
+    const live = useForceLayout(shape, force ? networkSignature(shape) : '', {
+        enabled: force,
+        anchor: dotMiddle,
+        radius: dotRoom,
+        rough: () => spiralLayout(shape),
+        reduced,
+    })
+    const placed = force ? live.placed : stressed
     const lit = useMemo(() => {
         if (hovered === null) return null
         const near = new Set([hovered])
@@ -258,6 +297,15 @@ export function NetworkGraph({
                 paneMenu={paneMenu}
                 fillFloor={fillFloor}
                 controls={controls}
+                onNodeDrag={
+                    force
+                        ? (id, at, phase) => {
+                              if (phase === 'start') live.grab(id, at)
+                              else if (phase === 'move') live.drag(id, at)
+                              else live.drop(id)
+                          }
+                        : undefined
+                }
                 onSelect={onSelect}
                 words={words}
                 className={className}

@@ -187,6 +187,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
     },
     graph: {
         context: "the canvas's context its nodes and edges share",
+        force: 'the live force layout `NetworkGraph`\'s `layout="force"` runs on d3-force',
         'use-graph-layout': 'the elk layout `GraphCanvas` waits on',
     },
     terminal: {

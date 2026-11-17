@@ -288,6 +288,7 @@ function FileTree() {
                     selected={chosen}
                     onSelect={setChosen}
                     defaultExpanded={['daily', 'runbooks']}
+                    openOnChoose
                     actions={(node) => [
                         ...(node.children === undefined
                             ? []
@@ -352,7 +353,8 @@ export const LazyOpen: StoryObj = { name: 'Lazy, open', render: () => <LazyPicke
 /** A search over the whole geography, loaded or not: each match with its path, broadest first. */
 export const Searched: StoryObj = { name: 'Searched', render: () => <LazyPicker open query="lavi" /> }
 /**
- * A vault's folders and notes, each with its icon (an open folder while open). A row's menu opens
+ * A vault's folders and notes, each with its icon (an open folder while open). Choosing a closed
+ * folder opens it (`openOnChoose`), its arrow closing it again. A row's menu opens
  * from the button at its end or a right-click; a row dragged onto a folder moves into it, held over
  * a closed one opens it, and dragged beside a top-level row it moves to the top.
  */

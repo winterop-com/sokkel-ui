@@ -378,6 +378,12 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     onSelectionChange?: (ids: string[]) => void
     /** Makes the canvas an editor: ports to connect, boxes to drag, Delete to remove. Without it the canvas only selects. */
     editing?: GraphEditing
+    /**
+     * Lets the nodes be dragged on a canvas that is no editor, such as a live layout's, which moves
+     * the rest around the one held: told as a drag starts, as it moves and as it ends, with the
+     * node's top-left corner in the graph's coordinates. The canvas moves nothing itself.
+     */
+    onNodeDrag?: (node: string, position: GraphPoint, phase: 'start' | 'move' | 'end') => void
     /** False hides the zoom buttons, for a toolbar that carries them. */
     controls?: boolean
     /** The app's own buttons after the zoom buttons, in their cluster, such as `GraphControlButton`s; they stay while the canvas is empty. */
@@ -411,7 +417,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
  * The canvas a graph is drawn on: React Flow in the library's tokens, in either scheme. It fits the
  * whole graph whenever its nodes or its own size change, until the reader pans or zooms it; the fit
  * button gives the view back. A canvas selects and does nothing else: nodes are not dragged,
- * connected or deleted. `settled` says the nodes stand where they will stay; once they do and the
+ * connected or deleted, unless `editing` makes it an editor or `onNodeDrag` hears a node dragged,
+ * which stops the fit as a pan does. `settled` says the nodes stand where they will stay; once they do and the
  * view has fitted them (or the reader has moved it), the frame carries `data-graph-settled`, which a
  * test waits on before it reads where a node stands.
  *
@@ -429,6 +436,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     onSelect,
     onSelectionChange,
     editing,
+    onNodeDrag,
     nodeMenu,
     paneMenu,
     controls = true,
@@ -667,7 +675,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 className="bg-transparent"
                                 minZoom={MIN_ZOOM}
                                 maxZoom={MAX_ZOOM}
-                                nodesDraggable={editable}
+                                nodesDraggable={editable || onNodeDrag !== undefined}
                                 nodesConnectable={editable}
                                 edgesFocusable={editable}
                                 elementsSelectable
@@ -722,19 +730,33 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                           }
                                         : undefined
                                 }
-                                onNodeDragStart={editable ? () => setMoved(true) : undefined}
-                                onNodeDragStop={
-                                    editable
-                                        ? (_, node, moved) => {
-                                              const all = moved.length > 0 ? moved : [node]
-                                              for (const each of all) editing.onMove?.(each.id, each.position)
-                                              setDragged((held) => {
-                                                  const next = { ...held }
-                                                  for (const each of all) delete next[each.id]
-                                                  return next
-                                              })
+                                onNodeDragStart={
+                                    editable || onNodeDrag !== undefined
+                                        ? (_, node) => {
+                                              setMoved(true)
+                                              if (!editable) onNodeDrag?.(node.id, node.position, 'start')
                                           }
                                         : undefined
+                                }
+                                onNodeDrag={
+                                    !editable && onNodeDrag !== undefined
+                                        ? (_, node) => onNodeDrag(node.id, node.position, 'move')
+                                        : undefined
+                                }
+                                onNodeDragStop={
+                                    !editable && onNodeDrag !== undefined
+                                        ? (_, node) => onNodeDrag(node.id, node.position, 'end')
+                                        : editable
+                                          ? (_, node, moved) => {
+                                                const all = moved.length > 0 ? moved : [node]
+                                                for (const each of all) editing.onMove?.(each.id, each.position)
+                                                setDragged((held) => {
+                                                    const next = { ...held }
+                                                    for (const each of all) delete next[each.id]
+                                                    return next
+                                                })
+                                            }
+                                          : undefined
                                 }
                                 onNodeContextMenu={
                                     nodeMenu !== undefined || (editable && editing.onNodeMenu !== undefined)

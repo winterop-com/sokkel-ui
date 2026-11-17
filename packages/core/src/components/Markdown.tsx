@@ -95,6 +95,9 @@ function useMathEngine(needed: boolean): MathEngine | undefined {
  *
  * `onLink` keeps the links the app answers for in the page, such as the times in a podcast's show
  * notes, which seek the player; a press with a modifier key, or on a link it declines, opens a new tab.
+ * `live={false}` draws every link as its words, a `[[link]]` as the words it shows, for a text set
+ * inside something pressed as a whole, and `highlight` marks where some words stand, as a search's
+ * matches are marked: a backlink's line drawn in the row that opens its note.
  *
  * For text other people wrote, `images={false}` draws each image as its alt text and address, so
  * nothing is fetched, and `linkSchemes` lists the schemes a link may have to be live, `relative`
