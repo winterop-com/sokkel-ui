@@ -163,3 +163,5 @@ Every high and medium finding of the 2026-11-16 review that a fix could reach: t
 endless render (#605), the terminal blank under StrictMode (#603), a release that stopped partway
 (#604), the schema form's re-render loop and decimal steps (#609), DataTable scrolling, focus and
 paging (#606, #612), the calendar on daylight-saving days (#613), and the rounds in #610 to #616.
+
+`DateTimeField`'s picker stacks its times under the calendar below 640px, so it fits a 344px window.

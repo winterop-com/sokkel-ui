@@ -37,9 +37,10 @@ async function videosSettled(page: Page): Promise<void> {
 /**
  * Waits until the story on the page has drawn and stopped moving: its maps, graphs, charts, videos,
  * fonts, highlighting and scrollers. A screenshot taken then is the same every run, and a layout
- * measured then includes what loads late.
+ * measured then includes what loads late. `videos: false` skips waiting for each video's picture,
+ * which a layout measure does not need and a story whose source never loads would never give.
  */
-export async function settled(page: Page): Promise<void> {
+export async function settled(page: Page, { videos = true }: { videos?: boolean } = {}): Promise<void> {
     await page.locator('#storybook-root > *').first().waitFor()
     await mapsSettled(page)
     await graphsSettled(page)
@@ -49,7 +50,7 @@ export async function settled(page: Page): Promise<void> {
     )
     // A page still drawing its parts, such as the theme gallery's frames, says so with data-settling.
     await page.waitForFunction(() => document.querySelector('[data-settling]') === null, null, { timeout: 90_000 })
-    await videosSettled(page)
+    if (videos) await videosSettled(page)
     await page.evaluate(() => document.fonts.ready)
     // A popup fading in, or anything else still moving, would be caught mid-way. Endless ones such as
     // spinners, and those driven by scrolling rather than time, are left running.
