@@ -46,7 +46,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 264 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 265 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -261,7 +261,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **SearchResults** | `@winterop-com/sokkel-ui/SearchResults` | The page of a search's results: the query in a `SearchField` over everything that matches, grouped by kind under headings with their counts, and the facets beside them (the kind and the app's own, such as the project) as checkboxes with how many results each keeps. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-search--open) |
 | **SecretField** | `@winterop-com/sokkel-ui/SecretField` | A secret a form sets but never reads back, such as a connection's token or password. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-secret-field--not-set) |
 | **SecretReveal** | `@winterop-com/sokkel-ui/SecretReveal` | A secret shown once, as it is created: an API token, a signing key, a recovery code. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
-| **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-edit-preview--markdown) |
+| **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-run-timeline--month) |
 | **SelectField** | `@winterop-com/sokkel-ui/SelectField` | A labeled choice from a list: a `Field` with the library's select inside, wired together, laid out as `TextField` and `NumberField` are. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-select-field--plain) |
 | **SettingRow** | `@winterop-com/sokkel-ui/SettingRow` | One setting: its title and what it does, and its control, placed by `layout`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
 | **SignIn** | `@winterop-com/sokkel-ui/SignIn` | A sign-in screen in two panes the window's height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
@@ -301,6 +301,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **PersonRow** | `@winterop-com/sokkel-ui/PersonRow` | A person as a row names them: their picture, their username in the code face over a second line (an email, a team), and an optional `aside` at the row's end, such as their role or a control that changes it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-row--people) |
 | **ProfileRow** | `@winterop-com/sokkel-ui/ProfileRow` | Someone a page is about, in one line: their picture, their name over a short fact (followers, a team, a role) and an action beside them, such as Follow. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-profile-row--person) |
 | **RelativeTime** | `@winterop-com/sokkel-ui/RelativeTime` | A time said relative to now, "3 minutes ago", with the exact instant on hover and on focus. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-relative-time--distances) |
+| **RunTimeline** | `@winterop-com/sokkel-ui/RunTimeline` | Jobs and their runs along one time axis: a lane per job, its name and state at the start, its runs as marks colored by their state where they fell, those still to come hollow, and a line at the current time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-run-timeline--month) |
 | **SelectionBar** | `@winterop-com/sokkel-ui/SelectionBar` | What is selected and what can be done with it: the count, an optional `offer` after it (such as selecting every row on every page), a Clear button when `onClear` is given, and the actions as `children`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-selection-bar--count) |
 | **Stat**, Sparkline | `@winterop-com/sokkel-ui/Stat` | One number with what it counts: runs today, the failure rate, the median duration. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-link-provider--router) |
 | **StatusChip** | `@winterop-com/sokkel-ui/StatusChip` | A state as a small chip: the state's own color on a faint wash of it, the word lowercase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-chip--run-states) |
