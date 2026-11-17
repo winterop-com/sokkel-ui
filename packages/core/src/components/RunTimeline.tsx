@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react'
 
+import { GripVertical } from 'lucide-react'
+
 import { cn } from '../lib/cn'
 import { Dot } from './Dot'
 import { useStatus } from './StatusProvider'
@@ -409,7 +411,7 @@ export function RunTimeline({
                                     layer={layer}
                                     id={lane.id}
                                     label={words.upcoming(label)}
-                                    left={share(Math.min(...upcoming.map((run) => timelineMs(run.at))) + moving, from, to)}
+                                    left={share((now ?? Math.min(...upcoming.map((run) => timelineMs(run.at)))) + moving, from, to)}
                                     right={share(Math.max(...upcoming.map((run) => timelineMs(run.at))) + moving, from, to)}
                                     preview={() => <ShiftAmount store={carried} say={words.by} />}
                                     onKeyDown={(event) => {
@@ -548,19 +550,19 @@ function ShiftHandle({ layer, id, label, left, right, preview, onKeyDown }: Shif
         <span
             ref={ref}
             {...press}
+            title={label}
             role="button"
             tabIndex={0}
             aria-label={label}
             aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
             onKeyDown={onKeyDown}
             data-shift-handle
-            className="absolute inset-y-1 z-3 cursor-grab touch-none rounded-control outline-offset-focus-inset hover:bg-primary/10"
-            // Two spacing steps past the first and last run, so a mark at either end is easy to take.
-            style={{
-                left: `calc(${percent(left)} - var(--spacing) * 2)`,
-                width: `calc(${percent(Math.max(right - left, 0))} + var(--spacing) * 4)`,
-            }}
-        />
+            className="absolute inset-y-1 z-3 cursor-grab touch-none rounded-control border border-dashed border-primary/50 bg-primary/5 outline-offset-focus-inset hover:bg-primary/10 active:cursor-grabbing"
+            // From the current time to two spacing steps past the last run, so the whole stretch ahead is taken.
+            style={{ left: percent(left), width: `calc(${percent(Math.max(right - left, 0))} + var(--spacing) * 2)` }}
+        >
+            <GripVertical aria-hidden className="absolute top-1/2 left-0.5 size-3.5 -translate-y-1/2 text-primary" />
+        </span>
     )
     if (layer === undefined) return draw()
     return (
