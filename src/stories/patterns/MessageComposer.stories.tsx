@@ -6,6 +6,7 @@ import { MessageComposer, MessageComposerAction, type MessageSchedule } from '@w
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PEOPLE, searchPeople } from '../fixtures/people'
+import { RECENT_EMOJI } from '../fixtures/reactions'
 
 /**
  * The composer of a team chat: the format bar, Write and Preview, the code block's languages, and
@@ -117,6 +118,18 @@ export const Mentions: StoryObj = {
         <Live
             draft="Thanks for the fix. @"
             mentions={{ people: PEOPLE, defaultOpen: true }}
+            defaultFormatting={false}
+            words={{ placeholder: 'Message #harbor-ops' }}
+        />
+    ),
+}
+
+/** The emoji button opens the full emoji picker over the composer; the emoji picked goes in at the caret. */
+export const Emoji: StoryObj = {
+    render: () => (
+        <Live
+            draft="The deploy of harbor-api is done "
+            emojiPicker={{ defaultOpen: true, recent: RECENT_EMOJI }}
             defaultFormatting={false}
             words={{ placeholder: 'Message #harbor-ops' }}
         />

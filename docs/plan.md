@@ -36,8 +36,8 @@ never imports an add-on and no add-on imports another, which `src/rules.test.ts`
 needs no engine and belongs to no domain goes in the core, save the music and video app parts in
 the media package. The
 core's own dependencies are what every app's frame draws with (Base UI, lucide, cmdk for the
-palette, the class helpers, the Plex fonts) and dnd-kit, small and loaded only by the parts that
-drag; every library only some parts need is an optional peer
+palette, the class helpers, the Plex fonts), dnd-kit, small and loaded only by the parts that
+drag, and `emojibase-data`, the emoji list `EmojiPicker` loads the first time a picker opens; every library only some parts need is an optional peer
 dependency: the engines left in the core (Mermaid, KaTeX, CodeMirror), Shiki, react-markdown and its
 plugins, ajv, react-day-picker, date-fns, embla, sonner, input-otp, react-resizable-panels,
 `@shadcn/react` and the Geist fonts. The README lists which part needs which. Mermaid draws every
@@ -1003,6 +1003,16 @@ A team chat is built from Rail's `strip` (labeled icons with counts or an unread
 icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the columns of a
 conversation and of a thread), ConversationStart, ChatMessage with ChatDay, and MessageComposer.
 An app's own navigation strip is the library's `Rail`, with no hand-drawn badge.
+
+Reactions are emoji. `ReactionBar` is the short list, round buttons with the emoji large and a
+more button that opens `EmojiPicker`, the full list: a search over names and keywords, the grid
+grouped by kind with Recent first and a tab per group along the bottom, the arrow keys moving
+through it. The full list (`emojibase-data`, its English names and keywords) loads the first time
+a picker opens, so no page pays for it until then, and keeps only the emoji the page's fonts draw;
+the recent emoji and the skin tone are kept per person through `useStored`. `ChatMessage` and
+`CommentThread` open the bar from their react buttons (`onReaction`) and draw the reactions given
+with their counts (`ReactionChips`); `toggleReaction` gives or takes back one in the app's list.
+`MessageComposer`'s emoji button opens the picker and puts the emoji at the caret (`emojiPicker`).
 
 CodeEditor is the one code editor, on CodeMirror 6. It carries JSON, YAML, jq (a stream language
 written from the jq manual) and markdown (a stream language of its own, with `[[links]]` between

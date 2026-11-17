@@ -1,10 +1,11 @@
-import { MoreHorizontal, Pin, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { MoreHorizontal, Pin, SmilePlus, ThumbsDown, ThumbsUp } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
 import { IconButton } from './IconButton'
 import { PersonAvatar } from './PersonAvatar'
+import { ReactionChips, ReactionPopover, mineOf, type ChatReaction, type ReactionBarProps } from './ReactionBar'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Textarea } from './ui/textarea'
@@ -30,12 +31,16 @@ export interface ThreadComment {
     /** Written by the owner of what is commented on, marked beside the name. */
     creator?: boolean
     edited?: boolean
+    /** The reactions given to it, drawn under it with their counts, with `onReaction`. */
+    reactions?: readonly ChatReaction[]
     replies?: readonly ThreadComment[]
 }
 
 export interface CommentThreadWords {
     like: string
     dislike: string
+    /** The react button's name, with `onReaction`. */
+    react: string
     reply: string
     /** The more button's name, before its menu. */
     actions: string
@@ -50,6 +55,7 @@ export interface CommentThreadWords {
 const WORDS: CommentThreadWords = {
     like: 'Like',
     dislike: 'Dislike',
+    react: 'Add a reaction',
     reply: 'Reply',
     actions: 'Comment actions',
     creator: 'creator',
@@ -151,6 +157,14 @@ interface ItemProps {
     onLike?: (comment: ThreadComment) => void
     onDislike?: (comment: ThreadComment) => void
     onReply?: (comment: ThreadComment, text: string) => void
+    /**
+     * Offers reactions: a react button that opens the reaction bar, and each reaction a press on
+     * gives or takes back; called with the emoji (or a reaction's id) and its name.
+     * `toggleReaction` from `ReactionBar` applies it to the comment's reactions.
+     */
+    onReaction?: (comment: ThreadComment, emoji: string, name: string) => void
+    /** The reaction bar's options: its quick reactions, words and full list. */
+    reactionBar?: Omit<ReactionBarProps, 'onReact' | 'selected' | 'framed' | 'className'>
     menu?: (comment: ThreadComment) => ReactNode
     openReplies?: readonly string[]
     words?: Partial<CommentThreadWords>
@@ -173,6 +187,8 @@ export function CommentItem({
     onLike,
     onDislike,
     onReply,
+    onReaction,
+    reactionBar,
     menu,
     openReplies,
     words: given,
@@ -182,6 +198,7 @@ export function CommentItem({
     const [open, setOpen] = useState(openReplies?.includes(comment.id) ?? false)
     const [replying, setReplying] = useState(false)
     const replies = comment.replies ?? []
+    const reactions = comment.reactions ?? []
     const items = menu?.(comment)
     const reply = depth > 0
     return (
@@ -207,6 +224,13 @@ export function CommentItem({
                     {comment.edited === true && <span className="text-muted-foreground">{words.edited}</span>}
                 </p>
                 <div className="text-sm leading-relaxed wrap-break-word">{comment.body}</div>
+                {onReaction !== undefined && reactions.length > 0 && (
+                    <ReactionChips
+                        reactions={reactions}
+                        onReact={(id) => onReaction(comment, id, reactions.find((reaction) => reaction.id === id)?.label ?? id)}
+                        className="mt-1"
+                    />
+                )}
                 <div className="-ml-2 flex items-center gap-0.5 text-xs text-muted-foreground">
                     <Button
                         variant="ghost"
@@ -227,6 +251,20 @@ export function CommentItem({
                     >
                         <ThumbsDown aria-hidden />
                     </IconButton>
+                    {onReaction !== undefined && (
+                        <ReactionPopover
+                            {...reactionBar}
+                            selected={mineOf(reactions)}
+                            onReact={(emoji, name) => onReaction(comment, emoji, name)}
+                            side="top"
+                            align="start"
+                            trigger={
+                                <IconButton label={words.react} size="icon-xs">
+                                    <SmilePlus aria-hidden />
+                                </IconButton>
+                            }
+                        />
+                    )}
                     {onReply !== undefined && (
                         <Button variant="ghost" size="xs" onClick={() => setReplying(true)}>
                             {words.reply}
@@ -273,6 +311,8 @@ export function CommentItem({
                                         onLike={onLike}
                                         onDislike={onDislike}
                                         onReply={onReply}
+                                        onReaction={onReaction}
+                                        reactionBar={reactionBar}
                                         menu={menu}
                                         openReplies={openReplies}
                                         words={words}
@@ -310,7 +350,9 @@ export type CommentThreadProps = ItemProps & {
  * pinned one first as given, and replies folded under their comment behind a count. The likes and
  * replies are the app's: `onLike` and `onDislike` hear a press and the app hands back the comment
  * with `liked` or `disliked` set, and `onReply` (with the `viewer` who writes) opens a field under a
- * comment and hears what was written. `menu` gives a comment's menu items, or nothing for no menu.
+ * comment and hears what was written. `onReaction` adds a react button that opens the reaction
+ * bar and draws each comment's `reactions` with their counts, a press giving or taking back one.
+ * `menu` gives a comment's menu items, or nothing for no menu.
  * `openReplies` names comments whose replies start open.
  *
  * Put a `CommentComposer` above it for a new comment, and a count with a sort in a `Toolbar` above
@@ -323,6 +365,8 @@ export function CommentThread({
     onLike,
     onDislike,
     onReply,
+    onReaction,
+    reactionBar,
     menu,
     openReplies,
     className,
@@ -340,6 +384,8 @@ export function CommentThread({
                     onLike={onLike}
                     onDislike={onDislike}
                     onReply={onReply}
+                    onReaction={onReaction}
+                    reactionBar={reactionBar}
                     menu={menu}
                     openReplies={openReplies}
                     words={given}

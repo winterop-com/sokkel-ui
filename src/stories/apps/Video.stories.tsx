@@ -35,6 +35,7 @@ import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { CommentComposer, CommentThread, type ThreadComment } from '@winterop-com/sokkel-ui/CommentThread'
+import { toggleReaction } from '@winterop-com/sokkel-ui/ReactionBar'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { ShowMore } from '@winterop-com/sokkel-ui/ShowMore'
 import { VideoPlayer } from '@winterop-com/sokkel-ui/media/VideoPlayer'
@@ -50,6 +51,7 @@ import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui-media/Artwork'
 import { pictureOf } from '../fixtures/portraits'
+import { RECENT_EMOJI } from '../fixtures/reactions'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
@@ -430,8 +432,18 @@ function threadComment(comment: Comment): ThreadComment {
         likes: comment.likes,
         pinned: comment.pinned,
         creator: comment.by === WATCHING.channel,
+        reactions: comment.pinned === true ? [{ id: '\u2764\uFE0F', icon: '\u2764\uFE0F', label: 'red heart', count: 24 }] : undefined,
         replies: comment.replies?.map(threadComment),
     }
+}
+
+/** Gives or takes back the viewer's reaction on a comment, wherever in the thread it is. */
+function react(list: readonly ThreadComment[], id: string, emoji: string, name: string): ThreadComment[] {
+    return list.map((one) =>
+        one.id === id
+            ? { ...one, reactions: toggleReaction(one.reactions ?? [], emoji, name) }
+            : { ...one, replies: one.replies && react(one.replies, id, emoji, name) },
+    )
 }
 
 /** Turns a comment's like or dislike on or off, wherever in the thread it is. */
@@ -475,6 +487,8 @@ function Comments() {
                 onLike={(comment) => setComments((list) => toggle(list, comment.id, 'liked'))}
                 onDislike={(comment) => setComments((list) => toggle(list, comment.id, 'disliked'))}
                 onReply={() => undefined}
+                onReaction={(comment, emoji, name) => setComments((list) => react(list, comment.id, emoji, name))}
+                reactionBar={{ picker: { recent: RECENT_EMOJI } }}
                 menu={() => (
                     <DropdownMenuItem>
                         <Flag aria-hidden />
