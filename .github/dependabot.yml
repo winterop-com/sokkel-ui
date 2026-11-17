@@ -15,3 +15,8 @@ updates:
           # Minor and patch updates arrive as one pull request; a major one comes on its own.
           minor-and-patch:
               update-types: ['minor', 'patch']
+      ignore:
+          # KaTeX is a peer apps install themselves, and before 1.0 its minor versions break; move it
+          # on purpose, with a note for apps.
+          - dependency-name: 'katex'
+            update-types: ['version-update:semver-minor', 'version-update:semver-major']

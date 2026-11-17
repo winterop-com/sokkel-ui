@@ -135,11 +135,11 @@
         "prepack": "cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ."
     },
     "dependencies": {
-        "lucide-react": "^1.68.0"
+        "lucide-react": "^1.73.0"
     },
     "peerDependencies": {
         "@winterop-com/sokkel-ui": "workspace:*",
-        "hls.js": "^1.7.3",
+        "hls.js": "^1.7.4",
         "react": "^19.2.0",
         "react-dom": "^19.2.0"
     },
