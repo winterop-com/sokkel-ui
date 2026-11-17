@@ -15,4 +15,7 @@ export const THEME_LIST: readonly { value: string; label: string; description?: 
     { value: 'terminal', label: 'Terminal', description: 'Green on black in the code face, and a light console by day.' },
     { value: 'steel', label: 'Steel', description: 'A steel-blue chrome (rail, bars, heads) over the familiar cool gray.' },
     { value: 'ember', label: 'Ember', description: 'Warm white, with an ember accent spent only where the app acts.' },
+    { value: 'phosphor', label: 'Phosphor', description: 'A green glow on black in the code face; dark green on pale paper by day.' },
+    { value: 'phosphor-bright', label: 'Phosphor bright', description: 'Phosphor turned up: bright green on pure black.' },
+    { value: 'tray', label: 'Tray', description: 'Light cards on a gray tray under a deep blue strip, with a forest green accent.' },
 ]

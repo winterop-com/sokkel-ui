@@ -228,7 +228,11 @@ has sharp surfaces and round controls and another the reverse. Ocean (deep sea b
 (an indigo primary on cool neutrals), terminal (green on black in the code face, a light console
 by day) and steel (a steel-blue rail, bars and heads over the cool gray) use them. Ember is the
 quiet one: warm white and neutral grays, with its ember spent only where the app acts (buttons,
-links, focus, the chosen place), so its hovers and heads stay gray.
+links, focus, the chosen place), so its hovers and heads stay gray. Phosphor is a green glow on a
+black screen in the code face, with square corners and heads in its own green, and dark green ink
+on a pale green paper by day; phosphor-bright turns it up to bright green on pure black, with
+stronger lines. Tray sets light cards on a gray tray with a forest green accent, its rail and top
+bar a pale blue by day and a deep blue strip by night.
 
 Applying and keeping the look is the library's too, never an app's: `useAppearance` keeps the theme,
 scheme, density, corners, typeface and motion in `localStorage` and wears them on `<html>`,

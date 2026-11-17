@@ -11,3 +11,6 @@
 @import './themes/terminal.css';
 @import './themes/steel.css';
 @import './themes/ember.css';
+@import './themes/phosphor.css';
+@import './themes/phosphor-bright.css';
+@import './themes/tray.css';
