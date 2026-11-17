@@ -424,23 +424,23 @@ to `plan.md` when it ships.
       touch devices. Run that pass before calling the examples checked on every platform.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
-  210.5 kB and forms at 197 kB start and 80.3 kB lazy (2026-11-17); the forms start one is full. A
+  210.5 kB and forms at 197 kB start and 67.4 kB lazy (2026-11-17); the forms start one is full. A
   change trims what it adds itself; when it is worth its size, its PR raises the budget it needs
   with the reason, rather than reworking unrelated parts to fit. A loader that lets `DataTable`
   register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the
   dashboard's start chunks.
 
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
-  and the heavy ones, Base UI's menu among them, load on first use. Left:
-    - A plain `DataTable` still brings `SelectionBar`, the pager's `NativeSelect` and the
-      row menus' `primitives/context-menu` (about 1.2 kB), each drawn at once when used.
-    - The palette's lazy chunk carries cmdk's `Command.Dialog` and the Radix dialog stack behind it
-      (about 21 kB), which cmdk attaches whether or not it is used. Replacing or vendoring cmdk
-      would take that off every app's first palette opening.
-    - `styles.css` holds every component's classes, so each new part adds to every app's
-      stylesheet. A Vite plugin that writes the `@source` list from the app's own imports would
-      give every app the lean stylesheet without a hand-kept list. Leaving out the 27 primitives no
-      part uses would take the forms page from about 48 to 38 kB.
+  and the heavy ones, Base UI's menu among them, load on first use. The palette's list is the
+  library's own (cmdk without its dialog and Radix), `DataTable` loads its pager select and row
+  menus when a table draws one, and `sokkelStyles()` writes an app's `@source` list
+  from its imports. Left:
+    - `SelectionBar` stays in every `DataTable`'s start, since a selection the app holds when the
+      table first draws, on the server too, shows its bar at once. A stand-in drawn until it loads
+      would take it off a plain table's start.
+    - `styles.css` without the plugin still holds every component's classes, so each new part adds
+      to the stylesheet of every app not on the plugin. Leaving out the primitives no part uses
+      would trim that path too.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit. The

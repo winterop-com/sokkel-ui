@@ -93,10 +93,13 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/tree-drag': "the tree's drag layer, loaded the first time a `Tree` with `onMove` or `onDrop` is drawn",
         'components/table-memory':
             "what `DataTable` keeps its rows' place with under its `scrollKey`, loaded the first time a table with one is drawn",
+        'components/table-parts':
+            "the pager's select and the rows' right-click menus `DataTable` loads the first time a table that pages or has row actions is drawn",
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
         'components/ui/checkbox-look':
             "the checkbox's look, which `primitives/checkbox` wears and `DataTable` draws its selection boxes in until it has loaded, and `PlainCheckbox`, the box `CheckboxField` and `SchemaForm` draw in it",
+        'components/ui/cmdk': 'the searchable list of commands `primitives/command` draws, taken from cmdk without its dialog',
         'components/ui/context-menu-engine': "Base UI's context menu, which `primitives/context-menu` loads on first use",
         'components/ui/deferred-menu': "the stand-in triggers menus draw until Base UI's menu has loaded, and the loading",
         'components/ui/menu-engine': "Base UI's menu, which `primitives/dropdown-menu` and `AccountMenu` load on first use",

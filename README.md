@@ -177,8 +177,30 @@ there too.
 ### Only the classes an app uses
 
 `styles.css` points Tailwind at every module of the core, so an app's CSS carries the classes of
-components it never imports: the forms page in `size/` ships 49 kB of CSS gzipped on it.
-An app that wants only its own imports `styles-base.css` instead, which is `styles.css` pointed at
+components it never imports: the forms page in `size/` ships 52 kB of CSS gzipped on it.
+
+The core's Vite plugin gives an app the lean stylesheet with no list to keep. Put `sokkelStyles()`
+before `tailwindcss()` and keep importing `styles.css`, from the stylesheet or the code:
+
+```ts
+// vite.config.ts
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { sokkelStyles } from '@winterop-com/sokkel-ui/vite'
+
+export default { plugins: [react(), sokkelStyles(), tailwindcss()] }
+```
+
+It reads every module of the library the app's code imports, under Vite's root (or the `dirs` it is
+given), in every file a relative import there reaches and in every installed package that itself
+depends on the library, such as an app's own shared package. It then puts `styles-base.css` and
+those modules' lists of sources in the place of the core's `styles.css`, and drops the add-ons'
+`styles.css`, whose lists the modules' lists bring. In the dev server, an import added or dropped
+writes the stylesheet again. The forms page built this way, `size/forms-lean`, ships 22 kB of CSS
+gzipped; the dashboard, map and music pages in `size/` drop from 52, 63 and 53 kB to 23, 30 and 21 kB.
+An app on `styles.css` without the plugin gets every class, as before.
+
+By hand, an app that wants only its own imports `styles-base.css` instead, which is `styles.css` pointed at
 no module, and after it the list of sources of each module it imports, `sources/<module>.css`
 under the name it imports the module by. A list holds an `@source` for the module and for every
 module it draws on, however deep, so the app names only what it imports itself:
@@ -200,8 +222,8 @@ The app adds one line per module it imports, from any package: `import { Rail } 
 `import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'` is
 `@import '@winterop-com/sokkel-ui-charts/sources/Chart.css'`. An add-on's list brings the lists of
 the core modules it uses, and on this path it takes the place of the add-on's `styles.css`. A module
-the app starts importing needs its line, or its classes are missing. The same forms page built this
-way, `size/forms-lean`, ships 20 kB of CSS gzipped.
+the app starts importing needs its line, or its classes are missing; the plugin writes these same
+lines.
 
 ### An app's own Tailwind entry
 
@@ -420,8 +442,7 @@ registerPlugins([dhis2Plugin({ functions: DHIS2_FUNCTIONS.filter((name) => name 
 <CodeEditor label="Condition" language={languageForMediaType('text/x-dhis2-rule')} value={condition} onChange={setCondition} />
 ```
 
-The core's own dependencies are what every app's frame draws with: Base UI, lucide, cmdk (the
-command palette `Shell` opens), the class helpers and the IBM Plex fonts, and dnd-kit, the drag
+The core's own dependencies are what every app's frame draws with: Base UI, lucide, the class helpers and the IBM Plex fonts, and dnd-kit, the drag
 and drop engine, which only the parts that drag load. The English emoji list `EmojiPicker` loads the
 first time a picker opens ships inside the core package, in a chunk of its own. Every other library is an
 optional peer dependency, installed by an app that uses a part needing it. A part that needs one

@@ -1,23 +1,23 @@
 'use client'
 
 import * as React from 'react'
-import { Command as CommandPrimitive } from 'cmdk'
+import * as CommandPrimitive from './cmdk'
 
 import { cn } from '../../lib/utils'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './dialog'
 import { InputGroup, InputGroupAddon } from './input-group'
 import { SearchIcon } from 'lucide-react'
 
-export type CommandProps = React.ComponentProps<typeof CommandPrimitive>
+export type CommandProps = React.ComponentProps<typeof CommandPrimitive.CommandRoot>
 
 /**
- * cmdk's list of commands. Its own Ctrl+N, Ctrl+J, Ctrl+P and Ctrl+K are off (`vimBindings`), so
+ * The library's list of commands (`ui/cmdk`). Its own Ctrl+N, Ctrl+J, Ctrl+P and Ctrl+K are off (`vimBindings`), so
  * Ctrl+K means one thing, the palette's key; the arrows stop at the first and last rows, and Home
  * and End reach them.
  */
 function Command({ className, vimBindings = false, ...props }: CommandProps) {
     return (
-        <CommandPrimitive
+        <CommandPrimitive.CommandRoot
             data-slot="command"
             vimBindings={vimBindings}
             className={cn('flex size-full flex-col overflow-hidden rounded-surface! bg-popover p-1 text-popover-foreground', className)}
@@ -53,13 +53,13 @@ function CommandDialog({ title, description, children, className, showCloseButto
     )
 }
 
-export type CommandInputProps = React.ComponentProps<typeof CommandPrimitive.Input>
+export type CommandInputProps = React.ComponentProps<typeof CommandPrimitive.CommandInput>
 
 function CommandInput({ className, ...props }: CommandInputProps) {
     return (
         <div data-slot="command-input-wrapper" className="p-1 pb-0">
             <InputGroup className="rounded-control! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
-                <CommandPrimitive.Input
+                <CommandPrimitive.CommandInput
                     data-slot="command-input"
                     className={cn('w-full self-stretch text-sm outline-hidden max-md:min-h-finger', className)}
                     {...props}
@@ -72,11 +72,11 @@ function CommandInput({ className, ...props }: CommandInputProps) {
     )
 }
 
-export type CommandListProps = React.ComponentProps<typeof CommandPrimitive.List>
+export type CommandListProps = React.ComponentProps<typeof CommandPrimitive.CommandList>
 
 function CommandList({ className, ...props }: CommandListProps) {
     return (
-        <CommandPrimitive.List
+        <CommandPrimitive.CommandList
             data-slot="command-list"
             className={cn('no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none', className)}
             {...props}
@@ -84,17 +84,17 @@ function CommandList({ className, ...props }: CommandListProps) {
     )
 }
 
-export type CommandEmptyProps = React.ComponentProps<typeof CommandPrimitive.Empty>
+export type CommandEmptyProps = React.ComponentProps<typeof CommandPrimitive.CommandEmpty>
 
 function CommandEmpty({ className, ...props }: CommandEmptyProps) {
-    return <CommandPrimitive.Empty data-slot="command-empty" className={cn('py-6 text-center text-sm', className)} {...props} />
+    return <CommandPrimitive.CommandEmpty data-slot="command-empty" className={cn('py-6 text-center text-sm', className)} {...props} />
 }
 
-export type CommandGroupProps = React.ComponentProps<typeof CommandPrimitive.Group>
+export type CommandGroupProps = React.ComponentProps<typeof CommandPrimitive.CommandGroup>
 
 function CommandGroup({ className, ...props }: CommandGroupProps) {
     return (
-        <CommandPrimitive.Group
+        <CommandPrimitive.CommandGroup
             data-slot="command-group"
             className={cn(
                 'overflow-hidden p-1 text-foreground **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground',
@@ -105,17 +105,17 @@ function CommandGroup({ className, ...props }: CommandGroupProps) {
     )
 }
 
-export type CommandSeparatorProps = React.ComponentProps<typeof CommandPrimitive.Separator>
+export type CommandSeparatorProps = React.ComponentProps<typeof CommandPrimitive.CommandSeparator>
 
 function CommandSeparator({ className, ...props }: CommandSeparatorProps) {
-    return <CommandPrimitive.Separator data-slot="command-separator" className={cn('-mx-1 h-px bg-border', className)} {...props} />
+    return <CommandPrimitive.CommandSeparator data-slot="command-separator" className={cn('-mx-1 h-px bg-border', className)} {...props} />
 }
 
-export type CommandItemProps = React.ComponentProps<typeof CommandPrimitive.Item>
+export type CommandItemProps = React.ComponentProps<typeof CommandPrimitive.CommandItem>
 
 function CommandItem({ className, ...props }: CommandItemProps) {
     return (
-        <CommandPrimitive.Item
+        <CommandPrimitive.CommandItem
             data-slot="command-item"
             className={cn(
                 "group/command-item relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-disabled max-md:min-h-finger data-selected:bg-accent data-selected:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-selected:*:[svg]:text-accent-foreground",
