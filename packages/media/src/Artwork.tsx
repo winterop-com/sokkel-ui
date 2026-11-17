@@ -1,10 +1,12 @@
 import { useEffect, useId, useRef, useState } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { ARTWORK_HUES, coverFor, type ArtworkCover, type ArtworkMotif } from './cover-seed'
+import { ARTWORK_HUES, COVER_INKS, coverFor, coverShapes, drawCover, type ArtworkCover, type ArtworkMotif } from './cover-seed'
+import type { MediaSessionDrawing } from './media-session'
 
 export { ARTWORK_HUES, ARTWORK_MOTIFS, coverFor, seedHash } from './cover-seed'
 export type { ArtworkCover, ArtworkHue, ArtworkMotif } from './cover-seed'
+export type { MediaSessionDrawing } from './media-session'
 
 export interface ArtworkProps {
     /** The picture's address. The drawn cover shows until it has loaded, and stays when it fails. */
@@ -84,84 +86,50 @@ export function Artwork({ src, alt, cover, seed = '', wide = false, className }:
 
 /** The motif's shapes, in the light and dark inks over the gradient. */
 function Motif({ motif, width }: { motif: ArtworkMotif; width: number }) {
-    const middle = width / 2
-    switch (motif) {
-        case 'sun':
-            return (
-                <>
-                    <circle cx={middle + 18} cy="36" r="16" fill="var(--terminal-foreground)" opacity="0.5" />
-                    <path d={`M0 74 L28 56 L50 66 L74 48 L${String(width)} 64 V100 H0 Z`} fill="var(--terminal)" opacity="0.18" />
-                    <path d={`M0 86 L34 72 L62 80 L${String(width)} 70 V100 H0 Z`} fill="var(--terminal)" opacity="0.16" />
-                </>
-            )
-        case 'rings':
-            return (
-                <g fill="none" stroke="var(--terminal-foreground)">
-                    {[10, 20, 30, 40, 50].map((r, index) => (
-                        <circle key={r} cx={middle} cy="50" r={r} strokeWidth="3" opacity={0.5 - index * 0.08} />
-                    ))}
-                </g>
-            )
-        case 'bands':
-            return (
-                <g>
-                    {[0, 1, 2, 3, 4].map((band) => (
-                        <rect
-                            key={band}
-                            y={18 + band * 14}
-                            width={width}
-                            height="6"
-                            fill="var(--terminal-foreground)"
-                            opacity={0.14 + band * 0.07}
-                        />
-                    ))}
-                </g>
-            )
-        case 'dots':
-            return (
-                <g fill="var(--terminal-foreground)">
-                    {Array.from({ length: 36 }, (_, index) => {
-                        const column = index % 6
-                        const row = Math.floor(index / 6)
-                        return (
-                            <circle
-                                key={index}
-                                cx={middle - 40 + column * 16}
-                                cy={10 + row * 16}
-                                r={1.5 + ((column + row) % 4) * 0.9}
-                                opacity="0.55"
-                            />
-                        )
-                    })}
-                </g>
-            )
-        case 'wave':
-            return (
-                <g fill="none" stroke="var(--terminal-foreground)" strokeWidth="3" strokeLinecap="round">
-                    {[38, 52, 66].map((y, index) => (
-                        <path
-                            key={y}
-                            d={`M-4 ${String(y)} Q ${String(width * 0.25)} ${String(y - 14)} ${String(middle)} ${String(y)} T ${String(width + 4)} ${String(y)}`}
-                            opacity={0.6 - index * 0.15}
-                        />
-                    ))}
-                </g>
-            )
-        case 'peaks':
-            return (
-                <>
-                    <path
-                        d={`M0 100 L${String(middle - 20)} 30 L${String(middle + 4)} 62 L${String(middle + 24)} 42 L${String(width)} 100 Z`}
-                        fill="var(--terminal)"
-                        opacity="0.22"
-                    />
-                    <path
-                        d={`M${String(middle - 20)} 30 L${String(middle - 11)} 41 L${String(middle - 27)} 39 Z`}
-                        fill="var(--terminal-foreground)"
-                        opacity="0.7"
-                    />
-                    <circle cx={middle - 26} cy="22" r="5" fill="var(--terminal-foreground)" opacity="0.6" />
-                </>
-            )
+    return coverShapes(motif, width).map(({ d, ink, opacity, stroke }, index) =>
+        stroke === undefined ? (
+            <path key={index} d={d} fill={COVER_INKS[ink]} opacity={opacity} />
+        ) : (
+            <path key={index} d={d} fill="none" stroke={COVER_INKS[ink]} strokeWidth={stroke} strokeLinecap="round" opacity={opacity} />
+        ),
+    )
+}
+
+/**
+ * A drawn cover as the operating system's media session takes artwork (`useMediaSession`): drawn on
+ * a canvas at each size it asks for, in the hues the page's theme gives the tokens as it is drawn,
+ * keyed by the cover so the same cover is not told again.
+ */
+export function coverArtwork(cover: ArtworkCover): MediaSessionDrawing {
+    return {
+        key: `cover:${cover.motif}:${cover.from}:${cover.to}`,
+        draw: (context, size) => {
+            withPaint((paint) => {
+                drawCover(context, cover, size, paint)
+            })
+        },
+    }
+}
+
+/**
+ * Runs `draw` with a function that turns a token into the color the page resolves it to, read from
+ * an element put in the page for as long as it runs, so the theme on the root applies.
+ */
+function withPaint(draw: (paint: (token: string) => string) => void) {
+    const probe = document.createElement('span')
+    probe.hidden = true
+    document.body.append(probe)
+    const seen = new Map<string, string>()
+    try {
+        draw((token) => {
+            const known = seen.get(token)
+            if (known !== undefined) return known
+            probe.style.color = token
+            const color = getComputedStyle(probe).color
+            seen.set(token, color)
+            return color
+        })
+    } finally {
+        probe.remove()
     }
 }

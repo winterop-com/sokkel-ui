@@ -1,6 +1,17 @@
 import { describe, expect, test } from 'vitest'
 
-import { isStalled, mediaError, nextTry, onReturn, resumeAt, RETRY_DELAY, trackProgress, type Progress } from './video-source'
+import {
+    isStalled,
+    mediaError,
+    nextTry,
+    onReturn,
+    playedOn,
+    resumeAt,
+    resumeCorrection,
+    RETRY_DELAY,
+    trackProgress,
+    type Progress,
+} from './video-source'
 
 describe("a media element's error", () => {
     test('reads its kind from the code', () => {
@@ -101,6 +112,37 @@ describe('where a try picks up', () => {
     test('is where it was for media that is not live, wherever it could seek', () => {
         expect(resumeAt(40, { start: 60, end: 120 }, false)).toBe(40)
         expect(resumeAt(40, null, false)).toBe(40)
+    })
+})
+
+describe('a try that picked up short of where it was', () => {
+    test('is moved on to where it stood, as a browser landing it at the start of its segment would replay that', () => {
+        // Stood at 23.87 in the segment from 18 to 24; the try landed at the segment's start.
+        expect(resumeCorrection(18, 23.87, { start: 0, end: 114 })).toBe(23.87)
+    })
+
+    test('is left where it landed close enough to the point', () => {
+        expect(resumeCorrection(23.6, 23.87, { start: 0, end: 114 })).toBeNull()
+        expect(resumeCorrection(24.2, 23.87, { start: 0, end: 114 })).toBeNull()
+    })
+
+    test('is not moved where the media cannot seek to the point, as a live window that ends before it', () => {
+        expect(resumeCorrection(18, 23.87, { start: 0, end: 6 })).toBeNull()
+        expect(resumeCorrection(18, 23.87, null)).toBeNull()
+    })
+})
+
+describe('a try playing on', () => {
+    test('is a step forward as playback takes one between two readings', () => {
+        expect(playedOn(15.98, 16.24)).toBe(true)
+    })
+
+    test('is not the hair a browser moves a playhead that waits for data, nor standing, nor a seek', () => {
+        expect(playedOn(15.98, 16)).toBe(false)
+        expect(playedOn(15.98, 15.98)).toBe(false)
+        expect(playedOn(18, 23.87)).toBe(false)
+        expect(playedOn(23.87, 18)).toBe(false)
+        expect(playedOn(null, 16.24)).toBe(false)
     })
 })
 

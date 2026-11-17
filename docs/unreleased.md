@@ -69,6 +69,14 @@ release and empties it.
   `useWorld` in the new `world` module, which also holds `WORLD_BASEMAP`.
 - `CountryLayer` (maps) fills countries by a value per ISO 3166-1 alpha-3 code from that geometry or
   the app's own, with `unvalued` to hatch or leave out the countries with no value.
+- `useMediaSession` takes artwork drawn on a canvas (`MediaSessionDrawing`: a `key` and a
+  `draw(context, size)`), drawn at `MEDIA_ARTWORK_SIZES` (96 to 512 pixels) as the system is told
+  what plays and handed to it as JPEG data addresses (`drawArtwork`). `coverArtwork(cover)` in `Artwork` makes one
+  of a drawn cover, in the colors the theme gives its tokens; `coverShapes`, `drawCover` and
+  `COVER_INKS` in `cover-seed` are the shapes both the SVG and the canvas draw.
+- `hlsSource` takes `skipMissing`, which lets hls.js skip a live stream's missing segment as it did
+  before; `retriesMissing` and `waitingConfig` are the fragment policy it gives hls.js otherwise.
+- `resumeCorrection`, `playedOn` and `RESUME_SLACK` in `media/video-source`.
 
 ## Changed
 
@@ -86,3 +94,16 @@ release and empties it.
 - `DataTable` loads the pager's page size select and the rows' right-click menus the first time a
   table that pages or has row actions is drawn; until then the pager shows the page size as text and
   a right click on a row is the browser's.
+- `hlsSource` waits on a segment a live stream lists but its server answers missing (a 4xx) rather
+  than letting hls.js skip past it: hls.js fetches it again as it backs off, the player waits on it
+  as on any stall, its tries taking over, and plays on from where it stood once the segment is
+  there. An app's own `shouldRetry` in `config.fragLoadPolicy` stands over this.
+- `VideoPlayer` says "Trying again" until the playhead plays on again, not once the media loads; a
+  try for a video that was paused still ends once it loads.
+
+## Fixed
+
+- `VideoPlayer` resumes a try where it stood under a browser's own HLS, which landed a try at a live
+  stream's edge at the start of the segment it stood in and played up to a segment again: a try
+  that picks up short is moved on there, or held paused under "Trying again" until the stream has
+  grown and loaded again there.

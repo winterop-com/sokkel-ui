@@ -1,7 +1,7 @@
 import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
 import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { SoundVisualizer } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
-import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
+import { Artwork, coverArtwork } from '@winterop-com/sokkel-ui-media/Artwork'
 import { Lyrics } from '@winterop-com/sokkel-ui-media/Lyrics'
 import { MediaBar } from '@winterop-com/sokkel-ui-media/MediaBar'
 import { parseLyrics } from '@winterop-com/sokkel-ui-media/lrc'
@@ -29,7 +29,7 @@ function SungWords({ text, element, playing }: { text: string; element: HTMLAudi
  * speed, the volume and the queue's button; grown from its top edge into the layout the settings
  * pick, with the waveform of the song as its scrubber and the visualizer behind it; and the full
  * screen with its picker of looks, the words and a star. The operating system's media keys and
- * lock screen drive it too.
+ * lock screen drive it too, and show the album's drawn cover.
  */
 export function Player({
     queueOpen,
@@ -58,6 +58,7 @@ export function Player({
                   title: song.title,
                   artist: artistName(song.artist),
                   album: album?.title,
+                  artwork: album === undefined ? undefined : coverArtwork(album.cover),
                   duration: radio ? undefined : song.duration,
                   position: at,
                   rate: options.rate,

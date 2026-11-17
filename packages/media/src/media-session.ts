@@ -40,13 +40,29 @@ export interface MediaSessionImage {
     type?: string
 }
 
+/**
+ * A picture drawn on a canvas, such as a record's drawn cover (`coverArtwork` in `Artwork`), handed
+ * to the system at each size it asks for as an image's address.
+ */
+export interface MediaSessionDrawing {
+    /** Says which picture it is, such as the record's id: the system is not told one with the same key again. */
+    key: string
+    /** Draws the picture on a square canvas `size` pixels across. */
+    draw: (context: CanvasRenderingContext2D, size: number) => void
+    /** The sizes it is drawn at, in pixels across: `MEDIA_ARTWORK_SIZES` by default. */
+    sizes?: readonly number[]
+}
+
+/** The sizes a drawn picture is handed to the system at, in pixels across: the ones its widgets and lock screens ask for. */
+export const MEDIA_ARTWORK_SIZES: readonly number[] = [96, 128, 192, 256, 384, 512]
+
 /** What plays, as the system is told it. */
 export interface MediaSessionInfo {
     title: string
     artist?: string
     album?: string
-    /** A picture's address, or the picture at several sizes. */
-    artwork?: string | readonly MediaSessionImage[]
+    /** A picture's address, the picture at several sizes, or a picture drawn on a canvas. */
+    artwork?: string | readonly MediaSessionImage[] | MediaSessionDrawing
     /** The length in seconds. Zero, unknown or infinite, as on a live stream, tells no position. */
     duration?: number
     /** Seconds from the start. */
@@ -79,11 +95,55 @@ export function mediaSession(): MediaSession | undefined {
     return browser?.mediaSession ?? undefined
 }
 
+/** Whether the artwork is a picture drawn on a canvas. */
+export function isDrawing(artwork: MediaSessionInfo['artwork']): artwork is MediaSessionDrawing {
+    return typeof artwork === 'object' && 'draw' in artwork
+}
+
+/** A square canvas a drawing is drawn on, as far as it is used: the page's own unless a test gives one. */
+export interface ArtworkCanvas {
+    getContext: (kind: '2d') => CanvasRenderingContext2D | null
+    toDataURL: (type: string, quality?: number) => string
+}
+
+function pageCanvas(size: number): ArtworkCanvas | null {
+    if (typeof document === 'undefined') return null
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    return canvas
+}
+
+/**
+ * A drawing as pictures the system takes: drawn on a canvas at each of its sizes and handed over as
+ * JPEG data addresses, a fraction of a PNG's weight for a cover with no see-through parts. Where there is no canvas (no page, or a browser that gives no 2D
+ * context) there are none.
+ */
+export function drawArtwork(drawing: MediaSessionDrawing, canvasOf: (size: number) => ArtworkCanvas | null = pageCanvas): MediaImage[] {
+    const images: MediaImage[] = []
+    for (const size of drawing.sizes ?? MEDIA_ARTWORK_SIZES) {
+        const canvas = canvasOf(size)
+        const context = canvas?.getContext('2d') ?? null
+        if (canvas === null || context === null) continue
+        drawing.draw(context, size)
+        images.push({ src: canvas.toDataURL('image/jpeg', 0.9), sizes: `${String(size)}x${String(size)}`, type: 'image/jpeg' })
+    }
+    return images
+}
+
 /** The artwork as the API takes it: a list of pictures. */
 export function artworkOf(artwork: MediaSessionInfo['artwork']): MediaImage[] {
     if (artwork === undefined) return []
     if (typeof artwork === 'string') return artwork === '' ? [] : [{ src: artwork }]
+    if (isDrawing(artwork)) return drawArtwork(artwork)
     return artwork.map((image) => ({ ...image }))
+}
+
+/** What tells one artwork from another, so the system is told again only when it changes. */
+export function artworkKey(artwork: MediaSessionInfo['artwork']): string | undefined {
+    if (artwork === undefined || typeof artwork === 'string') return artwork
+    if (isDrawing(artwork)) return `drawn:${artwork.key}`
+    return JSON.stringify(artwork)
 }
 
 /** Tells the system what plays, or that nothing does for `null`. Where the browser has no `MediaMetadata` it is not told. */

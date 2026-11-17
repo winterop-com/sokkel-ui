@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { ARTWORK_HUES, ARTWORK_MOTIFS, coverFor, seedHash } from './cover-seed'
+import { ARTWORK_HUES, ARTWORK_MOTIFS, COVER_INKS, coverFor, coverShapes, drawCover, seedHash, type CoverContext } from './cover-seed'
 
 const ids = (count: number) => Array.from({ length: count }, (_, index) => `album-${String(index)}`)
 
@@ -74,5 +74,95 @@ describe('coverFor', () => {
 
     it('draws an empty seed rather than refusing it', () => {
         expect(ARTWORK_MOTIFS).toContain(coverFor('').motif)
+    })
+})
+
+describe('coverShapes', () => {
+    it('draws every motif as path data, square and wide, each shape seen', () => {
+        for (const motif of ARTWORK_MOTIFS) {
+            for (const width of [100, 160]) {
+                const shapes = coverShapes(motif, width)
+                expect(shapes.length).toBeGreaterThan(0)
+                for (const shape of shapes) {
+                    expect(shape.d).toMatch(/^M/)
+                    expect(shape.opacity).toBeGreaterThan(0)
+                    expect(shape.opacity).toBeLessThanOrEqual(1)
+                }
+            }
+        }
+    })
+
+    it('centers a motif in a wide frame', () => {
+        // The innermost ring, ten across, from five left of the middle.
+        expect(coverShapes('rings', 160)[0].d).toMatch(/^M70 50a10 10 /)
+        expect(coverShapes('rings', 100)[0].d).toMatch(/^M40 50a10 10 /)
+    })
+})
+
+describe('drawCover', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    /** A 2D context that records what is drawn, and the paths made from SVG path data. */
+    function recorder() {
+        const calls: string[] = []
+        const stops: [number, string][] = []
+        const context = {
+            fillStyle: '' as unknown,
+            strokeStyle: '' as unknown,
+            globalAlpha: 1,
+            lineWidth: 1,
+            lineCap: 'butt',
+            save: () => calls.push('save'),
+            restore: () => calls.push('restore'),
+            scale: (x: number, y: number) => calls.push(`scale ${String(x)} ${String(y)}`),
+            createLinearGradient: (x0: number, y0: number, x1: number, y1: number) => {
+                calls.push(`gradient ${[x0, y0, x1, y1].join(' ')}`)
+                return { addColorStop: (offset: number, color: string) => stops.push([offset, color]) }
+            },
+            fillRect: (x: number, y: number, w: number, h: number) => calls.push(`fillRect ${[x, y, w, h].join(' ')}`),
+            fill: (path: { d: string }) => calls.push(`fill ${path.d} ${String(context.fillStyle)} ${String(context.globalAlpha)}`),
+            stroke: (path: { d: string }) =>
+                calls.push(`stroke ${path.d} ${String(context.strokeStyle)} ${String(context.lineWidth)} ${context.lineCap}`),
+        }
+        vi.stubGlobal(
+            'Path2D',
+            class {
+                constructor(readonly d: string) {}
+            },
+        )
+        return { context: context as unknown as CoverContext, calls, stops }
+    }
+
+    /** Each token as the page would resolve it, named so a test can read which was asked for. */
+    const paint = (token: string) => token.replace(/^var\(--(.+)\)$/, '$1')
+
+    it('fills the gradient from corner to corner in the hues the theme gives, scaled to the size asked', () => {
+        const { context, calls, stops } = recorder()
+        drawCover(context, { motif: 'bands', from: 'blue', to: 'pink' }, 512, paint)
+        expect(calls.slice(0, 4)).toEqual(['save', 'scale 5.12 5.12', 'gradient 0 0 100 100', 'fillRect 0 0 100 100'])
+        expect(stops).toEqual([
+            [0, 'kind-blue'],
+            [1, 'kind-pink'],
+        ])
+        expect(calls.at(-1)).toBe('restore')
+    })
+
+    it('draws the shapes the SVG draws, each in its ink', () => {
+        const { context, calls } = recorder()
+        drawCover(context, { motif: 'sun', from: 'amber', to: 'coral' }, 96, paint)
+        const [sun, near, far] = coverShapes('sun', 100)
+        expect(calls).toContain(`fill ${sun.d} terminal-foreground 0.5`)
+        expect(calls).toContain(`fill ${near.d} terminal 0.18`)
+        expect(calls).toContain(`fill ${far.d} terminal 0.16`)
+        expect(COVER_INKS.light).toBe('var(--terminal-foreground)')
+    })
+
+    it('strokes the motifs drawn in lines, with round ends', () => {
+        const { context, calls } = recorder()
+        drawCover(context, { motif: 'wave', from: 'teal', to: 'violet' }, 128, paint)
+        expect(calls.filter((call) => call.startsWith('stroke'))).toHaveLength(3)
+        expect(calls.find((call) => call.startsWith('stroke'))).toMatch(/ terminal-foreground 3 round$/)
     })
 })
