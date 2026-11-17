@@ -30,9 +30,10 @@ release and empties it.
   in view. The arrow keys move through the grid (one tab stop), Enter picks, Escape clears the
   search, then closes. The recent emoji (`recent`, `onRecentChange`) and the skin tone (`skinTone`,
   `onSkinToneChange`) are kept per person through `useStored` under `storeKey` unless the app holds
-  them. `EmojiPickerPopover` opens it from a `trigger`. The list comes from `emojibase-data`, a new
-  dependency of the core package, loaded the first time a picker opens (`loadEmojiData` loads it
-  ahead), and keeps only the emoji the page's fonts draw. Its words are `EMOJI_PICKER_WORDS`.
+  them. `EmojiPickerPopover` opens it from a `trigger`. The list, English names and keywords taken from
+  `emojibase-data`, ships inside the core package (no new dependency) as a chunk of its own, about
+  50 kB gzipped, loaded the first time a picker opens (`loadEmojiData` loads it ahead), and keeps
+  only the emoji the page's fonts draw. Its words are `EMOJI_PICKER_WORDS`.
 - `ReactionBar` (`@winterop-com/sokkel-ui/ReactionBar`): a row of quick reactions (`QUICK_REACTIONS`
   by default) as round buttons with the emoji large, the ones given drawn pressed (`selected`), and a
   more button that opens the full `EmojiPicker`; either way the emoji goes to `onReact(emoji, name)`.
@@ -53,6 +54,9 @@ release and empties it.
 
 ## Fixed
 
+- A panel in an arranged dashboard (`DashboardArrange`) keeps its own least height, such as
+  `StatPanel`'s 112 px; the arranged cell set every panel's least height to zero, so stat tiles stood
+  94 px tall there and 112 in a plain `DashboardGrid`.
 - A drag begun in a list that is scrolled, or that scrolls under it, lands under the pointer:
   `dragPoint` reads the pointer itself rather than the engine's offset, which is corrected for the
   scrolling of the dragged thing's boxes. Every drag that places by the pointer gains it (calendar,
