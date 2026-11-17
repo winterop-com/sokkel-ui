@@ -5,7 +5,7 @@
 
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 
-import type { SceneKind } from './clips/scenes'
+import type { SceneKind } from 'tidevann-shared/clips/scenes'
 
 export type Person = 'ada' | 'grace' | 'linus' | 'margaret'
 

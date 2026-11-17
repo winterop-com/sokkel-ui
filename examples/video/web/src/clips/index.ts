@@ -8,7 +8,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 
 import { channelOf, seedOf, type Video } from '../catalog'
 import { clearKept, keep, keptSize, pin, readKept, unpinAllBut } from './kept'
-import { drawFrame, type SceneSpec } from './scenes'
+import { drawFrame, type SceneSpec } from 'tidevann-shared/clips/scenes'
 import type { ClipJob, ClipReply } from './worker'
 
 export type RenditionId = '720' | '480' | '360' | '240'
