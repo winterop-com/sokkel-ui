@@ -3,6 +3,19 @@
     "id": "table",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {
+            "state": "partial",
+            "as_of": "6b8fdfd",
+            "note": "Counts in words are formatted for en-US, not the app's locale (drift)."
+        },
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "a592dfb",
+            "note": "The spike (examples/spike) draws a table by hand from the paints, not from the spec."
+        }
+    },
     "summary": "The one table: every listing and table, five rows or fifty thousand, flat, grouped or a tree. Rows at the density's row height, drawing only those in view; heads that sort and resize; selection with a bar; one row picked for a detail beside it; rows stacked as cards when its own box is narrow.",
     "sources": {
         "sokkel-ui": [
@@ -29,6 +42,7 @@
         "failure": "The failed read, in the table's place.",
         "foot": "A line at the foot: how many are loaded, the pager, Load more."
     },
+    "standsOn": {"default": "card", "frame": "background"},
     "options": {
         "columns": {
             "type": "columns",
@@ -196,6 +210,52 @@
         "emptyPadY": 12,
         "placeholderBar": {"value": 12, "note": "A skeleton bar 12 tall at 60 percent of its cell, one per cell."},
         "placeholderRowsAtEnd": 3
+    },
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "gap": 2,
+        "width": "Fills its container. A column given in px is round(px / 8.4) columns; one sized by its content measures its widest drawn cell, at most 320 px (38 columns). Below 576 px of its own box (69 columns) its rows become cards.",
+        "density": "A row, the head and the foot are one row at both levels. compact drops the list's side padding from 2 to 1 and a card's blank row.",
+        "sizes": {
+            "table": {"rows": 1, "padX": 1, "note": "Every row and the head one row; cells 2 apart."},
+            "list": {"rows": 1, "padX": {"regular": 2, "compact": 1}}
+        },
+        "pieces": {
+            "frame": {
+                "note": "A box, its corners by radius-surface; the rule under the head a row of tees in table-head-line."
+            },
+            "head": {
+                "rows": 1,
+                "note": "The label, then the sort glyph after 1 column on the sorted column (sortable on the column with keyboard focus)."
+            },
+            "row": {
+                "rows": 1,
+                "note": "Drawn only while visible; a missing value is the missing glyph in faint (principle 10)."
+            },
+            "card": {
+                "padX": 1,
+                "padY": {"regular": 1, "compact": 0},
+                "note": "A stacked card: its title line, then each field as a line of its name and value; cards 1 blank row apart at regular."
+            },
+            "foot": {"rows": 1, "note": "The range and the paging at the end."}
+        },
+        "glyphs": [
+            "box",
+            "rule",
+            "sort-ascending",
+            "sort-descending",
+            "sortable",
+            "checkbox-off",
+            "checkbox-on",
+            "checkbox-mixed",
+            "missing",
+            "ellipsis",
+            "chevron-right",
+            "chevron-down",
+            "grip-vertical"
+        ],
+        "note": "The select column is 4 columns: the box glyph and a gap (40 px rounds to 5; the box is 3 wide in ASCII)."
     },
     "states": {
         "rest": {"means": "Rows drawn, nothing chosen."},

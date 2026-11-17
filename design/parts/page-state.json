@@ -3,6 +3,11 @@
     "id": "page-state",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and the content. A failure is headed by what the server answered, with its diagnostic and the problems it named under the heading and Try again; a failed read of secondary data is a warning about part of the page. Drawn in a box of its own, or unframed inside a panel.",
     "sources": {
         "sokkel-ui": [
@@ -29,6 +34,7 @@
         "emptyContent": "Empty with more than a sentence: the app's own empty state (emptyRender), such as a way to make the first one, drawn in the frame's place as given.",
         "content": "The read came back with something: the content, drawn as given; the state draws nothing of its own."
     },
+    "standsOn": {"default": "background"},
     "options": {
         "loading": {"type": "boolean", "does": "The read is on its way."},
         "error": {
@@ -92,6 +98,30 @@
             "value": 16,
             "note": "The list's start pad: its discs hang in it, so a wrapped line starts under its own text."
         }
+    },
+    "cells": {
+        "padX": {"regular": 2, "compact": 1},
+        "gap": 1,
+        "width": "The width it is given; its lines wrap to it.",
+        "density": "Framed: one blank row inside the frame at the top and bottom at regular, none at compact. The blank row before Try again stays at both.",
+        "sizes": {
+            "frame": {
+                "padX": 2,
+                "padY": {"regular": 1, "compact": 0},
+                "note": "A box in the tone's edge, its corners by radius-surface; loading centers its line in the box."
+            },
+            "unframed": {"padX": {"regular": 2, "compact": 1}, "padY": 0, "note": "As in a panel: density.panel-pad."}
+        },
+        "pieces": {
+            "mark": {"width": "1 column and a gap of 1 before the heading, level with its first line."},
+            "spinner": {"width": "1 column and a gap of 1 before the loading word."},
+            "problems": {
+                "padX": 2,
+                "note": "Each problem after a bullet and a space, a wrapped line under its own text."
+            },
+            "retry": {"rows": 1, "note": "parts/button, after one blank row."}
+        },
+        "glyphs": ["spinner", "circle-alert", "triangle-alert", "bullet", "rotate-cw", "box"]
     },
     "states": {
         "rest": {

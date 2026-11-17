@@ -3,6 +3,11 @@
     "id": "select",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "One value chosen from a list: a trigger that shows the chosen option, or the placeholder, with a chevron at its end, and the list it opens: rows padded 4 in from its edge, each with an optional lead (an icon, or a theme's swatch) 8 before the label, a quiet detail at the row's end or under the label, and a check on the chosen one; groups under labels, separators between them, and arrows that scroll a long list. As a field it wears the text field's frame (parts/text-field): the label, the help and the issue mark.",
     "sources": {
         "sokkel-ui": [
@@ -35,6 +40,13 @@
         "groupLabel": "A group's name over its rows, small and muted.",
         "separator": "A rule between groups, across the list's full width.",
         "scrollArrow": "At the list's top or foot while it can scroll that way: a chevron on the popover ground; resting the pointer on it scrolls."
+    },
+    "standsOn": {
+        "default": "popover",
+        "field": "background",
+        "quiet": "background",
+        "chevron": "background",
+        "list": "background"
     },
     "options": {
         "variant": {

@@ -3,6 +3,11 @@
     "id": "settings-dialog",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "An app's preferences as one large dialog over the page it was opened from, on its own route (principle 9): a head with the title and a close; the sections in a column under their group titles, with a search over every setting at its top; the shown section's rows beside it, scrolling on their own; and a footer with Reset to defaults for the shown section, a note that changes are kept as they are made, and Done. Below 768 it fills the screen, and the column is a list of sections to go into.",
     "sources": {
         "sokkel-ui": [
@@ -45,6 +50,7 @@
         "saved": "The footer's note: words.saved, or the app's own (footer), announced as a status.",
         "done": "Done (words.done), a default button at the footer's end, which closes the dialog."
     },
+    "standsOn": {"default": "popover", "box": "background"},
     "options": {
         "open": {
             "type": "boolean",
