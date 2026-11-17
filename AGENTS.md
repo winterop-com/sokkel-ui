@@ -62,6 +62,9 @@ and ask before acting.
   and its changelog there, and its pin on sokkel-ui (`bun scripts/resolve.ts --ref <commit>` there,
   with its checks), merged before the sokkel-ui release that ships the change; then
   `bun run design --ref <its commit>` here. A release moves both to the same version.
+  What lands in sokkel-ui is the new normal: a part added or changed here is specified there in the
+  same round, as it landed (its words, options, sizes, paints and keys), never left for later and
+  never marked as a draft.
   `bun run design --tokens` fails when `tokens.json` is not the one the pinned contract was resolved
   from: CI warns on it, and the release stops.
 - `packages/core/tokens/tokens.json` is the only place a token is defined. Run `bun run tokens`
