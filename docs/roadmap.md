@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.29.2** is the latest release (2026-11-17): `ClipTimeline` (a video editor's multi-track
+- **0.29.3** is the latest release (2026-11-17): softer composers on `radius-composer` with round
+  buttons and `Composer`'s inline layout, `RunTimeline` choosing a lane anywhere in its track, emoji
+  and reaction keys that stop at their ends, and every part added this week specified in
+  sokkel-design; the contract at 0.29.3, with its site at winterop-com.github.io/sokkel-design.
+- **0.29.2** (2026-11-17): `ClipTimeline` (a video editor's multi-track
   timeline, taking drops from a media bin) with the Cut example, `EmojiPicker` and `ReactionBar` with
   reactions in the chat parts and examples, a drag that follows the real pointer, and an arranged
   dashboard keeping each panel's least height; sokkel-design's contract at 0.29.2.
