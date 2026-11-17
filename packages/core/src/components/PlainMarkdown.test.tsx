@@ -166,3 +166,22 @@ describe('PlainMarkdown tables', () => {
         expect(draw('| Job | State |\n|---|---|\n| sync-inventory | failed |')).toContain('<thead>')
     })
 })
+
+describe('PlainMarkdown inert lines with marks', () => {
+    const LINE = 'Runs after **[[Nightly export|the export]]**, see `nightly export` and [the log](https://example.org/log).'
+
+    it('draws every link as its words without live', () => {
+        const html = draw(LINE, { inline: true, live: false })
+        expect(html).not.toContain('<a')
+        expect(html).not.toContain('[[')
+        expect(html).toContain('<strong>the export</strong>')
+        expect(html).toContain('the log')
+    })
+
+    it('marks the words in any case, outside code', () => {
+        const html = draw(LINE, { inline: true, live: false, highlight: 'THE EXPORT' })
+        expect(html).toMatch(/<mark class="[^"]*bg-primary\/15[^"]*">the export<\/mark>/)
+        expect(draw(LINE, { inline: true, highlight: 'nightly export' })).toContain('<code>nightly export</code>')
+        expect(draw(LINE, { inline: true, highlight: '  ' })).not.toContain('<mark')
+    })
+})

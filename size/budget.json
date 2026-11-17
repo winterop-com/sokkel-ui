@@ -8,7 +8,7 @@
     "forms-lean": {
         "engines": [],
         "start": 197.2,
-        "lazy": 80.2,
+        "lazy": 80.3,
         "css": 22.7
     },
     "dashboard": {
@@ -17,7 +17,7 @@
         "lazy": 470.7,
         "css": 52.8,
         "first": {
-            "budget": 407.8,
+            "budget": 407.9,
             "fetches": [
                 "packages/charts/dist/engine.js",
                 "packages/charts/dist/kinds/categories.js",

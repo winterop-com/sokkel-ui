@@ -134,6 +134,7 @@ export function SchemaEditor({ file }: { file: WorkFile }) {
                         folding={prefs.folding}
                         indentGuides={prefs.indentGuides}
                         bracketColors={prefs.bracketColors}
+                        activeLine={prefs.lineWash ? 'always' : true}
                         search
                     />
                 </EditorPane>
@@ -159,6 +160,7 @@ export function SchemaEditor({ file }: { file: WorkFile }) {
                                 lineNumbers={prefs.lineNumbers}
                                 size={prefs.size}
                                 bracketColors={prefs.bracketColors}
+                                activeLine={prefs.lineWash ? 'always' : true}
                             />
                         </Pane>
                     }

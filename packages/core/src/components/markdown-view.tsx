@@ -20,6 +20,7 @@ import { hasMath, normalizeMath } from '../lib/math'
 import { TABLE_HEAD_TEXT } from '../lib/table'
 import { tagMatches, wikiLinksIn } from '../lib/wiki-links'
 import { Code } from './Code'
+import { highlightMark } from './Highlight'
 import { Link } from './Link'
 import type { CodeBlockWords } from './ui/code-block'
 import type { MermaidDiagramWords } from './MermaidDiagram'
@@ -401,17 +402,21 @@ interface TextRules {
     schemes: readonly string[] | undefined
     inline: boolean
     headingOffset: number
+    /** False: every link becomes its words. */
+    live: boolean
 }
 
 /**
  * Holds a text to what the app lets it draw: a link whose scheme is not allowed becomes its words,
  * an image its alt text and address when images are off, headings move down by `headingOffset`, a
- * table's header row of empty cells is dropped, and with `inline` every block is laid out as its text.
+ * table's header row of empty cells is dropped, with `inline` every block is laid out as its text,
+ * and without `live` every link becomes its words.
  */
-function rehypeText({ images, schemes, inline, headingOffset }: TextRules) {
+function rehypeText({ images, schemes, inline, headingOffset, live }: TextRules) {
     const replace = (node: HastNode): HastNode[] => {
         if (node.type !== 'element') return [node]
         const tag = node.tagName ?? ''
+        if (tag === 'a' && !live) return node.children ?? []
         if (tag === 'a' && !ownLink(node.properties) && !linkAllowed(String(node.properties?.href ?? ''), schemes)) {
             return node.children ?? []
         }
@@ -442,6 +447,43 @@ function rehypeText({ images, schemes, inline, headingOffset }: TextRules) {
     return () => (tree: HastNode) => {
         visit(tree)
         if (inline) tree.children = phrasing(tree.children ?? [])
+    }
+}
+
+/** Marks each place the words stand in the text's own words, in any case, outside code and math. */
+function rehypeHighlight(words: string) {
+    const needle = words.trim().toLowerCase()
+    const mark = highlightMark()
+    const split = (value: string): HastNode[] => {
+        const lower = value.toLowerCase()
+        const out: HastNode[] = []
+        let at = 0
+        for (let from = lower.indexOf(needle); from !== -1; from = lower.indexOf(needle, from + needle.length)) {
+            if (from > at) out.push({ type: 'text', value: value.slice(at, from) })
+            out.push({
+                type: 'element',
+                tagName: 'mark',
+                properties: { className: mark },
+                children: [{ type: 'text', value: value.slice(from, from + needle.length) }],
+            })
+            at = from + needle.length
+        }
+        if (out.length === 0) return [{ type: 'text', value }]
+        if (at < value.length) out.push({ type: 'text', value: value.slice(at) })
+        return out
+    }
+    const skipped = (node: HastNode) =>
+        /^(code|pre|mark)$/.test(node.tagName ?? '') || String(node.properties?.className ?? '').includes('katex')
+    const visit = (node: HastNode) => {
+        if (node.children === undefined || skipped(node)) return
+        node.children = node.children.flatMap((child) => {
+            if (child.type === 'text') return split(child.value ?? '')
+            visit(child)
+            return [child]
+        })
+    }
+    return () => (tree: HastNode) => {
+        if (needle !== '') visit(tree)
     }
 }
 
@@ -601,6 +643,13 @@ export interface MarkdownProps {
     /** Draws `[[links]]` between notes, and `#tags` with `onTag`, as links the app follows. */
     links?: MarkdownLinks
     /**
+     * False draws every link as its words, a `[[link]]` as the words it shows, for a text set inside
+     * something pressed as a whole, such as a backlink's line in a row that opens its note.
+     */
+    live?: boolean
+    /** Marks each place these words stand in the text, in any case and outside code, as a search's matches are marked. */
+    highlight?: string
+    /**
      * Follows a link inside the app: called with a link's address on a plain press, which stays in
      * the page when it answers true, such as a time in an episode's notes (`#t=754`) or a route of
      * the app's own. Any other link opens in a new tab.
@@ -653,6 +702,9 @@ export interface MarkdownProps {
  *
  * `onLink` keeps the links the app answers for in the page, such as the times in a podcast's show
  * notes, which seek the player; a press with a modifier key, or on a link it declines, opens a new tab.
+ * `live={false}` draws every link as its words, a `[[link]]` as the words it shows, for a text set
+ * inside something pressed as a whole, and `highlight` marks where some words stand, as a search's
+ * matches are marked: a backlink's line drawn in the row that opens its note.
  *
  * For text other people wrote, `images={false}` draws each image as its alt text and address, so
  * nothing is fetched, and `linkSchemes` lists the schemes a link may have to be live, `relative`
@@ -842,6 +894,8 @@ export const MarkdownView = memo(function MarkdownView({
     parts,
     partMarker: word = 'part',
     links,
+    live = true,
+    highlight = '',
     onLink,
     className,
     words: given,
@@ -868,8 +922,9 @@ export const MarkdownView = memo(function MarkdownView({
         () => (math && useMath !== undefined ? normalizeMath(shown, { streaming }) : shown),
         [math, useMath, shown, streaming],
     )
-    const linked = links !== undefined
-    const tagged = links?.onTag !== undefined
+    // Without `live` the links between notes are read too, so each is drawn as the words it shows.
+    const linked = links !== undefined || !live
+    const tagged = live && links?.onTag !== undefined
     const remark: Options['remarkPlugins'] = useMemo(() => {
         const plugins: NonNullable<Options['remarkPlugins']> = [remarkGfm, remarkParts(word)]
         if (katex !== undefined && math) plugins.push(katex.remarkMath)
@@ -889,10 +944,11 @@ export const MarkdownView = memo(function MarkdownView({
         }
         // After sanitizing, so KaTeX's own markup is kept.
         if (katex !== undefined && math) plugins.push([katex.rehypeKatex, { throwOnError: false, errorColor: 'var(--status-failed-ink)' }])
-        plugins.push(rehypeText({ images, schemes, inline, headingOffset: offset }))
+        plugins.push(rehypeText({ images, schemes, inline, headingOffset: offset, live }))
         plugins.push(rehypeDocument(anchors))
+        if (highlight.trim() !== '') plugins.push(rehypeHighlight(highlight))
         return plugins
-    }, [allowHtml, htmlEngine, anchors, katex, math, images, schemes, inline, offset])
+    }, [allowHtml, htmlEngine, anchors, katex, math, images, schemes, inline, offset, live, highlight])
     const urlTransform = useCallback<UrlTransform>(
         (url, key, node) => {
             if (key !== 'href' || node.tagName !== 'a') return defaultUrlTransform(url)

@@ -26,6 +26,7 @@
         "@storybook/react-vite": "^10",
         "@tailwindcss/oxide": "4.3.4",
         "@tailwindcss/vite": "^4.3.4",
+        "@types/d3-force": "^3.0.10",
         "@types/geojson": "^7946.0.16",
         "@types/node": "^26.6.6",
         "@types/react": "^19.3.0",
@@ -199,6 +200,7 @@
       "version": "0.29.3",
       "dependencies": {
         "@xyflow/react": "^12.12.1",
+        "d3-force": "^3.0.1",
         "elkjs": "^0.12.1",
         "lucide-react": "^1.68.0",
       },

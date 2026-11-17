@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CheckCircle2, CircleAlert } from 'lucide-react'
+import { CheckCircle2, CircleAlert, FileText } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
@@ -9,6 +9,7 @@ import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
 import { PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
 import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/TableOfContents'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@winterop-com/sokkel-ui/primitives/item'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
@@ -250,6 +251,55 @@ function LinkedNote() {
     )
 }
 
+/** The notes that link to Nightly export, each with the line its link stands in and the words the link shows. */
+const BACKLINKS = [
+    {
+        note: 'Retry a run',
+        line: 'After a **failed** run of [[Nightly export|the export]], start it again from `upload`.',
+        mark: 'the export',
+    },
+    {
+        note: 'Weekly sync with grace',
+        line: '- [ ] Ask _margaret_ whether [[Nightly export]] keeps a week of files',
+        mark: 'Nightly export',
+    },
+    {
+        note: '2026-11-09',
+        line: '> [[Nightly export#Steps]] ran long on the [worker](https://example.org/worker) again.',
+        mark: 'Nightly export',
+    },
+]
+
+/**
+ * A note's backlinks as a notes app lists them: each row opens the note that links here, its line
+ * drawn as Markdown with every link as its words and the name marked where it stands.
+ */
+function Backlinks() {
+    const [followed, setFollowed] = useState('Nothing yet')
+    return (
+        <div className="max-w-md p-6">
+            <Section title={`Linked mentions ${String(BACKLINKS.length)}`} flush>
+                <ItemGroup flush>
+                    {BACKLINKS.map(({ note, line, mark }) => (
+                        <Item key={note} size="xs" render={<button type="button" onClick={() => setFollowed(`Note ${note}`)} />}>
+                            <ItemMedia variant="icon">
+                                <FileText />
+                            </ItemMedia>
+                            <ItemContent>
+                                <ItemTitle>{note}</ItemTitle>
+                                <ItemDescription>
+                                    <PlainMarkdown inline live={false} content={line} highlight={mark} />
+                                </ItemDescription>
+                            </ItemContent>
+                        </Item>
+                    ))}
+                </ItemGroup>
+            </Section>
+            <p className="mt-6 text-sm text-muted-foreground">Followed: {followed}</p>
+        </div>
+    )
+}
+
 const SHOW_NOTES = `Ada and grace walk the harbor at low water and count what the tide left behind.
 
 - [00:00](#t=0) The harbor at low water
@@ -366,6 +416,13 @@ export const Measure: StoryObj = { name: 'Reading measure', render: () => <Measu
  * app follows, a link to a note that does not exist is drawn faint, and each `#tag` is a chip.
  */
 export const Links: StoryObj = { name: 'Linked notes', render: () => <LinkedNote /> }
+
+/**
+ * The lines that link to a note, each drawn as Markdown in the row that opens its note: strong
+ * words, code and a task read as written, every link (a `[[link]]` too) drawn as its words with
+ * `live={false}`, and `highlight` marking where the note is named, in any case.
+ */
+export const Backlinked: StoryObj = { name: 'Backlinks', render: () => <Backlinks /> }
 
 /**
  * Links the app follows in the page through `onLink`: each time in an episode's notes seeks, and a

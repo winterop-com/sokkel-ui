@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { NetworkGraph, type NetworkLink, type NetworkNode } from '@winterop-com/sokkel-ui-graph/NetworkGraph'
+import { NetworkGraph, type NetworkLayout, type NetworkLink, type NetworkNode } from '@winterop-com/sokkel-ui-graph/NetworkGraph'
 import { Stage } from './Frame'
 
 /** Tidevann's notes and the links between them, each note colored by its folder. */
@@ -63,13 +63,14 @@ const LINKS: NetworkLink[] = [
     ['day-2', 'oncall'],
 ].map(([source, target]) => ({ source: source as string, target: target as string }))
 
-function Network({ nodes, links, meta }: { nodes: NetworkNode[]; links: NetworkLink[]; meta: string }) {
+function Network({ nodes, links, meta, layout }: { nodes: NetworkNode[]; links: NetworkLink[]; meta: string; layout?: NetworkLayout }) {
     const [current, setCurrent] = useState<string | null>('export')
     return (
         <Stage title="Graph" meta={meta}>
             <NetworkGraph
                 nodes={nodes}
                 links={links}
+                layout={layout}
                 current={current}
                 onSelect={(id) => id !== null && setCurrent(id)}
                 words={{ label: 'Notes' }}
@@ -103,3 +104,12 @@ export const Short: Story = {
  * exist is faint, and the notes with no link stand in a row under the rest.
  */
 export const Vault: Story = { render: () => <Network nodes={NOTES} links={LINKS} meta={`${String(NOTES.length)} notes`} /> }
+
+/**
+ * The same vault laid out live by forces: linked notes pull together and every note pushes the
+ * others away until the network settles. Drag a dot and its neighbors follow while the rest make
+ * room; let it go and it settles back among them.
+ */
+export const Live: Story = {
+    render: () => <Network nodes={NOTES} links={LINKS} layout="force" meta={`${String(NOTES.length)} notes, live`} />,
+}

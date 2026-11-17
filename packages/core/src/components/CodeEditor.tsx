@@ -43,7 +43,9 @@ import { createRoot } from 'react-dom/client'
 
 import { cn } from '../lib/cn'
 import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
+import { isApple } from '../lib/keys'
 import { onPluginsChange, pluginLanguage, pluginLanguageForMediaType, type PluginLanguageNames } from '../lib/plugins'
+import { wikiLinksIn, type WikiLink } from '../lib/wiki-links'
 import { bracketColors as colorBrackets, indentGuides as drawGuides } from './code/guides'
 import { jq } from './code/jq'
 import { markdown } from './code/markdown'
@@ -347,10 +349,16 @@ const THEME = EditorView.theme({
     },
     '.cm-cursor': { borderLeftColor: 'var(--foreground)' },
     '.cm-placeholder': { color: 'var(--muted-foreground)' },
-    '&.cm-focused .cm-activeLine': { backgroundColor: 'color-mix(in oklab, var(--foreground) 5%, transparent)' },
+    '&.cm-focused .cm-activeLine, &.cm-activeLine-always .cm-activeLine': {
+        backgroundColor: 'color-mix(in oklab, var(--foreground) 5%, transparent)',
+    },
     '.cm-activeLine': { backgroundColor: 'transparent' },
-    '&.cm-focused .cm-activeLineGutter': { backgroundColor: 'transparent', color: 'var(--foreground)' },
+    '&.cm-focused .cm-activeLineGutter, &.cm-activeLine-always .cm-activeLineGutter': {
+        backgroundColor: 'transparent',
+        color: 'var(--foreground)',
+    },
     '.cm-activeLineGutter': { backgroundColor: 'transparent' },
+    '&.cm-follow-held .cm-wikiLink': { cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '0.2em' },
     '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
         backgroundColor: 'color-mix(in oklab, var(--primary) 28%, transparent) !important',
     },
@@ -602,6 +610,55 @@ export async function linkCompletions(context: CompletionContext, links: CodeLin
     }
 }
 
+/** The `[[links]]` of a document outside its code, each marked so a held Mod key can show it is followed by a click. */
+const followField = StateField.define<{ links: readonly WikiLink[]; set: DecorationSet }>({
+    create: (state) => linkMarks(state.doc.toString()),
+    update: (value, transaction) => (transaction.docChanged ? linkMarks(transaction.newDoc.toString()) : value),
+    provide: (field) => EditorView.decorations.from(field, (value) => value.set),
+})
+
+function linkMarks(text: string): { links: readonly WikiLink[]; set: DecorationSet } {
+    const links = wikiLinksIn(text)
+    const mark = Decoration.mark({ class: 'cm-wikiLink' })
+    return { links, set: Decoration.set(links.map((link) => mark.range(link.from, link.to))) }
+}
+
+/** Whether the follow key is held: ⌘ on an Apple device, Ctrl elsewhere, as CodeMirror's Mod reads. */
+const followKey = (event: MouseEvent | KeyboardEvent) => (isApple() ? event.metaKey : event.ctrlKey)
+
+/** The `[[link]]` under a position in the document, if any. */
+export function wikiLinkAt(state: EditorState, pos: number): WikiLink | undefined {
+    return state.field(followField, false)?.links.find((link) => link.from <= pos && pos < link.to)
+}
+
+/**
+ * Follows a `[[link]]` on a click with Mod held (⌘ on a Mac, Ctrl elsewhere), the links underlined
+ * and the pointer a hand while the key is held over the editor.
+ */
+function followLinks(follow: () => ((link: WikiLink) => void) | undefined): Extension {
+    const hold = (view: EditorView, held: boolean) => view.dom.classList.toggle('cm-follow-held', held)
+    return [
+        followField,
+        EditorView.domEventHandlers({
+            mousedown: (event, view) => {
+                const handler = follow()
+                if (handler === undefined || event.button !== 0 || !followKey(event)) return false
+                const pos = view.posAtCoords({ x: event.clientX, y: event.clientY }, false)
+                const link = wikiLinkAt(view.state, pos)
+                if (link === undefined) return false
+                event.preventDefault()
+                handler(link)
+                return true
+            },
+            mousemove: (event, view) => hold(view, followKey(event)),
+            mouseleave: (_event, view) => hold(view, false),
+            keydown: (event, view) => hold(view, followKey(event)),
+            keyup: (event, view) => hold(view, followKey(event)),
+            blur: (_event, view) => hold(view, false),
+        }),
+    ]
+}
+
 export interface CodeEditorProps {
     /** The document, held from outside with `onChange`; left out with `doc`. */
     value?: string
@@ -617,8 +674,11 @@ export interface CodeEditorProps {
     language?: CodeLanguage
     readOnly?: boolean
     lineNumbers?: boolean
-    /** Shades the caret's line while the editor has focus; on by default, off for an app whose people turn it off. */
-    activeLine?: boolean
+    /**
+     * Shades the caret's line while the editor has focus; on by default, off for an app whose people
+     * turn it off, and `always` keeps it shaded while the focus is elsewhere, as a reader may choose.
+     */
+    activeLine?: boolean | 'always'
     /** Folds long lines at the editor's edge instead of scrolling sideways. */
     wrap?: boolean
     marks?: readonly CodeMark[]
@@ -635,6 +695,11 @@ export interface CodeEditorProps {
     languageWords?: boolean
     /** The names a `[[link]]` to another note completes from as it is typed, such as every note's title. */
     links?: CodeLinks
+    /**
+     * Follows a `[[link]]` clicked with Mod held (⌘ on a Mac, Ctrl elsewhere), such as by opening the
+     * note it names; while the key is held, the links show they can be followed.
+     */
+    onFollowLink?: (link: WikiLink) => void
     /** What a word is, shown when the pointer rests on it; nothing to show nothing. */
     hover?: (word: string) => ReactNode
     /** Runs the document, on Mod-Enter (Cmd on a Mac, Ctrl elsewhere). */
@@ -726,7 +791,7 @@ export interface CodeEditorProps {
  * `markdown` highlights notes and documents: headings, strong and emphasized words, code, quotes,
  * lists, links and addresses, `[[links]]` between notes and `#tags`. `links` completes a
  * `[[link]]` as it is typed from the names given, such as every note's title, the closing brackets
- * put in with the name.
+ * put in with the name, and `onFollowLink` follows one clicked with Mod held.
  */
 export function CodeEditor({
     value: givenValue,
@@ -741,6 +806,7 @@ export function CodeEditor({
     completions,
     languageWords = true,
     links,
+    onFollowLink,
     hover,
     onRun,
     keys,
@@ -798,6 +864,7 @@ export function CodeEditor({
         onBlur,
         onProblems,
         onDocument,
+        onFollowLink,
     })
     props.current = {
         marks,
@@ -815,6 +882,7 @@ export function CodeEditor({
         onBlur,
         onProblems,
         onDocument,
+        onFollowLink,
     }
     /** Reads a JSON or YAML document for `onDocument`, a moment after the last edit. */
     const reading = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -860,11 +928,14 @@ export function CodeEditor({
         placeholder: new Compartment(),
         phrases: new Compartment(),
         attributes: new Compartment(),
+        follow: new Compartment(),
     })
 
     const oneLine = variant === 'line'
     const numbered = numberedGiven && !oneLine
-    const activeLine = activeGiven && !oneLine
+    const activeLine = activeGiven !== false && !oneLine
+    const activeAlways = activeGiven === 'always' && !oneLine
+    const following = onFollowLink !== undefined
     const pathLanguage: PathLanguage = language === 'json' || language === 'yaml' ? language : undefined
     const schemaLanguage: SchemaLanguage | undefined =
         schema !== undefined && (language === 'json' || language === 'yaml') ? language : undefined
@@ -919,6 +990,11 @@ export function CodeEditor({
     }
 
     const extensions = {
+        active: () =>
+            activeLine
+                ? [highlightActiveLine(), activeAlways ? EditorView.editorAttributes.of({ class: 'cm-activeLine-always' }) : []]
+                : [],
+        follow: () => (following && !large ? followLinks(() => props.current.onFollowLink) : []),
         keys: () =>
             Prec.highest(
                 keymap.of(
@@ -1010,7 +1086,8 @@ export function CodeEditor({
                     drawSelection(),
                     indentOnInput(),
                     bracketMatching(),
-                    parts.active.of(activeLine ? highlightActiveLine() : []),
+                    parts.active.of(extensions.active()),
+                    parts.follow.of(extensions.follow()),
                     syntaxHighlighting(HIGHLIGHT),
                     autocompletion({
                         icons: true,
@@ -1247,10 +1324,14 @@ export function CodeEditor({
                 compartments.current.gutter.reconfigure(
                     numbered ? [lineNumbers(), ...(activeLine ? [highlightActiveLineGutter()] : [])] : [],
                 ),
-                compartments.current.active.reconfigure(activeLine ? highlightActiveLine() : []),
+                compartments.current.active.reconfigure(extensions.active()),
             ],
         })
-    }, [numbered, activeLine])
+    }, [numbered, activeLine, activeAlways])
+
+    useEffect(() => {
+        view.current?.dispatch({ effects: compartments.current.follow.reconfigure(extensions.follow()) })
+    }, [following, large])
 
     useEffect(() => {
         view.current?.dispatch({ effects: compartments.current.wrap.reconfigure(wrap ? EditorView.lineWrapping : []) })

@@ -534,6 +534,11 @@ export interface TreeProps {
      * branch still opens to what is under it.
      */
     unavailable?: (node: TreeNode) => string | undefined
+    /**
+     * Choosing a closed branch opens it, by a press or Enter, as a file tree opens the folder it
+     * shows; its arrow still closes it. Off, a branch opens only by its arrow and the Right key.
+     */
+    openOnChoose?: boolean
     words?: Partial<TreeWords>
     /** What the tree is, for a screen reader. */
     label: string
@@ -571,6 +576,8 @@ export interface TreeProps {
  *
  * `unavailable` shuts the rows a reader may not choose and says why on each, such as the places
  * outside what a form is assigned to; their branches still open to the rows under them.
+ *
+ * `openOnChoose` opens a closed branch as it is chosen, as a file tree opens the folder it shows.
  */
 export function Tree({
     nodes,
@@ -591,6 +598,7 @@ export function Tree({
     nodeOf,
     order,
     unavailable,
+    openOnChoose = false,
     words: given,
     label,
     className,
@@ -854,6 +862,7 @@ export function Tree({
             setOpen((now) => new Set([...now, ...trail.ancestors.map((ancestor) => ancestor.id)]))
             setReveal(id)
         }
+        if (openOnChoose && matches === null && row.trail === undefined && isBranch(row.node, loads) && !open.has(id)) toggle(id, true)
         if (selection === 'none' || onSelect === undefined) return
         if (unavailable?.(row.node) !== undefined && !chosen.has(id)) return
         if (selection === 'single') onSelect([id])

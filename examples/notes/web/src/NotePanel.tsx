@@ -1,9 +1,8 @@
-import { Highlight } from '@winterop-com/sokkel-ui/Highlight'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
+import { PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { TableOfContents } from '@winterop-com/sokkel-ui/TableOfContents'
-import { literalRanges } from '@winterop-com/sokkel-ui/lib/search'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@winterop-com/sokkel-ui/primitives/item'
 import { CalendarDays, FilePlus, FileText, FileX, Link2 } from 'lucide-react'
@@ -14,7 +13,7 @@ import type { Note } from './model'
 import { useVault } from './state'
 import { unlinkedMentions } from './vault'
 
-/** A note another note's line points at: its name, the line with the words marked, and what can be done. */
+/** A note another note's line points at: its name, the line drawn as Markdown with the words marked, and what can be done. */
 function NoteItem({ note, line, mark, action }: { note: Note; line: string; mark: string; action?: React.ReactNode }) {
     const Icon = note.day === undefined ? FileText : CalendarDays
     return (
@@ -25,7 +24,7 @@ function NoteItem({ note, line, mark, action }: { note: Note; line: string; mark
             <ItemContent>
                 <ItemTitle>{note.title}</ItemTitle>
                 <ItemDescription>
-                    <Highlight text={line} ranges={literalRanges(line, mark)} />
+                    <PlainMarkdown inline live={false} content={line} highlight={mark} />
                 </ItemDescription>
             </ItemContent>
             {action !== undefined && <ItemActions>{action}</ItemActions>}
