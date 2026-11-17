@@ -5,6 +5,12 @@ release and empties it.
 
 ## Added
 
+- `TimeSeriesPanel` takes `marks`: lines across at values, such as a target or a limit, dashed in
+  their color with the label and value written at the end; the value axis reaches each. A chart's
+  spec takes the same as `targets` (`ChartTarget`).
+- `RAIL_SIZE` (`{ default, min, max }`, 240, 200 and 360, with its type `RailSize`) from
+  `@winterop-com/sokkel-ui/Rail`: the widths the rail's props default to, for an app that keeps the
+  width itself with `size` and `onSizeChange` to start from.
 - `CallBar` (`@winterop-com/sokkel-ui/CallBar`): the controls of a video or audio call, a round bar
   floating over the call's picture (`placement="floating"`, the default) or docked across its foot
   (`docked`). The microphone (`muted`, `onMutedChange`) and the camera (`cameraOff`,
@@ -98,6 +104,18 @@ release and empties it.
   (and on the server). `ReorderableTrackList` always draws every row.
 
 ## Changed
+
+- `CodeEditor`'s folding keys: Mod+. folds the block at the caret and Mod+Shift+. unfolds it,
+  Mod+Alt+. folds every block and Mod+Alt+Shift+. unfolds them, so a keyboard that types `[` and `]`
+  with Option or AltGr can fold. CodeMirror's bracket keys (Ctrl+Shift+[ and ], Ctrl+Alt+[ and ])
+  stay as second keys. `FOLD_KEYS` is the keymap.
+- A table's group heads (`groupBy`) are set as its column heads are: `text-head` in
+  `table-head-ink`, in their own case, never louder than the rows under them, where they were the
+  body size at weight 500 in the foreground.
+- `StatPanel` wears the dashboard panel's edge (`border-strong`), and its tools the panel tools'
+  focus outline, `focus-ring-offset` off; its target meter's track is `muted` (`on-fill` at 25
+  percent on a filled tile) where it was the reading's own color at 15 percent.
+- A chart legend's hidden entry fades at `disabled-opacity`, where it was 60 percent.
 
 - `@winterop-com/sokkel-ui/vite` exports `sokkelStyles()`, a Vite plugin that gives an app the
   lean stylesheet from its own imports. Put it before `tailwindcss()` and keep importing

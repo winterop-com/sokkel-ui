@@ -2,7 +2,7 @@ import { Disc3, Radio } from 'lucide-react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { Rail, railShows, railViewAfter, type RailBody, type RailGroup, type RailState } from './Rail'
+import { Rail, RAIL_SIZE, railShows, railViewAfter, type RailBody, type RailGroup, type RailState } from './Rail'
 import { ShellDrawer } from './shell-context'
 
 const GROUPS: RailGroup[] = [
@@ -156,5 +156,13 @@ describe('Rail collapsed', () => {
         const radio = anchors(html).find((link) => link.includes('href="#radio"')) ?? ''
         expect(radio).toContain('h-(--density-row)')
         expect(radio).toContain('max-md:h-finger')
+    })
+})
+
+describe('RAIL_SIZE', () => {
+    it('holds the widths the rail starts at and drags between, which its props default to', () => {
+        expect(RAIL_SIZE).toEqual({ default: 240, min: 200, max: 360 })
+        const html = renderToStaticMarkup(<Rail name="Tidevann" groups={GROUPS} />)
+        expect(html).toContain(`${RAIL_SIZE.default}px`)
     })
 })

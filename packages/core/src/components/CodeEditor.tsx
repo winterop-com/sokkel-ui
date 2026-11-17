@@ -12,6 +12,8 @@ import { yaml } from '@codemirror/lang-yaml'
 import {
     bracketMatching,
     codeFolding,
+    foldAll,
+    foldCode,
     foldGutter,
     foldKeymap,
     HighlightStyle,
@@ -20,6 +22,8 @@ import {
     StreamLanguage,
     syntaxHighlighting,
     type StreamParser,
+    unfoldAll,
+    unfoldCode,
 } from '@codemirror/language'
 import { diagnosticCount, forEachDiagnostic, linter, lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint'
 import { openSearchPanel, search as searchPanel, searchKeymap, SearchQuery, setSearchQuery } from '@codemirror/search'
@@ -35,6 +39,7 @@ import {
     lineNumbers,
     placeholder as placeholderText,
     type DecorationSet,
+    type KeyBinding as EditorKey,
 } from '@codemirror/view'
 import { tags } from '@lezer/highlight'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -468,6 +473,19 @@ const SIZES = {
     md: EditorView.theme({ '&': { fontSize: 'var(--text-sm)' }, '.cm-scroller': { lineHeight: 'var(--leading-code)' } }),
     lg: EditorView.theme({ '&': { fontSize: 'var(--text-base)' }, '.cm-scroller': { lineHeight: 'var(--text-base--line-height)' } }),
 }
+
+/**
+ * Folding's keys: Mod-. folds the block at the caret and Mod-Shift-. unfolds it, Mod-Alt-. folds
+ * every block and Mod-Alt-Shift-. unfolds them, keys any layout types without Alt. CodeMirror's
+ * own bracket keys (Ctrl-Shift-[ and ], Ctrl-Alt-[ and ]) stay as the second keys.
+ */
+export const FOLD_KEYS: readonly EditorKey[] = [
+    { key: 'Mod-.', run: foldCode },
+    { key: 'Mod-Shift-.', run: unfoldCode },
+    { key: 'Mod-Alt-.', run: foldAll },
+    { key: 'Mod-Alt-Shift-.', run: unfoldAll },
+    ...foldKeymap,
+]
 
 /** A document past this many characters drops folding, bracket colors and indent guides, which walk the whole of it. */
 export const LARGE_DOCUMENT = 1_000_000
@@ -1018,7 +1036,7 @@ export function CodeEditor({
             ),
         search: () => (search ? [searchPanel({ top: true }), keymap.of(searchKeymap)] : []),
         look: () => (large ? [] : [bracketColors ? colorBrackets : [], indentGuides ? drawGuides : []]),
-        folding: () => (folding && !large ? [codeFolding(), foldGutter(), keymap.of(foldKeymap)] : []),
+        folding: () => (folding && !large ? [codeFolding(), foldGutter(), keymap.of(FOLD_KEYS)] : []),
         lint: () => (diagnosing ? [lintGutter(), linter((editor) => diagnose(editor.state), { delay: 300 })] : []),
         schema: () => {
             if (schemaLanguage === undefined) return []

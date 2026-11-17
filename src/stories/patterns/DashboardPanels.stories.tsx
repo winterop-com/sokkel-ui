@@ -191,7 +191,7 @@ export const Gauges: StoryObj = {
     ),
 }
 
-/** Time series: lines over fading areas, percentiles with a threshold line, stacked areas, and a legend table. */
+/** Time series: lines over fading areas, percentiles with a threshold line, stacked areas, a legend table, and steps under a limit (`marks`), the axis reaching it. */
 export const TimeSeries: StoryObj = {
     name: 'Time series',
     render: () => (
@@ -219,7 +219,14 @@ export const TimeSeries: StoryObj = {
                     legend="table"
                     labelEvery={16}
                 />
-                <TimeSeriesPanel title="Queue depth" x={TIMES} series={QUEUE_SERIES} step labelEvery={16} />
+                <TimeSeriesPanel
+                    title="Queue depth"
+                    x={TIMES}
+                    series={QUEUE_SERIES}
+                    step
+                    marks={[{ value: 40, label: 'Limit', color: 'warning' }]}
+                    labelEvery={16}
+                />
             </DashboardGrid>
         </Ground>
     ),

@@ -65,6 +65,7 @@ export type {
     ChartKindDef,
     ChartLayer,
     ChartMark,
+    ChartTarget,
     ChartSpec,
     ChartStep,
     ChartWords,

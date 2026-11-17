@@ -102,6 +102,8 @@ and ask before acting.
   `src/rules.test.ts` fails a hand-set size or color anywhere, and in a story a selector reaching
   into a component, a raw table, a pill shape, a message under a field, or a component no story
   shows.
+- A head is never louder than what it heads: a table's column and group heads, a card's labels and
+  a section's heading are at most the size of the content under them, in a quieter ink.
 - Words a component says are props with English defaults, so an app can translate them.
 - Words follow their context. An action or a search in a page or section drops the noun the page
   already names: on Roles the button is "New" and the field "Search", not "New role" and "Search

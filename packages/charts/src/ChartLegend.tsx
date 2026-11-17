@@ -177,7 +177,7 @@ export function ChartLegend({
                             className={cn(
                                 'inline-flex h-6 items-center gap-1.5 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-hover hover:text-foreground max-md:h-finger',
                                 ITEM,
-                                off && 'opacity-60',
+                                off && 'opacity-disabled',
                             )}
                         >
                             <Swatch color={item.color} off={off} />

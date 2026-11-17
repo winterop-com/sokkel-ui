@@ -53,7 +53,7 @@ function TargetMeter({
     const mark = at(target)
     return (
         <div className="mt-2 mb-3 flex w-full max-w-48 flex-col gap-1">
-            <div className="relative h-1.5 rounded-mini bg-current/15">
+            <div className={cn('relative h-1.5 rounded-mini', filled ? 'bg-on-fill/25' : 'bg-muted')}>
                 <span className="absolute inset-y-0 left-0 rounded-mini bg-current" style={{ width: `${reach}%` }} />
                 <span
                     aria-hidden
@@ -193,7 +193,7 @@ export function StatPanel({
     const interactive = href !== undefined || onSelect !== undefined
     const Cover = href !== undefined ? Link : 'button'
     const tool = cn(
-        'pointer-events-auto flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid',
+        'pointer-events-auto flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
         filled ? 'text-on-fill/80 hover:text-on-fill' : 'text-muted-foreground hover:text-foreground',
     )
     return (
@@ -204,7 +204,7 @@ export function StatPanel({
                 target !== undefined && value !== null && 'min-h-36',
                 filled
                     ? 'border-transparent bg-[linear-gradient(135deg,color-mix(in_oklab,var(--tone)_92%,var(--on-fill)),var(--tone)_70%)] text-on-fill dark:bg-[linear-gradient(135deg,color-mix(in_oklab,var(--tone)_80%,var(--background)),color-mix(in_oklab,var(--tone)_62%,var(--background)))]'
-                    : 'border-border bg-card text-card-foreground',
+                    : 'border-border-strong bg-card text-card-foreground',
                 interactive && !filled && 'transition-colors hover:border-foreground/25 hover:bg-hover',
                 SPAN[span],
                 className,
@@ -303,7 +303,14 @@ export function StatPanel({
                         )}
                     </div>
                 ) : (
-                    <div className={cn('flex flex-1 flex-col items-center justify-center px-2.5 pb-7', inked && 'text-(--tone)')}>
+                    <div
+                        className={cn(
+                            'flex flex-1 flex-col items-center justify-center px-2.5',
+                            // The meter keeps its own room under it, so the value and the meter sit centered in the tile.
+                            target !== undefined && value !== null ? 'pb-0' : 'pb-7',
+                            inked && 'text-(--tone)',
+                        )}
+                    >
                         <p
                             className={cn(
                                 'flex items-baseline gap-1 tabular-nums',

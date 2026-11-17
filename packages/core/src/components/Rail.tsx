@@ -150,6 +150,19 @@ export const RAIL_WORDS: RailWords = {
     places: 'All places',
 }
 
+/** The expanded rail's width in pixels: where it starts, and how narrow and how wide its edge drags. */
+export interface RailSize {
+    default: number
+    min: number
+    max: number
+}
+
+/**
+ * The rail's widths: 240 at the start, 200 to 360 by its edge. An app that keeps the width itself
+ * (`size` with `onSizeChange`, stored per reader) starts from `RAIL_SIZE.default`.
+ */
+export const RAIL_SIZE: Readonly<RailSize> = { default: 240, min: 200, max: 360 }
+
 export interface RailProps {
     /** The app's mark, drawn in a small tile; in a strip, the workspace's tile at the top. */
     mark?: ReactNode
@@ -173,9 +186,11 @@ export interface RailProps {
     onSizeChange?: (size: number) => void
     /** Whether the expanded rail's edge drags to resize it, and a collapsed rail's to expand it. */
     resizable?: boolean
+    /** The narrowest the edge drags the rail, `RAIL_SIZE.min` by default. */
     minSize?: number
+    /** The widest the edge drags the rail, `RAIL_SIZE.max` by default. */
     maxSize?: number
-    /** The expanded width the rail starts at and a double click on the edge returns to. */
+    /** The expanded width the rail starts at and a double click on the edge returns to, `RAIL_SIZE.default` by default. */
     defaultSize?: number
     words?: Partial<RailWords>
     /** The ids of the unfolded parents, held from outside with `onExpandedChange`. */
@@ -274,9 +289,9 @@ export function Rail({
     size,
     onSizeChange,
     resizable = true,
-    minSize = 200,
-    maxSize = 360,
-    defaultSize = 240,
+    minSize = RAIL_SIZE.min,
+    maxSize = RAIL_SIZE.max,
+    defaultSize = RAIL_SIZE.default,
     words: given,
     expanded,
     onExpandedChange,
