@@ -31,6 +31,7 @@ const merge = extendTailwindMerge({
                         'detail-title',
                         'section-title',
                         'head',
+                        'column-head',
                         'body',
                         'action',
                         'label',

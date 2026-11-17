@@ -514,7 +514,8 @@ a `font-*` class still overrides:
 | Page title                  | `text-page-title`           | 24 / 32, tight tracking | 500       |
 | Detail or dialog title      | `text-detail-title`         | 16 / 24                 | 600       |
 | Section or card title       | `text-section-title`        | 15 / 22                 | 500       |
-| Compact panel or table head | `text-head`                 | 13 / 20                 | 600       |
+| Compact panel head          | `text-head`                 | 13 / 20                 | 600       |
+| Table column or group head  | `text-column-head`          | 16 / 24                 | 500       |
 | Body and controls (actions) | `text-body` (`text-action`) | 15 / 22                 | 400 (500) |
 | Field label                 | `text-label`                | 15 / 20                 | 500       |
 | Help and metadata           | `text-help`                 | 13 / 20                 | 400       |

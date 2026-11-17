@@ -1,14 +1,15 @@
 /**
- * A table's head text: the head role (`text-head`, the table-head tokens' size, weight and tracking
- * at the small line height), its ink and its case, so every table, list and section head reads alike.
+ * A table's column head text: the column head role (`text-column-head`, the table-head tokens' size,
+ * weight and tracking, one text step above the body text of the cells it heads), its ink and its
+ * case, so every table and listing head reads alike.
  */
-export const TABLE_HEAD_TEXT = 'text-head text-table-head-ink [text-transform:var(--table-head-transform)]'
+export const TABLE_HEAD_TEXT = 'text-column-head text-table-head-ink [text-transform:var(--table-head-transform)]'
 
 /**
- * A group's head row: the column heads' size, weight and ink, never louder than the rows under it,
- * in its own case, since a group is named by its value (a job, a state).
+ * A group's head row: the column heads' role and ink, one step above the rows under it, in its own
+ * case, since a group is named by its value (a job, a state).
  */
-export const GROUP_HEAD_TEXT = 'text-head text-table-head-ink'
+export const GROUP_HEAD_TEXT = 'text-column-head text-table-head-ink'
 
 /** A table's head row: its ground and the rule under it, from the table-head tokens. */
 export const TABLE_HEAD_ROW = 'border-b border-table-head-line bg-table-head-ground'
