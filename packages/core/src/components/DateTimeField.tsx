@@ -143,7 +143,7 @@ export function DateTimeField({
                         anchor={frame}
                         open={opened}
                         onOpenChange={setOpened}
-                        className="flex-row"
+                        className="max-sm:flex-col sm:flex-row"
                     >
                         <DayPick
                             value={day}
@@ -155,7 +155,7 @@ export function DateTimeField({
                                 entry.set(within(`${picked}T${entry.value?.slice(11) ?? (seconds ? '00:00:00' : '00:00')}`))
                             }
                         />
-                        <div className="relative w-28 border-l border-border">
+                        <div className="relative border-border max-sm:h-40 max-sm:border-t sm:w-28 sm:border-l">
                             <TimeList
                                 value={entry.value?.slice(11) ?? null}
                                 times={timesOfDay(step)}

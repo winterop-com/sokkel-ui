@@ -87,7 +87,7 @@ for (const story of stories) {
         for (const [name, width] of Object.entries(WIDTHS)) {
             await page.setViewportSize({ width, height: 900 })
             await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:dark`)
-            await settled(page)
+            await settled(page, { videos: false })
             const wide = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth))
             if (wide > width + 1) over.push(`${name} (${String(width)}px): the page is ${String(wide)}px wide`)
             for (const area of await page.evaluate(emptyScroll)) over.push(`${name} (${String(width)}px): ${area}`)
