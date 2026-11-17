@@ -282,13 +282,39 @@ export const dragCollision: CollisionDetection = (args) => {
     return rectIntersection(within)
 }
 
+/** Where the pointer is while a pointer drag is under way, followed from the window. */
+let livePointer: { x: number; y: number } | null = null
+let stopFollowing: (() => void) | undefined
+
+/**
+ * Follows the pointer from the press that starts a drag. The engine's own offset is corrected for
+ * the scrolling of the dragged thing's boxes, so a drag begun in a list that scrolls, or that
+ * scrolls under it, would otherwise be placed by that much off the pointer.
+ */
+function followPointer(activator: Event | null): void {
+    stopFollowing?.()
+    livePointer = activator === null || activator instanceof globalThis.KeyboardEvent ? null : getEventCoordinates(activator)
+    if (livePointer === null) return
+    const move = (event: Event) => {
+        livePointer = getEventCoordinates(event) ?? livePointer
+    }
+    const options = { capture: true, passive: true }
+    window.addEventListener('pointermove', move, options)
+    window.addEventListener('touchmove', move, options)
+    stopFollowing = () => {
+        window.removeEventListener('pointermove', move, options)
+        window.removeEventListener('touchmove', move, options)
+        stopFollowing = undefined
+    }
+}
+
 /**
  * Where the pointer is during a drag, or the middle of the dragged thing for a drag from the
  * keyboard, in the window's coordinates.
  */
 export function dragPoint(event: DragMoveEvent | DragOverEvent | DragEndEvent): { x: number; y: number } | null {
     const start = event.activatorEvent instanceof globalThis.KeyboardEvent ? null : getEventCoordinates(event.activatorEvent)
-    if (start !== null) return { x: start.x + event.delta.x, y: start.y + event.delta.y }
+    if (start !== null) return livePointer ?? { x: start.x + event.delta.x, y: start.y + event.delta.y }
     const rect = event.active.rect.current.translated
     return rect === null ? null : { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
 }
@@ -387,10 +413,12 @@ function DragDropRoot({
 }) {
     const words = useMemo(() => ({ ...DRAG_DROP_WORDS, ...given }), [given])
     const dragging = useRef(false)
-    // Gone mid-drag, it hands the page its own cursor back.
+    // Gone mid-drag, it hands the page its own cursor back and stops following the pointer.
     useEffect(
         () => () => {
-            if (dragging.current) document.body.style.cursor = ''
+            if (!dragging.current) return
+            document.body.style.cursor = ''
+            stopFollowing?.()
         },
         [],
     )
@@ -445,6 +473,7 @@ function DragDropRoot({
                 accessibility={{ announcements, screenReaderInstructions: { draggable: words.instructions } }}
                 autoScroll
                 onDragStart={(event) => {
+                    followPointer(event.activatorEvent)
                     dragging.current = true
                     setActive(dragData(event.active) ?? null)
                     document.body.style.cursor = 'grabbing'
@@ -458,12 +487,14 @@ function DragDropRoot({
                     document.body.style.cursor = ''
                     if (!fromKeyboard(event)) swallowClick()
                     handlers.onDragEnd?.(event)
+                    stopFollowing?.()
                 }}
                 onDragCancel={(event) => {
                     dragging.current = false
                     setActive(null)
                     document.body.style.cursor = ''
                     handlers.onDragCancel?.(event)
+                    stopFollowing?.()
                 }}
             >
                 {children}
