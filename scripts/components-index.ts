@@ -81,6 +81,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/theme-swatch': "a theme's sample before its name, which the theme picker and a select field's options lead with",
         'components/calendar/calendar-drag':
             'what the week and month views move their events with, loaded the first time one is drawn with `onEventMove`',
+        'components/clip-timeline-drag': "ClipTimeline's drag layer, loaded the first time a timeline that changes its clips is drawn",
         'components/run-timeline-drag': "RunTimeline's drag layer, loaded the first time a timeline that shifts runs is drawn",
         'components/calendar/event-keys': "the keys that move and resize a calendar event, and the views' drag layer loader",
         'components/calendar/follow-press': "the press on an event's edge that resizes it",
@@ -368,6 +369,7 @@ const CORE_AREAS: Record<string, string> = {
     RailDrops: 'Drag and drop',
     RepeatedDrag: 'Drag and drop',
     RunTimeline: 'Data display',
+    ClipTimeline: 'Data display',
     UptimeBar: 'Data display',
     // Actions, dialogs and feedback.
     Banner: 'Actions, dialogs and feedback',

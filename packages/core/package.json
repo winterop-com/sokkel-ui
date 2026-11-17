@@ -706,6 +706,10 @@
             "types": "./dist/components/UploadTray.d.ts",
             "import": "./dist/components/UploadTray.js"
         },
+        "./ClipTimeline": {
+            "types": "./dist/components/ClipTimeline.d.ts",
+            "import": "./dist/components/ClipTimeline.js"
+        },
         "./RunTimeline": {
             "types": "./dist/components/RunTimeline.d.ts",
             "import": "./dist/components/RunTimeline.js"

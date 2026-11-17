@@ -46,7 +46,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 265 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 266 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -282,6 +282,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **BarList** | `@winterop-com/sokkel-ui/BarList` | Labeled bars, each a share from 0 to 1, such as how likely each class is, with the chosen one in the accent and the rest quiet. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-bar-list--short) |
 | **CheckList** | `@winterop-com/sokkel-ui/CheckList` | A health report: each check with its verdict as a dot, its finding, and a hint when it needs attention. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **Chip** | `@winterop-com/sokkel-ui/Chip` | A short value as a chip: a tag on a job, a state that has no run color, a value that is absent. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-chip--tones) |
+| **ClipTimeline** | `@winterop-com/sokkel-ui/ClipTimeline` | The multi-track timeline of a video editor. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-clip-timeline--two-tracks) |
 | **ConsequenceList** | `@winterop-com/sokkel-ui/ConsequenceList` | What goes with the thing an action removes or changes, a row per kind with its count, under a heading that says what happens to them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 | **Count** | `@winterop-com/sokkel-ui/Count` | A count of what is waiting, such as unread messages, on the critical color, or with `tone="quiet"` how many entries a group holds. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-marks--counts) |
 | **DataTable**, TableCellFill, DataTableGroup | `@winterop-com/sokkel-ui/DataTable` | A table for rows of any number: sorting, selection with a bulk bar, a column menu, child rows, column widths, and the keyboard. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data-table--short-list) |
