@@ -102,6 +102,12 @@ release and empties it.
   draws only the rows in view and a dozen either side; the current and the focused row stay drawn.
   The window loads the first time a list is windowed, drawing the first 40 rows until it is here
   (and on the server). `ReorderableTrackList` always draws every row.
+- Themes `phosphor`, `phosphor-bright` and `tray`, each light and dark, in `themes.css` and as
+  `themes/<name>.css`, and in `THEMES` for a picker. Phosphor is a green glow on a black screen in
+  the code face with square corners (by day, dark green ink on a pale green paper);
+  phosphor-bright is the same turned up, bright green on pure black with stronger lines; tray sets
+  light cards on a gray tray with a forest green accent, under a pale blue rail and top bar by day
+  and a deep blue one by night.
 
 ## Changed
 
