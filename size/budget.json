@@ -30,12 +30,12 @@
         "engines": ["maplibre"],
         "start": 171,
         "lazy": 352,
-        "css": 62.7
+        "css": 62.8
     },
     "music": {
         "engines": [],
         "start": 174.8,
         "lazy": 46.1,
-        "css": 53.4
+        "css": 53.5
     }
 }
