@@ -92,7 +92,7 @@ export function GraphPage() {
             <PageHeader
                 title="Graph"
                 count={`${String(nodes.length)} notes, ${String(links.length)} links`}
-                description="Each dot a note, colored by its folder, larger the more it links; point at one to see its neighbors, press it to open it."
+                description="Each dot a note, colored by its folder, larger the more it links; point at one to see its neighbors, drag it to pull them along, press it to open it."
             />
             <Toolbar
                 end={
@@ -125,6 +125,7 @@ export function GraphPage() {
                 <NetworkGraph
                     nodes={nodes}
                     links={links}
+                    layout="force"
                     current={current}
                     onSelect={(id) => {
                         if (id === null) return

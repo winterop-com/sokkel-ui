@@ -1,4 +1,3 @@
-import { CheckboxField } from '@winterop-com/sokkel-ui/CheckboxField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { format } from 'date-fns'
 import {
@@ -22,18 +21,16 @@ import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Board as BoardArea, BoardDrop, BoardLane, type BoardMove } from '@winterop-com/sokkel-ui/board/Board'
 import { BoardCard, BoardLabel } from '@winterop-com/sokkel-ui/board/BoardCard'
 import { BoardColumn, BoardColumnHead } from '@winterop-com/sokkel-ui/board/BoardColumn'
-import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { BoardItemPanel } from '@winterop-com/sokkel-ui/board/BoardItemPanel'
 import { DueText } from '@winterop-com/sokkel-ui/DueText'
 import { FilterChip, type FilterOption } from '@winterop-com/sokkel-ui/FilterChip'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
-import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
-import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
+import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -44,12 +41,10 @@ import {
     DropdownMenuSeparator,
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
-import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { moveItem as reorder } from '@winterop-com/sokkel-ui/lib/reorder'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Progress } from '@winterop-com/sokkel-ui/primitives/progress'
 import { PeopleFilter } from '@winterop-com/sokkel-ui/PeopleFilter'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
@@ -382,98 +377,69 @@ const LABEL_OPTIONS: FilterOption[] = Object.entries(LABELS).map(([label, color]
     row: <BoardLabel name={label} color={color} />,
 }))
 
-function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) => void }) {
+function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number, done: boolean) => void }) {
     const column = COLUMNS.find((entry) => entry.id === item.column)
-    const done = item.checklist.filter((step) => step.done).length
     return (
-        <>
-            <PaneHeader size="lg" code={item.code} title={item.title}>
-                <Row as="span" inline gap="xs" className="rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
-                    {column?.icon}
-                    {column?.title}
-                </Row>
-                {item.labels.map((label) => (
-                    <BoardLabel key={label} name={label} color={LABELS[label]} />
-                ))}
-            </PaneHeader>
-            <PanelSection title="Description">
-                <p className="text-sm leading-6 text-pretty">{item.description}</p>
-            </PanelSection>
-            <PanelSection title="Fields">
-                <DescriptionList
-                    termWidth="6rem"
-                    items={[
-                        { term: 'Project', value: item.project, code: true },
-                        {
-                            term: 'Assignee',
-                            value:
-                                item.assignee === undefined ? undefined : (
-                                    <Row as="span" inline>
-                                        <PersonAvatar name={item.assignee} image={pictureOf(item.assignee)} size="xs" />
-                                        {item.assignee}
-                                    </Row>
-                                ),
-                        },
-                        {
-                            term: 'Due',
-                            value:
-                                item.due === undefined ? undefined : (
-                                    <DueText
-                                        date={item.due}
-                                        now={NOW}
-                                        done={item.column === 'done'}
-                                        quiet={false}
-                                        words={{ date: (date) => format(date, 'EEEE d MMMM') }}
-                                    />
-                                ),
-                        },
-                        { term: 'Reporter', value: 'margaret' },
-                        { term: 'Created', value: '28 October' },
-                    ]}
-                />
-            </PanelSection>
-            {item.checklist.length > 0 && (
-                <PanelSection title={`Checklist ${done}/${item.checklist.length}`}>
-                    <Progress value={(done / item.checklist.length) * 100} aria-label="Checklist done" />
-                    <Stack as="ul" gap="none" className="-mx-1">
-                        {item.checklist.map((step, index) => (
-                            <li key={step.text}>
-                                <CheckboxField
-                                    label={<span className={cn(step.done && 'text-muted-foreground line-through')}>{step.text}</span>}
-                                    checked={step.done}
-                                    onCheckedChange={() => onToggle(index)}
-                                />
-                            </li>
-                        ))}
-                    </Stack>
-                </PanelSection>
-            )}
-            <PanelSection title="Activity">
-                <Timeline
-                    events={[
-                        { id: 'made', title: 'margaret opened it', at: '28 Oct' },
-                        { id: 'given', title: 'grace assigned it to ada', at: '30 Oct' },
-                        {
-                            id: 'moved',
-                            title: (
-                                <>
-                                    ada moved it to <span className="font-medium">In progress</span>
-                                </>
-                            ),
-                            at: '2 Nov',
-                            tone: 'running',
-                        },
-                        {
-                            id: 'note',
-                            title: 'ada commented',
-                            detail: 'Reproduced with the 1 November feed: zero rows, and transform divides by it.',
-                            at: '3 Nov',
-                        },
-                        { id: 'run', title: 'nightly-export failed at validate', at: '04:00', tone: 'failed' },
-                    ]}
-                />
-            </PanelSection>
-        </>
+        <BoardItemPanel
+            code={item.code}
+            title={item.title}
+            state={column === undefined ? undefined : { icon: column.icon, label: column.title }}
+            labels={item.labels.map((label) => (
+                <BoardLabel key={label} name={label} color={LABELS[label]} />
+            ))}
+            description={item.description}
+            fields={[
+                { term: 'Project', value: item.project, code: true },
+                {
+                    term: 'Assignee',
+                    value:
+                        item.assignee === undefined ? undefined : (
+                            <Row as="span" inline>
+                                <PersonAvatar name={item.assignee} image={pictureOf(item.assignee)} size="xs" />
+                                {item.assignee}
+                            </Row>
+                        ),
+                },
+                {
+                    term: 'Due',
+                    value:
+                        item.due === undefined ? undefined : (
+                            <DueText
+                                date={item.due}
+                                now={NOW}
+                                done={item.column === 'done'}
+                                quiet={false}
+                                words={{ date: (date) => format(date, 'EEEE d MMMM') }}
+                            />
+                        ),
+                },
+                { term: 'Reporter', value: 'margaret' },
+                { term: 'Created', value: '28 October' },
+            ]}
+            checklist={item.checklist}
+            onChecklistChange={onToggle}
+            activity={[
+                { id: 'made', title: 'margaret opened it', at: '28 Oct' },
+                { id: 'given', title: 'grace assigned it to ada', at: '30 Oct' },
+                {
+                    id: 'moved',
+                    title: (
+                        <>
+                            ada moved it to <span className="font-medium">In progress</span>
+                        </>
+                    ),
+                    at: '2 Nov',
+                    tone: 'running',
+                },
+                {
+                    id: 'note',
+                    title: 'ada commented',
+                    detail: 'Reproduced with the 1 November feed: zero rows, and transform divides by it.',
+                    at: '3 Nov',
+                },
+                { id: 'run', title: 'nightly-export failed at validate', at: '04:00', tone: 'failed' },
+            ]}
+        />
     )
 }
 
@@ -556,7 +522,7 @@ function BoardApp({
                                     content: (
                                         <ItemPanel
                                             item={current}
-                                            onToggle={(index) =>
+                                            onToggle={(index, done) =>
                                                 setItems((now) =>
                                                     now.map((item) =>
                                                         item.code !== current.code
@@ -564,7 +530,7 @@ function BoardApp({
                                                             : {
                                                                   ...item,
                                                                   checklist: item.checklist.map((step, at) =>
-                                                                      at === index ? { ...step, done: !step.done } : step,
+                                                                      at === index ? { ...step, done } : step,
                                                                   ),
                                                               },
                                                     ),

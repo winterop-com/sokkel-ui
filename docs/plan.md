@@ -16,7 +16,7 @@ the core, the engine add-ons (and media), and the domain add-ons.
 - `@winterop-com/sokkel-ui-maps` (`packages/maps`): `MapView` and its layers, legends, popups,
   basemaps and period slider, on maplibre.
 - `@winterop-com/sokkel-ui-graph` (`packages/graph`): the graph canvas, views and editor, on React
-  Flow, laid out by elk.
+  Flow, laid out by elk, and a network kept live by d3-force.
 - `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
@@ -35,8 +35,8 @@ stands on the core as a peer dependency at the same version and imports it by it
 never imports an add-on and no add-on imports another, which `src/rules.test.ts` holds. A part that
 needs no engine and belongs to no domain goes in the core, save the music and video app parts in
 the media package. The
-core's own dependencies are what every app's frame draws with (Base UI, lucide, cmdk for the
-palette, the class helpers, the Plex fonts), dnd-kit, small and loaded only by the parts that
+core's own dependencies are what every app's frame draws with (Base UI, lucide, the class helpers,
+the Plex fonts; the palette's list is the library's own, taken from cmdk without its dialog), dnd-kit, small and loaded only by the parts that
 drag; the English emoji list `EmojiPicker` loads the first time a picker opens is data the core
 carries itself, written from `emojibase-data` by `bun run emoji-data`; every library only some parts need is an optional peer
 dependency: the engines left in the core (Mermaid, KaTeX, CodeMirror), Shiki, react-markdown and its
@@ -341,7 +341,7 @@ whatever Shift, Option or AltGr the layout took, a letter by its case with `shif
 letter key that Option or a non-Latin layout turned into another character by its place. `mod` is
 ⌘ on a Mac and Ctrl elsewhere, the other one refusing the press, save a binding with `alsoCtrl`,
 which a Mac's Ctrl answers too: the palette's, so ⌘K and Ctrl K both open it there and close it
-again (cmdk's own Ctrl keys are off, so Ctrl K means one thing), while Ctrl keeps its editing keys
+again (the list's own Ctrl keys are off, so Ctrl K means one thing), while Ctrl keeps its editing keys
 in a field for every other binding. Keys are quiet while typing in a
 field, where a slider keeps its arrows and a button its Space, and while a dialog, a sheet, a menu,
 an overlay or the shell's palette is open, unless a binding asks (`inFields`, `inDialogs`); `scope`
@@ -463,7 +463,9 @@ Notes that link to each other are read by one module, `lib/wiki-links`: `[[Note]
 `[[Note|words]]` and `[[Note#Heading]]` link to a note by its name and `#tag` tags it, neither read
 inside code. `Markdown`'s `links` draws them as links the app follows (`onOpen`, a link to a note
 `exists` denies drawn faint, `onTag` for the tags), and `wikiLinksIn`, `tagsIn` and `mentionsOf`
-give an app a note's links, its tags and where a name is written unlinked, for backlinks. Any other
+give an app a note's links, its tags and where a name is written unlinked, for backlinks. A
+backlink's line is drawn as Markdown in the row that opens its note: `live={false}` draws every link
+as its words and `highlight` marks the name where it stands. Any other
 link opens in a new tab unless `onLink` takes it: the app's own routes and the times in an episode's
 notes stay in the page. Text other people wrote is held to what the app allows: `images={false}` draws an
 image as its alt text and address and fetches nothing, `linkSchemes` lists the schemes a link may
@@ -995,7 +997,7 @@ lists each match with its path, and choosing one opens the tree down to it. Tree
 choice by its path, from `trails` when the choice's level has not loaded yet. Past a few hundred
 visible rows a tree draws only those in view of its nearest scrolling box, so fifty thousand open
 rows scroll as smoothly as fifty. As a file tree a node wears an `icon` (an open branch its
-`openIcon`), `actions` gives each row the menu a table's rows have, from a button at its end or a
+`openIcon`), `openOnChoose` opens a closed branch as it is chosen, `actions` gives each row the menu a table's rows have, from a button at its end or a
 right-click, and `onMove(id, into, index)` lets a row be dragged into a branch or beside any row,
 reordering its level, a closed branch opening as a row is held over it, and moved from the keyboard
 with Alt and the arrows; nothing goes into itself (`canMoveTo`), and `moveTreeNode` applies a move to
@@ -1023,20 +1025,33 @@ the recent emoji and the skin tone are kept per person through `useStored`. `Cha
 with their counts (`ReactionChips`); `toggleReaction` gives or takes back one in the app's list.
 `MessageComposer`'s emoji button opens the picker and puts the emoji at the caret (`emojiPicker`).
 
+A call's controls are `CallBar`, round and floating over the call's picture or docked at its foot:
+the microphone and the camera, each with a chevron opening the app's devices under their headings
+(the chosen one checked), sharing the screen, reactions (a toggle standing the `ReactionBar` over
+the bar), raising a hand, more (the app's rows, such as captions) and Leave in the critical tone. A
+muted microphone and a camera turned off wear the critical tone, as a chip in it does; what is on
+(sharing, a raised hand, open reactions) is drawn pressed as a chosen reaction is. The bar measures
+its room rather than the window: under 36rem the share and hand buttons go into more, under 26rem
+the device lists follow as submenus, so it never widens the page. The arrows move between its
+buttons, and `shortcuts` binds ⌘D and ⌘E through `useShortcuts`, listed in the shortcuts dialog.
+
 CodeEditor is the one code editor, on CodeMirror 6. It carries JSON, YAML, jq (a stream language
 written from the jq manual) and markdown (a stream language of its own, with `[[links]]` between
 notes and `#tags`) by name, SQL, shell and Jinja too, each loaded the first time an editor shows it,
 and takes any other language as a CodeMirror `LanguageSupport` or a stream parser
 (`defineLanguage`); `languageForMediaType` reads a schema's `contentMediaType` as one of them. `links` completes a `[[link]]` from the names an app gives as it
-is typed, the closing brackets put in with the name, and `size="lg"` sets long writing a step over
-the body. An app adds words to complete (a list or a function of the word,
+is typed, the closing brackets put in with the name, `onFollowLink` follows one clicked with Mod
+held (the links underlined under a hand while the key is held), and `size="lg"` sets long writing a
+step over the body. `activeLine="always"` keeps the caret's line shaded while the focus is
+elsewhere, a reader's choice. An app adds words to complete (a list or a function of the word,
 each with a detail, docs and a kind), docs on hover, ranged marks drawn as lint (an underline, a
 gutter dot, the message on hover), `onRun` on Mod-Enter and any other `keys`, a themed find bar, a
 fold gutter, bracket colors by depth and indent guides; the last three turn off past a megabyte. Given
 a JSON Schema (2020-12), JSON and YAML are checked by the same ajv rules as SchemaForm, each issue
 placed on the key or value it is about, and the schema's property names and enum values complete as
-they are typed, a key already written left out, a required one first, `allOf` parts followed and each `if` decided against the document, so a key's `then` offers only the branch that applies, and a key with a default
-put in with the default selected. A failed `anyOf` or `oneOf`, at any depth, reports only the branch
+they are typed, a key already written left out, a required one first, `allOf` parts followed and each `if` decided against the document, so a key's `then` offers only the branch that applies, a key with a default
+put in with the default selected, and a key whose object requires keys put in whole as a snippet,
+each required key with its default or a field for its value, Tab going from one field to the next. A failed `anyOf` or `oneOf`, at any depth, reports only the branch
 that fits the document, the one whose `const` properties (a `kind`) match it, else the one with the
 fewest errors, and an `if` whose `then` said what is wrong adds nothing of its own, so one wrong field
 in one document of two is one problem, not the other document's every key. An app adds its own
@@ -1193,6 +1208,16 @@ that offers no basemap gets the ground alone and no network, and the map draws o
 offers. Layers leave out features whose geometry cannot be read, and the map says how many in a
 note under it, after the app's own `notes`.
 
+`CountryLayer` fills the world's countries by a value per country code (`NOR`, `BRA`), drawn as
+`BoundaryLayer` draws areas, from the app's own geometry or the one the maps package carries:
+Natural Earth's 1:110m countries (public domain, about 53 kB gzipped, Antarctica left out), which `loadWorld` in `world`
+fetches the first time a layer or a basemap draws it, so no page carries it at start. The same
+geometry draws `WORLD_BASEMAP`, the countries as land with their borders in the token colors and
+no tile server. A map's `fallbackBasemap` is drawn while the chosen basemap cannot be had (offline,
+or its style or every tile fails), so with `WORLD_BASEMAP` a map still shows the world without the
+network. The `export` control, or `handle` for an app's own menu, saves the map as drawn as a PNG
+with the basemap's credits in its corner, as a chart frame exports.
+
 ## Graphs
 
 Their own package, `@winterop-com/sokkel-ui-graph`, so an app that draws no graph installs neither
@@ -1213,6 +1238,13 @@ NetworkGraph draws things linked with no direction to read, such as notes: a dot
 color, larger the more links it has, its name under it, straight lines between them, laid out by
 elk's stress algorithm (`layoutNetwork`) after a spiral holds the first frame; pointing at a dot
 lights its neighbors and fades the rest, and `current` rings the one the reader stands on.
+`layout="force"` keeps it live on d3-force instead: linked dots pull together, all push apart, and
+a dot dragged (`GraphCanvas`'s `onNodeDrag`, which lets a canvas that is no editor drag its nodes)
+pulls its neighbors after it, the rest settling again once it is let go. d3-force is the one force
+engine, about 7 kB gzipped, loaded the first time a live network is drawn; it starts from a spiral
+and jiggles from a seeded source, so a network settles the same way each time. Most of the
+settling runs before the first drawing and the rest is drawn as it goes, all at once with motion
+reduced. elk stays the layout of every other view: it has no live simulation to drag a node in.
 
 Every view takes how elk lays it out besides its direction: `routing` (`orthogonal` steps with
 rounded corners by default, `polyline` or `splines`, each drawn as elk routed it, and in the same

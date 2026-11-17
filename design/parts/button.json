@@ -3,6 +3,11 @@
     "id": "button",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "A button: words, an icon and words, or an icon alone named by its label. A button that cannot act says why; a busy one keeps its place and its focus.",
     "sources": {
         "sokkel-ui": ["packages/core/src/components/ui/button.tsx", "packages/core/src/components/IconButton.tsx"],
@@ -15,6 +20,7 @@
         "spinner": "While busy: in the leading icon's place, or before the label when there is no icon. The label stays.",
         "tooltip": "An icon button's label, or the reason a button cannot be pressed now, with a shortcut key when given. A reason shows on a tap by touch or pen too."
     },
+    "standsOn": {"default": "background"},
     "options": {
         "variant": {
             "values": ["default", "outline", "secondary", "ghost", "destructive", "link"],
@@ -175,6 +181,25 @@
             "value": "density.control",
             "note": "density control-xs, control-sm, control, control-lg: 24/28/32/36 regular, 20/24/28/32 compact. Button (its icon squares too), Input, the select triggers, the input group and the other controls read them, so controls side by side stand level at either density."
         }
+    },
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "gap": 1,
+        "width": "Its label's width in cells, measured, plus padX at each end; with an icon, the icon and a gap before the label. An icon button is its icon with padX at each side: 3 columns.",
+        "density": "Nothing changes: every control height is one row.",
+        "sizes": {"xs": {"padX": 1}, "sm": {"padX": 1}, "default": {"padX": 1}, "lg": {"padX": 1}},
+        "pieces": {
+            "spinner": {
+                "width": "1 column, in the icon's place, or before the label when there is no icon; the label stays."
+            },
+            "tooltip": {
+                "rows": 0,
+                "note": "Said in the status line while the button has focus, the reason a disabled one cannot act included (principle 23)."
+            }
+        },
+        "glyphs": ["spinner"],
+        "note": "One row leaves no room for an edge above and below: a button is its ground and its ink. How an outline button's edge shows is open (open-questions.md, T3)."
     },
     "states": {
         "rest": {"means": "Nothing is happening to it."},

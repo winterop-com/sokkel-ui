@@ -34,12 +34,10 @@ import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
-import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { DayStrip } from '@winterop-com/sokkel-ui/calendar/DayStrip'
-import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
@@ -280,12 +278,9 @@ function CalendarToggles({
                     const on = shown.includes(calendar.id)
                     return (
                         <CheckboxField
-                            label={
-                                <Row as="span" className={cn(!on && 'text-muted-foreground')}>
-                                    <Dot kind={calendar.color} />
-                                    {calendar.name}
-                                </Row>
-                            }
+                            label={calendar.name}
+                            dot={calendar.color}
+                            quiet="unchecked"
                             checked={on}
                             onCheckedChange={(next) =>
                                 onChange(next ? [...shown, calendar.id] : shown.filter((other) => other !== calendar.id))

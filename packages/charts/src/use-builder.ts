@@ -7,12 +7,16 @@ import type { ChartBuilder } from './kinds/spec'
 const loading = new Map<ChartKind, Promise<ChartBuilder>>()
 const loaded = new Map<ChartKind, ChartBuilder>()
 
-/** Fetches a kind's builder once, shared by every chart of that kind after; a failed fetch is tried again by the next chart. */
+/**
+ * Fetches a kind's builder once, shared by every chart of that kind after; a failed fetch is tried
+ * again by the next chart. The builder reads the spec with the status colors `statuses` names.
+ */
 function loadBuilder(kind: ChartKind): Promise<ChartBuilder> {
     let known = loading.get(kind)
     if (known === undefined) {
-        known = loadKind(kind).then(
-            (build) => {
+        known = Promise.all([loadKind(kind), import('./kinds/spec')]).then(
+            ([builder, { withStatuses }]) => {
+                const build: ChartBuilder = (spec, look, hidden) => builder(withStatuses(spec), look, hidden)
                 loaded.set(kind, build)
                 return build
             },

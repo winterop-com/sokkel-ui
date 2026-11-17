@@ -34,7 +34,7 @@ import type { PanelSeries } from '@winterop-com/sokkel-ui-charts/dashboard/serie
 import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 import { TimeSeriesPanel } from '@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel'
 import { DataTable, type DataAction, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
-import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { DetailPane, type DetailPaneSection } from '@winterop-com/sokkel-ui/DetailPane'
 import { ConfirmDialog, DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import { DiffView } from '@winterop-com/sokkel-ui/DiffView'
 import { Field } from '@winterop-com/sokkel-ui/Field'
@@ -49,7 +49,7 @@ import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
+import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { Board, type BoardMove } from '@winterop-com/sokkel-ui/board/Board'
@@ -1063,31 +1063,33 @@ const EVENTS: AuditEvent[] = [
 const TONE_INK: Record<Tone, string> = { neutral: 'text-muted-foreground', warning: 'text-warning-ink', critical: 'text-critical-ink' }
 
 function EventDetail({ event }: { event: AuditEvent }) {
-    return (
-        <>
-            <PanelSection title="Event">
-                <p className="text-sm">
-                    <span className="font-medium">{event.who}</span> {event.did}
-                </p>
-                <DescriptionList
-                    termWidth="5.5rem"
-                    items={[
-                        { term: 'Action', value: event.action, code: true },
-                        { term: 'Object', value: event.object, code: true },
-                        { term: 'Actor', value: event.who, code: true },
-                        { term: 'When', value: `${event.day}, ${event.at} UTC` },
-                        { term: 'From', value: event.ip, code: true },
-                        { term: 'Request', value: `req_${event.id}_00000000`, code: true },
-                    ]}
-                />
-            </PanelSection>
-            {event.after !== undefined && (
-                <PanelSection title="Change">
-                    <DiffView before={event.before ?? ''} after={event.after} title={event.object} size="sm" />
-                </PanelSection>
-            )}
-        </>
-    )
+    const sections: DetailPaneSection[] = [
+        {
+            id: 'event',
+            title: 'Event',
+            summary: (
+                <>
+                    <strong className="font-medium">{event.who}</strong> {event.did}
+                </>
+            ),
+            facts: [
+                { term: 'Action', value: event.action, code: true },
+                { term: 'Object', value: event.object, code: true },
+                { term: 'Actor', value: event.who, code: true },
+                { term: 'When', value: `${event.day}, ${event.at} UTC` },
+                { term: 'From', value: event.ip, code: true },
+                { term: 'Request', value: `req_${event.id}_00000000`, code: true },
+            ],
+        },
+    ]
+    if (event.after !== undefined) {
+        sections.push({
+            id: 'change',
+            title: 'Change',
+            content: <DiffView before={event.before ?? ''} after={event.after} title={event.object} size="sm" />,
+        })
+    }
+    return <DetailPane sections={sections} />
 }
 
 /** Events in the order they happened, from the number in their id. */

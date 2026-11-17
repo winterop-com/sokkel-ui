@@ -19,7 +19,7 @@ import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { type DataColumn, DataTable, findInTree } from '@winterop-com/sokkel-ui/DataTable'
 import { DragDrop, type DragData } from '@winterop-com/sokkel-ui/DragDrop'
 import { DownloadButton, type DownloadState } from '@winterop-com/sokkel-ui/DownloadButton'
-import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
 import { ConfirmDialog, DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import { FileGrid, FileList, FileTypeIcon, formatSize, sortFiles, type FileEntry, type FileSort } from '@winterop-com/sokkel-ui/FileList'
 import { FilePreview } from '@winterop-com/sokkel-ui/FilePreview'
@@ -29,7 +29,7 @@ import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SelectionBar } from '@winterop-com/sokkel-ui/SelectionBar'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
-import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
+import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { moveTreeNode, Tree, treeAncestors, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
@@ -412,37 +412,42 @@ function useDownload() {
 function Details({ file, folder }: { file: StoredFile; folder: string }) {
     const download = useDownload()
     return (
-        <>
-            <PanelSection title="Preview">
-                <FilePreview name={file.name} kind={file.kind} src={file.src} text={file.text} />
-            </PanelSection>
-            <PanelSection title="File">
-                <DescriptionList
-                    termWidth="5.5rem"
-                    items={[
+        <DetailPane
+            sections={[
+                {
+                    id: 'preview',
+                    title: 'Preview',
+                    content: <FilePreview name={file.name} kind={file.kind} src={file.src} text={file.text} />,
+                },
+                {
+                    id: 'file',
+                    title: 'File',
+                    facts: [
                         { term: 'Name', value: file.name, code: true },
                         { term: 'Size', value: file.size === undefined ? '' : formatSize(file.size) },
                         { term: 'Modified', value: file.modified },
                         { term: 'Owner', value: file.owner },
                         { term: 'Path', value: `/${folder}/${file.name}`, code: true },
-                    ]}
-                />
-            </PanelSection>
-            <Row align="stretch" className="px-4 py-3">
-                <DownloadButton
-                    size="sm"
-                    state={download.state}
-                    count={download.count}
-                    total={8}
-                    onDownload={download.start}
-                    onCancel={download.cancel}
-                />
-                <Button variant="ghost" size="sm">
-                    <Pencil aria-hidden />
-                    Rename
-                </Button>
-            </Row>
-        </>
+                    ],
+                },
+            ]}
+            actions={
+                <>
+                    <DownloadButton
+                        size="sm"
+                        state={download.state}
+                        count={download.count}
+                        total={8}
+                        onDownload={download.start}
+                        onCancel={download.cancel}
+                    />
+                    <Button variant="ghost" size="sm">
+                        <Pencil aria-hidden />
+                        Rename
+                    </Button>
+                </>
+            }
+        />
     )
 }
 

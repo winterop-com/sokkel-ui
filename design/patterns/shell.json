@@ -3,6 +3,15 @@
     "id": "shell",
     "kind": "pattern",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "a592dfb",
+            "note": "The spike (examples/spike) draws the frame by hand from the paints, not from the spec."
+        }
+    },
     "summary": "The frame every sokkel app has, on every target: the rail of places on the left, a thin top bar with the trail, search and palette, the page with its header as the one thing that scrolls, the settings dialog on its own route over the page, the status foot, and the states a page's read lands in.",
     "sources": {
         "sokkel-ui": ["packages/core/src/components/Shell.tsx", "packages/core/src/hooks/use-overlay-route.ts"],
@@ -30,6 +39,7 @@
         "shortcuts": "The keyboard shortcuts dialog, on ?.",
         "drawer": "Below 768 the rail as a drawer from the top bar's menu button, drawn expanded, with the account."
     },
+    "standsOn": {"default": "background"},
     "options": {
         "rail": {
             "type": "node",
@@ -90,6 +100,22 @@
         "overlayInset": "density.overlay-inset",
         "panelSheetGap": {"value": 48, "note": "The panel's sheet stops 48 short of the window's far edge."},
         "sequenceWait": {"value": 1000, "note": "ms for the second key of a sequence."}
+    },
+    "cells": {
+        "width": "The window. Below md (90 columns) the rail is a drawer and dialogs fill the screen; from lg (120 columns) the side panel is a column.",
+        "density": "The blank row at the page's top, and between its sections, are there at regular and gone at compact; the status line's rule row likewise.",
+        "pieces": {
+            "page": {
+                "padX": {"regular": 2, "compact": 1},
+                "padY": {"regular": 1, "compact": 0},
+                "note": "density.page-inset-wide or -narrow by the content's own width (640 px, 76 columns), at most 2 columns; one blank row on top at regular."
+            },
+            "drawer": {
+                "note": "The rail's expanded width, at most the window less 4 columns, over the content; what the content under it shows is open (open-questions.md, T2)."
+            }
+        },
+        "glyphs": ["box", "rule", "scroll-thumb", "scroll-track"],
+        "note": "Top bar one row, then the rail and the page side by side, then the status line: parts/top-bar, parts/rail and parts/status-line hold their own cells."
     },
     "breakpoints": {
         "phone": {

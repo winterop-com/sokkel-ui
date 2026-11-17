@@ -16,7 +16,7 @@ import { useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
-import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
 import { Dock } from '@winterop-com/sokkel-ui/Dock'
 import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
 import { AnsiText } from '@winterop-com/sokkel-ui/AnsiText'
@@ -212,36 +212,41 @@ type Shown = Pick<Run, 'id' | 'job' | 'state' | 'by' | 'started' | 'duration'>
 
 function Details({ run }: { run: Shown }) {
     return (
-        <>
-            <PanelSection title="Run">
-                <DescriptionList
-                    termWidth="6rem"
-                    items={[
+        <DetailPane
+            sections={[
+                {
+                    id: 'run',
+                    title: 'Run',
+                    facts: [
                         { term: 'Job', value: run.job, code: true },
                         { term: 'State', value: <StatusChip status={run.state} /> },
                         { term: 'Started by', value: run.by },
                         { term: 'Started', value: run.started },
                         { term: 'Duration', value: run.duration },
-                    ]}
-                />
-            </PanelSection>
-            <PanelSection title="Steps">
-                <Timeline
-                    events={[
-                        { id: 'fetch', title: <span className="font-mono">fetch</span>, at: '02:00:05', tone: 'succeeded' },
-                        { id: 'transform', title: <span className="font-mono">transform</span>, at: '02:00:06', tone: 'succeeded' },
-                        {
-                            id: 'validate',
-                            title: <span className="font-mono">validate</span>,
-                            at: '02:00:08',
-                            detail: '37 rows rejected',
-                            tone: 'failed',
-                        },
-                        { id: 'upload', title: <span className="font-mono">upload</span>, detail: 'skipped', tone: 'skipped' },
-                    ]}
-                />
-            </PanelSection>
-        </>
+                    ],
+                },
+                {
+                    id: 'steps',
+                    title: 'Steps',
+                    content: (
+                        <Timeline
+                            events={[
+                                { id: 'fetch', title: <span className="font-mono">fetch</span>, at: '02:00:05', tone: 'succeeded' },
+                                { id: 'transform', title: <span className="font-mono">transform</span>, at: '02:00:06', tone: 'succeeded' },
+                                {
+                                    id: 'validate',
+                                    title: <span className="font-mono">validate</span>,
+                                    at: '02:00:08',
+                                    detail: '37 rows rejected',
+                                    tone: 'failed',
+                                },
+                                { id: 'upload', title: <span className="font-mono">upload</span>, detail: 'skipped', tone: 'skipped' },
+                            ]}
+                        />
+                    ),
+                },
+            ]}
+        />
     )
 }
 

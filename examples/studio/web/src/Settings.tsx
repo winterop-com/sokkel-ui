@@ -16,7 +16,7 @@ import { useStudio } from './state'
 /** The themes the studio carries, whose styles `app.css` imports. */
 export const CARRIED = ['tidevann', 'steel', 'terminal', 'paper']
 
-type Flag = 'wrap' | 'lineNumbers' | 'folding' | 'indentGuides' | 'bracketColors'
+type Flag = 'wrap' | 'lineNumbers' | 'folding' | 'indentGuides' | 'bracketColors' | 'lineWash'
 
 /** A switch named for the editor setting it turns. */
 function Toggle({ flag, label }: { flag: Flag; label: string }) {
@@ -75,6 +75,12 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                         flag('folding', 'Folding', 'Arrows in the gutter fold a block of YAML or JSON away.', ['collapse']),
                         flag('indentGuides', 'Indent guides', 'A faint rule at each step of indent.'),
                         flag('bracketColors', 'Bracket colors', 'Brackets colored by depth, so a pair reads at a glance.'),
+                        flag(
+                            'lineWash',
+                            'Keep the line shaded',
+                            "The caret's line stays shaded while you work elsewhere, so you find your place again.",
+                            ['highlight', 'current line', 'cursor'],
+                        ),
                     ],
                 },
             ],
@@ -154,6 +160,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                             folding: DEFAULT_PREFS.folding,
                             indentGuides: DEFAULT_PREFS.indentGuides,
                             bracketColors: DEFAULT_PREFS.bracketColors,
+                            lineWash: DEFAULT_PREFS.lineWash,
                         })
                 }}
             />

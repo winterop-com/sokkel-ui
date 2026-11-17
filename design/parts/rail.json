@@ -3,6 +3,15 @@
     "id": "rail",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "a592dfb",
+            "note": "The spike draws the rail by hand inside its frame, not from the spec."
+        }
+    },
     "summary": "The app's places down the window's start: a head with the mark and the name, groups of entries, and a foot cell for the account. Expanded, collapsed to its icons, or a strip of labeled icons; its end edge resizes it, and pulled outward expands a collapsed rail.",
     "sources": {
         "sokkel-ui": [
@@ -48,6 +57,7 @@
         "stripEntry": "One place in the strip: a tile with its icon, a count or dot at the tile's corner, and its short label under it.",
         "stripTile": "A strip entry's tile, washed while its place is shown."
     },
+    "standsOn": {"default": "sidebar", "tooltip": "background"},
     "options": {
         "groups": {
             "type": "rows",
@@ -242,6 +252,31 @@
             "value": "motion-base",
             "note": "How long the width eases as the rail collapses or expands, as far as motion allows."
         }
+    },
+    "cells": {
+        "padX": 1,
+        "width": "240 px by the rule (29 columns), held between 200 and 360 (24 and 43); collapsed 57 px (7 columns): each entry its icon alone, centered. Below md (90 columns) it is a drawer over the content from the start, drawn expanded.",
+        "density": "Entries are one row at both levels. The blank row above a group's title is there at regular and gone at compact.",
+        "pieces": {
+            "head": {"rows": 1, "note": "The mark and the name; the collapse control at its end."},
+            "entry": {
+                "rows": 1,
+                "padX": 1,
+                "gap": 1,
+                "note": "The active entry's bar is the focus-mark glyph in primary at its first column, then the icon, a gap, the label, and a count or a dot at the end."
+            },
+            "groupTitle": {"rows": 1, "note": "In faint, after a blank row at regular."},
+            "edge": {"note": "A column of the track glyph in sidebar-border at the rail's end."}
+        },
+        "glyphs": [
+            "focus-mark",
+            "status-dot",
+            "chevron-right",
+            "chevron-down",
+            "panel-left-close",
+            "panel-left-open",
+            "scroll-track"
+        ]
     },
     "states": {
         "rest": {"means": "An entry that is not the place shown, nothing over it."},

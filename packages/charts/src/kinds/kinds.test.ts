@@ -9,6 +9,7 @@ import { LEGENDS, loadedLegend, loadLegend } from './legends'
 import { loadKind, readsHidden } from './load'
 import { dialSplits } from './gauge'
 import { linkedLayout, SHARED_SCALE } from './linked'
+import { withStatuses } from './spec'
 import { KINDS, type ChartKind, type ChartSpec } from '.'
 
 /** A look whose colors are the tokens' own names, so a test can read which token a part takes. */
@@ -254,6 +255,28 @@ describe('the chart kinds', () => {
         expect(legendOf('bar', spec).map((item) => item.color)).toEqual(['var(--kind-teal)', 'var(--status-failed)'])
         const pie = legendOf('pie', { rows: ROWS, x: 'job', palette: ['kind-blue', 'kind-pink'] })
         expect(pie.map((item) => item.color)).toEqual(['var(--kind-blue)', 'var(--kind-pink)', 'var(--kind-blue)'])
+    })
+
+    it('colors a series or a category named for a state in its status color, under the colors named', () => {
+        type Bars = { series: { name: string; itemStyle: { color: string } }[] }
+        const spec: ChartSpec = { rows: ROWS, x: 'job', series: 'state', statuses: true }
+        const option = KINDS.bar.build(withStatuses(spec), LOOK) as unknown as Bars
+        expect(option.series.map((entry) => [entry.name, entry.itemStyle.color])).toEqual([
+            ['succeeded', 'status-succeeded'],
+            ['failed', 'status-failed'],
+        ])
+        expect(legendOf('bar', spec).map((item) => item.color)).toEqual(['var(--status-succeeded)', 'var(--status-failed)'])
+        expect(legendOf('donut', { rows: ROWS, x: 'state', statuses: true }).map((item) => item.color)).toEqual([
+            'var(--status-succeeded)',
+            'var(--status-failed)',
+        ])
+        const own: ChartSpec = { ...spec, statuses: { succeeded: { color: 'good' } }, colors: { failed: 'muted-foreground' } }
+        expect(withStatuses(own).colors).toMatchObject({
+            succeeded: 'good',
+            failed: 'muted-foreground',
+            completed_with_errors: 'status-completed-with-errors',
+        })
+        expect(withStatuses({ rows: ROWS })).toEqual({ rows: ROWS })
     })
 
     it('reads a bullet target combined as its figure is', () => {
@@ -627,7 +650,8 @@ describe('the kinds apart', () => {
     it("keeps each kind's legend in a file of its own legends, never a builder's or another family's", () => {
         const registry = readFileSync(new URL('legends.ts', import.meta.url), 'utf8')
         expect(registry).not.toMatch(/^import (?!type)/m)
-        const files = new Set([...registry.matchAll(/import\('([^']+)'\)/g)].map((match) => match[1]))
+        // Beside the legends, the registry loads the spec every legend reads, for the status colors it names.
+        const files = new Set([...registry.matchAll(/import\('([^']+)'\)/g)].map((match) => match[1]).filter((file) => file !== './spec'))
         for (const file of files) {
             expect(file).toMatch(/^\.\/legend-[a-z]+$/)
             const source = readFileSync(new URL(`${file}.ts`, import.meta.url), 'utf8')

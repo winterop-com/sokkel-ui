@@ -1,5 +1,5 @@
 import { CalendarRange, ChevronDown, Pause, Play, RefreshCw } from 'lucide-react'
-import { lazy, Suspense, useRef, useState } from 'react'
+import { lazy, Suspense, useId, useRef, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 
 import { cn } from '../../lib/cn'
@@ -11,7 +11,9 @@ import { Spinner } from '../ui/spinner'
 /** The calendar and its date library, fetched when the picker is first pointed at, focused or opened. */
 const loadCalendar = () => import('../ui/calendar')
 const Calendar = lazy(() => loadCalendar().then((module) => ({ default: module.Calendar })))
-const prefetchCalendar = () => void loadCalendar()
+/** The fields a custom range's times are typed in, fetched with the calendar by a picker that takes times. */
+const loadTimes = () => import('./range-times')
+const RangeTimes = lazy(() => loadTimes().then((module) => ({ default: module.RangeTimes })))
 
 /** A named range a dashboard covers: the last hour, the last 7 days. */
 export interface RangePreset {
@@ -19,7 +21,7 @@ export interface RangePreset {
     label: string
 }
 
-/** What a dashboard covers: a preset, or a custom span of days. */
+/** What a dashboard covers: a preset, or a custom span of days, or of moments when the picker takes times. */
 export type TimeRangeValue = { preset: string } | { from: Date; to: Date }
 
 export const DEFAULT_PRESETS: RangePreset[] = [
@@ -30,11 +32,31 @@ export const DEFAULT_PRESETS: RangePreset[] = [
     { id: '90d', label: 'Last 90 days' },
 ]
 
-/** A custom range said for a reader: `Oct 3 to Oct 17, 2026`. */
-export function rangeLabel(from: Date, to: Date, locale = 'en-US'): string {
+const atMidnight = (date: Date) => date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0
+
+/**
+ * A custom range said for a reader: `Oct 3 to Oct 17, 2026`, and with its times where either end is
+ * not at midnight, on a 24 or a 12-hour clock: `Oct 3, 09:00 to Oct 17, 2026, 17:30`, or
+ * `Oct 3, 2026, 09:00 to 17:30` within one day.
+ */
+export function rangeLabel(from: Date, to: Date, locale = 'en-US', clock: 12 | 24 = 24): string {
     const short = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' })
     const year = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' })
-    return `${short.format(from)} to ${year.format(to)}`
+    if (atMidnight(from) && atMidnight(to)) return `${short.format(from)} to ${year.format(to)}`
+    const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hourCycle: clock === 24 ? 'h23' : 'h12' })
+    if (from.toDateString() === to.toDateString()) return `${year.format(from)}, ${time.format(from)} to ${time.format(to)}`
+    return `${short.format(from)}, ${time.format(from)} to ${year.format(to)}, ${time.format(to)}`
+}
+
+/** A moment's time of day on the wall clock, `HH:mm`. */
+export function timeOfDay(date: Date): string {
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+/** A day at a time of day, `HH:mm` or `HH:mm:ss`, on the wall clock. */
+export function atTime(day: Date, time: string): Date {
+    const [hours = 0, minutes = 0, seconds = 0] = time.split(':').map(Number)
+    return new Date(day.getFullYear(), day.getMonth(), day.getDate(), hours, minutes, seconds)
 }
 
 /** Whether two ranges cover the same: the same preset, or a custom span of the same days. */
@@ -45,17 +67,25 @@ export function sameRange(a: TimeRangeValue, b: TimeRangeValue): boolean {
 
 const draftOf = (value: TimeRangeValue): DateRange | undefined => ('from' in value ? { from: value.from, to: value.to } : undefined)
 
+/** The times a custom range starts and ends at: a custom value's own, or the whole of its days. */
+const timesOf = (value: TimeRangeValue): [string, string] =>
+    'from' in value ? [timeOfDay(value.from), timeOfDay(value.to)] : ['00:00', '23:59']
+
 /** The words a time range picker says; `range` writes a custom span for a reader. */
 export interface TimeRangeWords {
     custom: string
     apply: string
+    /** The fields a custom range's times are typed in, with `times`. */
+    start: string
+    end: string
     range: (from: Date, to: Date) => string
 }
 
-const TIME_RANGE_WORDS: TimeRangeWords = {
+const TIME_RANGE_WORDS: Omit<TimeRangeWords, 'range'> = {
     custom: 'Custom range',
     apply: 'Apply',
-    range: (from, to) => rangeLabel(from, to),
+    start: 'Start time',
+    end: 'End time',
 }
 
 export interface TimeRangePickerProps {
@@ -66,6 +96,13 @@ export interface TimeRangePickerProps {
     defaultMonth?: Date
     /** The day the calendar marks as today; the clock's day when omitted. */
     today?: Date
+    /**
+     * Whether a custom range takes a time of day at each end, typed or picked in two fields under
+     * the calendar; whole days from midnight to midnight when off.
+     */
+    times?: boolean
+    /** The clock the times are written on: 24-hour (`14:30`) or 12-hour (`2:30 PM`). */
+    clock?: 12 | 24
     /** Whether the popover is open, held from outside with `onOpenChange`. */
     open?: boolean
     /** Whether the popover starts open when `open` is not given. */
@@ -78,8 +115,10 @@ export interface TimeRangePickerProps {
 /**
  * The range a dashboard covers: a trigger naming the current range, opening a list of presets
  * beside a calendar for a custom span. Choosing a preset applies it at once; a custom span applies
- * with the Apply button. The calendar loads when the trigger is first pointed at or focused, with
- * a spinner in its place until it arrives.
+ * with the Apply button. With `times`, a custom span starts and ends at a time of day, typed or
+ * picked under the calendar (the whole of its days, `00:00` to `23:59`, until one is changed), and
+ * Apply waits for an end after the start. The calendar loads when the trigger is first pointed at
+ * or focused, with a spinner in its place until it arrives.
  *
  * Left to itself the popover opens and closes on its own, starting at `defaultOpen`; `open` with
  * `onOpenChange` holds it from outside.
@@ -90,13 +129,20 @@ export function TimeRangePicker({
     presets = DEFAULT_PRESETS,
     defaultMonth,
     today,
+    times = false,
+    clock = 24,
     open: openProp,
     defaultOpen = false,
     onOpenChange,
     words: given,
     className,
 }: TimeRangePickerProps) {
-    const words = { ...TIME_RANGE_WORDS, ...given }
+    const words: TimeRangeWords = { ...TIME_RANGE_WORDS, range: (from, to) => rangeLabel(from, to, 'en-US', clock), ...given }
+    const id = useId()
+    const prefetch = () => {
+        void loadCalendar()
+        if (times) void loadTimes()
+    }
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const open = openProp ?? ownOpen
     const setOpen = (next: boolean) => {
@@ -105,12 +151,21 @@ export function TimeRangePicker({
     }
     const chosenRef = useRef<HTMLButtonElement>(null)
     const [draft, setDraft] = useState<DateRange | undefined>(() => draftOf(value))
+    const [[start, end], setTimes] = useState<[string, string]>(() => timesOf(value))
     // A range changed from outside replaces the span being picked; an equal one built afresh does not.
     const [basis, setBasis] = useState(value)
     if (!sameRange(basis, value)) {
         setBasis(value)
         setDraft(draftOf(value))
+        setTimes(timesOf(value))
     }
+    const picked =
+        draft?.from === undefined || draft.to === undefined
+            ? null
+            : times
+              ? { from: atTime(draft.from, start), to: atTime(draft.to, end) }
+              : { from: draft.from, to: draft.to }
+    const ready = picked !== null && (!times || picked.from < picked.to)
     const label =
         'preset' in value
             ? (presets.find((preset) => preset.id === value.preset)?.label ?? value.preset)
@@ -119,13 +174,7 @@ export function TimeRangePicker({
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger
                 render={
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className={cn('gap-1.5', className)}
-                        onPointerEnter={prefetchCalendar}
-                        onFocus={prefetchCalendar}
-                    />
+                    <Button variant="outline" size="sm" className={cn('gap-1.5', className)} onPointerEnter={prefetch} onFocus={prefetch} />
                 }
             >
                 <CalendarRange aria-hidden />
@@ -174,15 +223,16 @@ export function TimeRangePicker({
                             selected={draft}
                             onSelect={setDraft}
                         />
+                        {times && <RangeTimes id={id} start={start} end={end} clock={clock} words={words} onChange={setTimes} />}
                     </Suspense>
                     <div className="flex justify-end border-t border-border p-2">
                         <Button
                             size="sm"
-                            aria-disabled={draft?.from === undefined || draft.to === undefined || undefined}
-                            className={cn((draft?.from === undefined || draft.to === undefined) && 'cursor-not-allowed opacity-disabled')}
+                            aria-disabled={!ready || undefined}
+                            className={cn(!ready && 'cursor-not-allowed opacity-disabled')}
                             onClick={() => {
-                                if (draft?.from === undefined || draft.to === undefined) return
-                                onChange({ from: draft.from, to: draft.to })
+                                if (picked === null || !ready) return
+                                onChange(picked)
                                 setOpen(false)
                             }}
                         >

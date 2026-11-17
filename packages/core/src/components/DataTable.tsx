@@ -46,9 +46,7 @@ import { ListingBar } from './ListingBar'
 import { SelectionBar } from './SelectionBar'
 import { Button } from './ui/button'
 import { CHECKBOX, CHECKBOX_INDICATOR, CheckboxMarks } from './ui/checkbox-look'
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from './ui/context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
-import { NativeSelect, NativeSelectOption } from './ui/native-select'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
@@ -716,21 +714,14 @@ export function watchFonts(fonts: FontLoads | undefined, onLoad: () => void): ()
 }
 
 type Deferred = typeof import('./table-deferred')
-let deferred: Deferred | undefined
 let deferredLoad: Promise<Deferred> | undefined
 
 /** Fetches `./table-deferred` once for every table; a failed fetch is tried again on the next ask. */
 function loadDeferred(): Promise<Deferred> {
-    deferredLoad ??= import('./table-deferred').then(
-        (module) => {
-            deferred = module
-            return module
-        },
-        (error: unknown) => {
-            deferredLoad = undefined
-            throw error
-        },
-    )
+    deferredLoad ??= import('./table-deferred').catch((error: unknown) => {
+        deferredLoad = undefined
+        throw error
+    })
     return deferredLoad
 }
 
@@ -754,23 +745,7 @@ function watching(start: (watch: Deferred) => () => void): () => void {
 }
 
 /** `./table-deferred` once it has loaded, fetched after the first paint once `wanted`; undefined until then. */
-function useDeferred(wanted: boolean): Deferred | undefined {
-    const [loaded, setLoaded] = useState(deferred)
-    useEffect(() => {
-        if (!wanted || loaded !== undefined) return
-        let live = true
-        loadDeferred().then(
-            (module) => {
-                if (live) setLoaded(module)
-            },
-            () => undefined,
-        )
-        return () => {
-            live = false
-        }
-    }, [wanted, loaded])
-    return loaded ?? deferred
-}
+const useDeferred = layer(loadDeferred)
 
 /**
  * Whether a `content` column's cells have outgrown its measured width: some cell's content is cut
@@ -2451,6 +2426,7 @@ export function DataTable<T>({
     // Base UI's checkbox and the menus' lists are fetched after the first paint, so they are here by the time a box is
     // pressed or a menu opens; until then a selection box is drawn the same without it.
     const later = useDeferred(selectable || columnMenu || sortMenu || !!reveal)
+    const parts = useTableParts(paging !== undefined || rowActions !== undefined)
 
     // A row to reveal: its way opened once the code that finds it is here and the row is known, then shown, scrolled
     // to and made active. Each reveal is done once.
@@ -2682,7 +2658,7 @@ export function DataTable<T>({
                     {actionIcon}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                    <MenuItems actions={actions} kind="dropdown" />
+                    <MenuItems actions={actions} />
                 </DropdownMenuContent>
             </DropdownMenu>
         )
@@ -2898,15 +2874,15 @@ export function DataTable<T>({
             body
         )
     const withMenu = (entry: FlatRow<T>, actions: DataAction[] | undefined, body: ReactElement) =>
-        actions === undefined ? (
+        actions === undefined || parts === undefined ? (
             body
         ) : (
-            <ContextMenu key={entry.key} onOpenChange={(open) => open && setActive(entry.key)}>
-                <ContextMenuTrigger render={body} />
-                <ContextMenuContent className="w-48">
-                    <MenuItems actions={actions} kind="context" />
-                </ContextMenuContent>
-            </ContextMenu>
+            <parts.ContextMenu key={entry.key} onOpenChange={(open) => open && setActive(entry.key)}>
+                <parts.ContextMenuTrigger render={body} />
+                <parts.ContextMenuContent className="w-48">
+                    <MenuItems actions={actions} parts={parts} />
+                </parts.ContextMenuContent>
+            </parts.ContextMenu>
         )
 
     /**
@@ -3957,7 +3933,7 @@ export function DataTable<T>({
                                                                     {actionIcon}
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent align="end" className="w-48">
-                                                                    <MenuItems actions={actions} kind="dropdown" />
+                                                                    <MenuItems actions={actions} />
                                                                 </DropdownMenuContent>
                                                             </DropdownMenu>
                                                         )}
@@ -4026,20 +4002,25 @@ export function DataTable<T>({
                         </span>
                         <label className="flex items-center gap-2">
                             {words.perPage}
-                            <NativeSelect
-                                size="sm"
-                                value={String(pageSize)}
-                                onChange={(event) => {
-                                    setPage(0)
-                                    setPageSize(Number(event.target.value))
-                                }}
-                            >
-                                {pageSizes.map((size) => (
-                                    <NativeSelectOption key={size} value={size}>
-                                        {size}
-                                    </NativeSelectOption>
-                                ))}
-                            </NativeSelect>
+                            {parts === undefined ? (
+                                // The size as text until the select has loaded.
+                                <span className="font-mono tabular-nums">{pageSize}</span>
+                            ) : (
+                                <parts.NativeSelect
+                                    size="sm"
+                                    value={String(pageSize)}
+                                    onChange={(event) => {
+                                        setPage(0)
+                                        setPageSize(Number(event.target.value))
+                                    }}
+                                >
+                                    {pageSizes.map((size) => (
+                                        <parts.NativeSelectOption key={size} value={size}>
+                                            {size}
+                                        </parts.NativeSelectOption>
+                                    ))}
+                                </parts.NativeSelect>
+                            )}
                         </label>
                         <div className="ml-auto flex items-center gap-1">
                             <span className="mr-2 tabular-nums">{words.page(current + 1, pages)}</span>
@@ -4077,65 +4058,49 @@ function RowLine({ part, inside = false }: { part: 'before' | 'after'; inside?: 
     )
 }
 
-type TableMemoryLayer = typeof import('./table-memory')
-let tableMemory: TableMemoryLayer | undefined
-let tableMemoryLoad: Promise<TableMemoryLayer> | undefined
-
-/** A table's scroll memory, fetched the first time a table with `scrollKey` is drawn, so a table without one never carries it. */
-function useTableMemory(wanted: boolean): TableMemoryLayer | undefined {
-    const [loaded, setLoaded] = useState(tableMemory)
-    useEffect(() => {
-        if (!wanted || loaded !== undefined) return
-        let live = true
-        tableMemoryLoad ??= import('./table-memory').then(
-            (module) => (tableMemory = module),
-            (error: unknown) => {
-                tableMemoryLoad = undefined
-                throw error
-            },
-        )
-        tableMemoryLoad.then(
-            (module) => {
-                if (live) setLoaded(module)
-            },
-            () => undefined,
-        )
-        return () => {
-            live = false
-        }
-    }, [wanted, loaded])
-    return wanted ? (loaded ?? tableMemory) : undefined
+/**
+ * A hook that fetches a module once for every table, the first time a table that wants it is drawn,
+ * and gives it once it has loaded; undefined until then and while unwanted. A failed fetch is tried
+ * again by the next table that wants it.
+ */
+function layer<M>(load: () => Promise<M>): (wanted: boolean) => M | undefined {
+    let module: M | undefined
+    let pending: Promise<M> | undefined
+    return function useLayer(wanted) {
+        const [loaded, setLoaded] = useState(module)
+        useEffect(() => {
+            if (!wanted || loaded !== undefined) return
+            let live = true
+            pending ??= load().then(
+                (done) => (module = done),
+                (error: unknown) => {
+                    pending = undefined
+                    throw error
+                },
+            )
+            pending.then(
+                (done) => {
+                    if (live) setLoaded(done)
+                },
+                () => undefined,
+            )
+            return () => {
+                live = false
+            }
+        }, [wanted, loaded])
+        return wanted ? (loaded ?? module) : undefined
+    }
 }
 
-type TableReorder = typeof import('./table-reorder')
-let tableReorder: TableReorder | undefined
-let tableReorderLoad: Promise<TableReorder> | undefined
+/** The pager's select and the rows' right-click menus, for a table that pages or has row actions. */
+const useTableParts = layer(() => import('./table-parts'))
+type TableParts = typeof import('./table-parts')
 
-/** The rows' drag layer, fetched the first time a table that reorders is drawn, so a table that does not never carries the drag engine. */
-function useTableReorder(wanted: boolean): TableReorder | undefined {
-    const [loaded, setLoaded] = useState(tableReorder)
-    useEffect(() => {
-        if (!wanted || loaded !== undefined) return
-        let live = true
-        tableReorderLoad ??= import('./table-reorder').then(
-            (module) => (tableReorder = module),
-            (error: unknown) => {
-                tableReorderLoad = undefined
-                throw error
-            },
-        )
-        tableReorderLoad.then(
-            (module) => {
-                if (live) setLoaded(module)
-            },
-            () => undefined,
-        )
-        return () => {
-            live = false
-        }
-    }, [wanted, loaded])
-    return wanted ? (loaded ?? tableReorder) : undefined
-}
+/** A table's scroll memory, for a table with `scrollKey`, so a table without one never carries it. */
+const useTableMemory = layer(() => import('./table-memory'))
+
+/** The rows' drag layer, for a table that reorders, so a table that does not never carries the drag engine. */
+const useTableReorder = layer(() => import('./table-reorder'))
 
 function allCount<T>(rows: readonly T[], childRows?: (row: T) => readonly T[] | undefined): number {
     if (childRows === undefined) return rows.length
@@ -4203,10 +4168,10 @@ function SelectBox({ later, checked, indeterminate = false, onClick, onCheckedCh
     )
 }
 
-/** A row's actions as the items of its button menu or its right-click menu. */
-function MenuItems({ actions, kind }: { actions: DataAction[]; kind: 'dropdown' | 'context' }) {
-    const Item = kind === 'dropdown' ? DropdownMenuItem : ContextMenuItem
-    const Separator = kind === 'dropdown' ? DropdownMenuSeparator : ContextMenuSeparator
+/** A row's actions as the items of its button menu, or of its right-click menu with the `parts` it is drawn from. */
+function MenuItems({ actions, parts }: { actions: DataAction[]; parts?: TableParts }) {
+    const Item = parts === undefined ? DropdownMenuItem : parts.ContextMenuItem
+    const Separator = parts === undefined ? DropdownMenuSeparator : parts.ContextMenuSeparator
     return actions.map((action) =>
         'separator' in action ? (
             <Separator key={action.id} />

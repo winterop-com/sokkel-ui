@@ -193,6 +193,7 @@ export function NotePage({ note }: { note: Note }) {
                         value={drafts[note.id] ?? note.body}
                         onChange={(text) => edit(note.id, text)}
                         links={completions}
+                        onFollowLink={(link) => follow(link.target, note, link.heading)}
                         wrap={prefs.wrap}
                         lineNumbers={prefs.lineNumbers}
                         size={prefs.fontSize}
