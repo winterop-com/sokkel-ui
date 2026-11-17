@@ -406,6 +406,7 @@ const CORE_AREAS: Record<string, string> = {
     MessageComposer: 'Chat and messaging',
     EmojiPicker: 'Chat and messaging',
     ReactionBar: 'Chat and messaging',
+    CallBar: 'Chat and messaging',
     MessageRow: 'Chat and messaging',
     ToolCall: 'Chat and messaging',
     UsageLine: 'Chat and messaging',
