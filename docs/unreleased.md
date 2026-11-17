@@ -54,6 +54,9 @@ release and empties it.
 
 ## Fixed
 
+- A panel in an arranged dashboard (`DashboardArrange`) keeps its own least height, such as
+  `StatPanel`'s 112 px; the arranged cell set every panel's least height to zero, so stat tiles stood
+  94 px tall there and 112 in a plain `DashboardGrid`.
 - A drag begun in a list that is scrolled, or that scrolls under it, lands under the pointer:
   `dragPoint` reads the pointer itself rather than the engine's offset, which is corrected for the
   scrolling of the dragged thing's boxes. Every drag that places by the pointer gains it (calendar,

@@ -421,7 +421,7 @@ function ArrangedPanel({
             }}
             data-dragging={drag.dragging || undefined}
             className={cn(
-                'relative flex min-w-0 flex-col *:min-h-0 *:flex-1',
+                'relative flex min-w-0 flex-col *:flex-1',
                 SPAN[span],
                 arranging && 'rounded-surface outline-1 outline-offset-2 outline-border-strong outline-dashed',
                 drag.dragging && 'opacity-40',
