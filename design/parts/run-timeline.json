@@ -1,0 +1,282 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "run-timeline",
+    "kind": "part",
+    "status": "stable",
+    "summary": "Jobs and their runs along one time axis, in a box on the card: a legend of the states the runs show, a ruler of ticks that fit the width on the time zone's clock, and a lane per job, its name and a detail line at the start and its runs where they fell, each a mark in its state's color (a bar as long as it took when it has an end), runs still to come hollow, a line at the current time across every lane. A lane is chosen by a press on its name or anywhere in its track, drawn raised; with onShift the chosen lane's upcoming runs drag sideways as one, snapped, a card at the pointer saying how far, and the arrow keys move them from the keyboard. The runs stay where they are until the app moves them. A total lane, such as how many run at once, closes the list.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/RunTimeline.tsx",
+            "packages/core/src/components/run-timeline-drag.tsx",
+            "packages/core/src/components/DragDrop.tsx",
+            "packages/core/src/components/Dot.tsx",
+            "packages/core/src/components/StatusProvider.tsx"
+        ]
+    },
+    "anatomy": {
+        "box": "The whole timeline: a box on the card, edged in border, rounded by radius-surface, its text the body role. It fills its container's width and is as tall as its lanes.",
+        "legend": "A strip over the ruler, drawn when the runs show a state, a run is upcoming or a lane can be shifted: an entry per state, words.scheduled after them when a run is upcoming, and words.hint at its end while the chosen lane can be shifted (from 640 wide). Ruled under. legend false leaves it out.",
+        "legendEntry": "One state in the legend: its dot (8, the state's color; Scheduled's hollow in muted-foreground) and the status map's label for it.",
+        "hint": "words.hint at the legend's end while the chosen lane's upcoming runs can be shifted; left out below 640.",
+        "axis": "The ruler: a row as tall as axisHeight, the names' column empty at its start, the ticks' labels along the rest, ruled under.",
+        "tick": "A tick's label, centered on its time: the day (Nov 17) for a tick at the zone's midnight or a step of a day or more, else the time (14:00) on a 24-hour clock. A tick within 2 percent of either end, or within nowRoom of the current time's label, draws no label.",
+        "gridLine": "A tick's line, 1 wide, down every lane.",
+        "nowLine": "The current time's line, 1 wide, down every lane and over the grid lines; drawn while now is within the axis.",
+        "nowLabel": "words.now on the ruler, centered on the current time, in capitals: a small primary tab over the tick labels.",
+        "lane": "One job's row: its name at the start and its track after it, ruled under (the last lane not). The chosen lane is washed accent; a total lane is ruled over in border-strong.",
+        "name": "The lane's name and detail, nameWidth wide (nameWidthNarrow below 640), padded 12 across and 8 down, a 2 wide start edge that the chosen lane draws in primary. With onSelect it is a button that chooses the lane, the keyboard's way to it; a total lane's is not.",
+        "laneName": "The name, in the code face at weight 500, cut short with an ellipsis; a total lane's in the body face at 600.",
+        "laneDetail": "The line under the name (detail): its state or what it holds, cut short.",
+        "track": "The rest of the lane, at least laneMinHeight tall, holding the grid lines, the now line and the runs. A press anywhere in another lane's track chooses that lane, as its name does.",
+        "run": "A run where it fell: a mark at its start (4 wide) or a bar from its start to its end (at least 4), 16 tall, centered in the track, in its state's color; titled with its state and when (Nov 17, 14:00). A run after now is upcoming and drawn hollow. A run wholly outside the axis is not drawn.",
+        "ghost": "While a drag carries the upcoming runs, each one's place before the drag: a dashed outline as large as a mark.",
+        "handle": "The chosen lane's upcoming runs as one thing to drag, drawn only while onShift is given and the chosen lane has upcoming runs: a dashed primary box from the current time (or the first upcoming run) to the last upcoming run and handlePast beyond it, inset 4 from the track's top and bottom, a grip at its start. Named words.upcoming; a tab stop.",
+        "grip": "The handle's grip icon, 14, 2 in from its start, centered down it.",
+        "card": "While a pointer drags the handle: words.by with how far the runs move, on a card that follows the pointer, cardOffset right of and below it."
+    },
+    "options": {
+        "lanes": {
+            "type": "rows",
+            "does": "The lanes in order: { id, name, label?, detail?, runs, total? }; label is the name as text for a screen reader and the words, the name itself when that is text.",
+            "sokkel-ui": "RunTimelineLane"
+        },
+        "runs": {
+            "type": "rows",
+            "does": "A lane's runs: { id, at, end?, status? }, times as ISO 8601 or ms since the epoch. A run without end is a mark at its start; status is a state the status map knows.",
+            "sokkel-ui": "RunTimelineRun"
+        },
+        "from": {"type": "text", "does": "Where the axis starts.", "sokkel-ui": "from (RunTimelineTime)"},
+        "to": {"type": "text", "does": "Where the axis ends.", "sokkel-ui": "to (RunTimelineTime)"},
+        "now": {
+            "type": "text",
+            "does": "The current time, drawn as a line; runs after it are upcoming. Left out, nothing is upcoming and nothing shifts.",
+            "sokkel-ui": "now (RunTimelineTime)"
+        },
+        "selected": {
+            "type": "text",
+            "default": null,
+            "does": "The lane chosen, drawn raised; its upcoming runs are what onShift moves. A total lane is never chosen."
+        },
+        "onSelect": {
+            "type": "callback",
+            "does": "Hears the lane pressed, by its name or its track. Without it no lane is a button and no track takes a press."
+        },
+        "onShift": {
+            "type": "callback",
+            "does": "Hears { lane, by } once the chosen lane's upcoming runs are dragged sideways, or moved with the arrow keys; by in ms, later above zero, never 0. The runs stay where they are until the app moves them."
+        },
+        "snap": {
+            "type": "number",
+            "does": "The step a shift snaps to, in ms; a quarter of the ticks' step when left out."
+        },
+        "legend": {
+            "type": "rows",
+            "does": "The states the legend names, in order, with Scheduled after them; by default the states the runs up to now show, in the order they first appear. false leaves the legend out."
+        },
+        "timeZone": {
+            "type": "text",
+            "does": "The IANA time zone the ticks and times are written in, and whose midnights a step of a day lands on; the system's own when left out."
+        },
+        "locale": {"type": "text", "default": "en-US", "does": "The locale the ticks and times are written in."}
+    },
+    "sizes": {
+        "legend": {"padX": 12, "padY": 8, "gap": 16, "text": "text.help", "note": "Its entries wrap, 4 between lines."},
+        "legendEntry": {"gap": 6, "icon": 8},
+        "axis": {"height": 32},
+        "name": {"padX": 12, "padY": 8, "note": "nameWidth wide, nameWidthNarrow below 640; the start edge 2 wide."},
+        "track": {"height": 48, "note": "At least: a lane is as tall as its name and detail when they need more."},
+        "run": {"height": 16, "width": 4, "note": "A mark's width; a bar is as long as the run took, at least 4."},
+        "ghost": {"height": 16, "width": 4},
+        "nowLabel": {"padX": 4, "note": "A 16 line."},
+        "grip": {"icon": 14},
+        "card": {"padX": 8, "padY": 4, "text": "text.help", "note": "In the code face."}
+    },
+    "layout": {
+        "nameWidth": {
+            "value": 192,
+            "note": "The names' column from 640 wide, on the ruler's row too, so the ticks line up with the runs."
+        },
+        "nameWidthNarrow": {"value": 112, "note": "The names' column below 640."},
+        "axisHeight": {"value": 32, "note": "The ruler's row."},
+        "laneMinHeight": {"value": 48, "note": "A track's least height."},
+        "tickRoom": {
+            "value": 64,
+            "note": "The least room a tick's label takes: the step is the finest of 15m, 30m, 1h, 2h, 3h, 6h, 12h, 1d, 2d, 3d, 7d and 14d that puts no more than the width / 64 ticks on the axis (at least 2); 640 wide until the axis is measured."
+        },
+        "nowRoom": {
+            "value": 40,
+            "note": "A tick's label within this many px of the current time's draws none, so the two never overlap."
+        },
+        "handleInset": {"value": 4, "note": "The handle's room from the track's top and bottom."},
+        "handlePast": {"value": 8, "note": "How far the handle reaches past the last upcoming run."},
+        "cardOffset": {"value": 12, "note": "How far right of and below the pointer the card stands."},
+        "dragFrom": {
+            "value": 4,
+            "note": "How far a mouse or pen moves pressed before the handle drags; a touch drags after a 300 ms hold that moves less than 8."
+        }
+    },
+    "states": {
+        "rest": {"means": "Drawn: the legend, the ruler and every lane, no lane chosen."},
+        "hover": {
+            "means": "The pointer is over another lane's name or track: the name on muted, the track on muted at half strength; the handle on primary at 10 percent.",
+            "reached": "the pointer, where a press would choose the lane or drag the runs"
+        },
+        "focus": {
+            "means": "Keyboard focus on a lane's name or the handle: the frame's focus outline, drawn its offset inside the box.",
+            "on": "keyboard",
+            "reached": "Tab"
+        },
+        "selected": {
+            "means": "The chosen lane: washed accent, its name's start edge in primary, its name keeping the accent under the pointer, and no press on its track.",
+            "reached": "selected"
+        },
+        "total": {
+            "means": "A lane that adds up the others: ruled over in border-strong, its name in the body face at 600, never a button and never chosen.",
+            "reached": "total on a lane"
+        },
+        "upcoming": {
+            "means": "A run after now: hollow, edged in muted-foreground; the ones of the chosen lane are what the handle moves.",
+            "reached": "a run's at after now"
+        },
+        "dragging": {
+            "means": "A pointer carries the chosen lane's upcoming runs: they and the handle are drawn where the shift puts them, snapped, never before now; a ghost stands at each one's place before the drag, and the card says how far. Let go, onShift hears the shift unless it is 0; Escape or a lost pointer puts them back.",
+            "reached": "a press on the handle moved past dragFrom"
+        },
+        "narrow": {
+            "means": "Below 640 the names' column is nameWidthNarrow and the hint is left out.",
+            "reached": "a window below 640"
+        }
+    },
+    "pieces": {
+        "box": {"rest": {"ground": "card", "edge": "border", "radius": "radius-surface", "text": "text.body"}},
+        "legend": {"rest": {"ink": "muted-foreground", "rule": "border", "text": "text.help"}},
+        "legendEntry": {
+            "rest": {
+                "note": "The dot is the state's color from the status map; Scheduled's is hollow, edged in muted-foreground."
+            }
+        },
+        "axis": {"rest": {"rule": "border"}},
+        "tick": {"rest": {"ink": "muted-foreground", "text": "text.2xs", "note": "In the code face, on one line."}},
+        "gridLine": {"rest": {"ground": "border"}},
+        "nowLine": {"rest": {"ground": "primary"}},
+        "nowLabel": {
+            "rest": {
+                "ground": "primary",
+                "ink": "primary-foreground",
+                "radius": "radius-mini",
+                "text": "text.2xs",
+                "weight": 600,
+                "note": "In the code face, in capitals, on a 16 line."
+            }
+        },
+        "lane": {
+            "rest": {"rule": "border", "note": "The last lane draws no rule; the box's edge closes it."},
+            "selected": {"ground": "accent"},
+            "total": {"rule": "border-strong", "note": "Over the lane, besides the rule under the lane before it."}
+        },
+        "name": {
+            "rest": {
+                "edge": "none",
+                "note": "A 2 wide start edge, drawn only when chosen; the lane's ground shows through."
+            },
+            "hover": {"ground": "muted"},
+            "selected": {"edge": "primary"},
+            "selected+hover": {"ground": "accent"},
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"}
+            }
+        },
+        "laneName": {
+            "rest": {"weight": 500, "note": "In the code face."},
+            "total": {"weight": 600, "note": "In the body face."}
+        },
+        "laneDetail": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "track": {"rest": {"note": "No ground of its own: the lane's shows."}, "hover": {"ground": "muted/50"}},
+        "run": {
+            "rest": {
+                "radius": "radius-mini",
+                "note": "Ground: the run's state's color from the status map (status-succeeded, status-failed, ...), which the app's StatusProvider may change at run time; an unknown state the map's fallback."
+            },
+            "upcoming": {"ground": "none", "edge": "muted-foreground"}
+        },
+        "ghost": {"rest": {"edge": "border-strong", "radius": "radius-mini", "note": "Dashed, 1 wide."}},
+        "handle": {
+            "rest": {"ground": "primary/5", "edge": "primary/50", "radius": "radius-control", "note": "Dashed, 1 wide."},
+            "hover": {"ground": "primary/10"},
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"}
+            }
+        },
+        "grip": {"rest": {"ink": "primary"}},
+        "card": {
+            "rest": {
+                "ground": "card",
+                "radius": "radius-surface",
+                "text": "text.help",
+                "note": "elevation-pop under it; the drag engine's card for a compact copy."
+            }
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches each lane's name, in order, then the chosen lane's handle after its name."},
+        {"keys": ["Enter", "Space"], "does": "Chooses the lane.", "when": "a lane's name has focus"},
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "Shifts the chosen lane's upcoming runs a snap earlier or later; onShift hears it. A shift that would put the first upcoming run at or before now does nothing.",
+            "when": "the handle has focus"
+        },
+        {
+            "keys": ["Shift+ArrowLeft", "Shift+ArrowRight"],
+            "does": "Shifts them a tick's step earlier or later, held to now as the arrows are.",
+            "when": "the handle has focus"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Puts the runs back where they were and ends the drag.",
+            "when": "a pointer drags the handle"
+        }
+    ],
+    "words": {
+        "now": "Now",
+        "scheduled": "Scheduled",
+        "hint": "Drag the selected job's upcoming runs to shift them",
+        "upcoming": "Upcoming runs of {lane}",
+        "by": "Shift {amount}",
+        "shifted": "Upcoming runs of {lane} shifted {amount}"
+    },
+    "samples": {
+        "upcoming": [{"with": {"lane": "sync-inventory"}, "says": "Upcoming runs of sync-inventory"}],
+        "by": [
+            {"with": {"amount": "+0m"}, "says": "Shift +0m"},
+            {"with": {"amount": "+2h"}, "says": "Shift +2h"},
+            {"with": {"amount": "-1d 6h"}, "says": "Shift -1d 6h"}
+        ],
+        "shifted": [
+            {
+                "with": {"lane": "sync-inventory", "amount": "+45m"},
+                "says": "Upcoming runs of sync-inventory shifted +45m"
+            }
+        ]
+    },
+    "appText": {
+        "lanes": "Each lane's name, label and detail.",
+        "states": "The legend's labels and the runs' titles name each state by the status map's label for it."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The axis is measured with a ResizeObserver; the ticks fit 640 until it is.",
+            "The drag runs on the library's one drag engine (dnd-kit, DragDrop), whose layer (run-timeline-drag) is fetched the first time a timeline with onShift is drawn; until then the handle is drawn and takes the arrow keys but no drag. A drop lands on no target: the timeline says the shift itself.",
+            "The shift is said to a screen reader (words.shifted, polite); the handle names its keys in aria-keyshortcuts, the name its state in aria-pressed.",
+            "A tick's label and a time are written with Intl.DateTimeFormat in locale and timeZone; a shift's amount by formatShift: signed, in days, hours and minutes, 0m when nothing.",
+            "The card's words follow the drag through a store, as the drag engine draws the card once."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 48f51ce there is no run timeline."
+        }
+    ]
+}

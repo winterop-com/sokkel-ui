@@ -122,9 +122,9 @@
             "pattern": "^radius(-[a-z0-9]+)*$"
         },
         "textRole": {
-            "$comment": "For text keys only: a text role (text.body, text.action), which carries size, line height, weight and tracking.",
+            "$comment": "For text keys only: a text role (text.body, text.action, text.2xs), which carries size, line height, weight and tracking.",
             "type": "string",
-            "pattern": "^text\\.[a-z][a-z-]*$"
+            "pattern": "^text\\.[a-z0-9][a-z0-9-]*$"
         },
         "length": {
             "oneOf": [
