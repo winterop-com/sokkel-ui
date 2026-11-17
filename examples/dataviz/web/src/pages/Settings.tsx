@@ -8,7 +8,7 @@ import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ChartColumn, Database, Hash, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 
 import { preferences } from '../backend'
 import { AGGREGATES, counted, type Dataset, DEFAULT_PREFERENCES, type NumberStyle, type Preferences } from '../model'
@@ -42,7 +42,7 @@ export function SettingsPage({
     open: boolean
     onClose: () => void
 }) {
-    const [active, setActive] = useState('charts')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'charts')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const { settings, setSettings } = frame.appearance

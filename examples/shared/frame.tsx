@@ -27,6 +27,19 @@ export interface Frame {
     dialogs: ReactNode
 }
 
+/** The address the account menu's Appearance opens: Settings at its Appearance section. */
+export const APPEARANCE = '/settings/appearance'
+
+/**
+ * The Settings section the route names, as `#/settings/appearance` names `appearance`, read
+ * without the query an example keeps after it; none when the route names no section.
+ */
+export function settingsSection(route: readonly string[]): string | undefined {
+    if (route[0] !== 'settings') return undefined
+    const section = route[1]?.split('?')[0]
+    return section === '' ? undefined : section
+}
+
 /** The base theme alone, the one every example's `styles.css` carries. */
 const BASE: readonly string[] = ['tidevann']
 

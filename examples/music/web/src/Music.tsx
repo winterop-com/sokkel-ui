@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, settingsSection, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -157,7 +157,6 @@ export function Music({ frame }: { frame: Frame }) {
     const [carrying, setCarrying] = useState(false)
     const [treeQuery, setTreeQuery] = useState('')
     const [query, setQuery] = useState('')
-    const { settings: look, setSettings: setLook } = frame.appearance
     const song = currentSong(state)
 
     // Settings open as a dialog over the page they were opened from.
@@ -454,9 +453,8 @@ export function Music({ frame }: { frame: Frame }) {
                                 name="ada"
                                 where="tidevann.example.org"
                                 collapsed={collapsed}
-                                scheme={look.scheme}
-                                onSchemeChange={(scheme) => setLook({ ...look, scheme })}
                                 onSettings={() => go('/settings')}
+                                onAppearance={() => go(APPEARANCE)}
                                 local
                             />
                         }
@@ -518,7 +516,9 @@ export function Music({ frame }: { frame: Frame }) {
                     onQueue={toggleQueue}
                 />
                 <Page className="@container">{page}</Page>
-                {settings.open && <Settings appearance={frame.appearance} open onClose={settings.close} />}
+                {settings.open && (
+                    <Settings appearance={frame.appearance} section={settingsSection(frame.route)} open onClose={settings.close} />
+                )}
             </Shell>
         </RailDrops>
     )

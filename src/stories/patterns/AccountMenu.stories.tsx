@@ -1,10 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CalendarClock, FolderGit2, Play, Workflow } from 'lucide-react'
-import { useState } from 'react'
 
 import { AccountMenu, type AccountMenuProps } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
-import type { Scheme } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { pictureOf } from '../fixtures/portraits'
@@ -12,7 +10,8 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
  * The account in the rail's foot: who is signed in and where, and the menu that opens upward from
- * it with settings, the keyboard shortcuts, the scheme and signing out. On a phone its rows are a
+ * it with settings, appearance, the keyboard shortcuts and signing out. Light and dark are chosen
+ * in Settings and the command palette, never in the menu. On a phone its rows are a
  * finger's height and Keyboard shortcuts is left out.
  */
 const meta: Meta = { title: 'Patterns/Account menu' }
@@ -30,8 +29,7 @@ const PLACES: RailGroup[] = [
 ]
 
 /** The menu open in the foot of Tidevann's rail, at the full height of the window. */
-function Foot({ railSize, ...props }: Omit<AccountMenuProps, 'scheme' | 'onSchemeChange'> & { railSize?: number }) {
-    const [scheme, setScheme] = useState<Scheme>('system')
+function Foot({ railSize, ...props }: AccountMenuProps & { railSize?: number }) {
     return (
         <TooltipProvider>
             <Row gap="none" align="stretch" className="h-svh bg-background">
@@ -40,7 +38,7 @@ function Foot({ railSize, ...props }: Omit<AccountMenuProps, 'scheme' | 'onSchem
                     name="Tidevann"
                     groups={PLACES}
                     defaultSize={railSize}
-                    foot={<AccountMenu {...props} scheme={scheme} onSchemeChange={setScheme} defaultOpen />}
+                    foot={<AccountMenu {...props} defaultOpen />}
                 />
             </Row>
         </TooltipProvider>
@@ -48,9 +46,8 @@ function Foot({ railSize, ...props }: Omit<AccountMenuProps, 'scheme' | 'onSchem
 }
 
 /**
- * Signed in: the person and the host at the head, Settings, Keyboard shortcuts with its key, a row
- * the app adds with an icon of its own, the scheme as three rows with the one in use checked, which
- * stay open as one is chosen, and Sign out.
+ * Signed in: the person and the host at the head, Settings, Appearance, which opens the appearance
+ * settings, Keyboard shortcuts with its key, a row the app adds with an icon of its own, and Sign out.
  */
 export const SignedIn: StoryObj = {
     name: 'Signed in',
@@ -60,6 +57,7 @@ export const SignedIn: StoryObj = {
             image={pictureOf('ada')}
             where="tidevann.example.org"
             onSettings={() => undefined}
+            onAppearance={() => undefined}
             onShortcuts={() => undefined}
             extra={[{ id: 'project', label: 'Switch project', icon: FolderGit2, onSelect: () => undefined }]}
             onSignOut={() => undefined}

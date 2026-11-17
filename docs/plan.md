@@ -250,6 +250,10 @@ Every app has the same frame: `Shell` with a `Rail` of its places, the command p
 Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local` until the app has
 sign-in, and a `StatusLine` as the shell's `foot`, which draws the foot strip itself in the room the
 shell gives it and which the account sits level with as one bar across the window's bottom edge.
+Light and dark are a setting: the scheme is chosen only in Settings › Appearance (`themeSettings`,
+`ThemePicker`) and in the command palette (`appearanceCommands`), never with a toggle in the top
+bar and never in the account menu, whose Appearance entry (`onAppearance`) opens Settings at
+Appearance.
 Every control of the frame (the rail's entries, mark, home link and collapse control, the top bar's
 menu button, crumbs and palette's button, the panel toggle, the account) wears the button's own
 focus look on keyboard focus, a ring outline two pixels off, and the top bar's menu button looks
@@ -270,8 +274,8 @@ version and, with `checkedAt`, when it was last asked (`recheck` asks again as t
 and `onPress` to open the app's own pane in place of its menu. The account menu takes a `detail`,
 such as a role, muted beside the name; the name keeps its room, and a row narrower than 13rem
 leaves the detail to the menu's head. The
-account menu offers Light, Dark and System in itself (`scheme`, `onSchemeChange`), staying open as
-one is chosen; an app's own rows (`extra`) carry their icons, and where no one is signed in
+account menu has no scheme of its own: its Appearance entry (`onAppearance`) opens Settings at
+Appearance, where the scheme is chosen; an app's own rows (`extra`) carry their icons, and where no one is signed in
 `onSignIn` stands in Sign out's place with an icon of its own. On a phone its rows are a finger's
 height and Keyboard shortcuts is left out. A new `contentKey` on `Shell` mounts the page afresh,
 as after the server has come back, without a wrapper of the app's. A work page with list and detail

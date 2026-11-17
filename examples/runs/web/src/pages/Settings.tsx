@@ -9,7 +9,7 @@ import { Bell, CalendarClock, Database, Palette, ScrollText, Settings2, UserRoun
 import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { DEFAULT_PREFS, type Prefs } from '../model'
 import { useConsole } from '../state'
 
@@ -30,7 +30,7 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
 export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const { prefs, setPrefs, me } = useConsole()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [active, setActive] = useState('general')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'general')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const [busy, setBusy] = useState(false)

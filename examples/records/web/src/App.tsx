@@ -419,8 +419,7 @@ export function App() {
                                         where={SERVER.address}
                                         local
                                         onSettings={() => openSettings()}
-                                        scheme={settings.scheme}
-                                        onSchemeChange={(scheme) => setSettings({ ...settings, scheme })}
+                                        onAppearance={() => openSettings('appearance')}
                                     />
                                 }
                             />

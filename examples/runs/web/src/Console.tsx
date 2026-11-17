@@ -10,7 +10,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/
 import { CalendarClock, LayoutDashboard, ListChecks, LogOut, Play, Settings, Workflow } from 'lucide-react'
 import { lazy, Suspense, useEffect } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -36,7 +36,6 @@ const JobPage = lazy(() => import('./pages/JobPage').then((module) => ({ default
 export function Console({ frame }: { frame: Frame }) {
     const { runs, jobs, prefs, setPrefs, me, now, runOf, jobOf } = useConsole()
     const actions = useActions()
-    const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
     const settings = useOverlayRoute(frame.route, 'settings')
     const [first = 'overview', second] = settings.route
@@ -152,8 +151,7 @@ export function Console({ frame }: { frame: Frame }) {
                             name={me}
                             where="tidevann.example.org"
                             onSettings={() => go('/settings')}
-                            scheme={look.scheme}
-                            onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                            onAppearance={() => go(APPEARANCE)}
                             onSignOut={() => void setPrefs({ user: null })}
                         />
                     }

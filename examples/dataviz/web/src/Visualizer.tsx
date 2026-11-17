@@ -10,7 +10,7 @@ import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { ChartColumn, Database, LayoutDashboard, LayoutGrid, Plus, Presentation, Settings2, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { savingNote, useCollection, useSaving } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -239,7 +239,14 @@ export function Visualizer({ frame }: { frame: Frame }) {
                         markHref="#/datasets"
                         name="Visualizer"
                         groups={groups}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => go('/settings')} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                where="tidevann.example.org"
+                                onSettings={() => go('/settings')}
+                                onAppearance={() => go(APPEARANCE)}
+                            />
+                        }
                     />
                 }
                 top={<TopBar trail={trail} />}

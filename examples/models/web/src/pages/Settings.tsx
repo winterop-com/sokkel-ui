@@ -13,7 +13,7 @@ import { ArrowDownToLine, Boxes, Cpu, Database, FolderOpen, Palette } from 'luci
 import { useEffect, useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { log } from '../data/backend'
 import { diskOf, validRoot } from '../data/disk'
 import { DEFAULT_PREFS, type Prefs } from '../data/model'
@@ -64,7 +64,7 @@ const HELD: Record<string, (keyof Omit<Prefs, 'id'>)[]> = {
 export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const { prefs, setPrefs, models } = useApp()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [active, setActive] = useState('library')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'library')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const [busy, setBusy] = useState(false)
