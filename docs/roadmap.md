@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.30.0** is the latest release (2026-11-17): `CallBar`, `Letter`, `DetailPane`, `BoardItemPanel`,
+- **0.30.1** is the latest release (2026-11-17): a table's column heads one text step above their
+  cells, and the examples' map data from Natural Earth; sokkel-design's contract at 0.30.1.
+- **0.30.0** (2026-11-17): `CallBar`, `Letter`, `DetailPane`, `BoardItemPanel`,
   a table's own search and windowed growing cards, `TrackList` links and windowing, a live force
   graph, ranges with times, country fills and an offline basemap, the palette's own list (cmdk gone),
   the lean-stylesheet Vite plugin, three themes (phosphor, phosphor-bright, tray), and the WebKit,
