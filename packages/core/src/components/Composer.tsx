@@ -1,6 +1,6 @@
 import { IconButton } from './IconButton'
-import { ArrowUp, Check, CircleAlert, FileText, Mic, Paperclip, Play, Square, X } from 'lucide-react'
-import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { ArrowUp, Check, CircleAlert, FileText, Mic, Paperclip, Play, Plus, Square, X } from 'lucide-react'
+import { lazy, Suspense, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { composing, touchTyping } from '../lib/keys'
@@ -250,6 +250,18 @@ function Chip({ attachment, words, onPlay }: { attachment: ComposerAttachment; w
     )
 }
 
+/**
+ * How a composer lays out: `stacked` puts the text on top and its controls in a row under it;
+ * `inline` puts them on one line, a pill, until the text needs a line of its own.
+ */
+export type ComposerLayout = 'stacked' | 'inline'
+
+/** The tools' row: their buttons (toggles and selects among them) round, as the composer's own buttons are. */
+const TOOLS = 'flex min-w-0 items-center gap-1 [&_button]:rounded-full!'
+
+/** Room the text must leave beyond its own width before an inline composer goes back to one line, so it does not flip at the edge. */
+const INLINE_SPARE = 8
+
 export interface ComposerProps {
     value: string
     onChange: (value: string) => void
@@ -263,6 +275,7 @@ export interface ComposerProps {
     onRemove?: (id: string) => void
     /** Stops a file's upload and drops it; a file still uploading cannot be taken off without it. */
     onCancel?: (id: string) => void
+    /** Controls beside attach, such as a model picker or a toggle; their buttons, toggles and selects are drawn round. */
     tools?: ReactNode
     disabled?: boolean
     /**
@@ -276,6 +289,13 @@ export interface ComposerProps {
     dictation?: ComposerDictation
     /** Suggests people at the caret as an `@` is typed, from the app's list or its search, and puts the one picked in as `@handle`. */
     mentions?: ComposerMentions
+    /**
+     * `stacked` (the default) puts the text on top and attach, the tools, the microphone and Send
+     * in a row under it. `inline` puts them on one line, a pill: a round attach button, the text,
+     * the tools and a round Send. Once the text (or the placeholder, while there is none) does not
+     * fit on that line, or files, dictation or a failure show, it opens into the stacked box.
+     */
+    layout?: ComposerLayout
     words?: Partial<ComposerWords>
     className?: string
 }
@@ -303,6 +323,10 @@ export interface ComposerProps {
  * Enter or Tab puts the one chosen in as `@handle` (Enter then does not send), and Escape closes
  * them. `mentions.onChange` hears the ids the text mentions; `mentionsIn` from `lib/mentions` reads
  * them from a text the app holds.
+ *
+ * `layout="inline"` draws it on one line, a pill, while the text (or the placeholder, while there
+ * is none) fits there beside the controls; it opens into the stacked box once the text wraps or
+ * breaks a line, or files, dictation or a failure show, and closes back when the text fits again.
  */
 export function Composer({
     value,
@@ -320,6 +344,7 @@ export function Composer({
     onRefuse,
     dictation: dictating,
     mentions,
+    layout = 'stacked',
     words: given,
     className,
 }: ComposerProps) {
@@ -375,6 +400,197 @@ export function Composer({
     }
     const drop = useFileDrop(take, onAttach !== undefined && !disabled)
     const over = drop.over
+    const inline = layout === 'inline'
+    const failed = offered && dictation.state === 'error' && dictation.problem !== undefined
+    // What opens an inline composer whatever the text: files, dictation and its failure.
+    const held = attachments.length > 0 || hearing || failed
+    const ruler = useRef<HTMLSpanElement>(null)
+    const [long, setLong] = useState(false)
+    const longNow = useRef(long)
+    // Whether the text, or the placeholder while there is none, needs a line of its own: a line break, or wider than the room beside the controls.
+    const measure = useCallback(() => {
+        const box = root.current
+        const area = text.current
+        const line = ruler.current
+        if (!inline || box === null || area === null || line === null) return
+        const typed = latest.current.value
+        let next = typed.includes('\n')
+        if (!next) {
+            const boxStyle = getComputedStyle(box)
+            const areaStyle = getComputedStyle(area)
+            const controls = [...box.querySelectorAll(':scope > [data-composer-control]')]
+            const used = controls.reduce((sum, control) => sum + control.getBoundingClientRect().width, 0)
+            const room =
+                box.clientWidth -
+                parseFloat(boxStyle.paddingLeft) -
+                parseFloat(boxStyle.paddingRight) -
+                used -
+                (parseFloat(boxStyle.columnGap) || 0) * controls.length -
+                parseFloat(areaStyle.paddingLeft) -
+                parseFloat(areaStyle.paddingRight)
+            const width = line.getBoundingClientRect().width
+            if (longNow.current) next = width + INLINE_SPARE > room
+            else {
+                const padding = parseFloat(areaStyle.paddingTop) + parseFloat(areaStyle.paddingBottom)
+                next = width > room || area.scrollHeight - padding > parseFloat(areaStyle.lineHeight) * 1.5
+            }
+        }
+        if (next === longNow.current) return
+        longNow.current = next
+        setLong(next)
+    }, [inline])
+    useLayoutEffect(measure, [measure, value, words.placeholder, held])
+    useLayoutEffect(() => {
+        const box = root.current
+        if (!inline || box === null || typeof ResizeObserver === 'undefined') return
+        const observer = new ResizeObserver(() => measure())
+        observer.observe(box)
+        return () => observer.disconnect()
+    }, [inline, measure])
+    // An inline composer on one line: a pill with the text between the controls.
+    const pill = inline && !held && !long
+    const boxed = inline && !pill
+    const button = inline ? 'icon' : 'icon-sm'
+    const attach = hearing ? (
+        <span data-composer-control className="flex">
+            <IconButton label={said.cancel} size={button} className="rounded-full" onClick={dictation.cancel}>
+                <X aria-hidden />
+            </IconButton>
+        </span>
+    ) : (
+        onAttach !== undefined && (
+            <span data-composer-control className="flex">
+                <input
+                    ref={picker}
+                    type="file"
+                    multiple
+                    accept={accept}
+                    hidden
+                    onChange={(event) => {
+                        files(event.target.files)
+                        event.target.value = ''
+                    }}
+                />
+                <IconButton
+                    label={words.attach}
+                    size={button}
+                    variant={inline ? 'secondary' : 'ghost'}
+                    disabled={disabled}
+                    className="rounded-full"
+                    onClick={() => picker.current?.click()}
+                >
+                    {inline ? <Plus aria-hidden /> : <Paperclip aria-hidden />}
+                </IconButton>
+            </span>
+        )
+    )
+    const area = (
+        <Textarea
+            ref={text}
+            bare
+            value={value}
+            rows={1}
+            disabled={disabled}
+            placeholder={words.placeholder}
+            aria-label={words.placeholder}
+            {...mention.areaProps}
+            onChange={(event) => {
+                onChange(event.target.value)
+                mention.onInput(event.target.value, event.target.selectionStart)
+            }}
+            onSelect={(event) => {
+                caret.current = event.currentTarget.selectionStart
+                mention.onSelect(event.currentTarget.value, event.currentTarget.selectionStart)
+            }}
+            onKeyDown={(event) => {
+                if (mention.onKeyDown(event)) return
+                if (event.key !== 'Enter' || event.shiftKey || touch || composing(event)) return
+                event.preventDefault()
+                if (ready) onSend()
+            }}
+            onPaste={(event) => {
+                if (onAttach === undefined) return
+                const pasted = [...event.clipboardData.items]
+                    .filter((item) => item.kind === 'file')
+                    .map((item) => item.getAsFile())
+                    .filter((file): file is File => file !== null)
+                if (pasted.length === 0) return
+                if (take(pasted) && !event.clipboardData.types.includes('text/plain')) event.preventDefault()
+            }}
+            className={cn(
+                'max-h-60 text-sm',
+                !inline && 'min-h-12 px-3 pt-3 pb-1',
+                inline && 'px-1.5 py-1 leading-6',
+                pill && 'min-w-0 flex-1 placeholder:truncate',
+                boxed && 'order-first basis-full',
+            )}
+        />
+    )
+    const controls = (
+        <>
+            {hearing ? (
+                <DictationStrip dictation={dictation} words={said} />
+            ) : (
+                <>
+                    {tools !== undefined && tools !== null && (
+                        <span data-composer-control className={TOOLS}>
+                            {tools}
+                        </span>
+                    )}
+                    {!pill && <div className="flex-1" />}
+                </>
+            )}
+            {offered && (
+                <span data-composer-control className="flex">
+                    <IconButton
+                        label={
+                            dictation.state === 'recording'
+                                ? said.finish
+                                : dictation.state === 'transcribing'
+                                  ? said.transcribing
+                                  : said.dictate
+                        }
+                        size={button}
+                        variant={dictation.state === 'recording' ? 'secondary' : 'ghost'}
+                        disabled={disabled && !hearing}
+                        aria-disabled={dictation.state === 'transcribing' || undefined}
+                        data-state={dictation.state}
+                        className="rounded-full"
+                        onClick={() => {
+                            if (dictation.state === 'recording') dictation.stop()
+                            else if (dictation.state !== 'transcribing') dictation.start()
+                        }}
+                    >
+                        {dictation.state === 'recording' ? <Check aria-hidden /> : <Mic aria-hidden />}
+                    </IconButton>
+                </span>
+            )}
+            <span data-composer-control className="flex">
+                {busy && onStop !== undefined ? (
+                    <IconButton
+                        label={words.stop}
+                        size={button}
+                        variant={inline ? 'default' : 'secondary'}
+                        className="rounded-full"
+                        onClick={onStop}
+                    >
+                        <Square className="fill-current" aria-hidden />
+                    </IconButton>
+                ) : (
+                    <IconButton
+                        label={uploading ? words.waiting : words.send}
+                        size={button}
+                        variant="default"
+                        aria-disabled={!ready || undefined}
+                        className={cn('rounded-full', !ready && 'cursor-not-allowed opacity-disabled')}
+                        onClick={ready ? onSend : undefined}
+                    >
+                        <ArrowUp aria-hidden />
+                    </IconButton>
+                )}
+            </span>
+        </>
+    )
     return (
         <div
             ref={root}
@@ -385,7 +601,12 @@ export function Composer({
                 dictation.cancel()
             }}
             className={cn(
-                'relative flex flex-col rounded-control border border-border-strong bg-field shadow-surface transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
+                'relative flex border border-border-strong bg-field shadow-surface transition-[color,background-color,border-color,box-shadow,border-radius] duration-base ease-motion focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
+                inline ? 'flex-wrap items-center gap-1.5 p-1.5' : 'flex-col',
+                // The pill's corners are half its height or more, so they ease to the box's as it opens.
+                pill
+                    ? 'rounded-[calc(var(--density-control)/2+--spacing(3))] max-md:rounded-[calc(var(--spacing-finger)/2+--spacing(3))]'
+                    : 'rounded-composer',
                 over && 'border-primary ring-2 ring-primary/30',
                 disabled && 'opacity-60',
                 className,
@@ -393,12 +614,12 @@ export function Composer({
             {...drop.handlers}
         >
             {over && (
-                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-control bg-background/80 text-sm font-medium">
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-[inherit] bg-background/80 text-sm font-medium">
                     {words.drop}
                 </div>
             )}
             {attachments.length > 0 && (
-                <ul className="flex flex-wrap gap-2 px-3 pt-3">
+                <ul className={cn('flex flex-wrap gap-2', inline ? 'order-first basis-full px-1.5 pt-1.5' : 'px-3 pt-3')}>
                     {attachments.map((attachment) => {
                         const pending = attachment.uploading === true
                         const drop = pending ? onCancel : onRemove
@@ -420,118 +641,37 @@ export function Composer({
                     })}
                 </ul>
             )}
-            <Textarea
-                ref={text}
-                bare
-                value={value}
-                rows={1}
-                disabled={disabled}
-                placeholder={words.placeholder}
-                aria-label={words.placeholder}
-                {...mention.areaProps}
-                onChange={(event) => {
-                    onChange(event.target.value)
-                    mention.onInput(event.target.value, event.target.selectionStart)
-                }}
-                onSelect={(event) => {
-                    caret.current = event.currentTarget.selectionStart
-                    mention.onSelect(event.currentTarget.value, event.currentTarget.selectionStart)
-                }}
-                onKeyDown={(event) => {
-                    if (mention.onKeyDown(event)) return
-                    if (event.key !== 'Enter' || event.shiftKey || touch || composing(event)) return
-                    event.preventDefault()
-                    if (ready) onSend()
-                }}
-                onPaste={(event) => {
-                    if (onAttach === undefined) return
-                    const pasted = [...event.clipboardData.items]
-                        .filter((item) => item.kind === 'file')
-                        .map((item) => item.getAsFile())
-                        .filter((file): file is File => file !== null)
-                    if (pasted.length === 0) return
-                    if (take(pasted) && !event.clipboardData.types.includes('text/plain')) event.preventDefault()
-                }}
-                className="max-h-60 min-h-12 px-3 pt-3 pb-1 text-sm"
-            />
+            {inline && (
+                <span aria-hidden className="pointer-events-none invisible absolute top-0 left-0 size-0 overflow-hidden">
+                    <span ref={ruler} className="text-sm leading-6 whitespace-pre">
+                        {value === '' ? words.placeholder : value}
+                    </span>
+                </span>
+            )}
+            {inline && attach}
+            {area}
             {mention.list !== null && <MentionList {...mention.list} />}
-            {offered && dictation.state === 'error' && dictation.problem !== undefined && (
+            {failed && dictation.problem !== undefined && (
                 // A line of its own over the row, wrapping as far as it needs, so the reason is read whole at any width.
-                <p role="alert" className="flex items-start gap-1.5 px-3 pb-1 text-xs text-critical-ink">
+                <p
+                    role="alert"
+                    className={cn(
+                        'flex items-start gap-1.5 text-xs text-critical-ink',
+                        inline ? 'order-first basis-full px-1.5' : 'px-3 pb-1',
+                    )}
+                >
                     <CircleAlert className="mt-0.75 size-3.5 shrink-0" aria-hidden />
                     <span className="min-w-0">{said[dictation.problem]}</span>
                 </p>
             )}
-            <div className="flex items-center gap-1 px-2 pb-2">
-                {hearing ? (
-                    <IconButton label={said.cancel} onClick={dictation.cancel}>
-                        <X aria-hidden />
-                    </IconButton>
-                ) : (
-                    onAttach !== undefined && (
-                        <>
-                            <input
-                                ref={picker}
-                                type="file"
-                                multiple
-                                accept={accept}
-                                hidden
-                                onChange={(event) => {
-                                    files(event.target.files)
-                                    event.target.value = ''
-                                }}
-                            />
-                            <IconButton label={words.attach} disabled={disabled} onClick={() => picker.current?.click()}>
-                                <Paperclip aria-hidden />
-                            </IconButton>
-                        </>
-                    )
-                )}
-                {hearing ? (
-                    <DictationStrip dictation={dictation} words={said} />
-                ) : (
-                    <>
-                        {tools}
-                        <div className="flex-1" />
-                    </>
-                )}
-                {offered && (
-                    <IconButton
-                        label={
-                            dictation.state === 'recording'
-                                ? said.finish
-                                : dictation.state === 'transcribing'
-                                  ? said.transcribing
-                                  : said.dictate
-                        }
-                        variant={dictation.state === 'recording' ? 'secondary' : 'ghost'}
-                        disabled={disabled && !hearing}
-                        aria-disabled={dictation.state === 'transcribing' || undefined}
-                        data-state={dictation.state}
-                        onClick={() => {
-                            if (dictation.state === 'recording') dictation.stop()
-                            else if (dictation.state !== 'transcribing') dictation.start()
-                        }}
-                    >
-                        {dictation.state === 'recording' ? <Check aria-hidden /> : <Mic aria-hidden />}
-                    </IconButton>
-                )}
-                {busy && onStop !== undefined ? (
-                    <IconButton label={words.stop} variant="secondary" onClick={onStop}>
-                        <Square className="fill-current" aria-hidden />
-                    </IconButton>
-                ) : (
-                    <IconButton
-                        label={uploading ? words.waiting : words.send}
-                        variant="default"
-                        aria-disabled={!ready || undefined}
-                        className={cn(!ready && 'cursor-not-allowed opacity-disabled')}
-                        onClick={ready ? onSend : undefined}
-                    >
-                        <ArrowUp aria-hidden />
-                    </IconButton>
-                )}
-            </div>
+            {inline ? (
+                controls
+            ) : (
+                <div className="flex items-center gap-1 px-2 pb-2">
+                    {attach}
+                    {controls}
+                </div>
+            )}
             {playing?.url !== undefined && (
                 <DialogShell
                     open

@@ -1,7 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { useState } from 'react'
+import { Lightbulb } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 
-import { Composer, type ComposerAttachment, type ComposerDictation, type ComposerMentions } from '@winterop-com/sokkel-ui/Composer'
+import {
+    Composer,
+    type ComposerAttachment,
+    type ComposerDictation,
+    type ComposerLayout,
+    type ComposerMentions,
+} from '@winterop-com/sokkel-ui/Composer'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { ModelPicker } from '../fixtures/models'
 import clip from '../media/fixtures/clip.webm?url'
@@ -12,7 +20,7 @@ import { fakeMicrophone, transcribeLater } from '../fixtures/speech'
 
 /**
  * The message composer: empty, with a draft and attachments, while an answer streams, and shut;
- * then files on their way up, a recording and a video that play before they are sent, and
+ * then on one line, inline; then files on their way up, a recording and a video that play before they are sent, and
  * dictation into the text.
  */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -36,6 +44,8 @@ function Live({
     disabled = false,
     dictation,
     mentions,
+    layout,
+    tools = <ModelPicker />,
 }: {
     initial: string
     files?: ComposerAttachment[]
@@ -43,6 +53,8 @@ function Live({
     disabled?: boolean
     dictation?: ComposerDictation
     mentions?: ComposerMentions
+    layout?: ComposerLayout
+    tools?: ReactNode
 }) {
     const [value, setValue] = useState(initial)
     const [attachments, setAttachments] = useState(files)
@@ -73,9 +85,10 @@ function Live({
             }
             onRemove={(id) => setAttachments((current) => current.filter((attachment) => attachment.id !== id))}
             onCancel={(id) => setAttachments((current) => current.filter((attachment) => attachment.id !== id))}
-            tools={<ModelPicker />}
+            tools={tools}
             dictation={dictation}
             mentions={mentions}
+            layout={layout}
         />
     )
 }
@@ -103,6 +116,45 @@ export default meta
 
 /** Empty, holding text with files and a picture attached, busy, and disabled. */
 export const States_: StoryObj = { name: 'States', render: () => <States /> }
+
+/** A toggle that asks for a longer, more careful answer, and the model in use, as an inline composer's tools. */
+function InlineTools() {
+    const [thinking, setThinking] = useState(false)
+    return (
+        <>
+            <IconButton label="Think longer" pressed={thinking} onClick={() => setThinking(!thinking)}>
+                <Lightbulb aria-hidden />
+            </IconButton>
+            <ModelPicker />
+        </>
+    )
+}
+
+/**
+ * On one line: a round attach button, the text, a toggle to think longer and the model, and a
+ * round Send, in a pill. Empty, with a short question, with one that wraps, and with a file
+ * attached: the last two open into the box, text on top and the controls under it, and close back
+ * to the pill once the text fits on one line again.
+ */
+export const Inline: StoryObj = {
+    render: () => (
+        <Ground>
+            <Live initial="" layout="inline" tools={<InlineTools />} />
+            <Live initial="Why did nightly-export fail last night?" layout="inline" tools={<InlineTools />} />
+            <Live
+                initial="Why did nightly-export fail last night, and which of the rows that validate rejected came from the import-orders run before it?"
+                layout="inline"
+                tools={<InlineTools />}
+            />
+            <Live
+                initial="Summarize this log."
+                files={[{ id: 'b', name: 'validate.log', kind: 'file', detail: '14 KB' }]}
+                layout="inline"
+                tools={<InlineTools />}
+            />
+        </Ground>
+    ),
+}
 
 /**
  * Files on their way up: a spinner while the share done is unknown, a ring when it is known, and a
