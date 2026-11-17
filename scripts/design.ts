@@ -8,6 +8,7 @@
  *   bun run design --ref main                  move the pin to a branch, tag or commit, and write the copy there
  *   bun run design --from ../sokkel-design     copy from a checkout and pin its HEAD, which must hold the files as committed
  *   bun run design --check                     fail when the copy is not the pinned commit's; skipped when GitHub cannot be reached
+ *   bun run design --tokens                    fail when tokens.json is not the one the pinned contract was resolved from
  *
  * A commit is read with git over HTTPS (`git ls-remote`, then a fetch of that one commit), never
  * through the GitHub API, so the check shares no API limit.
@@ -27,9 +28,52 @@ interface Pin {
     commit: string
 }
 
-/** The contract's files the copy holds: the index and the JSON of the schemas, parts and patterns. */
+/** The contract's files the copy holds: the index, its pin on sokkel-ui, and the JSON of the schemas, parts and patterns. */
 function copied(path: string): boolean {
-    return path === 'index.json' || /^(schema|parts|patterns)\/[^/]+\.json$/.test(path)
+    return path === 'index.json' || path === 'sokkel-ui.json' || /^(schema|parts|patterns)\/[^/]+\.json$/.test(path)
+}
+
+const TOKENS = 'packages/core/tokens/tokens.json'
+
+/** Two JSON values written alike, whatever their spacing and key order. */
+function sameJson(left: unknown, right: unknown): boolean {
+    const norm = (value: unknown): unknown =>
+        Array.isArray(value)
+            ? value.map(norm)
+            : value !== null && typeof value === 'object'
+              ? Object.fromEntries(
+                    Object.keys(value)
+                        .sort()
+                        .map((key) => [key, norm((value as Record<string, unknown>)[key])]),
+                )
+              : value
+    return JSON.stringify(norm(left)) === JSON.stringify(norm(right))
+}
+
+/**
+ * Whether tokens.json is the one the pinned contract resolved its tokens from (its `sokkel-ui.json`),
+ * so a release never ships tokens the contract does not know. The commit is read from this
+ * repository, fetched when a shallow checkout lacks it.
+ */
+function checkTokens(): void {
+    const root = join(import.meta.dirname, '..')
+    const pinned = join(DESIGN, 'sokkel-ui.json')
+    if (!existsSync(pinned)) throw new Error('design/sokkel-ui.json is missing; run `bun run design`')
+    const { commit } = JSON.parse(readFileSync(pinned, 'utf8')) as { commit: string }
+    let then: string
+    try {
+        then = git(['show', `${commit}:${TOKENS}`], root)
+    } catch {
+        git(['fetch', '-q', '--depth', '1', 'origin', commit], root)
+        then = git(['show', `${commit}:${TOKENS}`], root)
+    }
+    if (!sameJson(JSON.parse(then), JSON.parse(readFileSync(join(root, TOKENS), 'utf8')))) {
+        console.error(`${TOKENS} differs from the one the pinned design contract was resolved from (sokkel-ui ${commit}).`)
+        console.error("Move sokkel-design's pin to a sokkel-ui commit with these tokens (`bun scripts/resolve.ts --ref <commit>` there),")
+        console.error('merge it, then move this pin with `bun run design --ref <its commit>`.')
+        process.exit(1)
+    }
+    console.log(`${TOKENS} is the one the design contract was resolved from (sokkel-ui ${commit})`)
 }
 
 function git(args: string[], cwd?: string): string {
@@ -85,7 +129,8 @@ function checkout(dir: string): { commit: string; files: Map<string, Buffer> } {
 /** The copy's files now, by their path in the contract. */
 function local(): Map<string, Buffer> {
     const files = new Map<string, Buffer>()
-    if (existsSync(join(DESIGN, 'index.json'))) files.set('index.json', readFileSync(join(DESIGN, 'index.json')))
+    for (const name of ['index.json', 'sokkel-ui.json'])
+        if (existsSync(join(DESIGN, name))) files.set(name, readFileSync(join(DESIGN, name)))
     for (const folder of ['schema', 'parts', 'patterns']) {
         if (!existsSync(join(DESIGN, folder))) continue
         for (const name of readdirSync(join(DESIGN, folder))) {
@@ -136,6 +181,11 @@ function main(): void {
     const repo = pin?.repo ?? REPO
     const from = option('--from')
     const ref = option('--ref')
+
+    if (process.argv.includes('--tokens')) {
+        checkTokens()
+        return
+    }
 
     if (process.argv.includes('--check')) {
         if (pin === undefined) throw new Error('design/pin.json is missing; run `bun run design --ref main`')

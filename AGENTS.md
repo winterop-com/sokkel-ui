@@ -57,6 +57,16 @@ and ask before acting.
 - A part with a spec in `design/` (the pinned copy of sokkel-design) matches it: `src/parts.test.ts`
   checks its words, options, sizes, paints and keys. Changing what a spec covers is a sokkel-design
   PR first, then `bun run design --ref <ref>` to move the pin; `design/` is never edited by hand.
+- The design contract in sokkel-design (`../sokkel-design`) never falls behind the library. A change
+  to a token, or to anything a part's spec covers, updates sokkel-design in the same round: the spec
+  and its changelog there, and its pin on sokkel-ui (`bun scripts/resolve.ts --ref <commit>` there,
+  with its checks), merged before the sokkel-ui release that ships the change; then
+  `bun run design --ref <its commit>` here. A release moves both to the same version.
+  What lands in sokkel-ui is the new normal: a part added or changed here is specified there in the
+  same round, as it landed (its words, options, sizes, paints and keys), never left for later and
+  never marked as a draft.
+  `bun run design --tokens` fails when `tokens.json` is not the one the pinned contract was resolved
+  from: CI warns on it, and the release stops.
 - `packages/core/tokens/tokens.json` is the only place a token is defined. Run `bun run tokens`
   after editing it; `tokens.css`, `themes.css` and the theme files in `themes/`, all under
   `packages/core/src/styles/`, are generated and never edited by hand.
