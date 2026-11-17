@@ -479,17 +479,6 @@ to `plan.md` when it ships.
         - windowing in `TrackList`, and a `TrackList` row that links to a page
     - **Dashboards:**
         - a phone layout for an editor beside its live preview
-    - **Media:** artwork for the media session from drawn covers.
-    - **Video:**
-        - waiting on a live stream's missing segments, where hls.js now skips past them
-        - Apple's own HLS (Safari, the macOS webview) picking a try up at the start of the segment it
-          stood in, so up to a segment plays again, and dropping "Trying again" once the media loads
-          rather than once it plays
-
-        Checked on 2026-11-09: the video example makes its clips (WebCodecs VP8 and Opus) and plays
-        them in Tauri on the system WebKit, as in Chromium. Native HLS (MPEG-TS, `startAt`, stalls and
-        giving up) and full screen with a cover, in the browser and through a desktop call, were
-        checked headless in WebKit the same day.
 
 ## 1.0
 
