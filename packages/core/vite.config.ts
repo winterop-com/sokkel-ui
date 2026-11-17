@@ -17,10 +17,25 @@ function appearanceFile(): Plugin {
     }
 }
 
+/** Writes the data files under `src/data` with no source map: the map would only repeat the data. */
+function dataWithoutMaps(): Plugin {
+    return {
+        name: 'data-without-maps',
+        generateBundle(_, bundle) {
+            for (const out of Object.values(bundle)) {
+                if (out.type !== 'chunk' || !out.fileName.startsWith('data/')) continue
+                delete bundle[`${out.fileName}.map`]
+                out.map = null
+                out.code = out.code.replace(/\n\/\/# sourceMappingURL=\S+\s*$/, '\n')
+            }
+        },
+    }
+}
+
 // A module's list of sources is named as the `exports` map names the module: `primitives/<name>` for
 // `components/ui`, the bare name for the rest of `components`, and `hooks/` and `lib/` as they are.
 const config = library(import.meta.dirname, ['components', 'hooks', 'lib'], (module) =>
     module.replace(/^components\/ui\//, 'primitives/').replace(/^components\//, ''),
 )
 
-export default { ...config, plugins: [...(config.plugins ?? []), appearanceFile()] }
+export default { ...config, plugins: [...(config.plugins ?? []), appearanceFile(), dataWithoutMaps()] }

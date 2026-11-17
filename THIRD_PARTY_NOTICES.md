@@ -46,9 +46,9 @@ package manager rather than redistributed with it, so they are not listed.
   Copyright (c) 2023 shadcn.
 - `src/components/ui/waveform.tsx` and `src/components/ui/bar-visualizer.tsx` come from the
   ElevenLabs UI registry, and since modified: Copyright (c) 2025 Eleven Labs Inc.
-- The emoji names, keywords and groups `EmojiPicker` draws come from `emojibase-data` (version
-  18), a dependency of the core package that an app's bundler carries into the chunk the picker
-  loads: Copyright (c) 2017-2019 Miles Johnson. The data is derived from the Unicode emoji data
+- The emoji list the core package carries for `EmojiPicker` (`src/data/emoji-en.json`, built into
+  `dist/data/emoji-en.js`) is the English names, keywords, groups and skin tones of `emojibase-data`
+  (version 18.0.0), trimmed by `scripts/emoji-data.ts`: Copyright (c) 2017-2019 Miles Johnson. The data is derived from the Unicode emoji data
   files and the Unicode CLDR annotations, Copyright (c) 1991-2026 Unicode, Inc., under the Unicode
   License v3 (https://www.unicode.org/license.txt).
 - The icon glyphs in the terminal face under `packages/core/src/styles/fonts/` (see the SIL Open

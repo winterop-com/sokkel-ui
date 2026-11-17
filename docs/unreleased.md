@@ -30,9 +30,10 @@ release and empties it.
   in view. The arrow keys move through the grid (one tab stop), Enter picks, Escape clears the
   search, then closes. The recent emoji (`recent`, `onRecentChange`) and the skin tone (`skinTone`,
   `onSkinToneChange`) are kept per person through `useStored` under `storeKey` unless the app holds
-  them. `EmojiPickerPopover` opens it from a `trigger`. The list comes from `emojibase-data`, a new
-  dependency of the core package, loaded the first time a picker opens (`loadEmojiData` loads it
-  ahead), and keeps only the emoji the page's fonts draw. Its words are `EMOJI_PICKER_WORDS`.
+  them. `EmojiPickerPopover` opens it from a `trigger`. The list, English names and keywords taken from
+  `emojibase-data`, ships inside the core package (no new dependency) as a chunk of its own, about
+  50 kB gzipped, loaded the first time a picker opens (`loadEmojiData` loads it ahead), and keeps
+  only the emoji the page's fonts draw. Its words are `EMOJI_PICKER_WORDS`.
 - `ReactionBar` (`@winterop-com/sokkel-ui/ReactionBar`): a row of quick reactions (`QUICK_REACTIONS`
   by default) as round buttons with the emoji large, the ones given drawn pressed (`selected`), and a
   more button that opens the full `EmojiPicker`; either way the emoji goes to `onReact(emoji, name)`.

@@ -22,36 +22,16 @@ export interface EmojiData {
     byEmoji: ReadonlyMap<string, EmojiItem>
 }
 
-/** The data set's group numbers, as `emojibase-data` writes them; 2, the skin tone components, is left out. */
-const GROUP_OF: Record<number, EmojiGroup> = {
-    0: 'smileys',
-    1: 'people',
-    3: 'animals',
-    4: 'food',
-    5: 'travel',
-    6: 'activities',
-    7: 'objects',
-    8: 'symbols',
-    9: 'flags',
-}
-
-interface RawSkin {
-    emoji: string
-    tone?: number | number[]
-}
-
-interface RawEmoji {
-    label: string
-    emoji: string
-    tags?: string[]
-    group?: number
-    order?: number
-    version: number
-    skins?: RawSkin[]
-}
+/**
+ * One emoji as `src/data/emoji-en.json` holds it, which `bun run emoji-data` writes from
+ * `emojibase-data`: the character, its English name and keywords, the index of its group in
+ * `EMOJI_GROUPS`, the emoji version that brought it, and, where it takes a skin tone, the same emoji
+ * in the five tones, lightest first.
+ */
+export type EmojiRow = [emoji: string, name: string, keywords: string[], group: number, version: number, skins?: string[]]
 
 /** The newest emoji version the page's fonts draw: a sample of each version is drawn on a canvas and kept when it draws as one colored glyph. */
-function drawnVersion(raw: readonly RawEmoji[]): number {
+function drawnVersion(rows: readonly EmojiRow[]): number {
     if (typeof document === 'undefined') return Infinity
     let context: CanvasRenderingContext2D | null = null
     try {
@@ -80,31 +60,23 @@ function drawnVersion(raw: readonly RawEmoji[]): number {
     // A browser with no color font draws every emoji gray; then only the width tells a missing one.
     const color = colored('\u{1F600}')
     if (base === 0) return Infinity
-    const versions = [...new Set(raw.map((item) => item.version))].filter((version) => version >= 11).sort((a, b) => b - a)
+    const versions = [...new Set(rows.map((row) => row[4]))].filter((version) => version >= 11).sort((a, b) => b - a)
     for (const version of versions) {
-        const sample = raw.find((item) => item.version === version && item.group !== undefined && item.group !== 2)
+        const sample = rows.find((row) => row[4] === version)
         if (sample === undefined) continue
-        const width = context.measureText(sample.emoji).width
-        if (width <= base * 1.5 && (!color || colored(sample.emoji))) return version
+        const width = context.measureText(sample[0]).width
+        if (width <= base * 1.5 && (!color || colored(sample[0]))) return version
     }
     return 11
 }
 
-function shape(raw: readonly RawEmoji[]): EmojiData {
-    const newest = drawnVersion(raw)
+function shape(rows: readonly EmojiRow[]): EmojiData {
+    const newest = drawnVersion(rows)
     const list: EmojiItem[] = []
-    const order = new Map<EmojiItem, number>()
-    for (const item of raw) {
-        const group = item.group === undefined ? undefined : GROUP_OF[item.group]
-        if (group === undefined || item.version > newest) continue
-        const tones = new Map<number, string>()
-        for (const skin of item.skins ?? []) if (typeof skin.tone === 'number') tones.set(skin.tone, skin.emoji)
-        const skins = tones.size === 5 ? [1, 2, 3, 4, 5].map((tone) => tones.get(tone) ?? item.emoji) : undefined
-        const shaped: EmojiItem = { emoji: item.emoji, name: item.label, keywords: item.tags ?? [], group, ...(skins && { skins }) }
-        order.set(shaped, item.order ?? 0)
-        list.push(shaped)
+    for (const [emoji, name, keywords, group, version, skins] of rows) {
+        if (version > newest) continue
+        list.push({ emoji, name, keywords, group: EMOJI_GROUPS[group], ...(skins && { skins }) })
     }
-    list.sort((a, b) => EMOJI_GROUPS.indexOf(a.group) - EMOJI_GROUPS.indexOf(b.group) || (order.get(a) ?? 0) - (order.get(b) ?? 0))
     const byEmoji = new Map<string, EmojiItem>()
     for (const item of list) {
         byEmoji.set(item.emoji, item)
@@ -120,8 +92,8 @@ let loading: Promise<EmojiData> | undefined
  * hands back the same list after. Only emoji the page's fonts can draw are kept.
  */
 export function loadEmojiData(): Promise<EmojiData> {
-    loading ??= import('emojibase-data/en/data.json').then(
-        (module) => shape((module as unknown as { default: RawEmoji[] }).default),
+    loading ??= import('../data/emoji-en.json').then(
+        (module) => shape(module.default as unknown as EmojiRow[]),
         (error: unknown) => {
             loading = undefined
             throw error
