@@ -34,6 +34,10 @@
             "types": "./dist/BoundaryLayer.d.ts",
             "import": "./dist/BoundaryLayer.js"
         },
+        "./CountryLayer": {
+            "types": "./dist/CountryLayer.d.ts",
+            "import": "./dist/CountryLayer.js"
+        },
         "./geometry": {
             "types": "./dist/geometry.d.ts",
             "import": "./dist/geometry.js"
@@ -77,6 +81,10 @@
         "./vite": {
             "types": "./dist/vite.d.ts",
             "import": "./dist/vite.js"
+        },
+        "./world": {
+            "types": "./dist/world.d.ts",
+            "import": "./dist/world.js"
         }
     },
     "publishConfig": {

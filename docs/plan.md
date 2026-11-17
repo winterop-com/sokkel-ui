@@ -1189,6 +1189,16 @@ that offers no basemap gets the ground alone and no network, and the map draws o
 offers. Layers leave out features whose geometry cannot be read, and the map says how many in a
 note under it, after the app's own `notes`.
 
+`CountryLayer` fills the world's countries by a value per country code (`NOR`, `BRA`), drawn as
+`BoundaryLayer` draws areas, from the app's own geometry or the one the maps package carries:
+Natural Earth's 1:110m countries (public domain, about 53 kB gzipped, Antarctica left out), which `loadWorld` in `world`
+fetches the first time a layer or a basemap draws it, so no page carries it at start. The same
+geometry draws `WORLD_BASEMAP`, the countries as land with their borders in the token colors and
+no tile server. A map's `fallbackBasemap` is drawn while the chosen basemap cannot be had (offline,
+or its style or every tile fails), so with `WORLD_BASEMAP` a map still shows the world without the
+network. The `export` control, or `handle` for an app's own menu, saves the map as drawn as a PNG
+with the basemap's credits in its corner, as a chart frame exports.
+
 ## Graphs
 
 Their own package, `@winterop-com/sokkel-ui-graph`, so an app that draws no graph installs neither

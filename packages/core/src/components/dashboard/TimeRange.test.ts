@@ -1,10 +1,24 @@
 import { describe, expect, test } from 'vitest'
 
-import { rangeLabel, sameRange } from './TimeRange'
+import { atTime, rangeLabel, sameRange, timeOfDay } from './TimeRange'
 
 describe('a custom range for a reader', () => {
     test('names both days and the year once', () => {
         expect(rangeLabel(new Date(2026, 9, 3), new Date(2026, 9, 17))).toBe('Oct 3 to Oct 17, 2026')
+    })
+
+    test('writes the times where an end is not at midnight, once for the day within one', () => {
+        expect(rangeLabel(new Date(2026, 9, 3, 9), new Date(2026, 9, 17, 17, 30))).toBe('Oct 3, 09:00 to Oct 17, 2026, 17:30')
+        expect(rangeLabel(new Date(2026, 9, 3, 9), new Date(2026, 9, 3, 17, 30))).toBe('Oct 3, 2026, 09:00 to 17:30')
+        expect(rangeLabel(new Date(2026, 9, 3, 9), new Date(2026, 9, 3, 17, 30), 'en-US', 12)).toBe('Oct 3, 2026, 09:00 AM to 05:30 PM')
+    })
+})
+
+describe('a time of day', () => {
+    test('is read from a moment and set on a day', () => {
+        expect(timeOfDay(new Date(2026, 9, 3, 7, 5))).toBe('07:05')
+        expect(atTime(new Date(2026, 9, 3), '17:30')).toEqual(new Date(2026, 9, 3, 17, 30))
+        expect(atTime(new Date(2026, 9, 3, 12), '06:15:30')).toEqual(new Date(2026, 9, 3, 6, 15, 30))
     })
 })
 

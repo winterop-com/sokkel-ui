@@ -11,11 +11,13 @@ import { BarPanel } from '@winterop-com/sokkel-ui-charts/dashboard/BarPanel'
 import { ChartPanel } from '@winterop-com/sokkel-ui-charts/dashboard/ChartPanel'
 import { TimeSeriesPanel } from '@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel'
 import type { PanelSeries } from '@winterop-com/sokkel-ui-charts/dashboard/series'
+import { CountryLayer } from '@winterop-com/sokkel-ui-maps/CountryLayer'
 import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
 import { MapPopup } from '@winterop-com/sokkel-ui-maps/MapPopup'
 import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
 import { PointLayer } from '@winterop-com/sokkel-ui-maps/PointLayer'
 import { colorOf, sequentialScale } from '@winterop-com/sokkel-ui-maps/scale'
+import { useWorld as useWorldGeometry, WORLD_BASEMAP } from '@winterop-com/sokkel-ui-maps/world'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import { Pause, Play } from 'lucide-react'
@@ -291,7 +293,11 @@ export function FunnelPanel() {
     )
 }
 
-/** Paid revenue by country on a map, each country a point sized and colored by it, with its change in a popup. */
+/**
+ * Paid revenue by country on a map, each country filled by it (a point for one too small for the
+ * world geometry), with its change in a popup; the World basemap stands in offline, and the map
+ * exports as a PNG.
+ */
 export function CountriesPanel({ span: width = 'two-thirds' }: { span?: 'half' | 'two-thirds' | 'full' }) {
     const { world, money, view } = useLoaded()
     const segment = useSegment()
@@ -308,20 +314,26 @@ export function CountriesPanel({ span: width = 'two-thirds' }: { span?: 'half' |
             }),
         [most, money],
     )
+    const geometry = useWorldGeometry()
+    const values = useMemo(() => Object.fromEntries(figures.map((figure) => [figure.code, figure.revenue])), [figures])
+    // A country the world geometry is too coarse to hold is drawn as a point at its place.
     const points = useMemo(
         (): FeatureCollection<Point> => ({
             type: 'FeatureCollection',
-            features: figures.map((figure) => ({
-                type: 'Feature',
-                id: figure.name,
-                geometry: { type: 'Point', coordinates: figure.at },
-                properties: { name: figure.name, revenue: figure.revenue },
-            })),
+            features: figures
+                .filter((figure) => geometry !== null && !geometry.features.some((one) => one.id === figure.code))
+                .map((figure) => ({
+                    type: 'Feature',
+                    id: figure.code,
+                    geometry: { type: 'Point', coordinates: figure.at },
+                    properties: { name: figure.name, revenue: figure.revenue },
+                })),
         }),
-        [figures],
+        [figures, geometry],
     )
-    const chosen = figures.find((figure) => figure.name === selected)
-    const feature = points.features.find((one) => one.id === selected)
+    const chosen = figures.find((figure) => figure.code === selected)
+    const feature: Feature | undefined =
+        geometry?.features.find((one) => one.id === selected) ?? points.features.find((one) => one.id === selected)
     const total = figures.reduce((sum, figure) => sum + figure.revenue, 0)
     return (
         <DashboardPanel
@@ -335,21 +347,19 @@ export function CountriesPanel({ span: width = 'two-thirds' }: { span?: 'half' |
                 framed={false}
                 selected={selected}
                 onSelectedChange={(id) => setSelected(id)}
+                fallbackBasemap={WORLD_BASEMAP}
+                controls={{ export: true }}
+                file="revenue-by-country"
                 className="min-h-80 flex-1"
             >
-                <PointLayer
-                    id="countries"
-                    data={points}
-                    scale={scale}
-                    value="revenue"
-                    size={{ value: 'revenue', domain: [0, most], range: [4, 20] }}
-                />
+                <CountryLayer id="countries" values={values} scale={scale} unvalued="hidden" />
+                <PointLayer id="small-countries" data={points} scale={scale} value="revenue" />
                 <MapOverlay corner="bottom-left">
                     <MapLegend title="Revenue" description={rangeName(view.range)} scale={scale} captions={['Less', 'More']} />
                 </MapOverlay>
                 {chosen !== undefined && feature !== undefined && (
                     <MapPopup
-                        feature={feature as Feature}
+                        feature={feature}
                         title={chosen.name}
                         description={REGION_NAMES[chosen.region]}
                         rows={[

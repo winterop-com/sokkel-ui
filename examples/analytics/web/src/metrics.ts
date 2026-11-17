@@ -424,6 +424,7 @@ export function topCustomers(world: World, segment: Segment, span: Span, count =
 /** Each country's point, with its revenue now and before, for the map. */
 export interface CountryFigure {
     name: string
+    code: string
     region: Region
     at: [number, number]
     revenue: number
@@ -435,6 +436,7 @@ export function countries(world: World, segment: Segment, span: Span, previous: 
     const then = revenueByCountry(world, segment, previous.from, previous.to)
     return COUNTRIES.filter((country) => inRegion(country, segment)).map((country) => ({
         name: country.name,
+        code: country.code,
         region: country.region,
         at: country.at,
         revenue: now.get(country.name) ?? 0,

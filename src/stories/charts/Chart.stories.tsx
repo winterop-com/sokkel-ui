@@ -7,7 +7,7 @@ import { Field } from '@winterop-com/sokkel-ui/Field'
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
-import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
+import { RUN_ROWS, RUN_STATES } from '../fixtures/runRows'
 import { Framed, Ground } from './Ground'
 
 /**
@@ -25,7 +25,7 @@ const BY_JOB_STATE: ChartSpec = {
     x: 'job',
     series: 'state',
     seriesOrder: STATE_ORDER,
-    colors: STATE_COLORS,
+    statuses: true,
     stack: 'stacked',
 }
 const SHARE_BY_PROJECT: ChartSpec = {
@@ -33,13 +33,13 @@ const SHARE_BY_PROJECT: ChartSpec = {
     x: 'project',
     series: 'state',
     seriesOrder: STATE_ORDER,
-    colors: STATE_COLORS,
+    statuses: true,
     stack: 'percent',
     horizontal: true,
 }
 const DURATION_BY_DAY: ChartSpec = { rows: RUN_ROWS, x: 'day', y: 'duration', series: 'job', aggregate: 'avg', unit: ' s' }
 const ROWS_BY_DAY: ChartSpec = { rows: RUN_ROWS, x: 'day', y: 'rows', series: 'project', stack: 'stacked' }
-const BY_STATE: ChartSpec = { rows: RUN_ROWS, x: 'state', order: STATE_ORDER, colors: STATE_COLORS }
+const BY_STATE: ChartSpec = { rows: RUN_ROWS, x: 'state', order: STATE_ORDER, statuses: true }
 const BY_HOUR_WEEKDAY: ChartSpec = {
     rows: RUN_ROWS,
     x: 'hour',
@@ -53,7 +53,7 @@ const WARM = ['kind-pink', 'chart-5', 'chart-4', 'chart-3']
 const ROWS_BY_PROJECT: ChartSpec = { rows: RUN_ROWS, x: 'job', y: 'rows', series: 'project', stack: 'stacked', palette: COOL }
 const BY_WORKER: ChartSpec = { rows: RUN_ROWS, x: 'worker', palette: WARM }
 
-/** Runs per job, stacked by state in the states' own colors. */
+/** Runs per job, stacked by state, each state in its own status color through `statuses`. */
 export const Stacked: StoryObj = {
     render: () => (
         <Ground title="Runs, October">
@@ -202,7 +202,7 @@ export const Explore: StoryObj = {
                 series: split === 'none' || split === x ? undefined : split,
                 aggregate: measure === 'count' ? 'count' : how,
                 seriesOrder: split === 'state' ? STATE_ORDER : undefined,
-                colors: split === 'state' ? STATE_COLORS : undefined,
+                statuses: true,
                 unit: measure === 'duration' || measure === 'wait' ? ' s' : undefined,
             }),
             [x, measure, split, how],

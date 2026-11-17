@@ -43,6 +43,8 @@ export const REGION_OWNER: Record<Region, Person> = {
 
 export interface Country {
     name: string
+    /** Its ISO 3166-1 alpha-3 code, as the map's world geometry names it. */
+    code: string
     region: Region
     /** Where its point stands on the map: longitude, latitude. */
     at: [number, number]
@@ -51,36 +53,36 @@ export interface Country {
 }
 
 export const COUNTRIES: Country[] = [
-    { name: 'United Kingdom', region: 'europe', at: [-2, 53.5], weight: 16 },
-    { name: 'Germany', region: 'europe', at: [10.4, 51.2], weight: 18 },
-    { name: 'France', region: 'europe', at: [2.5, 46.6], weight: 12 },
-    { name: 'Netherlands', region: 'europe', at: [5.3, 52.1], weight: 8 },
-    { name: 'Norway', region: 'europe', at: [9, 61], weight: 7 },
-    { name: 'Sweden', region: 'europe', at: [16, 62.5], weight: 8 },
-    { name: 'Denmark', region: 'europe', at: [9.5, 56], weight: 5 },
-    { name: 'Finland', region: 'europe', at: [26, 63.5], weight: 4 },
-    { name: 'Spain', region: 'europe', at: [-3.7, 40.2], weight: 8 },
-    { name: 'Italy', region: 'europe', at: [12.5, 42.8], weight: 7 },
-    { name: 'Poland', region: 'europe', at: [19.4, 52], weight: 5 },
-    { name: 'Ireland', region: 'europe', at: [-8, 53.2], weight: 2 },
-    { name: 'United States', region: 'north-america', at: [-98.5, 39.8], weight: 74 },
-    { name: 'Canada', region: 'north-america', at: [-106, 56], weight: 16 },
-    { name: 'Mexico', region: 'north-america', at: [-102.5, 23.6], weight: 10 },
-    { name: 'Brazil', region: 'south-america', at: [-51.9, -10.8], weight: 48 },
-    { name: 'Argentina', region: 'south-america', at: [-64, -34], weight: 20 },
-    { name: 'Chile', region: 'south-america', at: [-71.2, -35.7], weight: 14 },
-    { name: 'Colombia', region: 'south-america', at: [-74.3, 4.6], weight: 18 },
-    { name: 'Japan', region: 'asia-pacific', at: [138.3, 36.2], weight: 22 },
-    { name: 'Australia', region: 'asia-pacific', at: [134.5, -25.7], weight: 24 },
-    { name: 'India', region: 'asia-pacific', at: [78.9, 21], weight: 22 },
-    { name: 'Singapore', region: 'asia-pacific', at: [103.8, 1.35], weight: 10 },
-    { name: 'South Korea', region: 'asia-pacific', at: [127.8, 36.5], weight: 12 },
-    { name: 'New Zealand', region: 'asia-pacific', at: [172.5, -41.5], weight: 10 },
-    { name: 'South Africa', region: 'middle-east-africa', at: [24, -29], weight: 30 },
-    { name: 'Nigeria', region: 'middle-east-africa', at: [8.7, 9.1], weight: 18 },
-    { name: 'Kenya', region: 'middle-east-africa', at: [37.9, 0.2], weight: 16 },
-    { name: 'Egypt', region: 'middle-east-africa', at: [30.8, 26.8], weight: 14 },
-    { name: 'United Arab Emirates', region: 'middle-east-africa', at: [54, 24], weight: 22 },
+    { name: 'United Kingdom', code: 'GBR', region: 'europe', at: [-2, 53.5], weight: 16 },
+    { name: 'Germany', code: 'DEU', region: 'europe', at: [10.4, 51.2], weight: 18 },
+    { name: 'France', code: 'FRA', region: 'europe', at: [2.5, 46.6], weight: 12 },
+    { name: 'Netherlands', code: 'NLD', region: 'europe', at: [5.3, 52.1], weight: 8 },
+    { name: 'Norway', code: 'NOR', region: 'europe', at: [9, 61], weight: 7 },
+    { name: 'Sweden', code: 'SWE', region: 'europe', at: [16, 62.5], weight: 8 },
+    { name: 'Denmark', code: 'DNK', region: 'europe', at: [9.5, 56], weight: 5 },
+    { name: 'Finland', code: 'FIN', region: 'europe', at: [26, 63.5], weight: 4 },
+    { name: 'Spain', code: 'ESP', region: 'europe', at: [-3.7, 40.2], weight: 8 },
+    { name: 'Italy', code: 'ITA', region: 'europe', at: [12.5, 42.8], weight: 7 },
+    { name: 'Poland', code: 'POL', region: 'europe', at: [19.4, 52], weight: 5 },
+    { name: 'Ireland', code: 'IRL', region: 'europe', at: [-8, 53.2], weight: 2 },
+    { name: 'United States', code: 'USA', region: 'north-america', at: [-98.5, 39.8], weight: 74 },
+    { name: 'Canada', code: 'CAN', region: 'north-america', at: [-106, 56], weight: 16 },
+    { name: 'Mexico', code: 'MEX', region: 'north-america', at: [-102.5, 23.6], weight: 10 },
+    { name: 'Brazil', code: 'BRA', region: 'south-america', at: [-51.9, -10.8], weight: 48 },
+    { name: 'Argentina', code: 'ARG', region: 'south-america', at: [-64, -34], weight: 20 },
+    { name: 'Chile', code: 'CHL', region: 'south-america', at: [-71.2, -35.7], weight: 14 },
+    { name: 'Colombia', code: 'COL', region: 'south-america', at: [-74.3, 4.6], weight: 18 },
+    { name: 'Japan', code: 'JPN', region: 'asia-pacific', at: [138.3, 36.2], weight: 22 },
+    { name: 'Australia', code: 'AUS', region: 'asia-pacific', at: [134.5, -25.7], weight: 24 },
+    { name: 'India', code: 'IND', region: 'asia-pacific', at: [78.9, 21], weight: 22 },
+    { name: 'Singapore', code: 'SGP', region: 'asia-pacific', at: [103.8, 1.35], weight: 10 },
+    { name: 'South Korea', code: 'KOR', region: 'asia-pacific', at: [127.8, 36.5], weight: 12 },
+    { name: 'New Zealand', code: 'NZL', region: 'asia-pacific', at: [172.5, -41.5], weight: 10 },
+    { name: 'South Africa', code: 'ZAF', region: 'middle-east-africa', at: [24, -29], weight: 30 },
+    { name: 'Nigeria', code: 'NGA', region: 'middle-east-africa', at: [8.7, 9.1], weight: 18 },
+    { name: 'Kenya', code: 'KEN', region: 'middle-east-africa', at: [37.9, 0.2], weight: 16 },
+    { name: 'Egypt', code: 'EGY', region: 'middle-east-africa', at: [30.8, 26.8], weight: 14 },
+    { name: 'United Arab Emirates', code: 'ARE', region: 'middle-east-africa', at: [54, 24], weight: 22 },
 ]
 
 export const COUNTRY = new Map(COUNTRIES.map((country) => [country.name, country]))

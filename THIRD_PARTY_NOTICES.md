@@ -18,6 +18,10 @@ package manager rather than redistributed with it, so they are not listed.
   Blue Marble: Next Generation mosaic as NASA GIBS serves it
   (https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api).
   NASA imagery is not subject to copyright in the United States; credit: NASA Earth Observatory.
+- `packages/maps/src/data/countries-110m.json`, shipped in the maps package, is Natural Earth's
+  1:110m Admin 0 countries, version 5.1.2 (https://www.naturalearthdata.com), trimmed by
+  `scripts/world-data.ts` to each country's outline, code and name. Natural Earth is in the public
+  domain; no permission is needed to use it.
 - `e2e/tiles/`, in the repository only and shipped in no package, holds responses recorded from
   `tiles.openfreemap.org` and `gibs.earthdata.nasa.gov`, which the browser suites serve in place of
   the network:

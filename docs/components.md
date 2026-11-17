@@ -48,7 +48,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 
 - [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 268 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
-- [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
+- [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 11 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
 - [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 18 modules
@@ -484,13 +484,14 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **BasemapSwitcher**, BasemapPreview, BasemapGallery | `@winterop-com/sokkel-ui-maps/BasemapSwitcher` | A button that opens the choice of basemap: one entry per basemap, each with its preview. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
-| **BoundaryLayer** | `@winterop-com/sokkel-ui-maps/BoundaryLayer` | Areas on the map: a choropleth when given a scale and a value, plain boundaries otherwise. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
+| **BoundaryLayer** | `@winterop-com/sokkel-ui-maps/BoundaryLayer` | Areas on the map: a choropleth when given a scale and a value, plain boundaries otherwise. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-globe--satellite) |
+| **CountryLayer** | `@winterop-com/sokkel-ui-maps/CountryLayer` | Countries filled by their value from a world geometry: a choropleth of the world, read from a record of values by country code, drawn as `BoundaryLayer` draws areas (hatched where a country has no value, outlined on hover, the selected country's id its code). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-countries--countries) |
 | **GeoJsonLayer** | `@winterop-com/sokkel-ui-maps/GeoJsonLayer` | Any GeoJSON on the map, drawn by its geometry in the theme's colors: polygons as a light fill inside an outline, lines as lines over a casing in the card color, points as circles ringed in it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **GridLayer** | `@winterop-com/sokkel-ui-maps/GridLayer` | Gridded values, such as rainfall or temperature, drawn as one image over the grid's bounds with every cell in its class color and cells without a value left clear, its rows placed at their latitudes in Web Mercator. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-legends--all) |
 | **MapLayerList** | `@winterop-com/sokkel-ui-maps/MapLayerList` | The map's layers as a panel of cards, topmost first: each with its name and a button that shows or hides it, its legend on an inset ground, and its opacity under a rule. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **MapLegend** | `@winterop-com/sokkel-ui-maps/MapLegend` | The key to a map's colors, in a card, or bare inside a panel that frames it already. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-legends--all) |
 | **MapPopup** | `@winterop-com/sokkel-ui-maps/MapPopup` | A card over the map, pointing at a feature or a position: a title, rows of names and values, and an optional action. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
-| **MapView**, MapOverlay | `@winterop-com/sokkel-ui-maps/MapView` | A maplibre map over a basemap, with its layers and overlays as children. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
+| **MapView**, MapOverlay | `@winterop-com/sokkel-ui-maps/MapView` | A maplibre map over a basemap, with its layers and overlays as children. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **PeriodSlider** | `@winterop-com/sokkel-ui-maps/PeriodSlider` | Steps through a fixed run of periods, such as the months of a year: a slider with one stop per period, buttons for the period before and after, and a play button that advances one period at a time and stops at the last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-layers--layer-panel) |
 | **PointLayer** | `@winterop-com/sokkel-ui-maps/PointLayer` | Points on the map, as circles colored by a scale or one color and sized by a value or one radius, each ringed in the card color so neighbors stay apart. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-at-scale--many-cells) |
 

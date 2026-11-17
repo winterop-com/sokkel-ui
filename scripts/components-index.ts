@@ -44,6 +44,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
         'components/code/steady': 'how `CodeEditor` tells a prop given afresh from one that changed',
         'components/markdown-view': '`Markdown` and `PlainMarkdown` as drawn, without their engines; both export its types',
+        'components/dashboard/range-times': 'the times a `TimeRangePicker` with `times` takes, loaded with its calendar',
         'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
         'components/entry':
             'what the typed fields share: the value held as text, its issues and its frame; `EntryFieldProps` is exported by each field',

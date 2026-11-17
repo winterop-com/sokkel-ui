@@ -1,12 +1,13 @@
 import type { Feature } from 'geojson'
-import { Expand, Globe, LocateFixed, Map as MapIcon, Minus, Plus, Shrink } from 'lucide-react'
+import { Download, Expand, Globe, LocateFixed, Map as MapIcon, Minus, Plus, Shrink } from 'lucide-react'
 import type { Map as MapLibreMap, MapGeoJSONFeature, PaddingOptions, PointLike, StyleSpecification } from 'maplibre-gl'
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import { createPortal } from 'react-dom'
 
 import { Link } from '@winterop-com/sokkel-ui/Link'
 import { useLongWait } from '@winterop-com/sokkel-ui/Loaders'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '@winterop-com/sokkel-ui/lib/fullscreen'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
@@ -19,15 +20,18 @@ import {
     GROUND_LAYER_ID,
     SCHEME_BASEMAPS,
     TILES_LAYER_ID,
-    VEIL_LAYER_ID,
+    basemapKey,
     composeStyle,
+    geometryStyle,
     graticule as graticuleLines,
     hasTiles,
+    isBasemapLayer,
     labelAnchor,
     loadStyle,
     rasterStyle,
     resolveBasemap,
     type Basemap,
+    type Credit,
     type SchemeBasemaps,
 } from './basemap'
 import { BasemapSwitcher } from './BasemapSwitcher'
@@ -48,6 +52,8 @@ export interface MapWords {
     globe: string
     flat: string
     basemap: string
+    /** The control that saves the map as a PNG image. */
+    export: string
     /** Said while the map engine loads, once the wait is long enough to show. */
     loading: string
     unavailable: string
@@ -68,6 +74,7 @@ const WORDS: MapWords = {
     globe: 'View as a globe',
     flat: 'View as a flat map',
     basemap: 'Basemap',
+    export: 'Export as PNG',
     loading: 'Loading the map',
     unavailable: 'This browser cannot draw the map, because WebGL is not available.',
     failed: 'The map could not be loaded.',
@@ -90,9 +97,17 @@ export interface MapControls {
     fullscreen?: boolean
     /** A toggle between the flat map and the globe. */
     projection?: boolean
+    /** A button that saves the map as drawn as a PNG image, named by `file`. */
+    export?: boolean
 }
 
-const CONTROLS: Required<MapControls> = { zoom: true, fit: true, fullscreen: true, projection: false }
+const CONTROLS: Required<MapControls> = { zoom: true, fit: true, fullscreen: true, projection: false, export: false }
+
+/** What a map offers its app: the map as drawn, as a PNG image. */
+export interface MapHandle {
+    /** The map as drawn, with the basemap's credits written in its corner, as a PNG `data:` URL. */
+    png: () => Promise<string>
+}
 
 /** A camera position: the center and the zoom. */
 export interface MapCamera {
@@ -118,6 +133,12 @@ export interface MapViewProps {
      */
     basemaps?: Basemap[]
     onBasemapChange?: (basemap: Basemap) => void
+    /**
+     * The basemap drawn in place of the chosen one when it cannot be had: its style or every tile
+     * of it fails to load, or the browser is offline. `WORLD_BASEMAP` (from `world`) draws the
+     * countries from geometry the package carries, with no network; the ground alone by default.
+     */
+    fallbackBasemap?: Basemap
     /** How opaque the basemap's tiles and place names are, from 0 to 1. */
     basemapOpacity?: number
     /** Whether the basemap's tiles and place names are drawn; the ground always is. */
@@ -157,6 +178,10 @@ export interface MapViewProps {
      */
     notes?: readonly ReactNode[]
     words?: Partial<MapWords>
+    /** The exported image's file name, without its extension. */
+    file?: string
+    /** Filled with the map's export while it is drawn, for an app's own menu. */
+    handle?: Ref<MapHandle | null>
     className?: string
     /** Layers and overlays. */
     children?: ReactNode
@@ -224,13 +249,57 @@ export function loadMapEngine(): Promise<void> {
     return loadEngine().then(() => undefined)
 }
 
-/** The tokens the map itself paints with: the ground, place names, the globe's horizon and the graticule. */
+/** The tokens the map itself paints with: the ground, place names, the globe's horizon, the graticule, a geometry basemap's land and the credits. */
 function mapPalette(scope: HTMLElement) {
     return resolveColors(scope, {
         ground: 'var(--card)',
         ink: 'color-mix(in oklab, var(--foreground) 80%, var(--card))',
         horizon: 'var(--chart-2)',
         graticule: 'color-mix(in oklab, var(--foreground) 14%, var(--card))',
+        land: 'color-mix(in oklab, var(--foreground) 8%, var(--card))',
+        border: 'color-mix(in oklab, var(--foreground) 24%, var(--card))',
+        credit: 'var(--muted-foreground)',
+    })
+}
+
+/**
+ * The map's canvas as a PNG `data:` URL, read as the next frame is drawn, before the canvas is
+ * cleared, with the credits written in its lower right corner over the ground, as the map shows them.
+ */
+function exportImage(map: MapLibreMap, scope: HTMLElement, credits: readonly Credit[]): Promise<string> {
+    return new Promise((resolve, reject) => {
+        map.once('render', () => {
+            try {
+                const canvas = map.getCanvas()
+                const image = document.createElement('canvas')
+                image.width = canvas.width
+                image.height = canvas.height
+                const context = image.getContext('2d')
+                if (context === null) throw new Error('No 2D canvas to draw the map image on.')
+                const palette = mapPalette(scope)
+                context.fillStyle = palette.ground
+                context.fillRect(0, 0, image.width, image.height)
+                context.drawImage(canvas, 0, 0)
+                const text = credits.map((credit) => credit.label).join(' ')
+                if (text !== '') {
+                    const ratio = canvas.width / Math.max(1, canvas.clientWidth)
+                    context.font = `${String(10 * ratio)}px ${getComputedStyle(scope).fontFamily}`
+                    const pad = 4 * ratio
+                    const width = context.measureText(text).width + pad * 2
+                    const height = 16 * ratio
+                    context.globalAlpha = 0.85
+                    context.fillRect(image.width - width, image.height - height, width, height)
+                    context.globalAlpha = 1
+                    context.fillStyle = palette.credit
+                    context.textBaseline = 'middle'
+                    context.fillText(text, image.width - width + pad, image.height - height / 2)
+                }
+                resolve(image.toDataURL('image/png'))
+            } catch (error) {
+                reject(error instanceof Error ? error : new Error(String(error)))
+            }
+        })
+        map.triggerRepaint()
     })
 }
 
@@ -333,6 +402,9 @@ function ControlButton({
  * until it arrives the frame shows its ground, with a spinner once the wait is long.
  * Its full screen control goes through `lib/fullscreen`: the browser's full screen, or in a desktop
  * shell the window's own once the app hands it over, keeping the same canvas and camera.
+ * `fallbackBasemap` is drawn while the chosen basemap cannot be had: offline, or when its style or
+ * all of its tiles fail. The `export` control, or `handle` for an app's own menu, saves the map as
+ * drawn as a PNG, with the basemap's credits in its corner.
  */
 export function MapView({
     label,
@@ -340,6 +412,7 @@ export function MapView({
     defaultBasemap = SCHEME_BASEMAPS,
     basemaps = BASEMAPS,
     onBasemapChange,
+    fallbackBasemap,
     basemapOpacity = 1,
     basemapVisible = true,
     projection,
@@ -358,6 +431,8 @@ export function MapView({
     framed = true,
     notes = [],
     words,
+    file = 'map',
+    handle,
     className,
     children,
 }: MapViewProps) {
@@ -379,8 +454,15 @@ export function MapView({
     const [fullscreen, setFullscreen] = useState(false)
     const [picked, setPicked] = useState<Basemap | null>(null)
     const wanted = resolveBasemap(basemap ?? picked ?? defaultBasemap, dark)
-    const shownBasemap =
+    const chosenBasemap =
         basemap !== undefined || basemaps.some((option) => option.id === wanted.id) ? wanted : (basemaps[0] ?? BLANK_BASEMAP)
+    // The key of the chosen basemap once it failed to load, or `*` while the browser is offline.
+    const [failed, setFailed] = useState<string | null>(() => (typeof navigator !== 'undefined' && !navigator.onLine ? '*' : null))
+    const chosenKey = basemapKey(chosenBasemap)
+    const shownBasemap =
+        fallbackBasemap !== undefined && hasTiles(chosenBasemap) && (failed === '*' || failed === chosenKey)
+            ? fallbackBasemap
+            : chosenBasemap
     const [heldProjection, setHeldProjection] = useState<MapProjection>(defaultProjection)
     const shownProjection = projection ?? heldProjection
     const [unreadable, setUnreadable] = useState(0)
@@ -475,10 +557,24 @@ export function MapView({
     )
     const fitNow = useRef(fit)
     const shownBasemapRef = useRef(shownBasemap)
+    const fallbackRef = useRef(fallbackBasemap)
+    // Whether a tile of the basemap drawn has loaded, so a later failure is one tile's, not the basemap's.
+    const tileLoaded = useRef(false)
     useEffect(() => {
         fitNow.current = fit
         shownBasemapRef.current = shownBasemap
+        fallbackRef.current = fallbackBasemap
     })
+    useEffect(() => {
+        const offline = () => setFailed('*')
+        const online = () => setFailed((was) => (was === '*' ? null : was))
+        window.addEventListener('offline', offline)
+        window.addEventListener('online', online)
+        return () => {
+            window.removeEventListener('offline', offline)
+            window.removeEventListener('online', online)
+        }
+    }, [])
 
     // Whether the map is on the screen or within a scroll of it: the engine loads only then.
     const [near, setNear] = useState(false)
@@ -604,6 +700,21 @@ export function MapView({
             if (armed.current && !pendingStyle.current) setIdle(true)
         })
         instance.on('load', () => setReady(true))
+        // A basemap none of whose tiles load, as when its host cannot be reached, gives way to the fallback.
+        const fromBasemap = (source: unknown) =>
+            typeof source === 'string' &&
+            (source === TILES_LAYER_ID || !source.startsWith('wui-')) &&
+            fallbackRef.current !== undefined &&
+            shownBasemapRef.current !== fallbackRef.current
+        instance.on('data', (event) => {
+            if (event.dataType === 'source' && 'tile' in event && event.tile !== undefined && fromBasemap(event.sourceId))
+                tileLoaded.current = true
+        })
+        instance.on('error', (event) => {
+            if (tileLoaded.current || !fromBasemap((event as { sourceId?: unknown }).sourceId)) return
+            const key = basemapKey(shownBasemapRef.current)
+            setFailed((was) => (was === '*' ? was : key))
+        })
 
         const resize = new ResizeObserver(() => {
             instance.resize()
@@ -639,11 +750,12 @@ export function MapView({
 
     // The basemap's style, composed with the map's own layers; a change of basemap, scheme or
     // opacity is a diff of the style, so the data layers and their feature state stay.
-    const styleKey = shownBasemap.style ?? (shownBasemap.tiles ?? []).join(' ')
+    const styleKey = basemapKey(shownBasemap)
     useEffect(() => {
         if (map === null || scope === null || !ready) return
         let cancelled = false
         pendingStyle.current = true
+        tileLoaded.current = false
         setIdle(false)
         const basemap = shownBasemapRef.current
         const palette = mapPalette(scope)
@@ -654,11 +766,17 @@ export function MapView({
             pendingStyle.current = false
             map.triggerRepaint()
         }
-        if (basemap.style === undefined) apply(rasterStyle(basemap, dark))
-        else
-            loadStyle(basemap.style).then(apply, () => {
-                if (!cancelled) apply(rasterStyle(BLANK_BASEMAP, dark))
-            })
+        // A basemap that cannot be had gives way to the fallback; a fallback that cannot, to the ground alone.
+        const fail = () => {
+            if (cancelled) return
+            if (fallbackRef.current === undefined || basemap === fallbackRef.current || !hasTiles(basemap))
+                apply(rasterStyle(BLANK_BASEMAP, dark))
+            else setFailed((was) => (was === '*' ? was : basemapKey(basemap)))
+        }
+        if (basemap.style !== undefined) loadStyle(basemap.style).then(apply, fail)
+        else if (basemap.geometry !== undefined && !hasTiles(basemap))
+            basemap.geometry().then((data) => apply(geometryStyle(data, { land: palette.land, border: palette.border })), fail)
+        else apply(rasterStyle(basemap, dark))
         return () => {
             cancelled = true
         }
@@ -674,11 +792,7 @@ export function MapView({
         const color = mapPalette(scope).graticule
         if (map.getSource(GRATICULE_LAYER_ID) === undefined) {
             map.addSource(GRATICULE_LAYER_ID, { type: 'geojson', data: graticuleLines() })
-            const above =
-                map
-                    .getLayersOrder()
-                    .find((id) => id.startsWith('wui-') && id !== GROUND_LAYER_ID && id !== TILES_LAYER_ID && id !== VEIL_LAYER_ID) ??
-                labelAnchor(map)
+            const above = map.getLayersOrder().find((id) => id.startsWith('wui-') && !isBasemapLayer(id)) ?? labelAnchor(map)
             map.addLayer(
                 { id: GRATICULE_LAYER_ID, type: 'line', source: GRATICULE_LAYER_ID, paint: { 'line-color': color, 'line-width': 0.75 } },
                 above,
@@ -743,7 +857,20 @@ export function MapView({
         if (basemap === undefined) setPicked(next)
         onBasemapChange?.(next)
     }
-    const credits = hasTiles(shownBasemap) && basemapVisible ? (shownBasemap.attribution ?? []) : []
+    const credits =
+        (hasTiles(shownBasemap) || shownBasemap.geometry !== undefined) && basemapVisible ? (shownBasemap.attribution ?? []) : []
+    const creditsNow = useRef(credits)
+    useEffect(() => {
+        creditsNow.current = credits
+    })
+    const exportPng = useCallback(
+        () =>
+            map === null || scope === null
+                ? Promise.reject(new Error('The map has not drawn yet.'))
+                : exportImage(map, scope, creditsNow.current),
+        [map, scope],
+    )
+    useImperativeHandle<MapHandle | null, MapHandle | null>(handle, () => (map === null ? null : { png: exportPng }), [map, exportPng])
 
     const toggleProjection = () => {
         const next: MapProjection = shownProjection === 'globe' ? 'mercator' : 'globe'
@@ -835,6 +962,20 @@ export function MapView({
                                         }}
                                     >
                                         {fullscreen ? <Shrink /> : <Expand />}
+                                    </ControlButton>
+                                )}
+                                {shown.export && (
+                                    <ControlButton
+                                        label={said.export}
+                                        container={scope}
+                                        onClick={() => {
+                                            exportPng().then(
+                                                (href) => download(`${file}.png`, { href }),
+                                                (reason: unknown) => console.error('The map could not be exported.', reason),
+                                            )
+                                        }}
+                                    >
+                                        <Download />
                                     </ControlButton>
                                 )}
                                 {shown.projection && (
