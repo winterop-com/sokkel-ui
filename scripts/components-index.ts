@@ -190,6 +190,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
     },
     graph: {
         context: "the canvas's context its nodes and edges share",
+        force: 'the live force layout `NetworkGraph`\'s `layout="force"` runs on d3-force',
         'use-graph-layout': 'the elk layout `GraphCanvas` waits on',
     },
     terminal: {
@@ -277,6 +278,7 @@ const CORE_AREAS: Record<string, string> = {
     FoldingRail: 'Page layout',
     ExampleList: 'Page layout',
     DetailSheet: 'Page layout',
+    DetailPane: 'Page layout',
     Layout: 'Page layout',
     PageHeader: 'Page layout',
     PaneHeader: 'Page layout',
@@ -409,7 +411,9 @@ const CORE_AREAS: Record<string, string> = {
     MessageComposer: 'Chat and messaging',
     EmojiPicker: 'Chat and messaging',
     ReactionBar: 'Chat and messaging',
+    CallBar: 'Chat and messaging',
     MessageRow: 'Chat and messaging',
+    Letter: 'Chat and messaging',
     ToolCall: 'Chat and messaging',
     UsageLine: 'Chat and messaging',
     // Files and attachments.

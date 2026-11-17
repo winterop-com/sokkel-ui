@@ -213,6 +213,7 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
             folding={prefs.folding}
             indentGuides={prefs.indentGuides}
             bracketColors={prefs.bracketColors}
+            activeLine={prefs.lineWash ? 'always' : true}
             search
         />
     )

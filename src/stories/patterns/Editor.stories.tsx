@@ -199,6 +199,17 @@ const JOB_SCHEMA = {
         project: { enum: ['harbor', 'juniper', 'larkspur'], description: 'The project the job runs in.' },
         schedule: { type: 'string', description: 'When the job runs.' },
         paused: { type: 'boolean', description: 'A paused job keeps its schedule but does not run.' },
+        notify: {
+            type: 'object',
+            description: 'Who hears of a run, and when.',
+            required: ['to', 'on', 'digest'],
+            additionalProperties: false,
+            properties: {
+                to: { type: 'string', description: 'The person told.' },
+                on: { enum: ['failed', 'succeeded', 'completed_with_errors'], description: 'The run state that tells them.' },
+                digest: { type: 'boolean', default: true, description: 'Gathers the day into one message.' },
+            },
+        },
         steps: {
             type: 'array',
             minItems: 1,
@@ -428,6 +439,49 @@ function MarkdownNote() {
     )
 }
 
+/** The note's links followed on Mod-click; the line under it says which. */
+function FollowedNote() {
+    const [note, setNote] = useState(NOTE_TEXT)
+    const [followed, setFollowed] = useState('Nothing yet')
+    return (
+        <Ground>
+            <Stack gap="sm">
+                <CodeEditor
+                    label="Note"
+                    language="markdown"
+                    value={note}
+                    onChange={setNote}
+                    links={NOTES}
+                    onFollowLink={(link) =>
+                        setFollowed(link.heading === undefined ? `Note ${link.target}` : `Note ${link.target}, at ${link.heading}`)
+                    }
+                    wrap
+                    className="h-80"
+                />
+                <p className="text-sm text-muted-foreground">Followed: {followed}</p>
+            </Stack>
+        </Ground>
+    )
+}
+
+const CARET_TEXT = `code: nightly-export
+project: larkspur
+schedule: every day at 02:00`
+
+/** Two editors out of focus: the caret's line washed only while focused, and washed always. */
+function CaretLine() {
+    return (
+        <Columns fields>
+            <Field id="caret-focused" label="While focused" hint="The default: the line is shaded only while you type here.">
+                <CodeEditor id="caret-focused" label="While focused" language="yaml" value={CARET_TEXT} className="h-28" />
+            </Field>
+            <Field id="caret-always" label="Always" hint="The line stays shaded while the focus is elsewhere.">
+                <CodeEditor id="caret-always" label="Always" language="yaml" value={CARET_TEXT} activeLine="always" className="h-28" />
+            </Field>
+        </Columns>
+    )
+}
+
 function Searching() {
     return (
         <Ground>
@@ -519,7 +573,9 @@ export const Languages_: StoryObj = { name: 'Languages', render: () => <Language
 /**
  * YAML checked against a JSON Schema as it is typed: each issue underlined on the value or key it is
  * about, with its message on hover, and the schema's property names and enum values offered while
- * typing, required ones first, a key with a default put in with it selected.
+ * typing, required ones first, a key with a default put in with it selected. A key whose object
+ * requires keys (`notify`) goes in whole, as a snippet: each required key with its default or a
+ * field for its value, Tab going from one field to the next.
  */
 export const Schema: StoryObj = { name: 'Schema', render: () => <SchemaChecked /> }
 /**
@@ -534,6 +590,16 @@ export const NamedSchema: StoryObj = { name: 'Named schema', render: () => <Name
  * notes by name, and the one chosen goes in with its closing brackets.
  */
 export const Markdown: StoryObj = { name: 'Markdown', render: () => <MarkdownNote /> }
+/**
+ * The same note with `onFollowLink`: a `[[link]]` clicked with Mod held (Cmd on a Mac, Ctrl
+ * elsewhere) is followed, the links underlined under a hand while the key is held.
+ */
+export const Followed: StoryObj = { name: 'Followed links', render: () => <FollowedNote /> }
+/**
+ * The caret's line as a reader may choose it: shaded only while the editor has the focus (the
+ * default), or with `activeLine="always"` while the focus is elsewhere too.
+ */
+export const Caret: StoryObj = { name: 'Caret line', render: () => <CaretLine /> }
 /** A read-only record in a dialog: the field and its line numbers one ground over the dialog's surface. */
 export const InADialog: StoryObj = { name: 'In a dialog', render: () => <InDialog /> }
 /** A job's stored record in the source sheet, open beside the button that opens it. */

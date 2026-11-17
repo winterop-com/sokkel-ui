@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import type { KindColor } from '../lib/kind'
 import { PlainCheckbox } from './ui/checkbox-look'
 
 export interface CheckboxFieldProps {
@@ -14,6 +15,13 @@ export interface CheckboxFieldProps {
     indeterminate?: boolean
     disabled?: boolean
     tone?: 'plain' | 'critical'
+    /** A dot in a kind color before the label, as a calendar's toggle wears its calendar's color. */
+    dot?: KindColor
+    /**
+     * Which state sets the label quiet: `unchecked` for a toggle whose thing is hidden while off (a
+     * calendar), `checked` for a step that is done, its label also struck through.
+     */
+    quiet?: 'checked' | 'unchecked'
     className?: string
 }
 
@@ -21,6 +29,11 @@ export interface CheckboxFieldProps {
  * A checkbox with its label beside it and, where the label alone does not say enough, a line
  * under it. The whole row is the label, so a press anywhere on it ticks the box. `critical` frames
  * the row in the critical tone, for an acknowledgement a destructive step waits on.
+ *
+ * `dot` draws a dot in a kind color before the label, for a list of toggles that each stand for a
+ * colored thing, such as the calendars a calendar shows. `quiet` sets the label in the muted ink in
+ * one state: while unticked for such a toggle, or while ticked, struck through, for a checklist's
+ * step that is done.
  */
 export function CheckboxField({
     label,
@@ -31,9 +44,13 @@ export function CheckboxField({
     indeterminate,
     disabled,
     tone = 'plain',
+    dot,
+    quiet,
     className,
 }: CheckboxFieldProps) {
     const [own, setOwn] = useState(defaultChecked ?? false)
+    const ticked = checked ?? own
+    const hushed = quiet !== undefined && ticked === (quiet === 'checked')
     return (
         <label
             className={cn(
@@ -43,7 +60,7 @@ export function CheckboxField({
             )}
         >
             <PlainCheckbox
-                checked={checked ?? own}
+                checked={ticked}
                 onCheckedChange={(next) => {
                     setOwn(next)
                     onCheckedChange?.(next)
@@ -53,7 +70,16 @@ export function CheckboxField({
                 className="mt-0.5"
             />
             <span className="flex min-w-0 flex-col">
-                <span className="leading-5">{label}</span>
+                <span className={cn('leading-5', hushed && 'text-muted-foreground', hushed && quiet === 'checked' && 'line-through')}>
+                    {dot !== undefined && (
+                        <span
+                            className="me-2 inline-block size-2.5 rounded-full align-middle"
+                            style={{ background: `var(--kind-${dot})` }}
+                            aria-hidden
+                        />
+                    )}
+                    {label}
+                </span>
                 {description !== undefined && <span className="text-xs text-muted-foreground">{description}</span>}
             </span>
         </label>

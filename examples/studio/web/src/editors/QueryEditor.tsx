@@ -135,6 +135,7 @@ export function QueryEditor({ file }: { file: WorkFile }) {
                         lineNumbers={prefs.lineNumbers}
                         size={prefs.size}
                         bracketColors={prefs.bracketColors}
+                        activeLine={prefs.lineWash ? 'always' : true}
                         search
                     />
                 </EditorPane>

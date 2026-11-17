@@ -3,6 +3,11 @@
     "id": "message-composer",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "missing", "as_of": "890b25f"},
+        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+    },
     "summary": "Where a message to people is written, as at the foot of a team chat's channel: a box on the field's ground, rounded by radius-composer, with the formatting toolbar on top (its groups as its width has room for, the rest behind More, and Write and Preview at its end), the text that grows with what is typed, and a row under it with add, the text style toggle, emoji and mention at the start, then the app's actions, and a round Send at the end with an optional schedule menu. Enter sends and Shift+Enter breaks the line; on a touch screen Enter breaks the line and only Send sends. A toolbar button wraps the selection in markdown; the code block button puts it in a fence named for the language chosen. Preview draws the message as a sent one is.",
     "sources": {
         "sokkel-ui": [
@@ -35,6 +40,7 @@
         "chevron": "With schedule or onSendLater: words.sendLater, a chevron 14 beside Send, its end round, ruled from Send in primary-foreground at 25 percent; it opens the times (words.sendLater over them, each with its detail at the row's end) and words.customTime last, or calls onSendLater at once with no schedule.",
         "mentionList": "With mentions: the people suggested at the caret, as parts/composer's suggestion list draws them."
     },
+    "standsOn": {"default": "field", "box": "background"},
     "options": {
         "value": {"type": "text", "does": "The text; onChange hears every change."},
         "onSend": {

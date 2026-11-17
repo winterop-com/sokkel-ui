@@ -1,7 +1,7 @@
 import { json } from '@codemirror/lang-json'
 import { yaml } from '@codemirror/lang-yaml'
 import { CompletionContext } from '@codemirror/autocomplete'
-import { EditorState, type TransactionSpec } from '@codemirror/state'
+import { EditorState, Transaction, type TransactionSpec } from '@codemirror/state'
 import { describe, expect, it } from 'vitest'
 
 import type { JsonSchema } from '../schema/read'
@@ -13,6 +13,7 @@ import {
     namedSchema,
     pathRange,
     readDocument,
+    requiredSnippet,
     schemaCompletion,
     schemaDiagnostics,
     schemaProblems,
@@ -518,5 +519,77 @@ describe("a pipeline's steps, each configured by its block", () => {
         expect(legacy).toMatchObject({ detail: 'deprecated', deprecated: true })
         const others = found.filter((option) => option !== legacy).map((option) => option.boost ?? 0)
         expect(Math.min(...others)).toBeGreaterThan(legacy?.boost ?? 0)
+    })
+})
+
+describe('completing a key with the keys its object requires', () => {
+    const SCHEDULE: JsonSchema = {
+        type: 'object',
+        properties: {
+            schedule: {
+                type: 'object',
+                required: ['cron', 'zone', 'retries', 'paused', 'step'],
+                properties: {
+                    cron: { type: 'string' },
+                    zone: { type: 'string', default: 'UTC' },
+                    retries: { type: 'integer' },
+                    paused: { type: 'boolean' },
+                    step: { enum: ['fetch', 'upload'] },
+                    owner: { type: 'string' },
+                },
+            },
+            labels: { type: 'object' },
+        },
+    }
+
+    /** Applies the option for `label` where the document ends, as a pick from the list does, and reads the document and the first field chosen. */
+    const pick = (state: EditorState, language: 'json' | 'yaml', label: string) => {
+        let now = state
+        const editor = {
+            get state() {
+                return now
+            },
+            // A snippet dispatches a transaction, any other option a spec.
+            dispatch(given: Transaction | TransactionSpec) {
+                now = given instanceof Transaction ? given.state : now.update(given).state
+            },
+        }
+        const result = schemaCompletion(() => SCHEDULE, language)(new CompletionContext(state, state.doc.length, true))
+        const option = result?.options.find((each) => each.label === label)
+        if (option === undefined || result === null) throw new Error(`No option ${label}`)
+        ;(option.apply as (view: unknown, completion: unknown, from: number, to: number) => void)(
+            editor,
+            option,
+            result.from,
+            state.doc.length,
+        )
+        const { from, to } = now.selection.main
+        return { text: now.doc.toString(), chosen: now.sliceDoc(from, to), at: from }
+    }
+
+    it('writes the template with each required key and a field for its value', () => {
+        expect(requiredSnippet('schedule', SCHEDULE.properties?.schedule ?? {}, SCHEDULE, 'json', 1, 0)).toBe(
+            '"schedule": \\{\n\t"cron": "${1}",\n\t"zone": ${2:"UTC"},\n\t"retries": ${3:0},\n\t"paused": ${4:false},\n\t"step": ${5:"fetch"}\n\\}',
+        )
+        expect(requiredSnippet('labels', { type: 'object' }, SCHEDULE, 'json', 0, 0)).toBeUndefined()
+    })
+
+    it('puts the whole object in JSON, the first field chosen', () => {
+        const { text, chosen, at } = pick(jsonState('{\n  "sch'), 'json', 'schedule')
+        expect(text).toBe(
+            '{\n  "schedule": {\n    "cron": "",\n    "zone": "UTC",\n    "retries": 0,\n    "paused": false,\n    "step": "fetch"\n  }',
+        )
+        expect(chosen).toBe('')
+        expect(text.slice(at - 1, at + 1)).toBe('""')
+    })
+
+    it('puts the whole mapping in YAML, indented under the key', () => {
+        const { text, chosen } = pick(yamlState('code: x\nsch'), 'yaml', 'schedule')
+        expect(text).toBe('code: x\nschedule:\n  cron: \n  zone: UTC\n  retries: 0\n  paused: false\n  step: fetch')
+        expect(chosen).toBe('')
+    })
+
+    it('keeps a key whose object requires nothing as it was', () => {
+        expect(pick(jsonState('{"lab'), 'json', 'labels').text).toBe('{"labels": {}')
     })
 })

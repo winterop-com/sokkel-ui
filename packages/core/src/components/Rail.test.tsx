@@ -109,6 +109,24 @@ describe('Rail with a body', () => {
         expect(html).not.toContain('All places')
     })
 
+    it('draws the places above the body with `places: above`, both shown and no row back', () => {
+        const html = renderToStaticMarkup(
+            <Rail name="Tidevann" groups={GROUPS} body={{ ...BODY, places: 'above' }} onCollapsedChange={() => undefined} />,
+        )
+        expect(parts(html)).toEqual({ body: 'shown', places: 'shown' })
+        expect(html).not.toContain('All places')
+        expect(html.indexOf('data-rail-places')).toBeLessThan(html.indexOf('data-rail-body'))
+        expect(html).toContain('href="#radio"')
+        expect(html).toContain('aria-label="The tree"')
+    })
+
+    it("draws only the places' icons with `places: above` while collapsed", () => {
+        const html = renderToStaticMarkup(
+            <Rail name="Tidevann" groups={GROUPS} body={{ ...BODY, places: 'above' }} collapsed onCollapsedChange={() => undefined} />,
+        )
+        expect(parts(html)).toEqual({ body: 'hidden', places: 'shown' })
+    })
+
     it('is left out of a strip', () => {
         const html = renderToStaticMarkup(<Rail variant="strip" name="Tidevann" groups={GROUPS} body={BODY} />)
         expect(html).toContain('href="#radio"')

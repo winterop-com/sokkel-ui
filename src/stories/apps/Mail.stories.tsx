@@ -29,6 +29,7 @@ import { AttachmentList, type AttachmentFile } from '@winterop-com/sokkel-ui/Att
 import { Composer } from '@winterop-com/sokkel-ui/Composer'
 import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import { InlineField } from '@winterop-com/sokkel-ui/InlineField'
+import { Letter as LetterPart } from '@winterop-com/sokkel-ui/Letter'
 import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
 import { MessageRow, type MessageLabel } from '@winterop-com/sokkel-ui/MessageRow'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
@@ -43,7 +44,6 @@ import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { SplitPane, useSplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
-import { Avatar, AvatarFallback, AvatarImage } from '@winterop-com/sokkel-ui/primitives/avatar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Checkbox } from '@winterop-com/sokkel-ui/primitives/checkbox'
 import { Input } from '@winterop-com/sokkel-ui/primitives/input'
@@ -337,72 +337,46 @@ I have attached the final checklist and the cutover plan. Ada, can you take step
     },
 ]
 
-function initial(person: Person): string {
-    return person.name.charAt(0)
-}
-
-function Letterhead({ letter, open, onToggle }: { letter: Letter; open: boolean; onToggle: () => void }) {
-    return (
-        <button type="button" aria-expanded={open} className="w-full min-w-0 text-left" onClick={onToggle}>
-            <Row as="span" gap="md" align="start">
-                <Avatar>
-                    {letter.from.picture !== undefined && <AvatarImage src={letter.from.picture} alt={letter.from.name} />}
-                    <AvatarFallback>{initial(letter.from)}</AvatarFallback>
-                </Avatar>
-                <Stack as="span" gap="none" className="flex-1">
-                    <Row as="span" align="baseline" className="min-w-0">
-                        <span className="truncate text-sm font-medium">{letter.from.name}</span>
-                        {open && <span className="truncate text-xs text-muted-foreground max-sm:hidden">{letter.from.address}</span>}
-                        <Row as="span" gap="xs" className="ml-auto shrink-0 text-xs text-muted-foreground tabular-nums">
-                            {letter.files !== undefined && <Paperclip className="size-3.5" aria-label="Has attachments" />}
-                            {letter.time}
-                        </Row>
-                    </Row>
-                    <span className="truncate text-sm text-muted-foreground">
-                        {open ? `to ${letter.to.map((person) => (person === PEOPLE.ada ? 'me' : person.name)).join(', ')}` : letter.body}
-                    </span>
-                </Stack>
-            </Row>
-        </button>
-    )
-}
-
 function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: boolean; last: boolean; onToggle: () => void }) {
     return (
-        <article className={cn('border-b border-border px-4 py-3 md:px-6', open && 'pb-5')}>
-            <Letterhead letter={letter} open={open} onToggle={onToggle} />
-            {open && (
-                <Stack gap="lg" className="mt-3 sm:pl-11">
-                    <Markdown content={letter.body} />
-                    {letter.files !== undefined && (
-                        <AttachmentList
-                            files={letter.files.map((file) => ({
-                                id: file.name,
-                                name: file.name,
-                                detail: file.detail,
-                                icon: <file.icon aria-hidden />,
-                            }))}
-                        />
-                    )}
-                    {last && (
-                        <Row align="stretch" wrap>
-                            <Button variant="outline" size="sm">
-                                <Reply aria-hidden />
-                                Reply
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <ReplyAll aria-hidden />
-                                Reply all
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <Forward aria-hidden />
-                                Forward
-                            </Button>
-                        </Row>
-                    )}
-                </Stack>
+        <LetterPart
+            from={{ name: letter.from.name, address: letter.from.address, image: letter.from.picture }}
+            to={letter.to.map((person) => (person === PEOPLE.ada ? 'me' : person.name))}
+            time={letter.time}
+            attached={letter.files !== undefined}
+            snippet={letter.body}
+            open={open}
+            onOpenChange={onToggle}
+            foldable={!last}
+        >
+            <Markdown content={letter.body} />
+            {letter.files !== undefined && (
+                <AttachmentList
+                    files={letter.files.map((file) => ({
+                        id: file.name,
+                        name: file.name,
+                        detail: file.detail,
+                        icon: <file.icon aria-hidden />,
+                    }))}
+                />
             )}
-        </article>
+            {last && (
+                <Row align="stretch" wrap>
+                    <Button variant="outline" size="sm">
+                        <Reply aria-hidden />
+                        Reply
+                    </Button>
+                    <Button variant="outline" size="sm">
+                        <ReplyAll aria-hidden />
+                        Reply all
+                    </Button>
+                    <Button variant="outline" size="sm">
+                        <Forward aria-hidden />
+                        Forward
+                    </Button>
+                </Row>
+            )}
+        </LetterPart>
     )
 }
 

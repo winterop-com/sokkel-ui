@@ -142,3 +142,22 @@ describe('a row that moves', () => {
         expect(menu?.closest('[data-no-drag]')).not.toBeNull()
     })
 })
+
+describe('openOnChoose', () => {
+    it('opens a closed branch as it is chosen, and leaves one closed without it', async () => {
+        const onSelect = vi.fn()
+        const at = await mount(<Tree label="Sites" nodes={sites} onSelect={onSelect} openOnChoose />)
+        expect(rowOf(at, 'norway')).toBeNull()
+        await act(async () => rowOf(at, 'europe')?.click())
+        expect(onSelect).toHaveBeenLastCalledWith(['europe'])
+        expect(rowOf(at, 'europe')?.getAttribute('aria-expanded')).toBe('true')
+        expect(rowOf(at, 'norway')).not.toBeNull()
+        // Chosen again, an open branch stays open.
+        await act(async () => rowOf(at, 'europe')?.click())
+        expect(rowOf(at, 'norway')).not.toBeNull()
+
+        await rerender(<Tree label="Sites" nodes={sites} onSelect={onSelect} key="plain" />)
+        await act(async () => rowOf(at, 'europe')?.click())
+        expect(rowOf(at, 'europe')?.getAttribute('aria-expanded')).toBe('false')
+    })
+})

@@ -3,6 +3,15 @@
     "id": "top-bar",
     "kind": "part",
     "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
+        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "a592dfb",
+            "note": "The spike draws the top bar by hand inside its frame, not from the spec."
+        }
+    },
     "summary": "The thin bar over the content: a search field at its start, the trail to the current screen, the button that opens the command palette, and the screen's actions at its end. On a phone the trail keeps its last crumb and the palette's button is an icon.",
     "sources": {
         "sokkel-ui": [
@@ -32,6 +41,7 @@
         "keys": "The keys that open the palette, drawn only when bound: in a key cap with no search field, as plain small code text beside one.",
         "actions": "The screen's actions at the bar's end, after the palette's button: the bar's order is the search, the trail, the palette's button, then the actions."
     },
+    "standsOn": {"default": "sidebar", "bar": "background", "keys": "field"},
     "options": {
         "trail": {
             "type": "rows",
@@ -143,6 +153,25 @@
             "value": "breakpoint-md",
             "note": "The md breakpoint: below it the last crumb alone, the palette as an icon, the search field gone."
         }
+    },
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "gap": 2,
+        "width": "The window's width less the rail's. The search field is 224 px by the rule (27 columns), 256 from lg (30), at most 320 (38).",
+        "density": "Nothing changes: one row.",
+        "pieces": {
+            "menu": {"width": "3 columns, below md only."},
+            "trail": {
+                "gap": 1,
+                "note": "Crumbs with the chevron-right glyph between, 1 column each side. Below md the last crumb alone, after chevron-left when there is a way back."
+            },
+            "palette": {
+                "note": "A button at the end of the trail's group with its keys, Ctrl+K; below md the search icon alone."
+            },
+            "actions": {"gap": 1}
+        },
+        "glyphs": ["menu", "chevron-right", "chevron-left", "search"]
     },
     "states": {
         "rest": {"means": "Nothing over the bar's controls."},

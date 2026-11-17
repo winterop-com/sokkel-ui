@@ -104,6 +104,7 @@ export function RunLog({ run }: { run: Run }) {
             readOnly
             wrap={prefs.wrap}
             lineNumbers={prefs.lineNumbers}
+            activeLine={prefs.lineWash ? 'always' : true}
             search
         />
     )
