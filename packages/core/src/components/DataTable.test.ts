@@ -35,6 +35,7 @@ import {
     widestOf,
     type MoreRows,
 } from './DataTable'
+import { cardRange, cardTops } from './table-cards'
 
 describe('widenTrack', () => {
     it('widens a length and a minmax floor, and leaves a fraction', () => {
@@ -756,5 +757,23 @@ describe('a table as tall as its rows, asking for more', () => {
         expect(table.observed()).toEqual(table.box.children)
         stop()
         expect(table.observed()).toEqual([])
+    })
+})
+
+describe('cards that grow', () => {
+    it('are placed one under another by their measured heights, the rest at the estimate', () => {
+        expect(cardTops(['a', 'b', 'c'], new Map([['b', 100]]), 60, 16)).toEqual([0, 76, 192, 268])
+    })
+
+    it('are drawn for the view and the cards either side of it', () => {
+        const tops = cardTops(
+            Array.from({ length: 1_000 }, (_, at) => String(at)),
+            new Map(),
+            84,
+            16,
+        )
+        expect(cardRange(tops, 0, 800, 2)).toEqual({ first: 0, last: 10 })
+        expect(cardRange(tops, 10_050, 800, 2)).toEqual({ first: 98, last: 111 })
+        expect(cardRange(tops, 99_900, 800, 2)).toEqual({ first: 997, last: 1_000 })
     })
 })

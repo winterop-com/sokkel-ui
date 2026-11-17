@@ -883,8 +883,9 @@ gives its `search` a line of its own, the tools wrapping across the width under 
 and the sort after them, and its stacked cards set each column by its `stack`: a line, named or not,
 a primary value over several lines under the title, a secondary fact on the card's last line, or a
 lead before the title, a press on which opens the row unless it lands on a control in it. A card
-whose primary value may take more than one line is as tall as its values take, so a short value
-leaves no blank space under it. `searchBy` gives a table or a list a search of its own, its field in
+whose primary value may take more than one line, or whose title is free, is as tall as its values
+take, so a short value leaves no blank space under it; such cards are windowed by their measured
+heights, the view staying put as the cards above it are measured. `searchBy` gives a table or a list a search of its own, its field in
 the bar and the rows cut to what is typed, for a page that keeps no query. A
 `ConfirmDialog` stays sized to its content (`phone="fit"` on `DialogShell`) while a form covers the
 screen, and a dialog's verbs stand in a row at the right while they fit, each on a full-width line,

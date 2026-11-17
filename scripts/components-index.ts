@@ -95,7 +95,9 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/table-memory':
             "what `DataTable` keeps its rows' place with under its `scrollKey`, loaded the first time a table with one is drawn",
         'components/table-parts':
-            "the pager's select and the rows' right-click menus `DataTable` loads the first time a table that pages or has row actions is drawn",
+            "the pager's select, the rows' right-click menus and the own search `DataTable` loads the first time a table that pages, has row actions or a `searchBy` is drawn",
+        'components/table-cards':
+            "how `DataTable` places, draws and measures stacked cards that grow, loaded the first time a table's cards grow",
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
         'components/ui/checkbox-look':
@@ -205,6 +207,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         follow: 'where a list scrolls to keep the playing row in view',
         'media-session': 'the Media Session calls behind `useMediaSession`, which exports their types',
         'use-follow': 'a list keeping the playing row in view, for `TrackList`, `ChapterList` and `Lyrics`',
+        'track-window': '`TrackList` drawn in part, loaded the first time a list is windowed',
     },
     fhir: {
         program: 'the tokens FHIRPath and CQL share; `ProgramState` is exported by `fhirpath` and `cql`',

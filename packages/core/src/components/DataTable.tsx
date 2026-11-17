@@ -34,13 +34,12 @@ import {
 } from 'react'
 
 import { cn } from '../lib/cn'
-import { queryWords } from '../lib/search'
 import { stepTo } from '../lib/reorder'
 import type { DragHandleProps } from './DragDrop'
 import type { IssueWords } from './IssueMark'
 import { PAGE_STATE_WORDS, PageState, type PageStateWords, type ReadOutcome } from './PageState'
 import { ResizeHandle } from './ResizeHandle'
-import { SearchField, type SearchFieldProps } from './SearchField'
+import type { SearchFieldProps } from './SearchField'
 import { NO_CELL, TableCellContext } from './table-cell'
 import { ListingBar } from './ListingBar'
 import { SelectionBar } from './SelectionBar'
@@ -1686,20 +1685,18 @@ export function DataTable<T>({
     className,
 }: DataTableProps<T>) {
     const words = { ...DATA_TABLE_WORDS, ...ownWords }
-    // The table's own search: its field, and the rows cut to those whose text holds every word typed.
+    // The table's own search, fetched once it has a `searchBy`: its field, and the rows cut to those whose text holds every word typed.
     const [query, setQuery] = useState('')
-    const queried = useMemo(() => (searchBy === undefined ? [] : queryWords(query.trim())), [searchBy, query])
+    const ownSearch = searchBy !== undefined && givenSearch === undefined
+    const finder = useTableParts(ownSearch)
     const rows = useMemo(
-        () =>
-            searchBy === undefined || queried.length === 0
-                ? givenRows
-                : givenRows.filter((row) => {
-                      const text = searchBy(row).toLowerCase()
-                      return queried.every((word) => text.includes(word))
-                  }),
-        [givenRows, searchBy, queried],
+        () => (finder === undefined || searchBy === undefined ? givenRows : finder.searchRows(givenRows, searchBy, query)),
+        [finder, givenRows, searchBy, query],
     )
-    const search = givenSearch ?? (searchBy === undefined ? undefined : <SearchField {...searchField} value={query} onChange={setQuery} />)
+    const search =
+        givenSearch ?? (finder === undefined ? undefined : <finder.SearchField {...searchField} value={query} onChange={setQuery} />)
+    // The bar keeps its place for the own search while its field is on its way.
+    const searched = search !== undefined || searchBy !== undefined
     // A failed read stands in place of the rows, unless they are being read again.
     const failed = error !== undefined && error !== null && error !== false && !loading
     const [sort, setSort] = useHeld(sortValue, defaultSort, onSortChange)
@@ -1931,7 +1928,8 @@ export function DataTable<T>({
     const titleEdits = compact && editable(stackParts.title)
     const factsEdit = compact && stackParts.facts.some(editable)
     // A free title, or a primary value over more than one line, makes each card as tall as it needs, so
-    // a value that takes fewer lines than it may leaves no blank space under it; every card is then drawn.
+    // a value that takes fewer lines than it may leaves no blank space under it; the cards are then
+    // windowed by their measured heights, each placed at the least it takes until it is measured.
     const grows = stacked && (stackParts.title?.stackTitle === 'free' || stackParts.primary.some((column) => (column.stackLines ?? 2) > 1))
     const cardPixels = stacked ? stackedCardPixels(stackParts, editable, compact, editLine, grows) : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
@@ -1959,7 +1957,7 @@ export function DataTable<T>({
     // A narrow list is a plain list of rows as tall as their lines.
     const listed = list && stacked
     // Grouped cards are drawn group by group, every one of them.
-    const every = (auto && !gridView) || listed || grows || (gridView && groupHeads !== undefined)
+    const every = (auto && !gridView) || listed || (gridView && groupHeads !== undefined)
     const whole = every || detailed
     // Rows drawn whole end where the scroller measures, and rows coming or growing move that end with
     // no scroll to say so: what it holds is watched, so the view hears of it.
@@ -1978,11 +1976,27 @@ export function DataTable<T>({
     useEffect(() => {
         if (arrived) setSeeking(undefined)
     }, [arrived])
+    // Cards that grow, windowed once `./table-cards` is here: where each starts by the heights measured so far.
+    const cards = useTableCards(grows && !whole)
+    const measuredCards = useRef(new Map<string, number>())
+    const [cardsMeasured, setCardsMeasured] = useState(0)
+    const tops = useMemo(
+        () =>
+            cards?.cardTops(
+                flat.map((entry) => entry.key),
+                measuredCards.current,
+                cardPixels,
+                GAP,
+            ),
+        // `cardsMeasured` counts the measures, whose heights are in the ref.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [cards, flat, cardPixels, cardsMeasured],
+    )
     const moreRows: MoreRows = {
         hasMore,
         busy: loading || failed,
         byButton: moreByButton,
-        end: whole ? undefined : lines * lineHeight,
+        end: tops !== undefined ? tops[tops.length - 1] : whole ? undefined : lines * lineHeight,
         margin: lineHeight * over,
         seeking,
     }
@@ -2000,8 +2014,25 @@ export function DataTable<T>({
     }, [asks, loadsMore, rows.length])
     const lineWindow: LineWindow = { lineHeight, over, whole, lines }
     const { firstLine, lastLine } = drawnLines(view, lineWindow)
-    const first = firstLine * perLine
-    const last = Math.min(gridView ? flat.length : drawn.length, lastLine * perLine)
+    // Cards that grow are drawn from the measured places, past the grid's padding at its top, with half a view
+    // either side, so a quick wheel never reaches past the cards drawn.
+    const cardsDrawn = tops && cards?.cardRange(tops, view.top - GAP - view.height / 2, view.height * 2, 1)
+    const first = cardsDrawn?.first ?? firstLine * perLine
+    const last = cardsDrawn?.last ?? Math.min(gridView ? flat.length : drawn.length, lastLine * perLine)
+    // Each card drawn is measured; one that is taller or shorter than placed moves the cards after it, and
+    // the view moves with a card above it, so what is in view stays put.
+    useLayoutEffect(() => {
+        const box = scroller.current
+        const moved = tops && box && cards?.measureCards(box, tops, measuredCards.current, cardPixels, GAP)
+        if (moved === undefined || moved === null) return
+        if (box !== null) box.scrollTop += moved
+        setCardsMeasured((count) => count + 1)
+    })
+    // Heights measured at another width, or of other columns, are measured again.
+    useEffect(() => {
+        measuredCards.current = new Map()
+        setCardsMeasured((count) => count + 1)
+    }, [view.width, stackParts, cardPixels])
 
     const [active, setActive] = useState<string | undefined>(undefined)
     const anchor = useRef<string | undefined>(undefined)
@@ -2258,9 +2289,11 @@ export function DataTable<T>({
             box.querySelector(`[data-row="${CSS.escape(entry.key)}"]`)?.scrollIntoView({ block: 'nearest' })
             return
         }
-        const at = Math.floor((gridView ? flat.indexOf(entry) : drawn.indexOf(entry)) / perLine) * lineHeight
+        const place = gridView ? flat.indexOf(entry) : drawn.indexOf(entry)
+        const at = tops === undefined ? Math.floor(place / perLine) * lineHeight : tops[place]
+        const tall = tops === undefined ? lineHeight : tops[place + 1] - tops[place]
         if (at < box.scrollTop) box.scrollTop = at
-        else if (at + lineHeight > box.scrollTop + box.clientHeight) box.scrollTop = at + lineHeight - box.clientHeight
+        else if (at + tall > box.scrollTop + box.clientHeight) box.scrollTop = at + tall - box.clientHeight
     }
     const activeIndex = active === undefined ? -1 : flat.findIndex((entry) => entry.key === active)
     // The heads the keys sort by, and the one chosen while the keys are in the head row, where the active row's mark waits.
@@ -2420,13 +2453,13 @@ export function DataTable<T>({
     const move = (id: string, by: -1 | 1) => setColumnIds(movedColumn(ordered, id, by))
     const sortable = manualSort && onSortChange === undefined ? [] : columns.filter((column) => column.sortValue !== undefined)
     // The bar over the rows, with the selection, the search, the tools, the count and the menus of columns and sorts.
-    const barShown = selection.size > 0 || (bar ?? (!list || search !== undefined || toolbar !== undefined))
+    const barShown = selection.size > 0 || (bar ?? (!list || searched || toolbar !== undefined))
     const columnMenu = barShown && !gridView && (hideable.length > 0 || reorder)
     const sortMenu = barShown && gridView && sortable.length > 0
     // Base UI's checkbox and the menus' lists are fetched after the first paint, so they are here by the time a box is
     // pressed or a menu opens; until then a selection box is drawn the same without it.
     const later = useDeferred(selectable || columnMenu || sortMenu || !!reveal)
-    const parts = useTableParts(paging !== undefined || rowActions !== undefined)
+    const parts = useTableParts(paging !== undefined || rowActions !== undefined || ownSearch)
 
     // A row to reveal: its way opened once the code that finds it is here and the row is known, then shown, scrolled
     // to and made active. Each reveal is done once.
@@ -2615,7 +2648,7 @@ export function DataTable<T>({
     }
 
     // An empty table given its own words says them alone, unless the bar's search or tools may have emptied it.
-    const bare = !failed && drawn.length === 0 && !loading && empty !== undefined && search === undefined && toolbar === undefined
+    const bare = !failed && drawn.length === 0 && !loading && empty !== undefined && !searched && toolbar === undefined
     const showHeads = !gridView && columnHeads && !bare
     // The head stays where the rows are sideways once the columns change, and a wheel over it scrolls the rows.
     useLayoutEffect(() => {
@@ -3000,7 +3033,7 @@ export function DataTable<T>({
     }
 
     /** A row as a card: the app's card, with the selection box and the menu laid over its top corners. */
-    const cardFor = (entry: FlatRow<T>) => {
+    const cardFor = (entry: FlatRow<T>, place?: number) => {
         const chosen = selection.has(entry.key)
         const isOpened = opened?.(entry.row) === true
         const actions = actionsOf(entry.row)
@@ -3065,6 +3098,7 @@ export function DataTable<T>({
                 role="row"
                 aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
                 data-row={entry.key}
+                data-card={tops === undefined ? undefined : place}
                 data-active={entry.key === marked || undefined}
                 onClick={(event) => press(entry, event)}
                 className={cn(
@@ -3530,7 +3564,7 @@ export function DataTable<T>({
                             if (headBox.current !== null) headBox.current.scrollLeft = event.currentTarget.scrollLeft
                             // A scroll that draws nothing new, within the lines drawn or sideways, renders nothing.
                             const next = viewOf(event.currentTarget)
-                            setView((before) => (redraws(before, next, lineWindow, moreRows) ? next : before))
+                            setView((before) => (tops !== undefined || redraws(before, next, lineWindow, moreRows) ? next : before))
                         }}
                         className="relative min-h-0 flex-1 overflow-auto"
                     >
@@ -3708,13 +3742,16 @@ export function DataTable<T>({
                             </div>
                         ) : gridView ? (
                             wrapRows(
-                                <div className="px-4 pt-4" style={{ minHeight: lines * lineHeight + GAP }}>
-                                    <div style={{ height: firstLine * lineHeight }} />
+                                <div
+                                    className="px-4 pt-4 [overflow-anchor:none]"
+                                    style={{ minHeight: tops === undefined ? lines * lineHeight + GAP : tops[tops.length - 1] + GAP }}
+                                >
+                                    <div style={{ height: tops === undefined ? firstLine * lineHeight : tops[first] }} />
                                     <div
                                         className="grid gap-4"
                                         style={{ gridTemplateColumns: `repeat(${String(perLine)}, minmax(0, 1fr))` }}
                                     >
-                                        {flat.slice(first, last).map((entry) => cardFor(entry))}
+                                        {flat.slice(first, last).map((entry, offset) => cardFor(entry, first + offset))}
                                         {placeholders &&
                                             (stacked
                                                 ? Array.from({ length: placeholderCount(lineHeight) }, (_, index) =>
@@ -4092,8 +4129,12 @@ function layer<M>(load: () => Promise<M>): (wanted: boolean) => M | undefined {
     }
 }
 
-/** The pager's select and the rows' right-click menus, for a table that pages or has row actions. */
+/** How stacked cards that grow are placed and measured, for a table whose cards grow to their text. */
+const useTableCards = layer(() => import('./table-cards'))
+
+/** The pager's select, the rows' right-click menus and the own search, for a table that pages, has row actions or a `searchBy`. */
 const useTableParts = layer(() => import('./table-parts'))
+
 type TableParts = typeof import('./table-parts')
 
 /** A table's scroll memory, for a table with `scrollKey`, so a table without one never carries it. */

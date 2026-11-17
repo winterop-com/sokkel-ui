@@ -403,6 +403,26 @@ export const StackedCards: StoryObj = {
     },
 }
 
+/** Five thousand runs, their notes one or two lines long, drawn from the five above by their place. */
+const MANY_RUNS: ListRun[] = Array.from({ length: 5_000 }, (_, index) => {
+    const run = LIST_RUNS[index % LIST_RUNS.length]
+    return { ...run, id: `m${String(index + 1)}`, job: `${run.job}-${String(index + 1)}` }
+})
+
+/**
+ * Five thousand runs as stacked cards, each as tall as its note: only the cards in view and half a
+ * view either side are drawn, each placed by its measured height, so the list scrolls as lightly as five.
+ */
+export const ManyCards: StoryObj = {
+    parameters: { frame: 'none' },
+    name: 'Many cards',
+    render: () => (
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
+            <DataTable className="flex-1" columns={STACKED_RUN_COLUMNS} rows={MANY_RUNS} rowKey={(run) => run.id} stackBelow="160rem" />
+        </Stack>
+    ),
+}
+
 /** Rows that grow to fit a cell longer than one line, here each run's note. */
 export const TallRows: StoryObj = {
     name: 'Tall rows',

@@ -283,7 +283,7 @@ describe('a press on a row', () => {
 })
 
 describe('stacked cards with a free title', () => {
-    it('are drawn every one at the height their title needs', async () => {
+    it('are each as tall as their title needs, and only those in view and a few past it are drawn', async () => {
         // A box 300 wide, narrower than the columns, stacks the rows.
         const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
         Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 300 })
@@ -299,7 +299,9 @@ describe('stacked cards with a free title', () => {
                 </div>,
             )
             const cards = [...at.querySelectorAll<HTMLElement>('[data-row]')]
-            expect(cards.length).toBe(60)
+            // A view 400 tall over cards measured at 40 and 16 apart: about seven in view, and half a view either side.
+            expect(cards.length).toBeGreaterThan(5)
+            expect(cards.length).toBeLessThan(20)
             expect(cards[0].className).toContain('group/card')
             expect(cards[0].style.height).toBe('')
             expect(cards[0].style.minHeight).not.toBe('')
@@ -364,8 +366,9 @@ describe('the own search', () => {
         const at = await mount(
             <DataTable variant="list" columns={columns} rows={jobs} rowKey={(job) => job.id} searchBy={(job) => job.name} />,
         )
+        // The field comes with the search's own module, fetched once the table has a `searchBy`.
+        await vi.waitFor(() => expect(at.querySelector('[data-slot="search-field"] input')).not.toBeNull())
         const field = at.querySelector<HTMLInputElement>('[data-slot="search-field"] input')
-        expect(field).not.toBeNull()
         const type = async (text: string) => {
             await act(async () => {
                 Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(field, text)

@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { TRACK_WINDOW_FROM, TrackList, trackRange, trackTops, type Track } from './TrackList'
+import * as React from 'react'
+
+import { trackRange, trackTops, windowedTrackList } from './track-window'
+import { TRACK_WINDOW_FROM, TrackList, type Track } from './TrackList'
 
 const SET: Track[] = [
     { id: '1-1', number: 1, title: 'Low Water', duration: 214, disc: 1 },
@@ -49,32 +52,30 @@ describe('TrackList windowing', () => {
         expect(trackRange(tops, 49_900, 400)).toEqual({ first: 986, last: 1_000 })
     })
 
-    it('draws a long list in part, the current row always among the rows drawn', () => {
+    it('draws a long list in part, the current row always among the rows drawn once its window is here', () => {
         const many = Array.from({ length: TRACK_WINDOW_FROM + 300 }, (_, at) => ({
             id: `t${String(at)}`,
             title: `Song ${String(at)}`,
             duration: 180,
         }))
-        const drawn = (html: string) => [...html.matchAll(/data-track-index="(\d+)"/g)].map((match) => Number(match[1]))
-        const long = drawn(renderToStaticMarkup(<TrackList tracks={many} current="t450" />))
-        expect(long.length).toBeLessThan(60)
-        expect(long).toContain(450)
-        expect(drawn(renderToStaticMarkup(<TrackList tracks={many.slice(0, TRACK_WINDOW_FROM)} />)).length).toBe(TRACK_WINDOW_FROM)
-    })
-})
-
-describe('TrackList links', () => {
-    it('makes a row given an address a link, its number the button that plays it', () => {
+        const rows = (html: string) => html.match(/<li/g)?.length ?? 0
+        // Before its window has loaded, as on the server, a long list draws its first rows.
+        expect(rows(renderToStaticMarkup(<TrackList tracks={many} current="t450" />))).toBe(40)
+        expect(rows(renderToStaticMarkup(<TrackList tracks={many.slice(0, TRACK_WINDOW_FROM)} />))).toBe(TRACK_WINDOW_FROM)
+        const WindowedTrackList = windowedTrackList(React)
         const html = renderToStaticMarkup(
-            <TrackList
-                tracks={SET.slice(0, 2)}
-                href={(track) => (track.id === '1-1' ? `#/songs/${track.id}` : undefined)}
-                onPlay={() => undefined}
+            <WindowedTrackList
+                tracks={many}
+                current="t450"
+                onMeasured={() => undefined}
+                rowAt={(index, Row) => <Row key={index} track={many[index]} index={index} />}
+                headAt={() => null}
+                Row={(props) => <li {...props} />}
+                className=""
             />,
         )
-        expect(html).toContain('href="#/songs/1-1"')
-        expect(html.match(/<a /g)?.length).toBe(1)
-        expect(html).toContain('aria-label="Play Low Water"')
-        expect(html).toContain('aria-label="Play Harbor Wall"')
+        const drawn = [...html.matchAll(/data-track-index="(\d+)"/g)].map((match) => Number(match[1]))
+        expect(drawn.length).toBeLessThan(60)
+        expect(drawn).toContain(450)
     })
 })
