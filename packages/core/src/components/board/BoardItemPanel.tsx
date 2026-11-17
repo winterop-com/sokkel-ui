@@ -14,13 +14,16 @@ export interface ChecklistStep {
     done: boolean
 }
 
-/** The words a checklist says; `title` heads it, with the steps done and the steps in all after it. */
+/** The words a checklist says; `title` heads it with the steps done and the steps in all. */
 export interface BoardChecklistWords {
-    title: string
+    title: (done: number, total: number) => string
     progress: string
 }
 
-export const BOARD_CHECKLIST_WORDS: BoardChecklistWords = { title: 'Checklist', progress: 'Checklist done' }
+export const BOARD_CHECKLIST_WORDS: BoardChecklistWords = {
+    title: (done, total) => `Checklist ${done}/${total}`,
+    progress: 'Checklist done',
+}
 
 export interface BoardChecklistProps {
     steps: readonly ChecklistStep[]
@@ -38,7 +41,7 @@ export function BoardChecklist({ steps, onStepChange, words: given }: BoardCheck
     const words = { ...BOARD_CHECKLIST_WORDS, ...given }
     const done = steps.filter((step) => step.done).length
     return (
-        <PanelSection title={`${words.title} ${done}/${steps.length}`}>
+        <PanelSection title={words.title(done, steps.length)}>
             <Progress value={steps.length === 0 ? 0 : (done / steps.length) * 100} aria-label={words.progress} />
             <ul className="-mx-1 flex flex-col">
                 {steps.map((step, index) => (

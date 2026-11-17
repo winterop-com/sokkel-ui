@@ -95,6 +95,12 @@ describe('CallBar', () => {
         expect(button('Unmute')?.className).toContain('bg-critical/15')
         expect(button('Turn on camera')?.dataset.off).toBe('true')
         expect(button('Leave')?.className).toContain('bg-critical')
+        // Under the pointer a control that is off keeps its critical ink, over the ghost button's hover ink.
+        for (const name of ['Unmute', 'Turn on camera', 'Microphone settings']) {
+            const classes = button(name)?.className.split(' ') ?? []
+            expect([name, classes.includes('not-aria-disabled:hover:text-critical-ink')]).toEqual([name, true])
+            expect([name, classes.includes('not-aria-disabled:hover:text-foreground')]).toEqual([name, false])
+        }
     })
 
     it('draws sharing and a raised hand pressed, a press asking for the other', async () => {

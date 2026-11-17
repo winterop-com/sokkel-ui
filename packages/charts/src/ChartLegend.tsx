@@ -141,7 +141,7 @@ export function ChartLegend({
                     const value = legendStats(item.values ?? [])[stat]
                     return (
                         <span className={cn('font-mono', hidden.has(item.key) && 'text-muted-foreground')}>
-                            {value === null ? '-' : format(value)}
+                            {value === null ? '—' : format(value)}
                         </span>
                     )
                 },

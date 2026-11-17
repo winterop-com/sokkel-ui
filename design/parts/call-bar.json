@@ -212,8 +212,8 @@
             "off": {"ground": "critical/15", "ink": "critical-ink"},
             "off+hover": {
                 "ground": "critical/25",
-                "ink": "foreground",
-                "note": "The ghost button's hover ink (not-aria-disabled:hover:text-foreground) stands over the off ink, which has no hover form of its own."
+                "ink": "critical-ink",
+                "note": "The off ink holds under the pointer, over the ghost button's hover ink."
             }
         },
         "devices": {
@@ -221,7 +221,7 @@
             "hover": {"ground": "hover", "ink": "foreground"},
             "open": {"ground": "hover", "ink": "foreground"},
             "off": {"ground": "critical/15", "ink": "critical-ink"},
-            "off+hover": {"ground": "critical/25", "ink": "foreground"}
+            "off+hover": {"ground": "critical/25", "ink": "critical-ink"}
         },
         "leave": {
             "rest": {"ground": "critical", "edge": "none", "ink": "critical-foreground", "text": "text.action"},

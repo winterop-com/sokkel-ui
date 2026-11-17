@@ -131,7 +131,7 @@ describe('dataCell', () => {
     })
 
     it('writes a missing figure as a dash and a label as it is', () => {
-        expect(dataCell(runs, RUNS[1], spec)).toBe('-')
+        expect(dataCell(runs, RUNS[1], spec)).toBe('—')
         expect(dataCell(time, RUNS[1], spec)).toBe('01:00')
     })
 

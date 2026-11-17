@@ -1,5 +1,6 @@
 import { CheckIcon, MinusIcon } from 'lucide-react'
 
+import { cn } from '../../lib/cn'
 import { INVALID_EDGE } from '../../lib/issue-edge'
 
 /** The checkbox's box, drawn from its `data-checked` and `data-indeterminate`. */
@@ -34,7 +35,7 @@ export function PlainCheckbox({ checked, indeterminate = false, onCheckedChange,
             data-slot="checkbox"
             {...state}
             {...rest}
-            className={className === undefined ? CHECKBOX : `${CHECKBOX} ${className}`}
+            className={cn(CHECKBOX, className)}
             onClick={() => onCheckedChange?.(!checked)}
         >
             {(checked || indeterminate) && (

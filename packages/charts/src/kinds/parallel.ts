@@ -40,7 +40,7 @@ export const parallel: ChartBuilder = (spec, look) => {
                     point.seriesName,
                     fields.map((field, index) => {
                         const value = point.value[index]
-                        return { label: field, value: typeof value === 'number' ? written({ ...spec, unit: '' }, value) : (value ?? '-') }
+                        return { label: field, value: typeof value === 'number' ? written({ ...spec, unit: '' }, value) : (value ?? '—') }
                     }),
                 ),
         },

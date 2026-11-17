@@ -174,7 +174,7 @@ const ROUND = 'size-(--density-control-lg) rounded-full max-md:min-h-finger max-
 /** A control at rest, pressed, and off; off is the critical tone, as a chip in it is. */
 const REST = 'bg-muted text-foreground not-aria-disabled:hover:bg-hover'
 const PRESSED = 'aria-pressed:bg-primary/12 aria-pressed:text-primary-ink aria-pressed:ring-1 aria-pressed:ring-primary/60'
-const OFF = 'bg-critical/15 text-critical-ink not-aria-disabled:hover:bg-critical/25'
+const OFF = 'bg-critical/15 text-critical-ink not-aria-disabled:hover:bg-critical/25 not-aria-disabled:hover:text-critical-ink'
 
 /** A shortcut's keys as this device writes them. */
 function written(chord: KeyChord): string {
