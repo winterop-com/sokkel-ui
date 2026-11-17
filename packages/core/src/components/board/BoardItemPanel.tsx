@@ -20,7 +20,7 @@ export interface BoardChecklistWords {
     progress: string
 }
 
-const CHECKLIST_WORDS: BoardChecklistWords = { title: 'Checklist', progress: 'Checklist done' }
+export const BOARD_CHECKLIST_WORDS: BoardChecklistWords = { title: 'Checklist', progress: 'Checklist done' }
 
 export interface BoardChecklistProps {
     steps: readonly ChecklistStep[]
@@ -35,7 +35,7 @@ export interface BoardChecklistProps {
  * through and quiet. The checklist is held from outside: a tick calls `onStepChange`.
  */
 export function BoardChecklist({ steps, onStepChange, words: given }: BoardChecklistProps) {
-    const words = { ...CHECKLIST_WORDS, ...given }
+    const words = { ...BOARD_CHECKLIST_WORDS, ...given }
     const done = steps.filter((step) => step.done).length
     return (
         <PanelSection title={`${words.title} ${done}/${steps.length}`}>
@@ -65,7 +65,11 @@ export interface BoardItemPanelWords {
     checklist: Partial<BoardChecklistWords>
 }
 
-const WORDS: Omit<BoardItemPanelWords, 'checklist'> = { description: 'Description', fields: 'Fields', activity: 'Activity' }
+export const BOARD_ITEM_PANEL_WORDS: Omit<BoardItemPanelWords, 'checklist'> = {
+    description: 'Description',
+    fields: 'Fields',
+    activity: 'Activity',
+}
 
 export interface BoardItemPanelProps {
     /** The item's code over its title, such as HRB-142. */
@@ -104,7 +108,7 @@ export function BoardItemPanel({
     activity,
     words: given,
 }: BoardItemPanelProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...BOARD_ITEM_PANEL_WORDS, ...given }
     const chips = state !== undefined || labels !== undefined
     return (
         <>

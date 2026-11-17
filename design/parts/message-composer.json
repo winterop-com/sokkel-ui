@@ -4,9 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "missing", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
+        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
     },
     "summary": "Where a message to people is written, as at the foot of a team chat's channel: a box on the field's ground, rounded by radius-composer, with the formatting toolbar on top (its groups as its width has room for, the rest behind More, and Write and Preview at its end), the text that grows with what is typed, and a row under it with add, the text style toggle, emoji and mention at the start, then the app's actions, and a round Send at the end with an optional schedule menu. Enter sends and Shift+Enter breaks the line; on a touch screen Enter breaks the line and only Send sends. A toolbar button wraps the selection in markdown; the code block button puts it in a fence named for the language chosen. Preview draws the message as a sent one is.",
     "sources": {
@@ -283,10 +283,10 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 48f51ce there is no message composer."
+            "today": "As of 9038006 there is no message composer."
         }
     ]
 }

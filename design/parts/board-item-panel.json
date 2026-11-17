@@ -1,0 +1,182 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "board-item-panel",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
+        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+    },
+    "summary": "One work item of a board as a side panel's tab holds it, in two parts that work together. BoardItemPanel: a head with the item's code over its title and a line of its column's chip and its labels, then its description, its fields, its checklist and its activity, each a section of its own (parts/detail-pane's sections), drawn only when given. BoardChecklist: the checklist as such a section, its heading saying the steps done of the steps in all, a bar filled as far, and each step a checkbox field that ticks it, a done step's words struck through and quiet. The checklist is held from outside: a tick calls onStepChange; without it the steps are read only.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/board/BoardItemPanel.tsx",
+            "packages/core/src/components/PaneHeader.tsx",
+            "packages/core/src/components/SidePanel.tsx",
+            "packages/core/src/components/CheckboxField.tsx",
+            "packages/core/src/components/ui/checkbox-look.tsx",
+            "packages/core/src/components/ui/progress.tsx",
+            "packages/core/src/components/ui/badge.tsx"
+        ]
+    },
+    "anatomy": {
+        "head": "The item's head (PaneHeader at size lg): padded 16 across and 12 down and up, at least density.panel-head tall, a 1px rule in border under it; the code, the title and the chips in a column 8 apart.",
+        "code": "With code: the item's code over its title, such as HRB-142, in the code face, cut short.",
+        "title": "The item's title, the h2, wrapping and breaking long words, in the heading face.",
+        "chips": "With state or labels: the column's chip, then the labels, in a row that wraps, 6 apart.",
+        "stateChip": "The column the item stands in: a chip (parts of Badge, secondary) with the column's icon before its label.",
+        "section": "Each of description, fields, checklist and activity: a section as parts/detail-pane draws one (padded 16 by 12, its small heading, a rule under it, none under the last), drawn only when given and not empty.",
+        "heading": "A section's heading: parts/detail-pane's, the checklist's with its steps done of the steps in all after the title.",
+        "description": "The Description section's prose, wrapping evenly, on lines 24 tall.",
+        "fields": "The Fields section's terms beside their values, the term column as wide as the longest term (parts/detail-pane's facts).",
+        "checklist": "BoardChecklist: a section headed words.checklist.title, a space, then the steps done, a slash and the steps in all (Checklist 2/4); the bar, then the steps.",
+        "progress": "The bar, named words.checklist.progress: a track 4 tall in muted, fully round, filled in primary as far as the share of steps done; its value said as a percent.",
+        "fill": "The progress bar's fill, as far along as the steps done of the steps in all.",
+        "steps": "The steps in a list, reaching 4 into the section's padding on each side so the boxes line up with the heading.",
+        "step": "One step: a checkbox field, the whole row its label, so a press anywhere on it ticks the box.",
+        "box": "The step's checkbox: 16 square, 2 under the row's top, its check 14 in it.",
+        "stepLabel": "The step's words beside the box; while done, in muted-foreground and struck through (CheckboxField quiet checked).",
+        "activity": "The Activity section: what happened to the item, oldest first, as a timeline."
+    },
+    "standsOn": {"default": "sidebar"},
+    "options": {
+        "code": {"type": "node", "does": "The item's code over its title."},
+        "title": {"type": "node", "does": "The item's title."},
+        "state": {"type": "node", "does": "The column it stands in: { label, icon? }, drawn as a chip."},
+        "labels": {"type": "node", "does": "Its labels on the chips' line, such as BoardLabels."},
+        "description": {
+            "type": "node",
+            "does": "What the item is about, as prose; its section is drawn only when given."
+        },
+        "fields": {"type": "rows", "does": "Its fields as terms beside values: project, assignee, due date, reporter."},
+        "checklist": {"type": "rows", "does": "Its steps, { text, done }; the section is drawn only when it has steps."},
+        "onChecklistChange": {
+            "type": "callback",
+            "does": "Hears a step ticked or unticked, by its place in the checklist; without it the steps are read only.",
+            "sokkel-ui": "BoardItemPanel onChecklistChange; BoardChecklist onStepChange"
+        },
+        "activity": {"type": "rows", "does": "What happened to it, oldest first (TimelineEvent)."}
+    },
+    "sizes": {
+        "head": {
+            "height": "density.panel-head",
+            "padX": 16,
+            "padY": 12,
+            "gap": 8,
+            "note": "At least this tall; the code, the title and the chips 8 apart."
+        },
+        "code": {"text": "text.xs", "note": "In typeface-mono."},
+        "title": {"text": "text.detail-title", "note": "In typeface-heading."},
+        "chips": {"gap": 6},
+        "stateChip": {"height": 20, "padX": 6, "gap": 4, "icon": 12, "radius": "radius-chip", "text": "text.badge"},
+        "section": {"padX": 16, "padY": 12, "gap": 8},
+        "heading": {
+            "note": "parts/detail-pane's heading: text.xs at weight 500, as its paint says; uppercase, tracked wide."
+        },
+        "description": {"text": "text.sm", "note": "On lines 24 tall."},
+        "progress": {"height": 4},
+        "step": {
+            "padX": 8,
+            "padY": 6,
+            "gap": 10,
+            "radius": "radius-control",
+            "text": "text.sm",
+            "note": "The label on lines 20 tall."
+        },
+        "box": {"height": 16, "width": 16, "icon": 14, "radius": "radius-sm"}
+    },
+    "layout": {
+        "stepsInset": {"value": -4, "note": "The steps reach this far past the section's padding on each side."},
+        "boxTop": {"value": 2, "note": "The box's offset from the row's top, so it sits on the label's first line."}
+    },
+    "states": {
+        "rest": {"means": "The head and every section given; a step not done, its box empty."},
+        "hover": {"means": "The pointer is over a step: the row washed hover.", "reached": "the pointer"},
+        "focus": {
+            "means": "Keyboard focus on a step's box: the focus outline in ring, focus-ring-width wide, focus-ring-offset off.",
+            "on": "keyboard",
+            "reached": "Tab"
+        },
+        "checked": {
+            "means": "A step done: the box filled primary with a check in primary-foreground, the words in muted-foreground and struck through.",
+            "reached": "done on a step, or a press on it"
+        },
+        "readOnly": {
+            "means": "Without onChecklistChange: every box is disabled, the step at 60 percent and its box at disabled-opacity, the row's cursor not-allowed.",
+            "reached": "no onChecklistChange",
+            "effect": {"piece": "step", "opacity": 0.6, "cursor": "not-allowed"}
+        }
+    },
+    "pieces": {
+        "head": {"rest": {"rule": "border", "note": "1 wide under the head; no ground of its own."}},
+        "code": {"rest": {"ink": "muted-foreground", "text": "text.xs"}},
+        "title": {"rest": {"ink": "section-head-ink", "text": "text.detail-title"}},
+        "stateChip": {
+            "rest": {
+                "ground": "secondary",
+                "edge": "none",
+                "ink": "secondary-foreground",
+                "radius": "radius-chip",
+                "text": "text.badge"
+            }
+        },
+        "section": {"rest": {"rule": "border", "note": "1 wide under each section but the last."}},
+        "heading": {"rest": {"ink": "faint", "text": "text.xs", "weight": 500, "note": "Uppercase, tracked wide."}},
+        "description": {"rest": {"text": "text.sm"}},
+        "progress": {"rest": {"ground": "muted", "note": "The track, fully round."}},
+        "fill": {"rest": {"ground": "primary"}},
+        "step": {"rest": {"radius": "radius-control", "text": "text.sm"}, "hover": {"ground": "hover"}},
+        "box": {
+            "rest": {"ground": "none", "edge": "input", "radius": "radius-sm", "dark": {"ground": "input/30"}},
+            "checked": {
+                "ground": "primary",
+                "edge": "primary",
+                "ink": "primary-foreground",
+                "dark": {"ground": "primary"}
+            },
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
+            "readOnly": {"opacity": "disabled-opacity"}
+        },
+        "stepLabel": {
+            "rest": {"text": "text.sm", "note": "In the ink of what it stands on."},
+            "checked": {"ink": "muted-foreground", "note": "Struck through."}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Moves from one step's box to the next.", "when": "the checklist is not read only"},
+        {"keys": ["Space", "Enter"], "does": "Ticks or unticks the step.", "when": "a step's box has focus"}
+    ],
+    "words": {
+        "description": "Description",
+        "fields": "Fields",
+        "activity": "Activity",
+        "checklist.title": "Checklist",
+        "checklist.progress": "Checklist done"
+    },
+    "appText": {
+        "code": "The item's code.",
+        "title": "The item's title.",
+        "state": "The column's label and icon.",
+        "labels": "The labels.",
+        "description": "The item's description.",
+        "fields": "Each field's term and value.",
+        "checklist": "Each step's words.",
+        "activity": "Each event's title, time and detail."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The checklist's heading is written as `${title} ${done}/${steps.length}`, not as a word of its own.",
+            "A step's box is PlainCheckbox, a native button with role checkbox, so the panel loads none of Base UI's checkbox.",
+            "The words are private default objects (WORDS, CHECKLIST_WORDS) merged under words; BoardItemPanel passes words.checklist to BoardChecklist."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 9038006 there is no board item panel or checklist."
+        }
+    ]
+}

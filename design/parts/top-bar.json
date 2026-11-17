@@ -4,13 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {
-            "state": "missing",
-            "as_of": "a592dfb",
-            "note": "The spike draws the top bar by hand inside its frame, not from the spec."
-        }
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "built", "as_of": "7bf2ece"}
     },
     "summary": "The thin bar over the content: a search field at its start, the trail to the current screen, the button that opens the command palette, and the screen's actions at its end. On a phone the trail keeps its last crumb and the palette's button is an icon.",
     "sources": {
@@ -23,7 +19,7 @@
             "packages/core/src/components/ui/kbd.tsx",
             "packages/core/src/lib/keys.ts"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/frame.rs (TopBar, search_button)",
             "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
         ]
@@ -270,7 +266,7 @@
             "With no search field the palette's button is named words.search and says it; beside one it is named words.palette, which its title shows.",
             "In a desktop window (Shell desktop, AppBar desktop) the bar is a window drag region (data-window-drag)."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "A crumb with an href is a route the app goes to on a press; there are no URLs.",
             "The bar is a fixed strip the Shell gives a rect; the trail is laid out left to right and the end's controls right to left, so a long trail is cut short before them.",
             "The window's width is the available rect: the phone layout below 768 is chosen by width, not a media query."
@@ -278,29 +274,29 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "order at the end",
             "spec": "The palette's button, then the screen's actions at the very end, 12 apart; the actions 6 apart.",
             "today": "As of 267236c: the actions, then the palette's button at the very end, 6 apart."
         },
-        {"renderer": "sokkel-ui-egui", "what": "chevron size", "spec": "14.", "today": "12."},
+        {"renderer": "sokkel-egui", "what": "chevron size", "spec": "14.", "today": "12."},
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "crumb gap",
             "spec": "4 between a crumb and a chevron.",
             "today": "6 (item_spacing)."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "palette focus",
             "spec": "On keyboard focus only: a 2px ring outline 2 off, as every control of the frame.",
             "today": "The shared focus_ring: 2 wide, 2 off the box, on any focus."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 267236c, TopBar draws the bar, a trail of plain words (the last in the action weight), the palette's button with its word and a key cap, and actions. Not yet: crumbs as links with a hover, code crumbs, trailEnds ancestor and the back chevron, the mark, the search field and /, the button beside a search field, keys shown only when bound, the menu button, the phone layout (last crumb, palette as a finger-square icon), the room for a panel toggle and for the window's buttons."
+            "today": "As of 9038006, TopBar draws the bar, a trail of plain words (the last in the action weight), the mark, the search field with its keys (Mod drawn as the command glyph), the palette's button with its word and a key cap, actions, and room for the window's buttons on desktop. Not yet: crumbs as links with a hover, code crumbs, trailEnds ancestor and the back chevron, and the phone layout (last crumb, palette as a finger-square icon)."
         }
     ]
 }

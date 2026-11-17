@@ -4,9 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "missing", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
+        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
     },
     "summary": "Where a message to an assistant is written: a box on the field's ground, rounded by radius-composer, holding a text that grows with what is typed up to textMaxHeight, the files waiting to go, and the controls: attach, the app's tools, the microphone and a round Send, which becomes Stop while an answer streams. Enter sends and Shift+Enter breaks the line; on a touch screen Enter breaks the line and only Send sends. Files come in by the attach button, a paste or a drop; Send waits while a file uploads or a dictation runs. Stacked, the text is on top and the controls in a row under it. Inline, it is one line, a pill, until the text (or the placeholder, while there is none) does not fit there or files, dictation or a failure show: then it opens into the box, and it closes back once the text fits again, its corners easing between the two.",
     "sources": {
@@ -294,10 +294,10 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 48f51ce there is no composer."
+            "today": "As of 9038006 there is no composer."
         }
     ]
 }

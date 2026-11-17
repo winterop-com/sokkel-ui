@@ -17,7 +17,7 @@ export interface LetterWords {
     to: (names: readonly string[]) => string
 }
 
-const WORDS: LetterWords = { attached: 'Has attachments', to: (names) => `to ${names.join(', ')}` }
+export const LETTER_WORDS: LetterWords = { attached: 'Has attachments', to: (names) => `to ${names.join(', ')}` }
 
 export interface LetterProps {
     from: LetterSender
@@ -65,7 +65,7 @@ export function Letter({
     className,
     words: given,
 }: LetterProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...LETTER_WORDS, ...given }
     const [own, setOwn] = useState(defaultOpen)
     const open = !foldable || (held ?? own)
     const head = (
