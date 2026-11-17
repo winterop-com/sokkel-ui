@@ -1,5 +1,7 @@
 import type { EChartsCoreOption } from 'echarts/core'
 
+import { RUN_STATUS_MAP, STATUS_CSS, type StatusMap } from '@winterop-com/sokkel-ui/lib/status'
+
 import { formatNumber, type Aggregate, type Row } from '../data'
 import { tokenColor, type ChartLook } from '../look'
 
@@ -41,6 +43,13 @@ export interface ChartSpec {
      * `/` and a percent after it is drawn that opaque, such as `muted-foreground/45` for a quiet series.
      */
     colors?: Readonly<Record<string, string>>
+    /**
+     * Series and categories named for a state, each in that state's status color: `true` for the
+     * run states (`succeeded`, `failed`, `running` and the rest), or the app's own `StatusMap`, as
+     * `StatusChip` reads it, for values of its own (`ok` drawn `good`); the run states are known
+     * either way. A name `colors` gives a token of its own keeps it.
+     */
+    statuses?: StatusMap | true
     /**
      * The color tokens series and categories take in turn where `colors` names none of their own,
      * such as `['kind-teal', 'kind-blue', 'chart-2']`; the theme's order by default. The first is
@@ -229,6 +238,22 @@ export type ChartBuilder = (spec: ChartSpec, look: ChartLook, hidden?: ReadonlyS
 /** A kind of chart: `build` draws it. What a frame's legend lists for it is in `LEGENDS`, apart, so a legend loads no builder. */
 export interface ChartKindDef {
     build: ChartBuilder
+}
+
+/** The token a status color is drawn in, as `colors` names one: `status-failed`, `good`. */
+const statusToken = (css: string) => css.slice('var(--'.length, -1)
+
+/**
+ * The spec with every state `statuses` knows given its status color in `colors`, under the colors
+ * the spec names itself; the spec as it is without `statuses`. A kind's builder and its legend read
+ * the spec through it, so every color the spec names reaches both alike.
+ */
+export function withStatuses(spec: ChartSpec): ChartSpec {
+    const statuses = spec.statuses
+    if (statuses === undefined) return spec
+    const map: StatusMap = statuses === true ? RUN_STATUS_MAP : { ...RUN_STATUS_MAP, ...statuses }
+    const colors = Object.fromEntries(Object.entries(map).map(([name, status]) => [name, statusToken(STATUS_CSS[status.color])]))
+    return { ...spec, colors: { ...colors, ...spec.colors } }
 }
 
 /** The `index`th token of the spec's palette, or undefined where it gives none. */

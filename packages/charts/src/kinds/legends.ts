@@ -59,7 +59,10 @@ export async function loadLegend(kind: ChartKind): Promise<KindLegend> {
     const known = loadedLegend(kind)
     if (known !== undefined) return known
     const [load, name] = LEGENDS[kind] as [Load, string]
-    const legend = (await load())[name] as KindLegend
+    const [module, { withStatuses }] = await Promise.all([load(), import('./spec')])
+    const listed = module[name] as KindLegend
+    // The legend reads the spec as the builder does, with the status colors `statuses` names.
+    const legend: KindLegend = (spec) => listed(withStatuses(spec))
     loaded.set(kind, legend)
     return legend
 }

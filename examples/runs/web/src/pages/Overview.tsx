@@ -39,7 +39,6 @@ import { isLive } from '../timeline'
 const HOUR = 3_600_000
 const SUCCESS: Threshold[] = [{ color: 'critical' }, { value: 85, color: 'warning' }, { value: 95, color: 'good' }]
 const FAILURES: Threshold[] = [{ color: 'good' }, { value: 1, color: 'warning' }, { value: 10, color: 'critical' }]
-const STATE_COLORS = Object.fromEntries(STATES.map((state) => [state, `status-${state}`]))
 
 interface Fire {
     job: string
@@ -271,7 +270,7 @@ export function Overview() {
                         stack="stacked"
                         order={day.hours}
                         seriesOrder={STATES}
-                        colors={STATE_COLORS}
+                        statuses
                         labelEvery={3}
                         file="runs-per-hour"
                     />

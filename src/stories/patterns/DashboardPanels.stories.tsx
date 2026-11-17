@@ -567,8 +567,27 @@ function OpenRange() {
     )
 }
 
+function OpenTimedRange() {
+    const [range, setRange] = useState<TimeRangeValue>({ from: new Date(2026, 9, 14, 9, 30), to: new Date(2026, 9, 16, 17, 0) })
+    return (
+        <Row gap="none" align="stretch" justify="end" className="min-h-svh bg-background p-6 text-foreground">
+            <TimeRangePicker
+                value={range}
+                onChange={setRange}
+                times
+                defaultMonth={new Date(2026, 9, 1)}
+                today={new Date(2026, 9, 20)}
+                defaultOpen
+            />
+        </Row>
+    )
+}
+
 /** The range picker open: presets beside a calendar for a range of its own. */
 export const TimeRange: StoryObj = { name: 'Time range', render: () => <OpenRange /> }
+
+/** A custom range with a time of day at each end, typed or picked under the calendar, and named with its times. */
+export const TimedRange: StoryObj = { name: 'Range with times', render: () => <OpenTimedRange /> }
 
 /** Rows grouping panels: one open, one collapsed saying how many panels it holds. */
 export const Rows: StoryObj = {

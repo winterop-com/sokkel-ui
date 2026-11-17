@@ -8,10 +8,11 @@ export interface Credit {
 }
 
 /**
- * What a map is drawn over. A basemap with neither `style` nor `tiles` is a background in the
- * token colors alone and reaches no network. A vector `style` is drawn under the data with its
- * place names above it; raster `tiles` are drawn under the data. The background keeps showing
- * wherever a tile is missing or fails.
+ * What a map is drawn over. A basemap with neither `style`, `tiles` nor `geometry` is a background
+ * in the token colors alone and reaches no network. A vector `style` is drawn under the data with
+ * its place names above it; raster `tiles` are drawn under the data; `geometry` is drawn as land
+ * with its borders, from outlines already at hand, and reaches no network either. The background
+ * keeps showing wherever a tile is missing or fails.
  */
 export interface Basemap {
     id: string
@@ -20,6 +21,12 @@ export interface Basemap {
     style?: string
     /** Raster tile url templates in `{z}/{x}/{y}` form. */
     tiles?: string[]
+    /**
+     * Outlines drawn as land in the token colors, with the borders between them, over the ground
+     * as sea: such as `loadWorld` from `world`, which `WORLD_BASEMAP` draws. Fetched when the
+     * basemap is first drawn.
+     */
+    geometry?: () => Promise<FeatureCollection>
     /**
      * A small image of the basemap, shown in the switcher: its address, or a function that fetches
      * it, so a page that never opens the switcher fetches no preview.
@@ -122,8 +129,17 @@ export const VEIL_LAYER_ID = 'wui-veil'
 /** The id the graticule is drawn under, as a source and as a layer. */
 export const GRATICULE_LAYER_ID = 'wui-graticule'
 
+/** The id a geometry basemap's land is drawn under, as a source and as a layer. */
+export const LAND_LAYER_ID = 'wui-land'
+
+/** The id of the borders between a geometry basemap's land. */
+export const BORDER_LAYER_ID = 'wui-land-border'
+
 /** The layers a basemap brings, which a basemap change replaces; every other `wui-` layer is the map's own. */
-const BASEMAP_IDS = new Set([GROUND_LAYER_ID, TILES_LAYER_ID, VEIL_LAYER_ID])
+const BASEMAP_IDS = new Set([GROUND_LAYER_ID, TILES_LAYER_ID, VEIL_LAYER_ID, LAND_LAYER_ID, BORDER_LAYER_ID])
+
+/** Whether a layer or source is one a basemap brings, rather than one of the map's own. */
+export const isBasemapLayer = (id: string): boolean => BASEMAP_IDS.has(id)
 
 type RasterPaint = NonNullable<RasterLayerSpecification['paint']>
 
@@ -158,6 +174,31 @@ export function rasterStyle(basemap: Basemap, dark: boolean): StyleSpecification
         sources: { [TILES_LAYER_ID]: rasterSource(basemap, basemap.tiles) },
         layers: [{ id: TILES_LAYER_ID, type: 'raster', source: TILES_LAYER_ID, paint: rasterPaint(basemap, dark) }],
     }
+}
+
+/** The style of a geometry basemap: its outlines as land in `land`, with borders in `border`, over the ground. */
+export function geometryStyle(data: FeatureCollection, { land, border }: { land: string; border: string }): StyleSpecification {
+    return {
+        version: 8,
+        sources: { [LAND_LAYER_ID]: { type: 'geojson', data } },
+        layers: [
+            { id: LAND_LAYER_ID, type: 'fill', source: LAND_LAYER_ID, paint: { 'fill-color': land } },
+            {
+                id: BORDER_LAYER_ID,
+                type: 'line',
+                source: LAND_LAYER_ID,
+                layout: { 'line-join': 'round' },
+                paint: { 'line-color': border, 'line-width': 0.6 },
+            },
+        ],
+    }
+}
+
+/** What a basemap's style is drawn from, so a change of it is told from a redraw of the same. */
+export function basemapKey(basemap: Basemap): string {
+    if (basemap.style !== undefined) return basemap.style
+    if (basemap.tiles !== undefined && basemap.tiles.length > 0) return basemap.tiles.join(' ')
+    return basemap.geometry === undefined ? '' : `geometry:${basemap.id}`
 }
 
 const styles = new Map<string, Promise<StyleSpecification>>()

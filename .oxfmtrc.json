@@ -20,6 +20,7 @@
         "e2e/__screenshots__",
         "e2e/tiles",
         "packages/core/src/styles/shadcn.css",
-        "packages/core/src/data/emoji-en.json"
+        "packages/core/src/data/emoji-en.json",
+        "packages/maps/src/data/countries-110m.json"
     ]
 }
