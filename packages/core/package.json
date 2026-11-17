@@ -98,6 +98,10 @@
             "types": "./dist/components/BarList.d.ts",
             "import": "./dist/components/BarList.js"
         },
+        "./CallBar": {
+            "types": "./dist/components/CallBar.d.ts",
+            "import": "./dist/components/CallBar.js"
+        },
         "./Callout": {
             "types": "./dist/components/Callout.d.ts",
             "import": "./dist/components/Callout.js"
