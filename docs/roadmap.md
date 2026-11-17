@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.29.3** is the latest release (2026-11-17): softer composers on `radius-composer` with round
+- **0.30.0** is the latest release (2026-11-17): `CallBar`, `Letter`, `DetailPane`, `BoardItemPanel`,
+  a table's own search and windowed growing cards, `TrackList` links and windowing, a live force
+  graph, ranges with times, country fills and an offline basemap, the palette's own list (cmdk gone),
+  the lean-stylesheet Vite plugin, three themes (phosphor, phosphor-bright, tray), and the WebKit,
+  HLS and code-scanning fixes; sokkel-design's contract at 0.30.0 with charts and the code editor.
+- **0.29.3** (2026-11-17): softer composers on `radius-composer` with round
   buttons and `Composer`'s inline layout, `RunTimeline` choosing a lane anywhere in its track, emoji
   and reaction keys that stop at their ends, and every part added this week specified in
   sokkel-design; the contract at 0.29.3, with its site at winterop-com.github.io/sokkel-design.
