@@ -4,9 +4,10 @@ Small Tidevann apps that hold the library to a size budget. They are not example
 builds them to measure what the library costs an app. The apps are `forms` (a settings page and a
 dialog with a schema form, and no engine), `dashboard` (stat and chart panels on ECharts, the range
 controls and a table), `map` (regions and sites on maplibre with a legend and a popup) and `music`
-(an album's tracks and the player bar). `forms-lean` is the forms app on the core's
-`styles-base.css` with the list of sources of each module it imports, where `forms` takes
-`styles.css`, so the CSS of an app that carries only its own modules' classes is measured too.
+(an album's tracks and the player bar). `forms-lean` is the forms app built with the core's
+`sokkelStyles()` Vite plugin, which puts `styles-base.css` and the list of sources of each module it
+imports in the place of `styles.css`, where `forms` takes `styles.css` whole, so the CSS of an app
+that carries only its own modules' classes is measured too.
 `scripts/size-budget.ts` builds each with Vite against the built packages and measures it gzipped:
 the JavaScript loaded with the page (`start`), what a dynamic import fetches later (`lazy`) and the
 CSS. `lazy` adds up every chunk the app could ever fetch, so splitting an engine finer makes it
@@ -31,7 +32,7 @@ bun run size      # typecheck the apps, build them and compare each with its bud
 
 Five-sixths of the CSS on `styles.css` is Tailwind's utilities: a rule for every class any core
 module names, whether the app draws that module or not, so a part's classes reach every app on
-`styles.css` (forms and music) and only the apps that import it on `styles-base.css`. Tailwind
+`styles.css` (forms and music) and only the apps that import it on `styles-base.css` or with the plugin. Tailwind
 reads every word of a module, comments and strings too, so a comment that names a utility
 (`shimmer`, `lowercase`) writes that utility. A class spelled two ways (`data-[highlighted]:` and
 `data-highlighted:`, `z-[1]` and `z-1`) writes two rules: take the spelling already in use. A tint

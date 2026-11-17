@@ -35,8 +35,8 @@ stands on the core as a peer dependency at the same version and imports it by it
 never imports an add-on and no add-on imports another, which `src/rules.test.ts` holds. A part that
 needs no engine and belongs to no domain goes in the core, save the music and video app parts in
 the media package. The
-core's own dependencies are what every app's frame draws with (Base UI, lucide, cmdk for the
-palette, the class helpers, the Plex fonts), dnd-kit, small and loaded only by the parts that
+core's own dependencies are what every app's frame draws with (Base UI, lucide, the class helpers,
+the Plex fonts; the palette's list is the library's own, taken from cmdk without its dialog), dnd-kit, small and loaded only by the parts that
 drag; the English emoji list `EmojiPicker` loads the first time a picker opens is data the core
 carries itself, written from `emojibase-data` by `bun run emoji-data`; every library only some parts need is an optional peer
 dependency: the engines left in the core (Mermaid, KaTeX, CodeMirror), Shiki, react-markdown and its
@@ -341,7 +341,7 @@ whatever Shift, Option or AltGr the layout took, a letter by its case with `shif
 letter key that Option or a non-Latin layout turned into another character by its place. `mod` is
 ⌘ on a Mac and Ctrl elsewhere, the other one refusing the press, save a binding with `alsoCtrl`,
 which a Mac's Ctrl answers too: the palette's, so ⌘K and Ctrl K both open it there and close it
-again (cmdk's own Ctrl keys are off, so Ctrl K means one thing), while Ctrl keeps its editing keys
+again (the list's own Ctrl keys are off, so Ctrl K means one thing), while Ctrl keeps its editing keys
 in a field for every other binding. Keys are quiet while typing in a
 field, where a slider keeps its arrows and a button its Space, and while a dialog, a sheet, a menu,
 an overlay or the shell's palette is open, unless a binding asks (`inFields`, `inDialogs`); `scope`
