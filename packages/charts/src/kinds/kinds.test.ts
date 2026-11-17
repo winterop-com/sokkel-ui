@@ -299,6 +299,25 @@ describe('the chart kinds', () => {
         ])
     })
 
+    it('draws a target as a line across with its label and value at its end, the value axis reaching it', () => {
+        type Lines = {
+            yAxis: { min?: number | ((extent: { min: number }) => number); max?: number | ((extent: { max: number }) => number) }
+            series: { markLine?: { data: { yAxis: number; label: { formatter: () => string; position: string } }[] } }[]
+        }
+        const option = KINDS.line.build({ ...BY_STATE, targets: [{ value: 5000, label: 'Target' }] }, LOOK) as unknown as Lines
+        const lines = option.series.flatMap((entry) => entry.markLine?.data ?? [])
+        expect(lines.map((line) => [line.yAxis, line.label.position, line.label.formatter()])).toEqual([
+            [5000, 'insideEndTop', 'Target 5,000'],
+        ])
+        const { min, max } = option.yAxis
+        expect([typeof max === 'function' ? max({ max: 120 }) : max, typeof max === 'function' ? max({ max: 9000 }) : max]).toEqual([
+            5000, 9000,
+        ])
+        expect(typeof min === 'function' ? min({ min: 0 }) : min).toBe(0)
+        const fixed = KINDS.line.build({ ...BY_STATE, targets: [{ value: 5000 }], max: 100 }, LOOK) as unknown as Lines
+        expect(fixed.yAxis.max).toBe(100)
+    })
+
     it('draws the steps after the first as lines across, a dashed series bare, and the range fixed', () => {
         type Lines = {
             yAxis: { min?: number; max?: number }

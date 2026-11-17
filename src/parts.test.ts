@@ -37,7 +37,7 @@ import { DataTable, DATA_TABLE_WORDS, headEntered, headStep, type DataColumn, ty
 import { DASHBOARD_PANEL_WORDS, DashboardPanel, SPAN, type DashboardPanelProps } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { STAT_PANEL_WORDS, StatPanel, type StatPanelProps } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import { THRESHOLD_LEGEND_WORDS, ThresholdLegend } from '@winterop-com/sokkel-ui/dashboard/ThresholdLegend'
-import { CodeEditor, SCHEMA_WORDS, type CodeEditorProps } from '@winterop-com/sokkel-ui/CodeEditor'
+import { CodeEditor, FOLD_KEYS, SCHEMA_WORDS, type CodeEditorProps } from '@winterop-com/sokkel-ui/CodeEditor'
 import { DATE_FIELD_WORDS, DateField } from '@winterop-com/sokkel-ui/DateField'
 import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
 import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
@@ -71,7 +71,7 @@ import {
     type ChatReaction,
     type ReactionBarProps,
 } from '@winterop-com/sokkel-ui/ReactionBar'
-import { Rail, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
+import { Rail, RAIL_SIZE, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
 import { RUN_TIMELINE_WORDS, RunTimeline, type RunTimelineLane, type RunTimelineProps } from '@winterop-com/sokkel-ui/RunTimeline'
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
@@ -1537,9 +1537,10 @@ const RAIL_ADAPTER: Adapter = {
         return [
             ...pads,
             ...layoutChecks('rail', {
-                width: () => numberIn(RAIL, /defaultSize = (\d+),/),
-                minWidth: () => numberIn(RAIL, /minSize = (\d+),/),
-                maxWidth: () => numberIn(RAIL, /maxSize = (\d+),/),
+                // The widths are RAIL_SIZE's, which the rail's props default to.
+                width: () => (/defaultSize = RAIL_SIZE\.default,/.test(RAIL) ? String(RAIL_SIZE.default) : undefined),
+                minWidth: () => (/minSize = RAIL_SIZE\.min,/.test(RAIL) ? String(RAIL_SIZE.min) : undefined),
+                maxWidth: () => (/maxSize = RAIL_SIZE\.max,/.test(RAIL) ? String(RAIL_SIZE.max) : undefined),
                 collapsedWidth: () => {
                     const found = /'w-\[calc\(([\d.]+)rem\+(\d+)px\)\]'/.exec(RAIL)
                     return found === null ? undefined : String(Number(found[1]) * 16 + Number(found[2]))
@@ -4929,7 +4930,7 @@ const STAT_PANEL_ADAPTER: Adapter = {
     more: () =>
         layoutChecks('stat-panel', {
             meterMaxWidth: () => numberIn(STAT_PANEL, /flex w-full max-w-(\d+) flex-col/, 'step'),
-            valueFoot: () => numberIn(STAT_PANEL, /justify-center px-2\.5 pb-(\d+)/, 'step'),
+            valueFoot: () => numberIn(STAT_PANEL, /value !== null \? 'pb-0' : 'pb-(\d+)'/, 'step'),
             meterTop: () => numberIn(STAT_PANEL, /className="mt-(\d+) mb-\d+ flex/, 'step'),
             meterFoot: () => numberIn(STAT_PANEL, /className="mt-\d+ mb-(\d+) flex/, 'step'),
             tickOverhang: () => numberIn(STAT_PANEL, /'absolute -inset-y-(\d+(?:\.\d+)?) /, 'step'),
@@ -5218,6 +5219,17 @@ const installs = (keymapName: string, when: RegExp) => () =>
         ? true
         : `${keymapName} is not installed as the spec says`
 
+/** Keys folding binds: each in the editor's fold keymap, which it installs with the fold gutter. */
+const foldsOn =
+    (...keys: string[]) =>
+    (): true | string => {
+        const bound = new Set(FOLD_KEYS.map((binding) => binding.key))
+        const missing = keys.filter((key) => !bound.has(key))
+        if (!/keymap\.of\(FOLD_KEYS\)/.test(CODE_EDITOR) || !/codeFolding\(\)/.test(CODE_EDITOR))
+            return 'the fold keymap is not installed with folding'
+        return missing.length === 0 ? true : `folding does not bind ${missing.join(', ')}`
+    }
+
 /** Says a schema issue of a kind as the words do, from a sample's values. */
 const sayIssue = (kind: string) => (say: typeof SCHEMA_WORDS.say, fill: Record<string, string | number>) => {
     // A counted rule (a length, a number of items) says its count; a bound says its limit.
@@ -5344,8 +5356,10 @@ const CODE_EDITOR_ADAPTER: Adapter = {
         'F3, Mod+G, Shift+F3, Mod+Shift+G (search)': installs('searchKeymap', /searchPanel\(/),
         'Escape (the find bar has focus)': installs('searchKeymap', /searchPanel\(/),
         'Mod+D, Mod+Shift+L, Mod+Alt+G (search)': installs('searchKeymap', /searchPanel\(/),
-        'Ctrl+Shift+[, Ctrl+Shift+] (folding)': installs('foldKeymap', /codeFolding\(\)/),
-        'Ctrl+Alt+[, Ctrl+Alt+] (folding)': installs('foldKeymap', /codeFolding\(\)/),
+        'Ctrl+Shift+[, Ctrl+Shift+] (folding)': foldsOn('Ctrl-Shift-[', 'Ctrl-Shift-]'),
+        'Ctrl+Alt+[, Ctrl+Alt+] (folding)': foldsOn('Ctrl-Alt-[', 'Ctrl-Alt-]'),
+        'Mod+., Mod+Shift+. (folding)': foldsOn('Mod-.', 'Mod-Shift-.'),
+        'Mod+Alt+., Mod+Alt+Shift+. (folding)': foldsOn('Mod-Alt-.', 'Mod-Alt-Shift-.'),
         'Mod+Click (markdown with onFollowLink)': () =>
             /classList\.toggle\('cm-follow-held', held\)/.test(CODE_EDITOR) && /followLinks\(/.test(CODE_EDITOR)
                 ? true
@@ -5511,7 +5525,11 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {}
+const PENDING: Record<string, Record<string, string>> = {
+    chart: { 'pieces.legendItem.hidden.opacity': 'a hidden entry fades at disabled-opacity' },
+    'stat-panel': { 'pieces.tile.rest.edge': "the tile wears the dashboard panel's border-strong edge" },
+    table: { 'pieces.groupHead.rest.text': "a group's head is never louder than its rows: the column heads' text.head" },
+}
 
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,

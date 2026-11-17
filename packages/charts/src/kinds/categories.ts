@@ -1,6 +1,6 @@
 import { extent } from '../data'
 import { tokenColor, tooltipMarkup, type ChartLook } from '../look'
-import { categoryAxis, edgeAxis, endsStack, fading, farCorners, markRoom, markSeries, tickWriter, valueLabels } from './axes'
+import { categoryAxis, edgeAxis, endsStack, fading, farCorners, markRoom, markSeries, reachTargets, tickWriter, valueLabels } from './axes'
 import { shaped } from './legend-series'
 import {
     categoryText,
@@ -29,14 +29,14 @@ function quietCategory<T extends { axisLabel?: object }>(spec: ChartSpec, look: 
     return spec.quiet === true ? { ...axis, axisLabel: { ...axis.axisLabel, fontFamily: look.mono } } : axis
 }
 
-/** The value axis' range: from `min` to `max`, or 0 to 100% in quarters where the figures stack to 100%. */
 /** Whether a line's value axis fits its figures: `fit` on a chart not stacked to shares. */
 function fitted(spec: ChartSpec) {
     return spec.fit === true && spec.stack !== 'percent'
 }
 
+/** The value axis' range: from `min` to `max`, reaching the targets, or 0 to 100% in quarters where the figures stack to 100%. */
 function valueRange(spec: ChartSpec) {
-    return spec.stack === 'percent' ? { min: 0, max: 100, interval: 25 } : { min: spec.min, max: spec.max }
+    return spec.stack === 'percent' ? { min: 0, max: 100, interval: 25 } : reachTargets(spec)
 }
 
 /** A tooltip listing every series with a figure at the category under the pointer; a series with none there draws nothing, so it is left out. */

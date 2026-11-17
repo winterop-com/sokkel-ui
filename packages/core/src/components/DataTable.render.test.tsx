@@ -535,6 +535,34 @@ describe('cards drawn every one', () => {
     })
 })
 
+describe("a group's head", () => {
+    const rows = [
+        { id: 'nightly-export', team: 'harbor' },
+        { id: 'sync-inventory', team: 'juniper' },
+    ]
+    const columns: DataColumn<(typeof rows)[number]>[] = [{ id: 'job', header: 'Job', width: '1fr', cell: (job) => job.id }]
+
+    it("is never louder than its rows: the column heads' size, weight and ink, in its own case, as a table, a list and a grid", () => {
+        for (const props of [
+            {},
+            { variant: 'list' as const },
+            { card: (job: (typeof rows)[number]) => <b>{job.id}</b>, defaultView: 'grid' as const },
+        ]) {
+            const html = renderToStaticMarkup(
+                <DataTable columns={columns} rows={rows} rowKey={(job) => job.id} groupBy="team" {...props} />,
+            )
+            const heads = [...html.matchAll(/<(?:div|li|section)[^>]*data-group="harbor"[^>]*>(?:<div class="([^"]*)")?/g)]
+            const classes = [...html.matchAll(/class="([^"]*)"[^>]*data-group="harbor"|data-group="harbor"[^>]*class="([^"]*)"/g)].map(
+                (match) => match[1] ?? match[2],
+            )
+            const drawn = [...classes, ...heads.map((match) => match[1] ?? '')].join(' ').split(' ')
+            expect(drawn).toContain('text-head')
+            expect(drawn).not.toContain('text-sm')
+            expect(drawn).not.toContain('[text-transform:var(--table-head-transform)]')
+        }
+    })
+})
+
 describe('what a table says in place of its rows', () => {
     const columns: DataColumn<{ id: string }>[] = [{ id: 'job', header: 'Job', width: '1fr', cell: (job) => job.id }]
 

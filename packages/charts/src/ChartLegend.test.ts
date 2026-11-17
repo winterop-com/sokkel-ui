@@ -29,6 +29,21 @@ describe('ChartLegend', () => {
         expect(html).toContain('max-md:h-finger')
     })
 
+    it('fades a hidden entry at the disabled opacity, a shown one not at all', () => {
+        const html = renderToStaticMarkup(
+            createElement(ChartLegend, {
+                items: [
+                    { key: 'harbor', label: 'harbor', color: 'var(--chart-2)' },
+                    { key: 'juniper', label: 'juniper', color: 'var(--chart-3)' },
+                ],
+                hidden: new Set(['juniper']),
+            }),
+        )
+        const [shown, hidden] = [...html.matchAll(/<button[^>]*class="([^"]*)"/g)].map((match) => match[1].split(' '))
+        expect([shown.includes('opacity-disabled'), hidden.includes('opacity-disabled')]).toEqual([false, true])
+        expect(html).not.toMatch(/opacity-\d/)
+    })
+
     it('writes each entry its figure beside its label with figures', () => {
         const items = [
             { key: 'succeeded', label: 'succeeded', color: 'var(--status-succeeded)', values: [1203] },

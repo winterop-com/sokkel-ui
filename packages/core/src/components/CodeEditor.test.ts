@@ -129,3 +129,18 @@ describe('problems', () => {
         expect(codeProblems(marked)[0].path).toEqual(['steps', 0, 'kind'])
     })
 })
+
+describe("folding's keys", () => {
+    it('folds and unfolds on keys with no bracket first, keeping the bracket keys as the second', async () => {
+        const { FOLD_KEYS } = await import('./CodeEditor')
+        const { foldAll, foldCode, unfoldAll, unfoldCode } = await import('@codemirror/language')
+        expect(FOLD_KEYS.slice(0, 4).map((binding) => [binding.key, binding.run])).toEqual([
+            ['Mod-.', foldCode],
+            ['Mod-Shift-.', unfoldCode],
+            ['Mod-Alt-.', foldAll],
+            ['Mod-Alt-Shift-.', unfoldAll],
+        ])
+        expect(FOLD_KEYS.slice(0, 4).some((binding) => /[[\]]/.test(binding.key ?? ''))).toBe(false)
+        expect(FOLD_KEYS.slice(4).map((binding) => binding.key)).toEqual(['Ctrl-Shift-[', 'Ctrl-Shift-]', 'Ctrl-Alt-[', 'Ctrl-Alt-]'])
+    })
+})

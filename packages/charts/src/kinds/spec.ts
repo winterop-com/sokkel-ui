@@ -174,6 +174,11 @@ export interface ChartSpec {
     bridge?: boolean
     /** Lines down the chart at categories of `x`, each dashed and labeled: where a forecast starts, a release. */
     marks?: readonly ChartMark[]
+    /**
+     * Lines across the chart at values, each dashed with its value written at its end: a target or a
+     * reference. The value axis reaches each, where it is above or below every figure.
+     */
+    targets?: readonly ChartTarget[]
 }
 
 /** One band of a fan; see `ChartSpec.bands`. */
@@ -191,6 +196,15 @@ export interface ChartMark {
     /** The category of `x` it stands at. */
     x: string
     /** What it marks, written at its top. */
+    label?: string
+    /** A color token; the muted foreground by default. */
+    color?: string
+}
+
+/** A line across the chart at one value; see `ChartSpec.targets`. */
+export interface ChartTarget {
+    value: number
+    /** What it is, written before its value at its end, such as Target. */
     label?: string
     /** A color token; the muted foreground by default. */
     color?: string

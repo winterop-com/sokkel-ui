@@ -71,6 +71,39 @@ function stepMarks(spec: ChartSpec, look: ChartLook) {
         })
 }
 
+/** The spec's targets, each a dashed line across the chart at its value, in its color, its label and value written at its end. */
+function targetMarks(spec: ChartSpec, look: ChartLook) {
+    return (spec.targets ?? []).map((target) => {
+        const color = target.color === undefined ? look.muted : look.token(target.color)
+        const value = written(spec, target.value)
+        return {
+            yAxis: target.value,
+            lineStyle: { color, type: 'dashed', width: 1 },
+            label: {
+                show: true,
+                position: 'insideEndTop',
+                formatter: () => (target.label === undefined ? value : `${target.label} ${value}`),
+                color,
+                fontFamily: look.font,
+                fontSize: look.size.small,
+            },
+        }
+    })
+}
+
+/** The value axis' ends reaching the spec's targets: each end a function of the figures' own, or the spec's where it fixes one. */
+export function reachTargets(spec: ChartSpec): {
+    min?: number | ((extent: { min: number }) => number)
+    max?: number | ((extent: { max: number }) => number)
+} {
+    const values = (spec.targets ?? []).map((target) => target.value)
+    if (values.length === 0) return { min: spec.min, max: spec.max }
+    return {
+        min: spec.min ?? ((extent) => Math.min(extent.min, ...values)),
+        max: spec.max ?? ((extent) => Math.max(extent.max, ...values)),
+    }
+}
+
 /** The spec's marks, each a dashed line down the chart at its category, in its color and labeled at its top. */
 function categoryMarks(spec: ChartSpec, look: ChartLook) {
     return (spec.marks ?? []).map((mark) => {
@@ -95,11 +128,11 @@ export const markRoom = (spec: ChartSpec, look: ChartLook): number =>
     spec.marks?.some((mark) => mark.label !== undefined) === true ? look.size.small + 12 : 10
 
 /**
- * The spec's lines across and down the chart: the steps after the first, dashed across at their
- * values, and the marks, dashed down at their categories.
+ * The spec's lines across and down the chart: the steps after the first and the targets, dashed
+ * across at their values, and the marks, dashed down at their categories.
  */
 export function stepLines(spec: ChartSpec, look: ChartLook) {
-    const data = [...stepMarks(spec, look), ...categoryMarks(spec, look)]
+    const data = [...stepMarks(spec, look), ...targetMarks(spec, look), ...categoryMarks(spec, look)]
     if (data.length === 0) return undefined
     return { silent: true, symbol: 'none', data }
 }

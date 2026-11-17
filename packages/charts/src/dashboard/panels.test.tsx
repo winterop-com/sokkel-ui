@@ -45,6 +45,21 @@ describe('dashboard panels', () => {
         frames.length = 0
     })
 
+    it("TimeSeriesPanel draws its marks as the chart spec's targets, beside its thresholds", () => {
+        const marks = [{ value: 40, label: 'Limit', color: 'warning' }]
+        const frame = frameOf(
+            <TimeSeriesPanel
+                title="Queue"
+                x={X}
+                series={SERIES}
+                marks={marks}
+                thresholds={[{ color: 'good' }, { value: 30, color: 'critical' }]}
+            />,
+        )
+        const chart = frame.children({} as never) as ReactElement<ChartSpec>
+        expect([chart.props.targets, chart.props.steps?.length]).toEqual([marks, 2])
+    })
+
     for (const [name, draw] of Object.entries(PANELS)) {
         it(`${name} leaves the frame's data view on by default`, () => {
             expect(frameOf(draw({})).data).toBeUndefined()

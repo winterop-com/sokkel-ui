@@ -4,7 +4,7 @@ import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../ChartFrame'
 import type { LegendStat } from '../ChartLegend'
 import { Chart } from '../Chart'
-import type { ChartSpec } from '../kinds'
+import type { ChartSpec, ChartTarget } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { legendItems, panelFormat, seriesSpec, valueWriter, type PanelSeries, usePanelFields, type PanelWords } from './series'
 import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
@@ -29,6 +29,8 @@ export interface TimeSeriesPanelProps extends ChartFrameViewProps {
     stacked?: boolean
     step?: boolean
     thresholds?: readonly Threshold[]
+    /** Lines across at values, such as a target: dashed, in their color, the label and value written at the end; the axis reaches each. */
+    marks?: readonly ChartTarget[]
     min?: number
     max?: number
     /** Labels every nth time on the axis; ECharts picks when omitted. */
@@ -52,7 +54,8 @@ export interface TimeSeriesPanelProps extends ChartFrameViewProps {
 
 /**
  * A dashboard panel of values over time: lines, over a fading or solid area, alone or stacked,
- * with dashed threshold lines, and a legend under it as a row or a table of each series' min, max,
+ * with dashed threshold lines and lines across at `marks` (a target or a limit, its value written at
+ * its end, the value axis reaching it), and a legend under it as a row or a table of each series' min, max,
  * mean and current value. It draws the `area` kind, or `line` without a fill and `step` for
  * steps. Keep `series` and `x` stable between renders.
  */
@@ -71,6 +74,7 @@ export function TimeSeriesPanel({
     stacked,
     step,
     thresholds,
+    marks,
     min,
     max,
     labelEvery,
@@ -101,11 +105,12 @@ export function TimeSeriesPanel({
             fill: stacked === true && fill === 'gradient' ? 'solid' : fill,
             stack: stacked === true ? 'stacked' : undefined,
             steps: thresholds,
+            targets: marks,
             min,
             max,
             labelEvery,
         }),
-        [x, series, fieldNames, unit, decimals, format, fill, stacked, thresholds, min, max, labelEvery],
+        [x, series, fieldNames, unit, decimals, format, fill, stacked, thresholds, marks, min, max, labelEvery],
     )
     const kind = step === true ? 'step' : fill === 'none' ? 'line' : 'area'
     const items = useMemo(() => legendItems(series), [series])

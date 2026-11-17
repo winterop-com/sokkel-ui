@@ -4,6 +4,12 @@
  */
 export const TABLE_HEAD_TEXT = 'text-head text-table-head-ink [text-transform:var(--table-head-transform)]'
 
+/**
+ * A group's head row: the column heads' size, weight and ink, never louder than the rows under it,
+ * in its own case, since a group is named by its value (a job, a state).
+ */
+export const GROUP_HEAD_TEXT = 'text-head text-table-head-ink'
+
 /** A table's head row: its ground and the rule under it, from the table-head tokens. */
 export const TABLE_HEAD_ROW = 'border-b border-table-head-line bg-table-head-ground'
 

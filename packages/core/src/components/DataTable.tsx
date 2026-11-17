@@ -50,7 +50,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
-import { STACK_EDIT_HEIGHT, TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnBands, columnName, columnOrder } from '../lib/table'
+import { GROUP_HEAD_TEXT, STACK_EDIT_HEIGHT, TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnBands, columnName, columnOrder } from '../lib/table'
 import type { CellAt, EditedValue, EditOption, EditorKind, EditValue } from '../lib/edit'
 import type { CellEdit, CellFocus, OpenCell, TableEditing, TableEditingContext } from './table-editing'
 import type { RowDropAt, TableRowDrag } from './table-reorder'
@@ -2603,7 +2603,7 @@ export function DataTable<T>({
                 data-group={head.key}
                 onClick={() => foldGroup(head.key)}
                 className={cn(
-                    'grid cursor-pointer items-center border-b border-border bg-panel-ground text-sm font-medium',
+                    cn('grid cursor-pointer items-center border-b border-border bg-panel-ground', GROUP_HEAD_TEXT),
                     spaced,
                     every ? 'min-h-(--density-row)' : 'h-(--density-row)',
                 )}
@@ -3631,7 +3631,10 @@ export function DataTable<T>({
                                                     aria-expanded={!entry.folded}
                                                     data-group={entry.key}
                                                     onClick={() => foldGroup(entry.key)}
-                                                    className="flex min-w-0 cursor-pointer items-center bg-panel-ground px-(--density-panel-pad) py-1.5 text-sm font-medium"
+                                                    className={cn(
+                                                        'flex min-w-0 cursor-pointer items-center bg-panel-ground px-(--density-panel-pad) py-1.5',
+                                                        GROUP_HEAD_TEXT,
+                                                    )}
                                                 >
                                                     {selectable && (
                                                         <span className="mr-2 flex" onClick={(event) => event.stopPropagation()}>
@@ -3725,7 +3728,7 @@ export function DataTable<T>({
                             <div className="flex flex-col gap-4 p-4">
                                 {groupHeads.map((head) => (
                                     <section key={head.key} data-group={head.key} aria-expanded={!head.folded}>
-                                        <div className="flex min-w-0 items-center text-sm font-medium">
+                                        <div className={cn('flex min-w-0 items-center', GROUP_HEAD_TEXT)}>
                                             {selectable && <span className="mr-2 flex">{groupBox(head)}</span>}
                                             {groupTitle(head)}
                                         </div>
