@@ -337,6 +337,7 @@ export function ChatPage({ id }: { id: string | undefined }) {
                             />
                         }
                         words={{ placeholder: model === undefined ? 'Pick a model to ask' : `Ask ${model.name}` }}
+                        layout="inline"
                     />
                 </Stack>
             }

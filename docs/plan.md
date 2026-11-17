@@ -221,8 +221,8 @@ ink and a page title's ink (each ink `foreground` unless a theme sets one); a ta
 editor's and a code block's ground and over their gutter; the scroll area's thumb and track, which
 the browser's own scroll bars take where `--scrollbar` names them; the shell's foot strip; and the
 palette's insets. Each defaults to what the part drew before, so a theme that sets none looks as
-tidevann does. Corners go by role: controls (buttons, fields, selects, toggles, the composers) round
-by `--control-radius` and surfaces (cards, boxed sections, popovers, menus, dialogs, code blocks)
+tidevann does. Corners go by role: controls (buttons, fields, selects, toggles) round
+by `--control-radius`, the composers by twice it, and surfaces (cards, boxed sections, popovers, menus, dialogs, code blocks)
 by `--surface-radius`, each `var(--radius)` unless a theme derives another from it, so one theme
 has sharp surfaces and round controls and another the reverse. Ocean (deep sea blues, teal), indigo
 (an indigo primary on cool neutrals), terminal (green on black in the code face, a light console
@@ -977,7 +977,11 @@ moves by a drag without leaving a gap at an edge, and a double press goes betwee
 Both composers take `mentions`: an `@` typed (or put in by `MessageComposer`'s mention button)
 suggests people at the caret from the app's list or its search, the arrow keys and Enter or Tab put
 one in as `@handle`, Escape closes them, and `onChange` hears the ids the text mentions;
-`mentionsIn` in `lib/mentions` reads them from a text the app holds.
+`mentionsIn` in `lib/mentions` reads them from a text the app holds. Both round softer than a
+control, by `radius-composer` (twice `--control-radius`), with round send and attach buttons.
+`Composer`'s `layout="inline"` puts it on one line, a pill with a round attach button, the text,
+the tools and a round Send, and opens it into the stacked box once the text needs a second line or
+files, dictation or a failure show.
 
 Tree and TreeSelect pick from a hierarchy of any depth and size. A single choice made outside the
 tree, such as a place picked on a map beside it, opens the tree down to it and scrolls to it. A node marked `hasChildren` loads
