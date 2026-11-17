@@ -1,6 +1,18 @@
 import { describe, expect, test } from 'vitest'
 
-import { isStalled, mediaError, nextTry, onReturn, resumeAt, RETRY_DELAY, trackProgress, type Progress } from './video-source'
+import {
+    isStalled,
+    mediaError,
+    nextTry,
+    onReturn,
+    playedOn,
+    resumeAt,
+    resumeCorrection,
+    RETRY_DELAY,
+    trackProgress,
+    wantsFirstFrame,
+    type Progress,
+} from './video-source'
 
 describe("a media element's error", () => {
     test('reads its kind from the code', () => {
@@ -104,6 +116,37 @@ describe('where a try picks up', () => {
     })
 })
 
+describe('a try that picked up short of where it was', () => {
+    test('is moved on to where it stood, as a browser landing it at the start of its segment would replay that', () => {
+        // Stood at 23.87 in the segment from 18 to 24; the try landed at the segment's start.
+        expect(resumeCorrection(18, 23.87, { start: 0, end: 114 })).toBe(23.87)
+    })
+
+    test('is left where it landed close enough to the point', () => {
+        expect(resumeCorrection(23.6, 23.87, { start: 0, end: 114 })).toBeNull()
+        expect(resumeCorrection(24.2, 23.87, { start: 0, end: 114 })).toBeNull()
+    })
+
+    test('is not moved where the media cannot seek to the point, as a live window that ends before it', () => {
+        expect(resumeCorrection(18, 23.87, { start: 0, end: 6 })).toBeNull()
+        expect(resumeCorrection(18, 23.87, null)).toBeNull()
+    })
+})
+
+describe('a try playing on', () => {
+    test('is a step forward as playback takes one between two readings', () => {
+        expect(playedOn(15.98, 16.24)).toBe(true)
+    })
+
+    test('is not the hair a browser moves a playhead that waits for data, nor standing, nor a seek', () => {
+        expect(playedOn(15.98, 16)).toBe(false)
+        expect(playedOn(15.98, 15.98)).toBe(false)
+        expect(playedOn(18, 23.87)).toBe(false)
+        expect(playedOn(23.87, 18)).toBe(false)
+        expect(playedOn(null, 16.24)).toBe(false)
+    })
+})
+
 describe('a page shown again', () => {
     test('plays on a video that was playing as the page was hidden and has been paused since', () => {
         expect(onReturn(true, true, 4)).toBe('play')
@@ -117,5 +160,21 @@ describe('a page shown again', () => {
     test('leaves alone a video that was not playing, or whose pause was asked for', () => {
         expect(onReturn(false, true, 4)).toBeNull()
         expect(onReturn(false, false, 1)).toBeNull()
+    })
+})
+
+describe('the first frame of a paused video', () => {
+    const video = { paused: true, readyState: 1, seeking: false, poster: '', preload: 'metadata' }
+
+    test('is fetched when the video has its length but no picture, as WebKit leaves it', () => {
+        expect(wantsFirstFrame(video)).toBe(true)
+    })
+
+    test('is left alone once shown, while playing or seeking, under a poster, or with nothing to preload', () => {
+        expect(wantsFirstFrame({ ...video, readyState: 2 })).toBe(false)
+        expect(wantsFirstFrame({ ...video, paused: false })).toBe(false)
+        expect(wantsFirstFrame({ ...video, seeking: true })).toBe(false)
+        expect(wantsFirstFrame({ ...video, poster: 'https://example.org/still.jpg' })).toBe(false)
+        expect(wantsFirstFrame({ ...video, preload: 'none' })).toBe(false)
     })
 })

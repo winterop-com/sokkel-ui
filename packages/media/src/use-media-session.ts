@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 
 import {
+    artworkKey,
     bindActions,
     describeMedia,
     MEDIA_SESSION_ACTIONS,
@@ -14,11 +15,13 @@ import {
     type ToldPosition,
 } from './media-session'
 
-export type { MediaSessionHandlers, MediaSessionImage, MediaSessionInfo, MediaSkip } from './media-session'
+export type { MediaSessionDrawing, MediaSessionHandlers, MediaSessionImage, MediaSessionInfo, MediaSkip } from './media-session'
 
 /**
  * Tells the operating system what plays, so its media keys, its now-playing widget and the lock
- * screen show it and control it: the title, artist, album and artwork as the session's metadata,
+ * screen show it and control it: the title, artist, album and artwork as the session's metadata
+ * (a picture's address, the picture at several sizes, or one drawn on a canvas, such as
+ * `coverArtwork` from `Artwork` makes of a drawn cover, handed over at each size systems ask for),
  * whether it plays, the position along its `duration` at its `rate`, and a handler for each of
  * the system's controls the app gives (play, pause, stop, previoustrack, nexttrack, seekbackward,
  * seekforward, seekto). Pass `null` while nothing plays.
@@ -39,7 +42,7 @@ export function useMediaSession(info: MediaSessionInfo | null | undefined): void
     const title = info?.title
     const artist = info?.artist
     const album = info?.album
-    const artwork = info?.artwork === undefined || typeof info.artwork === 'string' ? info?.artwork : JSON.stringify(info.artwork)
+    const artwork = artworkKey(info?.artwork)
     const playing = info?.playing ?? false
     useEffect(() => {
         const session = mediaSession()

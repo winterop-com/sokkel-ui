@@ -51,8 +51,12 @@ import {
     mediaError,
     nextTry,
     onReturn,
+    playedOn,
     resumeAt,
+    resumeCorrection,
+    RESUME_SLACK,
     trackProgress,
+    wantsFirstFrame,
     type Progress,
     type VideoError,
     type VideoSource,
@@ -196,6 +200,8 @@ const RECOVERED_AFTER = 5
 const WATCH_EVERY = 1000
 /** How far a nudge moves a playhead whose buffer stalled while the page was hidden, in seconds. */
 const NUDGE = 0.01
+/** How many times a try moves a playhead that picked up short of where it was to resume. */
+const RESUME_MOVES = 3
 
 /** A control drawn over the picture, light on dark in either scheme. */
 const ON_PICTURE =
@@ -396,9 +402,13 @@ function useCaptionChoice(store: Store<Partial<CaptionSettings>> | undefined): [
  * where it is through `onTime` and whether it plays through `onPlayingChange`. A playhead that
  * stands longer than `stallAfter` while playing, or a network or decoding error, loads the media
  * again where it was (a live stream's live edge once its window has moved past that point), the
- * source's engine starting its load there, `retries` times with a growing wait, before it pauses and
- * says over the picture that the video could not be played, with a button to try again where it
- * stood; played again, as by the viewer, it no longer counts as failed. When the page is shown
+ * source's engine starting its load there, `retries` times with a growing wait, saying "Trying
+ * again" over the picture until the playhead plays on (or, for a paused video, until the media
+ * loads), before it pauses and says over the picture that the video could not be played, with a
+ * button to try again where it stood; played again, as by the viewer, it no longer counts as
+ * failed. A try that picks up short of where it stood, as a browser's own HLS lands one at the
+ * start of the segment it falls in, is moved on there, or held there paused until the stream has
+ * grown past it, so nothing plays twice. When the page is shown
  * again after being hidden, a video that was playing plays on, and one whose buffer stalled while
  * away is moved a hair to wake it; a pause asked through the handle while hidden stays.
  *
@@ -520,6 +530,14 @@ export function VideoPlayer({
     const trying = useRef(false)
     // Whether a try has loaded the media again and waits for it to play, to note where it picked up.
     const resuming = useRef(false)
+    // Whether the try under way plays once loaded: its "Trying again" stands until the playhead plays on, else until the media loads.
+    const tryPlays = useRef(false)
+    // The playhead at the last reading during a try, to tell when it plays on.
+    const lastTick = useRef<number | null>(null)
+    // Where the try under way resumes, until the playhead is there, and how many more times it may be moved there.
+    const resumeTo = useRef<{ at: number; moves: number } | null>(null)
+    // Reads a try held short of its point, until the media grows past it or it has waited a stall's length.
+    const holdTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
     // What `onPlayingChange` last said, so each change is told once.
     const told = useRef<boolean | null>(null)
     const detach = useRef<(() => void) | null>(null)
@@ -544,6 +562,34 @@ export function VideoPlayer({
         clearInterval(watch.current)
         watch.current = undefined
         progress.current = null
+    }
+
+    const stopHold = () => {
+        clearInterval(holdTimer.current)
+        holdTimer.current = undefined
+    }
+
+    /**
+     * Holds a try that picked up short of where it was and cannot be moved there in place, as Apple's
+     * own HLS lands a try at a live stream's edge at the start of its last segment and seeks nowhere
+     * past the window it says it has: paused under "Trying again" rather than playing that segment
+     * again, until the stream grows, when it loads again there, or until it has waited `stallAfter`,
+     * a stall that is the next try.
+     */
+    const holdShort = (element: HTMLVideoElement, at: number) => {
+        if (holdTimer.current !== undefined) return
+        element.pause()
+        const since = Date.now()
+        const end = seekableOf(element)?.end ?? 0
+        holdTimer.current = setInterval(() => {
+            if ((seekableOf(element)?.end ?? 0) > end) {
+                reload({ at, play: true })
+                return
+            }
+            if (Date.now() - since < latest.current.stallAfter) return
+            stopHold()
+            meet({ kind: 'stalled', message: `The stream did not reach ${String(at)} s in ${String(latest.current.stallAfter)} ms` })
+        }, WATCH_EVERY)
     }
 
     /** Reads the playhead once a second while playing, and meets a stall once it has stood `stallAfter`. */
@@ -571,6 +617,14 @@ export function VideoPlayer({
         latest.current.onPlayingChange?.(playing)
     }
 
+    /** Ends the try under way, unless another waits or the tries are spent. */
+    const over = () => {
+        if (retryTimer.current !== undefined || failed.current) return
+        trying.current = false
+        lastTick.current = null
+        setTrouble(null)
+    }
+
     const takeHeldSeek = (element: HTMLVideoElement) => {
         const next = seek.current
         seek.current = null
@@ -579,11 +633,19 @@ export function VideoPlayer({
         if (at !== undefined && at > 0) {
             element.currentTime = Number.isFinite(element.duration) ? Math.min(element.duration, at) : at
         }
-        if (next !== 'start' && next.play) void element.play().catch(() => undefined)
+        if (next !== 'start' && next.play) {
+            // A try the browser will not let play is over once loaded, as one that was paused; a play cut short by a pause is not that.
+            void element.play().catch((error: unknown) => {
+                if (!(error instanceof DOMException) || error.name !== 'NotAllowedError') return
+                tryPlays.current = false
+                over()
+            })
+        }
     }
 
     const fail = (error: Omit<VideoError, 'fatal'>, unsupported: boolean) => {
         stopWatch()
+        stopHold()
         clearTimeout(retryTimer.current)
         retryTimer.current = undefined
         failed.current = true
@@ -621,11 +683,13 @@ export function VideoPlayer({
     }
 
     /**
-     * Where a try goes back to: a seek still held from before the media had its length, or where it
-     * is, or a live stream's live edge once its window has moved past where it is.
+     * Where a try goes back to: a seek still held from before the media had its length, where the
+     * try before was to resume and has not reached yet, or where it is, or a live stream's live edge
+     * once its window has moved past where it is.
      */
     const resumePoint = (): Exclude<Held, null> => {
         if (seek.current !== null) return seek.current
+        if (resumeTo.current !== null) return { at: resumeTo.current.at, play: started.current }
         const element = video.current
         if (element === null) return { at: 0, play: started.current }
         const live = attached.current?.stats?.(element)?.live === true || element.duration === Number.POSITIVE_INFINITY
@@ -636,12 +700,17 @@ export function VideoPlayer({
         const element = video.current
         if (element === null) return
         stopWatch()
+        stopHold()
         failed.current = false
         seek.current = point
         resuming.current = true
         const at = point === 'start' ? latest.current.startAt : point.at
         // Until it plays, the tries count from the point asked for; a live edge is known only once it plays there.
         resumedFrom.current = at ?? Number.POSITIVE_INFINITY
+        tryPlays.current = point !== 'start' && point.play
+        lastTick.current = null
+        resumeTo.current =
+            at !== undefined && at > 0 ? { at, moves: resumeTo.current?.at === at ? resumeTo.current.moves : RESUME_MOVES } : null
         const feed = latest.current.source
         if (feed !== undefined) connect(element, feed, at)
         else element.load()
@@ -728,12 +797,48 @@ export function VideoPlayer({
         if (element === null) return
         const metadata = () => {
             takeHeldSeek(element)
+            // A seek to where it stands makes WebKit fetch the frame there, which it leaves empty under
+            // `preload="metadata"`. Media an engine feeds through `source` keeps its own position.
+            if (latest.current.source === undefined && wantsFirstFrame(element)) {
+                const at = element.currentTime
+                element.currentTime = at
+            }
+        }
+        /**
+         * Moves a playhead that a try picked up short of where it was back there, as a browser's own
+         * HLS lands the try's seek at the start of the segment it falls in, or holds it where it cannot
+         * be moved, and lets the point go once the playhead has played past it.
+         */
+        const settle = () => {
+            const target = resumeTo.current
+            if (target === null || holdTimer.current !== undefined || element.seeking || element.readyState < HAVE_METADATA) return
+            // Let go once played past the point; one standing at it may still be moved back, as the segment it lands in loads.
+            if (element.currentTime > target.at + RESUME_SLACK || target.moves <= 0) {
+                resumeTo.current = null
+                return
+            }
+            if (element.currentTime >= target.at - RESUME_SLACK) return
+            target.moves -= 1
+            const to = resumeCorrection(element.currentTime, target.at, seekableOf(element))
+            if (to === null) holdShort(element, target.at)
+            else element.currentTime = to
         }
         const time = () => {
             if (tries.current > 0 && element.currentTime > resumedFrom.current + RECOVERED_AFTER) tries.current = 0
+            settle()
+            // A try that plays is over once the playhead plays on, not once the media loads, which may still wait for data.
+            if (trying.current && tryPlays.current && !element.seeking) {
+                if (playedOn(lastTick.current, element.currentTime)) over()
+                lastTick.current = element.currentTime
+            }
             latest.current.onTime?.(element.currentTime)
         }
         const played = () => {
+            // Played while a try is held short of its point, as the viewer presses Play: it plays on from there.
+            if (holdTimer.current !== undefined) {
+                stopHold()
+                resumeTo.current = null
+            }
             startWatch(element)
             tell(true)
         }
@@ -750,19 +855,18 @@ export function VideoPlayer({
             // Where a try picked up is where it first plays, which an engine starting at a live edge settles only then.
             if (resuming.current && event.type === 'playing') {
                 resuming.current = false
-                resumedFrom.current = element.currentTime
+                resumedFrom.current = Math.max(element.currentTime, resumeTo.current?.at ?? 0)
             }
+            settle()
             // Media played again after a failure, as when the viewer presses Play, has not failed.
             if (failed.current && event.type === 'playing') {
                 failed.current = false
                 tries.current = 0
                 resumedFrom.current = element.currentTime
+                tryPlays.current = false
             }
             if (!element.paused) startWatch(element)
-            if (retryTimer.current === undefined && !failed.current) {
-                trying.current = false
-                setTrouble(null)
-            }
+            if (!tryPlays.current) over()
         }
         const error = () => {
             // An element emptied on purpose, as a source does when it lets go, has nothing to fail.
@@ -790,6 +894,7 @@ export function VideoPlayer({
         element.addEventListener('ended', ended)
         element.addEventListener('playing', recovered)
         element.addEventListener('loadeddata', recovered)
+        element.addEventListener('canplay', recovered)
         element.addEventListener('emptied', stopWatch)
         element.addEventListener('error', error)
         document.addEventListener('visibilitychange', shown)
@@ -801,10 +906,12 @@ export function VideoPlayer({
             element.removeEventListener('ended', ended)
             element.removeEventListener('playing', recovered)
             element.removeEventListener('loadeddata', recovered)
+            element.removeEventListener('canplay', recovered)
             element.removeEventListener('emptied', stopWatch)
             element.removeEventListener('error', error)
             document.removeEventListener('visibilitychange', shown)
             stopWatch()
+            stopHold()
             clearTimeout(retryTimer.current)
             retryTimer.current = undefined
         }
@@ -822,6 +929,9 @@ export function VideoPlayer({
         trying.current = false
         started.current = false
         resuming.current = false
+        tryPlays.current = false
+        resumeTo.current = null
+        stopHold()
         setTrouble(null)
         setState((previous) => (previous.started ? { ...previous, started: false } : previous))
         seek.current = 'start'
@@ -927,6 +1037,9 @@ export function VideoPlayer({
         const element = video.current
         if (element === null) return
         const at = Math.max(0, seconds)
+        // A seek the viewer asks for stands over where a try was to resume.
+        resumeTo.current = null
+        stopHold()
         if (element.readyState < HAVE_METADATA) {
             seek.current = { at, play: false }
             return

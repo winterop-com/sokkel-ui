@@ -417,8 +417,17 @@ to `plan.md` when it ships.
 
 - **The reviews of 2026-11-09.** A visual review of the published catalog and a review of the
   twelve example apps on the web; every round of fixes from them shipped in 0.10.13 to 0.10.16.
-    - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
-      touch devices. Run that pass before calling the examples checked on every platform.
+    - **WebKit and Firefox (2026-11-17):** every story at 390 and 1440, dark and light, and every
+      example's pages linked from its first page plus Settings at 1440 (both schemes) and 390, all
+      headless, against Chromium: errors, CSP violations, sideways scroll and a screenshot each.
+      One real difference, fixed: WebKit drew no first frame of a paused video under
+      `preload="metadata"`. Both engines make and play the video example's WebCodecs clips. The rest
+      was the same in all three: the ResizeObserver loop notice from the graphs and `AsyncSelect`
+      (WebKit reports it as an uncaught error, Chromium only to `window.onerror`), and KaTeX's
+      MathML for `t_{\max}` (an `msub` with three children, which Firefox logs; the drawn formula is
+      KaTeX's HTML). `make layout-engines` runs the layout check in both; CI runs Chromium only.
+    - **Not covered yet:** the Electron and Tauri windows on screen, and real touch devices. Run
+      that pass before calling the examples checked on every platform.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
   210.5 kB and forms at 197 kB start and 67.4 kB lazy (2026-11-17); the forms start one is full. A
@@ -465,17 +474,6 @@ to `plan.md` when it ships.
 - **Gaps the examples found (2026-11-09)**, still open:
     - **Dashboards:**
         - a phone layout for an editor beside its live preview
-    - **Media:** artwork for the media session from drawn covers.
-    - **Video:**
-        - waiting on a live stream's missing segments, where hls.js now skips past them
-        - Apple's own HLS (Safari, the macOS webview) picking a try up at the start of the segment it
-          stood in, so up to a segment plays again, and dropping "Trying again" once the media loads
-          rather than once it plays
-
-        Checked on 2026-11-09: the video example makes its clips (WebCodecs VP8 and Opus) and plays
-        them in Tauri on the system WebKit, as in Chromium. Native HLS (MPEG-TS, `startAt`, stalls and
-        giving up) and full screen with a cover, in the browser and through a desktop call, were
-        checked headless in WebKit the same day.
 
 ## 1.0
 
@@ -509,7 +507,8 @@ Should:
 
 - **Screenshot comparison back in CI.** Off since 0.9.3 while the looks still move; the
   baselines branch, the screenshots workflow and `scripts/baselines.sh` stay. Turn it back on near
-  1.0, and add the render check in WebKit and Firefox for the platforms Chromium does not cover.
+  1.0, and add the render check in WebKit and Firefox for the platforms Chromium does not cover
+  (the layout check already runs in both with `make layout-engines`, outside CI).
 
 - **A design system for decks and mockups.** Built from the repo itself (the tokens, the
   component screenshots and `docs/components.md`), so slides and mockups made with AI design tools
