@@ -10,9 +10,9 @@ export const regions = regionData as unknown as FeatureCollection<Polygon | Mult
 /** One site whose position came back unreadable, as data from the field sometimes does. */
 const UNPLACED: Feature<Point, { name: string; region: string }> = {
     type: 'Feature',
-    id: 'bo/gerihun',
-    properties: { name: 'Gerihun', region: 'bo' },
-    geometry: { type: 'Point', coordinates: [Number.NaN, 7.9] },
+    id: 'bong/tern-landing',
+    properties: { name: 'Tern Landing', region: 'bong' },
+    geometry: { type: 'Point', coordinates: [Number.NaN, 7] },
 }
 
 /** The sites records are made at, each in a region, one of them with no position that can be read. */
@@ -21,8 +21,8 @@ export const sites: FeatureCollection<Point, { name: string; region: string }> =
     features: [...(placeData as unknown as FeatureCollection<Point, { name: string; region: string }>).features, UNPLACED],
 }
 
-export const COUNTRY = 'sierra-leone'
-export const COUNTRY_NAME = 'Sierra Leone'
+export const COUNTRY = 'liberia'
+export const COUNTRY_NAME = 'Liberia'
 
 export type Level = 'country' | 'region' | 'site'
 

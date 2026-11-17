@@ -33,19 +33,21 @@ function dataset(id: string, name: string, description: string, columns: Column[
 }
 
 export const REGION_NAMES = [
-    'Bo',
-    'Bombali',
-    'Bonthe',
-    'Kailahun',
-    'Kambia',
-    'Kenema',
-    'Koinadugu',
-    'Kono',
-    'Moyamba',
-    'Port Loko',
-    'Pujehun',
-    'Tonkolili',
-    'Western Area',
+    'Bomi',
+    'Bong',
+    'Gbapolu',
+    'Grand Bassa',
+    'Grand Cape Mount',
+    'Grand Gedeh',
+    'Grand Kru',
+    'Lofa',
+    'Margibi',
+    'Maryland',
+    'Montserrado',
+    'Nimba',
+    'River Cess',
+    'River Gee',
+    'Sinoe',
 ]
 
 /** Each month's share of a wet year, peaking in August. */

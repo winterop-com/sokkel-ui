@@ -52,7 +52,7 @@ import {
     type Form,
     type Question,
 } from '../data/forms'
-import { LEVEL_LABEL, PLACE_TREE, pathOf, placeOf } from '../data/geo'
+import { COUNTRY, LEVEL_LABEL, PLACE_TREE, pathOf, placeOf } from '../data/geo'
 import { count, KindBadge, sectionTrail, useFoot } from '../ui'
 
 /** Where a kind of form is filed from, said under the place's label. */
@@ -323,7 +323,7 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
                                 value={place === null ? [] : [place]}
                                 onValueChange={(ids) => setPlace(ids[0] ?? null)}
                                 unavailable={(node) => outside(node.id)}
-                                defaultExpanded={place === null ? ['sierra-leone'] : pathOf(place).map((one) => one.id)}
+                                defaultExpanded={place === null ? [COUNTRY] : pathOf(place).map((one) => one.id)}
                                 invalid={issueOf('place') !== null}
                             />
                         </Field>

@@ -24,7 +24,7 @@ import { Page } from './Page'
 /** The regions over one basemap, which opens on the light or dark street map by the scheme unless given one; the switcher offers the World basemap too. */
 function Over({ title, basemap }: { title: string; basemap?: Basemap }) {
     return (
-        <Page title={title} period="Thirteen regions">
+        <Page title={title} period="Fifteen regions">
             <MapView
                 label={`Regions over the ${title.toLowerCase()} basemap`}
                 defaultBasemap={basemap}

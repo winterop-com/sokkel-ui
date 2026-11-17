@@ -84,7 +84,7 @@ function Change() {
 
 function Boundaries() {
     return (
-        <Page title="Regions" period="Thirteen regions">
+        <Page title="Regions" period="Fifteen regions">
             <MapView
                 label="Region boundaries"
                 defaultBasemap={STREETS_BASEMAP}

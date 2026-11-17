@@ -22,6 +22,12 @@ package manager rather than redistributed with it, so they are not listed.
   1:110m Admin 0 countries, version 5.1.2 (https://www.naturalearthdata.com), trimmed by
   `scripts/world-data.ts` to each country's outline, code and name. Natural Earth is in the public
   domain; no permission is needed to use it.
+- `examples/shared/geo/regions.json` and its copy `src/stories/map/fixtures/regions.json`, in the
+  repository only and shipped in no package, are Liberia's fifteen counties from Natural Earth's
+  1:10m Admin 1 states and provinces, version 5.1.2 (https://www.naturalearthdata.com), trimmed by
+  `scripts/geo-examples.ts` to each county's outline and name. Natural Earth is in the public
+  domain. `places.json` beside each is made by the same script: invented site names at positions
+  drawn from a seeded generator inside those counties, carrying no third-party data.
 - `e2e/tiles/`, in the repository only and shipped in no package, holds responses recorded from
   `tiles.openfreemap.org` and `gibs.earthdata.nasa.gov`, which the browser suites serve in place of
   the network:

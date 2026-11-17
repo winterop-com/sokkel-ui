@@ -115,7 +115,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2048',
         site: 'Riverside station',
-        region: 'Bo',
+        region: 'Bong',
         visited: 'Nov 4, 09:40',
         by: 'grace',
         state: 'submitted',
@@ -127,7 +127,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2047',
         site: 'North ferry landing',
-        region: 'Port Loko',
+        region: 'Grand Bassa',
         visited: 'Nov 4, 08:15',
         by: 'linus',
         state: 'draft',
@@ -139,7 +139,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2046',
         site: 'Market well',
-        region: 'Kenema',
+        region: 'Nimba',
         visited: 'Nov 3, 16:20',
         by: 'ada',
         state: 'approved',
@@ -151,7 +151,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2045',
         site: 'Hill reservoir',
-        region: 'Kono',
+        region: 'Lofa',
         visited: 'Nov 3, 11:05',
         by: 'margaret',
         state: 'returned',
@@ -163,7 +163,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2044',
         site: 'Estuary gauge',
-        region: 'Bonthe',
+        region: 'Sinoe',
         visited: 'Nov 3, 07:50',
         by: 'grace',
         state: 'approved',
@@ -175,7 +175,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2043',
         site: 'Bridge crossing',
-        region: 'Tonkolili',
+        region: 'Margibi',
         visited: 'Nov 2, 15:30',
         by: 'linus',
         state: 'approved',
@@ -187,7 +187,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2042',
         site: 'Lake outlet',
-        region: 'Moyamba',
+        region: 'River Cess',
         visited: 'Nov 2, 10:10',
         by: 'ada',
         state: 'submitted',
@@ -199,7 +199,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2041',
         site: 'Coastal spring',
-        region: 'Western Area',
+        region: 'Montserrado',
         visited: 'Nov 1, 14:45',
         by: 'margaret',
         state: 'approved',
@@ -211,7 +211,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2040',
         site: 'Valley weir',
-        region: 'Koinadugu',
+        region: 'Gbapolu',
         visited: 'Nov 1, 09:20',
         by: 'grace',
         state: 'approved',
@@ -223,7 +223,7 @@ const VISITS: Visit[] = [
     {
         code: 'VIS-2039',
         site: 'School borehole',
-        region: 'Kailahun',
+        region: 'Grand Gedeh',
         visited: 'Oct 31, 13:00',
         by: 'linus',
         state: 'approved',
@@ -508,9 +508,9 @@ function VisitForm() {
                                     help="Only the sites assigned to juniper are offered."
                                 >
                                     <NativeSelect id="site" defaultValue="riverside" className="w-full">
-                                        <NativeSelectOption value="riverside">Riverside station, Bo</NativeSelectOption>
-                                        <NativeSelectOption value="ferry">North ferry landing, Port Loko</NativeSelectOption>
-                                        <NativeSelectOption value="well">Market well, Kenema</NativeSelectOption>
+                                        <NativeSelectOption value="riverside">Riverside station, Bong</NativeSelectOption>
+                                        <NativeSelectOption value="ferry">North ferry landing, Grand Bassa</NativeSelectOption>
+                                        <NativeSelectOption value="well">Market well, Nimba</NativeSelectOption>
                                     </NativeSelect>
                                 </Field>
                                 <Field id="by" label="Collected by" required>
@@ -1015,7 +1015,7 @@ interface Answer {
 }
 
 const ANSWERS: Answer[] = [
-    { id: 'site', part: 'Where and when', question: 'Site', answer: 'Riverside station, Bo' },
+    { id: 'site', part: 'Where and when', question: 'Site', answer: 'Riverside station, Bong' },
     { id: 'by', part: 'Where and when', question: 'Collected by', answer: 'grace' },
     { id: 'date', part: 'Where and when', question: 'Visit date', answer: '2026-11-04' },
     { id: 'time', part: 'Where and when', question: 'Reading taken at', answer: '09:40' },

@@ -324,7 +324,7 @@ export function presets(sample: string | undefined): ApiPresetGroup[] {
                     body: JSON.stringify(
                         {
                             form: 'FRM-SAMPLE',
-                            place: 'bo/baomahun',
+                            place: 'bong/alder-crossing',
                             visitDate: new Date().toISOString().slice(0, 10),
                             answers: { bottle: ['B-2041', 'B-2042'], taken: '09:40', preserved: true },
                         },
