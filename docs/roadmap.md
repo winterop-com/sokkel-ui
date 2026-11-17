@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.28.2** is the latest release (2026-11-15): a stacked card's edit line and popup search
+- **0.29.0** is the latest release (2026-11-17): the 2026-11-16 review's fixes (#602 to #629),
+  among them model replies show images only when asked, KaTeX 0.18 and `tailwindcss` as peers,
+  required booleans start false, cron days follow cron's rule, `Shell` catches a failed page,
+  and a DataTable branch that fails to load offers Try again; sokkel-design's contract at 0.29.0.
+- **0.28.2** (2026-11-15): a stacked card's edit line and popup search
   fields a finger tall below md; AsyncSelect's Searching only once a read is slow; parts that
   always stand on one surface name their ink; sokkel-design's contract at 0.28.2.
 - **0.28.1** (2026-11-14): a shut button's reason shows on a tap; no
