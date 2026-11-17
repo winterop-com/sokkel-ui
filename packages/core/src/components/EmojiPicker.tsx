@@ -351,7 +351,8 @@ export function EmojiPicker({
         const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
         if (step === 0 || at < 0) return
         event.preventDefault()
-        buttons[(at + step + buttons.length) % buttons.length]?.focus()
+        // Like every list of choices, the tabs stop at the first and the last.
+        buttons[Math.min(Math.max(at + step, 0), buttons.length - 1)]?.focus()
     }
 
     return (
