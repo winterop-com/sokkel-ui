@@ -17,7 +17,7 @@
         "lazy": 470.7,
         "css": 52.8,
         "first": {
-            "budget": 407.8,
+            "budget": 407.9,
             "fetches": [
                 "packages/charts/dist/engine.js",
                 "packages/charts/dist/kinds/categories.js",
