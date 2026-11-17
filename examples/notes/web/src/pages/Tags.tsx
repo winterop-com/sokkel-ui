@@ -3,10 +3,8 @@ import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
-import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Hash } from 'lucide-react'
-import { useState } from 'react'
 
 import { go } from 'tidevann-shared/router'
 import { useVault } from '../state'
@@ -23,7 +21,6 @@ interface TagRow {
 export function Tags({ tag }: { tag?: string }) {
     const state = useVault()
     const { vault, open } = state
-    const [query, setQuery] = useState('')
 
     if (tag !== undefined) {
         const notes = vault.tagged.get(tag) ?? []
@@ -56,8 +53,6 @@ export function Tags({ tag }: { tag?: string }) {
         notes: notes.length,
         latest: Math.max(...notes.map((note) => note.updated)),
     }))
-    const needle = query.trim().replace(/^#/, '').toLowerCase()
-    const shown = needle === '' ? rows : rows.filter((row) => row.id.toLowerCase().includes(needle))
     const most = Math.max(1, ...rows.map((row) => row.notes))
     const columns: DataColumn<TagRow>[] = [
         {
@@ -93,12 +88,13 @@ export function Tags({ tag }: { tag?: string }) {
                     minWidth="auto"
                     stackLayout="compact"
                     columns={columns}
-                    rows={shown}
+                    rows={rows}
                     rowKey={(row) => row.id}
                     defaultSort={{ column: 'notes', direction: 'desc' }}
                     onOpen={(row) => go(`/tags/${encodeURIComponent(row.id)}`)}
                     chevron
-                    search={<SearchField value={query} onChange={setQuery} placeholder="Filter" />}
+                    searchBy={(row) => `#${row.id}`}
+                    searchField={{ placeholder: 'Filter' }}
                     empty="No tag is named like that."
                 />
                 <Section title="Most used" className="w-full lg:w-80 lg:shrink-0">

@@ -881,7 +881,12 @@ and Cancel, Back and Next, or the finish, in a `FormBar`, Next shut with its rea
 On a phone each part lays itself out by the room it has, so no example patches it. `DataTable`'s bar
 gives its `search` a line of its own, the tools wrapping across the width under it with the count
 and the sort after them, and its stacked cards set each column by its `stack`: a line, named or not,
-a primary value over several lines under the title, or a secondary fact on the card's last line. A
+a primary value over several lines under the title, a secondary fact on the card's last line, or a
+lead before the title, a press on which opens the row unless it lands on a control in it. A card
+whose primary value may take more than one line, or whose title is free, is as tall as its values
+take, so a short value leaves no blank space under it; such cards are windowed by their measured
+heights, the view staying put as the cards above it are measured. `searchBy` gives a table or a list a search of its own, its field in
+the bar and the rows cut to what is typed, for a page that keeps no query. A
 `ConfirmDialog` stays sized to its content (`phone="fit"` on `DialogShell`) while a form covers the
 screen, and a dialog's verbs stand in a row at the right while they fit, each on a full-width line,
 the confirm on top, once they do not. `MessageComposer` keeps the formatting groups it has room for
@@ -1521,7 +1526,11 @@ one disc draws no head. `ReorderableTrackList`, a module of its own so a page th
 does not carry it, is the list a listener orders, a playlist or what a queue plays next: each row
 ends in a grip that drags it, the rest moving aside and the box scrolling at its edges, Escape
 putting it back, and the arrows move a focused grip's row a place; it calls `onMove(from, to)` and
-draws the order it is given.
+draws the order it is given. A track list's `href` makes each row a link to its own page, such as an
+episode's, its number or cover the button that plays it; a list longer than `TRACK_WINDOW_FROM` (or
+any with `windowed`) draws only the rows in view of the box that scrolls it and a dozen either side,
+each at its place, keeping the current and the focused row drawn, so a library of thousands scrolls
+as an album does.
 
 Lyrics are read by `parseLyrics` in `lrc`: LRC's timed lines, several stamps on one line, the
 `offset` tag and the metadata tags, word stamps dropped; plain text, or LRC stamped all at zero,

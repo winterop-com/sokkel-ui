@@ -77,6 +77,18 @@ release and empties it.
 - `hlsSource` takes `skipMissing`, which lets hls.js skip a live stream's missing segment as it did
   before; `retriesMissing` and `waitingConfig` are the fragment policy it gives hls.js otherwise.
 - `resumeCorrection`, `playedOn` and `RESUME_SLACK` in `media/video-source`.
+- `DataTable` `searchBy`: a table or a list with a search of its own. The bar holds the table's own
+  search field (`searchField` sets its placeholder, label, words and `/` key), and the rows are cut
+  to those whose text holds every word typed. An app that keeps the query itself still passes
+  `search`. The field and the finding load with the pager and the row menus, the first time a table
+  with a `searchBy` is drawn; until then the bar keeps its place.
+- `TrackList` `href`: a row links to its own page through the app's `LinkProvider`; with `onPlay`
+  too, its number or cover is the button that plays it. Its link and play button load the first
+  time a list has an `href`; until then the row plays as before.
+- `TrackList` windowing: a list longer than `TRACK_WINDOW_FROM` (200) rows, or any with `windowed`,
+  draws only the rows in view and a dozen either side; the current and the focused row stay drawn.
+  The window loads the first time a list is windowed, drawing the first 40 rows until it is here
+  (and on the server). `ReorderableTrackList` always draws every row.
 
 ## Changed
 
@@ -112,3 +124,10 @@ release and empties it.
   an empty picture until it played; a paused video with no poster now seeks to where it stands once
   it has its length, which makes WebKit fetch that frame. `media/video-source` exports the check,
   `wantsFirstFrame`.
+- `DataTable`: a press on a stacked card's `stack: 'lead'` column opens the row unless it lands on a
+  control in it; before, every press there was kept from the row.
+- `DataTable`: a stacked card whose `primary` value may take more than one line is as tall as its
+  values take, so a short value no longer leaves blank space under it. Such cards, and cards with
+  `stackTitle: 'free'`, which drew every card before, are windowed by their measured heights: only
+  the cards in view and half a view either side are drawn, each placed at the least it takes until
+  it is measured, and the view stays put as cards above it are measured.

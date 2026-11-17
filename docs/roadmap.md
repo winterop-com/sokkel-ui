@@ -472,11 +472,6 @@ to `plan.md` when it ships.
   (`var(--status-running)`); decide whether every color is emitted.
 
 - **Gaps the examples found (2026-11-09)**, still open:
-    - **Tables:**
-        - a list variant with its own search
-        - `stack: 'lead'` passing a press on a non-control through to the row
-        - blank space under stacked cards
-        - windowing in `TrackList`, and a `TrackList` row that links to a page
     - **Dashboards:**
         - a phone layout for an editor beside its live preview
 

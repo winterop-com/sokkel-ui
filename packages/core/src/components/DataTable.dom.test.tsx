@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act, useCallback, useState, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DataTable, type DataColumn } from './DataTable'
 
@@ -283,7 +283,7 @@ describe('a press on a row', () => {
 })
 
 describe('stacked cards with a free title', () => {
-    it('are drawn every one at the height their title needs', async () => {
+    it('are each as tall as their title needs, and only those in view and a few past it are drawn', async () => {
         // A box 300 wide, narrower than the columns, stacks the rows.
         const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
         Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 300 })
@@ -299,7 +299,9 @@ describe('stacked cards with a free title', () => {
                 </div>,
             )
             const cards = [...at.querySelectorAll<HTMLElement>('[data-row]')]
-            expect(cards.length).toBe(60)
+            // A view 400 tall over cards measured at 40 and 16 apart: about seven in view, and half a view either side.
+            expect(cards.length).toBeGreaterThan(5)
+            expect(cards.length).toBeLessThan(20)
             expect(cards[0].className).toContain('group/card')
             expect(cards[0].style.height).toBe('')
             expect(cards[0].style.minHeight).not.toBe('')
@@ -356,5 +358,64 @@ describe('a table first drawn hidden', () => {
             Element.prototype.getBoundingClientRect = rect
             if (width !== undefined) Object.defineProperty(HTMLElement.prototype, 'clientWidth', width)
         }
+    })
+})
+
+describe('the own search', () => {
+    it('draws a field of its own and keeps the rows whose text holds every word typed', async () => {
+        const at = await mount(
+            <DataTable variant="list" columns={columns} rows={jobs} rowKey={(job) => job.id} searchBy={(job) => job.name} />,
+        )
+        // The field comes with the search's own module, fetched once the table has a `searchBy`.
+        await vi.waitFor(() => expect(at.querySelector('[data-slot="search-field"] input')).not.toBeNull())
+        const field = at.querySelector<HTMLInputElement>('[data-slot="search-field"] input')
+        const type = async (text: string) => {
+            await act(async () => {
+                Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(field, text)
+                field?.dispatchEvent(new Event('input', { bubbles: true }))
+            })
+            await settle()
+        }
+        const keys = () => [...at.querySelectorAll('[data-row]')].map((row) => row.getAttribute('data-row'))
+        expect(keys()).toEqual(['nightly-export', 'sync-inventory'])
+        await type('SYNC inv')
+        expect(keys()).toEqual(['sync-inventory'])
+        await type('sync export')
+        expect(keys()).toEqual([])
+    })
+})
+
+describe('a stacked card', () => {
+    const leads: DataColumn<Job>[] = [
+        { id: 'mark', header: 'Mark', width: '2rem', stack: 'lead', cell: (job) => <span data-mark={job.id}>*</span> },
+        { id: 'box', header: 'Box', width: '2rem', stack: 'lead', cell: (job) => <button type="button" data-box={job.id} /> },
+        ...columns,
+        { id: 'note', header: 'Note', width: '1fr', stack: 'primary', cell: (job) => job.name },
+    ]
+    // A box 300 wide, narrower than the columns, stacks the rows.
+    const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
+    beforeEach(() => Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 300 }))
+    afterEach(() => {
+        if (width !== undefined) Object.defineProperty(HTMLElement.prototype, 'clientWidth', width)
+    })
+
+    it('opens on a press on a lead that is not a control, and leaves a press on a control to it', async () => {
+        const onOpen = vi.fn()
+        const at = await mount(<DataTable columns={leads} rows={jobs} rowKey={(job) => job.id} onOpen={onOpen} />)
+        expect(at.querySelector('[data-row="sync-inventory"]')?.className).toContain('group/card')
+        await act(async () => at.querySelector<HTMLElement>('[data-mark="sync-inventory"]')?.click())
+        expect(onOpen).toHaveBeenCalledTimes(1)
+        expect(onOpen.mock.calls[0][0]).toBe(jobs[1])
+        await act(async () => at.querySelector<HTMLElement>('[data-box="sync-inventory"]')?.click())
+        expect(onOpen).toHaveBeenCalledTimes(1)
+    })
+
+    it('grows to its own height from the least a primary value takes, so a short one leaves no blank space', async () => {
+        const at = await mount(<DataTable columns={leads} rows={jobs} rowKey={(job) => job.id} />)
+        const card = at.querySelector<HTMLElement>('[data-row="sync-inventory"]')
+        expect(card?.className).toContain('group/card')
+        expect(card?.style.height).toBe('')
+        // Its padding and edge, the title, and one line of the note.
+        expect(card?.style.minHeight).toBe(`${String(2 * 8 + 2 + 24 + 22)}px`)
     })
 })

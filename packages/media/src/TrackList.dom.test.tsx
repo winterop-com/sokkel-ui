@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { TrackList, type Track, type TrackRowProps } from './TrackList'
 
@@ -62,5 +62,29 @@ describe('TrackList', () => {
         expect([...drawn.keys()]).toEqual([3])
         const bar = host.querySelector<HTMLElement>('[data-slot="track-progress"]')
         expect(bar?.style.transform).toBe('scaleX(0.06)')
+    })
+
+    it('makes a row given an address a link once its links load, its number the button that plays it', async () => {
+        host = document.createElement('div')
+        document.body.append(host)
+        const made = createRoot(host)
+        root = made
+        const played: string[] = []
+        await act(async () =>
+            made.render(
+                <TrackList
+                    tracks={tracks.slice(0, 2)}
+                    follow={false}
+                    href={(track) => (track.id === 't0' ? `#/songs/${track.id}` : undefined)}
+                    onPlay={(track) => played.push(track.id)}
+                />,
+            ),
+        )
+        const at = host
+        await vi.waitFor(() => expect(at.querySelector('a[href="#/songs/t0"]')).not.toBeNull())
+        expect(at.querySelectorAll('a').length).toBe(1)
+        await act(async () => at.querySelector<HTMLElement>('button[aria-label="Play Harbor 1"]')?.click())
+        await act(async () => at.querySelector<HTMLElement>('button[aria-label="Play Harbor 2"]')?.click())
+        expect(played).toEqual(['t0', 't1'])
     })
 })

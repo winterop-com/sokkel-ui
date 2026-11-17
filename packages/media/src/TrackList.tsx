@@ -1,8 +1,10 @@
 import { Play, Volume2 } from 'lucide-react'
-import { Fragment, memo, useRef, type ComponentProps, type ComponentType, type ReactNode, type Ref } from 'react'
+import * as React from 'react'
+import { Fragment, lazy, memo, Suspense, useRef, useState, type ComponentProps, type ComponentType, type ReactNode, type Ref } from 'react'
 
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { Link } from '@winterop-com/sokkel-ui/Link'
 import { formatRemaining, formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { useFollow } from './use-follow'
 
@@ -39,6 +41,9 @@ function manyDiscs(tracks: readonly Track[]): boolean {
     return new Set(tracks.map((track) => track.disc ?? 1)).size > 1
 }
 
+/** A list longer than this draws only the rows in view, and a few around them, unless `windowed` says otherwise. */
+export const TRACK_WINDOW_FROM = 200
+
 /** What the current row shows of how far it has played: the time left in place of its length, or a line along its foot. */
 export type TrackProgress = 'left' | 'bar'
 
@@ -59,6 +64,18 @@ export interface TrackListProps {
     artwork?: 'square' | 'wide'
     /** Draws each row's element in place of a plain `li`, given its props, as a list that drags does to make its rows draggable. */
     row?: ComponentType<TrackRowProps>
+    /**
+     * Makes a row a link to its own page, such as an episode's or a song's, drawn through the app's
+     * `LinkProvider`; a track it gives no address stays a row that plays. With `onPlay` too, the
+     * row's number or picture is the button that plays it.
+     */
+    href?: (track: Track) => string | undefined
+    /**
+     * Whether only the rows in view are drawn, and a few around them, for a list of thousands; by
+     * default once the list is longer than `TRACK_WINDOW_FROM`. The current row and the one with the
+     * focus are always drawn.
+     */
+    windowed?: boolean
     className?: string
     words?: Partial<TrackListWords>
 }
@@ -69,6 +86,12 @@ export type TrackRowProps = ComponentProps<'li'> & { track: Track; index: number
 function PlainRow({ track: _track, index: _index, ...props }: TrackRowProps) {
     return <li {...props} />
 }
+
+/** The rows a windowed list draws before its window has loaded, as on the server. */
+const FIRST_ROWS = 40
+
+/** A windowed list's window, fetched the first time a list is windowed. */
+const Windowed = lazy(() => import('./track-window').then((module) => ({ default: module.windowedTrackList(React) })))
 
 /**
  * A list of tracks or episodes: the number or a small picture, the title over an optional second
@@ -93,9 +116,19 @@ function PlainRow({ track: _track, index: _index, ...props }: TrackRowProps) {
  * "Disc 2") over the first track of each disc it reaches, in the order the tracks are given. A
  * list on one disc draws no head.
  *
+ * `href` makes a row a link to its own page, such as an episode's: a press on the row opens it,
+ * and with `onPlay` its number or picture is a button of its own that plays it, as `MediaCard`'s
+ * cover links and its play button plays.
+ *
+ * A list longer than `TRACK_WINDOW_FROM` rows, or any with `windowed`, draws only the rows in view
+ * of the box that scrolls it (or the page) and a few either side, each at its place, so a library of
+ * thousands scrolls as lightly as an album; the current row and the focused one are always drawn, so
+ * following and the keyboard keep their row. The window loads the first time a list is windowed, so
+ * a short list never fetches it.
+ *
  * A row draws again only when what it shows changes, so a `position` reported many times a second
- * draws the current row alone; `onPlay`, `actions` and `row` kept the same between draws (made
- * once, or with `useCallback`) keep it that way.
+ * draws the current row alone; `onPlay`, `actions`, `href` and `row` kept the same between draws
+ * (made once, or with `useCallback`) keep it that way.
  */
 export function TrackList({
     tracks,
@@ -109,6 +142,8 @@ export function TrackList({
     variant = 'boxed',
     artwork = 'square',
     row: Row = PlainRow,
+    href,
+    windowed = tracks.length > TRACK_WINDOW_FROM,
     className,
     words,
 }: TrackListProps) {
@@ -116,42 +151,63 @@ export function TrackList({
     const followed = useRef<HTMLLIElement | null>(null)
     // Keyed on the row being there too, so rows that arrive after `current` still bring it into view.
     const listed = current !== undefined && tracks.some((track) => track.id === current)
-    useFollow(followed, listed ? current : undefined, { enabled: follow && listed })
+    // A windowed list follows once its window has measured its rows, so the current row is where it will stay.
+    const [measured, setMeasured] = useState(false)
+    useFollow(followed, listed ? current : undefined, { enabled: follow && listed && (!windowed || measured) })
     const discs = manyDiscs(tracks)
-    return (
-        <ol
-            className={cn(
-                '@container flex min-w-0 flex-col',
-                variant === 'boxed' && 'overflow-hidden rounded-surface border border-border-strong bg-card',
-                className,
-            )}
-        >
-            {tracks.map((track, index) => {
-                const now = track.id === current
-                const disc = track.disc ?? 1
-                const opens = discs && (index === 0 || (tracks[index - 1].disc ?? 1) !== disc)
-                return (
-                    <TrackRow
-                        key={track.id}
-                        track={track}
-                        index={index}
-                        now={now}
-                        playing={now && playing}
-                        played={now ? position : undefined}
-                        progress={progress}
-                        disc={opens ? said.disc(disc) : undefined}
-                        label={typeof track.title === 'string' ? said.play(track.title) : undefined}
-                        playingLabel={said.playing}
-                        variant={variant}
-                        artwork={artwork}
-                        Row={Row}
-                        onPlay={onPlay}
-                        actions={actions}
-                        followed={now ? followed : undefined}
-                    />
-                )
-            })}
-        </ol>
+    /** The row at `index`, drawn by `Drawn`; drawn by the list.s own row, it is under its disc.s head, which the window draws itself. */
+    const rowAt = (index: number, Drawn = Row) => {
+        const track = tracks[index]
+        const now = track.id === current
+        const disc = track.disc ?? 1
+        const opens = Drawn === Row && discs && (index === 0 || (tracks[index - 1].disc ?? 1) !== disc)
+        return (
+            <TrackRow
+                key={track.id}
+                track={track}
+                index={index}
+                now={now}
+                playing={now && playing}
+                played={now ? position : undefined}
+                progress={progress}
+                disc={opens ? said.disc(disc) : undefined}
+                label={typeof track.title === 'string' ? said.play(track.title) : undefined}
+                playingLabel={said.playing}
+                variant={variant}
+                artwork={artwork}
+                Row={Drawn}
+                onPlay={onPlay}
+                link={href?.(track)}
+                actions={actions}
+                followed={now ? followed : undefined}
+            />
+        )
+    }
+    const box = cn(
+        '@container flex min-w-0 flex-col',
+        variant === 'boxed' && 'overflow-hidden rounded-surface border border-border-strong bg-card',
+        className,
+    )
+    const plain = <ol className={box}>{(windowed ? tracks.slice(0, FIRST_ROWS) : tracks).map((_, index) => rowAt(index))}</ol>
+    // A windowed list draws its first rows until its window is here.
+    return windowed ? (
+        <Suspense fallback={plain}>
+            <Windowed
+                tracks={tracks}
+                current={current}
+                onMeasured={setMeasured}
+                rowAt={rowAt}
+                headAt={(index, top) => (
+                    <DiscHead key={-1 - index} index={index} variant={variant} top={top}>
+                        {said.disc(tracks[index].disc ?? 1)}
+                    </DiscHead>
+                )}
+                Row={Row}
+                className={box}
+            />
+        </Suspense>
+    ) : (
+        plain
     )
 }
 
@@ -170,6 +226,8 @@ interface TrackRowDrawProps {
     artwork: 'square' | 'wide'
     Row: ComponentType<TrackRowProps>
     onPlay: ((track: Track) => void) | undefined
+    /** The row's own page, with `href`. */
+    link: string | undefined
     actions: ((track: Track) => ReactNode) | undefined
     followed: Ref<HTMLLIElement> | undefined
 }
@@ -189,24 +247,46 @@ const TrackRow = memo(function TrackRow({
     artwork,
     Row,
     onPlay,
+    link,
     actions,
     followed,
 }: TrackRowDrawProps) {
     const bar = progress === 'bar' && played !== undefined && track.duration > 0
+    const play = onPlay === undefined ? undefined : () => onPlay(track)
+    const pad = variant === 'boxed' ? 'pl-(--density-panel-pad)' : 'pl-2'
+    const lead = <Lead track={track} now={now} playing={playing} shape={artwork} label={playingLabel} />
+    const body = (
+        <>
+            <span className="min-w-0 flex-1">
+                <span className={cn('block truncate', now ? 'font-medium text-primary-ink' : 'text-foreground')}>{track.title}</span>
+                {track.subtitle !== undefined && <span className="block truncate text-xs text-muted-foreground">{track.subtitle}</span>}
+            </span>
+            {track.meta !== undefined && (
+                <span className="hidden w-[28%] min-w-0 truncate text-sm text-muted-foreground @xl:block">{track.meta}</span>
+            )}
+            <span className="min-w-12 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
+                {progress === 'left' && played !== undefined ? formatRemaining(played, track.duration) : formatTime(track.duration)}
+            </span>
+        </>
+    )
+    const button = (
+        <button
+            type="button"
+            aria-current={now || undefined}
+            aria-label={label}
+            onClick={play}
+            className={cn(TRACK_BODY, pad, play !== undefined && 'cursor-pointer')}
+        >
+            {lead}
+            {body}
+        </button>
+    )
     return (
         <Fragment>
             {disc !== undefined && (
-                <li
-                    role="presentation"
-                    data-slot="track-list-disc"
-                    className={cn(
-                        'pt-2.5 pr-2 pb-1.5',
-                        variant === 'boxed' ? 'border-b border-border pl-(--density-panel-pad)' : 'pl-2',
-                        index > 0 && variant === 'plain' && 'pt-4',
-                    )}
-                >
-                    <GroupLabel as="span">{disc}</GroupLabel>
-                </li>
+                <DiscHead index={index} variant={variant}>
+                    {disc}
+                </DiscHead>
             )}
             <Row
                 track={track}
@@ -217,36 +297,33 @@ const TrackRow = memo(function TrackRow({
                     bar && 'relative overflow-hidden',
                     variant === 'boxed' && 'border-b border-border last:border-b-0',
                     variant === 'plain' && 'rounded-control',
-                    now ? 'bg-secondary' : onPlay !== undefined && 'has-[>button:hover]:bg-hover',
+                    now ? 'bg-secondary' : (onPlay !== undefined || link !== undefined) && 'has-[>:is(a,button):hover]:bg-hover',
                 )}
             >
-                <button
-                    type="button"
-                    aria-current={now || undefined}
-                    aria-label={label}
-                    onClick={onPlay === undefined ? undefined : () => onPlay(track)}
-                    className={cn(
-                        'flex min-h-(--density-row) min-w-0 flex-1 items-center gap-3 py-1.5 text-left text-sm outline-none focus-visible:bg-hover',
-                        variant === 'boxed' ? 'pl-(--density-panel-pad)' : 'pl-2',
-                        onPlay !== undefined && 'cursor-pointer',
-                    )}
-                >
-                    <Lead track={track} now={now} playing={playing} shape={artwork} label={playingLabel} />
-                    <span className="min-w-0 flex-1">
-                        <span className={cn('block truncate', now ? 'font-medium text-primary-ink' : 'text-foreground')}>
-                            {track.title}
-                        </span>
-                        {track.subtitle !== undefined && (
-                            <span className="block truncate text-xs text-muted-foreground">{track.subtitle}</span>
+                {link === undefined ? (
+                    button
+                ) : (
+                    <>
+                        {play === undefined ? (
+                            <span className={cn('flex shrink-0 items-center self-stretch', pad)}>{lead}</span>
+                        ) : (
+                            <button
+                                type="button"
+                                aria-label={label}
+                                onClick={play}
+                                className={cn(
+                                    'flex shrink-0 cursor-pointer items-center self-stretch outline-none focus-visible:bg-hover',
+                                    pad,
+                                )}
+                            >
+                                {lead}
+                            </button>
                         )}
-                    </span>
-                    {track.meta !== undefined && (
-                        <span className="hidden w-[28%] min-w-0 truncate text-sm text-muted-foreground @xl:block">{track.meta}</span>
-                    )}
-                    <span className="min-w-12 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
-                        {progress === 'left' && played !== undefined ? formatRemaining(played, track.duration) : formatTime(track.duration)}
-                    </span>
-                </button>
+                        <Link href={link} aria-current={now || undefined} draggable={false} className={cn(TRACK_BODY, 'pl-2')}>
+                            {body}
+                        </Link>
+                    </>
+                )}
                 {actions !== undefined && <span className="flex shrink-0 items-center gap-0.5 pl-1">{actions(track)}</span>}
                 {bar && (
                     <span
@@ -260,6 +337,28 @@ const TrackRow = memo(function TrackRow({
         </Fragment>
     )
 })
+
+/** A disc's head over its first track, at `top` in a windowed list. */
+function DiscHead({ index, variant, top, children }: { index: number; variant: 'boxed' | 'plain'; top?: number; children: ReactNode }) {
+    return (
+        <li
+            role="presentation"
+            data-slot="track-list-disc"
+            className={cn(
+                'pt-2.5 pr-2 pb-1.5',
+                variant === 'boxed' ? 'border-b border-border pl-(--density-panel-pad)' : 'pl-2',
+                index > 0 && variant === 'plain' && 'pt-4',
+            )}
+            style={top === undefined ? undefined : { position: 'absolute', left: 0, right: 0, top }}
+        >
+            <GroupLabel as="span">{children}</GroupLabel>
+        </li>
+    )
+}
+
+/** A row's body, the button that plays it or a linked row's link. */
+const TRACK_BODY =
+    'flex min-h-(--density-row) min-w-0 flex-1 items-center gap-3 py-1.5 text-left text-sm outline-none focus-visible:bg-hover'
 
 /** The row's start: its picture, or its number, or the playing mark in its place. */
 function Lead({

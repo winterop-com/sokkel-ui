@@ -16,7 +16,7 @@ const WORDS: Pick<ReorderableTrackListWords, 'move' | 'moved'> = {
     moved: (title, place, count) => `${title} moved to ${String(place)} of ${String(count)}`,
 }
 
-export interface ReorderableTrackListProps extends Omit<TrackListProps, 'words' | 'row'> {
+export interface ReorderableTrackListProps extends Omit<TrackListProps, 'words' | 'row' | 'windowed'> {
     /** Moves the track at `from` to `to`, both indexes into `tracks`; the list draws the order it is given. */
     onMove: (from: number, to: number) => void
     /** What a target outside the list takes its rows as, such as a playlist in the rail; each carries its `Track`. Only the list takes them without it. */
@@ -38,7 +38,8 @@ function SortableRow({ track, index: _index, ...props }: TrackRowProps) {
  * where it lands, scrolling the box around it at its edges; letting go calls `onMove(from, to)`,
  * and Escape puts it back. With the grip focused, the up and down arrows move the row one place,
  * the focus following it, and a screen reader is told its new place; Space or Enter picks it up to
- * carry it further. It draws no disc heads, an order of one's own having no discs.
+ * carry it further. It draws no disc heads, an order of one's own having no discs, and draws every
+ * row however long the list, so each can be carried past the rest.
  */
 export function ReorderableTrackList({ tracks, onMove, kind, actions, words: given, ...list }: ReorderableTrackListProps) {
     const words = { ...WORDS, ...given }
@@ -70,6 +71,7 @@ export function ReorderableTrackList({ tracks, onMove, kind, actions, words: giv
                 {...list}
                 tracks={flat}
                 words={given}
+                windowed={false}
                 row={SortableRow}
                 actions={(track) => (
                     <>

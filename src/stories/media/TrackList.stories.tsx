@@ -221,6 +221,29 @@ export const Episodes: StoryObj = {
 }
 
 /**
+ * Episodes whose rows link to their own pages (`href`): a press on a row opens the episode, and
+ * its frame is the button that plays it, as a cover card's does.
+ */
+export const LinkedRows: StoryObj = {
+    name: 'Linked rows',
+    render: function Render() {
+        const [current, setCurrent] = useState('e2')
+        return (
+            <Ground width="max-w-2xl">
+                <TrackList
+                    tracks={EPISODES}
+                    current={current}
+                    playing
+                    artwork="wide"
+                    onPlay={(track) => setCurrent(track.id)}
+                    href={(track) => `#/episodes/${track.id}`}
+                />
+            </Ground>
+        )
+    },
+}
+
+/**
  * A playlist of sixty songs in a pane that scrolls, the forty-first playing: brought to the middle
  * on the first draw, and kept in view as next and previous in the bar move the playing row, but
  * only when it is out of view, and never while the list is being scrolled or just after.
@@ -266,6 +289,33 @@ export const LongList: StoryObj = {
                     onNext={index < PLAYLIST.length - 1 ? () => go(index + 1) : undefined}
                 />
             </Stack>
+        )
+    },
+}
+
+/** A library of five thousand songs, each title, singer and length drawn from its place. */
+const LIBRARY: Track[] = Array.from({ length: 5_000 }, (_, index) => ({
+    id: `l${String(index + 1)}`,
+    number: index + 1,
+    title: `${WORDS[index % WORDS.length]} ${WORDS[(index * 7 + 5) % WORDS.length].toLowerCase()}`,
+    subtitle: ['Ada', 'Grace', 'Linus', 'Margaret'][(index * 3) % 4],
+    meta: `${WORDS[(index * 11 + 2) % WORDS.length]} sessions`,
+    duration: 140 + ((index * 53) % 220),
+}))
+
+/**
+ * A library of five thousand songs in a pane that scrolls, the 2,400th playing: the list is
+ * windowed, drawing only the rows in view and a dozen either side at their places, so it scrolls
+ * as lightly as an album; the playing row is brought to the middle on the first draw, and stays
+ * drawn, as the focused row does, wherever the pane is scrolled.
+ */
+export const Library: StoryObj = {
+    render: function Render() {
+        const [current, setCurrent] = useState('l2400')
+        return (
+            <Fill scroll className="h-svh bg-background p-4 text-foreground sm:p-6">
+                <TrackList tracks={LIBRARY} current={current} playing onPlay={(track) => setCurrent(track.id)} />
+            </Fill>
         )
     },
 }
