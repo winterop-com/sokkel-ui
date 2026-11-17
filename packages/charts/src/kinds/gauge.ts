@@ -91,7 +91,7 @@ function dial(
         fontWeight: 600,
         fontFamily: look.font,
         color: tone,
-        formatter: (shown: number) => (value === null ? '-' : write(shown)),
+        formatter: (shown: number) => (value === null ? '—' : write(shown)),
     }
     const title = { show: label !== undefined, fontSize: look.size.label, color: look.muted }
     const data = [{ value: value ?? min, name: label ?? '' }]

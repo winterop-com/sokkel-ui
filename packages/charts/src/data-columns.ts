@@ -59,7 +59,7 @@ export function dataCell(column: DataViewColumn, row: Row, spec: ChartSpec): str
     const value = row[column.field]
     if (!column.numeric) return labelOf(value)
     const figure = column.plain === true ? null : numberOf(value)
-    if (figure === null) return value === null || value === undefined || value === '' ? '-' : labelOf(value)
+    if (figure === null) return value === null || value === undefined || value === '' ? '—' : labelOf(value)
     return `${(spec.format ?? formatNumber)(figure)}${unitAt(spec, column.unit)}`
 }
 

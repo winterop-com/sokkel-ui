@@ -117,6 +117,16 @@ release and empties it.
 
 ## Fixed
 
+- `CallBar`: a muted microphone or a camera that is off keeps its critical ink under the pointer,
+  where the ghost button's hover ink turned it to the foreground's.
+- `BoardChecklist`: its heading is a word, `words.title(done, total)` ("Checklist 2/4" by default,
+  `BOARD_CHECKLIST_WORDS`), so an app can translate and reorder the count.
+- `CheckboxField`: a disabled row fades once, at `disabled-opacity`, its box with it, where the row
+  faded to a literal 60 percent and its box again on its own.
+- A missing value is drawn as the dash, `—`, as everywhere else: in `DescriptionList` (and so
+  `DetailPane` and `BoardItemPanel`), a chart's data table, the gauge, `BarGauge`, the dual axis
+  and parallel charts' tooltips, and `ChartLegend`, which drew a hyphen.
+
 - `VideoPlayer` resumes a try where it stood under a browser's own HLS, which landed a try at a live
   stream's edge at the start of the segment it stood in and played up to a segment again: a try
   that picks up short is moved on there, or held paused under "Trying again" until the stream has

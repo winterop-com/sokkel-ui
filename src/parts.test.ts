@@ -621,6 +621,7 @@ const FILL: Record<string, string | number> = {
     from: 1,
     to: 50,
     total: 120,
+    done: 2,
     page: 2,
     pages: 5,
     place: 2,
@@ -4556,7 +4557,10 @@ const BOARD_ITEM_PANEL_ADAPTER: Adapter = {
         description: 'BOARD_ITEM_PANEL_WORDS.description',
         fields: 'BOARD_ITEM_PANEL_WORDS.fields',
         activity: 'BOARD_ITEM_PANEL_WORDS.activity',
-        'checklist.title': 'BOARD_CHECKLIST_WORDS.title',
+        'checklist.title': [
+            'BOARD_CHECKLIST_WORDS.title',
+            (said: (done: number, total: number) => string, fill) => said(Number(fill.done), Number(fill.total)),
+        ],
         'checklist.progress': 'BOARD_CHECKLIST_WORDS.progress',
     },
     options: {},
@@ -4581,7 +4585,7 @@ const BOARD_ITEM_PANEL_ADAPTER: Adapter = {
     more: () =>
         layoutChecks('board-item-panel', {
             stepsInset: () => (/<ul className="-mx-1\b/.test(BOARD_ITEM_PANEL) ? '-4' : undefined),
-            boxTop: () => numberIn(CHECKBOX_FIELD, /className="mt-(\d+(?:\.\d+)?)"/, 'step'),
+            boxTop: () => numberIn(CHECKBOX_FIELD, /className="mt-(\d+(?:\.\d+)?)\b/, 'step'),
         }),
 }
 

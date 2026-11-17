@@ -26,4 +26,9 @@ describe('DescriptionList', () => {
         // The group's column, and the two-column list's own.
         expect(html.match(/--term-width:/g)).toHaveLength(2)
     })
+
+    it('draws a missing value as the dash in the faint ink', () => {
+        const html = renderToStaticMarkup(<DescriptionList items={[{ term: 'Finished', value: null }]} />)
+        expect(html).toMatch(/<dd class="[^"]*text-faint[^"]*">—<\/dd>/)
+    })
 })
