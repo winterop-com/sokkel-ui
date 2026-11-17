@@ -30,7 +30,7 @@
         "heading": "A section's heading: parts/detail-pane's, the checklist's with its steps done of the steps in all after the title.",
         "description": "The Description section's prose, wrapping evenly, on lines 24 tall.",
         "fields": "The Fields section's terms beside their values, the term column as wide as the longest term (parts/detail-pane's facts).",
-        "checklist": "BoardChecklist: a section headed words.checklist.title, a space, then the steps done, a slash and the steps in all (Checklist 2/4); the bar, then the steps.",
+        "checklist": "BoardChecklist: a section headed words.checklist.title with the steps done and the steps in all (Checklist 2/4); the bar, then the steps.",
         "progress": "The bar, named words.checklist.progress: a track 4 tall in muted, fully round, filled in primary as far as the share of steps done; its value said as a percent.",
         "fill": "The progress bar's fill, as far along as the steps done of the steps in all.",
         "steps": "The steps in a list, reaching 4 into the section's padding on each side so the boxes line up with the heading.",
@@ -103,9 +103,9 @@
             "reached": "done on a step, or a press on it"
         },
         "readOnly": {
-            "means": "Without onChecklistChange: every box is disabled, the step at 60 percent and its box at disabled-opacity, the row's cursor not-allowed.",
+            "means": "Without onChecklistChange: every box is disabled, the step's row at disabled-opacity, its box with it and not again on its own, the row's cursor not-allowed.",
             "reached": "no onChecklistChange",
-            "effect": {"piece": "step", "opacity": 0.6, "cursor": "not-allowed"}
+            "effect": {"piece": "step", "opacity": "disabled-opacity", "cursor": "not-allowed"}
         }
     },
     "pieces": {
@@ -135,8 +135,7 @@
                 "ink": "primary-foreground",
                 "dark": {"ground": "primary"}
             },
-            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
-            "readOnly": {"opacity": "disabled-opacity"}
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
         },
         "stepLabel": {
             "rest": {"text": "text.sm", "note": "In the ink of what it stands on."},
@@ -151,8 +150,16 @@
         "description": "Description",
         "fields": "Fields",
         "activity": "Activity",
-        "checklist.title": "Checklist",
+        "checklist.title": "Checklist {done}/{total}",
         "checklist.progress": "Checklist done"
+    },
+    "samples": {
+        "checklist.title": [
+            {"with": {"done": 0, "total": 4}, "says": "Checklist 0/4"},
+            {"with": {"done": 1, "total": 1}, "says": "Checklist 1/1"},
+            {"with": {"done": 2, "total": 4}, "says": "Checklist 2/4"},
+            {"with": {"done": 1200, "total": 1200}, "says": "Checklist 1200/1200"}
+        ]
     },
     "appText": {
         "code": "The item's code.",
@@ -166,9 +173,8 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "The checklist's heading is written as `${title} ${done}/${steps.length}`, not as a word of its own.",
             "A step's box is PlainCheckbox, a native button with role checkbox, so the panel loads none of Base UI's checkbox.",
-            "The words are private default objects (WORDS, CHECKLIST_WORDS) merged under words; BoardItemPanel passes words.checklist to BoardChecklist."
+            "The words are default objects, exported as BOARD_ITEM_PANEL_WORDS and BOARD_CHECKLIST_WORDS (title a function of the steps done and in all), merged under words; BoardItemPanel passes words.checklist to BoardChecklist."
         ]
     },
     "drift": [

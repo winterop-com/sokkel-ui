@@ -83,8 +83,7 @@
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "Each section is SidePanel's PanelSection and its facts a DescriptionList in the side layout, whose pairs are subgrids so every term shares the column.",
-            "A missing fact is drawn as a hyphen in faint (DescriptionList), the quiet dash of principle 10."
+            "Each section is SidePanel's PanelSection and its facts a DescriptionList in the side layout, whose pairs are subgrids so every term shares the column."
         ]
     },
     "drift": [
