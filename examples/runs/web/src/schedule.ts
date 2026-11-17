@@ -70,3 +70,24 @@ export function saySchedule(schedule: Schedule | null): string {
             return `${weekdayOf(schedule.starts)}s at ${schedule.at} UTC`
     }
 }
+
+/**
+ * The schedule moved `by` milliseconds, as dragging its upcoming runs along the timeline asks: its
+ * time of day for a daily one, its minute for one that fires every hour or quarter, and its first
+ * day too for a weekly one carried past midnight.
+ */
+export function shiftSchedule(schedule: Schedule, by: number): Schedule {
+    const { hour, minute } = parts(schedule.at)
+    const moved = hour * 60 + minute + Math.round(by / MINUTE)
+    const two = (value: number) => String(value).padStart(2, '0')
+    if (schedule.cadence === '15m' || schedule.cadence === 'hourly') {
+        const within = schedule.cadence === '15m' ? 15 : 60
+        return { ...schedule, at: `${two(hour)}:${two(((moved % within) + within) % within)}` }
+    }
+    const minutes = ((moved % 1440) + 1440) % 1440
+    const at = `${two(Math.floor(minutes / 60))}:${two(minutes % 60)}`
+    if (schedule.cadence !== 'weekly') return { ...schedule, at }
+    const days = Math.floor(moved / 1440)
+    const starts = new Date(startOf(schedule) + days * DAY).toISOString().slice(0, 10)
+    return { ...schedule, at, starts }
+}
