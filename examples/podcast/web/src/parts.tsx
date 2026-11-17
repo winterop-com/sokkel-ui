@@ -240,12 +240,14 @@ export function useEpisodeTrack(withShow: boolean): (episode: Episode) => Track 
 export const EPISODE_DRAG = 'episode'
 
 /**
- * Episodes as a list: a press plays one, or pauses the one playing; each row ends in its actions,
- * and drags onto the queue, Starred or Downloads in the rail.
+ * Episodes as a list: a press plays one, or pauses the one playing, or with `linked` opens its page
+ * while its cover plays it; each row ends in its actions, and drags onto the queue, Starred or
+ * Downloads in the rail.
  */
 export function EpisodeList({
     episodes,
     withShow = true,
+    linked = false,
     actions,
     onMove,
     variant = 'boxed',
@@ -254,6 +256,8 @@ export function EpisodeList({
 }: {
     episodes: readonly Episode[]
     withShow?: boolean
+    /** Whether a press on a row opens the episode's page, its cover playing it. */
+    linked?: boolean
     /** `plain` inside a section's box, `boxed` on the page. */
     variant?: 'boxed' | 'plain'
     /** Whether the page scrolls to keep the episode playing in view. */
@@ -274,6 +278,7 @@ export function EpisodeList({
         position: state.position,
         progress: 'bar' as const,
         onPlay: (one: Track) => state.play(one.id),
+        href: linked ? (one: Track) => `#/episode/${one.id}` : undefined,
         actions: (one: Track) => {
             const episode = episodeById.get(one.id)
             return episode === undefined ? null : <EpisodeActions id={one.id} extra={actions?.(episode, index.get(one.id) ?? 0)} />

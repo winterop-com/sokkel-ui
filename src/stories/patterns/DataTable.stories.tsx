@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Chip, type ChipTone } from '@winterop-com/sokkel-ui/Chip'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import {
     type CellFocus,
@@ -368,6 +369,38 @@ export const StackedNames: StoryObj = {
             rowKey={(row) => row.id}
         />
     ),
+}
+
+/** A run's state as a dot leading its stacked card: a mark, not a control. */
+const STACKED_RUN_COLUMNS: DataColumn<ListRun>[] = [
+    { id: 'mark', header: 'State', width: '2.5rem', stack: 'lead', cell: (run) => <Dot status={run.state} label={run.state} /> },
+    { id: 'job', header: 'Job', width: 'minmax(10rem,1fr)', cell: (run) => <span className="font-mono">{run.job}</span> },
+    { id: 'note', header: 'Note', width: 'minmax(16rem,2fr)', stack: 'primary', cell: (run) => run.note },
+    { id: 'by', header: 'Started by', width: '8rem', stack: 'secondary', cell: (run) => run.by },
+    { id: 'took', header: 'Took', width: '6rem', stack: 'secondary', cell: (run) => <span className="tabular-nums">{run.took}</span> },
+]
+
+/**
+ * Runs as stacked cards at every width (`stackBelow` past any screen's): a state dot leads each
+ * title (`stack: 'lead'`), and a press on it opens the run as a press anywhere else on the card
+ * does; each note takes up to two lines (`stack: 'primary'`), and a card whose note takes one is that
+ * much shorter, with no blank space under it.
+ */
+export const StackedCards: StoryObj = {
+    name: 'Stacked cards',
+    render: function Render() {
+        const [chosen, setChosen] = useState('r2')
+        return (
+            <DataTable
+                columns={STACKED_RUN_COLUMNS}
+                rows={LIST_RUNS}
+                rowKey={(run) => run.id}
+                onOpen={(run) => setChosen(run.id)}
+                opened={(run) => run.id === chosen}
+                stackBelow="160rem"
+            />
+        )
+    },
 }
 
 /** Rows that grow to fit a cell longer than one line, here each run's note. */
@@ -944,24 +977,21 @@ const BAND_COLUMNS: DataColumn<JobCounts>[] = [
 
 /**
  * Columns in bands (`band`): a month's runs of each job by service, and under each service by how
- * they ended, a rule where each band starts and ends. A list given a search keeps its bar. Stacked,
- * each line is named by its band and its header.
+ * they ended, a rule where each band starts and ends. The list searches its rows itself
+ * (`searchBy`), its field in the bar it keeps. Stacked, each line is named by its band and its header.
  */
 export const Bands: StoryObj = {
-    render: function Render() {
-        const [query, setQuery] = useState('')
-        return (
-            <DataTable
-                variant="list"
-                columns={BAND_COLUMNS}
-                rows={JOB_COUNTS.filter((row) => row.job.includes(query.trim()))}
-                rowKey={(row) => row.job}
-                minWidth="auto"
-                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
-                empty="No job is named like that."
-            />
-        )
-    },
+    render: () => (
+        <DataTable
+            variant="list"
+            columns={BAND_COLUMNS}
+            rows={JOB_COUNTS}
+            rowKey={(row) => row.job}
+            minWidth="auto"
+            searchBy={(row) => row.job}
+            empty="No job is named like that."
+        />
+    ),
 }
 
 const TODAY = taskDate(TASKS_TODAY)

@@ -380,6 +380,11 @@ describe('a stacked card’s height', () => {
         // The title's 24 becomes the edit line's 48, the facts staying at 24.
         expect(stackedCardPixels(parts, (column) => column?.id === 'job', true, 48)).toBe(around - 24 + 48 + 24)
     })
+
+    it('counts one line for each primary value at the least, for a card that grows to its own height', () => {
+        const parts = stackColumns(columns, 'labeled')
+        expect(stackedCardPixels(parts, editable, false, 36, true)).toBe(around - 2 * 22 + 36 + 36 + 20 + 24)
+    })
 })
 
 describe('content widths', () => {

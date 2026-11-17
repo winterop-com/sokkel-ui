@@ -79,6 +79,7 @@ export function Tracks() {
                     current={now.song?.id}
                     playing={now.playing}
                     follow={false}
+                    windowed
                     onPlay={(track) => playSongs(ids, ids.indexOf(track.id), source)}
                     actions={(track) => <SongActions song={track.id} starred={starred.has(track.id)} />}
                 />

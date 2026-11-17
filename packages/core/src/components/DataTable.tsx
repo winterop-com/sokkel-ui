@@ -34,11 +34,13 @@ import {
 } from 'react'
 
 import { cn } from '../lib/cn'
+import { queryWords } from '../lib/search'
 import { stepTo } from '../lib/reorder'
 import type { DragHandleProps } from './DragDrop'
 import type { IssueWords } from './IssueMark'
 import { PAGE_STATE_WORDS, PageState, type PageStateWords, type ReadOutcome } from './PageState'
 import { ResizeHandle } from './ResizeHandle'
+import { SearchField, type SearchFieldProps } from './SearchField'
 import { NO_CELL, TableCellContext } from './table-cell'
 import { ListingBar } from './ListingBar'
 import { SelectionBar } from './SelectionBar'
@@ -154,11 +156,15 @@ export interface DataColumn<T> {
      * How the column shows once the table stacks its rows as cards on a narrow box: `line` (the
      * default) a line of its own, `primary` the value in body text under the title over up to
      * `stackLines` lines, `secondary` among the muted facts that share the card's last line, `lead`
-     * before the title, such as a box that marks a row done, and `none` not at all. The first
-     * column that is not `lead` is the title.
+     * before the title, such as a box that marks a row done or a mark of its kind, and `none` not
+     * at all. A press on a control in a lead is the control's, and one beside it opens the row as a
+     * press anywhere else on it does. The first column that is not `lead` is the title.
      */
     stack?: 'lead' | 'line' | 'primary' | 'secondary' | 'none'
-    /** The most lines a `primary` value takes in a stacked card; 2 by default. */
+    /**
+     * The most lines a `primary` value takes in a stacked card; 2 by default. Over more than one, a
+     * card is as tall as its values take, never leaving the lines a short value does not fill blank.
+     */
     stackLines?: number
     /**
      * How the title column draws as a stacked card's title: `line` (the default) keeps it to one line,
@@ -606,20 +612,22 @@ export function stackColumns<C extends { stack?: DataColumn<unknown>['stack'] }>
  * A stacked card's height in pixels, which the virtualized cards are placed by: its padding and
  * edge, its title, each primary value over its lines, each labeled line and the line of facts. A
  * line that holds a field to edit in is `editLine` tall, the height `STACK_EDIT_HEIGHT` draws there,
- * and so are a compact card's editable title and facts, as their editor opens in their place.
+ * and so are a compact card's editable title and facts, as their editor opens in their place. With
+ * `least`, each primary value counts one line: the least a card takes that grows to its own height.
  */
 export function stackedCardPixels<C extends { stackLines?: number }>(
     parts: { title?: C; primary: readonly C[]; lines: readonly C[]; facts: readonly C[] },
     editable: (column: C | undefined) => boolean,
     compact: boolean,
     editLine: number,
+    least = false,
 ): number {
     const titleEdits = compact && editable(parts.title)
     const factsEdit = compact && parts.facts.some(editable)
     return (
         STACK_PAD * 2 +
         (titleEdits ? editLine : STACK_TITLE) +
-        parts.primary.reduce((sum, column) => sum + (column.stackLines ?? 2) * STACK_PRIMARY_LINE, 0) +
+        parts.primary.reduce((sum, column) => sum + (least ? 1 : (column.stackLines ?? 2)) * STACK_PRIMARY_LINE, 0) +
         parts.lines.reduce((sum, column) => sum + (editable(column) ? editLine : STACK_LINE), 0) +
         (parts.facts.length > 0 ? (factsEdit ? editLine : STACK_FACTS) : 0) +
         2
@@ -1317,6 +1325,15 @@ export interface DataTableProps<T> {
      */
     search?: ReactNode
     /**
+     * The table's own search: the text a row is found by, such as its name and code. The bar then
+     * holds a search field of the table's own, and the rows given are cut to those whose text holds
+     * every word typed, in any case; a tree's children are not searched. An app that keeps the query
+     * itself passes a `search` instead.
+     */
+    searchBy?: (row: T) => string
+    /** The own search's field, with `searchBy`: its placeholder ("Search" by default), its label, its words and its `/` key. */
+    searchField?: Omit<SearchFieldProps, 'value' | 'onChange'>
+    /**
      * What the bar holds when nothing is selected, such as filters. With a `search` they take a line
      * of their own under it and wrap from the left edge; without one they sit before the count, and
      * take a line of their own under it on a narrow table.
@@ -1457,7 +1474,7 @@ export interface DataTableProps<T> {
     columnWidths?: Readonly<Record<string, number>>
     defaultColumnWidths?: Readonly<Record<string, number>>
     onColumnWidthsChange?: (widths: Readonly<Record<string, number>>) => void
-    /** `list`: a short listing's look, with no bar above the head while nothing is selected, unless it has a `search` or a `toolbar`. */
+    /** `list`: a short listing's look, with no bar above the head while nothing is selected, unless it has a search (`search` or `searchBy`) or a `toolbar`. */
     variant?: 'table' | 'list'
     /**
      * Whether the bar above the head shows while nothing is selected: by default a table has one, and a
@@ -1570,7 +1587,8 @@ export interface DataTableProps<T> {
  * view (`SavedViews`) holds them from outside.
  *
  * The bar above the head holds `search` and the `toolbar`'s tools, then the count, the sort and the
- * view switch. With a search, the search and the count share the first line and the tools take a
+ * view switch. `searchBy` gives the table a search of its own, its field in the bar and the rows cut
+ * to what is typed, for a list (or a table) whose app keeps no query. With a search, the search and the count share the first line and the tools take a
  * line of their own under it, wrapping from the left edge. Once the rows stack as cards, each column's
  * `stack` says how it shows: a line (named, or not with `stackLabel: false`), a primary value over
  * several lines under the title, a secondary fact on the card's last line, or a lead before the
@@ -1595,7 +1613,7 @@ export interface DataTableProps<T> {
  */
 export function DataTable<T>({
     columns,
-    rows,
+    rows: givenRows,
     rowKey,
     childRows,
     hasChildren,
@@ -1630,7 +1648,9 @@ export function DataTable<T>({
     rowActions,
     actionButton = 'always',
     actionIcon = <EllipsisIcon />,
-    search,
+    search: givenSearch,
+    searchBy,
+    searchField,
     toolbar,
     total,
     paging,
@@ -1691,6 +1711,20 @@ export function DataTable<T>({
     className,
 }: DataTableProps<T>) {
     const words = { ...DATA_TABLE_WORDS, ...ownWords }
+    // The table's own search: its field, and the rows cut to those whose text holds every word typed.
+    const [query, setQuery] = useState('')
+    const queried = useMemo(() => (searchBy === undefined ? [] : queryWords(query.trim())), [searchBy, query])
+    const rows = useMemo(
+        () =>
+            searchBy === undefined || queried.length === 0
+                ? givenRows
+                : givenRows.filter((row) => {
+                      const text = searchBy(row).toLowerCase()
+                      return queried.every((word) => text.includes(word))
+                  }),
+        [givenRows, searchBy, queried],
+    )
+    const search = givenSearch ?? (searchBy === undefined ? undefined : <SearchField {...searchField} value={query} onChange={setQuery} />)
     // A failed read stands in place of the rows, unless they are being read again.
     const failed = error !== undefined && error !== null && error !== false && !loading
     const [sort, setSort] = useHeld(sortValue, defaultSort, onSortChange)
@@ -1921,7 +1955,10 @@ export function DataTable<T>({
     // Compact, an editable title or line of facts is as tall as the editor that opens in its place.
     const titleEdits = compact && editable(stackParts.title)
     const factsEdit = compact && stackParts.facts.some(editable)
-    const cardPixels = stacked ? stackedCardPixels(stackParts, editable, compact, editLine) : cardBox.height
+    // A free title, or a primary value over more than one line, makes each card as tall as it needs, so
+    // a value that takes fewer lines than it may leaves no blank space under it; every card is then drawn.
+    const grows = stacked && (stackParts.title?.stackTitle === 'free' || stackParts.primary.some((column) => (column.stackLines ?? 2) > 1))
+    const cardPixels = stacked ? stackedCardPixels(stackParts, editable, compact, editLine, grows) : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
     const perLine = stacked ? 1 : gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
     const lineHeight = gridView ? cardPixels + GAP : rowHeight
@@ -1946,10 +1983,8 @@ export function DataTable<T>({
     // Rows that grow are all drawn, as their heights are not known before they are.
     // A narrow list is a plain list of rows as tall as their lines.
     const listed = list && stacked
-    // A stacked card with a free title is as tall as its title needs, so every card is drawn at its own height.
-    const freeTitle = stacked && stackParts.title?.stackTitle === 'free'
     // Grouped cards are drawn group by group, every one of them.
-    const every = (auto && !gridView) || listed || freeTitle || (gridView && groupHeads !== undefined)
+    const every = (auto && !gridView) || listed || grows || (gridView && groupHeads !== undefined)
     const whole = every || detailed
     // Rows drawn whole end where the scroller measures, and rows coming or growing move that end with
     // no scroll to say so: what it holds is watched, so the view hears of it.
@@ -2631,6 +2666,10 @@ export function DataTable<T>({
 
     /** A press on a part of a stacked row that is its own control, kept from opening the row. */
     const keep = (event: MouseEvent) => event.stopPropagation()
+    /** A press on a control inside a part of a stacked row, kept from opening the row; a press beside the control is the row's. */
+    const keepControl = (event: MouseEvent) => {
+        if (event.target instanceof Element && event.target.closest(CELL_CONTROL) !== null) event.stopPropagation()
+    }
 
     /** A row's menu button, or nothing for a row without actions or a table with the button off. */
     const menuFor = (actions: DataAction[] | undefined, variant: 'ghost' | 'secondary') =>
@@ -2660,10 +2699,10 @@ export function DataTable<T>({
             />
         ) : null
 
-    /** A stacked row's lead columns before its title, each its own control. */
+    /** A stacked row's lead columns before its title; a press on a control in one is the control's, beside it the row's. */
     const leadsOf = (entry: FlatRow<T>, listed: boolean) =>
         stackParts.lead.map((column) => (
-            <span key={column.id} role={listed ? 'gridcell' : undefined} className="flex h-6 shrink-0 items-center" onClick={keep}>
+            <span key={column.id} role={listed ? 'gridcell' : undefined} className="flex h-6 shrink-0 items-center" onClick={keepControl}>
                 {column.cell(entry.row)}
             </span>
         ))
@@ -3060,7 +3099,7 @@ export function DataTable<T>({
                     dragged === true && 'opacity-40',
                     typeof passedClass === 'string' && passedClass,
                 )}
-                style={freeTitle ? { minHeight: cardPixels } : { height: cardPixels }}
+                style={grows ? { minHeight: cardPixels } : { height: cardPixels }}
             >
                 {stacked ? stackedCard(grip) : card?.(entry.row)}
                 {stacked && rowAt?.key === entry.key && <RowLine part={rowAt.part} inside />}

@@ -101,7 +101,7 @@ export function ShowPage({ id }: { id: string }) {
                     }
                 />
                 {listed.length > 0 ? (
-                    <EpisodeList episodes={listed} withShow={false} />
+                    <EpisodeList episodes={listed} withShow={false} linked />
                 ) : (
                     <Nothing
                         icon={<Filter aria-hidden />}
