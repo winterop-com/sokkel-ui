@@ -13,9 +13,22 @@ export type Evaluation =
     | { state: 'done'; value: unknown[]; ms: number }
     | { state: 'failed'; message: string; line?: number; column?: number }
 
+/** The text with each closed block comment replaced by what `by` makes of it (nothing by default); an unclosed one stays. */
+function withoutBlockComments(text: string, by: (comment: string) => string = () => ''): string {
+    let out = ''
+    let at = 0
+    for (let open = text.indexOf('/*'); open >= 0; open = text.indexOf('/*', at)) {
+        const close = text.indexOf('*/', open + 2)
+        if (close < 0) break
+        out += text.slice(at, open) + by(text.slice(open, close + 2))
+        at = close + 2
+    }
+    return out + text.slice(at)
+}
+
 /** Evaluates an expression against a resource or a Bundle, `%resource` and `%context` bound to it, `%loinc` and `%sct` to their systems. */
 export function evaluate(expression: string, subject: Resource | undefined): Evaluation {
-    const code = expression.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' ')).replace(/\/\/[^\n]*/g, '')
+    const code = withoutBlockComments(expression, (comment) => comment.replace(/[^\n]/g, ' ')).replace(/\/\/[^\n]*/g, '')
     if (code.trim() === '' || subject === undefined) return { state: 'empty' }
     const start = performance.now()
     try {

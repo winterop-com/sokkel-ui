@@ -244,7 +244,7 @@ function exported(path: string): string | undefined {
             const fill = subpath.slice(prefix.length, subpath.length - suffix.length)
             // A module's list of sources is written for an exported module only.
             if (prefix === './sources/' && suffix === '.css' && EXPORTS[name][`./${fill}`] === undefined) continue
-            return built.replace('*', fill)
+            return built.replaceAll('*', fill)
         }
     }
     return undefined

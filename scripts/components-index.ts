@@ -564,7 +564,7 @@ export function importPath(packageName: string, exports: Exports, module: string
         if (!module.startsWith(prefix) || !module.endsWith(suffix) || module.length < prefix.length + suffix.length) continue
         if (best !== undefined && prefix.length <= best.length) continue
         const middle = module.slice(prefix.length, module.length - suffix.length)
-        best = { path: `${packageName}/${key.slice(2).replace('*', middle)}`, length: prefix.length }
+        best = { path: `${packageName}/${key.slice(2).replaceAll('*', middle)}`, length: prefix.length }
     }
     return best?.path
 }
@@ -574,7 +574,7 @@ export function sanitize(text: string): string {
     return text
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+        .replace(/^-|-$/g, '')
 }
 
 /** A story's name from its export name, as Storybook makes it: `LayerPanel` is `Layer Panel`. */

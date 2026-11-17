@@ -10,7 +10,7 @@ export interface NumberFormat {
 }
 
 /** A plain number: digits with an optional sign, a point before the decimals and an exponent. */
-export const NUMBER_PATTERN = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i
+export const NUMBER_PATTERN = /^[+-]?(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i
 
 /**
  * The number typed in `text`, or null when it is not a finite one: digits with an optional sign, a

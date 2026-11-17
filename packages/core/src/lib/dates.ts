@@ -83,15 +83,16 @@ export function formatTime(value: string, { clock = 24, seconds = false, periods
  */
 export function readTime(text: string, { seconds = false, periods = ['AM', 'PM'] }: TimeFormat = {}): string | null {
     const plain = (word: string) => word.toLowerCase().replaceAll('.', '')
-    const match = /^(.*?)\s*([a-z.]+)?$/i.exec(text.trim())
-    if (match === null) return null
+    const typed = text.trim()
+    let cut = typed.length
+    while (cut > 0 && /[a-z.]/i.test(typed[cut - 1])) cut -= 1
+    const time = typed.slice(0, cut).trimEnd()
     let period: number | null = null
-    if (match[2] !== undefined) {
-        const said = plain(match[2])
+    if (cut < typed.length) {
+        const said = plain(typed.slice(cut))
         period = periods.findIndex((word) => plain(word) === said || plain(word)[0] === said)
         if (period < 0) return null
     }
-    const time = match[1]
     let parts: string[]
     if (/^\d{1,6}$/.test(time))
         parts =
@@ -124,7 +125,8 @@ export function formatDateTime(value: string, date: DateFormat = ISO_DATE, time:
  * `T`, then a time as `readTime` reads it. Both are needed.
  */
 export function readDateTime(text: string, date: DateFormat = ISO_DATE, time: TimeFormat = {}): string | null {
-    const match = /^(\S+?)(?:\s*[Tt,]\s*|\s+)(\S.*)$/.exec(text.trim())
+    // The date ends at the first space, comma or `T`, as no date `readDate` reads holds one.
+    const match = /^([^\sTt,]+)(?:\s*[Tt,]\s*|\s+)(\S.*)$/.exec(text.trim())
     if (match === null) return null
     const day = readDate(match[1], date)
     const clock = readTime(match[2], time)

@@ -425,6 +425,13 @@ describe('the chart kinds', () => {
         expect(bandLabel({ low: 'p2.5', high: 'p97.5' })).toBe('2.5-97.5')
         expect(bandLabel({ low: 'lower', high: 'upper' })).toBe('lower-upper')
         expect(bandLabel({ low: 'q10', high: 'q90', label: '80%' })).toBe('80%')
+        expect(bandLabel({ low: 'q.5', high: 'q1.2.3' })).toBe('5-2.3')
+    })
+
+    it('names a band by a long field in time in step with its length', () => {
+        const started = performance.now()
+        expect(bandLabel({ low: `${'0'.repeat(100_000)}x`, high: 'q90' })).toBe(`${'0'.repeat(100_000)}x-q90`)
+        expect(performance.now() - started).toBeLessThan(500)
     })
 
     it('draws a mark down a line chart at its category', () => {

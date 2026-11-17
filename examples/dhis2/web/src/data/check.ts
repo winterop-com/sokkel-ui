@@ -3,7 +3,17 @@
  * every item names metadata it holds, and whether the server's version knows every function and
  * variable. Findings carry the span they are about, for the editor to underline.
  */
-import { EVALUATED, ExpressionError, parse, walk, type Finding, type ItemKind, type Language, type Node } from './expression'
+import {
+    EVALUATED,
+    ExpressionError,
+    parse,
+    walk,
+    withoutBlockComments,
+    type Finding,
+    type ItemKind,
+    type Language,
+    type Node,
+} from './expression'
 import { constant, DATA_SETS, dataElement, optionCombo, REPORTING_METRICS } from './metadata'
 import { ADDED, LATEST, namesOf, type Version } from './versions'
 
@@ -152,7 +162,7 @@ function checkCall(
 
 /** An expression read and checked: its tree when it reads, and every finding. */
 export function check(source: string, language: Language, context: CheckContext): Checked {
-    if (source.replace(/\/\*[\s\S]*?\*\//g, '').trim() === '')
+    if (withoutBlockComments(source).trim() === '')
         return { node: null, findings: [{ from: 0, to: 0, tone: 'error', message: 'The expression is empty.' }] }
     let node: Node
     try {

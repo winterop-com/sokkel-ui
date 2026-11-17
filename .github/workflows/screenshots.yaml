@@ -21,8 +21,7 @@ on:
                 default: ''
 
 permissions:
-    contents: write
-    actions: write
+    contents: read
 
 # Two retakes of one branch's baselines, or a retake on main and a merge's update of `baselines`,
 # never run at once.
@@ -34,8 +33,11 @@ jobs:
     update:
         runs-on: ubuntu-latest
         timeout-minutes: 60
+        # Pushes the baselines' branches.
+        permissions:
+            contents: write
         container:
-            image: mcr.microsoft.com/playwright:v1.65.1-noble
+            image: mcr.microsoft.com/playwright:v1.65.1-noble@sha256:1507cbfc550a63a6b7396791ca4f00df17beb56342d2447b3f106c306f525579
             options: --ipc=host
         env:
             CI: '1'
@@ -45,7 +47,7 @@ jobs:
             GIT_COMMITTER_NAME: github-actions[bot]
             GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   ref: ${{ github.ref_name }}
             - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -64,6 +66,10 @@ jobs:
         needs: update
         runs-on: ubuntu-latest
         timeout-minutes: 30
+        # Lists, cancels, reruns and starts ci runs.
+        permissions:
+            contents: read
+            actions: write
         steps:
             # The commit's own ci run, from its PR or from its push to main, is run again (stopped
             # first if it is still going), so the commit's check ends on the new baselines rather than

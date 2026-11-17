@@ -126,7 +126,15 @@ release and empties it.
 - A missing value is drawn as the dash, `—`, as everywhere else: in `DescriptionList` (and so
   `DetailPane` and `BoardItemPanel`), a chart's data table, the gauge, `BarGauge`, the dual axis
   and parallel charts' tooltips, and `ChartLegend`, which drew a hyphen.
-
+- Text an app or a person gives is read in time in step with its length, where a long run of one
+  character (spaces, zeros, dashes, backticks, brackets) took seconds before: `readNumber` and a
+  schema field's number, `readTime` and `readDateTime`, `fileName`, `mentionsIn`, `withoutCode`
+  and the wiki links read past code, `markdownHeadings` (and a `Markdown` table of contents),
+  `DataTable`'s column widths (`widenTrack`), `isAddress` and `parseAddresses`, `requestAddress`
+  (`ApiPlayground`), `TextLink`'s external mark and the charts' `bandLabel`. What each reads is
+  unchanged.
+- `useStored`, `createStore` and the stored values say they are not for secrets: they keep plain
+  text any script on the page can read.
 - `VideoPlayer` resumes a try where it stood under a browser's own HLS, which landed a try at a live
   stream's edge at the start of the segment it stood in and played up to a segment again: a try
   that picks up short is moved on there, or held paused under "Trying again" until the stream has

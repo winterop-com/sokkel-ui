@@ -551,7 +551,8 @@ const CARD = 3
 /** One frame of a clip: its scene at second `t`, the title card over the first seconds, and the channel's mark and the time in its corners. */
 export function drawFrame(ctx: Context, spec: SceneSpec, t: number, w: number, h: number, card = true): void {
     ctx.save()
-    SCENES[spec.kind](ctx, w, h, spec, t)
+    // A spec posted to a worker is checked: only a scene of its own is drawn.
+    if (Object.hasOwn(SCENES, spec.kind)) SCENES[spec.kind](ctx, w, h, spec, t)
     ctx.restore()
     const small = Math.round(h * 0.03)
     ctx.textBaseline = 'alphabetic'
