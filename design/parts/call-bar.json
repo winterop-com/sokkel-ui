@@ -1,0 +1,298 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "call-bar",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
+        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+    },
+    "summary": "The controls of a video or audio call, as a round bar floating over the call's picture (placement floating) or a strip docked across its foot (docked): the microphone and the camera, each a toggle with a chevron beside it opening the app's lists of devices with the chosen one checked; sharing the screen; reactions, a toggle that stands the reaction bar (parts/reaction-bar) over the bar; raising a hand; more, the app's own rows; and Leave. A muted microphone and a camera turned off are drawn in the critical tone; sharing, a raised hand and open reactions are drawn pressed. Each control is offered only when its handler is given, and one of the bar's menus is open at a time. Every control is round, and a finger square below md. The bar measures its own room: under 576 the share and hand buttons move into more, and under 416 the device lists follow as submenus there, so the bar never widens the page.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/CallBar.tsx",
+            "packages/core/src/components/ui/button.tsx",
+            "packages/core/src/components/ui/dropdown-menu.tsx",
+            "packages/core/src/components/ui/popover.tsx",
+            "packages/core/src/components/ui/tooltip.tsx",
+            "packages/core/src/components/ReactionBar.tsx",
+            "packages/core/src/hooks/use-shortcuts.ts"
+        ]
+    },
+    "anatomy": {
+        "frame": "The bar's room, as wide as its container, centering the bar. Docked: a strip on the background ground with a 1px border rule along its top, padded 12 across and 8 down. Floating: no look of its own.",
+        "bar": "A toolbar named words.label, the controls in a row 8 apart, centered, wrapping only where even the narrow room cannot hold them, never wider than the frame. Floating: on the popup's look (parts/select's popup: popover ground and ink, a 1px border-strong edge, elevation-pop), fully round, padded 6. Docked: no look of its own.",
+        "control": "One round control, density.control-lg square, a ghost button (parts/button) on the muted ground: the microphone, the camera, share, reactions, raise hand and more. Each is named by its word, which its tooltip says above it; a toggle that holds a state is aria-pressed.",
+        "microphone": "With onMutedChange: the microphone's toggle, named words.mute, or words.unmute while muted, a microphone (a struck microphone while muted). With microphones, joined to its devices chevron as one round control, the two halves flat where they meet. Its tooltip shows its key with shortcuts.",
+        "camera": "With onCameraOffChange: the camera's toggle, named words.cameraOff, or words.cameraOn while off, a video camera (struck while off), joined to its chevron as the microphone is.",
+        "devices": "With microphones or cameras, while the room holds them: the chevron after the microphone or the camera, named words.microphoneDevices or words.cameraDevices, 24 wide (32 below md) and as tall as a control, an up chevron 14; in the critical tone while its toggle is. Pressed, it opens a menu above it (parts/dropdown-menu) of each device list under its heading, the chosen device checked as a radio item, lists set apart by separators.",
+        "share": "With onSharingChange, in a wide room: words.share, a screen with an arrow, pressed while sharing.",
+        "reactions": "With onReact: words.reactions, a smile with a plus, pressed while the reaction bar is open. Pressed, it stands the reaction bar (parts/reaction-bar, unframed) in a popover above it, padded 4; a reaction given goes to onReact.",
+        "hand": "With onHandRaisedChange, in a wide room: words.raiseHand, a hand, pressed while raised.",
+        "more": "While there is something to hold: words.more, an ellipsis, opening a menu above it of the device lists moved there (words.microphone, words.camera, as submenus), share and raise hand as check items, a separator, then the app's rows (check items while they toggle, with their icons).",
+        "leave": "With onLeave: the bar's last control, words.leave, a phone hung up on the critical ground; in a wide room a pill holding the icon and words.leave, 16 in at the sides; otherwise round with the icon alone.",
+        "tooltip": "Each control's name above it in the library's tooltip (parts/tooltip), with its key caps after it for the microphone and the camera while shortcuts are bound."
+    },
+    "standsOn": {
+        "default": "background",
+        "frame": "background",
+        "bar": "background",
+        "control": "popover",
+        "devices": "popover",
+        "leave": "popover"
+    },
+    "alsoStandsOn": {"control": ["background"], "devices": ["background"], "leave": ["background"]},
+    "options": {
+        "muted": {
+            "type": "boolean",
+            "default": false,
+            "does": "The microphone is muted: drawn in the critical tone, named words.unmute."
+        },
+        "onMutedChange": {"type": "callback", "does": "Offers the microphone, called with the state a press asks for."},
+        "microphones": {
+            "type": "rows",
+            "default": [],
+            "does": "The microphone's device lists ({ id, label, devices: [{ id, label }], selected?, onSelect }, such as the microphones and the speakers), offered from the chevron beside it.",
+            "sokkel-ui": "CallDeviceList"
+        },
+        "cameraOff": {
+            "type": "boolean",
+            "default": false,
+            "does": "The camera is off: drawn in the critical tone, named words.cameraOn."
+        },
+        "onCameraOffChange": {"type": "callback", "does": "Offers the camera, called with the state a press asks for."},
+        "cameras": {
+            "type": "rows",
+            "default": [],
+            "does": "The camera's device lists, offered from the chevron beside it."
+        },
+        "sharing": {"type": "boolean", "default": false, "does": "The screen is shared: share drawn pressed."},
+        "onSharingChange": {"type": "callback", "does": "Offers share."},
+        "onReact": {
+            "type": "callback",
+            "does": "Offers the reactions toggle, which stands the reaction bar over the bar; hears the emoji given and its English name."
+        },
+        "reactions": {
+            "type": "rows",
+            "does": "The quick reactions the reaction bar offers, QUICK_REACTIONS by default (parts/reaction-bar)."
+        },
+        "reactionPicker": {
+            "type": "node",
+            "does": "The reaction bar's full list's options: recent emoji, skin tone (parts/emoji-picker)."
+        },
+        "handRaised": {"type": "boolean", "default": false, "does": "A hand is raised: raise hand drawn pressed."},
+        "onHandRaisedChange": {"type": "callback", "does": "Offers raise hand."},
+        "more": {
+            "type": "rows",
+            "default": [],
+            "does": "The app's rows in more: { id, label, icon?, onSelect, checked?, disabled? }; a row with checked is a check item.",
+            "sokkel-ui": "CallBarItem"
+        },
+        "onLeave": {"type": "callback", "does": "Offers Leave."},
+        "openMenu": {
+            "values": ["microphone", "camera", "reactions", "more"],
+            "does": "Which of the bar's menus is open, one at a time, or none, when the app holds it (openMenu, defaultOpenMenu, onOpenMenuChange); opening one closes the other.",
+            "sokkel-ui": "CallBarMenu"
+        },
+        "placement": {
+            "values": ["floating", "docked"],
+            "default": "floating",
+            "does": "floating: a round bar on the popup's look over the call's picture; docked: a strip across its foot on the background.",
+            "sokkel-ui": "CallBarProps placement"
+        },
+        "shortcuts": {
+            "default": false,
+            "does": "Binds the microphone's and the camera's keys while the bar is mounted: true for Mod+D and Mod+E (CALL_BAR_SHORTCUTS), or the app's own chords ({ microphone?, camera? }, false leaving one unbound). A bound key is said in its control's tooltip and aria-keyshortcuts, and listed in the shortcuts dialog under words.shortcutGroup.",
+            "sokkel-ui": "CallBarShortcuts"
+        }
+    },
+    "sizes": {
+        "frame": {"padX": 12, "padY": 8, "note": "Docked only; floating, the frame has no pad."},
+        "bar": {
+            "padX": 6,
+            "padY": 6,
+            "gap": 8,
+            "note": "The pad only when floating; the gap at both placements. Fully round (rounded-full): no corner role, half its height."
+        },
+        "control": {
+            "height": "density.control-lg",
+            "width": "density.control-lg",
+            "icon": 16,
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "A circle. Joined to its devices chevron, its end half is square and it pads 4 at its start and 2 at its end."
+        },
+        "devices": {
+            "height": "density.control-lg",
+            "width": 24,
+            "icon": 14,
+            "phoneMinHeight": "spacing-finger",
+            "note": "Square at its start, where it meets its toggle; round at its end. Below md at least 32 wide (min-w-8), a finger tall."
+        },
+        "leave": {
+            "height": "density.control-lg",
+            "padX": 16,
+            "icon": 16,
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "text": "text.action",
+            "note": "In a wide room a pill as wide as its icon and words.leave, 6 apart, padded 16; otherwise a circle density.control-lg square with the icon alone.",
+            "gap": 6
+        },
+        "reactionsPopover": {
+            "padX": 4,
+            "padY": 4,
+            "note": "The popover holding the reaction bar, as wide as the bar, never wider than the window less 16."
+        }
+    },
+    "layout": {
+        "midRoom": {
+            "value": 576,
+            "note": "Below this width of the frame's own box (36rem), share and raise hand move into more as check items. Measured on the box, never the window."
+        },
+        "narrowRoom": {
+            "value": 416,
+            "note": "Below this width (26rem), the device lists move into more as submenus too, and Leave is round with its icon alone, as below midRoom."
+        },
+        "popoverEdge": {"value": 8, "note": "The reaction bar's popover keeps this far from the window's edges."}
+    },
+    "states": {
+        "rest": {
+            "means": "Every offered control at rest: the microphone on, the camera on, nothing shared, no hand raised, no menu open."
+        },
+        "hover": {
+            "means": "The pointer is over a control: washed hover, its ink foreground; over Leave, the critical ground at 85 percent.",
+            "reached": "the pointer"
+        },
+        "focus": {
+            "means": "Keyboard focus on a control: the button's focus outline (parts/button), in ring, focus-ring-width wide, focus-ring-offset outside the circle.",
+            "reached": "Tab, the arrows",
+            "on": "keyboard",
+            "effect": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
+            "sokkel-ui": "focus-visible:outline-focus outline-offset-focus outline-ring, from Button"
+        },
+        "pressed": {
+            "means": "A toggle that is on: sharing, a raised hand, the reactions open. Washed primary at 12 percent in primary-ink, a 1 wide ring in primary at 60 percent around it.",
+            "reached": "sharing, handRaised, the reaction bar open",
+            "sokkel-ui": "aria-pressed"
+        },
+        "open": {
+            "means": "A devices chevron or more while its menu is open: washed hover in foreground, as a ghost button's open state (parts/button).",
+            "reached": "a press on it, or openMenu",
+            "sokkel-ui": "aria-expanded"
+        },
+        "off": {
+            "means": "The microphone muted or the camera off, its toggle and its chevron alike: washed critical at 15 percent in critical-ink.",
+            "reached": "muted, cameraOff",
+            "sokkel-ui": "data-off on the toggle; the chevron takes the same classes"
+        }
+    },
+    "pieces": {
+        "frame": {
+            "rest": {
+                "ground": "background",
+                "rule": "border",
+                "note": "Docked: the background ground and a 1px border rule along its top. Floating: nothing of its own."
+            }
+        },
+        "bar": {
+            "rest": {
+                "ground": "popover",
+                "edge": "border-strong",
+                "ink": "popover-foreground",
+                "note": "Floating: the popup's look, fully round, elevation-pop under it. Docked, no ground, edge or shadow of its own."
+            }
+        },
+        "control": {
+            "rest": {"ground": "muted", "edge": "none", "ink": "foreground", "note": "A circle."},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "pressed": {"ground": "primary/12", "ink": "primary-ink", "ring": {"color": "primary/60", "width": 1}},
+            "open": {"ground": "hover", "ink": "foreground"},
+            "off": {"ground": "critical/15", "ink": "critical-ink"},
+            "off+hover": {
+                "ground": "critical/25",
+                "ink": "foreground",
+                "note": "The ghost button's hover ink (not-aria-disabled:hover:text-foreground) stands over the off ink, which has no hover form of its own."
+            }
+        },
+        "devices": {
+            "rest": {"ground": "muted", "edge": "none", "ink": "foreground"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "open": {"ground": "hover", "ink": "foreground"},
+            "off": {"ground": "critical/15", "ink": "critical-ink"},
+            "off+hover": {"ground": "critical/25", "ink": "foreground"}
+        },
+        "leave": {
+            "rest": {"ground": "critical", "edge": "none", "ink": "critical-foreground", "text": "text.action"},
+            "hover": {"ground": "critical/85"}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "Moves to the bar's control before or after, each devices chevron included; it stops at the first and the last, as every list of choices does. A key from the reaction bar or a menu standing over the bar is theirs.",
+            "when": "a control of the bar has focus"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Presses the control: turns a toggle, opens a devices menu, the reaction bar or more, or leaves.",
+            "when": "a control of the bar has focus"
+        },
+        {
+            "keys": ["Mod+D"],
+            "does": "Mutes or unmutes the microphone, in a text input too.",
+            "when": "shortcuts, with onMutedChange"
+        },
+        {
+            "keys": ["Mod+E"],
+            "does": "Turns the camera off or on, in a text input too.",
+            "when": "shortcuts, with onCameraOffChange"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the open menu or the reaction bar, focus back on the control that opened it.",
+            "when": "a menu or the reaction bar of the bar is open"
+        }
+    ],
+    "words": {
+        "label": "Call controls",
+        "mute": "Mute",
+        "unmute": "Unmute",
+        "microphoneDevices": "Microphone settings",
+        "cameraOff": "Turn off camera",
+        "cameraOn": "Turn on camera",
+        "cameraDevices": "Camera settings",
+        "microphone": "Microphone",
+        "camera": "Camera",
+        "share": "Share screen",
+        "reactions": "Reactions",
+        "raiseHand": "Raise hand",
+        "more": "More options",
+        "leave": "Leave",
+        "shortcutGroup": "Call",
+        "shortcutMicrophone": "Mute or unmute",
+        "shortcutCamera": "Turn the camera on or off"
+    },
+    "appText": {
+        "microphones": "Each device list's heading (Microphone, Speaker) and each device's label.",
+        "cameras": "Each device list's heading and each device's label.",
+        "more": "Each of the app's rows' label and icon.",
+        "reactionBar": "The reaction bar's words are parts/reaction-bar's, passed through words.reactionBar; its label is words.reactions unless given."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The room is measured with a ResizeObserver on the frame's own box, in rem of the root's font size; a box not laid out yet (0 wide) keeps the room it had, so a server drawing is the wide one.",
+            "The devices and more menus are Base UI's Menu (parts/dropdown-menu) and the reaction bar's popover Base UI's Popover, opening on top; they take Escape and a press outside and put focus back on the trigger.",
+            "The keys are bound through useShortcuts (inFields 'inputs'), so the shortcuts dialog lists them; Mod is Cmd on a Mac and Ctrl elsewhere, written as the device writes keys."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 9038006 there is no call bar."
+        }
+    ]
+}

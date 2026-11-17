@@ -4,13 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {
-            "state": "missing",
-            "as_of": "a592dfb",
-            "note": "The spike draws the rail by hand inside its frame, not from the spec."
-        }
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "The app's places down the window's start: a head with the mark and the name, groups of entries, and a foot cell for the account. Expanded, collapsed to its icons, or a strip of labeled icons; its end edge resizes it, and pulled outward expands a collapsed rail.",
     "sources": {
@@ -24,7 +20,7 @@
             "packages/core/src/components/Shell.tsx",
             "packages/core/src/hooks/use-panel-size.ts"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/frame.rs (Rail, RailGroup, RailEntry)",
             "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
         ]
@@ -51,8 +47,8 @@
         "flyout": "A parent's entries in a popover beside a collapsed rail or a strip, under the parent's label as a group title; a link chosen there closes it.",
         "edge": "The resize handle along the rail's end edge: a line in the accent while hovered, focused or dragged, nothing otherwise.",
         "footCell": "The account control's cell at the rail's foot, as tall as the status line and level with it.",
-        "back": "With a body: the row at the top that shows the places again (words.places), under the head.",
-        "body": "App content the expanded rail holds in place of its groups, such as a tree with its search; kept as it was while the places or the icons show.",
+        "back": "With a body whose places are behind it: the row at the top that shows the places again (words.places), under the head. With places above, there is no such row.",
+        "body": "App content the expanded rail holds in place of its groups, such as a tree with its search, or under them with places above; kept as it was while the places or the icons show.",
         "strip": "The strip variant's column: the workspace's tile at the top, each entry a tile over its short label, the foot's items stacked at the bottom.",
         "stripEntry": "One place in the strip: a tile with its icon, a count or dot at the tile's corner, and its short label under it.",
         "stripTile": "A strip entry's tile, washed while its place is shown."
@@ -105,7 +101,7 @@
         },
         "body": {
             "type": "node",
-            "does": "Content held in place of the groups in the expanded rail: { content, title?, search? }, under the back row. Collapsed, the rail draws the places' icons."
+            "does": "Content held in place of the groups in the expanded rail: { content, title?, search?, places? }, under the back row. places: behind (the default), the places behind the back row, shown in the body's place; above, the places over the body, both shown at once with no back row, for an app with a few places beside one tree. Collapsed, the rail draws the places' icons."
         },
         "view": {
             "values": ["places", "body"],
@@ -517,7 +513,7 @@
             "A body stays mounted while hidden, so a tree's open levels and its scroll come back as left.",
             "In a desktop window (Shell desktop) the head is a window drag region (data-window-drag)."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "There are no URLs: a press on an entry sets the app's active place, which the app routes by.",
             "The rail fills the rect the Shell gives it; a width the reader drags is app state the Shell is told.",
             "A collapsed entry's name shows in the library's tooltip.",
@@ -526,46 +522,52 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "entry inset",
             "spec": "An entry pads 12 at its start, the 2 wide bar inside it: the icon at 12, the label at 40.",
             "today": "As of 267236c: the icon at 10 and the label at 38, 2 toward the start."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "entry corners",
             "spec": "radius-sm at the start (3.5, floored to 3) and radius-md at the end, in every state.",
             "today": "The active row's start corners are 2; the hover wash rounds radius-md all round."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "count weight",
             "spec": "An expanded row's count at 600.",
             "today": "TextRole::Badge, at 500."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "collapsed group rule",
             "spec": "The rule keeps the title's room: 16 above, its 20 line, 6 below and 4 to the first entry (46 from the last entry before), the rule 26 down.",
             "today": "26 from the last entry before to the next group's first, the rule 20 down."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "keyboard focus",
             "spec": "Entries take keyboard focus and show it in the button's focus look: a 2px ring outline 2 off, on keyboard focus only.",
             "today": "An entry senses clicks but paints no focus."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "collapsed entry tooltip",
             "spec": "A collapsed entry's name shows in the library's one tooltip (parts/tooltip), 8 away.",
             "today": "As of 267236c: egui's own on_hover_text (frame.rs:202), not the library's tooltip."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 267236c, Rail has groups with titles, entries with an icon and a count, the active entry's bar and wash, the hover wash, and collapse at 240 / 57 with tooltips. Not yet: descriptions, the unread and color dots, entries without icons, parents (fold, chevron, flyout), counts over a collapsed icon, the head's collapse control and the mark as the expand control, markHref, resize and expand by the edge, the strip variant, a body, reordering, the drawer, finger-tall rows below 768, and room for the window's buttons."
+            "today": "As of 9038006, Rail has groups with titles, entries with an icon, a description (text-pretty) and a count, the active entry's bar and wash, the hover wash, collapse at 240 / 57 with tooltips, the mark, and the drawer on a phone. Not yet: parents (fold, chevron, flyout), the unread and color dots, resize and expand by the edge, the strip variant, a body, reordering, and finger-tall rows below 768."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with no parents or flyouts, descriptions, strip, body, resize or reorder."
         }
     ]
 }

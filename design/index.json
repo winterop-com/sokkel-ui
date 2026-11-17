@@ -12,8 +12,7 @@
             "id": "sokkel-egui",
             "repo": "winterop-com/sokkel-egui",
             "toolkit": "egui",
-            "reads": "tokens/tokens.resolved.json and the specs",
-            "alsoNamed": "sokkel-ui-egui, in sources, rendererSpecific and drift"
+            "reads": "tokens/tokens.resolved.json and the specs"
         },
         {
             "id": "sokkel-tui",
@@ -74,6 +73,9 @@
             "Finger sizes do not apply.",
             "The radius ladder is one bit: a corner role above 0 draws rounded box corners, 0 square (glyphs.json, box).",
             "No shadows or elevations: a popup or a dialog is its edge, drawn with the box glyphs.",
+            "A one-row control (a button, a field's control, a select's trigger) draws its edge as edge-start and edge-end at its ends, inside its padding, in the edge's flat color; [ and ] in ASCII. A control whose edge is none draws neither.",
+            "Keyboard focus on a one-row control is focus-ring-start and focus-ring-end in ring in the cell beside each end, outside its width, in the one-column gap the parts' cells keep between controls; > and < in ASCII; without color, the control in reverse video. A row of a table or a list takes focus-mark in ring at its start. The control's own paints stay as they are.",
+            "A surface other than the one a piece stands on: its paints' flatOn and fadedOn for that surface, where its spec names it in alsoStandsOn.",
             "Text is one size; a role keeps what textRoles gives it."
         ],
         "textRoles": {
@@ -156,7 +158,11 @@
         {"id": "emoji-picker", "file": "parts/emoji-picker.json", "status": "stable"},
         {"id": "reaction-bar", "file": "parts/reaction-bar.json", "status": "stable"},
         {"id": "composer", "file": "parts/composer.json", "status": "stable"},
-        {"id": "message-composer", "file": "parts/message-composer.json", "status": "stable"}
+        {"id": "message-composer", "file": "parts/message-composer.json", "status": "stable"},
+        {"id": "call-bar", "file": "parts/call-bar.json", "status": "stable"},
+        {"id": "letter", "file": "parts/letter.json", "status": "stable"},
+        {"id": "detail-pane", "file": "parts/detail-pane.json", "status": "stable"},
+        {"id": "board-item-panel", "file": "parts/board-item-panel.json", "status": "stable"}
     ],
     "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "stable"}],
     "principles": "principles.md",

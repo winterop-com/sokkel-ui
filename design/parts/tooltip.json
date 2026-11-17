@@ -4,9 +4,13 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {
+            "state": "built",
+            "as_of": "7bf2ece",
+            "note": "Said in the status line while its trigger has keyboard focus (principle 23)."
+        }
     },
     "summary": "The library's one tooltip: a short line about a control, in a small inverted box beside it with an arrow toward it, shown once the pointer has rested on the control for 500 ms or at once while it has keyboard focus, and gone when both leave. It names an icon button, says why a control is off (a button's reason), names a collapsed rail's entries, and can add the key that does the same. A touch screen has no hover: there a tap on a shut button shows its reason (tap), held tip-hold or until the next press.",
     "sources": {
@@ -16,7 +20,7 @@
             "packages/core/src/lib/finger.ts",
             "packages/core/src/lib/tap-tip.ts"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/overlay.rs (tooltip, tooltip_shown)",
             "examples/storybook/src/stories/overlays.rs (Primitives/Overlays/Tooltip)"
         ]
@@ -154,7 +158,7 @@
             "Tooltip holds whether it is open itself, Base UI's root controlled (or as open says), so a tap can open it: with tap, TooltipTrigger tells the tooltip of a press that ends on it (pointerup, which a shut Base UI button still hears where it drops its own press and click), and a press by touch or pen shows it. A second tap, Base UI's outside press, or TIP_HOLD (lib/durations, from tip-hold) closes it; while a tap holds it a hover's close is refused (lib/tap-tip), as a pen lifting reports one.",
             "The rail's collapsed entries (parts/rail) and SwitchField's help mark show in this tooltip too; no part draws a tooltip of its own."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "tooltip(response, text) shows it under a resting pointer or with keyboard focus; tooltip_shown(response, text) shows it whatever the pointer does.",
             "egui's Popup with PopupKind::Tooltip.",
             "Hover comes from last frame's rects; the delay counts from the first frame the pointer is over the trigger."
@@ -162,13 +166,13 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "side",
             "spec": "Above the trigger by default, 4 away, centered; side and align as options.",
             "today": "As of 26b411f (overlay.rs unchanged since bee2a97): always under the trigger (RectAlign::BOTTOM), 4 away."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of 26b411f, the tooltip draws the box on the foreground ground in the background's ink, radius-md, padded 12 by 6, text.help, at most 320 wide, on hover and keyboard focus. Not yet: the arrow, keys, side and align, a delay group, Escape, the finger hit area below 768, and tap."

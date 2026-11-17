@@ -4,9 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "A menu of actions opened from a trigger: rows a control tall with an icon, a label and the keys that do the same, groups under labels, separators, check and radio rows with their marks in a gutter at the start, rows that open a submenu beside them, and destructive rows in the destructive ink. As wide as its widest row; every row a finger tall on a phone; the arrows stop at its first and last rows.",
     "sources": {
@@ -18,7 +18,7 @@
             "packages/core/src/lib/finger.ts",
             "packages/core/src/lib/focus.ts"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/menu.rs (DropdownMenu, MenuItem, action_row)",
             "examples/storybook/src/stories/menus.rs (Primitives/Menus/Dropdown menu)"
         ]
@@ -139,6 +139,36 @@
             "note": "A submenu stands right at its row's end, 3 above it so its first row is level."
         },
         "openEase": {"value": "motion-fast", "note": "How long the menu fades and zooms in, as far as motion allows."}
+    },
+    "cells": {
+        "padX": 1,
+        "width": "As wide as its widest row: the row's 6 px across is 1 column each side, a shortcut 2 columns after its label; at least the trigger's width where the menu says so, at most the window less 2.",
+        "density": "Nothing changes: every row is one row at both levels.",
+        "pieces": {
+            "popup": {
+                "padX": 0,
+                "padY": 0,
+                "note": "A box whose border is its edge (border-strong), corners by radius-surface; its 4 px padding is no cell. It opens under its trigger, over it when there is no room under."
+            },
+            "item": {
+                "rows": 1,
+                "padX": 1,
+                "note": "One row; the highlighted row on accent in accent-foreground, as on the web."
+            },
+            "gutter": {
+                "width": "2 columns at the row's start while the menu holds a check or radio row: the check glyph and a gap.",
+                "note": "Every row of such a menu keeps it, so labels line up."
+            },
+            "label": {"rows": 1, "padX": 1, "note": "A group's label: a row in the help role."},
+            "separator": {"rows": 1, "note": "A row of the rule glyph in border, edge to edge inside the box."},
+            "shortcut": {"width": "Its keys' width, 2 columns after the label, at the row's end."},
+            "subTrigger": {"rows": 1, "padX": 1, "note": "Its label, then chevron-right at the row's end."},
+            "submenu": {
+                "note": "A box of its own at the row's end, its first row level with the row; over the menu where the window has no room after it."
+            }
+        },
+        "glyphs": ["box", "check", "rule", "chevron-right", "status-dot"],
+        "note": "A radio row's mark is the status dot in the gutter, a check row's the check. What lies under it is drawn as it is until the scrim in cells is decided (open-questions.md, T2). From sokkel-tui's proposal, section c3."
     },
     "states": {
         "rest": {"means": "A row with nothing over it."},
@@ -271,7 +301,7 @@
             "AccountMenu and NavBar draw their menus with Base UI's Menu at once, in the same popup look (lib/popup), their rows density.control tall in the same highlight, stopping at the ends.",
             "The trigger takes the finger hit area (FINGER_HIT) unless its render element places itself or draws its own ::after (takesFinger)."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "DropdownMenu::new(&items).show(&trigger) returns the index of the action pressed this frame; a MenuItem is an Action, a Label or a Separator.",
             "egui's Popup::menu, closing on a click outside; end() lines the menu's end up with the trigger's.",
             "MenuItem's tint, hint, id and keywords serve the command palette and the board: an icon in a color of its own, a muted word at the row's end."
@@ -279,52 +309,58 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "width",
             "spec": "As wide as its widest row, at least the trigger and 128, at most the window less 32.",
             "today": "As of 26b411f (menu.rs unchanged since 5dd7c34): at least 220 too (width's default), with no most."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "row height",
             "spec": "density.control tall on one line (32, 28 compact), a finger below 768.",
             "today": "As of 26b411f (menu.rs unchanged since 5dd7c34): 30 tall at every density."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "popup edge and shadow",
             "spec": "Every popup's look: a 1px border-strong edge inside the box, and elevation-pop under the menu and its submenus.",
             "today": "A 1px foreground/10 stroke inside the box; one shadow 0 4 blur 12, black at 24 (90 in dark)."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "icon ink",
             "spec": "An icon in its row's ink: popover-foreground, accent-foreground highlighted, destructive in a destructive row.",
             "today": "muted-foreground unless the row is lit, destructive or tinted."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "keys at a row's end",
             "spec": "text.help tracked 0.1em, in accent-foreground in a highlighted row.",
             "today": "text.help with 1 of extra letter spacing, muted-foreground in every row."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "destructive highlight in dark",
             "spec": "destructive/10 in light, destructive/20 in dark.",
             "today": "destructive/10 in both schemes."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "story path",
             "spec": "Specimens pair by sokkel-ui's path, Primitives/Menus/DropdownMenu.",
             "today": "The egui story is at Primitives/Menus/Dropdown menu."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of 26b411f, DropdownMenu draws actions 30 tall, 6 in, with a 16 icon and 22 to the label, keys or a hint at the end, labels in text.badge, separators, destructive and disabled rows, the accent highlight under the pointer, and start or end alignment. Not yet: check and radio rows, the gutter, inset, submenus, side, finger-tall rows below 768, the trigger's finger hit area, and the keys (opening from the keyboard, the arrows stopping at the ends, Home, End, typing, Enter, Space, ArrowRight, ArrowLeft, Escape)."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with no radio groups; one submenu level."
         }
     ]
 }

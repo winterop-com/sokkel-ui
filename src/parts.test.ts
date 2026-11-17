@@ -6,6 +6,8 @@ import { createElement, type ComponentType, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import { BOARD_CHECKLIST_WORDS, BOARD_ITEM_PANEL_WORDS, BoardChecklist, BoardItemPanel } from '@winterop-com/sokkel-ui/board/BoardItemPanel'
+import { CALL_BAR_SHORTCUTS, CALL_BAR_WORDS, CallBar, type CallBarProps } from '@winterop-com/sokkel-ui/CallBar'
 import {
     COMMAND_PALETTE_WORDS,
     CommandPalette,
@@ -30,12 +32,14 @@ import {
     type TimelineTrack,
 } from '@winterop-com/sokkel-ui/ClipTimeline'
 import { DataTable, DATA_TABLE_WORDS, headEntered, headStep, type DataColumn, type DataTableProps } from '@winterop-com/sokkel-ui/DataTable'
+import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
 import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
 import { EMOJI_PICKER_WORDS, EmojiPicker } from '@winterop-com/sokkel-ui/EmojiPicker'
 import { FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
+import { Letter, LETTER_WORDS } from '@winterop-com/sokkel-ui/Letter'
 import { MESSAGE_COMPOSER_WORDS, MessageComposer, type MessageComposerProps } from '@winterop-com/sokkel-ui/MessageComposer'
 import { PageHeader, PAGE_HEADER_WORDS, type PageHeaderProps } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState, PAGE_STATE_WORDS, type PageStateProps } from '@winterop-com/sokkel-ui/PageState'
@@ -440,7 +444,7 @@ const READ = {
     underline: (name: string) => (name === 'underline' ? 'true' : name === 'no-underline' ? 'false' : undefined),
     radius: (name: string) => {
         if (name.startsWith('rounded-[min(var(--control-radius),')) return 'radius-control'
-        const match = /^rounded-(control|surface|composer|mini|xs|sm|md|lg|xl|none|full)$/.exec(name)
+        const match = /^rounded-(control|surface|composer|chip|mini|xs|sm|md|lg|xl|none|full)$/.exec(name)
         return match === null ? undefined : `radius-${match[1]}`
     },
     radiusMax: (name: string) => /^rounded-\[min\(var\(--control-radius\),(\d+)px\)\]$/.exec(name)?.[1],
@@ -4236,6 +4240,351 @@ const MESSAGE_COMPOSER_ADAPTER: Adapter = {
     },
 }
 
+// Call bar
+
+const CALL_BAR = source('components/CallBar.tsx')
+const DEVICES = [
+    {
+        id: 'microphones',
+        label: 'Microphone',
+        devices: [
+            { id: 'built-in', label: 'Built-in microphone' },
+            { id: 'headset', label: 'Headset' },
+        ],
+        selected: 'built-in',
+        onSelect: noop,
+    },
+]
+const callBar = (props: Partial<CallBarProps> = {}) =>
+    draw(
+        TooltipProvider,
+        {},
+        createElement(CallBar, {
+            onMutedChange: noop,
+            microphones: DEVICES,
+            onCameraOffChange: noop,
+            cameras: DEVICES,
+            onSharingChange: noop,
+            onReact: noop,
+            onHandRaisedChange: noop,
+            more: [{ id: 'captions', label: 'Captions', onSelect: noop, checked: false }],
+            onLeave: noop,
+            ...props,
+        }),
+    )
+const CALL_BARS = once(() => ({
+    plain: callBar(),
+    off: callBar({ muted: true, sharing: true }),
+    docked: callBar({ placement: 'docked' }),
+}))
+const CALL_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+    pressed: ['aria-pressed'],
+    open: ['aria-expanded'],
+}
+const callOn = (state: string) => state.split('+').flatMap((one) => CALL_ON[one] ?? [])
+/** The quoted members of a union a type alias names, read from its source. */
+const unionOf = (text: string, name: string) =>
+    [...(new RegExp(`export type ${name} = ([^\\n]+)`).exec(text)?.[1] ?? '').matchAll(/'([\w-]+)'/g)].map((match) => match[1])
+/** The reactions' popover, which a server drawing leaves closed: its classes from the source. */
+const CALL_POPOVER = literalAfter(CALL_BAR, '<PopoverContent', 'className=')
+/** The bar's own words: the reaction bar's are parts/reaction-bar's, passed through `reactionBar`. */
+const { reactionBar: _callReactionWords, ...CALL_BAR_OWN } = CALL_BAR_WORDS
+const toolbarOf = (elements: El[]) => elements.find((element) => element.attrs.role === 'toolbar')
+
+const CALL_BAR_ADAPTER: Adapter = {
+    wordObjects: { CALL_BAR_OWN },
+    complete: ['CALL_BAR_OWN'],
+    words: Object.fromEntries(Object.keys(CALL_BAR_OWN).map((key) => [key, `CALL_BAR_OWN.${key}`])),
+    options: { openMenu: unionOf(CALL_BAR, 'CallBarMenu'), placement: propValues(CALL_BAR, 'CallBarProps', 'placement') },
+    size: (size, key) => {
+        const { plain, docked } = CALL_BARS()
+        const read: Record<string, Where | undefined> = {
+            frame: pieceWhere(byData(docked, 'data-slot', 'call-bar')),
+            bar: pieceWhere(toolbarOf(plain)),
+            control: pieceWhere(byLabel(plain, CALL_BAR_WORDS.share), key === 'icon' ? SIZE_ON.icon : []),
+            devices: pieceWhere(byLabel(plain, CALL_BAR_WORDS.microphoneDevices), key === 'icon' ? SVG_ON : []),
+            leave: pieceWhere(byLabel(plain, CALL_BAR_WORDS.leave), key === 'icon' ? SIZE_ON.icon : []),
+            reactionsPopover: { layers: [CALL_POPOVER], on: [] },
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const { plain, off, docked } = CALL_BARS()
+        const on = callOn(state)
+        const turnedOff = state.split('+').includes('off')
+        switch (name) {
+            case 'frame':
+                return pieceWhere(byData(docked, 'data-slot', 'call-bar'))
+            case 'bar':
+                return pieceWhere(toolbarOf(plain))
+            case 'control':
+                if (turnedOff) return pieceWhere(byLabel(off, CALL_BAR_WORDS.unmute), on)
+                return pieceWhere(byLabel(state === 'pressed' ? off : plain, CALL_BAR_WORDS.share), on)
+            case 'devices':
+                return pieceWhere(byLabel(turnedOff ? off : plain, CALL_BAR_WORDS.microphoneDevices), on)
+            case 'leave':
+                return pieceWhere(byLabel(plain, CALL_BAR_WORDS.leave), on)
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => (state === 'focus' ? pieceWhere(byLabel(CALL_BARS().plain, CALL_BAR_WORDS.share), ['focus-visible']) : undefined),
+    keys: {
+        'ArrowLeft, ArrowRight (a control of the bar has focus)': () =>
+            /querySelectorAll<HTMLButtonElement>\('\[data-call-control\]'\)/.test(CALL_BAR) && STOPS_AT_ENDS.test(CALL_BAR)
+                ? true
+                : "the arrows do not move between the bar's controls, stopping at the ends",
+        'Enter, Space (a control of the bar has focus)': () =>
+            byLabel(CALL_BARS().plain, CALL_BAR_WORDS.share)?.attrs.type === 'button' ? true : 'a control is not a native button',
+        'Mod+D (shortcuts, with onMutedChange)': () =>
+            CALL_BAR_SHORTCUTS.microphone !== false &&
+            CALL_BAR_SHORTCUTS.microphone.key === 'd' &&
+            CALL_BAR_SHORTCUTS.microphone.mod === true
+                ? true
+                : `the microphone's key is ${JSON.stringify(CALL_BAR_SHORTCUTS.microphone)}`,
+        'Mod+E (shortcuts, with onCameraOffChange)': () =>
+            CALL_BAR_SHORTCUTS.camera !== false && CALL_BAR_SHORTCUTS.camera.key === 'e' && CALL_BAR_SHORTCUTS.camera.mod === true
+                ? true
+                : `the camera's key is ${JSON.stringify(CALL_BAR_SHORTCUTS.camera)}`,
+        'Escape (a menu or the reaction bar of the bar is open)': BASE_UI(
+            'Menu and Popover',
+            'close on Escape and put focus back on their trigger',
+        ),
+    },
+    more: () =>
+        layoutChecks('call-bar', {
+            midRoom: () => numberIn(CALL_BAR, /const MID = (\d+)\b/, 'rem'),
+            narrowRoom: () => numberIn(CALL_BAR, /const NARROW = (\d+)\b/, 'rem'),
+            popoverEdge: () => numberIn(CALL_BAR, /collisionPadding=\{(\d+)\}/),
+        }),
+}
+
+// Letter
+
+const LETTER = source('components/Letter.tsx')
+const letter = (open: boolean) =>
+    draw(
+        Letter,
+        {
+            from: { name: 'grace', address: 'grace@example.org' },
+            to: ['me', 'linus'],
+            time: '09:12',
+            attached: true,
+            snippet: 'The plan for harbor',
+            defaultOpen: open,
+        },
+        createElement('p', {}, 'The plan for harbor.'),
+    )
+const LETTERS = once(() => ({ folded: letter(false), open: letter(true) }))
+const letterHead = (elements: El[]) => elements.find((element) => element.tag === 'button' && element.attrs['aria-expanded'] !== undefined)
+const startingWith = (elements: El[], start: string) => elements.find((element) => classesOf(element).startsWith(start))
+/** Each piece of an open letter, by its name in the spec. */
+const letterPieces = (open: El[]): Record<string, El | undefined> => ({
+    letter: open.find((element) => element.tag === 'article'),
+    head: letterHead(open),
+    row: startingWith(open, 'flex min-w-0 items-start'),
+    name: startingWith(open, 'truncate text-sm font-medium'),
+    nameLine: startingWith(open, 'flex min-w-0 items-baseline'),
+    address: startingWith(open, 'truncate text-xs'),
+    time: startingWith(open, 'ml-auto'),
+    line: startingWith(open, 'truncate text-sm text-muted-foreground'),
+    body: startingWith(open, 'mt-3'),
+})
+
+const LETTER_ADAPTER: Adapter = {
+    wordObjects: { LETTER_WORDS },
+    complete: ['LETTER_WORDS'],
+    words: {
+        attached: 'LETTER_WORDS.attached',
+        to: ['LETTER_WORDS.to', (said: (names: readonly string[]) => string, fill) => said(String(fill.names).split(', '))],
+    },
+    options: {},
+    size: (size, key) => {
+        const { open } = LETTERS()
+        const pieces = letterPieces(open)
+        const read: Record<string, Where | undefined> = {
+            letter: pieceWhere(pieces.letter),
+            head: pieceWhere(key === 'radius' ? pieces.head : pieces.row),
+            avatar: pieceWhere(pieces.row === undefined ? undefined : open.find((element) => element.parent === pieces.row)),
+            name: pieceWhere(pieces.name),
+            nameLine: pieceWhere(pieces.nameLine),
+            address: pieceWhere(pieces.address),
+            time: pieceWhere(key === 'icon' ? iconOf(open, pieces.time) : pieces.time),
+            line: pieceWhere(pieces.line),
+            body: pieceWhere(pieces.body),
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => pieceWhere(letterPieces(LETTERS().open)[name], state === 'focus' ? ['focus-visible'] : []),
+    effect: () => skip('the letter states no effects'),
+    keys: {
+        'Enter, Space (a foldable head has focus)': () =>
+            letterHead(LETTERS().folded)?.attrs.type === 'button' ? true : "a foldable letter's head is not a native button",
+    },
+    more: () => {
+        const { letter: article, body } = letterPieces(LETTERS().open)
+        return layoutChecks('letter', {
+            padXFromMd: () => (article === undefined ? undefined : resolve([classesOf(article)], ['md'], READ.padX)),
+            openFoot: () => numberIn(LETTER, /open && 'pb-(\d+(?:\.\d+)?)'/, 'step'),
+            bodyTop: () => numberIn(classesOf(body), /\bmt-(\d+(?:\.\d+)?)\b/, 'step'),
+            bodyIndent: () => numberIn(classesOf(body), /\bsm:pl-(\d+(?:\.\d+)?)\b/, 'step'),
+            addressFrom: () => (/max-sm:hidden/.test(LETTER) ? '640' : undefined),
+        })
+    },
+}
+
+// Detail pane
+
+const DESCRIPTION_LIST = source('components/DescriptionList.tsx')
+const DETAIL_PANES = once(() =>
+    draw(DetailPane, {
+        sections: [
+            {
+                id: 'run',
+                title: 'Run',
+                summary: 'ada started it',
+                facts: [
+                    { term: 'Job', value: 'nightly-export' },
+                    { term: 'State', value: 'failed' },
+                ],
+                actions: createElement('button', { type: 'button' }, 'Copy'),
+            },
+            { id: 'steps', title: 'Steps', content: createElement('p', {}, 'fetch') },
+        ],
+        actions: createElement('button', { type: 'button' }, 'Run again'),
+    }),
+)
+/** A piece that takes its text from an element around it: that element's classes, then its own. */
+const inside = (around: El | undefined, element: El | undefined, on: string[] = []): Where | undefined =>
+    element === undefined ? undefined : { layers: [classesOf(around), classesOf(element)], on, around: ancestors(element) }
+const byTag = (elements: El[], tag: string) => elements.find((element) => element.tag === tag)
+/** Each piece of a detail pane, by its name in the spec. */
+const detailPieces = (pane: El[]): Record<string, El | undefined> => {
+    const row = byTag(pane, 'h3')?.parent
+    return {
+        section: byTag(pane, 'section'),
+        heading: byTag(pane, 'h3'),
+        headingRow: row,
+        sectionActions: row === undefined ? undefined : pane.find((element) => element.parent === row && element.tag === 'div'),
+        summary: pane.find((element) => element.tag === 'p' && element.text === 'ada started it'),
+        facts: byTag(pane, 'dl'),
+        term: byTag(pane, 'dt'),
+        value: byTag(pane, 'dd'),
+        list: byTag(pane, 'dl'),
+        actions: pane.find((element) => element.parent === undefined && element.tag === 'div'),
+    }
+}
+
+const DETAIL_PANE_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {},
+    size: (size) => pieceWhere(detailPieces(DETAIL_PANES())[size]),
+    paint: (_, name) => {
+        const pieces = detailPieces(DETAIL_PANES())
+        // A value takes its text from the list around it.
+        return name === 'value' ? inside(pieces.list, pieces.value) : pieceWhere(pieces[name])
+    },
+    effect: () => skip('the detail pane states no effects'),
+    keys: {},
+    more: () =>
+        layoutChecks('detail-pane', {
+            factsRowGap: () => numberIn(DESCRIPTION_LIST, /'grid gap-y-(\d+(?:\.\d+)?)'\)/, 'step'),
+            termMax: () => {
+                const share = /(\d+)%/.exec(DESCRIPTION_LIST)?.[1]
+                return share === undefined ? undefined : String(Number(share) / 100)
+            },
+        }),
+}
+
+// Board item panel
+
+const BOARD_ITEM_PANEL = source('components/board/BoardItemPanel.tsx')
+const CHECKBOX_FIELD = source('components/CheckboxField.tsx')
+const STEPS = [
+    { text: 'Reproduce with the 1 November feed', done: true },
+    { text: 'Add a validate rule for zero rows', done: false },
+]
+const BOARD_ITEMS = once(() => ({
+    panel: draw(BoardItemPanel, {
+        code: 'HRB-142',
+        title: 'Empty export after a feed change',
+        state: { label: 'In progress', icon: createElement(Play) },
+        description: 'nightly-export wrote no rows.',
+        fields: [{ term: 'Project', value: 'harbor' }],
+        checklist: STEPS,
+        onChecklistChange: noop,
+    }),
+    readOnly: draw(BoardChecklist, { steps: STEPS }),
+}))
+const stepRow = (elements: El[], done: boolean) =>
+    elements.find((element) => element.tag === 'label' && element.text.includes(STEPS[done ? 0 : 1].text))
+const inStep = (elements: El[], done: boolean, found: (element: El) => boolean) => {
+    const row = stepRow(elements, done)
+    return row === undefined ? undefined : elements.find((element) => within(element, row) && found(element))
+}
+const boxOf = (elements: El[], done: boolean) => inStep(elements, done, (element) => element.attrs.role === 'checkbox')
+const BOARD_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'], checked: ['data-checked'], readOnly: ['disabled'] }
+/** Each piece of a work item's panel, by its name in the spec. */
+const boardPieces = (panel: El[], done: boolean): Record<string, El | undefined> => {
+    const chip = panel.find((element) => classesOf(element).startsWith('group/badge'))
+    return {
+        head: panel[0],
+        code: panel.find((element) => element.text === 'HRB-142'),
+        title: byTag(panel, 'h2'),
+        chips: chip?.parent,
+        stateChip: chip,
+        section: byTag(panel, 'section'),
+        heading: byTag(panel, 'h3'),
+        description: panel.find((element) => element.text === 'nightly-export wrote no rows.'),
+        progress: byData(panel, 'data-slot', 'progress-indicator')?.parent,
+        fill: byData(panel, 'data-slot', 'progress-indicator'),
+        step: stepRow(panel, done),
+        box: boxOf(panel, done),
+        indicator: inStep(panel, done, (element) => element.attrs['data-slot'] === 'checkbox-indicator'),
+        stepLabel: inStep(panel, done, (element) => classesOf(element).startsWith('leading-5')),
+    }
+}
+
+const BOARD_ITEM_PANEL_ADAPTER: Adapter = {
+    wordObjects: { BOARD_ITEM_PANEL_WORDS, BOARD_CHECKLIST_WORDS },
+    complete: ['BOARD_ITEM_PANEL_WORDS', 'BOARD_CHECKLIST_WORDS'],
+    words: {
+        description: 'BOARD_ITEM_PANEL_WORDS.description',
+        fields: 'BOARD_ITEM_PANEL_WORDS.fields',
+        activity: 'BOARD_ITEM_PANEL_WORDS.activity',
+        'checklist.title': 'BOARD_CHECKLIST_WORDS.title',
+        'checklist.progress': 'BOARD_CHECKLIST_WORDS.progress',
+    },
+    options: {},
+    size: (size, key) => {
+        const pieces = boardPieces(BOARD_ITEMS().panel, false)
+        // The icons: the chip's own svg, and the check inside a ticked box's indicator.
+        if (key === 'icon' && size === 'box') return pieceWhere(boardPieces(BOARD_ITEMS().panel, true).indicator, ['[&>svg]'])
+        return pieceWhere(pieces[size], key === 'icon' ? ['[&>svg]'] : [])
+    },
+    paint: (_, name, state) => {
+        const pieces = boardPieces(state === 'readOnly' ? BOARD_ITEMS().readOnly : BOARD_ITEMS().panel, state === 'checked')
+        const on = BOARD_ON[state] ?? []
+        if (name === 'stepLabel') return inside(pieces.step, pieces.stepLabel, on)
+        return pieceWhere(pieces[name], on)
+    },
+    effect: (state) => (state === 'readOnly' ? pieceWhere(stepRow(BOARD_ITEMS().readOnly, false), ['has-disabled']) : undefined),
+    keys: {
+        'Tab (the checklist is not read only)': () => (focusable(boxOf(BOARD_ITEMS().panel, false)) ? true : "a step's box takes no focus"),
+        "Space, Enter (a step's box has focus)": () =>
+            boxOf(BOARD_ITEMS().panel, false)?.attrs.role === 'checkbox' ? true : "a step's box is not a checkbox",
+    },
+    more: () =>
+        layoutChecks('board-item-panel', {
+            stepsInset: () => (/<ul className="-mx-1\b/.test(BOARD_ITEM_PANEL) ? '-4' : undefined),
+            boxTop: () => numberIn(CHECKBOX_FIELD, /className="mt-(\d+(?:\.\d+)?)"/, 'step'),
+        }),
+}
+
 /**
  * Each sokkel-ui drift entry in a spec, by its `what`, with the checks it covers: they may differ,
  * and must, or the entry is stale. A function instead says whether the difference is still there,
@@ -4273,6 +4622,10 @@ const ADAPTERS: Record<string, Adapter> = {
     'reaction-bar': REACTION_BAR_ADAPTER,
     composer: COMPOSER_ADAPTER,
     'message-composer': MESSAGE_COMPOSER_ADAPTER,
+    'call-bar': CALL_BAR_ADAPTER,
+    letter: LETTER_ADAPTER,
+    'detail-pane': DETAIL_PANE_ADAPTER,
+    'board-item-panel': BOARD_ITEM_PANEL_ADAPTER,
 }
 
 // The checks, walked from each spec

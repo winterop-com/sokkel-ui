@@ -4,9 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "missing", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
+        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
     },
     "summary": "Jobs and their runs along one time axis, in a box on the card: a legend of the states the runs show, a ruler of ticks that fit the width on the time zone's clock, and a lane per job, its name and a detail line at the start and its runs where they fell, each a mark in its state's color (a bar as long as it took when it has an end), runs still to come hollow, a line at the current time across every lane. A lane is chosen by a press on its name or anywhere in its track, drawn raised; with onShift the chosen lane's upcoming runs drag sideways as one, snapped, a card at the pointer saying how far, and the arrow keys move them from the keyboard. The runs stay where they are until the app moves them. A total lane, such as how many run at once, closes the list.",
     "sources": {
@@ -279,10 +279,10 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 48f51ce there is no run timeline."
+            "today": "As of 9038006 there is no run timeline."
         }
     ]
 }

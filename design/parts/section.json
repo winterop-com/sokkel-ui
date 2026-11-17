@@ -4,18 +4,14 @@
     "kind": "part",
     "status": "draft",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {
-            "state": "partial",
-            "as_of": "890b25f",
-            "note": "Section is built in crates/core/src/widgets/section.rs; the drift entries were written before it."
-        },
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "A titled part of a page. Boxed (the default): a bordered surface whose head is a bar of its own, its title set like a table's column heads. Flat: a heading over a rule with the content on the page's own ground. Either takes a count or fact beside the title, a description under it and actions at the head's end; a tone draws the body as a graph's dot grid or marks the section critical.",
     "sources": {
         "sokkel-ui": ["packages/core/src/components/Section.tsx", "packages/core/src/components/PaneHeader.tsx"],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/display.rs (Card with bar: no Section yet)",
             "examples/storybook/src/stories/display.rs (Primitives/Display/Card)"
         ]
@@ -104,7 +100,9 @@
         "width": "Fills its container.",
         "density": "The body's blank row inside the box at the top and bottom, and the blank row after a flat head, are there at regular and gone at compact; the side padding drops from 2 to 1.",
         "pieces": {
-            "box": {"note": "A box, its corners by radius-surface, in border."},
+            "box": {
+                "note": "A box, its corners by radius-surface, in border. In the critical tone its top line is the heavy rule in critical (rule-heavy), standing for the web's 2px rule over the box."
+            },
             "head": {
                 "rows": 1,
                 "padX": {"regular": 2, "compact": 1},
@@ -112,9 +110,13 @@
                 "note": "One row on section-head-ground whatever density.panel-head is, the rule under it a row of tees in section-head-line. A description makes it one row more per line."
             },
             "flatHead": {"rows": 2, "note": "The title row, then a rule row in border."},
-            "body": {"padX": {"regular": 2, "compact": 1}, "padY": {"regular": 1, "compact": 0}}
+            "body": {
+                "padX": {"regular": 2, "compact": 1},
+                "padY": {"regular": 1, "compact": 0},
+                "note": "In the graph tone its ground carries the dot grid: grid-dot in the grid's ink, one every few cells."
+            }
         },
-        "glyphs": ["box", "rule", "triangle-alert"]
+        "glyphs": ["box", "rule", "triangle-alert", "rule-heavy", "grid-dot"]
     },
     "states": {
         "rest": {"means": "A titled part of the page, its body drawn."},
@@ -194,28 +196,28 @@
             "className and bodyClassName lay the section and its body out in their container.",
             "Surface, beside Section in the same module, is the bordered surface with no heading of its own, for content that is a surface under a flat heading."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "There is no Section yet: Card with bar(true) is the nearest, a box with the section heads' bar and its title."
         ]
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "insets",
             "spec": "density.panel-pad (12, 8 compact) across the head and round the body.",
             "today": "As of dfb6079 (display.rs unchanged since b73200b): Card pads the head's title 16 and its body 16 at both densities."
         },
         {
-            "renderer": "sokkel-ui-egui",
-            "what": "description",
-            "spec": "In the head under the title, in text.help; the head grows to hold it.",
-            "today": "Card draws it in the body, in text.body."
-        },
-        {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of dfb6079 there is no Section. Card with bar(true) draws the boxed head: density.panel-head tall, section-head-ground over a section-head-line rule, the title in text.head and section-head-ink (else card-foreground, which is foreground in every theme), cut short. Not yet: the flat variant, the meta, the actions, the tones critical and graph, flush, fill, and the head growing to hold a description."
+            "today": "Built in crates/core/src/widgets/section.rs (as of 9038006), with the meta, the actions, a description the head grows to hold, and flush. Not yet: the flat variant, the tones critical and graph, and fill."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with no fill."
         }
     ]
 }

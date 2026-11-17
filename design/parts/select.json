@@ -4,9 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "One value chosen from a list: a trigger that shows the chosen option, or the placeholder, with a chevron at its end, and the list it opens: rows padded 4 in from its edge, each with an optional lead (an icon, or a theme's swatch) 8 before the label, a quiet detail at the row's end or under the label, and a check on the chosen one; groups under labels, separators between them, and arrows that scroll a long list. As a field it wears the text field's frame (parts/text-field): the label, the help and the issue mark.",
     "sources": {
@@ -20,7 +20,7 @@
             "packages/core/src/lib/issue-edge.ts",
             "packages/core/src/lib/focus.ts"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/overlay.rs (Select, paint_swatch)",
             "crates/core/src/tokens.rs (Swatch, swatch)",
             "examples/storybook/src/stories/overlays.rs (Primitives/Inputs/Select)"
@@ -185,6 +185,48 @@
             "value": "motion-fast",
             "note": "How long the list fades and zooms in, as far as motion allows; none while it is laid over the trigger."
         }
+    },
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "width": "The trigger: the width its field gives it, else its widest option's label plus the chevron, by the rule. The list: as wide as the trigger at least, and its widest row.",
+        "density": "Nothing changes: the trigger and every row are one row.",
+        "sizes": {"default": {"rows": 1, "padX": 1}, "sm": {"rows": 1, "padX": 1}},
+        "pieces": {
+            "trigger": {
+                "rows": 1,
+                "padX": 1,
+                "note": "The field variant: its ground, and its edge as edge-start and edge-end; its focus is its focus edge, as a text field's is. The quiet variant draws no edge, and shows keyboard focus by focus-ring-start and focus-ring-end beside it."
+            },
+            "chevron": {"width": "1 column at the trigger's end, before its end padding."},
+            "list": {
+                "note": "A box whose border is its edge, as a menu's popup is, its 4 px padding no cell; it opens under the trigger, over it when there is no room under. At most the window less 2 rows tall, then it scrolls with scroll-arrow rows."
+            },
+            "row": {
+                "rows": 1,
+                "padX": 1,
+                "note": "The chosen row's check in a 2-column gutter at its start; the highlighted row on accent in accent-foreground."
+            },
+            "lead": {"width": "1 column (an icon) and a gap of 1 before the label."},
+            "swatch": {"width": "1 column: the status dot in the swatch's color, and a gap of 1."},
+            "detail": {"note": "Under the label it takes a row of its own; after it, 2 columns after the label."},
+            "groupLabel": {"rows": 1, "padX": 1, "note": "A row in the help role."},
+            "separator": {"rows": 1, "note": "A row of the rule glyph."},
+            "scrollArrow": {"rows": 1, "note": "chevron-up or chevron-down, centered, while the list scrolls that way."}
+        },
+        "glyphs": [
+            "box",
+            "chevron-down",
+            "chevron-up",
+            "check",
+            "rule",
+            "status-dot",
+            "edge-start",
+            "edge-end",
+            "focus-ring-start",
+            "focus-ring-end"
+        ],
+        "note": "What lies under it is drawn as it is until the scrim in cells is decided (open-questions.md, T2). From sokkel-tui's proposal, section c3."
     },
     "states": {
         "rest": {"means": "Holding a value; nothing over it."},
@@ -364,7 +406,7 @@
             "As a field (SelectField) the trigger fills its row, the field's label names it, and a refused value marks it aria-invalid; the issue mark and the warning edge are the text field's (parts/text-field).",
             "The theme select (ThemePicker) draws each swatch in its own theme with data-theme-scope, opens under the trigger at most 320 tall, and is as wide as its widest row up to 384 and the room it has; a theme's description stands under its name there. A SelectField whose options name a swatch draws the same ThemeSwatch."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "Select::new(&mut chosen, options, label): the chosen option is an index, and the label names it for AccessKit.",
             "The list is egui's Popup::menu, closing on a click outside.",
             "A swatch's colors come from tokens::swatch(theme, dark): the theme's background, border, foreground, primary and chart-3, resolved."
@@ -372,52 +414,58 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "trigger width",
             "spec": "As wide as what it shows, as the widest label with widest, or the room it is given.",
             "today": "As of 26b411f (overlay.rs unchanged since bee2a97): 220 unless set with width()."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "trigger edge and ring",
             "spec": "The input edge, the ring edge and a 1px ring with keyboard focus; nothing of its own while open.",
             "today": "The ring edge while open or focused, and the shared 2px focus ring 2 off."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "trigger hover",
             "spec": "No look in light; input/50 in dark.",
             "today": "The hover ground in both schemes, while closed."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "list placement",
             "spec": "Laid over the trigger with the chosen row level with the value when a pointer opened it and there is room, else under it 4 away; at least 144 wide.",
             "today": "Always under, 4 away, as wide as the trigger with no least width."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "list edge and shadow",
             "spec": "Every popup's look: a 1px border-strong edge inside the box, and elevation-pop under it.",
             "today": "A 1px foreground/10 stroke inside the box; one shadow 0 4 blur 12, black at 24 (90 in dark)."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "rows",
             "spec": "density.control tall (32, 28 compact; a finger below 768); the label 6 in, the check 8 from the end; highlighted in accent with accent-foreground ink.",
             "today": "density.control less 4 (28, 24 compact); the label 8 in, the check centered 14 from the end; highlighted in hover with popover-foreground ink."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "swatch",
             "spec": "Corners half of --radius; in a row at the row's 6 inset.",
             "today": "Corners half of radius-control; in a row 8 in. In the trigger it matches: 10 in, the label 36 in."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of 26b411f, Select draws the field trigger at density.control with the value, the chevron and an optional swatch, and a list of rows with a check on the chosen one. Not yet: size sm, the quiet variant, the placeholder, widest, invalid, disabled and readOnly, option icons and details (end and below, chosenDetail), disabled options, groups with labels and separators, scroll arrows, mono, finger-tall rows below 768, and the keys (opening from the keyboard, the arrows, Home, End, typing, Enter, Space, Escape)."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with no swatches, detail under the label or alignItemWithTrigger."
         }
     ]
 }

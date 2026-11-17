@@ -4,9 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
     },
     "summary": "A page's head: its title (the name, else the code) with a count beside it, the code, a description and a line of facts under it, an optional back button and picture before it, and the page's actions at the row's end with the primary one last. The actions stay on the title's row while there is room and wrap under it otherwise; actions given as items fold into More instead.",
     "sources": {
@@ -18,7 +18,7 @@
             "packages/core/src/components/Link.tsx",
             "packages/core/src/components/shell-context.ts"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/page.rs (PageHeader)",
             "examples/storybook/src/stories/page.rs (Patterns/Page header)"
         ]
@@ -257,41 +257,47 @@
             "A cut-short title or code says the whole of it in the title attribute, on hover.",
             "The back button's name shows in its tooltip."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "PageHeader::show(ui, actions) lays the actions out from the row's end, right to left, so the app adds the primary one first.",
             "The width the header lays out by is the available rect's, as for every part that fills its container."
         ]
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "lines under the title",
             "spec": "The code right under the title, the description 4 under what is above it, the meta 6.",
             "today": "As of dfb6079 (page.rs unchanged since b73200b): every line 4 apart (item_spacing.y), the code included."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "count's line",
             "spec": "On the title's baseline, 8 after it.",
             "today": "8 after the title, centered on its line (ui.horizontal)."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "description width",
             "spec": "At most a reading measure, 65ch of its own text.",
             "today": "At most 640."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "actions that wrap",
             "spec": "The actions stay on the title's row while there is room and wrap under it, 12 down, when there is not.",
             "today": "Laid out once from the row's end beside the title block; they never go under the title."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of dfb6079, PageHeader draws the title in text.page-title and page-title-ink (else foreground), a count in text.help, the code in the code face, a description in text.body, and actions from the row's end. Not yet: the back button, the trail, the aside, the meta, the lead, items folding into More with the primary and wordsOnly, actionsFill, the code standing as the title (code face, one line, cut short), singleLine, and words (back, trail, more, moreWays)."
+            "today": "As of 9038006, PageHeader draws the title in text.page-title and page-title-ink (else foreground), a count in text.help, chips as its meta, the code under the title in the code face, a description in text.body, the back button, the title edited in place, and actions from the row's end. Not yet: the trail, the aside, the lead, items folding into More with the primary and wordsOnly, actionsFill, singleLine, and the words trail, more and moreWays."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 7bf2ece, drawn from the spec in cells, with no lead, aside, wordsOnly or singleLine."
         }
     ]
 }

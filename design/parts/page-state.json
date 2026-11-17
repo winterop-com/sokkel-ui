@@ -4,9 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "6b8fdfd"},
-        "sokkel-egui": {"state": "partial", "as_of": "890b25f"},
-        "sokkel-tui": {"state": "missing", "as_of": "a592dfb"}
+        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
+        "sokkel-tui": {"state": "built", "as_of": "7bf2ece"}
     },
     "summary": "The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and the content. A failure is headed by what the server answered, with its diagnostic and the problems it named under the heading and Try again; a failed read of secondary data is a warning about part of the page. Drawn in a box of its own, or unframed inside a panel.",
     "sources": {
@@ -15,7 +15,7 @@
             "packages/core/src/components/ProseText.tsx",
             "packages/core/src/components/ui/button.tsx"
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "crates/core/src/widgets/page.rs (PageState, PageStateTone, PageStateWords)",
             "examples/storybook/src/stories/page.rs (Patterns/Page state)"
         ]
@@ -235,7 +235,7 @@
             "The spinner is animate-spin, which motion.css leaves turning when motion is reduced.",
             "emptyRender and children are drawn as given, with no frame."
         ],
-        "sokkel-ui-egui": [
+        "sokkel-egui": [
             "The app picks the state by its constructor (loading, refused, missing, unreachable, empty) rather than by an HTTP status; the headings are the same.",
             "show returns true when Try again was pressed; retry(true) draws it.",
             "An empty state with more than a sentence is the app's own drawing in the state's place, such as Empty; the content is the app's own drawing too."
@@ -243,31 +243,31 @@
     },
     "drift": [
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "problems",
             "spec": "A bulleted list padded 16 at its start, its lines with nothing between them, a wrapped line starting under its own text.",
             "today": "Each problem a label of its own after a bullet and two spaces, 4 apart; a wrapped line runs under the bullet."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "code in the diagnostic",
             "spec": "Backticked parts in the code face on a muted chip, radius-sm, padded 4 across.",
             "today": "Plain text, the backticks shown."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "retry icon",
             "spec": "Try again with a turning arrow before the word.",
             "today": "The word alone."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "mark's place",
             "spec": "2 below the row's top, its center at 10.",
             "today": "Centered in a 22 tall slot, its center at 11."
         },
         {
-            "renderer": "sokkel-ui-egui",
+            "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of dfb6079, PageState draws loading, refused, missing, not answering, a part refused and empty, framed or not, in both tones, with the diagnostic, the problems and Try again, and words as fields. Not yet: headingLevel (the heading as the page's h1 or a part's h2 for AccessKit), and the announcements (polite while loading and for a warning, an alert for a failure)."
