@@ -1,5 +1,5 @@
 {
-    "$description": "The sokkel-design contract: its version, which moves in lockstep with sokkel-ui before 1.0, the foundations every part refers to, and every part and pattern with its status. A stable part is drawn by both renderers from its spec and compared side by side; a draft one is not yet. CHANGELOG.md says what each version changed.",
+    "$description": "The sokkel-design contract: its version, which moves in lockstep with sokkel-ui before 1.0, the foundations every part refers to, and every part and pattern with its status. A stable part is drawn by both renderers from its spec and compared side by side, or is a part as it landed in sokkel-ui, specified in the same round, whose drift says what egui has not built yet; a draft one is not yet. CHANGELOG.md says what each version changed.",
     "version": "0.29.2",
     "tokens": {
         "source": "sokkel-ui: packages/core/tokens/tokens.json, at the commit sokkel-ui.json pins",
@@ -45,7 +45,11 @@
         {"id": "tooltip", "file": "parts/tooltip.json", "status": "stable"},
         {"id": "dialog", "file": "parts/dialog.json", "status": "stable"},
         {"id": "settings-dialog", "file": "parts/settings-dialog.json", "status": "stable"},
-        {"id": "command-palette", "file": "parts/command-palette.json", "status": "stable"}
+        {"id": "command-palette", "file": "parts/command-palette.json", "status": "stable"},
+        {"id": "run-timeline", "file": "parts/run-timeline.json", "status": "stable"},
+        {"id": "clip-timeline", "file": "parts/clip-timeline.json", "status": "stable"},
+        {"id": "emoji-picker", "file": "parts/emoji-picker.json", "status": "stable"},
+        {"id": "reaction-bar", "file": "parts/reaction-bar.json", "status": "stable"}
     ],
     "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "stable"}],
     "principles": "principles.md",

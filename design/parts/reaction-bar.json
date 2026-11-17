@@ -1,0 +1,222 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "reaction-bar",
+    "kind": "part",
+    "status": "stable",
+    "summary": "Reactions, in two parts that work together. ReactionBar is a row of quick reactions as round buttons with the emoji large, and a more button at its end that opens the full emoji picker (parts/emoji-picker) in a popover over it; either way the emoji and its English name go to onReact, and the ones the person already gave are drawn pressed. Framed, it floats over a video or a message on a popup's look; unframed, it sits in a toolbar or a popover (ReactionPopover, which closes once a reaction is given). In a narrow room the reactions scroll sideways inside the bar while the more button stays at its end. ReactionChips are the reactions under a message: each emoji with how many gave it, yours marked, a press adding or taking back yours, and a button at the end that opens the bar to give a new one.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ReactionBar.tsx",
+            "packages/core/src/components/EmojiPicker.tsx",
+            "packages/core/src/lib/popup.ts",
+            "packages/core/src/components/ui/popover.tsx",
+            "packages/core/src/components/ui/tooltip.tsx"
+        ]
+    },
+    "anatomy": {
+        "bar": "ReactionBar: a toolbar named words.label, as wide as its buttons and never wider than its container. Framed, on the popup's look (parts/select's popup: popover ground and ink, a 1px border-strong edge, radius-surface, elevation-pop), padded 4.",
+        "reactions": "The quick reactions in a row, 2 apart, scrolling sideways with no scroll bar when the bar is narrower than they are.",
+        "reaction": "One quick reaction: a round button with the emoji, named and titled by its English name, pressed while the person has given it.",
+        "more": "With more: the button at the bar's end, outside the scrolling row, a smile with a plus in muted-foreground, named and titled words.more. Pressed, it opens the full emoji picker in a popover over it, lined up at its end, its pick going to onReact.",
+        "chips": "ReactionChips: the reactions in a row that wraps, 4 apart, and the add button at its end. Nothing is drawn while there are no reactions and no way to add one.",
+        "chip": "One reaction: its icon or emoji, then how many gave it, on a pill a control-xs tall; marked in primary while one of them is yours. Titled by its label and named words.count; a press adds or takes back yours.",
+        "chipCount": "The count after the emoji, in the body face with tabular figures.",
+        "add": "With onReaction or onAddReaction: the add button at the chips' end, a pill like a chip holding a smile with a plus, named words.react with a tooltip saying it. With onReaction it opens the bar in a popover over it (ReactionPopover, lined up at its start), the person's own reactions pressed in it; with onAddReaction the app answers it."
+    },
+    "options": {
+        "onReact": {
+            "type": "callback",
+            "does": "ReactionBar: hears the emoji given, from the row or from the full list, and its English name. ReactionChips: hears a chip's id when it is pressed."
+        },
+        "reactions": {
+            "type": "rows",
+            "does": "ReactionBar: the quick reactions, as emoji or { emoji, name }; QUICK_REACTIONS by default (red heart, thumbs up, party popper, clapping hands, face with tears of joy, face with open mouth, crying face, thinking face, thumbs down). ReactionChips: the reactions given, { id, icon, label, count, mine? }."
+        },
+        "selected": {
+            "type": "rows",
+            "default": [],
+            "does": "ReactionBar: the emoji the person has already given, drawn pressed."
+        },
+        "more": {"type": "boolean", "default": true, "does": "ReactionBar: offers the more button at the end."},
+        "moreOpen": {
+            "type": "boolean",
+            "does": "ReactionBar: whether the full list is open, when the app holds it (moreOpen, defaultMoreOpen, onMoreOpenChange)."
+        },
+        "picker": {
+            "type": "node",
+            "does": "ReactionBar: the full list's options (parts/emoji-picker): its recent emoji, skin tone and where it keeps them."
+        },
+        "size": {
+            "values": ["sm", "md"],
+            "default": "md",
+            "does": "ReactionBar: md, buttons 36 round with the emoji at text.emoji; sm, 28 with text.base, for a message's hover bar or a tight toolbar.",
+            "sokkel-ui": "ReactionBarProps size"
+        },
+        "framed": {
+            "type": "boolean",
+            "default": true,
+            "does": "ReactionBar: draws the bar on the popup's look, to float over a video or a message; false inside a popover or a toolbar of its own. ReactionPopover sets false."
+        },
+        "onReaction": {
+            "type": "callback",
+            "does": "ReactionChips: offers the add button, which opens the bar and its full list; hears the emoji given and its name."
+        },
+        "onAddReaction": {
+            "type": "callback",
+            "does": "ReactionChips: offers the add button, which the app answers itself; onReaction opens the bar instead."
+        },
+        "bar": {"type": "node", "does": "ReactionChips: the bar's options: its quick reactions, words and full list."}
+    },
+    "sizes": {
+        "bar": {
+            "padX": 4,
+            "padY": 4,
+            "gap": 2,
+            "radius": "radius-surface",
+            "note": "The pad and the popup's look only when framed."
+        },
+        "reaction": {
+            "height": 36,
+            "width": 36,
+            "text": "text.emoji",
+            "note": "md; a circle. The emoji in the emoji face."
+        },
+        "reactionSm": {"height": 28, "width": 28, "text": "text.base", "note": "sm; a circle."},
+        "more": {"icon": 20, "note": "As large as the bar's reactions, md or sm."},
+        "chips": {"gap": 4},
+        "chip": {
+            "height": 24,
+            "padX": 6,
+            "gap": 4,
+            "icon": 14,
+            "radius": "radius-control",
+            "text": "text.body",
+            "note": "The emoji in the emoji face on a line as tall as its size; an icon 14."
+        },
+        "chipCount": {"text": "text.badge"},
+        "add": {"height": 24, "padX": 6, "icon": 14, "radius": "radius-control"}
+    },
+    "layout": {
+        "popoverEdge": {
+            "value": 8,
+            "note": "A popover holding the bar or the full list keeps this far from the window's edges, and is never wider than the window less 16."
+        }
+    },
+    "states": {
+        "rest": {"means": "Drawn: the quick reactions, the more button, none given."},
+        "hover": {
+            "means": "The pointer is over a reaction or the more button: washed hover, the more button's icon in foreground; over a chip or the add button, edged border-strong, the add button's icon in foreground.",
+            "reached": "the pointer"
+        },
+        "focus": {
+            "means": "Keyboard focus on a reaction, the more button, a chip or the add button: a focus-ring-width ring in ring at half strength around it, with no offset.",
+            "on": "keyboard",
+            "reached": "Tab, the arrows"
+        },
+        "pressed": {
+            "means": "A quick reaction the person has given: washed primary at 12 percent, a 1 wide ring in primary at 60 percent.",
+            "reached": "selected"
+        },
+        "open": {
+            "means": "The more button while the full list is open, the add button while the bar is: the more button washed hover, the add button edged border-strong.",
+            "reached": "a press on it, or moreOpen"
+        },
+        "mine": {
+            "means": "A chip one of whose givers is the person: edged primary at 60 percent, washed primary at 12 percent, in primary-ink.",
+            "reached": "mine on a reaction"
+        },
+        "sm": {"means": "ReactionBar at size sm: buttons 28 with text.base.", "reached": "size sm"}
+    },
+    "pieces": {
+        "bar": {
+            "rest": {
+                "ground": "popover",
+                "edge": "border-strong",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "note": "Framed: the popup's look, elevation-pop under it. Unframed, no ground, edge or shadow of its own."
+            }
+        },
+        "reaction": {
+            "rest": {"text": "text.emoji", "note": "A circle; no ground at rest."},
+            "hover": {"ground": "hover"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}},
+            "pressed": {"ground": "primary/12", "ring": {"color": "primary/60", "width": 1}},
+            "sm": {"text": "text.base"}
+        },
+        "more": {
+            "rest": {"ink": "muted-foreground"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "open": {"ground": "hover"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "chip": {
+            "rest": {
+                "ground": "muted",
+                "edge": "none",
+                "ink": "muted-foreground",
+                "radius": "radius-control",
+                "text": "text.body"
+            },
+            "hover": {"edge": "border-strong"},
+            "mine": {"ground": "primary/12", "edge": "primary/60", "ink": "primary-ink"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "chipCount": {"rest": {"text": "text.badge"}},
+        "add": {
+            "rest": {"ground": "muted", "edge": "none", "ink": "muted-foreground", "radius": "radius-control"},
+            "hover": {"edge": "border-strong", "ink": "foreground"},
+            "open": {"edge": "border-strong"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "Moves to the bar's button before or after, the more button included, wrapping at the ends.",
+            "when": "a button of the bar has focus"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Gives the reaction, or opens the full list from the more button.",
+            "when": "a button of the bar has focus"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Adds or takes back the person's reaction, or opens the bar from the add button.",
+            "when": "a chip or the add button has focus"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the full list or ReactionPopover, focus back on the button that opened it; with a query in the list's search, clears it first.",
+            "when": "a popover of the bar is open"
+        }
+    ],
+    "words": {"label": "Reactions", "more": "More reactions", "react": "Add a reaction", "count": "{label}, {count}"},
+    "samples": {
+        "count": [
+            {"with": {"label": "thumbs up", "count": 0}, "says": "thumbs up, 0"},
+            {"with": {"label": "thumbs up", "count": 1}, "says": "thumbs up, 1"},
+            {"with": {"label": "thumbs up", "count": 1200}, "says": "thumbs up, 1200"}
+        ]
+    },
+    "appText": {
+        "reactions": "Each chip's icon and label; a quick reaction's name when the app gives its own list.",
+        "picker": "The full list's words are parts/emoji-picker's, passed through the bar's words.picker."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The bar's and the add button's popovers are Base UI's Popover, which takes Escape and a press outside and puts focus back on the trigger; the list starts loading as the pointer reaches a trigger or it takes focus (loadEmojiData).",
+            "The quick reactions scroll in a row with scrollbar-width none; the more button sits outside it.",
+            "toggleReaction and mineOf are helpers an app may use to apply a reaction to its list: the count moves by one, a reaction no one gives any more is dropped, a new one is added at the end."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 48f51ce there is no reaction bar or reaction chips."
+        }
+    ]
+}

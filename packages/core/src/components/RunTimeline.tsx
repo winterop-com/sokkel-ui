@@ -379,7 +379,7 @@ export function RunTimeline({
                                 aria-pressed={chosenLane}
                                 onClick={() => onSelect(lane.id)}
                                 className={cn(
-                                    'w-28 shrink-0 border-s-2 border-transparent px-3 py-2 text-start outline-offset-focus-inset hover:bg-muted sm:w-48',
+                                    'w-28 shrink-0 border-s-2 border-transparent px-3 py-2 text-start outline-offset-focus-inset hover:bg-muted focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid sm:w-48',
                                     chosenLane && 'border-primary hover:bg-accent',
                                 )}
                             >
@@ -565,7 +565,7 @@ function ShiftHandle({ layer, id, label, left, right, preview, onKeyDown }: Shif
             aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
             onKeyDown={onKeyDown}
             data-shift-handle
-            className="absolute inset-y-1 z-3 cursor-grab touch-none rounded-control border border-dashed border-primary/50 bg-primary/5 outline-offset-focus-inset hover:bg-primary/10 active:cursor-grabbing"
+            className="absolute inset-y-1 z-3 cursor-grab touch-none rounded-control border border-dashed border-primary/50 bg-primary/5 outline-offset-focus-inset hover:bg-primary/10 focus-visible:outline-focus focus-visible:outline-ring focus-visible:outline-solid active:cursor-grabbing"
             // From the current time to two spacing steps past the last run, so the whole stretch ahead is taken.
             style={{ left: percent(left), width: `calc(${percent(Math.max(right - left, 0))} + var(--spacing) * 2)` }}
         >

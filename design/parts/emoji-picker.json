@@ -1,0 +1,289 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "emoji-picker",
+    "kind": "part",
+    "status": "stable",
+    "summary": "The full list of emoji to pick one from, in a box 320 wide and 384 tall on the popover's ground: a search over the emoji's English names and keywords with a skin tone button beside it, a grid of 8 to a row grouped by kind under headings that stay at the top as it scrolls, Recent first when there are recent emoji, and a tab per group along the foot that scrolls to its group and marks the one in view. The arrow keys move through the grid. A picked emoji goes to onPick in the chosen skin tone with its English name and joins the recent ones. The list loads the first time a picker is drawn, a spinner meanwhile, and keeps only the emoji the fonts draw. EmojiPickerPopover holds it in a popover opened from a trigger.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/EmojiPicker.tsx",
+            "packages/core/src/components/emoji-data.ts",
+            "packages/core/src/data/emoji-en.json",
+            "packages/core/src/components/SearchField.tsx",
+            "packages/core/src/components/Loading.tsx",
+            "packages/core/src/components/ui/popover.tsx",
+            "packages/core/src/hooks/use-stored.ts"
+        ]
+    },
+    "anatomy": {
+        "box": "The picker: boxWidth wide (never wider than its container) and boxHeight tall, on the popover's ground and ink, its corners its container's. Inline it stands on what holds it; in EmojiPickerPopover the popover's box, with no pad of its own, is its frame.",
+        "head": "The search and the skin tone button in a row at the top, 8 in at the top and sides and 6 over the grid.",
+        "search": "parts/text-field's search field, filling the row: a search glyph, the query or words.search, a clear button once there is a query; named words.searchLabel. It has focus when the picker is drawn (autoFocus).",
+        "toneButton": "The skin tone button at the row's end, with skinTones: a square a control tall holding the raised hand in the chosen tone, named words.skinTone. Pressed, the row turns into the tone choice.",
+        "toneChoice": "In the head's place while it is open: a radio group named words.skinTone of the six hands, the default and light to dark, spread across the row, each a square a control tall named by words.tones, the chosen one on muted; focus starts on the chosen one. A choice closes it and focus goes back to the tone button.",
+        "grid": "The emoji, scrolling down under the head, 8 in at its sides and foot: a section per group, each a heading and 8 cells to a row. Searching, one section of what the search found, under words.results.",
+        "heading": "A section's heading (words.groups, or words.results), small and muted on the popover's ground, staying at the grid's top while its section scrolls under it.",
+        "cell": "One emoji: a square, an eighth of the grid's width, the emoji large and centered, named and titled by its English name. Washed hover under the pointer and while it has keyboard focus. Only the cell the arrows last reached is a tab stop.",
+        "tabs": "A toolbar named words.tabs along the foot, ruled over: Recent (when there are recent emoji) and each group, spread across it. Shut while the list loads.",
+        "tab": "A group's tab: its icon (a clock, a smile, a hand, a paw, an apple, a ball, a car, a bulb, a heart, a flag) in a 28 square, named and titled by its group's words. Pressed, it clears the search and scrolls to its group. The group in view is its current tab: its icon primary-ink over a short primary bar at its foot; none while searching.",
+        "tabMark": "The current tab's bar: 2 tall, rounded fully, 6 in from the tab's sides and 4 under its foot.",
+        "loading": "While the list loads: a spinner in the grid's place, named words.loading, shown only once the load has taken 250 ms.",
+        "failed": "When the list could not be loaded: words.failed, centered, and parts/button's outline button at sm saying words.retry under it, which loads it again.",
+        "empty": "When a search finds nothing: words.empty, centered in the grid's place."
+    },
+    "options": {
+        "onPick": {"type": "callback", "does": "Hears the emoji picked, in the chosen skin tone, and its English name."},
+        "recent": {
+            "type": "rows",
+            "does": "The emoji picked lately, newest first, when the app holds them; otherwise the picker keeps them per person under storeKey."
+        },
+        "onRecentChange": {
+            "type": "callback",
+            "does": "Hears the new recent list after each pick: the emoji first, the rest after it with it taken out, cut to recentLimit."
+        },
+        "recentLimit": {"type": "number", "default": 24, "does": "How many recent emoji are kept."},
+        "skinTone": {
+            "values": ["0", "1", "2", "3", "4", "5"],
+            "does": "The skin tone, when the app holds it: 0 the default yellow, 1 to 5 light to dark; otherwise the picker keeps it per person under storeKey. An emoji that takes a tone is listed and picked in it.",
+            "sokkel-ui": "skinTone, onSkinToneChange (SkinTone)"
+        },
+        "skinTones": {"type": "boolean", "default": true, "does": "Offers the skin tone button beside the search."},
+        "storeKey": {
+            "type": "text",
+            "default": "emoji",
+            "does": "Where the person's recent emoji and tone are kept: <storeKey>.recent and <storeKey>.tone."
+        },
+        "autoFocus": {"type": "boolean", "default": true, "does": "Gives the search focus when the picker is drawn."},
+        "onClose": {"type": "callback", "does": "Hears Escape once the search is empty, for a picker drawn inline."},
+        "defaultQuery": {"type": "text", "default": "", "does": "The search the picker opens with."},
+        "side": {
+            "type": "text",
+            "default": "top",
+            "does": "EmojiPickerPopover: the side of the trigger it opens on (top, right, bottom or left), turned to the other side where there is no room.",
+            "sokkel-ui": "EmojiPickerPopover side"
+        },
+        "align": {
+            "type": "text",
+            "default": "start",
+            "does": "EmojiPickerPopover: how it lines up along that side (start, center or end).",
+            "sokkel-ui": "EmojiPickerPopover align"
+        },
+        "closeOnPick": {
+            "type": "boolean",
+            "default": true,
+            "does": "EmojiPickerPopover: closes once an emoji is picked; false to pick several in a row."
+        },
+        "trigger": {
+            "type": "node",
+            "does": "EmojiPickerPopover: the button that opens it; the list starts loading as the pointer reaches it or it takes focus. Left out, the popover opens at anchor, held open from outside."
+        }
+    },
+    "sizes": {
+        "box": {
+            "width": 320,
+            "height": 384,
+            "text": "text.body",
+            "note": "Never wider than its container; in a popover never wider than the window less 16."
+        },
+        "head": {"padX": 8, "gap": 6, "note": "8 over it, 6 under it."},
+        "toneButton": {
+            "height": "density.control",
+            "width": "density.control",
+            "radius": "radius-md",
+            "text": "text.emoji",
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "The hand in the emoji face."
+        },
+        "toneChoice": {"height": "density.control", "note": "Each hand a square a control tall, radius-md, text.emoji."},
+        "grid": {"padX": 8, "note": "8 under the last row too."},
+        "heading": {"padX": 4, "text": "text.badge", "note": "6 over and 4 under its line."},
+        "cell": {
+            "radius": "radius-md",
+            "text": "text.emoji",
+            "note": "Square: an eighth of the grid's width, 38 in a 320 box. The emoji in the emoji face."
+        },
+        "tabs": {"padX": 6, "padY": 4, "gap": 2},
+        "tab": {
+            "height": 28,
+            "width": 28,
+            "icon": 16,
+            "radius": "radius-md",
+            "note": "Narrower when the row cannot hold every tab at 28."
+        },
+        "tabMark": {"height": 2}
+    },
+    "layout": {
+        "columns": {"value": 8, "note": "Emoji to a row of the grid, in every section."},
+        "boxWidth": {"value": 320},
+        "boxHeight": {"value": 384},
+        "firstPaint": {
+            "value": 400,
+            "note": "How many emoji the first drawing holds; the rest follow a frame later, at once when a key or a tab asks for them, so the picker opens at once."
+        },
+        "inView": {
+            "value": 4,
+            "note": "A section is the one in view once its top is within this of the grid's scrolled top."
+        },
+        "popoverEdge": {"value": 8, "note": "EmojiPickerPopover keeps this far from the window's edges."}
+    },
+    "states": {
+        "rest": {
+            "means": "Loaded: the search empty, Recent (when there are recent emoji) and every group, the first tab current."
+        },
+        "hover": {
+            "means": "The pointer is over a cell, a tab or a tone hand: washed hover; a tab's icon in foreground.",
+            "reached": "the pointer"
+        },
+        "focus": {
+            "means": "Keyboard focus on a cell, a tab or a tone hand: a focus-ring-width ring in ring at half strength around it, with no offset; a cell washed hover too.",
+            "on": "keyboard",
+            "reached": "Tab, the arrows"
+        },
+        "current": {
+            "means": "The tab of the group in view: its icon primary-ink, its bar under it.",
+            "reached": "scrolling the grid, or pressing the tab"
+        },
+        "chosen": {"means": "The chosen tone in the tone choice: on muted.", "reached": "skinTone"},
+        "searching": {
+            "means": "The search holds a query: one section of the emoji whose name or keywords hold every word of it, those named by it first, then those whose name starts with it, shorter names first; no tab current.",
+            "reached": "typing in the search"
+        },
+        "loading": {
+            "means": "The list has not loaded: the spinner in the grid's place, the tabs shut.",
+            "reached": "the first picker drawn"
+        },
+        "failed": {"means": "The list could not be loaded: words.failed and words.retry.", "reached": "a failed load"},
+        "empty": {"means": "A search found nothing: words.empty.", "reached": "a query no emoji matches"},
+        "disabled": {
+            "means": "The tabs while the list loads: at disabled-opacity, not pressed.",
+            "reached": "loading",
+            "effect": {"piece": "tab", "opacity": "disabled-opacity"}
+        },
+        "phone": {"means": "Below 768 the tone button is a finger square.", "reached": "a window below 768"}
+    },
+    "pieces": {
+        "box": {"rest": {"ground": "popover", "ink": "popover-foreground", "text": "text.body"}},
+        "toneButton": {
+            "rest": {"radius": "radius-md", "text": "text.emoji"},
+            "hover": {"ground": "hover"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "toneChoice": {
+            "rest": {"radius": "radius-md", "text": "text.emoji", "note": "Each hand."},
+            "hover": {"ground": "hover"},
+            "chosen": {"ground": "muted"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "heading": {"rest": {"ground": "popover", "ink": "muted-foreground", "text": "text.badge"}},
+        "cell": {
+            "rest": {"radius": "radius-md", "text": "text.emoji"},
+            "hover": {"ground": "hover"},
+            "focus": {"ground": "hover", "ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "tabs": {"rest": {"rule": "border"}},
+        "tab": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "current": {"ink": "primary-ink"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}},
+            "disabled": {"opacity": "disabled-opacity"}
+        },
+        "tabMark": {"rest": {"note": "Drawn only on the current tab."}, "current": {"ground": "primary"}},
+        "loading": {"rest": {"ink": "muted-foreground", "note": "A 24 spinner."}},
+        "failed": {"rest": {"ink": "muted-foreground"}},
+        "empty": {"rest": {"ink": "muted-foreground"}}
+    },
+    "keyboard": [
+        {
+            "keys": ["ArrowDown"],
+            "does": "Enters the grid at the cell last reached, the first at the start.",
+            "when": "the search has focus and the grid holds emoji"
+        },
+        {
+            "keys": ["Enter"],
+            "does": "Picks the first emoji found.",
+            "when": "the search has focus and holds a query that found any"
+        },
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "Moves to the cell before or after, across rows and sections; it stops at the first and the last.",
+            "when": "a cell has focus"
+        },
+        {
+            "keys": ["ArrowUp", "ArrowDown"],
+            "does": "Moves to the row above or below, across sections, in the same column or the row's last when it is shorter; it stops at the last row, and Up from the first row goes back to the search.",
+            "when": "a cell has focus"
+        },
+        {"keys": ["Home", "End"], "does": "Moves to the first or the last cell.", "when": "a cell has focus"},
+        {"keys": ["Enter", "Space"], "does": "Picks the emoji.", "when": "a cell has focus"},
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "Moves to the tab before or after, wrapping at the ends.",
+            "when": "a tab has focus"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Clears the search and scrolls to the tab's group.",
+            "when": "a tab has focus"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Clears the search while it holds a query, the popover staying open; once it is empty, calls onClose, and closes EmojiPickerPopover with focus back on its trigger.",
+            "when": "focus is in the picker and the tone choice is not open"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the tone choice, focus back on the tone button.",
+            "when": "the tone choice is open"
+        }
+    ],
+    "words": {
+        "search": "Search",
+        "searchLabel": "Search emoji",
+        "groups.recent": "Recent",
+        "groups.smileys": "Smileys and emotion",
+        "groups.people": "People and body",
+        "groups.animals": "Animals and nature",
+        "groups.food": "Food and drink",
+        "groups.activities": "Activities",
+        "groups.travel": "Travel and places",
+        "groups.objects": "Objects",
+        "groups.symbols": "Symbols",
+        "groups.flags": "Flags",
+        "results": "Search results",
+        "empty": "No emoji found",
+        "loading": "Loading emoji",
+        "failed": "The emoji could not be loaded",
+        "retry": "Try again",
+        "skinTone": "Skin tone",
+        "tones.default": "Default",
+        "tones.light": "Light",
+        "tones.mediumLight": "Medium-light",
+        "tones.medium": "Medium",
+        "tones.mediumDark": "Medium-dark",
+        "tones.dark": "Dark",
+        "tabs": "Emoji groups",
+        "label": "Emoji"
+    },
+    "appText": {
+        "names": "The emoji's English names and keywords come from the library's data set (emojibase), not from words."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The data set is src/data/emoji-en.json, written from emojibase-data, fetched as a separate chunk the first time a picker is drawn (loadEmojiData, also called as the pointer reaches a popover's trigger). An emoji newer than the version the page's emoji face draws as one colored glyph is left out: a sample of each version is drawn on a canvas.",
+            "The recent emoji and the tone are kept with useStored, per person, unless the app gives recent and skinTone.",
+            "The headings are sticky in the grid's scroller; the group in view is found from each section's offset as the grid scrolls.",
+            "Escape in the search clears it and stops there, so a popover around the picker stays open; on an empty search it blurs the field and reaches the picker's onClose.",
+            "In EmojiPickerPopover, Base UI's popover takes Escape and a press outside, puts focus back on its trigger, and gives the picker's focus to the search (initialFocus false, autoFocus on the search); it is named words.label."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 48f51ce there is no emoji picker."
+        }
+    ]
+}

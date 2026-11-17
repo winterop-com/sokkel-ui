@@ -13,8 +13,18 @@ import {
     type CommandPaletteProps,
     type PaletteCommand,
 } from '@winterop-com/sokkel-ui/CommandPalette'
+import {
+    CLIP_TIMELINE_FIT,
+    CLIP_TIMELINE_WORDS,
+    CLIP_TIMELINE_ZOOM,
+    ClipTimeline,
+    type ClipTimelineProps,
+    type TimelineClip,
+    type TimelineTrack,
+} from '@winterop-com/sokkel-ui/ClipTimeline'
 import { DataTable, DATA_TABLE_WORDS, headEntered, headStep, type DataColumn, type DataTableProps } from '@winterop-com/sokkel-ui/DataTable'
 import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
+import { EMOJI_PICKER_WORDS, EmojiPicker } from '@winterop-com/sokkel-ui/EmojiPicker'
 import { FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
@@ -34,7 +44,16 @@ import {
     type SelectTriggerProps,
 } from '@winterop-com/sokkel-ui/primitives/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import {
+    REACTION_BAR_WORDS,
+    REACTION_CHIPS_WORDS,
+    ReactionBar,
+    ReactionChips,
+    type ChatReaction,
+    type ReactionBarProps,
+} from '@winterop-com/sokkel-ui/ReactionBar'
 import { Rail, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
+import { RUN_TIMELINE_WORDS, RunTimeline, type RunTimelineLane, type RunTimelineProps } from '@winterop-com/sokkel-ui/RunTimeline'
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
 import { ProblemLine } from '@winterop-com/sokkel-ui/ProseText'
@@ -454,9 +473,10 @@ function inkOf(where: Where, on: string[]): string {
 /**
  * The text role the classes set: a role's own class, or a size and weight that are a role's (a
  * size with no weight of its own takes the weight around it). Given the role the spec wants, a
- * size that makes it is named by it.
+ * size that makes it is named by it. A plain size (`text.2xs`, `text.emoji`) is a role of its own,
+ * at 400 unless the paint names its weight (`plainWeight`).
  */
-function roleOf(where: Where, on: string[], wanted: string): string {
+function roleOf(where: Where, on: string[], wanted: string, plainWeight = '400'): string {
     const size = resolve(where.layers, on, READ.size)
     if (size === undefined) return 'none'
     const entry = TEXT.get(size)
@@ -473,7 +493,8 @@ function roleOf(where: Where, on: string[], wanted: string): string {
         target.size === `var(--text-${size})` &&
         target.leading === `var(--text-${size}--line-height)` &&
         (target.weight ?? '400') === weight
-    return makes ? wanted : `text-${size} at ${weight}`
+    const plain = role === size && target !== undefined && target.weight === undefined && target.tracking === undefined
+    return makes || (plain && weight === plainWeight) ? wanted : `text-${size} at ${weight}`
 }
 
 // Checks
@@ -554,7 +575,14 @@ function paintChecks(key: string, paint: Paint, where: Where): Check[] {
         checks.push(check(`${key}.underline`, String(paint.underline), resolve(where.layers, where.on, READ.underline) ?? 'false'))
     }
     if (paint.weight !== undefined) checks.push(check(`${key}.weight`, String(paint.weight), resolve(where.layers, where.on, READ.weight)))
-    if (paint.text !== undefined) checks.push(check(`${key}.text`, paint.text, roleOf(where, where.on, paint.text)))
+    if (paint.text !== undefined)
+        checks.push(
+            check(
+                `${key}.text`,
+                paint.text,
+                roleOf(where, where.on, paint.text, paint.weight === undefined ? undefined : String(paint.weight)),
+            ),
+        )
     return checks
 }
 
@@ -589,6 +617,16 @@ const FILL: Record<string, string | number> = {
     section: 'General',
     query: 'harbor',
     reason: 'The search timed out',
+    lane: 'sync-inventory',
+    amount: '+2h',
+    label: 'harbor-wide',
+    start: '00:00:04:00',
+    end: '00:00:09:15',
+    at: '00:00:06:00',
+    length: '00:00:05:15',
+    clip: 'harbor-wide',
+    track: 'B-roll',
+    item: 'juniper-pan',
 }
 const filled = (template: string, values: Record<string, string | number>) =>
     template.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? FILL[name]))
@@ -3142,6 +3180,755 @@ const SHELL_ADAPTER: Adapter = {
 
 // Differences the contract states, and those it is to drop
 
+// What a drag carries on the drag engine's card, and how a press becomes a drag: read from DragDrop, which every drag shares.
+
+const DRAG_DROP = source('components/DragDrop.tsx')
+/** The card a compact copy is drawn on, which follows the pointer. */
+const DRAG_CARD = literalAfter(DRAG_DROP, '<DragOverlay', 'className={cn(')
+const CARD_OFFSET = () => numberIn(DRAG_DROP, /const COMPACT_OFFSET = (\d+)\b/)
+const DRAG_FROM = () => numberIn(DRAG_DROP, /const DISTANCE = (\d+)\b/)
+/** The icon a class sizes through its children (`[&_svg]:size-4`). */
+const SVG_ON = ['[&_svg]']
+const noop = () => undefined
+
+// Run timeline
+
+const RUN_TIMELINE = source('components/RunTimeline.tsx')
+const RUN_TIMELINE_DRAG = source('components/run-timeline-drag.tsx')
+const NOON = Date.UTC(2026, 10, 17, 12)
+const HOURS = 3_600_000
+const RUN_LANES: RunTimelineLane[] = [
+    {
+        id: 'nightly-export',
+        name: 'nightly-export',
+        detail: 'Every day at 02:00',
+        runs: [
+            { id: 'ran', at: NOON - 6 * HOURS, end: NOON - 5 * HOURS, status: 'succeeded' },
+            { id: 'due', at: NOON + 4 * HOURS },
+        ],
+    },
+    {
+        id: 'sync-inventory',
+        name: 'sync-inventory',
+        detail: 'Every 6 hours',
+        runs: [
+            { id: 'failed', at: NOON - 3 * HOURS, status: 'failed' },
+            { id: 'next', at: NOON + 6 * HOURS },
+        ],
+    },
+    { id: 'running', name: 'Concurrency', detail: 'at most 2 at once', total: true, runs: [] },
+]
+const runTimeline = (props: Partial<RunTimelineProps> = {}) =>
+    draw(RunTimeline, {
+        lanes: RUN_LANES,
+        from: NOON - 12 * HOURS,
+        to: NOON + 12 * HOURS,
+        now: NOON,
+        timeZone: 'UTC',
+        selected: 'sync-inventory',
+        onSelect: noop,
+        onShift: noop,
+        ...props,
+    })
+const RUN_TIMELINES = once(() => runTimeline())
+const laneOf = (elements: El[], id: string) => elements.find((element) => element.attrs['data-lane'] === id)
+const inLane = (elements: El[], id: string, find: (element: El) => boolean) => {
+    const lane = laneOf(elements, id)
+    return lane === undefined ? undefined : elements.find((element) => within(element, lane) && find(element))
+}
+const laneButton = (elements: El[], id: string) => inLane(elements, id, (element) => element.tag === 'button')
+const shiftHandle = (elements: El[]) => elements.find((element) => element.attrs['data-shift-handle'] !== undefined)
+const timelineAxis = (elements: El[]) => elements.find((element) => classesOf(element).startsWith('relative h-8'))
+/** A run's ghost and the card's amount are drawn only while a drag carries the runs: read from the source. */
+const RUN_GHOST = literalAfter(RUN_TIMELINE, '{faded && (', 'className=')
+const SHIFT_AMOUNT = literalAfter(RUN_TIMELINE, 'function ShiftAmount(', 'className=')
+const RUN_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'], 'selected+hover': ['hover'] }
+
+const RUN_TIMELINE_ADAPTER: Adapter = {
+    wordObjects: { RUN_TIMELINE_WORDS },
+    complete: ['RUN_TIMELINE_WORDS'],
+    words: {
+        now: 'RUN_TIMELINE_WORDS.now',
+        scheduled: 'RUN_TIMELINE_WORDS.scheduled',
+        hint: 'RUN_TIMELINE_WORDS.hint',
+        upcoming: ['RUN_TIMELINE_WORDS.upcoming', (said: (lane: string) => string, fill) => said(String(fill.lane))],
+        by: ['RUN_TIMELINE_WORDS.by', (said: (amount: string) => string, fill) => said(String(fill.amount))],
+        shifted: [
+            'RUN_TIMELINE_WORDS.shifted',
+            (said: (lane: string, amount: string) => string, fill) => said(String(fill.lane), String(fill.amount)),
+        ],
+    },
+    options: {},
+    size: (size, key) => {
+        const drawn = RUN_TIMELINES()
+        const legend = drawn.find((element) => classesOf(element).includes('gap-x-4'))
+        const entry = drawn.find((element) => element.parent === legend && element.tag === 'span')
+        const read: Record<string, Where | undefined> = {
+            legend: pieceWhere(legend),
+            legendEntry: pieceWhere(entry),
+            axis: pieceWhere(timelineAxis(drawn)),
+            name: pieceWhere(laneButton(drawn, 'nightly-export')),
+            track: pieceWhere(inLane(drawn, 'nightly-export', (element) => element.attrs['data-lane-track'] !== undefined)),
+            run: pieceWhere(drawn.find((element) => element.attrs['data-run'] === 'failed')),
+            ghost: { layers: [RUN_GHOST], on: [] },
+            nowLabel: pieceWhere(drawn.find((element) => classesOf(element).includes('rounded-mini bg-primary'))),
+            grip: pieceWhere(iconOf(drawn, shiftHandle(drawn))),
+            card: { layers: [DRAG_CARD, SHIFT_AMOUNT], on: [] },
+        }
+        // The legend entry's icon is its dot.
+        if (size === 'legendEntry' && key === 'icon') {
+            const dot = drawn.find((element) => entry !== undefined && element.parent === entry)
+            return pieceWhere(drawn.find((element) => dot !== undefined && element.parent === dot))
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const drawn = RUN_TIMELINES()
+        const on = RUN_ON[state] ?? []
+        switch (name) {
+            case 'box':
+                return pieceWhere(drawn[0])
+            case 'legend':
+                return pieceWhere(drawn.find((element) => classesOf(element).includes('gap-x-4')))
+            case 'axis':
+                return pieceWhere(timelineAxis(drawn)?.parent)
+            case 'tick':
+                return pieceWhere(
+                    drawn.find(
+                        (element) => classesOf(element).includes('font-mono text-2xs') && !classesOf(element).includes('bg-primary'),
+                    ),
+                )
+            case 'gridLine':
+                return pieceWhere(drawn.find((element) => classesOf(element).includes('w-px bg-border')))
+            case 'nowLine':
+                return pieceWhere(drawn.find((element) => classesOf(element).includes('w-px bg-primary')))
+            case 'nowLabel':
+                return pieceWhere(drawn.find((element) => classesOf(element).includes('rounded-mini bg-primary')))
+            case 'lane':
+                return pieceWhere(laneOf(drawn, state === 'selected' ? 'sync-inventory' : state === 'total' ? 'running' : 'nightly-export'))
+            case 'name':
+                return pieceWhere(laneButton(drawn, state.startsWith('selected') ? 'sync-inventory' : 'nightly-export'), on)
+            case 'laneName': {
+                const lane = state === 'total' ? 'running' : 'nightly-export'
+                return pieceWhere(inLane(drawn, lane, (element) => element.tag === 'span' && classesOf(element).includes('block truncate')))
+            }
+            case 'laneDetail':
+                return pieceWhere(inLane(drawn, 'nightly-export', (element) => classesOf(element).includes('text-muted-foreground')))
+            case 'track':
+                return pieceWhere(
+                    inLane(drawn, 'nightly-export', (element) => element.attrs['data-lane-track'] !== undefined),
+                    on,
+                )
+            case 'run':
+                return state === 'upcoming'
+                    ? skip('an upcoming run is hollow by its inline style, read in more')
+                    : pieceWhere(drawn.find((element) => element.attrs['data-run'] === 'failed'))
+            case 'ghost':
+                return { layers: [RUN_GHOST], on: [] }
+            case 'handle':
+                return pieceWhere(shiftHandle(drawn), on)
+            case 'grip':
+                return pieceWhere(iconOf(drawn, shiftHandle(drawn)))
+            case 'card':
+                return { layers: [DRAG_CARD, SHIFT_AMOUNT], on: [] }
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the run timeline states no effects'),
+    keys: {
+        Tab: () => {
+            const drawn = RUN_TIMELINES()
+            const order = [laneButton(drawn, 'nightly-export'), laneButton(drawn, 'sync-inventory'), shiftHandle(drawn)]
+            const places = order.map((element) => (element === undefined ? -1 : drawn.indexOf(element)))
+            const reached =
+                order.every((element) => focusable(element) && (element?.tag === 'button' || element?.attrs.tabindex === '0')) &&
+                places.every((place, index) => place >= 0 && (index === 0 || place > places[index - 1]))
+            return reached ? true : `drawn in another order, or out of the tab order: ${places.join(', ')}`
+        },
+        "Enter, Space (a lane's name has focus)": () =>
+            laneButton(RUN_TIMELINES(), 'nightly-export')?.attrs.type === 'button' ? true : 'the name is not a native button',
+        'ArrowLeft, ArrowRight (the handle has focus)': () =>
+            /if \(event\.key !== 'ArrowLeft' && event\.key !== 'ArrowRight'\) return/.test(RUN_TIMELINE) &&
+            /shift\(lane, now !== undefined && first \+ amount <= now \? 0 : amount\)/.test(RUN_TIMELINE)
+                ? true
+                : 'the handle does not shift by the arrows, held to now',
+        'Shift+ArrowLeft, Shift+ArrowRight (the handle has focus)': () =>
+            /const amount = \(event\.shiftKey \? step : grain\)/.test(RUN_TIMELINE) ? true : 'Shift does not shift by a tick',
+        'Escape (a pointer drags the handle)': () =>
+            /onDragCancel=\{onCancel\}/.test(RUN_TIMELINE_DRAG) ? true : "the drag engine's cancel does not put the runs back",
+    },
+    more: () => {
+        const drawn = RUN_TIMELINES()
+        const name = laneButton(drawn, 'nightly-export')
+        return [
+            // An upcoming run is drawn by its style: no ground, an edge in muted-foreground.
+            check('pieces.run.upcoming.edge', 'muted-foreground', /const color = upcoming \? 'var\(--([a-z-]+)\)'/.exec(RUN_TIMELINE)?.[1]),
+            check(
+                'pieces.run.upcoming.ground',
+                'none',
+                /backgroundColor: upcoming \? undefined : color,\s+borderColor: upcoming \? color : undefined/.test(RUN_TIMELINE) &&
+                    /upcoming && 'border'/.test(RUN_TIMELINE)
+                    ? 'none'
+                    : undefined,
+            ),
+            ...layoutChecks('run-timeline', {
+                nameWidth: () => (name === undefined ? undefined : resolve([classesOf(name)], ['sm'], READ.width)),
+                nameWidthNarrow: () => lengthOn(name, READ.width),
+                axisHeight: () => lengthOn(timelineAxis(drawn), READ.height),
+                laneMinHeight: () =>
+                    lengthOn(
+                        inLane(drawn, 'nightly-export', (element) => element.attrs['data-lane-track'] !== undefined),
+                        READ.minHeight,
+                    ),
+                tickRoom: () => numberIn(RUN_TIMELINE, /const TICK_ROOM = (\d+)\b/),
+                nowRoom: () => numberIn(RUN_TIMELINE, /const NOW_ROOM = (\d+)\b/),
+                handleInset: () => lengthOn(shiftHandle(drawn), lengthOf('inset-y-')),
+                handlePast: () => numberIn(RUN_TIMELINE, /\+ var\(--spacing\) \* (\d+)\)/, 'step'),
+                cardOffset: CARD_OFFSET,
+                dragFrom: DRAG_FROM,
+            }),
+        ]
+    },
+}
+
+// Clip timeline
+
+const CLIP_TIMELINE = source('components/ClipTimeline.tsx')
+const CLIP_TIMELINE_DRAG = source('components/clip-timeline-drag.tsx')
+const CLIP_TRACKS: TimelineTrack[] = [
+    { id: 'titles', name: 'Titles', kind: 'title' },
+    { id: 'video', name: 'Video', kind: 'video' },
+    { id: 'voice', name: 'Interview', kind: 'audio' },
+    { id: 'broll', name: 'B-roll', kind: 'video', locked: true, hidden: true },
+]
+const CLIPS: TimelineClip[] = [
+    { id: 'opening', track: 'titles', start: 0, duration: 3, label: 'Opening' },
+    { id: 'wide', track: 'video', start: 0, duration: 6, label: 'harbor-wide' },
+    { id: 'pan', track: 'video', start: 6, duration: 4, label: 'juniper-pan' },
+    { id: 'voice', track: 'voice', start: 0, duration: 8, label: 'interview', waveform: [0.1, 0.5, 0.9, 0.4, 0.2, 0.6] },
+    { id: 'crane', track: 'broll', start: 2, duration: 3, label: 'larkspur-crane' },
+]
+const clipTimeline = (props: Partial<ClipTimelineProps> = {}) =>
+    draw(ClipTimeline, {
+        tracks: CLIP_TRACKS,
+        clips: CLIPS,
+        duration: 12,
+        playhead: 2,
+        onPlayheadChange: noop,
+        selected: ['wide'],
+        onSelectedChange: noop,
+        onClipsChange: noop,
+        onTrackChange: noop,
+        ...props,
+    })
+const CLIP_TIMELINES = once(() => clipTimeline())
+/** A clip in each kind color, on the video track. */
+const CLIP_COLORS = once(() =>
+    clipTimeline({
+        clips: (['blue', 'green', 'jade', 'pink', 'teal', 'violet'] as const).map((color, index) => ({
+            id: color,
+            track: 'video',
+            start: index * 2,
+            duration: 2,
+            label: color,
+            color,
+        })),
+        selected: [],
+    }),
+)
+const byData = (elements: El[], name: string, value?: string) =>
+    elements.find((element) => element.attrs[name] !== undefined && (value === undefined || element.attrs[name] === value))
+const clipOf = (elements: El[], id: string) => byData(elements, 'data-clip', id)
+const timelineRuler = (elements: El[]) => byData(elements, 'data-ruler')
+const clipCorner = (elements: El[]) => elements.find((element) => classesOf(element).startsWith('sticky top-0 z-1 flex h-8'))
+const clipHeaders = (elements: El[]) => elements.find((element) => classesOf(element).startsWith('sticky start-0'))
+const rulerTick = (elements: El[]) => {
+    const ruler = timelineRuler(elements)
+    return elements.find((element) => ruler !== undefined && within(element, ruler) && classesOf(element).includes('border-border-strong'))
+}
+const minorTick = (elements: El[]) => elements.find((element) => classesOf(element).includes('bottom-0 h-1.5'))
+const trackHeader = (elements: El[]) => byData(elements, 'data-track-header', 'video')
+const trackName = (elements: El[]) => {
+    const header = trackHeader(elements)
+    return elements.find((element) => header !== undefined && within(element, header) && classesOf(element).startsWith('truncate text-xs'))
+}
+const clipLabel = (elements: El[]) => {
+    const clip = clipOf(elements, 'pan')
+    return elements.find((element) => clip !== undefined && within(element, clip) && classesOf(element).includes('px-2 pt-1'))
+}
+/** The grips, the landing, the snap line and the card are drawn only while a drag is under way, by the drag layer: read from the source. */
+const CLIP_GRIP = literalAfter(CLIP_TIMELINE, 'function Grip(', 'className={cn(')
+const LANDING = literalAfter(CLIP_TIMELINE, 'data-landing', 'className={cn(')
+const LANDS = /proposal\.fits \? '([^']+)' : '([^']+)'/.exec(CLIP_TIMELINE)
+const ARRIVES = /landing\.fits \? '([^']+)' : '([^']+)'/.exec(CLIP_TIMELINE)
+const SNAP_LINE = literalAfter(CLIP_TIMELINE, '(proposal?.snapped ?? landing?.snapped) !== undefined && (', 'className=')
+const CARRY_CARD = literalAfter(CLIP_TIMELINE, 'function CarryCard(', '<span className=')
+const kindsIn = (text: string, type: string) =>
+    [...(new RegExp(`export type ${type} = ([^\\n]+)`).exec(text)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1])
+
+const CLIP_TIMELINE_ADAPTER: Adapter = {
+    wordObjects: { CLIP_TIMELINE_WORDS },
+    complete: ['CLIP_TIMELINE_WORDS'],
+    words: {
+        label: 'CLIP_TIMELINE_WORDS.label',
+        playhead: 'CLIP_TIMELINE_WORDS.playhead',
+        'kinds.video': ['CLIP_TIMELINE_WORDS.kinds', (said: Record<string, string>) => said.video],
+        'kinds.audio': ['CLIP_TIMELINE_WORDS.kinds', (said: Record<string, string>) => said.audio],
+        'kinds.title': ['CLIP_TIMELINE_WORDS.kinds', (said: Record<string, string>) => said.title],
+        mute: 'CLIP_TIMELINE_WORDS.mute',
+        lock: 'CLIP_TIMELINE_WORDS.lock',
+        hide: 'CLIP_TIMELINE_WORDS.hide',
+        clip: [
+            'CLIP_TIMELINE_WORDS.clip',
+            (said: (label: string, start: string, end: string) => string, fill) =>
+                said(String(fill.label), String(fill.start), String(fill.end)),
+        ],
+        start: ['CLIP_TIMELINE_WORDS.start', (said: (at: string) => string, fill) => said(String(fill.at))],
+        length: ['CLIP_TIMELINE_WORDS.length', (said: (length: string) => string, fill) => said(String(fill.length))],
+        moved: [
+            'CLIP_TIMELINE_WORDS.moved',
+            (said: (clip: string, at: string) => string, fill) => said(String(fill.clip), String(fill.at)),
+        ],
+        movedTo: [
+            'CLIP_TIMELINE_WORDS.moved',
+            (said: (clip: string, at: string, track: string) => string, fill) =>
+                said(String(fill.clip), String(fill.at), String(fill.track)),
+        ],
+        trimmed: [
+            'CLIP_TIMELINE_WORDS.trimmed',
+            (said: (clip: string, length: string) => string, fill) => said(String(fill.clip), String(fill.length)),
+        ],
+        split: [
+            'CLIP_TIMELINE_WORDS.split',
+            (said: (clip: string, at: string) => string, fill) => said(String(fill.clip), String(fill.at)),
+        ],
+        deleted: [
+            'CLIP_TIMELINE_WORDS.deleted',
+            (said: (count: number, ripple: boolean) => string, fill) => said(Number(fill.count), false),
+        ],
+        deletedRipple: [
+            'CLIP_TIMELINE_WORDS.deleted',
+            (said: (count: number, ripple: boolean) => string, fill) => said(Number(fill.count), true),
+        ],
+        blocked: ['CLIP_TIMELINE_WORDS.blocked', (said: (clip: string) => string, fill) => said(String(fill.clip))],
+        dropped: [
+            'CLIP_TIMELINE_WORDS.dropped',
+            (said: (item: string, track: string, at: string) => string, fill) =>
+                said(String(fill.item), String(fill.track), String(fill.at)),
+        ],
+        at: ['CLIP_TIMELINE_WORDS.at', (said: (at: string) => string, fill) => said(String(fill.at))],
+        zoomIn: 'CLIP_TIMELINE_WORDS.zoomIn',
+        zoomOut: 'CLIP_TIMELINE_WORDS.zoomOut',
+        zoomFit: 'CLIP_TIMELINE_WORDS.zoomFit',
+    },
+    options: {
+        kind: kindsIn(CLIP_TIMELINE, 'ClipTrackKind'),
+        color: /color\?: KindColor/.test(CLIP_TIMELINE) ? kindsIn(source('lib/kind.ts'), 'KindColor') : [],
+    },
+    size: (size) => {
+        const drawn = CLIP_TIMELINES()
+        const read: Record<string, Where | undefined> = {
+            corner: pieceWhere(clipCorner(drawn)),
+            trackHeader: pieceWhere(trackHeader(drawn)),
+            kindIcon: pieceWhere(iconOf(drawn, trackHeader(drawn))),
+            trackName: pieceWhere(trackName(drawn)),
+            ruler: pieceWhere(timelineRuler(drawn)),
+            tick: pieceWhere(rulerTick(drawn)),
+            minorTick: pieceWhere(minorTick(drawn)),
+            playhead: pieceWhere(byData(drawn, 'data-playhead')),
+            lane: pieceWhere(byData(drawn, 'data-track-lane', 'video')),
+            clipLabel: pieceWhere(clipLabel(drawn)),
+            grip: { layers: [CLIP_GRIP], on: [] },
+            card: { layers: [DRAG_CARD, CARRY_CARD], on: [] },
+        }
+        return read[size]
+    },
+    paint: (group, name, state) => {
+        if (group === 'variants') {
+            const drawn = CLIP_COLORS()
+            return pieceWhere(clipOf(drawn, name))
+        }
+        const drawn = CLIP_TIMELINES()
+        switch (name) {
+            case 'box':
+                return pieceWhere(drawn[0])
+            case 'corner':
+                return pieceWhere(clipCorner(drawn))
+            case 'headers':
+                return pieceWhere(clipHeaders(drawn))
+            case 'trackHeader':
+                return pieceWhere(trackHeader(drawn))
+            case 'kindIcon':
+                return pieceWhere(iconOf(drawn, trackHeader(drawn)))
+            case 'trackName':
+                return pieceWhere(trackName(drawn))
+            case 'ruler':
+                return pieceWhere(timelineRuler(drawn))
+            case 'tick':
+                return pieceWhere(rulerTick(drawn))
+            case 'minorTick':
+                return pieceWhere(minorTick(drawn))
+            case 'playhead':
+                return pieceWhere(byData(drawn, 'data-playhead'), state === 'focus' ? ['focus-visible'] : [])
+            case 'lane':
+                return pieceWhere(byData(drawn, 'data-track-lane', state === 'locked' ? 'broll' : 'video'))
+            case 'clip': {
+                const id = state === 'chosen' ? 'wide' : state === 'faded' ? 'crane' : state === 'title' ? 'opening' : 'pan'
+                return pieceWhere(clipOf(drawn, id), state === 'focus' ? ['focus-visible'] : [])
+            }
+            case 'clipLabel':
+                return pieceWhere(clipLabel(drawn))
+            case 'waveform': {
+                const clip = clipOf(drawn, 'voice')
+                return pieceWhere(drawn.find((element) => clip !== undefined && element.tag === 'svg' && within(element, clip)))
+            }
+            case 'landing':
+                if (state === 'arriving') return { layers: [LANDING, ARRIVES?.[1] ?? ''], on: [] }
+                return { layers: [LANDING, (state === 'blocked' ? LANDS?.[2] : LANDS?.[1]) ?? ''], on: [] }
+            case 'snapLine':
+                return { layers: [SNAP_LINE], on: [] }
+            case 'card':
+                return { layers: [DRAG_CARD, CARRY_CARD], on: [] }
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the clip timeline states no effects'),
+    keys: {
+        Tab: () => {
+            const drawn = CLIP_TIMELINES()
+            const order = [
+                drawn.find((element) => element.tag === 'button' && element.attrs['aria-label'] === CLIP_TIMELINE_WORDS.hide),
+                byData(drawn, 'data-playhead'),
+                clipOf(drawn, 'opening'),
+                clipOf(drawn, 'wide'),
+            ]
+            const places = order.map((element) => (element === undefined ? -1 : drawn.indexOf(element)))
+            const reached =
+                order.every((element) => focusable(element) && (element?.tag === 'button' || element?.attrs.tabindex === '0')) &&
+                places.every((place, index) => place >= 0 && (index === 0 || place > places[index - 1]))
+            return reached ? true : `drawn in another order, or out of the tab order: ${places.join(', ')}`
+        },
+        'Enter, Space (a clip has focus)': () =>
+            /if \(event\.key !== 'Enter' && event\.key !== ' '\) return[\s\S]{0,80}onChoose\(clip\.id, event\.shiftKey \|\| event\.metaKey \|\| event\.ctrlKey\)/.test(
+                CLIP_TIMELINE,
+            )
+                ? true
+                : 'Enter and Space do not choose a clip',
+        'ArrowLeft, ArrowRight (focus is inside the timeline)': () =>
+            /else seek\(playhead \+ sign \* \(event\.shiftKey \? 1 : frame\), true\)/.test(CLIP_TIMELINE)
+                ? true
+                : 'the arrows do not move the playhead a frame, a second with Shift',
+        'Home, End (focus is inside the timeline)': () =>
+            /seek\(event\.key === 'Home' \? 0 : total, true\)/.test(CLIP_TIMELINE) ? true : 'Home and End do not reach the ends',
+        'Alt+ArrowLeft, Alt+ArrowRight (focus is inside the timeline and onClipsChange is given)': () =>
+            /if \(event\.altKey\) nudge\(sign \* frame\)/.test(CLIP_TIMELINE) &&
+            /if \(onClipsChange === undefined\) return/.test(CLIP_TIMELINE)
+                ? true
+                : 'Alt and the arrows do not move the chosen clips a frame',
+        'S (focus is inside the timeline and onSplit is given)': () =>
+            /\(event\.key === 's' \|\| event\.key === 'S'\) && !mod && !event\.altKey && onSplit !== undefined/.test(CLIP_TIMELINE)
+                ? true
+                : 'S does not split',
+        'Delete, Backspace (focus is inside the timeline, onDelete is given and a clip is chosen)': () =>
+            /\(event\.key === 'Delete' \|\| event\.key === 'Backspace'\) && !mod && onDelete !== undefined && chosen\.length > 0/.test(
+                CLIP_TIMELINE,
+            ) && /remove\(event\.shiftKey\)/.test(CLIP_TIMELINE)
+                ? true
+                : 'Delete and Backspace do not delete, Shift rippling',
+        'Escape (a pointer drags a clip or a grip)': () =>
+            /onDragCancel=\{\(\) => \{\s+onCancel\(\)/.test(CLIP_TIMELINE_DRAG)
+                ? true
+                : "the drag engine's cancel does not put the clip back",
+    },
+    more: () => {
+        const drawn = CLIP_TIMELINES()
+        return layoutChecks('clip-timeline', {
+            headerWidth: () => resolve([classesOf(clipHeaders(drawn))], ['sm'], READ.width),
+            headerWidthNarrow: () => lengthOn(clipHeaders(drawn), READ.width),
+            rowHeight: () => lengthOn(byData(drawn, 'data-track-lane', 'video'), READ.height),
+            rulerHeight: () => lengthOn(timelineRuler(drawn), READ.height),
+            clipInset: () => lengthOn(clipOf(drawn, 'pan'), lengthOf('inset-y-')),
+            clipMinWidth: () => numberIn(CLIP_TIMELINE, /Math\.max\(clip\.duration \* pps, (\d+)\)/),
+            gripWidth: () => resolve([CLIP_GRIP], [], READ.width),
+            snapReach: () => numberIn(CLIP_TIMELINE, /const SNAP_REACH = (\d+)\b/),
+            tickRoom: () => numberIn(CLIP_TIMELINE, /const TICK_ROOM = (\d+)\b/),
+            minorTickMin: () => numberIn(CLIP_TIMELINE, /if \(minor \* pps < (\d+)\) return/),
+            fitPixelsPerSecond: () => String(CLIP_TIMELINE_FIT.pixelsPerSecond),
+            fitRoom: () => String(CLIP_TIMELINE_FIT.room),
+            defaultRoom: () => numberIn(CLIP_TIMELINE, /const room = viewport \|\| (\d+)/),
+            zoomMin: () => String(CLIP_TIMELINE_ZOOM.min),
+            zoomMax: () => String(CLIP_TIMELINE_ZOOM.max),
+            cardOffset: CARD_OFFSET,
+            dragFrom: DRAG_FROM,
+        })
+    },
+}
+
+// Emoji picker
+
+const EMOJI_PICKER = source('components/EmojiPicker.tsx')
+/** Drawn on the server the list has not loaded: the grid's cells, headings and messages are read from the source. */
+const emojiPicker = once(() => draw(EmojiPicker, { onPick: noop, recent: ['\u{1F44D}'], autoFocus: false }))
+const TONE_CHOICE = literalAfter(EMOJI_PICKER, 'role="radiogroup"', 'className=')
+const TONE_HAND = literalAfter(EMOJI_PICKER, 'role="radio"', 'className={cn(')
+const TONE_CHOSEN = /tone === index && '([^']+)'/.exec(EMOJI_PICKER)?.[1] ?? ''
+const EMOJI_HEADING = literalAfter(EMOJI_PICKER, '<h3 className=')
+const EMOJI_CELL = literalAfter(EMOJI_PICKER, 'data-index={cell.index}', 'className=')
+const EMOJI_FAILED = literalAfter(EMOJI_PICKER, 'role="alert"', 'className=')
+const EMOJI_EMPTY = literalAfter(EMOJI_PICKER, '<p role="status" className=')
+const emojiTabs = (elements: El[]) => elements.find((element) => element.attrs.role === 'toolbar')
+/** A tab: the current one (Recent, the first while nothing is in view), or another. */
+const emojiTab = (elements: El[], current: boolean) => {
+    const tabs = emojiTabs(elements)
+    return elements.find(
+        (element) =>
+            tabs !== undefined &&
+            element.tag === 'button' &&
+            element.parent === tabs &&
+            (element.attrs['aria-current'] === 'true') === current,
+    )
+}
+const toneButton = (elements: El[]) => elements.find((element) => element.attrs['aria-label'] === EMOJI_PICKER_WORDS.skinTone)
+const EMOJI_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'], disabled: ['disabled'] }
+
+const EMOJI_PICKER_ADAPTER: Adapter = {
+    wordObjects: { EMOJI_PICKER_WORDS },
+    complete: ['EMOJI_PICKER_WORDS'],
+    words: {
+        search: 'EMOJI_PICKER_WORDS.search',
+        searchLabel: 'EMOJI_PICKER_WORDS.searchLabel',
+        ...Object.fromEntries(
+            ['recent', 'smileys', 'people', 'animals', 'food', 'activities', 'travel', 'objects', 'symbols', 'flags'].map((group) => [
+                `groups.${group}`,
+                ['EMOJI_PICKER_WORDS.groups', (said: Record<string, string>) => said[group]] as WordSource,
+            ]),
+        ),
+        results: 'EMOJI_PICKER_WORDS.results',
+        empty: 'EMOJI_PICKER_WORDS.empty',
+        loading: 'EMOJI_PICKER_WORDS.loading',
+        failed: 'EMOJI_PICKER_WORDS.failed',
+        retry: 'EMOJI_PICKER_WORDS.retry',
+        skinTone: 'EMOJI_PICKER_WORDS.skinTone',
+        ...Object.fromEntries(
+            ['default', 'light', 'mediumLight', 'medium', 'mediumDark', 'dark'].map((tone, index) => [
+                `tones.${tone}`,
+                ['EMOJI_PICKER_WORDS.tones', (said: readonly string[]) => said[index]] as WordSource,
+            ]),
+        ),
+        tabs: 'EMOJI_PICKER_WORDS.tabs',
+        label: 'EMOJI_PICKER_WORDS.label',
+    },
+    options: {
+        skinTone: [...(/export type SkinTone = ([^\n]+)/.exec(source('components/emoji-data.ts'))?.[1] ?? '').matchAll(/\d+/g)].map(
+            (match) => match[0],
+        ),
+    },
+    size: (size, key) => {
+        const drawn = emojiPicker()
+        const tab = emojiTab(drawn, false)
+        const read: Record<string, Where | undefined> = {
+            box: pieceWhere(byData(drawn, 'data-slot', 'emoji-picker')),
+            head: pieceWhere(toneButton(drawn)?.parent),
+            toneButton: pieceWhere(toneButton(drawn)),
+            toneChoice: { layers: [TONE_CHOICE], on: [] },
+            grid: pieceWhere(drawn.find((element) => classesOf(element).includes('overscroll-contain'))),
+            heading: { layers: [EMOJI_HEADING], on: [] },
+            cell: { layers: [EMOJI_CELL], on: [] },
+            tabs: pieceWhere(emojiTabs(drawn)),
+            tab: pieceWhere(tab, key === 'icon' ? SVG_ON : []),
+            tabMark: pieceWhere(emojiTab(drawn, true), ['after']),
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const drawn = emojiPicker()
+        const on = EMOJI_ON[state] ?? []
+        switch (name) {
+            case 'box':
+                return pieceWhere(byData(drawn, 'data-slot', 'emoji-picker'))
+            case 'toneButton':
+                return pieceWhere(toneButton(drawn), on)
+            case 'toneChoice':
+                return { layers: [TONE_HAND, state === 'chosen' ? TONE_CHOSEN : ''], on }
+            case 'heading':
+                return { layers: [EMOJI_HEADING], on: [] }
+            case 'cell':
+                return { layers: [EMOJI_CELL], on }
+            case 'tabs':
+                return pieceWhere(emojiTabs(drawn))
+            case 'tab':
+                return pieceWhere(emojiTab(drawn, state === 'current'), on)
+            case 'tabMark':
+                return pieceWhere(emojiTab(drawn, state === 'current'), ['after'])
+            case 'loading':
+                return pieceWhere(drawn.find((element) => element.tag === 'svg' && classesOf(element).includes('size-6')))
+            case 'failed':
+                return { layers: [EMOJI_FAILED], on: [] }
+            case 'empty':
+                return { layers: [EMOJI_EMPTY], on: [] }
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => (state === 'disabled' ? pieceWhere(emojiTab(emojiPicker(), false), ['disabled']) : skip(`no effect of ${state}`)),
+    keys: {
+        'ArrowDown (the search has focus and the grid holds emoji)': () =>
+            /event\.key === 'ArrowDown' && cells\.length > 0\) \{\s+event\.preventDefault\(\)\s+moveTo\(focused\)/.test(EMOJI_PICKER)
+                ? true
+                : 'Down from the search does not enter the grid',
+        'Enter (the search has focus and holds a query that found any)': () =>
+            /event\.key === 'Enter' && searching && cells\.length > 0\) \{\s+event\.preventDefault\(\)\s+pick\(cells\[0\]\.emoji, cells\[0\]\.name\)/.test(
+                EMOJI_PICKER,
+            )
+                ? true
+                : 'Enter in the search does not pick the first found',
+        'ArrowLeft, ArrowRight (a cell has focus)': () =>
+            /ArrowLeft: \(\) => focused - 1,\s+ArrowRight: \(\) => focused \+ 1,/.test(EMOJI_PICKER) &&
+            /Math\.max\(0, Math\.min\(cells\.length - 1, index\)\)/.test(EMOJI_PICKER)
+                ? true
+                : 'the arrows do not move across the cells, stopping at the ends',
+        'ArrowUp, ArrowDown (a cell has focus)': () =>
+            /ArrowUp: \(\) => inRow\(row - 1\),\s+ArrowDown: \(\) => inRow\(row \+ 1\),/.test(EMOJI_PICKER) &&
+            /if \(event\.key === 'ArrowUp' && row === 0\) return search\.current\?\.focus\(\)/.test(EMOJI_PICKER)
+                ? true
+                : 'Up and Down do not move by rows, Up from the first back to the search',
+        'Home, End (a cell has focus)': () =>
+            /Home: \(\) => 0,\s+End: \(\) => cells\.length - 1,/.test(EMOJI_PICKER) ? true : 'Home and End do not reach the ends',
+        'Enter, Space (a cell has focus)': () =>
+            /type="button"\s+data-index=\{cell\.index\}/.test(EMOJI_PICKER) &&
+            /onClick=\{\(\) => pick\(cell\.emoji, cell\.name\)\}/.test(EMOJI_PICKER)
+                ? true
+                : 'a cell is not a native button that picks',
+        'ArrowLeft, ArrowRight (a tab has focus)': () =>
+            /buttons\[\(at \+ step \+ buttons\.length\) % buttons\.length\]\?\.focus\(\)/.test(EMOJI_PICKER) &&
+            /onKeyDown=\{onTabsKey\}/.test(EMOJI_PICKER)
+                ? true
+                : 'the arrows do not move between the tabs, wrapping',
+        'Enter, Space (a tab has focus)': () =>
+            emojiTab(emojiPicker(), false)?.attrs.type === 'button' &&
+            /const showGroup = \(group: EmojiSection\) => \{\s+setQuery\(''\)/.test(EMOJI_PICKER)
+                ? true
+                : 'a tab is not a native button that clears the search',
+        'Escape (focus is in the picker and the tone choice is not open)': () =>
+            /event\.key === 'Escape' && query !== ''\) \{[\s\S]{0,120}event\.stopPropagation\(\)/.test(EMOJI_PICKER) &&
+            /if \(event\.key !== 'Escape' \|\| onClose === undefined \|\| event\.defaultPrevented\) return\s+event\.preventDefault\(\)\s+onClose\(\)/.test(
+                EMOJI_PICKER,
+            )
+                ? true
+                : 'Escape does not clear the search, then call onClose',
+        'Escape (the tone choice is open)': () =>
+            /if \(event\.key === 'Escape'\) \{\s+event\.stopPropagation\(\)\s+setToneOpen\(false\)\s+requestAnimationFrame\(\(\) => toneButton\.current\?\.focus\(\)\)/.test(
+                EMOJI_PICKER,
+            )
+                ? true
+                : 'Escape does not close the tone choice, focus back on its button',
+    },
+    more: () => {
+        const box = byData(emojiPicker(), 'data-slot', 'emoji-picker')
+        return layoutChecks('emoji-picker', {
+            columns: () => (/grid grid-cols-8/.test(EMOJI_PICKER) ? numberIn(EMOJI_PICKER, /const COLUMNS = (\d+)\b/) : undefined),
+            boxWidth: () => lengthOn(box, READ.width),
+            boxHeight: () => lengthOn(box, READ.height),
+            firstPaint: () => numberIn(EMOJI_PICKER, /const FIRST_PAINT = (\d+)\b/),
+            inView: () => numberIn(EMOJI_PICKER, /section\.offsetTop <= box\.scrollTop \+ (\d+)\)/),
+            popoverEdge: () => numberIn(EMOJI_PICKER, /collisionPadding=\{(\d+)\}/),
+        })
+    },
+}
+
+// Reaction bar and reaction chips
+
+const REACTION_BAR = source('components/ReactionBar.tsx')
+/** The bar's own words: its full list's are the emoji picker's, passed through `picker`. */
+const { picker: _pickerWords, ...REACTION_BAR_OWN } = REACTION_BAR_WORDS
+const reactionBar = (props: Partial<ReactionBarProps> = {}) => draw(ReactionBar, { onReact: noop, selected: ['❤️'], ...props })
+const REACTION_BARS = once(() => ({ md: reactionBar(), sm: reactionBar({ size: 'sm' }) }))
+const REACTIONS: ChatReaction[] = [
+    { id: 'thumbs', icon: '\u{1F44D}', label: 'thumbs up', count: 3, mine: true },
+    { id: 'party', icon: '\u{1F389}', label: 'party popper', count: 1 },
+]
+const reactionChips = once(() =>
+    draw(TooltipProvider, {}, createElement(ReactionChips, { reactions: REACTIONS, onReact: noop, onReaction: noop })),
+)
+const byLabel = (elements: El[], label: string) =>
+    elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === label)
+const chipOf = (elements: El[], title: string) => elements.find((element) => element.tag === 'button' && element.attrs.title === title)
+const REACTION_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+    pressed: ['aria-pressed'],
+    open: ['data-popup-open'],
+}
+
+const REACTION_BAR_ADAPTER: Adapter = {
+    wordObjects: { REACTION_BAR_OWN, REACTION_CHIPS_WORDS },
+    complete: ['REACTION_BAR_OWN', 'REACTION_CHIPS_WORDS'],
+    words: {
+        label: 'REACTION_BAR_OWN.label',
+        more: 'REACTION_BAR_OWN.more',
+        react: 'REACTION_CHIPS_WORDS.react',
+        count: [
+            'REACTION_CHIPS_WORDS.count',
+            (said: (label: string, count: number) => string, fill) => said(String(fill.label), Number(fill.count)),
+        ],
+    },
+    options: { size: propValues(REACTION_BAR, 'ReactionBarProps', 'size') },
+    size: (size, key) => {
+        const { md, sm } = REACTION_BARS()
+        const chips = reactionChips()
+        const add = byLabel(chips, REACTION_CHIPS_WORDS.react)
+        const read: Record<string, Where | undefined> = {
+            bar: pieceWhere(byData(md, 'data-slot', 'reaction-bar')),
+            reaction: pieceWhere(byLabel(md, 'thumbs up')),
+            reactionSm: pieceWhere(byLabel(sm, 'thumbs up')),
+            more: pieceWhere(byLabel(md, REACTION_BAR_WORDS.more), SVG_ON),
+            chips: pieceWhere(byData(chips, 'data-slot', 'reaction-chips')),
+            chip: pieceWhere(chipOf(chips, 'party popper'), key === 'icon' ? SVG_ON : []),
+            chipCount: pieceWhere(chips.find((element) => classesOf(element).includes('tabular-nums'))),
+            add: key === 'icon' ? pieceWhere(iconOf(chips, add)) : pieceWhere(add),
+        }
+        return read[size]
+    },
+    paint: (_, name, state) => {
+        const { md, sm } = REACTION_BARS()
+        const chips = reactionChips()
+        const on = REACTION_ON[state] ?? []
+        switch (name) {
+            case 'bar':
+                return pieceWhere(byData(md, 'data-slot', 'reaction-bar'))
+            case 'reaction':
+                return pieceWhere(byLabel(state === 'sm' ? sm : md, state === 'pressed' ? 'red heart' : 'thumbs up'), on)
+            case 'more':
+                return pieceWhere(byLabel(md, REACTION_BAR_WORDS.more), on)
+            case 'chip':
+                return pieceWhere(chipOf(chips, state === 'mine' ? 'thumbs up' : 'party popper'), on)
+            case 'chipCount':
+                return pieceWhere(chips.find((element) => classesOf(element).includes('tabular-nums')))
+            case 'add':
+                return pieceWhere(byLabel(chips, REACTION_CHIPS_WORDS.react), on)
+            default:
+                return undefined
+        }
+    },
+    effect: () => skip('the reaction bar states no effects'),
+    keys: {
+        'ArrowLeft, ArrowRight (a button of the bar has focus)': () =>
+            /querySelectorAll<HTMLButtonElement>\('\[data-reaction\]'\)/.test(REACTION_BAR) &&
+            /buttons\[\(at \+ step \+ buttons\.length\) % buttons\.length\]\?\.focus\(\)/.test(REACTION_BAR) &&
+            byLabel(REACTION_BARS().md, REACTION_BAR_WORDS.more)?.attrs['data-reaction'] !== undefined
+                ? true
+                : "the arrows do not move between the bar's buttons, the more button included, wrapping",
+        'Enter, Space (a button of the bar has focus)': () =>
+            byLabel(REACTION_BARS().md, 'thumbs up')?.attrs.type === 'button' ? true : 'a reaction is not a native button',
+        'Enter, Space (a chip or the add button has focus)': () =>
+            chipOf(reactionChips(), 'party popper')?.attrs.type === 'button' ? true : 'a chip is not a native button',
+        'Escape (a popover of the bar is open)': BASE_UI('Popover', 'closes on Escape and puts focus back on its trigger'),
+    },
+    more: () => layoutChecks('reaction-bar', { popoverEdge: () => numberIn(REACTION_BAR, /collisionPadding=\{(\d+)\}/) }),
+}
+
 /**
  * Each sokkel-ui drift entry in a spec, by its `what`, with the checks it covers: they may differ,
  * and must, or the entry is stale. A function instead says whether the difference is still there,
@@ -3173,6 +3960,10 @@ const ADAPTERS: Record<string, Adapter> = {
     'settings-dialog': SETTINGS_DIALOG_ADAPTER,
     'command-palette': COMMAND_PALETTE_ADAPTER,
     shell: SHELL_ADAPTER,
+    'run-timeline': RUN_TIMELINE_ADAPTER,
+    'clip-timeline': CLIP_TIMELINE_ADAPTER,
+    'emoji-picker': EMOJI_PICKER_ADAPTER,
+    'reaction-bar': REACTION_BAR_ADAPTER,
 }
 
 // The checks, walked from each spec

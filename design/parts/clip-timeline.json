@@ -1,0 +1,417 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "clip-timeline",
+    "kind": "part",
+    "status": "stable",
+    "summary": "The multi-track timeline of a video editor, in a box on the card: a row per track, its header at the start (its kind's icon, its name, and with onTrackChange toggles to mute or hide it and to lock it), and its lane after it, under a ruler of timecode that fits the zoom. Clips are blocks in their color with their label, an audio clip drawing its waveform and a title dashed; the chosen ones are outlined. A press or a drag on the ruler moves the playhead, a line across every track. With onClipsChange a clip drags along its track or onto another of the same kind and either end trims it, snapped to the playhead, other clips' edges and 0, a card at the pointer saying the new start or length, never landing on another clip. With onDrop a thing dragged from another part of the same drag area lands on a track that takes it, an outline showing where. The lanes scroll sideways and down while the ruler stays at the top, the headers at the start and the playhead's timecode over both. The clips stay where they are until the app moves them.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ClipTimeline.tsx",
+            "packages/core/src/components/clip-timeline-drag.tsx",
+            "packages/core/src/components/DragDrop.tsx",
+            "packages/core/src/components/IconButton.tsx",
+            "packages/core/src/lib/kind.ts"
+        ]
+    },
+    "anatomy": {
+        "box": "The whole timeline: a box on the card, edged in border, rounded by radius-surface, its text the body role. It fills its container; inside it one scroller holds the headers and the lanes, scrolling both ways.",
+        "corner": "Over the headers' column and level with the ruler: the playhead's time as timecode (HH:MM:SS:FF), in the code face with tabular figures. It stays put both ways.",
+        "headers": "The headers' column at the start, headerWidth wide (headerWidthNarrow below 640), ruled at its end; it stays at the start while the lanes scroll sideways.",
+        "trackHeader": "One track's header, as tall as its lane, ruled under: the kind's icon (named words.kinds) and the track's name, cut short; under them, with onTrackChange, the toggles.",
+        "kindIcon": "The track's kind: a film for video, a sound wave for audio, a T for a title; 14.",
+        "trackName": "The track's name (name), cut short.",
+        "toggle": "A header's toggles, parts/button's ghost icon buttons at icon-xs: words.mute (an audio track) or words.hide (a video or title track), then words.lock, each pressed while on, its icon saying which (a struck speaker, a shut eye, a shut lock).",
+        "ruler": "The ruler over the lanes, rulerHeight tall, ruled under: a labeled tick at each step, a short minor tick at each fifth of a step, and the playhead's line and knob. It stays at the top while the lanes scroll down. A press or a drag on it moves the playhead.",
+        "tick": "A labeled tick: a rule down the ruler's height in border-strong, its timecode after it, 4 in and 4 down, in the code face with tabular figures.",
+        "minorTick": "A minor tick, 1 wide and 6 tall at the ruler's foot, drawn only while a fifth of a step is at least minorTickMin wide.",
+        "playhead": "The playhead: a line 1 wide down the ruler and every lane, and a knob on the ruler's foot (12 wide, 16 tall, its foot corners rounded), the knob a slider named words.playhead whose value is the timecode.",
+        "lane": "One track's lane, as wide as the timeline at the zoom and rowHeight tall, ruled under (the last not). A locked track's lane is shaded. A press on an empty part of it lets the chosen clips go.",
+        "clip": "A clip: a block from its start to its end at the zoom (at least clipMinWidth), inset 4 from the lane's top and bottom, rounded by radius-control, a 1 wide edge, a wash and an ink in its color (by its track's kind when it names none: video blue, audio green, a title violet); a title's edge dashed. Named words.clip; a tab stop.",
+        "clipLabel": "The clip's label at its top start, 8 in and 4 down, cut short; a title's with a T before it.",
+        "waveform": "An audio clip's loudness for the part of its source it plays, mirrored about the middle, filling the clip under its label (20 from its top, 4 from its foot), in the clip's ink at 60 percent.",
+        "grip": "Each end of a clip that changes: gripWidth wide, the clip's full height; dragged, it trims that end. Under the pointer it is washed in the clip's ink at 25 percent.",
+        "landing": "Where a drag would put a clip, or a thing from outside: a dashed outline 2 wide, inset 4 from the lane's top and bottom, rounded by radius-control, as long as the clip (a thing whose length is unknown: a mark at the time, centered on it); in primary where it lands, a thing from outside washed primary at 10 percent, in destructive where it would cover another clip.",
+        "snapLine": "While an edge snaps: a line 1 wide in ring at the time it snapped to, down every lane under the ruler.",
+        "card": "While a pointer drags a clip or a grip: words.start with the new start, or words.length with the new length, on a card that follows the pointer, cardOffset right of and below it."
+    },
+    "options": {
+        "tracks": {
+            "type": "rows",
+            "does": "The tracks in order: { id, name, kind, muted?, locked?, hidden? }.",
+            "sokkel-ui": "TimelineTrack"
+        },
+        "kind": {
+            "values": ["video", "audio", "title"],
+            "does": "What a track holds, which sets its icon, its clips' color by default and which clips may move onto it.",
+            "sokkel-ui": "ClipTrackKind"
+        },
+        "clips": {
+            "type": "rows",
+            "does": "The clips: { id, track, start, duration, inPoint?, sourceDuration?, label, color?, waveform? }, times in seconds; waveform is the loudness of the clip's whole source from 0 to 1.",
+            "sokkel-ui": "TimelineClip"
+        },
+        "color": {
+            "values": ["blue", "green", "jade", "pink", "teal", "violet"],
+            "does": "A clip's color, one of the kind colors; by its track's kind when left out.",
+            "sokkel-ui": "TimelineClip color (KindColor)"
+        },
+        "duration": {
+            "type": "number",
+            "does": "The timeline's length in seconds; the ruler reaches at least this far, and further when a clip does."
+        },
+        "playhead": {"type": "number", "does": "Where the playhead stands, in seconds."},
+        "onPlayheadChange": {
+            "type": "callback",
+            "does": "Hears where the playhead goes, on a frame: a press or a drag on the ruler, or a key."
+        },
+        "selected": {"type": "rows", "default": [], "does": "The ids of the clips chosen, drawn outlined."},
+        "onSelectedChange": {
+            "type": "callback",
+            "does": "Hears the clips chosen: a press or Enter chooses one; with Shift, Cmd or Ctrl it adds the clip or takes it away; a press on an empty part of a lane chooses none."
+        },
+        "onClipsChange": {
+            "type": "callback",
+            "does": "Hears [{ id, start?, duration?, inPoint?, track? }], only what changed, once a clip is moved or trimmed. Without it the clips are read-only: no grips, no drag, no Alt+arrows."
+        },
+        "onSplit": {
+            "type": "callback",
+            "does": "Hears S: each chosen clip the playhead stands inside, and the time, on a frame. Without it S does nothing."
+        },
+        "onDelete": {
+            "type": "callback",
+            "does": "Hears Delete or Backspace on the chosen clips not on a locked track; ripple true with Shift, to close the gap they leave. Without it the keys do nothing."
+        },
+        "onDrop": {
+            "type": "callback",
+            "does": "Hears { data, track, at } once a thing dragged from another part of the same drag area is let go on a track that takes it; at in seconds, snapped, clear of the track's clips when its length is known. From the keyboard it lands at the playhead."
+        },
+        "accepts": {
+            "type": "callback",
+            "does": "Which things from outside a track takes; every one without it. A locked track takes none."
+        },
+        "dropDuration": {
+            "type": "callback",
+            "does": "How long a thing from outside lasts once dropped, in seconds, for its outline, its snapping at both ends and keeping it off the track's clips; its value's duration when that is a number by default."
+        },
+        "onTrackChange": {
+            "type": "callback",
+            "does": "Hears a header's toggles as { muted }, { hidden } or { locked }; without it the headers draw none."
+        },
+        "zoom": {
+            "type": "number",
+            "does": "How wide a second is drawn, in px. Left out, the fit: the length fits the lanes' width, never tighter than fitPixelsPerSecond, or than the length fitted to fitRoom when that is tighter still; past that the lanes scroll sideways. With neither zoom nor onZoomChange the timeline keeps its own zoom."
+        },
+        "onZoomChange": {
+            "type": "callback",
+            "does": "Hears a zoom asked for with Cmd or Ctrl and the wheel, or a pinch, held around the pointer: from zoomMin to zoomMax, never under half the fit."
+        },
+        "onFitChange": {
+            "type": "callback",
+            "does": "Hears the fit as the lanes' width changes, for an app's zoom buttons to start from."
+        },
+        "fps": {
+            "type": "number",
+            "default": 30,
+            "does": "Frames a second: the timecode's frames, what a time snaps to and how far an arrow steps."
+        },
+        "snap": {
+            "type": "boolean",
+            "default": true,
+            "does": "Whether a dragged edge snaps to the playhead, another clip's edge and 0, within snapReach."
+        }
+    },
+    "sizes": {
+        "corner": {
+            "height": 32,
+            "padX": 12,
+            "text": "text.help",
+            "note": "In the code face, tabular figures, in foreground."
+        },
+        "trackHeader": {
+            "height": 56,
+            "padX": 12,
+            "gap": 2,
+            "note": "The name's line and the toggles' row, centered down it."
+        },
+        "kindIcon": {"icon": 14, "note": "6 before the name."},
+        "trackName": {"text": "text.badge"},
+        "ruler": {"height": 32},
+        "tick": {
+            "text": "text.2xs",
+            "note": "4 in from the rule, 4 down from the top; in the code face, tabular figures."
+        },
+        "minorTick": {"height": 6, "width": 1},
+        "playhead": {"height": 16, "width": 12, "note": "The knob; the line is 1 wide."},
+        "lane": {"height": 56},
+        "clipLabel": {
+            "padX": 8,
+            "gap": 4,
+            "text": "text.badge",
+            "note": "4 down from the clip's top, on a 16 line; a title's T is 12."
+        },
+        "grip": {"width": 8},
+        "card": {"padX": 8, "padY": 4, "text": "text.help", "note": "In the code face, on one line."}
+    },
+    "layout": {
+        "headerWidth": {"value": 176, "note": "The headers' column from 640 wide."},
+        "headerWidthNarrow": {"value": 112, "note": "The headers' column below 640."},
+        "rowHeight": {"value": 56, "note": "A track's header and lane."},
+        "rulerHeight": {"value": 32, "note": "The ruler and the corner over the headers."},
+        "clipInset": {"value": 4, "note": "A clip's and a landing's room from the lane's top and bottom."},
+        "clipMinWidth": {"value": 2, "note": "A clip is drawn at least this wide, however short at the zoom."},
+        "gripWidth": {"value": 8, "note": "Each trim grip at a clip's ends."},
+        "snapReach": {
+            "value": 8,
+            "note": "How near in px an edge comes to a time before it snaps to it; else it snaps to a frame."
+        },
+        "tickRoom": {
+            "value": 88,
+            "note": "The least room a labeled tick takes: the step is the first of 1, 2, 5 and 10 frames, then 1, 2, 5, 10, 15 and 30 s, 1, 2, 5, 10, 15 and 30 min, and 1 h, that is at least this wide at the zoom."
+        },
+        "minorTickMin": {
+            "value": 8,
+            "note": "Minor ticks, a fifth of a step apart, are drawn only while that is at least this wide."
+        },
+        "fitPixelsPerSecond": {
+            "value": 16,
+            "note": "The fit's floor: a second at least this wide, a 4 second clip's 64 px holding the first characters of its label."
+        },
+        "fitRoom": {
+            "value": 960,
+            "note": "A length that would outgrow this room at the floor is fitted to this room instead, so a long timeline still fits whole on a desktop."
+        },
+        "defaultRoom": {"value": 640, "note": "The lanes' width taken until the scroller is measured."},
+        "zoomMin": {"value": 0.05, "note": "px a second, the narrowest a zoom asked for is drawn."},
+        "zoomMax": {"value": 600, "note": "px a second, the widest."},
+        "cardOffset": {"value": 12, "note": "How far right of and below the pointer the card stands."},
+        "dragFrom": {
+            "value": 4,
+            "note": "How far a mouse or pen moves pressed before a clip or a grip drags; a touch drags after a 300 ms hold that moves less than 8."
+        }
+    },
+    "states": {
+        "rest": {
+            "means": "Drawn: the ruler, every track's header and lane, the clips at the zoom, the playhead in sight."
+        },
+        "hover": {
+            "means": "The pointer is over a grip: washed in the clip's ink at 25 percent.",
+            "reached": "the pointer"
+        },
+        "focus": {
+            "means": "Keyboard focus on a clip or the playhead's knob: the frame's focus outline, focus-ring-offset outside it.",
+            "on": "keyboard",
+            "reached": "Tab"
+        },
+        "chosen": {
+            "means": "A chosen clip: a 2 wide primary ring around it, over the clips beside it.",
+            "reached": "selected"
+        },
+        "title": {
+            "means": "A clip on a title track: its edge dashed, a T before its label.",
+            "reached": "a track of kind title"
+        },
+        "faded": {
+            "means": "A clip a drag carries elsewhere, or on a hidden or muted track: at half strength.",
+            "reached": "a drag, or hidden or muted on its track"
+        },
+        "locked": {
+            "means": "A locked track: its lane shaded, its clips neither move, trim, split nor delete, and it takes nothing from outside.",
+            "reached": "locked on a track"
+        },
+        "dragging": {
+            "means": "A pointer carries a clip or one of its ends: the landing shows where it would go, snapped, the snap line where an edge snapped, the card its new start or length. A move goes along its track or onto another of its kind that is not locked; a trim never passes the source's ends or a neighbor. Let go, onClipsChange hears what changed; Escape or a lost pointer puts it back.",
+            "reached": "a press on a clip or a grip moved past dragFrom"
+        },
+        "blocked": {
+            "means": "The landing would cover another clip with no free place within the clip's own length: drawn in destructive, and let go there, words.blocked is said and nothing changes. A clip let go on one goes to the nearest free place beside it when there is one.",
+            "reached": "a drag over a full stretch"
+        },
+        "arriving": {
+            "means": "A thing from another part of the same drag area is over a track that takes it: the landing, washed, where it would be dropped.",
+            "reached": "onDrop and a drag from outside over a track"
+        },
+        "narrow": {
+            "means": "Below 640 the headers' column is headerWidthNarrow; a room narrower than the fit's floor scrolls the lanes sideways inside the box.",
+            "reached": "a window below 640"
+        }
+    },
+    "variants": {
+        "blue": {"rest": {"ground": "kind-blue/25", "edge": "kind-blue/60", "ink": "kind-blue-ink"}},
+        "green": {"rest": {"ground": "kind-green/25", "edge": "kind-green/60", "ink": "kind-green-ink"}},
+        "jade": {"rest": {"ground": "kind-jade/25", "edge": "kind-jade/60", "ink": "kind-jade-ink"}},
+        "pink": {"rest": {"ground": "kind-pink/25", "edge": "kind-pink/60", "ink": "kind-pink-ink"}},
+        "teal": {"rest": {"ground": "kind-teal/25", "edge": "kind-teal/60", "ink": "kind-teal-ink"}},
+        "violet": {"rest": {"ground": "kind-violet/25", "edge": "kind-violet/60", "ink": "kind-violet-ink"}}
+    },
+    "pieces": {
+        "box": {"rest": {"ground": "card", "edge": "border", "radius": "radius-surface", "text": "text.body"}},
+        "corner": {"rest": {"ground": "card", "ink": "foreground", "rule": "border", "text": "text.help"}},
+        "headers": {"rest": {"ground": "card", "rule": "border"}},
+        "trackHeader": {"rest": {"rule": "border"}},
+        "kindIcon": {"rest": {"ink": "muted-foreground"}},
+        "trackName": {"rest": {"text": "text.badge"}},
+        "ruler": {"rest": {"ground": "card", "rule": "border"}},
+        "tick": {"rest": {"ink": "muted-foreground", "rule": "border-strong", "text": "text.2xs"}},
+        "minorTick": {"rest": {"ground": "border"}},
+        "playhead": {
+            "rest": {
+                "ground": "primary",
+                "note": "The knob's foot corners rounded by radius-mini; the line in primary too."
+            },
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        },
+        "lane": {"rest": {"rule": "border"}, "locked": {"ground": "muted/50"}},
+        "clip": {
+            "rest": {"radius": "radius-control", "note": "The wash, edge and ink are the clip's color's (variants)."},
+            "chosen": {"ring": {"color": "primary", "width": 2}},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}},
+            "faded": {"opacity": 0.5},
+            "title": {"note": "The edge dashed."}
+        },
+        "clipLabel": {"rest": {"text": "text.badge"}},
+        "waveform": {"rest": {"opacity": 0.6, "note": "Filled in the clip's ink."}},
+        "grip": {"rest": {"note": "No paint of its own."}, "hover": {"note": "The clip's ink at 25 percent."}},
+        "landing": {
+            "rest": {
+                "edge": "primary",
+                "radius": "radius-control",
+                "note": "Dashed, 2 wide; drawn only while a drag shows where it lands."
+            },
+            "arriving": {"ground": "primary/10", "edge": "primary"},
+            "blocked": {"edge": "destructive"}
+        },
+        "snapLine": {"rest": {"ground": "ring"}},
+        "card": {
+            "rest": {
+                "ground": "card",
+                "radius": "radius-surface",
+                "text": "text.help",
+                "note": "elevation-pop under it; the drag engine's card for a compact copy."
+            }
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the headers' toggles, the playhead's knob and each clip, in order."},
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Chooses the clip; with Shift, Cmd or Ctrl adds it or takes it away.",
+            "when": "a clip has focus"
+        },
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "Moves the playhead a frame earlier or later, held between 0 and the lanes' end; words.at says where. With Shift, a second.",
+            "when": "focus is inside the timeline"
+        },
+        {
+            "keys": ["Home", "End"],
+            "does": "Moves the playhead to 0 or to the timeline's length.",
+            "when": "focus is inside the timeline"
+        },
+        {
+            "keys": ["Alt+ArrowLeft", "Alt+ArrowRight"],
+            "does": "Moves the chosen clips a frame along their tracks; when any would leave 0, be locked or cover another, none moves and words.blocked is said.",
+            "when": "focus is inside the timeline and onClipsChange is given"
+        },
+        {
+            "keys": ["S"],
+            "does": "Splits each chosen clip the playhead stands inside, not on a locked track, at the playhead.",
+            "when": "focus is inside the timeline and onSplit is given"
+        },
+        {
+            "keys": ["Delete", "Backspace"],
+            "does": "Deletes the chosen clips not on a locked track; with Shift, closing the gap they leave.",
+            "when": "focus is inside the timeline, onDelete is given and a clip is chosen"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Puts the carried clip back and ends the drag.",
+            "when": "a pointer drags a clip or a grip"
+        }
+    ],
+    "words": {
+        "label": "Timeline",
+        "playhead": "Playhead",
+        "kinds.video": "Video",
+        "kinds.audio": "Audio",
+        "kinds.title": "Title",
+        "mute": "Mute",
+        "lock": "Lock",
+        "hide": "Hide",
+        "clip": "{label}, {start} to {end}",
+        "start": "Start {at}",
+        "length": "Length {length}",
+        "moved": "{clip} moved to {at}",
+        "movedTo": "{clip} moved to {track} at {at}",
+        "trimmed": "{clip} trimmed to {length}",
+        "split": "{clip} split at {at}",
+        "deleted": {"one": "Clip deleted", "other": "{count} clips deleted"},
+        "deletedRipple": {"one": "Clip deleted, the gap closed", "other": "{count} clips deleted, the gap closed"},
+        "blocked": "{clip} cannot go there",
+        "dropped": "{item} added to {track} at {at}",
+        "at": "Playhead at {at}",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "zoomFit": "Fit"
+    },
+    "samples": {
+        "clip": [
+            {
+                "with": {"label": "harbor-wide", "start": "00:00:04:00", "end": "00:00:09:15"},
+                "says": "harbor-wide, 00:00:04:00 to 00:00:09:15"
+            }
+        ],
+        "start": [{"with": {"at": "00:00:04:00"}, "says": "Start 00:00:04:00"}],
+        "length": [{"with": {"length": "00:00:05:15"}, "says": "Length 00:00:05:15"}],
+        "moved": [{"with": {"clip": "harbor-wide", "at": "00:00:06:00"}, "says": "harbor-wide moved to 00:00:06:00"}],
+        "movedTo": [
+            {
+                "with": {"clip": "harbor-wide", "track": "B-roll", "at": "00:00:06:00"},
+                "says": "harbor-wide moved to B-roll at 00:00:06:00"
+            }
+        ],
+        "trimmed": [
+            {"with": {"clip": "harbor-wide", "length": "00:00:03:10"}, "says": "harbor-wide trimmed to 00:00:03:10"}
+        ],
+        "split": [{"with": {"clip": "harbor-wide", "at": "00:00:05:00"}, "says": "harbor-wide split at 00:00:05:00"}],
+        "deleted": [
+            {"with": {"count": 1}, "says": "Clip deleted"},
+            {"with": {"count": 1200}, "says": "1200 clips deleted"}
+        ],
+        "deletedRipple": [
+            {"with": {"count": 1}, "says": "Clip deleted, the gap closed"},
+            {"with": {"count": 1200}, "says": "1200 clips deleted, the gap closed"}
+        ],
+        "blocked": [{"with": {"clip": "harbor-wide"}, "says": "harbor-wide cannot go there"}],
+        "dropped": [
+            {
+                "with": {"item": "juniper-pan", "track": "Video", "at": "00:00:12:00"},
+                "says": "juniper-pan added to Video at 00:00:12:00"
+            }
+        ],
+        "at": [{"with": {"at": "00:00:01:12"}, "says": "Playhead at 00:00:01:12"}]
+    },
+    "appText": {
+        "tracks": "Each track's name.",
+        "clips": "Each clip's label.",
+        "drops": "A thing from outside names itself by its drag data's label, said in words.dropped and words.blocked."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The lanes' width is measured with a ResizeObserver on the scroller, less the headers' column; the fit takes defaultRoom until it is.",
+            "Moves, trims and drops run on the library's one drag engine (dnd-kit, DragDrop), whose layer (clip-timeline-drag) is fetched the first time a timeline with onClipsChange or onDrop is drawn; until then the clips are drawn and take keys but no drag. Each clip and each grip is a drag item, each track a drop target scoped to its timeline; a drop of a clip lands on no target, as the timeline places it itself.",
+            "The ruler, the corner and the headers' column are sticky in the one scroller, so both ways of scrolling keep them in sight; the playhead is scrolled into sight when the timeline is first drawn and as a key moves it.",
+            "A wheel with Cmd or Ctrl, which a trackpad's pinch sends too, zooms around the pointer, the time under it kept under it; a small delta (a trackpad) zooms faster per unit than a mouse wheel's.",
+            "Each change is said to a screen reader (polite): moved, trimmed, split, deleted, blocked, dropped, and where the playhead went by a key.",
+            "The waveform is an SVG polygon stretched over the clip, sliced to the clip's part of its source.",
+            "The card's words follow the drag through a store, as the drag engine draws the card once."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-ui-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 48f51ce there is no clip timeline."
+        }
+    ]
+}
