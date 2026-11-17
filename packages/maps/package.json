@@ -88,8 +88,8 @@
     },
     "dependencies": {
         "@types/geojson": "^7946.0.16",
-        "lucide-react": "^1.68.0",
-        "maplibre-gl": "^6.7.0"
+        "lucide-react": "^1.73.0",
+        "maplibre-gl": "^6.18.0"
     },
     "peerDependencies": {
         "@winterop-com/sokkel-ui": "workspace:*",
