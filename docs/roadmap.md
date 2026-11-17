@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.29.1** is the latest release (2026-11-17): `RunTimeline`, jobs and their runs along one
+- **0.29.2** is the latest release (2026-11-17): `ClipTimeline` (a video editor's multi-track
+  timeline, taking drops from a media bin) with the Cut example, `EmojiPicker` and `ReactionBar` with
+  reactions in the chat parts and examples, a drag that follows the real pointer, and an arranged
+  dashboard keeping each panel's least height; sokkel-design's contract at 0.29.2.
+- **0.29.1** (2026-11-17): `RunTimeline`, jobs and their runs along one
   time axis, the chosen job's upcoming runs dragged to shift them.
 - **0.29.0** (2026-11-17): the 2026-11-16 review's fixes (#602 to #629),
   among them model replies show images only when asked, KaTeX 0.18 and `tailwindcss` as peers,
