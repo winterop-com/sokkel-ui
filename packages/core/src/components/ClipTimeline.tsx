@@ -170,12 +170,19 @@ export interface ClipTimelineProps {
     onTrackChange?: (id: string, patch: Partial<Pick<TimelineTrack, 'muted' | 'locked' | 'hidden'>>) => void
     /**
      * How wide a second is drawn, in pixels. Left out, the timeline's length fits its width, and with
-     * no `onZoomChange` the timeline keeps its own zoom.
+     * no `onZoomChange` the timeline keeps its own zoom. A fit is never drawn tighter than
+     * `clipFitZoom` allows: a second keeps at least `CLIP_TIMELINE_FIT.pixelsPerSecond` (room for the
+     * first few characters of a typical clip's label), or the room the whole length would get from
+     * `CLIP_TIMELINE_FIT.room` pixels, whichever is less. In a room narrower than that, as on a phone,
+     * the lanes scroll sideways inside the timeline.
      */
     zoom?: number
     /** Hears a zoom asked for with the command key and the wheel, or a pinch, held around the pointer. */
     onZoomChange?: (pixelsPerSecond: number) => void
-    /** Hears the zoom at which the timeline's length fits its width, as the width changes, for an app's zoom buttons to start from. */
+    /**
+     * Hears the zoom the fitted view draws at, `clipFitZoom` of the lanes' width, as the width changes,
+     * for an app's zoom buttons to start from.
+     */
     onFitChange?: (pixelsPerSecond: number) => void
     /** Frames a second: the ruler's timecode, what a time snaps to and how far an arrow steps. 30 by default. */
     fps?: number
@@ -196,6 +203,24 @@ const SECOND_STEPS = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600]
 
 /** The narrowest and widest a second is drawn by a zoom the timeline asks for, in pixels. */
 export const CLIP_TIMELINE_ZOOM = { min: 0.05, max: 600 } as const
+
+/**
+ * The floor of a fitted view. `pixelsPerSecond`: a typical clip of 4 seconds keeps 64 pixels, the
+ * first five or six characters of its label beside its padding. `room`: the lanes' width on a
+ * laptop; a length that would outgrow it at that floor is drawn as this room fits it, so a long
+ * timeline still fits whole on a desktop.
+ */
+export const CLIP_TIMELINE_FIT = { pixelsPerSecond: 64 / 4, room: 960 } as const
+
+/**
+ * The zoom at which a timeline `length` seconds long fits lanes `room` pixels wide, never tighter than
+ * `CLIP_TIMELINE_FIT.pixelsPerSecond`, or than `length` fitted to `CLIP_TIMELINE_FIT.room` when that
+ * is tighter still. Past that floor the lanes are wider than the room and scroll.
+ */
+export function clipFitZoom(room: number, length: number): number {
+    const span = Math.max(length, 1)
+    return Math.max(room / span, Math.min(CLIP_TIMELINE_FIT.pixelsPerSecond, CLIP_TIMELINE_FIT.room / span))
+}
 
 const NEAR = 1e-6
 
@@ -399,18 +424,23 @@ export function ClipTimeline({
     const [scroller, setScroller] = useState<HTMLDivElement | null>(null)
     const content = useRef<HTMLDivElement>(null)
     const root = useRef<HTMLDivElement>(null)
+    const side = useRef<HTMLDivElement>(null)
+    const ruler = useRef<HTMLDivElement>(null)
+    /** The lanes' width in sight: the scroller's, less the header column held at its start. */
     const [viewport, setViewport] = useState(0)
     useLayoutEffect(() => {
         if (scroller === null) return
-        setViewport(scroller.clientWidth)
-        const observer = new ResizeObserver(() => setViewport(scroller.clientWidth))
+        const measure = () => setViewport(Math.max(scroller.clientWidth - (side.current?.offsetWidth ?? 0), 0))
+        measure()
+        const observer = new ResizeObserver(measure)
         observer.observe(scroller)
+        if (side.current !== null) observer.observe(side.current)
         return () => observer.disconnect()
     }, [scroller])
 
     const total = Math.max(duration, ...clips.map(end), 0)
     const room = viewport || 640
-    const fit = room / Math.max(total, 1)
+    const fit = clipFitZoom(room, total)
     const [own, setOwn] = useState<number | null>(null)
     useEffect(() => {
         if (viewport > 0) onFitChange?.(fit)
@@ -451,8 +481,8 @@ export function ClipTimeline({
         anchor.current = null
         scroller.scrollLeft = held.time * pps - held.x
     }, [pps, scroller])
-    const zoomRef = useRef({ pps, fit, onZoomChange, controlled: zoom !== undefined })
-    zoomRef.current = { pps, fit, onZoomChange, controlled: zoom !== undefined }
+    const zoomRef = useRef({ pps, fit, onZoomChange, controlled: zoom !== undefined, timeAt })
+    zoomRef.current = { pps, fit, onZoomChange, controlled: zoom !== undefined, timeAt }
     useEffect(() => {
         if (scroller === null) return
         const wheel = (event: WheelEvent) => {
@@ -465,8 +495,8 @@ export function ClipTimeline({
                 CLIP_TIMELINE_ZOOM.max,
             )
             if (Math.abs(next - now.pps) < NEAR) return
-            const x = event.clientX - scroller.getBoundingClientRect().left
-            anchor.current = { time: (scroller.scrollLeft + x) / now.pps, x }
+            const time = now.timeAt(event.clientX)
+            anchor.current = { time, x: time * now.pps - scroller.scrollLeft }
             now.onZoomChange?.(next)
             if (now.onZoomChange === undefined && !now.controlled) setOwn(next)
         }
@@ -480,9 +510,9 @@ export function ClipTimeline({
         if (!follow.current || scroller === null) return
         follow.current = false
         const x = playhead * pps
-        if (x < scroller.scrollLeft) scroller.scrollLeft = x - scroller.clientWidth / 4
-        else if (x > scroller.scrollLeft + scroller.clientWidth) scroller.scrollLeft = x - (scroller.clientWidth * 3) / 4
-    }, [playhead, pps, scroller])
+        if (x < scroller.scrollLeft) scroller.scrollLeft = x - room / 4
+        else if (x > scroller.scrollLeft + room) scroller.scrollLeft = x - (room * 3) / 4
+    }, [playhead, pps, scroller, room])
 
     const seek = (time: number, byKey = false) => {
         const at = Math.min(Math.max(toFrame(time), 0), toFrame(reach))
@@ -497,10 +527,14 @@ export function ClipTimeline({
     const targetsFor = (id: string) =>
         snap ? [0, playhead, ...clips.filter((clip) => clip.id !== id).flatMap((clip) => [clip.start, end(clip)])] : []
 
-    /** The track whose lane holds a point on the page, its lanes' visible part only. */
+    /** The track whose lane holds a point on the page, its lanes' visible part only: past the headers and under the ruler. */
     const laneUnder = (point: { x: number; y: number }): TimelineTrack | undefined => {
-        const shown = scroller?.getBoundingClientRect()
-        if (shown === undefined || point.x < shown.left || point.x > shown.right) return undefined
+        if (scroller === null) return undefined
+        const shown = scroller.getBoundingClientRect()
+        const left = side.current?.getBoundingClientRect().right ?? shown.left
+        const top = ruler.current?.getBoundingClientRect().bottom ?? shown.top
+        if (point.x < left || point.x > shown.left + scroller.clientWidth) return undefined
+        if (point.y < top || point.y > shown.top + scroller.clientHeight) return undefined
         const lanes = root.current?.querySelectorAll<HTMLElement>('[data-track-lane]') ?? []
         for (const lane of lanes) {
             const box = lane.getBoundingClientRect()
@@ -750,22 +784,28 @@ export function ClipTimeline({
             onKeyDown={onKeyDown}
             className={cn('flex min-h-0 min-w-0 flex-col overflow-hidden rounded-surface border border-border bg-card text-sm', className)}
         >
-            <div className="flex min-h-0 flex-1 overflow-y-auto">
-                <div className="w-28 shrink-0 border-e border-border sm:w-44">
-                    <div className="flex h-8 items-center border-b border-border px-3 font-mono text-xs text-foreground tabular-nums">
-                        {formatTimecode(playhead, fps)}
+            <div ref={setScroller} data-timeline-scroller className="relative min-h-0 flex-1 overflow-auto overscroll-x-contain">
+                <div className="flex min-h-full w-max min-w-full">
+                    <div ref={side} className="sticky start-0 z-5 w-28 shrink-0 overflow-clip border-e border-border bg-card sm:w-44">
+                        <div className="sticky top-0 z-1 flex h-8 items-center border-b border-border bg-card px-3 font-mono text-xs text-foreground tabular-nums">
+                            {formatTimecode(playhead, fps)}
+                        </div>
+                        {tracks.map((track) => (
+                            <TrackHeader key={track.id} track={track} words={words} onTrackChange={onTrackChange} />
+                        ))}
                     </div>
-                    {tracks.map((track) => (
-                        <TrackHeader key={track.id} track={track} words={words} onTrackChange={onTrackChange} />
-                    ))}
-                </div>
-                <div ref={setScroller} className="relative min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
-                    <div ref={content} className="relative" style={{ width: `${String(width)}px` }}>
+                    <div ref={content} className="relative shrink-0" style={{ width: `${String(width)}px` }}>
                         <div
+                            ref={ruler}
                             data-ruler
                             onPointerDown={scrub}
-                            className="relative h-8 cursor-col-resize touch-none overflow-hidden border-b border-border select-none"
+                            className="sticky top-0 z-4 h-8 cursor-col-resize touch-none overflow-hidden border-b border-border bg-card select-none"
                         >
+                            <span
+                                aria-hidden
+                                className="pointer-events-none absolute inset-y-0 w-px -translate-x-1/2 bg-primary"
+                                style={{ left: `${String(head)}px` }}
+                            />
                             {minors.map((at) => (
                                 <span
                                     key={at}

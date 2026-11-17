@@ -5,7 +5,9 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import {
+    CLIP_TIMELINE_FIT,
     ClipTimeline,
+    clipFitZoom,
     clipTickStep,
     formatTimecode,
     placeClip,
@@ -104,6 +106,17 @@ describe('zoom', () => {
     it('picks a tick step that leaves room for the timecode', () => {
         expect(clipTickStep(10)).toBe(10)
         expect(clipTickStep(300, 30)).toBeCloseTo(10 / 30)
+    })
+    it('fits the length to the room, never tighter than a readable floor', () => {
+        // A desktop's room fits a minute as before.
+        expect(clipFitZoom(1200, 60)).toBe(20)
+        // A phone's does not: a second keeps its floor, and the lanes scroll.
+        expect(clipFitZoom(230, 30)).toBe(CLIP_TIMELINE_FIT.pixelsPerSecond)
+        expect(clipFitZoom(230, 60)).toBe(CLIP_TIMELINE_FIT.pixelsPerSecond)
+        // A longer one is held to what the floor's room fits, so it still fits whole on a desktop.
+        expect(clipFitZoom(230, 600)).toBeCloseTo(CLIP_TIMELINE_FIT.room / 600)
+        expect(clipFitZoom(1200, 3600)).toBeCloseTo(1200 / 3600)
+        expect(clipFitZoom(230, 3600)).toBeCloseTo(CLIP_TIMELINE_FIT.room / 3600)
     })
 })
 
