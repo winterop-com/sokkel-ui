@@ -119,22 +119,36 @@ export function freeStart(edit: Edit, track: string, at: number, duration: numbe
     return start
 }
 
-/** Places a source on its kind's first track at `at`, or after what is there; the new clip's id with the edit. */
-export function addSource(edit: Edit, source: Source, at: number): { edit: Edit; id: string } | undefined {
-    const track = firstTrack(edit, source.kind)
-    if (track === undefined) return undefined
-    const duration = source.kind === 'video' ? Math.min(source.duration, 8) : Math.min(source.duration, 16)
-    const id = clipId()
-    const clip: Clip = {
-        id,
-        track: track.id,
-        start: freeStart(edit, track.id, at, duration),
-        duration,
+/** How long a source's clip runs when it is placed: a picture up to 8 seconds, a sound up to 16. */
+export const placedLength = (source: Source) => Math.min(source.duration, source.kind === 'video' ? 8 : 16)
+
+/** A new clip of a source on `track` at `start`, as long as `placedLength` says. */
+function sourceClip(source: Source, track: string, start: number): Clip {
+    return {
+        id: clipId(),
+        track,
+        start: onFrame(start),
+        duration: placedLength(source),
         inPoint: 0,
         source: source.id,
         ...(source.kind === 'audio' ? { volume: 0.8 } : {}),
     }
-    return { edit: { ...edit, clips: [...edit.clips, clip] }, id }
+}
+
+/** Places a source on `track` at `at`, where a timeline's drop has found it room; the new clip's id with the edit. */
+export function dropSource(edit: Edit, source: Source, track: string, at: number): { edit: Edit; id: string } | undefined {
+    const target = trackOf(edit, track)
+    if (target === undefined || target.kind !== source.kind || target.locked === true) return undefined
+    const clip = sourceClip(source, track, at)
+    return { edit: { ...edit, clips: [...edit.clips, clip] }, id: clip.id }
+}
+
+/** Places a source on its kind's first track at `at`, or after what is there; the new clip's id with the edit. */
+export function addSource(edit: Edit, source: Source, at: number): { edit: Edit; id: string } | undefined {
+    const track = firstTrack(edit, source.kind)
+    if (track === undefined) return undefined
+    const clip = sourceClip(source, track.id, freeStart(edit, track.id, at, placedLength(source)))
+    return { edit: { ...edit, clips: [...edit.clips, clip] }, id: clip.id }
 }
 
 /** Adds a title of `duration` seconds at `at` on the first title track. */

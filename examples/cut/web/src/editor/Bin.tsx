@@ -1,3 +1,4 @@
+import type { DragData } from '@winterop-com/sokkel-ui/DragDrop'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
@@ -9,7 +10,7 @@ import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
 import { ArrowRightToLine, Plus, Type } from 'lucide-react'
 
 import { peaksOf, posterOf, SOURCES, type Source } from '../media'
-import { lengthText } from '../model'
+import { lengthText, placedLength } from '../model'
 
 /** How many bars a sound's card draws. */
 const BARS = 48
@@ -20,6 +21,19 @@ function barsOf(source: Source): number[] {
     const each = Math.max(1, Math.floor(peaks.length / BARS))
     return Array.from({ length: Math.min(BARS, peaks.length) }, (_, index) => Math.max(...peaks.slice(index * each, (index + 1) * each), 0))
 }
+
+/** What a bin tile carries onto the timeline: its kind, the length it is placed at, and its source. */
+export interface MediaDragValue {
+    kind: Source['kind']
+    duration: number
+    source: string
+}
+
+export const mediaDrag = (source: Source): DragData => ({
+    kind: 'media',
+    label: source.name,
+    value: { kind: source.kind, duration: placedLength(source), source: source.id } satisfies MediaDragValue,
+})
 
 function SourceCard({ source, onAdd, onAppend }: { source: Source; onAdd: () => void; onAppend: () => void }) {
     return (
@@ -44,6 +58,7 @@ function SourceCard({ source, onAdd, onAppend }: { source: Source; onAdd: () => 
                 )
             }
             onSelect={onAdd}
+            drag={mediaDrag(source)}
             menu={
                 <>
                     <DropdownMenuItem onClick={onAdd}>
@@ -61,8 +76,8 @@ function SourceCard({ source, onAdd, onAppend }: { source: Source; onAdd: () => 
 }
 
 /**
- * The media bin: the pictures and sounds to cut from, each placed at the playhead when pressed or
- * at the end of its track from its menu, and a title added at the playhead.
+ * The media bin: the pictures and sounds to cut from, each dragged onto a track of its kind, placed
+ * at the playhead when pressed or at the end of its track from its menu, and a title added at the playhead.
  */
 export function Bin({
     onAdd,

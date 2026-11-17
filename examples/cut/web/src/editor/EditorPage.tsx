@@ -5,6 +5,7 @@ import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { useRailMode } from '@winterop-com/sokkel-ui/Shell'
 import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
+import { DragDrop } from '@winterop-com/sokkel-ui/DragDrop'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Copy, Download, PencilLine, Redo2, Scissors, Trash2, Undo2, ZoomIn, ZoomOut, Maximize2, ListX } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -16,6 +17,7 @@ import {
     addTitle,
     applyChanges,
     deleteClips,
+    dropSource,
     end,
     FPS,
     firstTrack,
@@ -32,7 +34,7 @@ import {
 } from '../model'
 import { setSoundLevel } from '../sound'
 import { useEditHistory } from '../history'
-import { Bin } from './Bin'
+import { Bin, type MediaDragValue } from './Bin'
 import { ClipInspector } from './ClipInspector'
 import { ExportDialog } from './ExportDialog'
 import { Preview } from './Preview'
@@ -290,6 +292,14 @@ export function EditorPage({
                     zoom={zoom}
                     onZoomChange={setZoom}
                     onFitChange={setFit}
+                    accepts={(drag, track) => drag.kind === 'media' && (drag.value as MediaDragValue).kind === track.kind}
+                    onDrop={({ data, track, at }) => {
+                        const source = sourceOf((data.value as MediaDragValue).source)
+                        const done = source === undefined ? undefined : dropSource(edit, source, track, at)
+                        if (done === undefined) return
+                        apply(done.edit)
+                        setSelected([done.id])
+                    }}
                     fps={FPS}
                     snap={prefs.snap}
                 />
@@ -328,62 +338,64 @@ export function EditorPage({
                     reason: length === 0 ? 'The edit has nothing in it to export.' : undefined,
                 }}
             />
-            <SplitPane
-                direction="down"
-                id="cut-rows"
-                className="min-h-0 flex-1"
-                defaultShare={0.56}
-                minShare={0.35}
-                maxShare={0.8}
-                first={
-                    <SplitPane
-                        id="cut-bin"
-                        defaultShare={0.24}
-                        minShare={0.15}
-                        maxShare={0.4}
-                        narrowBelow={720}
-                        first={
-                            <Bin
-                                onAdd={(source) => place(source, 'playhead')}
-                                onAppend={(source) => place(source, 'end')}
-                                onTitle={title}
-                            />
-                        }
-                        second={
-                            <SplitPane
-                                id="cut-inspector"
-                                defaultShare={0.66}
-                                minShare={0.45}
-                                maxShare={0.8}
-                                narrowBelow={720}
-                                first={
-                                    <Preview
-                                        edit={edit}
-                                        length={length}
-                                        playback={playback}
-                                        light={prefs.lightPreview}
-                                        level={level}
-                                        muted={muted}
-                                        onLevelChange={setLevel}
-                                        onMutedChange={setMuted}
-                                    />
-                                }
-                                second={
-                                    <ClipInspector
-                                        edit={edit}
-                                        selected={selected}
-                                        playhead={playhead}
-                                        onPatch={patch}
-                                        onSplit={split}
-                                        onDelete={remove}
-                                    />
-                                }
-                            />
-                        }
-                    />
-                }
-                second={timeline}
-            />
+            <DragDrop>
+                <SplitPane
+                    direction="down"
+                    id="cut-rows"
+                    className="min-h-0 flex-1"
+                    defaultShare={0.52}
+                    minShare={0.35}
+                    maxShare={0.8}
+                    first={
+                        <SplitPane
+                            id="cut-bin"
+                            defaultShare={0.24}
+                            minShare={0.15}
+                            maxShare={0.4}
+                            narrowBelow={720}
+                            first={
+                                <Bin
+                                    onAdd={(source) => place(source, 'playhead')}
+                                    onAppend={(source) => place(source, 'end')}
+                                    onTitle={title}
+                                />
+                            }
+                            second={
+                                <SplitPane
+                                    id="cut-inspector"
+                                    defaultShare={0.66}
+                                    minShare={0.45}
+                                    maxShare={0.8}
+                                    narrowBelow={720}
+                                    first={
+                                        <Preview
+                                            edit={edit}
+                                            length={length}
+                                            playback={playback}
+                                            light={prefs.lightPreview}
+                                            level={level}
+                                            muted={muted}
+                                            onLevelChange={setLevel}
+                                            onMutedChange={setMuted}
+                                        />
+                                    }
+                                    second={
+                                        <ClipInspector
+                                            edit={edit}
+                                            selected={selected}
+                                            playhead={playhead}
+                                            onPatch={patch}
+                                            onSplit={split}
+                                            onDelete={remove}
+                                        />
+                                    }
+                                />
+                            }
+                        />
+                    }
+                    second={timeline}
+                />
+            </DragDrop>
             {exporting && <ExportDialog name={project.name} edit={edit} size={prefs.exportSize} onClose={() => setExporting(false)} />}
         </>
     )
