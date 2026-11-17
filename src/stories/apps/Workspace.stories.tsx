@@ -22,6 +22,8 @@ import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
 import { AnsiText } from '@winterop-com/sokkel-ui/AnsiText'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
+import { RunTimeline } from '@winterop-com/sokkel-ui/RunTimeline'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -46,6 +48,7 @@ import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { NEW_JOB_STEPS, useNewJob } from '../dialogs/flows'
 import { RunsListing } from '../RunsListing'
 import { RUN_FIELDS, WEEK_RUNS } from '../fixtures/weekRuns'
+import { DAY, lanesFrom, NOW } from '../fixtures/schedules'
 
 /** Where the stories keep what they remember, apart from an app's own keys. */
 const KEPT = { prefix: 'tidevann-stories.' }
@@ -517,6 +520,120 @@ function NewJobPage({ layout }: { layout?: 'side' | 'top' }) {
     )
 }
 
+/** One upcoming run of a schedule, as the Schedules page lists it. */
+interface Fire {
+    id: string
+    job: string
+    at: number
+}
+
+const SCHEDULE_SPANS = [
+    { value: '24h', label: '24 hours' },
+    { value: '3d', label: '3 days' },
+    { value: 'week', label: 'Week' },
+] as const
+type ScheduleSpan = (typeof SCHEDULE_SPANS)[number]['value']
+const SPAN_MS: Record<ScheduleSpan, number> = { '24h': DAY, '3d': 3 * DAY, week: 7 * DAY }
+
+const FIRE_COLUMNS: DataColumn<Fire>[] = [
+    { id: 'job', header: 'Job', width: 'minmax(10rem,1fr)', cell: (fire) => <span className="font-mono">{fire.job}</span> },
+    {
+        id: 'at',
+        header: 'At',
+        width: '9rem',
+        cell: (fire) => <span className="tabular-nums">{new Date(fire.at).toISOString().slice(5, 16).replace('T', ' ')}</span>,
+    },
+    {
+        id: 'in',
+        header: 'Starts',
+        width: '7rem',
+        align: 'end',
+        cell: (fire) => <RelativeTime date={fire.at} now={new Date(NOW)} length="short" className="text-muted-foreground" />,
+    },
+]
+
+/**
+ * The schedules: every job's runs along one axis, the last ones beside the next, and the upcoming
+ * runs listed under it. A job is chosen by its name, and its upcoming runs drag sideways to move its
+ * schedule, the list following.
+ */
+function SchedulesPage() {
+    const [collapsed, setCollapsed] = useState(false)
+    const [span, setSpan] = useState<ScheduleSpan>('3d')
+    const [selected, setSelected] = useState<string | null>('nightly-export')
+    const [moved, setMoved] = useState<Record<string, number>>({})
+    const ahead = SPAN_MS[span]
+    const from = NOW - ahead / 2
+    const to = NOW + ahead
+    const lanes = lanesFrom(from, to).map((lane) => ({
+        ...lane,
+        runs: lane.runs.map((run) => (Number(run.at) > NOW ? { ...run, at: Number(run.at) + (moved[lane.id] ?? 0) } : run)),
+    }))
+    const fires: Fire[] = lanes
+        .flatMap((lane) =>
+            lane.runs
+                .filter((run) => Number(run.at) > NOW && Number(run.at) <= to)
+                .map((run) => ({ id: run.id, job: lane.id, at: Number(run.at) })),
+        )
+        .sort((left, right) => left.at - right.at)
+    return (
+        <TooltipProvider>
+            <Shell
+                rail={
+                    <Rail
+                        mark={<TidevannMark />}
+                        name="Tidevann"
+                        groups={railAt('schedules')}
+                        defaultExpanded={['projects']}
+                        collapsed={collapsed}
+                        onCollapsedChange={setCollapsed}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSignOut={() => undefined}
+                            />
+                        }
+                    />
+                }
+                top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: 'Schedules' }]} />}
+            >
+                <Page>
+                    <PageHeader
+                        title="Schedules"
+                        count={`${String(fires.length)} runs ahead`}
+                        description="What the schedules will start, on the UTC clock."
+                        actions={<Segmented label="Ahead" value={span} options={SCHEDULE_SPANS} onValueChange={setSpan} />}
+                    />
+                    <Stack gap="lg">
+                        <RunTimeline
+                            lanes={lanes}
+                            from={from}
+                            to={to}
+                            now={NOW}
+                            timeZone="UTC"
+                            selected={selected}
+                            onSelect={(id) => setSelected((current) => (current === id ? null : id))}
+                            snap={15 * 60_000}
+                            onShift={({ lane, by }) => setMoved((current) => ({ ...current, [lane]: (current[lane] ?? 0) + by }))}
+                        />
+                        <DataTable
+                            columns={FIRE_COLUMNS}
+                            rows={fires}
+                            rowKey={(fire) => fire.id}
+                            rowLabel={(fire) => fire.job}
+                            words={{ rows: (count) => `${String(count)} ${count === 1 ? 'run' : 'runs'}` }}
+                            minWidth="24rem"
+                        />
+                    </Stack>
+                </Page>
+            </Shell>
+        </TooltipProvider>
+    )
+}
+
 const meta: Meta = { title: 'Apps/Workspace' }
 export default meta
 
@@ -531,6 +648,9 @@ export const Output: StoryObj = { name: 'Run output', render: (_, { globals }) =
  * active row. Sorting or grouping the table draws it in that order instead, without the grips.
  */
 export const Queue: StoryObj = { render: (_, { globals }) => <Workspace globals={globals} queue /> }
+
+/** The schedules: each job's runs along one time axis above the upcoming runs; dragging the chosen job's upcoming runs moves its schedule. */
+export const Schedules: StoryObj = { render: () => <SchedulesPage /> }
 
 /** The runs with a log dock at the page's foot, its lines filtered by level. */
 export const WithDock: StoryObj = { name: 'Log dock', render: (_, { globals }) => <Workspace globals={globals} dock /> }
