@@ -486,12 +486,18 @@
             "does": "Selects the next occurrence of the selection, selects every occurrence, or goes to a line (CodeMirror's search keymap).",
             "when": "search"
         },
+        {"keys": ["Mod+.", "Mod+Shift+."], "does": "Folds or unfolds the block at the caret.", "when": "folding"},
+        {"keys": ["Mod+Alt+.", "Mod+Alt+Shift+."], "does": "Folds or unfolds every block.", "when": "folding"},
         {
             "keys": ["Ctrl+Shift+[", "Ctrl+Shift+]"],
-            "does": "Folds or unfolds the block at the caret (Cmd+Alt+[ and Cmd+Alt+] on a Mac).",
+            "does": "The second keys for folding and unfolding the block at the caret (Cmd+Alt+[ and Cmd+Alt+] on a Mac), CodeMirror's own, kept beside the keys with no bracket (principle 17).",
             "when": "folding"
         },
-        {"keys": ["Ctrl+Alt+[", "Ctrl+Alt+]"], "does": "Folds or unfolds every block.", "when": "folding"},
+        {
+            "keys": ["Ctrl+Alt+[", "Ctrl+Alt+]"],
+            "does": "The second keys for folding and unfolding every block, CodeMirror's own.",
+            "when": "folding"
+        },
         {
             "keys": ["Mod+Click"],
             "does": "Follows the [[link]] clicked (onFollowLink); while Mod is held the links are underlined and the pointer is a hand.",

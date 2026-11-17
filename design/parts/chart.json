@@ -117,6 +117,10 @@
             "type": "rows",
             "does": "Lines down the chart at categories of x ({ x, label?, color? }): where a forecast starts, a release (markLine)."
         },
+        "targets": {
+            "type": "rows",
+            "does": "Lines across the chart at values, { value, label?, color? }: each dashed, 1 wide, in its color token (muted-foreground by default), its label and value written at its end above it; the value axis reaches each where the figures do not. ChartSpec targets, ChartTarget."
+        },
         "format": {
             "type": "callback",
             "does": "How a figure is written, in ticks, tooltips, the legend and the data view; unit is written after it."
@@ -281,7 +285,7 @@
             "focus": {
                 "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset", "inset": "all"}
             },
-            "hidden": {"opacity": 0.6, "note": "The label struck through."}
+            "hidden": {"opacity": "disabled-opacity", "note": "The label struck through."}
         },
         "legendSwatch": {
             "rest": {"radius": "radius-mini", "note": "In the series' color."},

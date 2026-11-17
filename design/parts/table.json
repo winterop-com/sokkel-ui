@@ -341,7 +341,15 @@
             "toneWarning": {"ground": "mix-oklab(warning 10%, card)"},
             "muted": {"opacity": 0.6, "note": "The cells' content, not the ground."}
         },
-        "groupHead": {"rest": {"ground": "panel-ground", "rule": "border", "text": "text.section-title"}},
+        "groupHead": {
+            "rest": {
+                "ground": "panel-ground",
+                "rule": "border",
+                "ink": "table-head-ink",
+                "text": "text.head",
+                "note": "The column heads' role and ink, in the group's own case (a group is named by its value): a head is never louder than the rows it heads."
+            }
+        },
         "card": {
             "rest": {"ground": "card", "edge": "border", "radius": "radius-surface"},
             "hover": {"ground": "hover"},

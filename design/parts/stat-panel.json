@@ -29,7 +29,7 @@
         "note": "With note: a line under the value in text.xs, muted-foreground, cut short.",
         "stale": "With stale: parts/dashboard-panel's stale mark, under the value.",
         "meter": "With target and a value: a meter under the value, 8 below it and 12 above the tile's foot, at most 192 wide, its pieces 4 apart: the track, then the target written out.",
-        "track": "The meter's track: 6 tall, radius-mini, in the value's ink at 15 percent; filled from its start in the value's ink as far as target(value, range) puts the reading (range from targetRange, else 0 to the larger of the reading and the target).",
+        "track": "The target meter's track, 6 tall and at most meterMaxWidth wide, filled from its start as far as the reading in the reading's own color (set at run time), the tick at the target over it.",
         "tick": "A mark at the target across the track: 2 wide, reaching 4 above and below it, radius-mini, in foreground (on-fill when filled).",
         "targetLabel": "words.target, then the target written as the value is with a string unit after it (Target 99.5%), centered, at text.xs, the figure in the code face with tabular figures, in muted-foreground (on-fill at 85 percent when filled).",
         "failure": "With error: what failed (error's own words, else words.failed) at text.xs in critical-ink, centered in the value's place, then Retry with onRetry: a 12 turning arrow and words.retry, a tool as wide as its words.",
@@ -120,7 +120,10 @@
         "failure": {"gap": 6, "padX": 10, "text": "text.xs"}
     },
     "layout": {
-        "valueFoot": {"value": 28, "note": "Under the value's room (pb-7)."},
+        "valueFoot": {
+            "value": 28,
+            "note": "Under the value's room (pb-7); none with a target meter, whose own room under it centers the value and the meter in the tile."
+        },
         "meterTop": {"value": 8, "note": "Between the value and the meter."},
         "meterFoot": {"value": 12, "note": "Under the meter."},
         "tickOverhang": {"value": 4, "note": "The tick reaches this far above and below the track."},
@@ -165,7 +168,13 @@
     },
     "pieces": {
         "tile": {
-            "rest": {"ground": "card", "edge": "border", "ink": "card-foreground", "radius": "radius-surface"},
+            "rest": {
+                "ground": "card",
+                "edge": "border-strong",
+                "ink": "card-foreground",
+                "radius": "radius-surface",
+                "note": "parts/dashboard-panel's edge, so a grid of panels and tiles wears one."
+            },
             "hover": {"ground": "hover", "edge": "foreground/25"},
             "filled": {
                 "edge": "none",
@@ -186,7 +195,10 @@
         "tool": {
             "rest": {"ink": "muted-foreground", "radius": "radius-md"},
             "hover": {"ink": "foreground"},
-            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}},
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"},
+                "note": "parts/dashboard-panel's tools' focus outline."
+            },
             "filled": {"ink": "on-fill/80"}
         },
         "value": {
@@ -204,6 +216,7 @@
         "note": {"rest": {"ink": "muted-foreground", "text": "text.xs"}, "filled": {"ink": "on-fill/85"}},
         "tick": {"rest": {"ground": "foreground", "radius": "radius-mini"}, "filled": {"ground": "on-fill"}},
         "targetLabel": {"rest": {"ink": "muted-foreground", "text": "text.xs"}, "filled": {"ink": "on-fill/85"}},
+        "track": {"rest": {"ground": "muted", "radius": "radius-mini"}, "filled": {"ground": "on-fill/25"}},
         "failure": {"rest": {"ink": "critical-ink", "text": "text.xs"}, "filled": {"ink": "on-fill/90"}},
         "cover": {
             "rest": {"radius": "radius-surface"},
@@ -248,7 +261,7 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "The reading's color is set at run time as the CSS variable --tone from the token the scale picks (tokenVar); text-(--tone) inks, and the filled ground is a gradient of it, so neither is a resolved paint.",
-            "The track's ground and fill are bg-current at 15 percent and in full, following the value's ink.",
+            "The meter's fill is bg-current in full, the reading's own ink set at run time; its track is the muted token (track).",
             "The trend is an SVG area (SparkArea), its stroke not scaled with the box.",
             "A title cut short sets its title attribute only while it is clamped (useClamped).",
             "The words are a module-private object (WORDS: noData, info, menu, loading, target, and PANEL_STATE_WORDS spread in), merged under words.",

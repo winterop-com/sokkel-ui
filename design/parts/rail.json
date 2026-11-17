@@ -184,7 +184,7 @@
     "layout": {
         "width": {
             "value": 240,
-            "note": "Expanded, by default (defaultSize); a double click on the edge or Enter puts it back."
+            "note": "Expanded, by default (defaultSize, RAIL_SIZE.default); a double click on the edge or Enter puts it back. RAIL_SIZE holds 240, 200 and 360, for an app that keeps the width itself."
         },
         "minWidth": 200,
         "maxWidth": 360,
