@@ -1,0 +1,183 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "server-menu",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "ServerMenu built before this spec (d163191): the dot, the name, the version, a menu of the state, facts, Check again and the app's items; no checks tooltip."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "The server an app talks to, for the top bar's actions: a dot in the state's color (pulsing while the app asks), the server's name and its version in the code face, opening a menu that says the state in words with the server's facts under it, Check again, and the app's own items. The app may add states of its own (degraded), draw a quiet face that is a silent dot until something is wrong, and list every check behind the state in a tooltip on the face and in the menu.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ServerMenu.tsx",
+            "packages/core/src/components/Dot.tsx",
+            "packages/core/src/components/ui/badge.tsx",
+            "packages/core/src/components/ui/dropdown-menu.tsx",
+            "packages/core/src/components/ui/tooltip.tsx"
+        ]
+    },
+    "anatomy": {
+        "face": "parts/button's ghost at sm, 8 across and 8 between its pieces: the dot, the name, the version and a chevron. Its name says words.label, the name, the version and the state. On a phone the name gives way; the dot and the version stay.",
+        "dot": "The state's dot (index.json statuses): up in succeeded, down in failed, checking in skipped and pulsing, an app's own state in its color. Quiet and wrong, the dot also says the state in words.",
+        "name": "The server's name, cut to its room; hidden below md.",
+        "version": "The version in the code face on parts/badge's secondary chip.",
+        "chevron": "A chevron down, 16, in muted-foreground; not drawn with onPress or quiet.",
+        "menu": "parts/dropdown-menu's popup at the face's end, 288 wide: the state's label with its icon, the info, the checks behind a separator, then Check again and the app's items behind a separator.",
+        "stateLabel": "The menu's label: the state's icon (a plug while well, a crashed server while down, turning arrows while checking, an alert otherwise), then the state in words.",
+        "info": "Under the label, padded 8 across and 6 under, 4 apart, text.help in muted-foreground: the name at 500 in foreground, the environment after it, the version in the code face while quiet, then each fact on its own line.",
+        "checks": "Every check behind the state, one a line, 4 apart: its dot, its name at 500, its state's words and its detail, quieter; in the menu padded 8 across and 6 down, in the tooltip under its head.",
+        "tooltip": "With checks or checkedAt: parts/tooltip at the face's end, under it: the name at 500, the environment and the version, then words.checkedAt, then the checks."
+    },
+    "standsOn": {"default": "background", "menu": "popover", "info": "popover"},
+    "options": {
+        "name": {"type": "text", "does": "What the server is called, such as the deployment's name."},
+        "version": {"type": "text", "does": "The version it answers with, drawn in the code face beside the name."},
+        "environment": {
+            "type": "text",
+            "does": "Which deployment it is, such as production, said beside the name in the tooltip and the menu."
+        },
+        "state": {
+            "values": ["up", "down", "checking"],
+            "does": "Whether the server answers, does not, or the app is asking it now; or a state the app names in states."
+        },
+        "states": {
+            "type": "rows",
+            "does": "The app's own states with their words and colors, such as degraded in warning; one named up, down or checking changes that state's words or color."
+        },
+        "quiet": {
+            "type": "boolean",
+            "default": false,
+            "does": "A face that is the dot alone while the server is well (its state drawn good or succeeded) or being asked, and the dot with the state in words when it is not. The name and the version stay in the menu and in the face's name."
+        },
+        "checks": {
+            "type": "rows",
+            "does": "Every check behind the state, each { name, state, detail? }, listed in a tooltip on the face and in the menu."
+        },
+        "checkedAt": {
+            "type": "text",
+            "does": "When the server was last asked, said in the tooltip relative to now: words.checkedAt."
+        },
+        "recheck": {
+            "type": "callback",
+            "does": "Called as the tooltip opens while the server is not being asked, so the app can ask again."
+        },
+        "onPress": {
+            "type": "callback",
+            "does": "Pressing the face calls this in place of opening the menu, for an app with its own pane about the server; no menu and no chevron."
+        },
+        "facts": {
+            "type": "rows",
+            "does": "Lines under the name in the menu: its address, what it serves, how it stores."
+        },
+        "onCheck": {
+            "type": "callback",
+            "does": "Asks the server again: adds Check again to the menu, its icon turning while checking, when it says words.checking and is disabled."
+        },
+        "children": {
+            "type": "node",
+            "does": "The app's own items after Check again, such as a link to a page about the server."
+        },
+        "defaultOpen": {"type": "boolean", "default": false, "does": "Starts with the menu open."}
+    },
+    "sizes": {
+        "face": {"padX": 8, "gap": 8, "note": "parts/button's sm, its padding and gap set to 8."},
+        "chevron": {"height": 16, "width": 16},
+        "menu": {"width": 288},
+        "info": {"padX": 8, "gap": 4, "note": "6 under it."}
+    },
+    "states": {
+        "rest": {"means": "Up: the dot in succeeded.", "reached": "state up"},
+        "down": {
+            "means": "Not answering: the dot in failed; quiet, the state in words beside it.",
+            "reached": "state down"
+        },
+        "checking": {
+            "means": "Being asked: the dot in skipped, pulsing; Check again turns its icon and says words.checking.",
+            "reached": "state checking"
+        },
+        "hover": {"means": "The pointer is over the face.", "reached": "pointer over"},
+        "focus": {
+            "means": "Keyboard focus on the face: parts/button's focus outline.",
+            "reached": "Tab",
+            "on": "keyboard"
+        },
+        "open": {"means": "The menu is open.", "reached": "a press, Enter, Space or ArrowDown on the face; defaultOpen"}
+    },
+    "pieces": {
+        "chevron": {"rest": {"ink": "muted-foreground"}},
+        "version": {
+            "rest": {
+                "ground": "secondary",
+                "ink": "secondary-foreground",
+                "radius": "radius-chip",
+                "text": "text.badge",
+                "note": "In the code face."
+            }
+        },
+        "info": {"rest": {"ink": "muted-foreground", "text": "text.help"}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the face; its tooltip shows on focus."},
+        {
+            "keys": ["Enter", "Space", "ArrowDown"],
+            "does": "Opens the menu (parts/dropdown-menu's keys), or calls onPress.",
+            "when": "the face has focus"
+        },
+        {"keys": ["Escape"], "does": "Shuts the menu, the focus back on the face.", "when": "the menu is open"}
+    ],
+    "words": {
+        "up": "Connected",
+        "down": "Not answering",
+        "checking": "Checking",
+        "check": "Check again",
+        "label": "Server",
+        "checkedAt": "Checked {ago}"
+    },
+    "messages": {
+        "up": {"id": "serverMenu.up", "en": "Connected"},
+        "down": {"id": "serverMenu.down", "en": "Not answering"},
+        "checking": {"id": "serverMenu.checking", "en": "Checking"},
+        "check": {"id": "serverMenu.check", "en": "Check again"},
+        "label": {"id": "serverMenu.label", "en": "Server"},
+        "checkedAt": {"id": "serverMenu.checkedAt", "en": "Checked {ago}"}
+    },
+    "samples": {
+        "checkedAt": [
+            {"with": {"ago": "2 minutes ago"}, "says": "Checked 2 minutes ago"},
+            {"with": {"ago": "just now"}, "says": "Checked just now"}
+        ]
+    },
+    "appText": {
+        "name": "The server's name.",
+        "environment": "The deployment.",
+        "facts": "Each fact line.",
+        "checks": "Each check's name and detail.",
+        "states": "The app's own states' words."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The dot's color is the state's status color, set as a CSS variable from StatusProvider (useStatus), so an app's own states take their colors there.",
+            "words.checkedAt is said with RelativeTime's relativeTime, in the app's locale."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, ServerMenu was built (d163191) before this spec: the dot, the name, the version, a menu of the state, the facts, Check again and the app's items. Not yet: the checks' tooltip; not compared with this spec."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

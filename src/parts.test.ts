@@ -6,6 +6,16 @@ import { createElement, type ComponentType, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import { API_LINK_WORDS, ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
+import { ChoiceList } from '@winterop-com/sokkel-ui/ChoiceList'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
+import { ITEM_CARD_WORDS, ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
+import { Badge, type BadgeProps } from '@winterop-com/sokkel-ui/primitives/badge'
+import { SERVER_MENU_WORDS, ServerMenu } from '@winterop-com/sokkel-ui/ServerMenu'
+import { SORTABLE_WORDS, SortableGrid } from '@winterop-com/sokkel-ui/Sortable'
+import { Stat } from '@winterop-com/sokkel-ui/Stat'
+import { Unfoldable } from '@winterop-com/sokkel-ui/Unfoldable'
 import { BOARD_CHECKLIST_WORDS, BOARD_ITEM_PANEL_WORDS, BoardChecklist, BoardItemPanel } from '@winterop-com/sokkel-ui/board/BoardItemPanel'
 import { Banner, BANNER_WORDS, type BannerTone } from '@winterop-com/sokkel-ui/Banner'
 import { CALL_BAR_SHORTCUTS, CALL_BAR_WORDS, CallBar, type CallBarProps } from '@winterop-com/sokkel-ui/CallBar'
@@ -48,7 +58,7 @@ import { EMOJI_PICKER_WORDS, EmojiPicker } from '@winterop-com/sokkel-ui/EmojiPi
 import { Field, FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
-import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
+import { ISSUE_COUNT_WORDS, ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
 import { JSON_TREE_WORDS, JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
 import { Letter, LETTER_WORDS } from '@winterop-com/sokkel-ui/Letter'
 import { MESSAGE_COMPOSER_WORDS, MessageComposer, type MessageComposerProps } from '@winterop-com/sokkel-ui/MessageComposer'
@@ -258,7 +268,12 @@ for (const match of STYLES.matchAll(/--text-([a-z0-9]+(?:-[a-z0-9]+)*)(--line-he
     else entry.tracking = value
     TEXT.set(name, entry)
 }
-const WEIGHTS: Record<string, number> = { 'font-normal': 400, 'font-medium': 500, 'font-semibold': 600, 'font-bold': 700 }
+const WEIGHTS: Record<string, number> = {
+    'font-normal': 400,
+    'font-medium': 500,
+    'font-semibold': 600,
+    'font-bold': 700,
+}
 
 // Drawing a component on the server, and finding its elements
 
@@ -269,7 +284,14 @@ interface El {
     parent: El | undefined
 }
 
-const ENTITIES: Record<string, string> = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#x27;': "'", '&#39;': "'" }
+const ENTITIES: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#x27;': "'",
+    '&#39;': "'",
+}
 const decode = (text: string) => text.replace(/&(?:amp|lt|gt|quot|#x27|#39);/g, (entity) => ENTITIES[entity])
 
 /** Every element of server-drawn markup, in document order, with its attributes, its text and its parent. */
@@ -340,7 +362,11 @@ function utility(token: string): Utility {
         }
     }
     const name = token.slice(start)
-    return { mods: parts, name: name.replace(/^!|!$/g, ''), important: name.startsWith('!') || name.endsWith('!') }
+    return {
+        mods: parts,
+        name: name.replace(/^!|!$/g, ''),
+        important: name.startsWith('!') || name.endsWith('!'),
+    }
 }
 
 /** Variants that hold wherever the part is drawn: a guard that only turns a state off, or a selector that reaches the piece itself. */
@@ -444,7 +470,10 @@ const lengthOf =
     }
 
 /** The ring widths the theme names (`ring-focus`, `outline-focus`), by the token each stands for. */
-const RING_WIDTHS: Record<string, string> = { focus: 'focus-ring-width', invalid: 'invalid-ring-width' }
+const RING_WIDTHS: Record<string, string> = {
+    focus: 'focus-ring-width',
+    invalid: 'invalid-ring-width',
+}
 
 const READ = {
     ground: prefixed('bg-'),
@@ -584,7 +613,10 @@ function ringChecks(key: string, ring: Ring, where: Where): Check[] {
     const light = resolve(where.layers, where.on, READ.ringColor)
     const dark = resolve(where.layers, [...where.on, 'dark'], READ.ringColor)
     const checks = [
-        { ...check(`${key}.color`, ring.color, light), same: sameColor(ring.color, light) },
+        {
+            ...check(`${key}.color`, ring.color, light),
+            same: sameColor(ring.color, light),
+        },
         check(`${key}.width`, String(ring.width), resolve(where.layers, where.on, READ.ringWidth)),
     ]
     if (ring.offset !== undefined) {
@@ -593,7 +625,10 @@ function ringChecks(key: string, ring: Ring, where: Where): Check[] {
     }
     if (ring.dark !== undefined || dark !== light) {
         const wanted = ring.dark?.color ?? ring.color
-        checks.push({ ...check(`${key}.color (dark)`, wanted, dark), same: sameColor(wanted, dark) })
+        checks.push({
+            ...check(`${key}.color (dark)`, wanted, dark),
+            same: sameColor(wanted, dark),
+        })
     }
     return checks
 }
@@ -605,15 +640,25 @@ function paintChecks(key: string, paint: Paint, where: Where): Check[] {
         const wanted = paint[name]
         const light = colorFound(name, where, where.on)
         const dark = colorFound(name, where, [...where.on, 'dark'])
-        if (wanted !== undefined) checks.push({ ...check(`${key}.${name}`, wanted, light), same: sameColor(wanted, light) })
+        if (wanted !== undefined)
+            checks.push({
+                ...check(`${key}.${name}`, wanted, light),
+                same: sameColor(wanted, light),
+            })
         const wantedDark = paint.dark?.[name] ?? wanted
         if (wantedDark !== undefined && (paint.dark?.[name] !== undefined || dark !== light)) {
-            checks.push({ ...check(`${key}.${name} (dark)`, wantedDark, dark), same: sameColor(wantedDark, dark) })
+            checks.push({
+                ...check(`${key}.${name} (dark)`, wantedDark, dark),
+                same: sameColor(wantedDark, dark),
+            })
         }
     }
     if (paint.mark !== undefined) {
         const found = where.mark === undefined ? undefined : resolve([where.mark], where.on, READ.ink)
-        checks.push({ ...check(`${key}.mark`, paint.mark, found), same: sameColor(paint.mark, found) })
+        checks.push({
+            ...check(`${key}.mark`, paint.mark, found),
+            same: sameColor(paint.mark, found),
+        })
     }
     if (paint.ring !== undefined) checks.push(...ringChecks(`${key}.ring`, paint.ring, where))
     if (paint.radius !== undefined) checks.push(check(`${key}.radius`, paint.radius, resolve(where.layers, where.on, READ.radius)))
@@ -794,14 +839,22 @@ function buttonWhere(elements: El[], state: string): Where | Skip | undefined {
     if (element === undefined) return undefined
     const on = BUTTON_ON[state]
     if (on === undefined) return skip(`no way to reach ${state} on a button`)
-    return { layers: [classesOf(element)], on, around: ancestors(element), focusable: focusable(element) }
+    return {
+        layers: [classesOf(element)],
+        on,
+        around: ancestors(element),
+        focusable: focusable(element),
+    }
 }
 
 const BUTTON_ADAPTER: Adapter = {
     wordObjects: {},
     complete: [],
     words: {},
-    options: { variant: variantKeys(BUTTON, 'variant'), size: variantKeys(BUTTON, 'size') },
+    options: {
+        variant: variantKeys(BUTTON, 'variant'),
+        size: variantKeys(BUTTON, 'size'),
+    },
     size: (size) => {
         const element = firstButton(button({ size: size as never }))
         return pieceWhere(element)
@@ -810,7 +863,14 @@ const BUTTON_ADAPTER: Adapter = {
         if (group === 'pieces') return name === 'container' ? buttonWhere(button(), state) : undefined
         if (name === 'icon-button') {
             const pressed = state === 'pressed'
-            return buttonWhere(draw(IconButton, { label: 'Edit', pressed: pressed || undefined, children: 'E' }), pressed ? 'rest' : state)
+            return buttonWhere(
+                draw(IconButton, {
+                    label: 'Edit',
+                    pressed: pressed || undefined,
+                    children: 'E',
+                }),
+                pressed ? 'rest' : state,
+            )
         }
         if (name === 'destructive-hover') return buttonWhere(button({ destructiveHover: true }), state)
         return buttonWhere(button({ variant: name as never }), state)
@@ -841,7 +901,9 @@ const FIELD = source('components/Field.tsx')
 const TEXT_FIELD = source('components/TextField.tsx')
 const field = (props: Partial<Parameters<typeof TextField>[0]> = {}) => draw(TextField, { id: 'name', label: 'Name', ...props })
 const REFUSED = { error: 'Use letters and digits' }
-const WARNED = { issues: [{ tone: 'warning' as const, text: 'Longer than most' }] }
+const WARNED = {
+    issues: [{ tone: 'warning' as const, text: 'Longer than most' }],
+}
 const byText = (elements: El[], tag: string, text: string) =>
     elements.find((element) => element.tag === tag && element.text === text && !classesOf(element).includes('sr-only'))
 
@@ -897,10 +959,17 @@ const TEXT_FIELD_ADAPTER: Adapter = {
         ],
         warnings: [
             'IssueCount.warnings',
-            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+            (_: never, fill) =>
+                draw(IssueCount, {
+                    critical: 0,
+                    warning: Number(fill.count),
+                    list: [],
+                })[0]?.attrs['aria-label'] ?? '',
         ],
     },
-    options: { requiredMark: propValues(TEXT_FIELD, 'TextFieldProps', 'requiredMark') },
+    options: {
+        requiredMark: propValues(TEXT_FIELD, 'TextFieldProps', 'requiredMark'),
+    },
     size: (size) => {
         const where = controlWhere('rest', size === 'multiline')
         return isSkip(where) || where === undefined ? where : { ...where, layers: [where.layers[0]] }
@@ -963,16 +1032,30 @@ const JOBS: Job[] = [
     { id: 'rebuild-index', name: 'rebuild-index', state: 'running' },
 ]
 const COLUMNS: DataColumn<Job>[] = [
-    { id: 'name', header: 'Name', width: 'minmax(12rem,1fr)', cell: (job) => job.name, sortValue: (job) => job.name },
+    {
+        id: 'name',
+        header: 'Name',
+        width: 'minmax(12rem,1fr)',
+        cell: (job) => job.name,
+        sortValue: (job) => job.name,
+    },
     { id: 'state', header: 'State', width: '8rem', cell: (job) => job.state },
 ]
 const DATA_TABLE = source('components/DataTable.tsx')
 const table = (props: Partial<DataTableProps<Job>> = {}) =>
-    draw(DataTable<Job>, { columns: COLUMNS, rows: JOBS, rowKey: (job) => job.id, ...props } as DataTableProps<Job>)
+    draw(DataTable<Job>, {
+        columns: COLUMNS,
+        rows: JOBS,
+        rowKey: (job) => job.id,
+        ...props,
+    } as DataTableProps<Job>)
 const rowOf = (elements: El[], key = JOBS[0].id) => elements.find((element) => element.attrs['data-row'] === key)
 const FIRST = new Set([JOBS[0].id])
 /** Rows drawn as cards: a box this wide stacks below the widest a server drawing assumes. */
-const STACKED: Partial<DataTableProps<Job>> = { stackBelow: 5000, minWidth: 'auto' }
+const STACKED: Partial<DataTableProps<Job>> = {
+    stackBelow: 5000,
+    minWidth: 'auto',
+}
 
 const HOVER = ['hover', 'group-hover/row', 'group-hover/card']
 const ACTIVE_FOCUS = ['group-focus-visible/table', 'data-active']
@@ -1011,7 +1094,11 @@ function tableCard(state: string): Where | Skip | undefined {
     const card = elements.find((element) => element.attrs.role === 'row' && classesOf(element).includes('group/card'))
     const face = elements.find((element) => element.parent === card)
     if (card === undefined || face === undefined) return undefined
-    return { layers: [classesOf(card), classesOf(face)], on, around: ancestors(card) }
+    return {
+        layers: [classesOf(card), classesOf(face)],
+        on,
+        around: ancestors(card),
+    }
 }
 
 const TABLE_ADAPTER: Adapter = {
@@ -1084,6 +1171,9 @@ const TABLE_ADAPTER: Adapter = {
         loadMore: propValues(DATA_TABLE, 'DataTableProps', 'loadMore'),
         stackLayout: propValues(DATA_TABLE, 'DataTableProps', 'stackLayout'),
         rowHeight: propValues(DATA_TABLE, 'DataTableProps', 'rowHeight'),
+        cellFocus: [
+            ...(/export type CellFocus = ([^\n]+)/.exec(source('components/table-editing.tsx'))?.[1] ?? '').matchAll(/'([^']+)'/g),
+        ].map((match) => match[1]),
     },
     size: (size, key) => {
         const elements = table(size === 'list' ? { variant: 'list' } : {})
@@ -1103,14 +1193,22 @@ const TABLE_ADAPTER: Adapter = {
             if (head === undefined) return undefined
             // The head the keys chose takes the focus on its sorter, which wears the button's focus look.
             const on = state === 'hover' ? ['hover'] : state === 'headActive+focus' ? ['focus-visible'] : []
-            return { layers: [classesOf(head), ...(state === 'rest' ? [] : [classesOf(sorter)])], on, around: ancestors(head) }
+            return {
+                layers: [classesOf(head), ...(state === 'rest' ? [] : [classesOf(sorter)])],
+                on,
+                around: ancestors(head),
+            }
         }
         if (name === 'groupHead') {
             const elements = table({ groupBy: (job: Job) => job.state })
             return pieceWhere(elements.find((element) => element.attrs.role === 'row' && element.attrs['data-group'] !== undefined))
         }
         if (name === 'cardDetail') {
-            const elements = table({ ...STACKED, detail: () => 'Ran in 4 minutes', defaultExpanded: FIRST })
+            const elements = table({
+                ...STACKED,
+                detail: () => 'Ran in 4 minutes',
+                defaultExpanded: FIRST,
+            })
             return pieceWhere(
                 elements.find((element) => element.text === 'Ran in 4 minutes' && classesOf(element).includes('rounded-surface')),
             )
@@ -1120,15 +1218,26 @@ const TABLE_ADAPTER: Adapter = {
         if (name === 'empty') return pieceWhere(byText(table({ rows: [] }), 'p', DATA_TABLE_WORDS.empty))
         if (name === 'failure') {
             if (state === 'rest') return skip('not drawn at rest')
-            const elements = table({ error: 'The read timed out', onRetry: () => undefined })
+            const elements = table({
+                error: 'The read timed out',
+                onRetry: () => undefined,
+            })
             const state_ = elements.find((element) => element.attrs['data-slot'] === 'page-state')
             if (state_ === undefined) return undefined
             const mark = elements.find((element) => element.tag === 'svg' && element.parent === state_)
-            return { layers: [classesOf(state_)], on: [], around: ancestors(state_), mark: classesOf(mark) }
+            return {
+                layers: [classesOf(state_)],
+                on: [],
+                around: ancestors(state_),
+                mark: classesOf(mark),
+            }
         }
         if (name === 'dropLine') {
             // Drawn only while a row is dragged, which a server drawing never is: its classes are read from the source.
-            return { layers: [literalAfter(DATA_TABLE, 'function RowLine', 'className={cn(')], on: [] }
+            return {
+                layers: [literalAfter(DATA_TABLE, 'function RowLine', 'className={cn(')],
+                on: [],
+            }
         }
         return undefined
     },
@@ -1257,7 +1366,13 @@ const FRAME_ON: Record<string, string[]> = {
 const frameOn = (state: string) => state.split('+').flatMap((one) => FRAME_ON[one] ?? [])
 
 function at(element: El | undefined, state = 'rest'): Where | undefined {
-    return element === undefined ? undefined : { layers: [classesOf(element)], on: frameOn(state), around: ancestors(element) }
+    return element === undefined
+        ? undefined
+        : {
+              layers: [classesOf(element)],
+              on: frameOn(state),
+              around: ancestors(element),
+          }
 }
 
 /** A value made the first time it is asked for, and kept. */
@@ -1279,15 +1394,33 @@ const PLACES: RailGroup[] = [
         id: 'operate',
         title: 'Operate',
         entries: [
-            { id: 'runs', label: 'Runs', icon: Play, href: '#/runs', active: true, count: 3 },
-            { id: 'schedules', label: 'Schedules', icon: CalendarClock, href: '#/schedules' },
+            {
+                id: 'runs',
+                label: 'Runs',
+                icon: Play,
+                href: '#/runs',
+                active: true,
+                count: 3,
+            },
+            {
+                id: 'schedules',
+                label: 'Schedules',
+                icon: CalendarClock,
+                href: '#/schedules',
+            },
         ],
     },
     {
         id: 'build',
         title: 'Build',
         entries: [
-            { id: 'jobs', label: 'Jobs', icon: Workflow, href: '#/jobs', unread: true },
+            {
+                id: 'jobs',
+                label: 'Jobs',
+                icon: Workflow,
+                href: '#/jobs',
+                unread: true,
+            },
             {
                 id: 'services',
                 label: 'Services',
@@ -1315,8 +1448,21 @@ const DESCRIBED: RailGroup[] = [
     {
         id: 'places',
         entries: [
-            { id: 'runs', label: 'Runs', description: 'Every run, newest first', icon: Play, href: '#/runs', active: true },
-            { id: 'schedules', label: 'Schedules', description: 'When each job starts', icon: CalendarClock, href: '#/schedules' },
+            {
+                id: 'runs',
+                label: 'Runs',
+                description: 'Every run, newest first',
+                icon: Play,
+                href: '#/runs',
+                active: true,
+            },
+            {
+                id: 'schedules',
+                label: 'Schedules',
+                description: 'When each job starts',
+                icon: CalendarClock,
+                href: '#/schedules',
+            },
         ],
     },
 ]
@@ -1340,9 +1486,21 @@ const HOLDING: RailGroup[] = [
 ]
 
 const rail = (props: Partial<RailProps> = {}) =>
-    draw(Rail, { name: 'Tidevann', mark: 'T', markHref: '#/', groups: PLACES, onCollapsedChange: () => undefined, foot: 'ada', ...props })
+    draw(Rail, {
+        name: 'Tidevann',
+        mark: 'T',
+        markHref: '#/',
+        groups: PLACES,
+        onCollapsedChange: () => undefined,
+        foot: 'ada',
+        ...props,
+    })
 /** The drawings most checks read, each made once. */
-const RAILS = once(() => ({ expanded: rail(), collapsed: rail({ collapsed: true }), strip: rail({ variant: 'strip' }) }))
+const RAILS = once(() => ({
+    expanded: rail(),
+    collapsed: rail({ collapsed: true }),
+    strip: rail({ variant: 'strip' }),
+}))
 /** An expanded entry's row, by its label: the row that draws the start bar. */
 const railRow = (elements: El[], label: string) =>
     elements.find((element) => classesOf(element).includes('border-l-2') && element.text.startsWith(label))
@@ -1379,7 +1537,10 @@ const RAIL_ADAPTER: Adapter = {
         unread: 'RAIL_WORDS.unread',
         places: 'RAIL_WORDS.places',
     },
-    options: { variant: propValues(RAIL, 'RailProps', 'variant'), view: propValues(RAIL, 'RailProps', 'view') },
+    options: {
+        variant: propValues(RAIL, 'RailProps', 'variant'),
+        view: propValues(RAIL, 'RailProps', 'view'),
+    },
     size: (size, key) => {
         const { expanded, collapsed, strip } = RAILS()
         // An expanded row's pad is its start bar and its start pad against its end pad, which `more` reads.
@@ -1477,7 +1638,11 @@ const RAIL_ADAPTER: Adapter = {
                 )
             case 'footCell':
                 // Docked, the cell is drawn into the shell's foot row through a portal: its classes are read from the source.
-                if (state === 'docked') return { layers: [literalAfter(RAIL, 'createPortal(', 'className=')], on: [] }
+                if (state === 'docked')
+                    return {
+                        layers: [literalAfter(RAIL, 'createPortal(', 'className=')],
+                        on: [],
+                    }
                 return at(footCell(expanded), state)
             case 'stripEntry':
                 return at(stripEntry(strip, active ? 'Runs' : 'Schedules'), state)
@@ -1640,11 +1805,23 @@ const NEW = createElement('button', { type: 'button' }, 'New')
 const FIELD_GIVEN = createElement('input', { 'aria-label': 'Find a run' })
 
 const topBar = (props: Partial<TopBarProps> = {}) =>
-    draw(TopBar, { trail: CRUMBS, onSearch: () => undefined, shortcut: 'Ctrl K', actions: NEW, ...props })
+    draw(TopBar, {
+        trail: CRUMBS,
+        onSearch: () => undefined,
+        shortcut: 'Ctrl K',
+        actions: NEW,
+        ...props,
+    })
 /** The top bar in a shell, as an app draws it: in the shell's bar, under the frame's ink. */
 const shell = (props: Partial<ShellProps> = {}) => draw(Shell, { rail: null, children: 'Run 1842', ...props })
 const framedBar = (props: Partial<TopBarProps> = {}) =>
-    shell({ top: createElement(TopBar, { trail: CRUMBS, onSearch: () => undefined, ...props }) })
+    shell({
+        top: createElement(TopBar, {
+            trail: CRUMBS,
+            onSearch: () => undefined,
+            ...props,
+        }),
+    })
 const BARS = once(() => ({ bar: topBar(), framed: framedBar() }))
 const paletteButton = (elements: El[], word: string) =>
     elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === word)
@@ -1654,7 +1831,11 @@ const menuButton = (elements: El[]) =>
 const TOP_BAR_ADAPTER: Adapter = {
     wordObjects: { TOP_BAR_WORDS },
     complete: ['TOP_BAR_WORDS'],
-    words: { search: 'TOP_BAR_WORDS.search', palette: 'TOP_BAR_WORDS.palette', trail: 'TOP_BAR_WORDS.trail' },
+    words: {
+        search: 'TOP_BAR_WORDS.search',
+        palette: 'TOP_BAR_WORDS.palette',
+        trail: 'TOP_BAR_WORDS.trail',
+    },
     options: { trailEnds: propValues(TOP_BAR, 'TopBarProps', 'trailEnds') },
     size: (size, key) => {
         const { bar, framed } = BARS()
@@ -1771,12 +1952,26 @@ const TOP_BAR_ADAPTER: Adapter = {
 
 const STATUS_LINE = source('components/StatusLine.tsx')
 const FACTS = [
-    createElement(StatusItem, { key: 'run', label: 'run', code: true, children: 'run_01JCF8Q2' }),
+    createElement(StatusItem, {
+        key: 'run',
+        label: 'run',
+        code: true,
+        children: 'run_01JCF8Q2',
+    }),
     createElement(StatusItem, { key: 'step', children: 'step 3 of 5' }),
 ]
 const statusLine = (props: Partial<StatusLineProps> = {}) =>
-    draw(StatusLine, { note: 'import-orders is running', children: FACTS, ...props })
-const STATUS_TONES: Record<string, StatusLineProps['tone']> = { rest: 'quiet', toneLive: 'live', toneWarn: 'warn', toneError: 'error' }
+    draw(StatusLine, {
+        note: 'import-orders is running',
+        children: FACTS,
+        ...props,
+    })
+const STATUS_TONES: Record<string, StatusLineProps['tone']> = {
+    rest: 'quiet',
+    toneLive: 'live',
+    toneWarn: 'warn',
+    toneError: 'error',
+}
 
 const STATUS_LINE_ADAPTER: Adapter = {
     wordObjects: {},
@@ -1929,7 +2124,12 @@ const PAGE_HEADER_ADAPTER: Adapter = {
 // Section
 
 const SECTION = source('components/Section.tsx')
-const section = (props: Partial<SectionProps> = {}) => draw(Section, { title: 'Steps', children: 'fetch, transform, validate', ...props })
+const section = (props: Partial<SectionProps> = {}) =>
+    draw(Section, {
+        title: 'Steps',
+        children: 'fetch, transform, validate',
+        ...props,
+    })
 /** The drawings the checks read, each made once. */
 const SECTIONS = once(() => ({
     boxed: section({ meta: '5', actions: RUN }),
@@ -1948,7 +2148,10 @@ const SECTION_ADAPTER: Adapter = {
     wordObjects: {},
     complete: [],
     words: {},
-    options: { variant: propValues(SECTION, 'SectionProps', 'variant'), tone: propValues(SECTION, 'SectionProps', 'tone') },
+    options: {
+        variant: propValues(SECTION, 'SectionProps', 'variant'),
+        tone: propValues(SECTION, 'SectionProps', 'tone'),
+    },
     size: (size) => {
         const { boxed, described, critical, flat } = SECTIONS()
         const drawn: Record<string, El | undefined> = {
@@ -1988,7 +2191,12 @@ const SECTION_ADAPTER: Adapter = {
                 // The dots are a gradient of a color the classes name with var(): read as the mark's ink.
                 const dot = /radial-gradient\(circle,var\(--([a-z0-9-]+)\)/.exec(classesOf(body))?.[1]
                 const where = at(body)
-                return where === undefined ? undefined : { ...where, mark: dot === undefined ? undefined : `text-(--${dot})` }
+                return where === undefined
+                    ? undefined
+                    : {
+                          ...where,
+                          mark: dot === undefined ? undefined : `text-(--${dot})`,
+                      }
             }
             default:
                 return undefined
@@ -2026,8 +2234,17 @@ function stateDrawn(state: string): El[] {
     const on = new Set(state.split('+'))
     const frame = on.has('unframed') ? { frame: false } : {}
     if (on.has('loading')) return pageState({ loading: true, ...frame })
-    if (on.has('failed')) return pageState({ ...REFUSAL, ...(on.has('warning') ? { tone: 'warning' as const } : {}), ...frame })
-    return pageState({ empty: true, emptyMessage: 'No runs in the last 24 hours.', ...frame })
+    if (on.has('failed'))
+        return pageState({
+            ...REFUSAL,
+            ...(on.has('warning') ? { tone: 'warning' as const } : {}),
+            ...frame,
+        })
+    return pageState({
+        empty: true,
+        emptyMessage: 'No runs in the last 24 hours.',
+        ...frame,
+    })
 }
 const stateFrame = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'page-state')
 /** The lines under a failed read's heading, announced together. */
@@ -2079,7 +2296,11 @@ const PAGE_STATE_ADAPTER: Adapter = {
                 const heading = elements.find((element) => element.parent !== undefined && element.parent === stateLines(elements))
                 return heading === undefined || frame === undefined
                     ? undefined
-                    : { layers: [classesOf(frame), classesOf(heading)], on: [], around: ancestors(heading) }
+                    : {
+                          layers: [classesOf(frame), classesOf(heading)],
+                          on: [],
+                          around: ancestors(heading),
+                      }
             }
             case 'diagnostic':
                 return at(elements.find((element) => element.tag === 'div' && element.parent === stateLines(elements)))
@@ -2172,7 +2393,13 @@ const optionLead = (elements: El[]) =>
 /** A theme picker whose themes wear swatches, one of them none: its theme select draws the chosen one's swatch in the trigger. */
 const themePicker = (theme: string) =>
     draw(ThemePicker, {
-        value: { theme, scheme: 'light', density: 'regular', corners: 'theme', typeface: 'theme' },
+        value: {
+            theme,
+            scheme: 'light',
+            density: 'regular',
+            corners: 'theme',
+            typeface: 'theme',
+        },
         onChange: () => undefined,
         themes: [
             { value: 'tidevann', label: 'Tidevann', swatch: true },
@@ -2222,7 +2449,11 @@ const SELECT_ADAPTER: Adapter = {
             const trigger = selectTrigger(select(size === 'sm' ? { size: 'sm' } : {}))
             return trigger === undefined
                 ? undefined
-                : { layers: [classesOf(trigger)], on: [`data-[size=${size}]`], around: ancestors(trigger) }
+                : {
+                      layers: [classesOf(trigger)],
+                      on: [`data-[size=${size}]`],
+                      around: ancestors(trigger),
+                  }
         }
         if (size === 'lead') {
             const lead = optionLead(selectField())
@@ -2256,7 +2487,10 @@ const SELECT_ADAPTER: Adapter = {
             case 'swatch':
                 return at(swatchOf(themePicker(state === 'noTheme' ? 'plain' : 'tidevann')))
             case 'detail':
-                return { layers: [SELECT_LIST.row, SELECT_LIST.detailEnd], on: rowOn(state) }
+                return {
+                    layers: [SELECT_LIST.row, SELECT_LIST.detailEnd],
+                    on: rowOn(state),
+                }
             case 'list':
                 return { layers: [POPUP_LOOK, SELECT_LIST.list], on: [] }
             case 'row':
@@ -2273,7 +2507,12 @@ const SELECT_ADAPTER: Adapter = {
         const trigger = selectTrigger(select({}, { disabled: true }))
         return trigger === undefined
             ? undefined
-            : { layers: [classesOf(trigger)], on: ['disabled'], around: ancestors(trigger), focusable: focusable(trigger) }
+            : {
+                  layers: [classesOf(trigger)],
+                  on: ['disabled'],
+                  around: ancestors(trigger),
+                  focusable: focusable(trigger),
+              }
     },
     keys: {
         Tab: () =>
@@ -2579,7 +2818,10 @@ const footerBand = () => classesOf(draw(DialogFooter, {}, 'Done')[0])
 /** The corner close: a ghost button at icon-sm, placed in the box's corner. */
 const cornerClose = () => {
     const drawn = button({ variant: 'ghost', size: 'icon-sm' })
-    return { layers: [classesOf(firstButton(drawn)), DIALOG_PARTS.close], on: [] as string[] }
+    return {
+        layers: [classesOf(firstButton(drawn)), DIALOG_PARTS.close],
+        on: [] as string[],
+    }
 }
 /** The confirm a dialog draws with a reason or busy, as the dialog hands them to its button. */
 const confirmWhere = (state: 'shut' | 'busy') => {
@@ -2628,7 +2870,10 @@ const DIALOG_ADAPTER: Adapter = {
                     on: state === 'phone' ? ['max-md'] : [],
                 }
             case 'nestedShade':
-                return { layers: [DIALOG_PARTS.nested], on: state === 'nested' ? ['data-nested-dialog-open', 'after'] : [] }
+                return {
+                    layers: [DIALOG_PARTS.nested],
+                    on: state === 'nested' ? ['data-nested-dialog-open', 'after'] : [],
+                }
             case 'title':
                 return { layers: [DIALOG_PARTS.title], on: [] }
             case 'description':
@@ -2748,7 +2993,11 @@ const SETTINGS_BOX = [DIALOG_PARTS.box, SETTINGS_LOOK.box]
 const entryWhere = (state: string): Where => {
     const shown = state === 'shown'
     const layers = [SETTINGS_LOOK.entry, SETTINGS_LOOK.entryInDialog, shown ? SETTINGS_LOOK.entryShown : SETTINGS_LOOK.entryRest]
-    const on: Record<string, string[]> = { hover: ['md', 'hover'], focus: ['md', 'focus-visible'], phoneList: [] }
+    const on: Record<string, string[]> = {
+        hover: ['md', 'hover'],
+        focus: ['md', 'focus-visible'],
+        phoneList: [],
+    }
     return { layers, on: on[state] ?? ['md'] }
 }
 /** A setting's row, with a note: the row, the grid that places its control, its title, description and note. */
@@ -2930,18 +3179,48 @@ const PALETTE_GROUPS: CommandPaletteProps['groups'] = [
     {
         title: 'Go to',
         commands: [
-            { id: 'runs', label: 'Runs', icon: Play, hint: 'every run', keys: ['G', 'R'], onSelect },
-            { id: 'nightly-export', label: 'nightly-export', icon: Workflow, code: 'job_01', meta: '4m 12s', onSelect },
-            { id: 'send-digest', label: 'send-digest', icon: Workflow, disabled: 'Paused by ada', onSelect },
+            {
+                id: 'runs',
+                label: 'Runs',
+                icon: Play,
+                hint: 'every run',
+                keys: ['G', 'R'],
+                onSelect,
+            },
+            {
+                id: 'nightly-export',
+                label: 'nightly-export',
+                icon: Workflow,
+                code: 'job_01',
+                meta: '4m 12s',
+                onSelect,
+            },
+            {
+                id: 'send-digest',
+                label: 'send-digest',
+                icon: Workflow,
+                disabled: 'Paused by ada',
+                onSelect,
+            },
         ],
     },
-    { title: 'Create', commands: [{ id: 'new-job', label: 'New job', kind: 'Form', keys: ['N'], onSelect }] },
+    {
+        title: 'Create',
+        commands: [{ id: 'new-job', label: 'New job', kind: 'Form', keys: ['N'], onSelect }],
+    },
 ]
 const palette = (props: Partial<CommandPaletteProps> = {}) =>
-    draw(CommandPalette, { open: true, onOpenChange: () => undefined, groups: PALETTE_GROUPS, ...props })
+    draw(CommandPalette, {
+        open: true,
+        onOpenChange: () => undefined,
+        groups: PALETTE_GROUPS,
+        ...props,
+    })
 /** The palette open on one command, as the server draws it. */
 const paletteWith = (command: Omit<PaletteCommand, 'id' | 'onSelect'>) =>
-    palette({ groups: [{ title: 'Jobs', commands: [{ id: 'job', onSelect, ...command }] }] })
+    palette({
+        groups: [{ title: 'Jobs', commands: [{ id: 'job', onSelect, ...command }] }],
+    })
 const PALETTES = once(() => ({
     full: palette({ description: 'Choose a run', foot: { name: 'Tidevann' } }),
     empty: palette({ groups: [] }),
@@ -2983,7 +3262,10 @@ const RUNNING = [
     literalAfter(PALETTE, '{running ? (', '<CommandShortcut className='),
 ]
 const refusal = once(() =>
-    draw(ProblemLine, { className: literalAfter(PALETTE, '<ProblemLine className='), children: 'Only an owner can rerun' }),
+    draw(ProblemLine, {
+        className: literalAfter(PALETTE, '<ProblemLine className='),
+        children: 'Only an owner can rerun',
+    }),
 )
 
 const COMMAND_PALETTE_ADAPTER: Adapter = {
@@ -3022,16 +3304,25 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
             search:
                 key === 'icon'
                     ? pieceWhere(searchIcon)
-                    : { layers: [classesOf(bySlot(full, 'input-group')), classesOf(bySlot(full, 'command-input'))], on: [] },
+                    : {
+                          layers: [classesOf(bySlot(full, 'input-group')), classesOf(bySlot(full, 'command-input'))],
+                          on: [],
+                      },
             group: pieceWhere(bySlot(full, 'command-group')),
-            groupTitle: { layers: [classesOf(bySlot(full, 'command-group'))], on: GROUP_TITLE },
+            groupTitle: {
+                layers: [classesOf(bySlot(full, 'command-group'))],
+                on: GROUP_TITLE,
+            },
             row: runs === undefined ? undefined : { layers: [classesOf(runs)], on: IN_DIALOG },
             hint: pieceWhere(spanOf(full, 'every run')),
             code: pieceWhere(spanOf(full, 'job_01')),
             meta: pieceWhere(spanOf(full, '4m 12s')),
             keys: pieceWhere(full.find((element) => element.parent?.attrs['data-slot'] === 'command-shortcut' && element.tag === 'span')),
             spinner: /<Spinner aria-label=\{words\.running\} \/>/.test(PALETTE)
-                ? { layers: [literalAfter(source('components/ui/spinner.tsx'), 'className={cn(')], on: [] }
+                ? {
+                      layers: [literalAfter(source('components/ui/spinner.tsx'), 'className={cn(')],
+                      on: [],
+                  }
                 : undefined,
             refusal: key === 'icon' ? pieceWhere(iconOf(refusal(), refusal()[0])) : pieceWhere(refusal()[0]),
             empty: pieceWhere(bySlot(empty, 'command-empty')),
@@ -3048,25 +3339,39 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
             case 'description':
                 return pieceWhere(byText(full, 'p', 'Choose a run'))
             case 'search':
-                return { layers: [classesOf(bySlot(full, 'input-group')), classesOf(bySlot(full, 'command-input'))], on: [] }
+                return {
+                    layers: [classesOf(bySlot(full, 'input-group')), classesOf(bySlot(full, 'command-input'))],
+                    on: [],
+                }
             case 'searchIcon':
                 return pieceWhere(full.find((element) => element.tag === 'svg' && classesOf(element).includes('lucide-search')))
             case 'groupTitle':
-                return { layers: [classesOf(bySlot(full, 'command-group'))], on: GROUP_TITLE }
+                return {
+                    layers: [classesOf(bySlot(full, 'command-group'))],
+                    on: GROUP_TITLE,
+                }
             case 'separator':
                 return pieceWhere(bySlot(full, 'command-separator'))
             case 'row': {
                 const row = paletteRow(full, state === 'disabled' ? 'send-digest' : 'Runs')
                 return row === undefined
                     ? undefined
-                    : { layers: [classesOf(row)], on: PALETTE_ON[state] ?? IN_DIALOG, around: ancestors(row) }
+                    : {
+                          layers: [classesOf(row)],
+                          on: PALETTE_ON[state] ?? IN_DIALOG,
+                          around: ancestors(row),
+                      }
             }
             case 'icon': {
                 const row = paletteRow(full, 'Runs')
                 const icon = iconOf(full, row)
                 return row === undefined || icon === undefined
                     ? undefined
-                    : { layers: [classesOf(row), classesOf(icon)], on: PALETTE_ON[state] ?? IN_DIALOG, around: ancestors(icon) }
+                    : {
+                          layers: [classesOf(row), classesOf(icon)],
+                          on: PALETTE_ON[state] ?? IN_DIALOG,
+                          around: ancestors(icon),
+                      }
             }
             case 'hint':
                 return pieceWhere(spanOf(paletteWith({ label: 'Runs', hint: 'every run', tone: toned }), 'every run'), QUIET_ON(state))
@@ -3075,11 +3380,22 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
             case 'meta':
                 if (state === 'twoLine') {
                     // A two-line row's meta is the search result's quiet fact at its end.
-                    const two = paletteWith({ label: 'import-orders', detail: 'harbor', meta: 'no upload step' })
+                    const two = paletteWith({
+                        label: 'import-orders',
+                        detail: 'harbor',
+                        meta: 'no upload step',
+                    })
                     return pieceWhere(spanOf(two, 'no upload step'))
                 }
                 return pieceWhere(
-                    spanOf(paletteWith({ label: 'import-orders', meta: 'no upload step', metaTone: toned }), 'no upload step'),
+                    spanOf(
+                        paletteWith({
+                            label: 'import-orders',
+                            meta: 'no upload step',
+                            metaTone: toned,
+                        }),
+                        'no upload step',
+                    ),
                     QUIET_ON(state),
                 )
             case 'kind':
@@ -3192,7 +3508,10 @@ const SHELL_SPEC_ROUTE = () => SPECS.get('shell')?.routes?.settings ?? ''
 /** A shell with a side panel, and the panel's toggle in it. */
 const withPanel = (open: boolean) => {
     const elements = shell({ top: 'Runs', panel: 'Details', panelOpen: open })
-    return { elements, toggle: elements.find((element) => element.tag === 'button' && element.attrs['aria-pressed'] !== undefined) }
+    return {
+        elements,
+        toggle: elements.find((element) => element.tag === 'button' && element.attrs['aria-pressed'] !== undefined),
+    }
 }
 
 const SHELL_ADAPTER: Adapter = {
@@ -3271,7 +3590,12 @@ const RUN_LANES: RunTimelineLane[] = [
         name: 'nightly-export',
         detail: 'Every day at 02:00',
         runs: [
-            { id: 'ran', at: NOON - 6 * HOURS, end: NOON - 5 * HOURS, status: 'succeeded' },
+            {
+                id: 'ran',
+                at: NOON - 6 * HOURS,
+                end: NOON - 5 * HOURS,
+                status: 'succeeded',
+            },
             { id: 'due', at: NOON + 4 * HOURS },
         ],
     },
@@ -3284,7 +3608,13 @@ const RUN_LANES: RunTimelineLane[] = [
             { id: 'next', at: NOON + 6 * HOURS },
         ],
     },
-    { id: 'running', name: 'Concurrency', detail: 'at most 2 at once', total: true, runs: [] },
+    {
+        id: 'running',
+        name: 'Concurrency',
+        detail: 'at most 2 at once',
+        total: true,
+        runs: [],
+    },
 ]
 const runTimeline = (props: Partial<RunTimelineProps> = {}) =>
     draw(RunTimeline, {
@@ -3310,7 +3640,11 @@ const timelineAxis = (elements: El[]) => elements.find((element) => classesOf(el
 /** A run's ghost and the card's amount are drawn only while a drag carries the runs: read from the source. */
 const RUN_GHOST = literalAfter(RUN_TIMELINE, '{faded && (', 'className=')
 const SHIFT_AMOUNT = literalAfter(RUN_TIMELINE, 'function ShiftAmount(', 'className=')
-const RUN_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'], 'selected+hover': ['hover'] }
+const RUN_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+    'selected+hover': ['hover'],
+}
 
 const RUN_TIMELINE_ADAPTER: Adapter = {
     wordObjects: { RUN_TIMELINE_WORDS },
@@ -3474,8 +3808,21 @@ const CLIPS: TimelineClip[] = [
     { id: 'opening', track: 'titles', start: 0, duration: 3, label: 'Opening' },
     { id: 'wide', track: 'video', start: 0, duration: 6, label: 'harbor-wide' },
     { id: 'pan', track: 'video', start: 6, duration: 4, label: 'juniper-pan' },
-    { id: 'voice', track: 'voice', start: 0, duration: 8, label: 'interview', waveform: [0.1, 0.5, 0.9, 0.4, 0.2, 0.6] },
-    { id: 'crane', track: 'broll', start: 2, duration: 3, label: 'larkspur-crane' },
+    {
+        id: 'voice',
+        track: 'voice',
+        start: 0,
+        duration: 8,
+        label: 'interview',
+        waveform: [0.1, 0.5, 0.9, 0.4, 0.2, 0.6],
+    },
+    {
+        id: 'crane',
+        track: 'broll',
+        start: 2,
+        duration: 3,
+        label: 'larkspur-crane',
+    },
 ]
 const clipTimeline = (props: Partial<ClipTimelineProps> = {}) =>
     draw(ClipTimeline, {
@@ -3653,7 +4000,10 @@ const CLIP_TIMELINE_ADAPTER: Adapter = {
             }
             case 'landing':
                 if (state === 'arriving') return { layers: [LANDING, ARRIVES?.[1] ?? ''], on: [] }
-                return { layers: [LANDING, (state === 'blocked' ? LANDS?.[2] : LANDS?.[1]) ?? ''], on: [] }
+                return {
+                    layers: [LANDING, (state === 'blocked' ? LANDS?.[2] : LANDS?.[1]) ?? ''],
+                    on: [],
+                }
             case 'snapLine':
                 return { layers: [SNAP_LINE], on: [] }
             case 'card':
@@ -3759,7 +4109,11 @@ const emojiTab = (elements: El[], current: boolean) => {
     )
 }
 const toneButton = (elements: El[]) => elements.find((element) => element.attrs['aria-label'] === EMOJI_PICKER_WORDS.skinTone)
-const EMOJI_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'], disabled: ['disabled'] }
+const EMOJI_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+    disabled: ['disabled'],
+}
 
 const EMOJI_PICKER_ADAPTER: Adapter = {
     wordObjects: { EMOJI_PICKER_WORDS },
@@ -3819,7 +4173,10 @@ const EMOJI_PICKER_ADAPTER: Adapter = {
             case 'toneButton':
                 return pieceWhere(toneButton(drawn), on)
             case 'toneChoice':
-                return { layers: [TONE_HAND, state === 'chosen' ? TONE_CHOSEN : ''], on }
+                return {
+                    layers: [TONE_HAND, state === 'chosen' ? TONE_CHOSEN : ''],
+                    on,
+                }
             case 'heading':
                 return { layers: [EMOJI_HEADING], on: [] }
             case 'cell':
@@ -3911,13 +4268,24 @@ const REACTION_BAR = source('components/ReactionBar.tsx')
 /** The bar's own words: its full list's are the emoji picker's, passed through `picker`. */
 const { picker: _pickerWords, ...REACTION_BAR_OWN } = REACTION_BAR_WORDS
 const reactionBar = (props: Partial<ReactionBarProps> = {}) => draw(ReactionBar, { onReact: noop, selected: ['❤️'], ...props })
-const REACTION_BARS = once(() => ({ md: reactionBar(), sm: reactionBar({ size: 'sm' }) }))
+const REACTION_BARS = once(() => ({
+    md: reactionBar(),
+    sm: reactionBar({ size: 'sm' }),
+}))
 const REACTIONS: ChatReaction[] = [
     { id: 'thumbs', icon: '\u{1F44D}', label: 'thumbs up', count: 3, mine: true },
     { id: 'party', icon: '\u{1F389}', label: 'party popper', count: 1 },
 ]
 const reactionChips = once(() =>
-    draw(TooltipProvider, {}, createElement(ReactionChips, { reactions: REACTIONS, onReact: noop, onReaction: noop })),
+    draw(
+        TooltipProvider,
+        {},
+        createElement(ReactionChips, {
+            reactions: REACTIONS,
+            onReact: noop,
+            onReaction: noop,
+        }),
+    ),
 )
 const byLabel = (elements: El[], label: string) =>
     elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === label)
@@ -3993,7 +4361,10 @@ const REACTION_BAR_ADAPTER: Adapter = {
             chipOf(reactionChips(), 'party popper')?.attrs.type === 'button' ? true : 'a chip is not a native button',
         'Escape (a popover of the bar is open)': BASE_UI('Popover', 'closes on Escape and puts focus back on its trigger'),
     },
-    more: () => layoutChecks('reaction-bar', { popoverEdge: () => numberIn(REACTION_BAR, /collisionPadding=\{(\d+)\}/) }),
+    more: () =>
+        layoutChecks('reaction-bar', {
+            popoverEdge: () => numberIn(REACTION_BAR, /collisionPadding=\{(\d+)\}/),
+        }),
 }
 
 // The suggestions both composers share: their keys, read from the hook and the key map.
@@ -4060,7 +4431,10 @@ const textArea = (elements: El[]) => elements.find((element) => element.tag === 
 const fileChip = (elements: El[]) => elements.find((element) => classesOf(element).startsWith('flex h-14'))
 const removeButton = (elements: El[]) =>
     elements.find((element) => element.tag === 'button' && element.attrs['aria-label']?.startsWith(COMPOSER_WORDS.remove) === true)
-const COMPOSER_ON: Record<string, string[]> = { hover: ['hover'], within: ['focus-within'] }
+const COMPOSER_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    within: ['focus-within'],
+}
 
 const COMPOSER_ADAPTER: Adapter = {
     wordObjects: { COMPOSER_OWN, COMPOSER_DICTATION_WORDS, MENTION_WORDS },
@@ -4175,8 +4549,15 @@ const messageComposer = (props: Partial<MessageComposerProps> = {}) =>
 const MESSAGE_COMPOSERS = once(() => ({
     full: messageComposer(),
     empty: messageComposer({ value: '' }),
-    scheduled: messageComposer({ schedule: [{ id: 'tomorrow', label: 'Tomorrow', detail: '09:00' }], onSendLater: noop }),
-    emptyScheduled: messageComposer({ value: '', schedule: [{ id: 'tomorrow', label: 'Tomorrow' }], onSendLater: noop }),
+    scheduled: messageComposer({
+        schedule: [{ id: 'tomorrow', label: 'Tomorrow', detail: '09:00' }],
+        onSendLater: noop,
+    }),
+    emptyScheduled: messageComposer({
+        value: '',
+        schedule: [{ id: 'tomorrow', label: 'Tomorrow' }],
+        onSendLater: noop,
+    }),
     previewing: messageComposer({ value: '', mode: 'preview' }),
 }))
 const toolbarRow = (elements: El[]) => elements.find((element) => classesOf(element).startsWith('relative flex items-center gap-2'))
@@ -4205,7 +4586,10 @@ const MESSAGE_COMPOSER_ADAPTER: Adapter = {
         ),
         ...MENTION_WORD_SOURCES,
     },
-    options: { mode: kindsIn(MESSAGE_COMPOSER, 'MessageComposerMode'), format: kindsIn(MESSAGE_COMPOSER, 'MessageFormat') },
+    options: {
+        mode: kindsIn(MESSAGE_COMPOSER, 'MessageComposerMode'),
+        format: kindsIn(MESSAGE_COMPOSER, 'MessageFormat'),
+    },
     size: (size, key) => {
         const { full, previewing, scheduled } = MESSAGE_COMPOSERS()
         const read: Record<string, Where | undefined> = {
@@ -4351,7 +4735,10 @@ const CALL_BAR_ADAPTER: Adapter = {
     wordObjects: { CALL_BAR_OWN },
     complete: ['CALL_BAR_OWN'],
     words: Object.fromEntries(Object.keys(CALL_BAR_OWN).map((key) => [key, `CALL_BAR_OWN.${key}`])),
-    options: { openMenu: unionOf(CALL_BAR, 'CallBarMenu'), placement: propValues(CALL_BAR, 'CallBarProps', 'placement') },
+    options: {
+        openMenu: unionOf(CALL_BAR, 'CallBarMenu'),
+        placement: propValues(CALL_BAR, 'CallBarProps', 'placement'),
+    },
     size: (size, key) => {
         const { plain, docked } = CALL_BARS()
         const read: Record<string, Where | undefined> = {
@@ -4657,7 +5044,13 @@ const DETAIL_PANES = once(() =>
 )
 /** A piece that takes its text from an element around it: that element's classes, then its own. */
 const inside = (around: El | undefined, element: El | undefined, on: string[] = []): Where | undefined =>
-    element === undefined ? undefined : { layers: [classesOf(around), classesOf(element)], on, around: ancestors(element) }
+    element === undefined
+        ? undefined
+        : {
+              layers: [classesOf(around), classesOf(element)],
+              on,
+              around: ancestors(element),
+          }
 const byTag = (elements: El[], tag: string) => elements.find((element) => element.tag === tag)
 /** Each piece of a detail pane, by its name in the spec. */
 const detailPieces = (pane: El[]): Record<string, El | undefined> => {
@@ -4726,7 +5119,12 @@ const inStep = (elements: El[], done: boolean, found: (element: El) => boolean) 
     return row === undefined ? undefined : elements.find((element) => within(element, row) && found(element))
 }
 const boxOf = (elements: El[], done: boolean) => inStep(elements, done, (element) => element.attrs.role === 'checkbox')
-const BOARD_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'], checked: ['data-checked'], readOnly: ['disabled'] }
+const BOARD_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+    checked: ['data-checked'],
+    readOnly: ['disabled'],
+}
 /** Each piece of a work item's panel, by its name in the spec. */
 const boardPieces = (panel: El[], done: boolean): Record<string, El | undefined> => {
     const chip = panel.find((element) => classesOf(element).startsWith('group/badge'))
@@ -4823,13 +5221,19 @@ const lookClass = (text: string, pattern: RegExp, prefix: string) => {
     return color === undefined ? '' : `${prefix}${color}`
 }
 /** A piece ECharts draws, as the classes its colors would take. */
-const drawnAs = (...classes: string[]): Where => ({ layers: [classes.filter((one) => one !== '').join(' ')], on: [] })
+const drawnAs = (...classes: string[]): Where => ({
+    layers: [classes.filter((one) => one !== '').join(' ')],
+    on: [],
+})
 
 const STEP_COLOR = /const color = step\.color === undefined \? look\.(\w+) :/
 const MARK_COLOR = /const color = mark\.color === undefined \? look\.(\w+) :/
 /** A tooltip's markup (`tooltipMarkup`): its box, a row, a row's swatch, its label and its value, by their literal classes. */
 const TOOLTIP_MARKUP = /export function tooltipMarkup[\s\S]*?\n}/.exec(CHART_LOOK)?.[0] ?? ''
-const tooltipClasses = (pattern: RegExp) => ({ layers: [pattern.exec(TOOLTIP_MARKUP)?.[1] ?? ''], on: [] })
+const tooltipClasses = (pattern: RegExp) => ({
+    layers: [pattern.exec(TOOLTIP_MARKUP)?.[1] ?? ''],
+    on: [],
+})
 const TOOLTIP_PIECES: Record<string, () => Where> = {
     tooltip: () => tooltipClasses(/<div class="(grid [^"]+)">/),
     tooltipRow: () => tooltipClasses(/<div class="(flex items-center[^"]+)">/),
@@ -4842,8 +5246,16 @@ const LEGEND_ITEMS = [
     { key: 'runs', label: 'Runs', color: 'var(--chart-2)', value: '3,526' },
     { key: 'failed', label: 'Failed', color: 'var(--chart-3)' },
 ]
-const legendOf = (hidden: readonly string[] = []) => draw(ChartLegend, { items: LEGEND_ITEMS, hidden: new Set(hidden), onToggle: noop })
-const LEGENDS = once(() => ({ shown: legendOf(), hidden: legendOf(['failed']) }))
+const legendOf = (hidden: readonly string[] = []) =>
+    draw(ChartLegend, {
+        items: LEGEND_ITEMS,
+        hidden: new Set(hidden),
+        onToggle: noop,
+    })
+const LEGENDS = once(() => ({
+    shown: legendOf(),
+    hidden: legendOf(['failed']),
+}))
 const legendButton = (elements: El[], label: string) => elements.find((element) => element.tag === 'button' && element.text.includes(label))
 const legendSwatchOf = (elements: El[], label: string) => {
     const button = legendButton(elements, label)
@@ -4851,7 +5263,10 @@ const legendSwatchOf = (elements: El[], label: string) => {
         ? undefined
         : elements.find((element) => element.parent === button && element.attrs['aria-hidden'] !== undefined)
 }
-const CHART_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'] }
+const CHART_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+}
 
 /** A literal number after a pattern in a source, as a string. */
 const literalIn = (text: string, pattern: RegExp) => pattern.exec(text)?.[1]
@@ -4943,7 +5358,14 @@ const PANEL_MENU = createElement(DropdownMenuItem, {}, 'Download')
 const dashboardPanel = (props: Partial<DashboardPanelProps> = {}) =>
     draw(
         DashboardPanel,
-        { title: 'Runs', subtitle: 'Last 24 hours', expandable: true, menu: PANEL_MENU, footer: 'harbor', ...props },
+        {
+            title: 'Runs',
+            subtitle: 'Last 24 hours',
+            expandable: true,
+            menu: PANEL_MENU,
+            footer: 'harbor',
+            ...props,
+        },
         createElement('p', {}, 'nightly-export'),
     )
 const DASHBOARD_PANELS = once(() => ({
@@ -5029,7 +5451,11 @@ const STAT_PANELS = once(() => ({
     filled: statPanel({ color: 'chart-2', colorMode: 'background' }),
     noData: statPanel({ value: null }),
     failed: statPanel({ error: true }),
-    filledFailed: statPanel({ error: true, color: 'chart-2', colorMode: 'background' }),
+    filledFailed: statPanel({
+        error: true,
+        color: 'chart-2',
+        colorMode: 'background',
+    }),
 }))
 /** Each piece of a stat tile, by its name in the spec. */
 const statPieces = (tile: El[]): Record<string, El | undefined> => {
@@ -5055,13 +5481,19 @@ const statPieces = (tile: El[]): Record<string, El | undefined> => {
         failureRoom: failure?.parent,
     }
 }
-const STAT_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'] }
+const STAT_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+}
 
 const STAT_PANEL_ADAPTER: Adapter = {
     wordObjects: { STAT_PANEL_WORDS },
     complete: ['STAT_PANEL_WORDS'],
     words: Object.fromEntries(Object.keys(STAT_PANEL_WORDS).map((key) => [key, `STAT_PANEL_WORDS.${key}`])),
-    options: { colorMode: propValues(STAT_PANEL, 'StatPanelProps', 'colorMode'), span: Object.keys(SPAN) },
+    options: {
+        colorMode: propValues(STAT_PANEL, 'StatPanelProps', 'colorMode'),
+        span: Object.keys(SPAN),
+    },
     size: (size, key) => {
         const { plain, untargeted, failed } = STAT_PANELS()
         // A tile is taller with a target meter: its least height is read from one without.
@@ -5114,8 +5546,16 @@ const STAT_PANEL_ADAPTER: Adapter = {
 
 const THRESHOLDS = [{ color: 'good' }, { value: 90, color: 'warning' }, { value: 95, color: 'critical' }]
 const thresholdLegend = (layout: 'list' | 'bar') =>
-    draw(ThresholdLegend, { thresholds: THRESHOLDS, title: 'Success rate', layout, noData: true })
-const THRESHOLD_LEGENDS = once(() => ({ list: thresholdLegend('list'), bar: thresholdLegend('bar') }))
+    draw(ThresholdLegend, {
+        thresholds: THRESHOLDS,
+        title: 'Success rate',
+        layout,
+        noData: true,
+    })
+const THRESHOLD_LEGENDS = once(() => ({
+    list: thresholdLegend('list'),
+    bar: thresholdLegend('bar'),
+}))
 /** Each piece of a time series panel's threshold legend, by its name in the spec. */
 const thresholdPieces = (list: El[], bar: El[]): Record<string, El | undefined> => {
     const band = byTag(list, 'li')
@@ -5154,7 +5594,11 @@ const TIME_SERIES_PANEL_ADAPTER: Adapter = {
         thresholdLayout: propValues(THRESHOLD_LEGEND, 'ThresholdLegendProps', 'layout'),
     },
     size: (size) => {
-        if (size === 'chart') return { layers: [/bodyClassName = '([^']+)'/.exec(TIME_SERIES_PANEL)?.[1] ?? ''], on: [] }
+        if (size === 'chart')
+            return {
+                layers: [/bodyClassName = '([^']+)'/.exec(TIME_SERIES_PANEL)?.[1] ?? ''],
+                on: [],
+            }
         const { list, bar } = THRESHOLD_LEGENDS()
         return pieceWhere(thresholdPieces(list, bar)[size])
     },
@@ -5183,7 +5627,11 @@ const TIME_SERIES_PANEL_ADAPTER: Adapter = {
 
 const CODE_EDITOR = source('components/CodeEditor.tsx')
 const codeEditor = (props: Partial<CodeEditorProps> = {}) =>
-    draw(CodeEditor, { label: 'Definition', value: 'job: nightly-export', ...props })
+    draw(CodeEditor, {
+        label: 'Definition',
+        value: 'job: nightly-export',
+        ...props,
+    })
 const CODE_EDITORS = once(() => ({
     field: codeEditor(),
     line: codeEditor({ variant: 'line' }),
@@ -5301,7 +5749,10 @@ const highlightClasses = (token: string) => {
 }
 
 /** A piece of the editor drawn by its theme, its states laid in order over its rest. */
-const themed = (...selectors: string[]): Where => ({ layers: selectors.map((one) => themeClasses(one)), on: [] })
+const themed = (...selectors: string[]): Where => ({
+    layers: selectors.map((one) => themeClasses(one)),
+    on: [],
+})
 
 const FOCUSED_LINE = '&.cm-focused .cm-activeLine, &.cm-activeLine-always .cm-activeLine'
 const FOCUSED_GUTTER = '&.cm-focused .cm-activeLineGutter, &.cm-activeLine-always .cm-activeLineGutter'
@@ -5327,7 +5778,11 @@ function editorPiece(name: string, state: string): Where | Skip | undefined {
         }
         return undefined
     }
-    if (name.startsWith('syntax-')) return { layers: [highlightClasses(`code-${name.slice('syntax-'.length)}`)], on: [] }
+    if (name.startsWith('syntax-'))
+        return {
+            layers: [highlightClasses(`code-${name.slice('syntax-'.length)}`)],
+            on: [],
+        }
     const lineOf = (tone: string) => `.cm-mark-${tone}`
     switch (name) {
         case 'text':
@@ -5410,7 +5865,10 @@ const sayKind = (kind: string) => (_: never, fill: Record<string, string | numbe
                 .split(', ')
                 .map((one) => JSON.parse(one) as unknown),
         },
-        const: { kind: 'const', value: JSON.parse(String(fill.value)) as unknown },
+        const: {
+            kind: 'const',
+            value: JSON.parse(String(fill.value)) as unknown,
+        },
         minimum: { kind: 'minimum', limit, exclusive: false },
         exclusiveMinimum: { kind: 'minimum', limit, exclusive: true },
         maximum: { kind: 'maximum', limit, exclusive: false },
@@ -5424,9 +5882,17 @@ const sayKind = (kind: string) => (_: never, fill: Record<string, string | numbe
         uniqueItems: { kind: 'uniqueItems' },
         deprecated: { kind: 'deprecated' },
         unchecked: { kind: 'unchecked', reason: String(fill.reason) },
-        other: { kind: 'other', keyword: 'minLength', message: String(fill.message) },
+        other: {
+            kind: 'other',
+            keyword: 'minLength',
+            message: String(fill.message),
+        },
     }
-    return sayIssue(SCHEMA_WORDS, { path: [], tone: 'critical', ...issues[kind] } as unknown as Parameters<typeof sayIssue>[1])
+    return sayIssue(SCHEMA_WORDS, {
+        path: [],
+        tone: 'critical',
+        ...issues[kind],
+    } as unknown as Parameters<typeof sayIssue>[1])
 }
 const ISSUE_KINDS = [
     'required',
@@ -5552,7 +6018,13 @@ const PICKERS = source('components/pickers.tsx')
 const CALENDAR = source('components/ui/calendar.tsx')
 const DAY_PICK = source('components/day-pick.tsx')
 const dateField = (props: Partial<Parameters<typeof DateField>[0]> = {}) =>
-    draw(DateField, { id: 'first-run', label: 'First run', value: '2026-11-09', onValueChange: noop, ...props })
+    draw(DateField, {
+        id: 'first-run',
+        label: 'First run',
+        value: '2026-11-09',
+        onValueChange: noop,
+        ...props,
+    })
 const DATE_FIELDS = once(() => ({
     plain: dateField(),
     disabled: dateField({ disabled: true }),
@@ -5594,7 +6066,12 @@ const DATE_FIELD_ADAPTER: Adapter = {
         ],
         warnings: [
             'IssueCount.warnings',
-            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+            (_: never, fill) =>
+                draw(IssueCount, {
+                    critical: 0,
+                    warning: Number(fill.count),
+                    list: [],
+                })[0]?.attrs['aria-label'] ?? '',
         ],
         unreadable: 'DATE_FIELD_WORDS.unreadable',
         example: ['DATE_FIELD_WORDS.example', (said: (sample: string) => string, fill) => said(String(fill.sample))],
@@ -5681,16 +6158,31 @@ const DATE_FIELD_ADAPTER: Adapter = {
                 : 'picking a day does not close the calendar',
         'Escape (the calendar is open)': BASE_UI('Popover', 'closes on Escape and puts focus back on its trigger'),
     },
-    more: () => layoutChecks('date-field', { calendarLoading: () => numberIn(DAY_PICK, /flex h-72 w-(\d+) items-center/, 'step') }),
+    more: () =>
+        layoutChecks('date-field', {
+            calendarLoading: () => numberIn(DAY_PICK, /flex h-72 w-(\d+) items-center/, 'step'),
+        }),
 }
 
 // Side panel
 
 const SIDE_PANEL = source('components/SidePanel.tsx')
 const PANEL_TABS = [
-    { id: 'details', label: 'Details', content: createElement('p', {}, 'run-4821') },
-    { id: 'log', label: 'Log', content: createElement('p', {}, 'fetched 1,204 records') },
-    { id: 'outputs', label: 'Outputs', content: createElement('p', {}, 'exports/harbor') },
+    {
+        id: 'details',
+        label: 'Details',
+        content: createElement('p', {}, 'run-4821'),
+    },
+    {
+        id: 'log',
+        label: 'Log',
+        content: createElement('p', {}, 'fetched 1,204 records'),
+    },
+    {
+        id: 'outputs',
+        label: 'Outputs',
+        content: createElement('p', {}, 'exports/harbor'),
+    },
 ]
 const SIDE_PANELS = once(() => ({
     tabbed: draw(SidePanel, { tabs: PANEL_TABS, defaultActive: 'log' }),
@@ -5789,7 +6281,11 @@ const JSON_TREES = once(() => ({
         },
         open: 1,
     }),
-    long: draw(JsonTree, { value: { steps: ['fetch', 'transform', 'validate'] }, open: 2, limit: 1 }),
+    long: draw(JsonTree, {
+        value: { steps: ['fetch', 'transform', 'validate'] },
+        open: 2,
+        limit: 1,
+    }),
 }))
 const spanWith = (elements: El[], ink: string) =>
     elements.find((element) => element.tag === 'span' && classesOf(element).split(' ').includes(ink))
@@ -5817,7 +6313,10 @@ const jsonTreePieces = (): Record<string, El | undefined> => {
         step: long.find((element) => element.tag === 'button' && element.text.startsWith('Show')),
     }
 }
-const JSON_TREE_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'] }
+const JSON_TREE_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+}
 
 const JSON_TREE_ADAPTER: Adapter = {
     wordObjects: { JSON_TREE_WORDS },
@@ -5861,15 +6360,25 @@ const SECRET_FIELD = source('components/SecretField.tsx')
 const secretField = (props: Partial<SecretFieldProps> = {}) => draw(SecretField, { id: 'token', label: 'API token', ...props })
 const SECRET_FIELDS = once(() => ({
     open: secretField({ value: 'harbor-key' }),
-    sealed: secretField({ sealed: true, setAt: '2026-11-07T09:00:00Z', now: new Date('2026-11-09T09:00:00Z') }),
+    sealed: secretField({
+        sealed: true,
+        setAt: '2026-11-07T09:00:00Z',
+        now: new Date('2026-11-09T09:00:00Z'),
+    }),
     replacing: secretField({ sealed: true, defaultReplacing: true }),
     disabled: secretField({ disabled: true }),
     invalid: secretField({ error: 'The token was refused' }),
-    warning: secretField({ issues: [{ tone: 'warning', text: 'Expires in a day' }] }),
+    warning: secretField({
+        issues: [{ tone: 'warning', text: 'Expires in a day' }],
+    }),
 }))
 const secretFrame = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'secret-field')
 const SECRET_REPLACE = SECRET_FIELD_WORDS.replaceLabel('API token')
-const SECRET_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-within'], keyFocus: ['focus-visible'] }
+const SECRET_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-within'],
+    keyFocus: ['focus-visible'],
+}
 
 /** The secret field's frame in a state: its classes, then those of the field's box around it, which puts the issue's edge on it. */
 function secretControl(state: string): Where | undefined {
@@ -5905,7 +6414,12 @@ const SECRET_FIELD_ADAPTER: Adapter = {
         ],
         warnings: [
             'IssueCount.warnings',
-            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+            (_: never, fill) =>
+                draw(IssueCount, {
+                    critical: 0,
+                    warning: Number(fill.count),
+                    list: [],
+                })[0]?.attrs['aria-label'] ?? '',
         ],
         set: 'SECRET_FIELD_WORDS.set',
         setWhen: [
@@ -5919,7 +6433,9 @@ const SECRET_FIELD_ADAPTER: Adapter = {
         show: 'SECRET_FIELD_WORDS.show',
         hide: 'SECRET_FIELD_WORDS.hide',
     },
-    options: { requiredMark: propValues(SECRET_FIELD, 'SecretFieldProps', 'requiredMark') },
+    options: {
+        requiredMark: propValues(SECRET_FIELD, 'SecretFieldProps', 'requiredMark'),
+    },
     size: (size, key) => {
         const { open, sealed } = SECRET_FIELDS()
         if (size === 'control') return pieceWhere(secretFrame(open))
@@ -5988,18 +6504,29 @@ const SECRET_FIELD_ADAPTER: Adapter = {
 
 const YES_NO_FIELD = source('components/YesNoField.tsx')
 const yesNoField = (props: Partial<YesNoFieldProps> = {}) =>
-    draw(YesNoField, { id: 'notify', label: 'Notify on failure', value: null, onValueChange: noop, ...props })
+    draw(YesNoField, {
+        id: 'notify',
+        label: 'Notify on failure',
+        value: null,
+        onValueChange: noop,
+        ...props,
+    })
 const YES_NO_FIELDS = once(() => ({
     unanswered: yesNoField(),
     answered: yesNoField({ value: true }),
     disabled: yesNoField({ disabled: true }),
     invalid: yesNoField({ error: 'Answer before you save' }),
-    warned: yesNoField({ issues: [{ tone: 'warning', text: 'Usually answered yes' }] }),
+    warned: yesNoField({
+        issues: [{ tone: 'warning', text: 'Usually answered yes' }],
+    }),
 }))
 const choiceOf = (elements: El[]) => elements.find((element) => element.attrs.role === 'group')
 const optionOf = (elements: El[], label: string) =>
     elements.find((element) => element.tag === 'button' && element.attrs['aria-pressed'] !== undefined && element.text === label)
-const YES_NO_ON: Record<string, string[]> = { hover: ['hover'], keyFocus: ['focus-visible'] }
+const YES_NO_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    keyFocus: ['focus-visible'],
+}
 
 const YES_NO_FIELD_ADAPTER: Adapter = {
     wordObjects: { YES_NO_FIELD_WORDS },
@@ -6014,7 +6541,12 @@ const YES_NO_FIELD_ADAPTER: Adapter = {
         ],
         warnings: [
             'IssueCount.warnings',
-            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+            (_: never, fill) =>
+                draw(IssueCount, {
+                    critical: 0,
+                    warning: Number(fill.count),
+                    list: [],
+                })[0]?.attrs['aria-label'] ?? '',
         ],
         yes: 'YES_NO_FIELD_WORDS.yes',
         no: 'YES_NO_FIELD_WORDS.no',
@@ -6047,7 +6579,12 @@ const YES_NO_FIELD_ADAPTER: Adapter = {
         if (state !== 'disabled') return undefined
         const { disabled } = YES_NO_FIELDS()
         const where = pieceWhere(choiceOf(disabled))
-        return where === undefined ? undefined : { ...where, focusable: focusable(optionOf(disabled, YES_NO_FIELD_WORDS.yes)) }
+        return where === undefined
+            ? undefined
+            : {
+                  ...where,
+                  focusable: focusable(optionOf(disabled, YES_NO_FIELD_WORDS.yes)),
+              }
     },
     keys: {
         Tab: () => {
@@ -6081,12 +6618,20 @@ const YES_NO_FIELD_ADAPTER: Adapter = {
 
 const TIME_FIELD = source('components/TimeField.tsx')
 const timeField = (props: Partial<TimeFieldProps> = {}) =>
-    draw(TimeField, { id: 'window', label: 'Window opens', value: '14:30', onValueChange: noop, ...props })
+    draw(TimeField, {
+        id: 'window',
+        label: 'Window opens',
+        value: '14:30',
+        onValueChange: noop,
+        ...props,
+    })
 const TIME_FIELDS = once(() => ({
     plain: timeField({ zone: 'UTC' }),
     disabled: timeField({ disabled: true }),
     invalid: timeField({ error: 'Pick a later time' }),
-    warning: timeField({ issues: [{ tone: 'warning', text: 'After the nightly-export run' }] }),
+    warning: timeField({
+        issues: [{ tone: 'warning', text: 'After the nightly-export run' }],
+    }),
 }))
 /** A time in the list, and the chosen one, which a server drawing leaves closed: their classes from the sources. */
 const TIME_ROW = literalAfter(PICKERS, 'role="option"', 'className={cn(')
@@ -6106,7 +6651,12 @@ const TIME_FIELD_ADAPTER: Adapter = {
         ],
         warnings: [
             'IssueCount.warnings',
-            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+            (_: never, fill) =>
+                draw(IssueCount, {
+                    critical: 0,
+                    warning: Number(fill.count),
+                    list: [],
+                })[0]?.attrs['aria-label'] ?? '',
         ],
         unreadable: 'TIME_FIELD_WORDS.unreadable',
         example: ['TIME_FIELD_WORDS.example', (said: (sample: string) => string, fill) => said(String(fill.sample))],
@@ -6196,7 +6746,10 @@ const TIME_FIELD_ADAPTER: Adapter = {
                 : 'picking a time does not close the list',
         'Escape (the list is open)': BASE_UI('Popover', 'closes on Escape and puts focus back on its trigger'),
     },
-    more: () => layoutChecks('time-field', { listMaxHeight: () => numberIn(TIME_FIELD, /className="max-h-(\d+) /, 'step') }),
+    more: () =>
+        layoutChecks('time-field', {
+            listMaxHeight: () => numberIn(TIME_FIELD, /className="max-h-(\d+) /, 'step'),
+        }),
 }
 
 // Computed field
@@ -6217,7 +6770,10 @@ const computedInput = (elements: El[]) => elements.find((element) => element.tag
 const COMPUTED_FIELD_ADAPTER: Adapter = {
     wordObjects: { COMPUTED_FIELD_WORDS },
     complete: ['COMPUTED_FIELD_WORDS'],
-    words: { pending: 'COMPUTED_FIELD_WORDS.pending', computed: 'COMPUTED_FIELD_WORDS.computed' },
+    words: {
+        pending: 'COMPUTED_FIELD_WORDS.pending',
+        computed: 'COMPUTED_FIELD_WORDS.computed',
+    },
     options: {},
     size: (size, key) => {
         const { valued } = COMPUTED_FIELDS()
@@ -6266,7 +6822,11 @@ const repeatedGroup = (props: Partial<RepeatedGroupProps> = {}) =>
     )
 const REPEATED_GROUPS = once(() => ({
     plain: repeatedGroup(),
-    marked: repeatedGroup({ required: true, description: 'Each step runs after the one before.', error: 'Add a step' }),
+    marked: repeatedGroup({
+        required: true,
+        description: 'Each step runs after the one before.',
+        error: 'Add a step',
+    }),
     worded: repeatedGroup({ required: true, requiredMark: 'word' }),
 }))
 const groupHead = (elements: El[]) => elements.find((element) => classesOf(element).includes('min-h-(--density-control-sm)'))
@@ -6292,7 +6852,9 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
         issueCritical: 'REPEATED_GROUP_WORDS.issueCritical',
         issueWarning: 'REPEATED_GROUP_WORDS.issueWarning',
     },
-    options: { requiredMark: propValues(REPEATED_GROUP, 'RepeatedGroupProps', 'requiredMark') },
+    options: {
+        requiredMark: propValues(REPEATED_GROUP, 'RepeatedGroupProps', 'requiredMark'),
+    },
     size: (size, key) => {
         const { plain, marked } = REPEATED_GROUPS()
         switch (size) {
@@ -6313,7 +6875,12 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
                     byLabel(plain, REPEATED_GROUP_WORDS.itemAction(REPEATED_GROUP_WORDS.moveUp, REPEATED_GROUP_WORDS.item(2))),
                 )
             case 'grip':
-                return key === 'gap' ? { layers: [literalAfter(REPEATED_DRAG, '<SortableItem', 'className=')], on: [] } : undefined
+                return key === 'gap'
+                    ? {
+                          layers: [literalAfter(REPEATED_DRAG, '<SortableItem', 'className=')],
+                          on: [],
+                      }
+                    : undefined
             default:
                 return undefined
         }
@@ -6359,7 +6926,12 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
         )
         return shut === undefined
             ? undefined
-            : { layers: [classesOf(shut)], on: ['aria-disabled'], around: ancestors(shut), focusable: focusable(shut) }
+            : {
+                  layers: [classesOf(shut)],
+                  on: ['aria-disabled'],
+                  around: ancestors(shut),
+                  focusable: focusable(shut),
+              }
     },
     keys: {
         Tab: () => {
@@ -6399,7 +6971,13 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
 const PERIOD_PICKER = source('components/PeriodPicker.tsx')
 const PERIODS = source('lib/periods.ts')
 const periodPicker = (props: Partial<PeriodPickerProps> = {}) =>
-    draw(PeriodPicker, { type: 'monthly', value: '202610', onValueChange: noop, today: '2026-11-08', ...props })
+    draw(PeriodPicker, {
+        type: 'monthly',
+        value: '202610',
+        onValueChange: noop,
+        today: '2026-11-08',
+        ...props,
+    })
 const PERIOD_PICKERS = once(() => ({
     plain: periodPicker(),
     empty: periodPicker({ value: null }),
@@ -6412,7 +6990,12 @@ const PERIOD_PICKERS = once(() => ({
         id: 'period',
         label: 'Period',
         error: 'Choose a period',
-        children: createElement(PeriodPicker, { type: 'monthly', value: '202610', onValueChange: noop, today: '2026-11-08' }),
+        children: createElement(PeriodPicker, {
+            type: 'monthly',
+            value: '202610',
+            onValueChange: noop,
+            today: '2026-11-08',
+        }),
     }),
 }))
 const periodTrigger = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'select-trigger')
@@ -6423,7 +7006,12 @@ const triggerOn = (elements: El[], on: string[]): Where | undefined => {
     const trigger = periodTrigger(elements)
     return trigger === undefined
         ? undefined
-        : { layers: [classesOf(trigger)], on, around: ancestors(trigger), focusable: focusable(trigger) }
+        : {
+              layers: [classesOf(trigger)],
+              on,
+              around: ancestors(trigger),
+              focusable: focusable(trigger),
+          }
 }
 /** A word of the period labels that is one entry of a list or a record. */
 const entry = (path: string, at: string | number): WordSource => [path, (said: Record<string | number, string>) => said[at]]
@@ -6475,7 +7063,9 @@ const PERIOD_PICKER_ADAPTER: Adapter = {
         typed: 'PERIOD_PICKER_WORDS.typed',
         placeholder: 'PERIOD_PICKER_WORDS.placeholder',
     },
-    options: { type: [...(/export type PeriodType = ([^\n]+)/.exec(PERIODS)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1]) },
+    options: {
+        type: [...(/export type PeriodType = ([^\n]+)/.exec(PERIODS)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1]),
+    },
     size: (size) => {
         const { plain, typed } = PERIOD_PICKERS()
         switch (size) {
@@ -6506,7 +7096,10 @@ const PERIOD_PICKER_ADAPTER: Adapter = {
             case 'row':
                 return { layers: [SELECT_LIST.row], on: rowOn(state) }
             case 'periodId':
-                return { layers: [SELECT_LIST.row, classesOf(periodIdOf(plain))], on: rowOn(state) }
+                return {
+                    layers: [SELECT_LIST.row, classesOf(periodIdOf(plain))],
+                    on: rowOn(state),
+                }
             case 'separator':
                 return { layers: [SELECT_LIST.separator], on: [] }
             case 'typed': {
@@ -6574,7 +7167,12 @@ const REGIONS: TreeNode[] = [
     },
 ]
 const treeSelect = (props: Partial<TreeSelectProps> = {}) =>
-    draw(TreeSelect, { nodes: REGIONS, value: ['bergen'], onValueChange: noop, ...props })
+    draw(TreeSelect, {
+        nodes: REGIONS,
+        value: ['bergen'],
+        onValueChange: noop,
+        ...props,
+    })
 const tree = (props: Partial<TreeProps> = {}) =>
     draw(Tree, {
         label: TREE_SELECT_WORDS.search,
@@ -6837,6 +7435,568 @@ const PROMPT_ADAPTER: Adapter = {
     },
 }
 
+// Group label
+
+const GROUP_LABEL = source('components/GroupLabel.tsx')
+
+const GROUP_LABEL_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: { as: propValues(GROUP_LABEL, 'GroupLabelProps', 'as') },
+    size: () => undefined,
+    paint: () => pieceWhere(draw(GroupLabel, { children: 'Runs' })[0]),
+    effect: () => skip('the group label states no effects'),
+    keys: {},
+}
+
+// Unfoldable
+
+const UNFOLDABLES = once(() => ({
+    shut: draw(Unfoldable, {
+        heading: 'Steps',
+        aside: '3',
+        summary: 'fetch, transform, upload',
+        children: createElement('p', {}, 'fetch'),
+    }),
+    forced: draw(Unfoldable, {
+        heading: 'Steps',
+        forced: true,
+        children: createElement('p', {}, 'fetch'),
+    }),
+}))
+/** Each piece of an unfoldable, by its name in the spec. */
+const unfoldablePieces = (state = 'rest'): Record<string, El | undefined> => {
+    const { shut, forced } = UNFOLDABLES()
+    const drawn = state === 'forced' ? forced : shut
+    const row = shut.find((element) => element.tag === 'button')
+    return {
+        unfoldable: shut[0],
+        row,
+        chevron: drawn.find((element) => element.tag === 'svg'),
+        aside: shut.find((element) => element.tag === 'div' && /\btext-xs\b/.test(classesOf(element)) && element.text === '3'),
+        summary: shut.find((element) => element.attrs['data-slot'] === 'unfoldable-summary'),
+    }
+}
+const UNFOLDABLE_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+}
+
+const UNFOLDABLE_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {},
+    size: (size) => pieceWhere(unfoldablePieces()[size]),
+    paint: (_, name, state) => pieceWhere(unfoldablePieces(state)[name], UNFOLDABLE_ON[state] ?? []),
+    effect: () => skip('the unfoldable states no effects'),
+    keys: {
+        'Tab (it unfolds and is not forced)': () => (focusable(unfoldablePieces().row) ? true : 'the row is out of the tab order'),
+        'Enter, Space (the row has focus)': () => {
+            const row = unfoldablePieces().row
+            return row?.tag === 'button' && 'aria-expanded' in row.attrs ? true : 'the row is not a native button with aria-expanded'
+        },
+    },
+    more: () =>
+        layoutChecks('unfoldable', {
+            indent: () => numberIn(classesOf(unfoldablePieces().summary), /\bpl-(\d+(?:\.\d+)?)\b/, 'step'),
+        }),
+}
+
+// Choice list
+
+const CHOICE_LIST = source('components/ChoiceList.tsx')
+const CHOICES = once(() =>
+    draw(ChoiceList, {
+        options: [
+            { value: 'paper', label: 'Paper', description: 'Light and warm' },
+            { value: 'steel', label: 'Steel' },
+        ],
+        value: 'paper',
+        onValueChange: () => undefined,
+        label: 'Theme',
+    }),
+)
+/** Each piece of a choice list, by its name in the spec: the chosen row's, or the other's. */
+const choicePieces = (chosen: boolean): Record<string, El | undefined> => {
+    const elements = CHOICES()
+    const rows = elements.filter((element) => element.tag === 'label')
+    const row = chosen ? rows[0] : rows[1]
+    const inRow = (test: (element: El) => boolean) =>
+        row === undefined ? undefined : elements.find((element) => within(element, row) && test(element))
+    return {
+        list: elements.find((element) => element.attrs.role === 'radiogroup'),
+        row,
+        radio: inRow((element) => element.attrs['data-slot'] === 'radio-group-item'),
+        label: inRow((element) => element.tag === 'span' && /\bfont-medium\b/.test(classesOf(element))),
+        description:
+            rows[0] === undefined
+                ? undefined
+                : elements.find((element) => within(element, rows[0]) && /\btext-xs\b/.test(classesOf(element))),
+    }
+}
+
+const CHOICE_LIST_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {},
+    size: (size) => pieceWhere(choicePieces(true)[size]),
+    paint: (_, name, state) => {
+        const pieces = choicePieces(state === 'chosen')
+        if (name === 'label') return inside(pieces.row, pieces.label)
+        if (name === 'radio')
+            return pieceWhere(pieces.radio, state === 'chosen' ? ['data-checked'] : state === 'focus' ? ['focus-visible'] : [])
+        return pieceWhere(pieces[name], state === 'hover' ? ['hover'] : [])
+    },
+    effect: () => skip('the choice list states no effects'),
+    keys: {
+        // Base UI's roving focus makes the active radio the tab stop once hydrated; the server marks it.
+        Tab: () =>
+            'data-composite-item-active' in (choicePieces(true).radio?.attrs ?? {}) ? true : 'the chosen radio is not the tab stop',
+        'ArrowDown, ArrowRight (a choice has focus)': () =>
+            /<RadioGroup\b/.test(CHOICE_LIST) ? true : "the list is not Base UI's radio group, which moves and chooses by the arrows",
+        'ArrowUp, ArrowLeft (a choice has focus)': () =>
+            /<RadioGroup\b/.test(CHOICE_LIST) ? true : "the list is not Base UI's radio group, which moves and chooses by the arrows",
+        'Space (a choice has focus)': () => (choicePieces(false).radio?.attrs.role === 'radio' ? true : "a choice is not Base UI's radio"),
+    },
+}
+
+// Badge
+
+const BADGE = source('components/ui/badge.tsx')
+const KIND_SOURCE = source('lib/kind.ts')
+const badgeWhere = (props: Partial<BadgeProps>, on: string[] = []) => pieceWhere(draw(Badge, { children: 'v2.4.1', ...props })[0], on)
+
+const BADGE_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {
+        variant: variantKeys(BADGE, 'variant'),
+        kind: [...(/export type KindColor = ([^\n]+)/.exec(KIND_SOURCE)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1]),
+    },
+    size: () => badgeWhere({}),
+    paint: (_, name, state) => {
+        const on = state === 'hover' ? ['hover'] : state === 'focus' ? ['focus-visible'] : []
+        const kind = /^kind-(\w+)$/.exec(name)?.[1]
+        return kind === undefined ? badgeWhere({ variant: name as never }, on) : badgeWhere({ kind: kind as never }, on)
+    },
+    effect: (state) => (state === 'focus' ? badgeWhere({}, ['focus-visible']) : undefined),
+    keys: {
+        Tab: () => (/useRender\(/.test(BADGE) ? true : 'a badge cannot be drawn as another element, such as a link'),
+    },
+}
+
+// Stat
+
+const STAT = source('components/Stat.tsx')
+const STATS = once(() => {
+    const common = {
+        label: 'Runs today',
+        value: '1,204',
+        unit: 'runs',
+        change: '+12%',
+        note: 'vs last week',
+    }
+    return {
+        plain: draw(Stat, common),
+        good: draw(Stat, { ...common, good: true }),
+        bad: draw(Stat, { ...common, good: false }),
+        tile: draw(Stat, { ...common, variant: 'tile', onSelect: () => undefined }),
+        lg: draw(Stat, { ...common, variant: 'tile', size: 'lg' }),
+    }
+})
+/** Each piece of a stat, by its name in the spec. */
+const statTilePieces = (elements: El[]): Record<string, El | undefined> => {
+    const container = elements[0]
+    const valueRow = elements.find((element) => element.tag === 'div' && /\bitems-baseline\b/.test(classesOf(element)))
+    const children = elements.filter((element) => element.parent === container)
+    return {
+        container,
+        tile: container,
+        cover: elements.find((element) => element.tag === 'button'),
+        label: children.find((element) => element.tag === 'span' && /\bitems-center\b/.test(classesOf(element))),
+        value:
+            valueRow === undefined
+                ? undefined
+                : elements.find((element) => element.parent === valueRow && /\btabular-nums\b/.test(classesOf(element))),
+        valueRow,
+        unit: valueRow === undefined ? undefined : elements.find((element) => element.parent === valueRow && element.text === 'runs'),
+        change: elements.find((element) => element.tag === 'span' && /\bgap-0\.5\b/.test(classesOf(element))),
+        note: children.filter((element) => element.tag === 'span').at(-1),
+    }
+}
+
+const STAT_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {
+        variant: propValues(STAT, 'StatProps', 'variant'),
+        size: propValues(STAT, 'StatProps', 'size'),
+    },
+    size: (size) => {
+        const { plain, tile, lg } = STATS()
+        if (size === 'md') return pieceWhere(statTilePieces(tile).value)
+        if (size === 'lg') return pieceWhere(statTilePieces(lg).value)
+        if (size === 'tile') return pieceWhere(statTilePieces(tile).container)
+        if (size === 'value') return pieceWhere(statTilePieces(plain).valueRow)
+        return pieceWhere(statTilePieces(plain)[size])
+    },
+    paint: (group, name, state) => {
+        const stats = STATS()
+        const on = state === 'hover' ? ['hover'] : state === 'focus' ? ['focus-visible'] : []
+        if (group === 'variants') return pieceWhere(statTilePieces(name === 'tile' ? stats.tile : stats.plain).container, on)
+        const drawn = state === 'good' ? stats.good : state === 'bad' ? stats.bad : stats.plain
+        return pieceWhere(statTilePieces(drawn)[name], on)
+    },
+    effect: () => skip('the stat states no effects'),
+    keys: {
+        Tab: () => (focusable(statTilePieces(STATS().tile).cover) ? true : 'the tile is out of the tab order'),
+        'Enter (the tile has focus)': () =>
+            statTilePieces(STATS().tile).cover?.tag === 'button' ? true : 'the tile is not a native button',
+    },
+}
+
+// Description list
+
+const DESCRIPTION_FACTS = [
+    { term: 'Job', value: 'nightly-export' },
+    { term: 'Owner', value: null },
+]
+const DESCRIPTION_LISTS = once(() => ({
+    side: draw(DescriptionList, { items: DESCRIPTION_FACTS }),
+    stacked: draw(DescriptionList, {
+        items: DESCRIPTION_FACTS,
+        layout: 'stacked',
+        columns: 2,
+    }),
+    row: draw(DescriptionList, { items: DESCRIPTION_FACTS, layout: 'row' }),
+}))
+
+const DESCRIPTION_LIST_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {
+        layout: propValues(DESCRIPTION_LIST, 'DescriptionListProps', 'layout'),
+        size: propValues(DESCRIPTION_LIST, 'DescriptionListProps', 'size'),
+    },
+    size: (size) => {
+        const drawn = DESCRIPTION_LISTS()[size as 'side' | 'stacked' | 'row'] as El[] | undefined
+        return drawn === undefined ? undefined : pieceWhere(byTag(drawn, 'dl'))
+    },
+    paint: (_, name, state) => {
+        const { side } = DESCRIPTION_LISTS()
+        const values = side.filter((element) => element.tag === 'dd')
+        if (name === 'term') return pieceWhere(byTag(side, 'dt'))
+        return inside(byTag(side, 'dl'), state === 'missing' ? values[1] : values[0])
+    },
+    effect: () => skip('the description list states no effects'),
+    keys: {},
+    more: () =>
+        layoutChecks('description-list', {
+            rowGap: () => numberIn(classesOf(byTag(DESCRIPTION_LISTS().side, 'dl')), /\bgap-y-(\d+(?:\.\d+)?)\b/, 'step'),
+            termWidth: () => numberIn(DESCRIPTION_LIST, /termWidth = '(\d+(?:\.\d+)?)rem'/, 'rem'),
+            termMax: () => {
+                const share = /(\d+)%/.exec(DESCRIPTION_LIST)?.[1]
+                return share === undefined ? undefined : String(Number(share) / 100)
+            },
+        }),
+}
+
+// API link
+
+const API_PATH = '/api/jobs/nightly-export'
+const API_LINKS = once(() => ({
+    plain: draw(ApiLink, { path: API_PATH }),
+    linked: draw(ApiLink, {
+        path: API_PATH,
+        href: 'https://api.example.org/docs',
+    }),
+    write: draw(ApiLink, { method: 'POST', path: API_PATH }),
+    delete: draw(ApiLink, { method: 'DELETE', path: API_PATH }),
+    open: draw(ApiLink, { path: API_PATH, open: true }),
+}))
+const methodOf = (elements: El[]) => elements.find((element) => element.tag === 'span' && /\bfont-medium\b/.test(classesOf(element)))
+
+const API_LINK_ADAPTER: Adapter = {
+    wordObjects: { API_LINK_WORDS },
+    complete: ['API_LINK_WORDS'],
+    words: {
+        copy: 'API_LINK_WORDS.copy',
+        copied: 'API_LINK_WORDS.copied',
+        opens: 'API_LINK_WORDS.opens',
+    },
+    options: {},
+    size: () => pieceWhere(API_LINKS().plain[0]),
+    paint: (group, name, state) => {
+        const links = API_LINKS()
+        const on = state === 'hover' ? ['hover'] : state === 'focus' ? ['focus-visible'] : []
+        if (group === 'variants') return pieceWhere((name === 'open' ? links.open : links.plain)[0], on)
+        if (name === 'method')
+            return pieceWhere(methodOf(state === 'write' ? links.write : state === 'delete' ? links.delete : links.plain))
+        if (name === 'arrow') return pieceWhere(links.open.find((element) => element.tag === 'svg'))
+        if (state === 'rest') return pieceWhere(links.plain.find((element) => element.tag === 'span' && element.attrs.title === API_PATH))
+        return pieceWhere(
+            links.linked.find((element) => element.tag === 'a'),
+            on,
+        )
+    },
+    effect: () => skip('the API link states no effects'),
+    keys: {
+        Tab: () => {
+            const { linked } = API_LINKS()
+            const link = linked.find((element) => element.tag === 'a')
+            const copy = linked.find((element) => element.tag === 'button')
+            return focusable(link) && focusable(copy) ? true : 'the path or the copy button is out of the tab order'
+        },
+        'Enter (the path or the chip (open) has focus)': () =>
+            API_LINKS().open[0]?.tag === 'a' &&
+            API_LINKS().linked.some((element) => element.tag === 'a' && element.attrs.href !== undefined)
+                ? true
+                : 'the path or the open chip is not a link',
+        'Enter, Space (the copy button has focus)': () =>
+            API_LINKS().plain.some((element) => element.tag === 'button') ? true : 'the copy button is not a native button',
+    },
+    more: () =>
+        layoutChecks('api-link', {
+            chipStart: () => lengthOn(API_LINKS().plain[0], READ.padStart),
+        }),
+}
+
+// Issue count
+
+const ISSUE_MARK = source('components/IssueMark.tsx')
+const ISSUE_ENTRY = {
+    label: 'Job name',
+    issue: {
+        tone: 'critical' as const,
+        text: 'A job named nightly-export already exists.',
+    },
+    onGo: noop,
+}
+const ISSUE_COUNTS = once(() => ({
+    critical: draw(IssueCount, { critical: 2, warning: 1, list: [ISSUE_ENTRY] }),
+    warning: draw(IssueCount, { critical: 0, warning: 1, list: [ISSUE_ENTRY] }),
+}))
+const ISSUE_COUNT_SOURCE = ISSUE_MARK.slice(ISSUE_MARK.indexOf('export function IssueCount'))
+/** The list and its entries open only on a press, which no server drawing makes: their classes are read from the source. */
+const ISSUE_LIST = literalAfter(ISSUE_COUNT_SOURCE, 'side="top" align="start"', 'className=')
+const ISSUE_ENTRY_CLASSES = literalAfter(ISSUE_COUNT_SOURCE, 'entry.onGo()', 'className=')
+const issueCountPieces = (elements: El[]): Record<string, El | undefined> => ({
+    face: elements.find((element) => element.tag === 'button'),
+    figure: elements.find((element) => element.tag === 'span' && /\bpx-2\b/.test(classesOf(element))),
+})
+const ISSUE_COUNT_ON: Record<string, string> = {
+    hover: 'hover',
+    open: 'data-popup-open',
+    focus: 'focus-visible',
+}
+
+const ISSUE_COUNT_ADAPTER: Adapter = {
+    wordObjects: { ISSUE_COUNT_WORDS },
+    complete: ['ISSUE_COUNT_WORDS'],
+    words: {
+        errors: ['ISSUE_COUNT_WORDS.errors', (said: (count: number) => string, fill) => said(Number(fill.count))],
+        warnings: ['ISSUE_COUNT_WORDS.warnings', (said: (count: number) => string, fill) => said(Number(fill.count))],
+    },
+    options: {},
+    size: (size) => {
+        if (size === 'list') return { layers: [ISSUE_LIST], on: [] }
+        if (size === 'entry') return { layers: [ISSUE_ENTRY_CLASSES], on: [] }
+        return pieceWhere(issueCountPieces(ISSUE_COUNTS().critical)[size])
+    },
+    paint: (_, name, state) => {
+        const states = state.split('+')
+        const on = states.flatMap((one) => (ISSUE_COUNT_ON[one] === undefined ? [] : [ISSUE_COUNT_ON[one]]))
+        if (name === 'entry') return { layers: [ISSUE_ENTRY_CLASSES], on }
+        const counts = ISSUE_COUNTS()
+        return pieceWhere(issueCountPieces(states.includes('warning') ? counts.warning : counts.critical)[name], on)
+    },
+    effect: () => skip('the issue count states no effects'),
+    keys: {
+        Tab: () => (focusable(issueCountPieces(ISSUE_COUNTS().critical).face) ? true : 'the face is out of the tab order'),
+        'Enter, Space (the face has focus)': () =>
+            issueCountPieces(ISSUE_COUNTS().critical).face?.tag === 'button' ? true : 'the face is not a native button',
+        'Enter, Space (an entry has focus)': () =>
+            /<button\s+key=\{index\}\s+type="button"/.test(ISSUE_COUNT_SOURCE) ? true : 'an entry is not a native button',
+        'Escape (the list is open)': () => (/<Popover\b/.test(ISSUE_COUNT_SOURCE) ? true : "the list is not Base UI's popover"),
+    },
+}
+
+// Server menu
+
+const SERVER_MENU = source('components/ServerMenu.tsx')
+const SERVER_MENUS = once(() => draw(ServerMenu, { name: 'api', version: 'v2.4.1', state: 'up' }))
+/** Each piece of a server menu, by its name in the spec; the menu opens only on a press, so its classes are read from the source. */
+const serverMenuWhere = (name: string, on: string[] = []): Where | undefined => {
+    const elements = SERVER_MENUS()
+    const face = elements.find((element) => element.tag === 'button')
+    switch (name) {
+        case 'face':
+            return pieceWhere(face, on)
+        case 'chevron':
+            return pieceWhere(elements.filter((element) => element.tag === 'svg').at(-1), on)
+        case 'version':
+            return pieceWhere(
+                elements.find((element) => element.attrs['data-slot'] === 'badge'),
+                on,
+            )
+        case 'menu':
+            return {
+                layers: [literalAfter(SERVER_MENU, '<DropdownMenuContent align="end" className=')],
+                on,
+            }
+        case 'info':
+            return {
+                layers: [literalAfter(SERVER_MENU, '</DropdownMenuGroup>', '<div className=')],
+                on,
+            }
+        default:
+            return undefined
+    }
+}
+
+const SERVER_MENU_ADAPTER: Adapter = {
+    wordObjects: { SERVER_MENU_WORDS },
+    complete: ['SERVER_MENU_WORDS'],
+    words: {
+        up: 'SERVER_MENU_WORDS.up',
+        down: 'SERVER_MENU_WORDS.down',
+        checking: 'SERVER_MENU_WORDS.checking',
+        check: 'SERVER_MENU_WORDS.check',
+        label: 'SERVER_MENU_WORDS.label',
+        checkedAt: ['SERVER_MENU_WORDS.checkedAt', (said: (ago: string) => string, fill) => said(String(fill.ago))],
+    },
+    options: {
+        state: [...(/export type ServerState = ([^\n]+)/.exec(SERVER_MENU)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1]),
+    },
+    size: (size) => serverMenuWhere(size),
+    paint: (_, name) => serverMenuWhere(name),
+    effect: () => skip('the server menu states no effects'),
+    keys: {
+        Tab: () => (focusable(SERVER_MENUS().find((element) => element.tag === 'button')) ? true : 'the face is out of the tab order'),
+        'Enter, Space, ArrowDown (the face has focus)': () =>
+            /<DropdownMenuTrigger render=\{button\}/.test(SERVER_MENU) ? true : "the face does not open parts/dropdown-menu's menu",
+        'Escape (the menu is open)': () => (/<DropdownMenu\b/.test(SERVER_MENU) ? true : "the menu is not parts/dropdown-menu's"),
+    },
+}
+
+// Item card
+
+const ITEM_CARD = source('components/ItemCard.tsx')
+const ITEM_CARDS = once(() => ({
+    full: draw(ItemCard, {
+        title: 'Harbor',
+        code: 'harbor',
+        icon: createElement(Folder),
+        status: 'running',
+        description: 'Nightly exports to the archive.',
+        facts: [{ label: 'Jobs', value: 12 }],
+        menu: createElement('div', {}, 'Rename'),
+        onSelect: noop,
+        selected: true,
+    }),
+    plain: draw(ItemCard, { title: 'Harbor', onSelect: noop }),
+}))
+/** Each piece of an item card, by its name in the spec. */
+const itemCardPieces = (elements: El[]): Record<string, El | undefined> => ({
+    card: elements[0],
+    cover: elements.find((element) => element.tag === 'button' && /\binset-0\b/.test(classesOf(element))),
+    body: elements.find((element) => element.tag === 'div' && /\bp-4\b/.test(classesOf(element))),
+    head: byTag(elements, 'header'),
+    icon: elements.find((element) => element.tag === 'span' && /\bsize-8\b/.test(classesOf(element))),
+    check: elements.find((element) => element.tag === 'span' && /\bsize-5\b/.test(classesOf(element))),
+    menu: elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === ITEM_CARD_WORDS.menu),
+    status: elements.find((element) => element.tag === 'div' && /\btext-xs\b/.test(classesOf(element))),
+    description: byTag(elements, 'p'),
+    facts: byTag(elements, 'dl'),
+})
+
+const ITEM_CARD_ADAPTER: Adapter = {
+    wordObjects: { ITEM_CARD_WORDS },
+    complete: ['ITEM_CARD_WORDS'],
+    words: { menu: 'ITEM_CARD_WORDS.menu' },
+    options: {},
+    size: (size) => pieceWhere(itemCardPieces(ITEM_CARDS().full)[size]),
+    paint: (_, name, state) => {
+        const cards = ITEM_CARDS()
+        const on = state === 'hover' ? ['hover'] : state === 'focus' ? ['focus-visible'] : []
+        if (name === 'card') {
+            if (state === 'selected') return pieceWhere(itemCardPieces(cards.full).card)
+            if (state === 'focus') return pieceWhere(itemCardPieces(cards.plain).cover, on)
+            return pieceWhere(itemCardPieces(cards.plain).card, on)
+        }
+        return pieceWhere(itemCardPieces(cards.full)[name], on)
+    },
+    effect: () => skip('the item card states no effects'),
+    keys: {
+        Tab: () => {
+            const { cover, menu } = itemCardPieces(ITEM_CARDS().full)
+            return focusable(cover) && focusable(menu) ? true : 'the card or its menu is out of the tab order'
+        },
+        'Enter (the card has focus)': () =>
+            itemCardPieces(ITEM_CARDS().plain).cover?.tag === 'button' ? true : 'the card is not a native button',
+        'Enter, Space, ArrowDown (the menu button has focus)': () =>
+            /<DropdownMenuTrigger\b/.test(ITEM_CARD) ? true : "the menu is not parts/dropdown-menu's",
+    },
+    more: () =>
+        layoutChecks('item-card', {
+            factMin: () => numberIn(ITEM_CARD, /minmax\((\d+(?:\.\d+)?)rem,1fr\)/, 'rem'),
+        }),
+}
+
+// Sortable grid
+
+const SORTABLE_GRIDS = once(() =>
+    draw(SortableGrid<string>, {
+        items: ['harbor', 'juniper', 'larkspur'],
+        itemKey: (item) => item,
+        itemLabel: (item) => item,
+        renderItem: (item) => createElement('div', {}, item),
+        onMove: noop,
+    }),
+)
+
+const SORTABLE_GRID_ADAPTER: Adapter = {
+    wordObjects: { SORTABLE_WORDS },
+    complete: ['SORTABLE_WORDS'],
+    words: {
+        move: ['SORTABLE_WORDS.move', (said: (item: string) => string, fill) => said(String(fill.item))],
+        moved: [
+            'SORTABLE_WORDS.moved',
+            (said: (item: string, place: number, count: number) => string, fill) =>
+                said(String(fill.item), Number(fill.place), Number(fill.count)),
+        ],
+    },
+    options: { handle: propValues(SORTABLE, 'SortableGridProps', 'handle') },
+    size: (size) => (size === 'grid' ? pieceWhere(byTag(SORTABLE_GRIDS(), 'ul')) : undefined),
+    paint: (_, name, state) =>
+        name === 'item' ? pieceWhere(byTag(SORTABLE_GRIDS(), 'li'), state === 'focus' ? ['focus-visible'] : []) : undefined,
+    effect: (state) => (state === 'dragging' ? { layers: [literalAfter(SORTABLE, 'sortable.isDragging &&')], on: [] } : undefined),
+    keys: {
+        Tab: () => (focusable(byTag(SORTABLE_GRIDS(), 'li')) ? true : 'a card is out of the tab order'),
+        'ArrowUp, ArrowLeft (a card has focus)': () =>
+            /event\.key === 'ArrowUp' \|\| \(group\.layout === 'grid' && event\.key === 'ArrowLeft'\)/.test(SORTABLE)
+                ? true
+                : 'the arrows back do not move a card',
+        'ArrowDown, ArrowRight (a card has focus)': () =>
+            /event\.key === 'ArrowDown' \|\| \(group\.layout === 'grid' && event\.key === 'ArrowRight'\)/.test(SORTABLE)
+                ? true
+                : 'the arrows on do not move a card',
+        'Space, Enter (a card has focus)': () =>
+            /KeyboardSensor/.test(DRAG_DROP) ? true : "the drag engine's keyboard sensor is not used",
+        'Escape (a card is being moved)': () => (/KeyboardSensor/.test(DRAG_DROP) ? true : "the drag engine's keyboard sensor is not used"),
+    },
+    more: () =>
+        layoutChecks('sortable-grid', {
+            minItemWidth: () => numberIn(SORTABLE, /minItemWidth = '(\d+(?:\.\d+)?)rem'/, 'rem'),
+        }),
+}
+
 /**
  * Each sokkel-ui drift entry in a spec, by its `what`, with the checks it covers: they may differ,
  * and must, or the entry is stale. A function instead says whether the difference is still there,
@@ -6896,6 +8056,17 @@ const ADAPTERS: Record<string, Adapter> = {
     'period-picker': PERIOD_PICKER_ADAPTER,
     'tree-select': TREE_SELECT_ADAPTER,
     prompt: PROMPT_ADAPTER,
+    'group-label': GROUP_LABEL_ADAPTER,
+    unfoldable: UNFOLDABLE_ADAPTER,
+    'choice-list': CHOICE_LIST_ADAPTER,
+    badge: BADGE_ADAPTER,
+    stat: STAT_ADAPTER,
+    'description-list': DESCRIPTION_LIST_ADAPTER,
+    'api-link': API_LINK_ADAPTER,
+    'issue-count': ISSUE_COUNT_ADAPTER,
+    'server-menu': SERVER_MENU_ADAPTER,
+    'item-card': ITEM_CARD_ADAPTER,
+    'sortable-grid': SORTABLE_GRID_ADAPTER,
 }
 
 // The checks, walked from each spec

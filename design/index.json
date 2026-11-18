@@ -295,7 +295,18 @@
         {"id": "chart", "file": "parts/chart.json", "status": "stable"},
         {"id": "dashboard-panel", "file": "parts/dashboard-panel.json", "status": "stable"},
         {"id": "stat-panel", "file": "parts/stat-panel.json", "status": "stable"},
-        {"id": "time-series-panel", "file": "parts/time-series-panel.json", "status": "stable"}
+        {"id": "time-series-panel", "file": "parts/time-series-panel.json", "status": "stable"},
+        {"id": "group-label", "file": "parts/group-label.json", "status": "stable"},
+        {"id": "unfoldable", "file": "parts/unfoldable.json", "status": "stable"},
+        {"id": "choice-list", "file": "parts/choice-list.json", "status": "stable"},
+        {"id": "badge", "file": "parts/badge.json", "status": "stable"},
+        {"id": "stat", "file": "parts/stat.json", "status": "stable"},
+        {"id": "description-list", "file": "parts/description-list.json", "status": "stable"},
+        {"id": "api-link", "file": "parts/api-link.json", "status": "stable"},
+        {"id": "issue-count", "file": "parts/issue-count.json", "status": "stable"},
+        {"id": "server-menu", "file": "parts/server-menu.json", "status": "stable"},
+        {"id": "item-card", "file": "parts/item-card.json", "status": "stable"},
+        {"id": "sortable-grid", "file": "parts/sortable-grid.json", "status": "stable"}
     ],
     "patterns": [
         {"id": "shell", "file": "patterns/shell.json", "status": "stable"},

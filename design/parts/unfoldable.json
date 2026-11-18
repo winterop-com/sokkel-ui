@@ -1,0 +1,134 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "unfoldable",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "Unfoldable built before this spec, with forced; not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A heading that opens what is under it. The whole heading row is the control: the chevron turns, the row says whether it is open, and it washes under the pointer the way a menu row does. A line under the heading can say in short what is folded away while it is shut, facts can stand at the row's end, and a row with nothing to unfold is static, lined up with the rest. Held open while forced, as a filter does while it is typed.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/Unfoldable.tsx"]},
+    "anatomy": {
+        "unfoldable": "The column: the row, then the summary while shut or the content while open, 8 apart.",
+        "row": "The heading row, the whole of it the control while it unfolds (a button): the chevron, then the heading; padded 4 all round and reaching 4 past the column on each side, so its words line up with the text around it.",
+        "chevron": "A chevron pointing at the heading, turned down while open; 14 square, in muted-foreground. While forced it is turned down in faint; a static row keeps its room empty.",
+        "heading": "The heading, text.sm at 500, cut to one line.",
+        "aside": "Facts at the row's end, outside the button's name, such as a count: text.xs in muted-foreground, 8 apart.",
+        "summary": "While shut, a line under the heading saying what the folded part holds in short: text.xs in muted-foreground, under the heading's start (layout.indent), 6 up into the column's gap, one line unless wrapSummary.",
+        "content": "While open, what it holds, under the heading's start (layout.indent)."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["card", "popover", "sidebar"]},
+    "options": {
+        "heading": {"type": "node", "does": "What the row says."},
+        "aside": {"type": "node", "does": "Facts at the row's end, outside the button's name, such as a count."},
+        "summary": {
+            "type": "node",
+            "does": "A line under the heading while it is shut, such as what the folded part holds in short."
+        },
+        "open": {
+            "type": "boolean",
+            "does": "Whether it is open, held by the app with onOpenChange; held inside when not given."
+        },
+        "defaultOpen": {"type": "boolean", "default": false, "does": "Starts it open."},
+        "onOpenChange": {"type": "callback", "does": "Called with the open state the reader asked for."},
+        "forced": {
+            "type": "boolean",
+            "default": false,
+            "does": "Holds it open whatever the reader chose, as a filter does while it is typed: the row is static meanwhile, its chevron turned down in faint, and the reader's own choice returns when it is let go."
+        },
+        "wrapSummary": {
+            "type": "boolean",
+            "default": false,
+            "does": "Lets a long summary wrap onto more lines instead of being cut to one."
+        },
+        "children": {
+            "type": "node",
+            "does": "What opens under the heading. Without it the row is static: no chevron and no button, its heading where an unfoldable row's stands, so a list of mixed rows lines up."
+        }
+    },
+    "sizes": {
+        "unfoldable": {"gap": 8},
+        "row": {
+            "padX": 4,
+            "padY": 4,
+            "gap": 8,
+            "radius": "radius-md",
+            "phoneMinHeight": "spacing-finger",
+            "note": "A finger tall below md while it unfolds."
+        },
+        "chevron": {"height": 14, "width": 14},
+        "aside": {"gap": 8}
+    },
+    "layout": {
+        "indent": {
+            "value": 22,
+            "note": "The summary's and the content's start: the chevron's 14 and the row's 8, so they line up with the heading."
+        }
+    },
+    "states": {
+        "rest": {"means": "Shut: the chevron points at the heading, the summary under it."},
+        "hover": {"means": "The pointer is over a row that unfolds.", "reached": "pointer over"},
+        "focus": {"means": "Keyboard focus on the row: the focus ring inside it.", "reached": "Tab", "on": "keyboard"},
+        "open": {
+            "means": "Open: the chevron turned down, the content under the heading, no summary.",
+            "reached": "a press, Enter or Space on the row; open or defaultOpen"
+        },
+        "forced": {"means": "Held open: the row is static, its chevron turned down in faint.", "reached": "forced"}
+    },
+    "pieces": {
+        "row": {
+            "rest": {
+                "radius": "radius-md",
+                "text": "text.sm",
+                "weight": 500,
+                "note": "In the ink of what it stands on."
+            },
+            "hover": {"ground": "hover"},
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width"},
+                "note": "The ring drawn inside the row (ring-inset)."
+            }
+        },
+        "chevron": {"rest": {"ink": "muted-foreground"}, "forced": {"ink": "faint"}},
+        "aside": {"rest": {"ink": "muted-foreground", "text": "text.xs"}},
+        "summary": {"rest": {"ink": "muted-foreground", "text": "text.xs"}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the row.", "when": "it unfolds and is not forced"},
+        {"keys": ["Enter", "Space"], "does": "Opens or shuts what is under the heading.", "when": "the row has focus"}
+    ],
+    "words": {},
+    "messages": {},
+    "appText": {
+        "heading": "What the row says.",
+        "aside": "The row's facts.",
+        "summary": "What the folded part holds, in short."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The row is a native button with aria-expanded; a static row (no children, or forced) is a div.",
+            "The chevron turns with a CSS transition."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, Unfoldable was built before this spec (with forced) and has not been compared with it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

@@ -1,0 +1,110 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "choice-list",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "ChoiceList built before this spec, with each theme's sample in the theme settings' list; not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Pick one of a few choices, each a row with its radio, its name and a line saying what choosing it means. The whole row is pressable and the chosen one is filled, so the choice reads at a glance where a bare radio would be easy to miss.",
+    "sources": {
+        "sokkel-ui": ["packages/core/src/components/ChoiceList.tsx", "packages/core/src/components/ui/radio-group.tsx"]
+    },
+    "anatomy": {
+        "list": "The rows one under the other, 2 apart: a radio group.",
+        "row": "One choice, the whole of it pressable: the radio, then the label over the description; padded 10 across and 8 down, 12 between the radio and the words, rounded by radius-control. The chosen row is filled.",
+        "radio": "The choice's radio, 16 square and round: an edge in input, filled in primary with a dot in primary-foreground while chosen. Set at the top with a description, 2 down, level with the label's first line.",
+        "label": "The choice's name, text.sm at 500 where it is words; a richer row (a person, a theme's sample) as the app draws it.",
+        "description": "A line under the label: what choosing it means, text.xs in muted-foreground."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["popover", "card"]},
+    "options": {
+        "options": {"type": "rows", "does": "The choices, in order: { value, label, description? }."},
+        "value": {"type": "text", "does": "The chosen value."},
+        "onValueChange": {"type": "callback", "does": "Called with the value chosen."},
+        "label": {"type": "text", "does": "The list's accessible name, where no visible heading names it."},
+        "labelledBy": {"type": "text", "does": "The id of a visible heading that names the list."}
+    },
+    "sizes": {
+        "list": {"gap": 2},
+        "row": {"padX": 10, "padY": 8, "gap": 12, "radius": "radius-control"},
+        "radio": {"height": 16, "width": 16}
+    },
+    "states": {
+        "rest": {"means": "A choice not chosen."},
+        "hover": {"means": "The pointer is over a row not chosen.", "reached": "pointer over"},
+        "chosen": {"means": "The chosen row: filled in secondary, its radio filled in primary.", "reached": "value"},
+        "focus": {
+            "means": "Keyboard focus on the chosen radio (or the first): the focus outline around the radio.",
+            "reached": "Tab",
+            "on": "keyboard"
+        }
+    },
+    "pieces": {
+        "row": {
+            "rest": {"radius": "radius-control", "text": "text.sm"},
+            "hover": {"ground": "hover"},
+            "chosen": {"ground": "secondary"}
+        },
+        "radio": {
+            "rest": {"edge": "input", "dark": {"ground": "input/30"}, "note": "Round."},
+            "chosen": {"ground": "primary", "edge": "primary", "ink": "primary-foreground"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        },
+        "label": {
+            "rest": {
+                "text": "text.sm",
+                "weight": 500,
+                "note": "Where the label is words; in the ink of what it stands on."
+            }
+        },
+        "description": {"rest": {"ink": "muted-foreground", "text": "text.xs"}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the list at the chosen choice (the first when none is chosen); Tab again leaves it."
+        },
+        {
+            "keys": ["ArrowDown", "ArrowRight"],
+            "does": "Moves to the next choice and chooses it, wrapping.",
+            "when": "a choice has focus"
+        },
+        {
+            "keys": ["ArrowUp", "ArrowLeft"],
+            "does": "Moves to the choice before and chooses it, wrapping.",
+            "when": "a choice has focus"
+        },
+        {"keys": ["Space"], "does": "Chooses the focused choice.", "when": "a choice has focus"}
+    ],
+    "words": {},
+    "messages": {},
+    "appText": {"options": "Each choice's label and description.", "label": "The list's accessible name."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "A radio group (Base UI's RadioGroup); each row is a label around its radio, so a press anywhere on it chooses.",
+            "Settings' theme list (useThemeSettings' themeList) is a ChoiceList whose labels are each theme's sample."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, ChoiceList was built before this spec, with each theme's sample in the theme settings' list (theme_list), and has not been compared with it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}
