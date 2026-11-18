@@ -2,7 +2,7 @@ import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
-import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { useThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import type { AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
 import { CORNERS, DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
@@ -363,7 +363,7 @@ export function Settings({
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        ...themeSettings({
+                        ...useThemeSettings({
                             value: appearance.settings,
                             onChange: appearance.setSettings,
                             themes: APP_THEMES,

@@ -14,7 +14,7 @@
             "packages/core/src/components/Shell.tsx",
             "packages/core/src/hooks/use-overlay-route.ts",
             "packages/core/src/components/AccountMenu.tsx (onAppearance)",
-            "packages/core/src/components/ThemePicker.tsx (themeSettings)",
+            "packages/core/src/components/ThemePicker.tsx (useThemeSettings)",
             "packages/core/src/lib/commands.ts (appearanceCommands)"
         ],
         "sokkel-egui": [

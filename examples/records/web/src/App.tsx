@@ -18,7 +18,7 @@ import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import type { ShortcutGroup } from '@winterop-com/sokkel-ui/ShortcutsDialog'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
-import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { useThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import {
     Braces,
@@ -288,7 +288,7 @@ export function App() {
                     id: 'appearance',
                     label: 'Appearance',
                     settings: [
-                        ...themeSettings({
+                        ...useThemeSettings({
                             value: settings,
                             onChange: setSettings,
                             themes: frame.themes,

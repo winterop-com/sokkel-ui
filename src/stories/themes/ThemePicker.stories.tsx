@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
-import { ThemePicker, themeSettings, type ThemePickerWords, type ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { ThemePicker, useThemeSettings, type ThemePickerWords, type ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { CORNERS, THEMES, TYPEFACES } from '@winterop-com/sokkel-ui/lib/appearance'
 
 /**
@@ -65,7 +65,7 @@ export const ThemeList: StoryObj = { name: 'Theme list', render: () => <Picker f
 export const ThemeCards: StoryObj = { name: 'Theme cards', render: () => <Picker full={false} cards /> }
 
 /**
- * The choices as settings rows (`themeSettings`), as a settings dialog's appearance section lists
+ * The choices as settings rows (`useThemeSettings`), as a settings dialog's appearance section lists
  * them: each with its title and a line on what it changes, its control beside it while the row has
  * room and under it on a phone.
  */
@@ -75,7 +75,7 @@ export const SettingsRows: StoryObj = {
         const [settings, setSettings] = useState<ThemeSettings>({ ...START, motion: 'system' })
         return (
             <Stack gap="none" className="max-w-2xl divide-y divide-border">
-                {themeSettings({
+                {useThemeSettings({
                     value: settings,
                     onChange: setSettings,
                     themes: THEMES,

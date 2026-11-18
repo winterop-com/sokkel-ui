@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import { GraphEditingContext } from './context'
-import { GraphCanvas, type GraphEditing } from './GraphCanvas'
+import { boxInView, GraphCanvas, type GraphEditing } from './GraphCanvas'
 
 declare global {
     var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
@@ -55,5 +55,20 @@ describe('GraphCanvas', () => {
         act(() => root?.render(draw()))
         act(() => root?.render(draw()))
         expect(draws).toBe(settled)
+    })
+})
+
+describe('boxInView', () => {
+    const box = { x: 400, y: 300, width: 160, height: 48 }
+    it('takes a box wholly on the canvas under the view as in view', () => {
+        expect(boxInView(box, { x: 0, y: 0, zoom: 1 }, { width: 1024, height: 720 })).toBe(true)
+    })
+    it('takes a box that a narrower canvas or a re-wrap leaves below or beside the view as out of it', () => {
+        expect(boxInView(box, { x: 0, y: 0, zoom: 1 }, { width: 500, height: 720 })).toBe(false)
+        expect(boxInView({ ...box, y: 700 }, { x: 0, y: 0, zoom: 1 }, { width: 1024, height: 720 })).toBe(false)
+        expect(boxInView(box, { x: -500, y: 0, zoom: 1 }, { width: 1024, height: 720 })).toBe(false)
+    })
+    it('measures under the view zoom', () => {
+        expect(boxInView({ ...box, y: 700 }, { x: 0, y: 0, zoom: 0.5 }, { width: 1024, height: 720 })).toBe(true)
     })
 })
