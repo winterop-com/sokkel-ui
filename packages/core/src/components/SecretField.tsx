@@ -18,7 +18,7 @@ export interface SecretFieldWords extends FieldWords {
     /** Said of a secret set at a time, given that time said relative to now. */
     setWhen: (when: ReactNode) => ReactNode
     replace: string
-    /** Replace's name, given the field's label, so two sealed secrets are told apart: "Replace password". */
+    /** Replace's name, given the field's label as it reads mid-sentence, so two sealed secrets are told apart: "Replace password". */
     replaceLabel: (label: string) => string
     cancel: string
     show: string
@@ -30,18 +30,27 @@ export const SECRET_FIELD_WORDS: SecretFieldWords = {
     set: 'Set',
     setWhen: (when) => <>Set {when}</>,
     replace: 'Replace',
-    // A label that opens on a capitalized word is lowercased there, as mid-sentence; "API token" stays as it is.
-    replaceLabel: (label) => `Replace ${/^[A-Z][a-z]/.test(label) ? label.charAt(0).toLowerCase() + label.slice(1) : label}`,
+    replaceLabel: (label) => `Replace ${label}`,
     cancel: 'Cancel',
     show: 'Show',
     hide: 'Hide',
 }
 
 /** Where a catalog holds a secret field's words. */
-export const SECRET_FIELD_PART: WordsPart<SecretFieldWords> = { id: 'secretField', words: SECRET_FIELD_WORDS, from: [FIELD_PART] }
+export const SECRET_FIELD_PART: WordsPart<SecretFieldWords> = {
+    id: 'secretField',
+    words: SECRET_FIELD_WORDS,
+    from: [FIELD_PART],
+    args: { replaceLabel: 'label' },
+}
 
 /** A secret field's phrases as ICU messages in English, for the catalog. */
-export const SECRET_FIELD_MESSAGES: WordMessages<SecretFieldWords> = { setWhen: null, replaceLabel: null }
+export const SECRET_FIELD_MESSAGES: WordMessages<SecretFieldWords> = { setWhen: null, replaceLabel: 'Replace {label}' }
+
+/** A label as it reads mid-sentence: one that opens on a capitalized word is lowercased there; "API token" stays as it is. */
+function midSentence(label: string): string {
+    return /^[A-Z][a-z]/.test(label) ? label.charAt(0).toLowerCase() + label.slice(1) : label
+}
 
 export interface SecretFieldProps {
     id: string
@@ -168,7 +177,7 @@ export function SecretField({
                 'flex h-(--density-control) w-full min-w-0 items-center gap-1 rounded-control border border-input bg-field pr-1 pl-2.5 text-base transition-colors max-md:min-h-finger md:text-sm',
                 open ? 'cursor-text focus-within:border-ring focus-within:ring-1 focus-within:ring-ring' : 'bg-muted/40',
                 disabled && 'cursor-not-allowed bg-input/50 opacity-disabled',
-                bare && tone !== null && ISSUE_WITHIN_EDGE[tone],
+                tone !== null && ISSUE_WITHIN_EDGE[tone],
                 bare && className,
             )}
         >
@@ -233,7 +242,7 @@ export function SecretField({
                             variant="ghost"
                             size="xs"
                             // Named for itself, not by the field's label, which points at it.
-                            aria-label={label === '' ? words.replace : words.replaceLabel(label)}
+                            aria-label={label === '' ? words.replace : words.replaceLabel(midSentence(label))}
                             aria-describedby={statusId}
                             onClick={() => {
                                 moved.current = 'input'

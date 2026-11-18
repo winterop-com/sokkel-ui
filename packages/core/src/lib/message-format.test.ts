@@ -111,3 +111,11 @@ describe('formatMessage', () => {
         expect(messageArguments('{a, select, x {{b}} other {{c}}}')).toEqual(['a', 'b', 'c'])
     })
 })
+
+describe('a number in a plain argument', () => {
+    it('is written as the locale writes numbers, its thousands grouped, as ICU writes it', () => {
+        expect(formatMessage('{count} runs', { count: 1200 })).toBe('1,200 runs')
+        expect(plain(formatMessage('{count} runs', { count: 1200 }, 'nb-NO'))).toBe('1 200 runs')
+        expect(formatMessage('{name}', { name: '1200' })).toBe('1200')
+    })
+})

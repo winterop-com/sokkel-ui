@@ -6,6 +6,7 @@ import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Count } from './Count'
+import { writeCount } from '../lib/numbers'
 
 /** One thing that happened: what, when, how it reads, and the one way to act on it. */
 export interface ActivityItem {
@@ -35,7 +36,7 @@ export const ACTIVITY_WORDS: ActivityWords = {
     markAllRead: 'Mark all read',
     empty: 'Nothing new.',
     unread: 'unread',
-    bell: (unread) => (unread > 0 ? `Activity, ${String(unread)} unread` : 'Activity'),
+    bell: (unread) => (unread > 0 ? `Activity, ${writeCount(unread)} unread` : 'Activity'),
 }
 
 /** Where a catalog holds an activity list's words, and the arguments its phrases name. */

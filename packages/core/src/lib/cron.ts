@@ -1,4 +1,5 @@
 import type { WordMessages, WordsPart } from './words'
+import { writeCount } from './numbers'
 /** A day of the month named by a rule: the last (`L`), the last weekday (`LW`), the weekday nearest a day (`15W`). */
 export type CronDayRule = { kind: 'last' } | { kind: 'lastWeekday' } | { kind: 'nearestWeekday'; day: number }
 
@@ -311,8 +312,8 @@ const pad = (number: number) => String(number).padStart(2, '0')
 
 function ordinal(number: number): string {
     const tens = number % 100
-    if (tens >= 11 && tens <= 13) return `${String(number)}th`
-    return `${String(number)}${['th', 'st', 'nd', 'rd'][number % 10] ?? 'th'}`
+    if (tens >= 11 && tens <= 13) return `${number.toLocaleString('en-US')}th`
+    return `${number.toLocaleString('en-US')}${['th', 'st', 'nd', 'rd'][number % 10] ?? 'th'}`
 }
 
 /**
@@ -390,14 +391,14 @@ export const CRON_WORDS: CronWords = {
     ordinal,
     everyMinute: 'every minute',
     everyMinutes: (step) => `every ${String(step)} minutes`,
-    everyHour: (minute) => (minute === 0 ? 'every hour, on the hour' : `every hour at ${String(minute)} minutes past`),
-    everyHours: (step, minute) => `every ${String(step)} hours${minute === 0 ? '' : ` at ${String(minute)} minutes past`}`,
+    everyHour: (minute) => (minute === 0 ? 'every hour, on the hour' : `every hour at ${writeCount(minute)} minutes past`),
+    everyHours: (step, minute) => `every ${String(step)} hours${minute === 0 ? '' : ` at ${writeCount(minute)} minutes past`}`,
     hourly: (from, to) => `every hour from ${from} to ${to}`,
     at: (times) => `at ${times}`,
     minutesBetween: (step, from, to) => `every ${String(step)} minutes from ${from} to ${to}`,
     everyMinuteBetween: (from, to) => `every minute from ${from} to ${to}`,
     everyMinuteOfHours: (hours) => `every minute of hours ${hours}`,
-    minutesOfHours: (minutes, hours) => `at minute ${minutes} of hour ${hours}`,
+    minutesOfHours: (minutes, hours) => `at minute ${writeCount(minutes)} of hour ${hours}`,
     daily: (time) => `every day ${time}`,
     onDays: (days) => `on the ${days}`,
     weekdays: 'on weekdays',

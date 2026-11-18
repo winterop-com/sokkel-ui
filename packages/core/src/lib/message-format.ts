@@ -3,6 +3,7 @@
  * `selectordinal` with `#`, `=n` and `offset:`, `select`, `number` (with `integer`, `percent` and the
  * skeletons `::compact-short`, `::compact-long`, `::percent`, `::integer` and `::.##`), and `date` and
  * `time` (with `short`, `medium`, `long`, `full` and a skeleton such as `::MMMd` or `::HHmm`).
+ * A number in a plain argument is written in the locale, its thousands grouped, as ICU writes it.
  * Quoting follows ICU: `''` is an apostrophe and `'{…}'` is literal text. Plurals ask
  * `Intl.PluralRules` and numbers and dates `Intl`, in the locale given.
  */
@@ -230,7 +231,9 @@ function render(parts: readonly Part[], values: MessageValues, locale: string, p
         const value = values[part.arg]
         switch (part.type) {
             case undefined:
-                out += value === undefined || value === null ? '' : String(value)
+                // A number in a plain argument is written as the locale writes numbers, as ICU does.
+                out +=
+                    value === undefined || value === null ? '' : typeof value === 'number' ? formatNumber(value, locale, '') : String(value)
                 break
             case 'number':
                 out += formatNumber(Number(value), locale, part.style)

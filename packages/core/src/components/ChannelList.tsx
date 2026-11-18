@@ -14,6 +14,7 @@ import { PersonAvatar, PresenceDot, type Presence } from './PersonAvatar'
 import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 import { SearchField } from './SearchField'
+import { writeCount } from '../lib/numbers'
 
 export type { Presence } from './PersonAvatar'
 
@@ -86,13 +87,13 @@ export interface ChannelListWords {
 export const CHANNEL_LIST_WORDS: ChannelListWords = {
     add: (section) => `Add to ${section}`,
     collapse: (section) => `Show or hide ${section}`,
-    mentions: (count) => `${String(count)} mention${count === 1 ? '' : 's'}`,
+    mentions: (count) => `${count.toLocaleString('en-US')} mention${count === 1 ? '' : 's'}`,
     presence: { active: 'Active', away: 'Away', offline: 'Offline' },
     find: 'Find a conversation',
     clear: 'Clear the search',
     nothing: 'No conversation matches.',
     resize: 'Resize the conversation list',
-    moved: (entry, place, count) => `${entry} moved to ${String(place)} of ${String(count)}`,
+    moved: (entry, place, count) => `${entry} moved to ${writeCount(place)} of ${writeCount(count)}`,
 }
 
 /** Where a catalog holds a channel list's words, and the arguments its phrases name. */

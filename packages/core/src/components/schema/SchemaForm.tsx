@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
+import { writeCount } from '../../lib/numbers'
 import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 import { Banner } from '../Banner'
 import { Field, type RequiredMark } from '../Field'
@@ -78,9 +79,16 @@ export interface SchemaFormWords extends IssueWords {
     choose: string
     none: string
     notJson: string
-    item: (index: number) => string
+    /** A list's entry by its place, counted from 1. */
+    item: (place: number) => string
+    /** A list entry's control named with its action and the entry: "Move up: Item 2". */
+    itemAction: (action: string, item: string) => string
     moveUp: string
     moveDown: string
+    /** Why the first entry's Move up is shut. */
+    first: string
+    /** Why the last entry's Move down is shut. */
+    last: string
     /** Drawn after a required field's label when the form marks them with `requiredMark="word"`. */
     required: string
     /** What applies when a field with a schema `default` is left empty, for a form drawn with `fallbacks`. */
@@ -130,9 +138,12 @@ export const SCHEMA_FORM_WORDS: SchemaFormWords = {
     choose: 'Choose',
     none: 'None',
     notJson: 'Not valid JSON',
-    item: (index) => `Item ${String(index + 1)}`,
+    item: (place) => `Item ${writeCount(place)}`,
+    itemAction: (action, item) => `${action}: ${item}`,
     moveUp: 'Move up',
     moveDown: 'Move down',
+    first: 'Already first',
+    last: 'Already last',
     required: 'required',
     fallback: (value) => `Default is ${typeof value === 'string' ? value : literal(value)}`,
     default: 'default',
@@ -143,7 +154,7 @@ export const SCHEMA_FORM_WORDS: SchemaFormWords = {
     removeEntry: (field, row) => (typeof row === 'number' ? `Remove ${field} row ${String(row)}` : `Remove ${field} ${row}`),
     useDefault: (value) => `Default (${value})`,
     repeatedKey: 'Each key only once',
-    more: (count) => `${String(count)} more ${count === 1 ? 'field' : 'fields'}`,
+    more: (count) => `${count.toLocaleString('en-US')} more ${count === 1 ? 'field' : 'fields'}`,
     fewer: 'Fewer fields',
     marks: 'Issues in this form',
     ...ISSUE_WORDS,
@@ -153,7 +164,7 @@ export const SCHEMA_FORM_WORDS: SchemaFormWords = {
 export const SCHEMA_FORM_PART: WordsPart<SchemaFormWords> = {
     id: 'schemaForm',
     words: SCHEMA_FORM_WORDS,
-    args: { mapKey: 'field row', mapValue: 'field row', useDefault: 'value', more: 'count' },
+    args: { item: 'place', itemAction: 'action item', mapKey: 'field row', mapValue: 'field row', useDefault: 'value', more: 'count' },
     from: [ISSUE_PART],
 }
 
@@ -161,7 +172,8 @@ export const SCHEMA_FORM_PART: WordsPart<SchemaFormWords> = {
 export const SCHEMA_FORM_MESSAGES: WordMessages<SchemaFormWords> = {
     say: null,
     use: null,
-    item: null,
+    item: 'Item {place, number}',
+    itemAction: '{action}: {item}',
     fallback: null,
     mapKey: '{field} key {row}',
     mapValue: '{field} value {row}',
@@ -1315,19 +1327,19 @@ function Property({
             locked || items.length < 2 ? null : (
                 <>
                     <IconButton
-                        label={`${form.words.moveUp}: ${form.words.item(index)}`}
+                        label={form.words.itemAction(form.words.moveUp, form.words.item(index + 1))}
                         type="button"
                         size="icon"
-                        disabled={index === 0}
+                        reason={index === 0 ? form.words.first : undefined}
                         onClick={() => form.moveItem(path, index, index - 1)}
                     >
                         <ArrowUp aria-hidden />
                     </IconButton>
                     <IconButton
-                        label={`${form.words.moveDown}: ${form.words.item(index)}`}
+                        label={form.words.itemAction(form.words.moveDown, form.words.item(index + 1))}
                         type="button"
                         size="icon"
-                        disabled={index === items.length - 1}
+                        reason={index === items.length - 1 ? form.words.last : undefined}
                         onClick={() => form.moveItem(path, index, index + 1)}
                     >
                         <ArrowDown aria-hidden />
@@ -1351,7 +1363,7 @@ function Property({
                         {moves(index)}
                         {!locked && (
                             <IconButton
-                                label={`${form.words.remove} ${form.words.item(index)}`}
+                                label={form.words.itemAction(form.words.remove, form.words.item(index + 1))}
                                 type="button"
                                 size="icon"
                                 onClick={() => removeAt(index)}

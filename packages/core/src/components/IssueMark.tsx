@@ -151,8 +151,8 @@ export interface IssueCountWords {
 }
 
 export const ISSUE_COUNT_WORDS: IssueCountWords = {
-    errors: (count) => `${String(count)} ${count === 1 ? 'error' : 'errors'}`,
-    warnings: (count) => `${String(count)} ${count === 1 ? 'warning' : 'warnings'}`,
+    errors: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'error' : 'errors'}`,
+    warnings: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'warning' : 'warnings'}`,
 }
 
 /** Where a catalog holds an issue count's words, and the arguments its phrases name. */

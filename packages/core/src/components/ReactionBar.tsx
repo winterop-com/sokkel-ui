@@ -7,6 +7,7 @@ import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { EmojiPickerPopover, loadEmojiData, type EmojiPickerProps, type EmojiPickerWords } from './EmojiPicker'
 import { Popover, PopoverContent, PopoverTrigger, type PopoverContentProps } from './ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { writeCount } from '../lib/numbers'
 
 /** A reaction to a message: what it is, how many gave it, and whether you are one of them. */
 export interface ChatReaction {
@@ -265,7 +266,7 @@ export interface ReactionChipsWords {
 
 export const REACTION_CHIPS_WORDS: ReactionChipsWords = {
     react: 'Add a reaction',
-    count: (label, count) => `${label}, ${String(count)}`,
+    count: (label, count) => `${label}, ${writeCount(count)}`,
 }
 
 /** Where a catalog holds the words of a row of reactions, and the arguments its phrases name. */

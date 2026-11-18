@@ -28,5 +28,8 @@
     "chartLegend.current": "Current",
     "chartLegend.max": "Max",
     "chartLegend.min": "Min",
-    "chartLegend.series": "Series"
+    "chartLegend.series": "Series",
+    "panel.category": "Category",
+    "panel.series": "Series",
+    "panel.value": "Value"
 }

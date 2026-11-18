@@ -6,6 +6,7 @@ import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokke
 import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { useGraphControls } from './context'
+import { writeCount } from '@winterop-com/sokkel-ui/lib/numbers'
 
 /** The words a graph toolbar says. */
 export interface GraphToolbarWords {
@@ -39,7 +40,7 @@ export const GRAPH_TOOLBAR_WORDS: GraphToolbarWords = {
     zoomIn: 'Zoom in',
     zoomOut: 'Zoom out',
     fit: 'Fit the graph',
-    issues: (count) => `${String(count)} to fix`,
+    issues: (count) => `${writeCount(count)} to fix`,
     clean: 'No problems',
 }
 

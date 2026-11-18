@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 
 import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
@@ -16,6 +16,7 @@ import {
     type PeriodType,
 } from '../lib/periods'
 import { ISSUE_EDGE, ISSUE_PART, ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
+import { FieldTone } from './field-rows'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from './ui/select'
 
@@ -125,8 +126,10 @@ export function PeriodPicker({
     const selected = typing ? OTHER : listed ? value : null
     const typedId = id === undefined ? undefined : `${id}-typed`
 
+    // In a Field, the trigger wears the field's issue edge and keeps the mark's room, not the whole picker.
+    const tone = useContext(FieldTone)
     return (
-        <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
+        <div data-field-edge="own" className={cn('flex min-w-0 flex-col gap-1.5', className)}>
             <Select
                 items={items}
                 value={selected}
@@ -143,7 +146,7 @@ export function PeriodPicker({
                     onValueChange(next)
                 }}
             >
-                <SelectTrigger id={id} className="w-full">
+                <SelectTrigger id={id} className={cn('w-full', tone !== null && ['pr-9', ISSUE_EDGE[tone]])}>
                     <SelectValue placeholder={words.placeholder}>
                         {(chosen: string | null) => {
                             if (chosen === OTHER) return words.other

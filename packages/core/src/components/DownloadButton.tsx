@@ -7,6 +7,7 @@ import { IconButton } from './IconButton'
 import { Button, buttonVariants } from './ui/button'
 import { ProgressRing } from './ui/progress-ring'
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { writeCount } from '../lib/numbers'
 
 /** Where a download stands: not started, under way, held part way, or done and kept on the device. */
 export type DownloadState = 'idle' | 'running' | 'paused' | 'kept'
@@ -34,7 +35,7 @@ export interface DownloadButtonWords {
 
 export const DOWNLOAD_BUTTON_WORDS: DownloadButtonWords = {
     download: 'Download',
-    progress: (count, total) => `${String(count)} of ${String(total)}`,
+    progress: (count, total) => `${writeCount(count)} of ${writeCount(total)}`,
     share: formatPercent,
     running: 'Downloading',
     paused: 'Paused',

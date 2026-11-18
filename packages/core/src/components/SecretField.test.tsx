@@ -45,7 +45,7 @@ describe('a secret field', () => {
         const own = renderToStaticMarkup(
             <SecretField id="pw" label="Password" sealed words={{ replaceLabel: (label) => `Change ${label}` }} />,
         )
-        expect(own).toContain('aria-label="Change Password"')
+        expect(own).toContain('aria-label="Change password"')
     })
 
     it('offers no Replace when read only', () => {
@@ -123,5 +123,15 @@ describe("a schema form's secrets", () => {
         }
         expect(count(false)).toBe(1)
         expect(count(true)).toBe(0)
+    })
+})
+
+describe("a secret field's issue edge", () => {
+    it('wears the issue edge and the invalid ring on its frame in a field, as every typed field does', () => {
+        const html = renderToStaticMarkup(<SecretField id="pw" label="Password" error="Too short" />)
+        const frame = /data-slot="secret-field" class="([^"]+)"/.exec(html)?.[1] ?? ''
+        expect(frame).toContain('border-critical/80')
+        expect(frame).toContain('focus-within:ring-invalid-ring')
+        expect(frame).not.toContain('focus-within:ring-ring')
     })
 })

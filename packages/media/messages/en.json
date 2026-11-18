@@ -1,11 +1,11 @@
 {
     "channelRow.follow": "Follow",
-    "channelRow.followers": "{count, number, ::compact-short} {count, plural, =1 {follower} other {followers}}",
+    "channelRow.followers": "{count, number, ::compact-short .#} {count, plural, =1 {follower} other {followers}}",
     "channelRow.following": "Following",
     "draggableTrackList.drag": "Drag {title}",
     "lyrics.label": "Lyrics",
     "lyrics.none": "No lyrics",
-    "mediaActions.count": "{count, number, ::compact-short}",
+    "mediaActions.count": "{count, number, ::compact-short .#}",
     "mediaActions.dislike": "Dislike",
     "mediaActions.like": "Like",
     "mediaActions.more": "More",

@@ -8,6 +8,7 @@ import { Timeline, type TimelineEvent } from '../Timeline'
 import { Badge } from '../ui/badge'
 import { Progress } from '../ui/progress'
 import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
+import { writeCount } from '../../lib/numbers'
 
 /** One step of a work item's checklist and whether it is done. */
 export interface ChecklistStep {
@@ -22,7 +23,7 @@ export interface BoardChecklistWords {
 }
 
 export const BOARD_CHECKLIST_WORDS: BoardChecklistWords = {
-    title: (done, total) => `Checklist ${done}/${total}`,
+    title: (done, total) => `Checklist ${writeCount(done)}/${writeCount(total)}`,
     progress: 'Checklist done',
 }
 

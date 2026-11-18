@@ -46,13 +46,17 @@ function samples(message: string, arg: string): unknown[] {
     const typed = (type: string) => new RegExp(`\\{\\s*${arg}\\s*,\\s*${type}\\b`).test(message)
     const optional = new RegExp(`\\{\\s*${arg}\\s*,\\s*select\\s*,[^]*\\bundefined\\s*\\{`).test(message) ? [undefined] : []
     if (typed('date') || typed('time')) return [new Date(2026, 10, 17, 9, 5), new Date(2026, 0, 3, 18, 45)]
-    if (typed('plural') || typed('selectordinal') || typed('number')) return [...optional, 0, 1, 2, 3, 7, 11, 12, 13, 21, 22, 23, 101, 999]
+    if (typed('plural') || typed('selectordinal') || typed('number'))
+        return [...optional, 0, 1, 2, 3, 7, 11, 12, 13, 21, 22, 23, 101, 999, 1200, 12345]
     const select = new RegExp(`\\{\\s*${arg}\\s*,\\s*select\\s*,`).exec(message)
     if (select) {
         const keys = [...message.slice(select.index).matchAll(/(?:,|\})\s*([\w-]+)\s*\{/g)].map((match) => match[1] as string)
         if (keys.includes('true')) return [true, false]
         return [...new Set(keys.filter((key) => key !== 'other')), 'something else'].map((key) => (key === 'undefined' ? undefined : key))
     }
+    // A plain argument that counts or places is a number, written as the locale writes numbers.
+    if (/^(count|place|total|limit|done|failed|shown|index|granted|unread|number|seconds|minutes|tokens)$/.test(arg))
+        return [0, 1, 2, 1200, 12345]
     return ['nightly-export', 'grace']
 }
 

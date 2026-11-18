@@ -6,6 +6,7 @@ import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { FIELD_PART, FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
 import { ISSUE_EDGE, IssueMark } from './IssueMark'
 import { Input } from './ui/input'
+import { writeCount } from '../lib/numbers'
 
 export interface CronFieldWords extends FieldWords {
     label: string
@@ -28,7 +29,7 @@ export const CRON_FIELD_WORDS: CronFieldWords = {
     label: 'Schedule',
     invalid: 'Not a cron expression',
     invalidDetail: 'Five fields: minute, hour, day of the month, month, weekday. As in 0 2 * * 1-5.',
-    next: (count) => `Next ${String(count)} runs`,
+    next: (count) => `Next ${writeCount(count)} runs`,
     zone: 'UTC',
     never: 'Never runs',
     checking: 'Checking',

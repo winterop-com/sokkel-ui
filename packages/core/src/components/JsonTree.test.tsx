@@ -39,3 +39,13 @@ describe('JsonTree', () => {
         expect(html).not.toContain('more')
     })
 })
+
+describe('JsonTree folded', () => {
+    it('says how many items a folded list holds, as it says the keys of a folded object', () => {
+        const html = renderToStaticMarkup(
+            <JsonTree value={{ steps: ['fetch', 'upload', 'notify'], run: { job: 'nightly-export', step: 'fetch' } }} open={1} />,
+        )
+        expect(html).toContain('3 items')
+        expect(html).toContain('2 keys')
+    })
+})

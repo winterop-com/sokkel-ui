@@ -4,6 +4,7 @@ import type { LegendItem } from '../ChartLegend'
 import type { ChartSpec } from '../kinds'
 import { SERIES_ORDER } from '../look'
 import { formatValue, tokenVar } from '@winterop-com/sokkel-ui/dashboard/thresholds'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 
 /** One series of a dashboard chart panel. `name` names it in the legend, the tooltip and `hidden`. */
 export interface PanelSeries {
@@ -61,9 +62,14 @@ export interface PanelWords {
     value: string
 }
 
-/** The names a panel's spec gives its fields, from its words over the English defaults. */
-export function usePanelFields(words?: Partial<PanelWords>): Record<string, string> {
-    const { category = 'Category', series = 'Series', value = 'Value' } = words ?? {}
+export const PANEL_WORDS: PanelWords = { category: 'Category', series: 'Series', value: 'Value' }
+
+/** Where a catalog holds the words a panel's data view heads its columns with. */
+export const PANEL_PART: WordsPart<PanelWords> = { id: 'panel', words: PANEL_WORDS }
+
+/** The names a panel's spec gives its fields, from its words over the catalog's over the English defaults. */
+export function usePanelFields(given?: Partial<PanelWords>): Record<string, string> {
+    const { category, series, value } = useWords(PANEL_PART, given)
     return useMemo(() => ({ [CATEGORY]: category, [SERIES]: series, [FIGURE]: value }), [category, series, value])
 }
 

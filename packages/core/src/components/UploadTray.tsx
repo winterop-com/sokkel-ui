@@ -6,6 +6,7 @@ import { cn } from '../lib/cn'
 import { checkFiles, type CheckedRefusal, type UploadOptions } from '../lib/uploads'
 import { formatSize } from './FileList'
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { writeCount } from '../lib/numbers'
 
 /** One file on its way up. */
 export interface Upload {
@@ -32,8 +33,11 @@ export interface UploadTrayWords {
 }
 
 export const UPLOAD_TRAY_WORDS: UploadTrayWords = {
-    uploading: (count) => `Uploading ${count} ${count === 1 ? 'file' : 'files'}`,
-    finished: (done, failed) => (failed === 0 ? `${done} ${done === 1 ? 'upload' : 'uploads'} done` : `${done} done, ${failed} failed`),
+    uploading: (count) => `Uploading ${count.toLocaleString('en-US')} ${count === 1 ? 'file' : 'files'}`,
+    finished: (done, failed) =>
+        failed === 0
+            ? `${writeCount(done)} ${done === 1 ? 'upload' : 'uploads'} done`
+            : `${writeCount(done)} done, ${writeCount(failed)} failed`,
     done: 'Done',
     retry: 'Retry',
     cancel: 'Cancel the upload',

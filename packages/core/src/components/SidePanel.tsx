@@ -152,7 +152,7 @@ export function SidePanel({
                 ref={panel}
                 aria-labelledby={titled ? titleId : undefined}
                 className={cn(
-                    'flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar',
+                    'flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar text-sidebar-foreground',
                     sheet && 'w-full border-l-0',
                     className,
                 )}

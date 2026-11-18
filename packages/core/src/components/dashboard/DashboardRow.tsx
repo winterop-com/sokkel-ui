@@ -12,7 +12,7 @@ export interface DashboardRowWords {
 }
 
 export const DASHBOARD_ROW_WORDS: DashboardRowWords = {
-    panels: (n: number) => `${n} ${n === 1 ? 'panel' : 'panels'}`,
+    panels: (n: number) => `${n.toLocaleString('en-US')} ${n === 1 ? 'panel' : 'panels'}`,
 }
 
 /** Where a catalog holds a dashboard row's words, and the arguments its phrases name. */

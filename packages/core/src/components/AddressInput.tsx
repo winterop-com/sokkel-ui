@@ -26,7 +26,8 @@ export const ADDRESS_INPUT_WORDS: AddressInputWords = {
     placeholder: 'Add people',
     remove: (who) => `Remove ${who}`,
     invalid: 'Not an email address',
-    issue: (count) => (count === 1 ? '1 address is not an email address' : `${String(count)} addresses are not email addresses`),
+    issue: (count) =>
+        count === 1 ? '1 address is not an email address' : `${count.toLocaleString('en-US')} addresses are not email addresses`,
     removeInvalid: 'Remove them',
     ...ISSUE_WORDS,
 }

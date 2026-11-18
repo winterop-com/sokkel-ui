@@ -96,7 +96,7 @@ export interface AssistantReplyWords {
 
 export { wordCount }
 
-const plural = (count: number, word: string) => `${String(count)} ${word}${count === 1 ? '' : 's'}`
+const plural = (count: number, word: string) => `${count.toLocaleString('en-US')} ${word}${count === 1 ? '' : 's'}`
 
 export const ASSISTANT_REPLY_WORDS: AssistantReplyWords = {
     name: 'Assistant',

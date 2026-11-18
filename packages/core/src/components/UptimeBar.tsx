@@ -30,7 +30,7 @@ export interface UptimeBarWords {
 
 export const UPTIME_BAR_WORDS: UptimeBarWords = {
     uptime: (percent) => `${percent} uptime`,
-    since: (days) => `${String(days)} days ago`,
+    since: (days) => `${days.toLocaleString('en-US')} days ago`,
     today: 'Today',
     noData: 'No data',
 }

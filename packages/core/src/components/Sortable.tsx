@@ -41,7 +41,7 @@ export interface SortableWords {
 
 export const SORTABLE_WORDS: SortableWords = {
     move: (item) => `Move ${item}`,
-    moved: (item, place, count) => `${item} moved to ${String(place)} of ${String(count)}`,
+    moved: (item, place, count) => `${item} moved to ${place.toLocaleString('en-US')} of ${count.toLocaleString('en-US')}`,
 }
 
 /** Where a catalog holds a sortable list's words, and the arguments its phrases name. */

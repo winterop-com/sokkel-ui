@@ -49,7 +49,7 @@ export const ANSWER_COLUMN_WORDS: AnswerColumnWords = {
     remove: 'Remove',
     failedTitle: 'The model could not answer',
     thinking: 'Thinking',
-    thoughtFor: (count) => `Thought for ${String(count)} ${count === 1 ? 'word' : 'words'}`,
+    thoughtFor: (count) => `Thought for ${count.toLocaleString('en-US')} ${count === 1 ? 'word' : 'words'}`,
     usage: {},
     markdown: {},
 }

@@ -10,6 +10,7 @@ import { formatSize } from './FileList'
 import type { Issue } from './IssueMark'
 import { Button } from './ui/button'
 import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { writeCount } from '../lib/numbers'
 
 export { checkFiles, type CheckedFiles, type CheckedRefusal, type RefusalReason } from '../lib/uploads'
 
@@ -68,11 +69,11 @@ export const FILE_FIELD_WORDS: FileFieldWords = {
     dropping: 'Drop to add',
     family: (family) => `${family} files`,
     either: (types) => disjunction('en-US').format(types),
-    sizeLimit: (limit, each) => (each ? `up to ${limit} each` : `up to ${limit}`),
-    countLimit: (limit) => (limit === 1 ? 'one file' : `at most ${String(limit)} files`),
+    sizeLimit: (limit, each) => (each ? `up to ${writeCount(limit)} each` : `up to ${writeCount(limit)}`),
+    countLimit: (limit) => (limit === 1 ? 'one file' : `at most ${limit.toLocaleString('en-US')} files`),
     type: (types) => `wrong type: ${types} only`,
-    size: (size, limit) => `too large: ${size}, at most ${limit}`,
-    count: (limit) => `too many: at most ${String(limit)} ${limit === 1 ? 'file' : 'files'}`,
+    size: (size, limit) => `too large: ${size}, at most ${writeCount(limit)}`,
+    count: (limit) => `too many: at most ${limit.toLocaleString('en-US')} ${limit === 1 ? 'file' : 'files'}`,
     dismiss: (name) => `Dismiss ${name}`,
     files: {},
 }

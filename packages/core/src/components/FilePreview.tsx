@@ -6,6 +6,7 @@ import { DataTable, type DataColumn } from './DataTable'
 import { FileTypeIcon, type FileKind } from './FileList'
 import { JsonTree } from './JsonTree'
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { writeCount } from '../lib/numbers'
 
 export type { FileKind } from './FileList'
 
@@ -21,7 +22,7 @@ export interface FilePreviewWords {
 
 export const FILE_PREVIEW_WORDS: FilePreviewWords = {
     rows: (shown, total) => (shown === total ? `${total} rows` : `First ${shown} of ${total} rows`),
-    firstRows: (shown) => `First ${shown} rows`,
+    firstRows: (shown) => `First ${writeCount(shown)} rows`,
     unreadable: 'This JSON does not parse; its text is shown.',
     none: 'No preview for this kind of file.',
     cut: 'Only the start of this file is shown.',

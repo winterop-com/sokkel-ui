@@ -1,7 +1,7 @@
 import { Paperclip } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { PersonAvatar } from './PersonAvatar'
 
@@ -12,19 +12,19 @@ export interface LetterSender {
     image?: string
 }
 
-/** The words a letter says; `to` reads the recipients' names out as one line. */
+/** The words a letter says; `to` reads the recipients out as one line, given their names listed in the locale ("me, linus, margaret"). */
 export interface LetterWords {
     attached: string
-    to: (names: readonly string[]) => string
+    to: (names: string) => string
 }
 
-export const LETTER_WORDS: LetterWords = { attached: 'Has attachments', to: (names) => `to ${names.join(', ')}` }
+export const LETTER_WORDS: LetterWords = { attached: 'Has attachments', to: (names) => `to ${names}` }
 
 /** Where a catalog holds a letter's words. */
-export const LETTER_PART: WordsPart<LetterWords> = { id: 'letter', words: LETTER_WORDS }
+export const LETTER_PART: WordsPart<LetterWords> = { id: 'letter', words: LETTER_WORDS, args: { to: 'names' } }
 
 /** A letter's phrases as ICU messages in English, for the catalog. */
-export const LETTER_MESSAGES: WordMessages<LetterWords> = { to: null }
+export const LETTER_MESSAGES: WordMessages<LetterWords> = { to: 'to {names}' }
 
 export interface LetterProps {
     from: LetterSender
@@ -73,6 +73,7 @@ export function Letter({
     words: given,
 }: LetterProps) {
     const words = useWords(LETTER_PART, given)
+    const locale = useLocale()
     const [own, setOwn] = useState(defaultOpen)
     const open = !foldable || (held ?? own)
     const head = (
@@ -90,7 +91,12 @@ export function Letter({
                     </span>
                 </span>
                 {open
-                    ? to !== undefined && to.length > 0 && <span className="truncate text-sm text-muted-foreground">{words.to(to)}</span>
+                    ? to !== undefined &&
+                      to.length > 0 && (
+                          <span className="truncate text-sm text-muted-foreground">
+                              {words.to(new Intl.ListFormat(locale, { type: 'unit', style: 'short' }).format(to))}
+                          </span>
+                      )
                     : snippet !== undefined && <span className="truncate text-sm text-muted-foreground">{snippet}</span>}
             </span>
         </span>

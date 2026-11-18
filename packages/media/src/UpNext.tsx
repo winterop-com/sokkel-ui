@@ -6,6 +6,7 @@ import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Artwork } from './Artwork'
+import { writeCount } from '@winterop-com/sokkel-ui/lib/numbers'
 
 /** The words the part says, each with an English default. */
 export interface UpNextWords {
@@ -21,7 +22,7 @@ export const UP_NEXT_WORDS: UpNextWords = {
     heading: 'Up next',
     playNow: 'Play now',
     cancel: 'Cancel',
-    playingIn: (seconds) => `Playing in ${String(seconds)} s`,
+    playingIn: (seconds) => `Playing in ${writeCount(seconds)} s`,
 }
 
 /** Where a catalog holds an up-next card's words, and the arguments its phrases name. */

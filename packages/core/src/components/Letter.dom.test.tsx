@@ -88,7 +88,7 @@ describe('Letter', () => {
                 time="09:42"
                 attached
                 foldable={false}
-                words={{ attached: 'Har vedlegg', to: (names) => `til ${names.join(', ')}` }}
+                words={{ attached: 'Har vedlegg', to: (names) => `til ${names}` }}
             >
                 <p>Body</p>
             </Letter>,

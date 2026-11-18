@@ -73,7 +73,7 @@ export const CHAT_MESSAGE_WORDS: ChatMessageWords = {
     react: 'Add a reaction',
     reply: 'Reply in thread',
     more: 'More actions',
-    replies: (count) => `${String(count)} ${count === 1 ? 'reply' : 'replies'}`,
+    replies: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'reply' : 'replies'}`,
     lastReply: (when) => `Last reply ${when}`,
     viewThread: 'View thread',
     player: {},

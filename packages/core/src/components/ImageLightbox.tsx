@@ -8,6 +8,7 @@ import { IconButton } from './IconButton'
 import { ImageAnnotations, type ImageBox } from './ImageAnnotations'
 import { Button } from './ui/button'
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { writeCount } from '../lib/numbers'
 
 /** The words an image lightbox says. */
 export interface ImageLightboxWords {
@@ -34,7 +35,7 @@ export const IMAGE_LIGHTBOX_WORDS: ImageLightboxWords = {
     zoomOut: 'Zoom out',
     fit: 'Fit to screen',
     actual: 'Actual size',
-    count: (index, total) => `${String(index)} of ${String(total)}`,
+    count: (index, total) => `${writeCount(index)} of ${writeCount(total)}`,
 }
 
 /** Where a catalog holds an image lightbox's words, and the arguments its phrases name. */

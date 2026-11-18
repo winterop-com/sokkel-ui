@@ -2,6 +2,7 @@ import { addDays, differenceInCalendarDays, endOfDay, format, isBefore, max, min
 
 import type { KindColor } from '../../lib/kind'
 import { type WordMessages, type WordsPart } from '../../lib/words'
+import { writeCount } from '../../lib/numbers'
 
 /**
  * One thing on a calendar: a job's run, a meeting, a day away. A timed event runs from `start`
@@ -170,7 +171,7 @@ export const CALENDAR_WORDS: CalendarWords = {
     hour: (hour) => `${String(hour).padStart(2, '0')}:00`,
     weekday: (date) => format(date, 'EEE'),
     dayNumber: (date) => format(date, 'd'),
-    more: (count) => `+${count} more`,
+    more: (count) => `+${writeCount(count)} more`,
     now: 'Now',
     empty: 'Nothing scheduled',
     changed: (title, start, end, allDay) =>

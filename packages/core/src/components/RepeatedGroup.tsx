@@ -3,6 +3,7 @@ import { useContext, useId, type ReactNode } from 'react'
 
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
+import { writeCount } from '../lib/numbers'
 import type { RequiredMark } from './Field'
 import { IconButton } from './IconButton'
 import { ISSUE_PART, ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
@@ -15,8 +16,14 @@ export interface RepeatedGroupWords extends IssueWords {
     remove: string
     moveUp: string
     moveDown: string
-    /** A row's name: its place, counted from 1. */
-    item: (index: number) => string
+    /** A row's name, given its place counted from 1. */
+    item: (place: number) => string
+    /** A row's control named with its action and the row's name: "Move up: Item 2", "Remove: Item 2". */
+    itemAction: (action: string, item: string) => string
+    /** Why the first row's Move up is shut. */
+    first: string
+    /** Why the last row's Move down is shut. */
+    last: string
     /** Said after the name of a required group: to a screen reader beside the star, or drawn as the `word` mark. */
     required: string
 }
@@ -26,16 +33,24 @@ export const REPEATED_GROUP_WORDS: RepeatedGroupWords = {
     remove: 'Remove',
     moveUp: 'Move up',
     moveDown: 'Move down',
-    item: (index) => `Item ${String(index + 1)}`,
+    item: (place) => `Item ${writeCount(place)}`,
+    itemAction: (action, item) => `${action}: ${item}`,
+    first: 'Already first',
+    last: 'Already last',
     required: 'required',
     ...ISSUE_WORDS,
 }
 
 /** Where a catalog holds a repeated group's words. */
-export const REPEATED_GROUP_PART: WordsPart<RepeatedGroupWords> = { id: 'repeatedGroup', words: REPEATED_GROUP_WORDS, from: [ISSUE_PART] }
+export const REPEATED_GROUP_PART: WordsPart<RepeatedGroupWords> = {
+    id: 'repeatedGroup',
+    words: REPEATED_GROUP_WORDS,
+    from: [ISSUE_PART],
+    args: { item: 'place', itemAction: 'action item' },
+}
 
 /** A repeated group's phrases as ICU messages in English, for the catalog. */
-export const REPEATED_GROUP_MESSAGES: WordMessages<RepeatedGroupWords> = { item: null }
+export const REPEATED_GROUP_MESSAGES: WordMessages<RepeatedGroupWords> = { item: 'Item {place, number}', itemAction: '{action}: {item}' }
 
 export interface RepeatedGroupProps {
     /** The group's name, over its rows. */
@@ -122,27 +137,28 @@ export function RepeatedGroup({
     const removing = !readOnly && onRemove !== undefined && rows.length > min
     const moving = !readOnly && onMove !== undefined && rows.length > 1
     const Sorted = useContext(DragPartsContext).repeatedRows
+    const name = (index: number) => words.item(index + 1)
     const list = rows.map((row, index) => (
         <section key={row.key} className="flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3">
             <div className="-my-1 flex items-center gap-1">
-                <span className="text-xs font-medium text-muted-foreground">{words.item(index)}</span>
+                <span className="text-xs font-medium text-muted-foreground">{name(index)}</span>
                 <span className="ml-auto flex items-center">
                     {moving && (
                         <>
                             <IconButton
-                                label={`${words.moveUp}: ${words.item(index)}`}
+                                label={words.itemAction(words.moveUp, name(index))}
                                 type="button"
                                 size="icon"
-                                disabled={index === 0}
+                                reason={index === 0 ? words.first : undefined}
                                 onClick={() => onMove(index, index - 1)}
                             >
                                 <ArrowUp aria-hidden />
                             </IconButton>
                             <IconButton
-                                label={`${words.moveDown}: ${words.item(index)}`}
+                                label={words.itemAction(words.moveDown, name(index))}
                                 type="button"
                                 size="icon"
-                                disabled={index === rows.length - 1}
+                                reason={index === rows.length - 1 ? words.last : undefined}
                                 onClick={() => onMove(index, index + 1)}
                             >
                                 <ArrowDown aria-hidden />
@@ -155,7 +171,7 @@ export function RepeatedGroup({
                             variant="ghost"
                             size="sm"
                             className="text-muted-foreground"
-                            aria-label={`${words.remove} ${words.item(index)}`}
+                            aria-label={words.itemAction(words.remove, name(index))}
                             onClick={() => onRemove(row.key)}
                         >
                             <X aria-hidden />
@@ -202,7 +218,7 @@ export function RepeatedGroup({
             </div>
             {description !== undefined && <p className="-mt-1 text-xs text-muted-foreground">{description}</p>}
             {moving ? (
-                <Sorted rows={rows} item={words.item} onMove={onMove}>
+                <Sorted rows={rows} item={name} onMove={onMove}>
                     {list}
                 </Sorted>
             ) : (

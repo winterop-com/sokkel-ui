@@ -48,7 +48,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
         'components/entry':
             'what the typed fields share: the value held as text, its issues and its frame; `EntryFieldProps` is exported by each field',
-        'components/field-rows': 'the gap `Columns` with `fields` hands each `Field` so a row of fields lines up',
+        'components/field-rows':
+            'the gap `Columns` with `fields` hands each `Field` so a row of fields lines up, and the tone a control draws its own edge in',
         'components/inline-edit-parts': 'the editors `InlineEdit` and the cells `tableEditing` edits share',
         'components/panel-strip':
             "the strip of a `SidePanel`'s tabs `Shell` draws on a phone with `panelStrip` and the types the context names",

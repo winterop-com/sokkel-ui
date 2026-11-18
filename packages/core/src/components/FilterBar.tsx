@@ -20,6 +20,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { writeCount } from '../lib/numbers'
 
 export type { Filter, FilterOperator, FilterOption, FilterType }
 
@@ -130,7 +131,7 @@ export const FILTER_BAR_WORDS: FilterBarWords = {
     until: 'until',
     search: 'Search',
     empty: 'Nothing matches.',
-    more: (count) => `+${String(count)}`,
+    more: (count) => `+${writeCount(count)}`,
     number: (value, unit) => sayNumber(value, unit, 'en-US'),
     date: (value) => sayDate(value, 'en-US'),
     range: (from, to) => `${from} – ${to}`,
