@@ -45,6 +45,7 @@ generated-check: ## Check the generated tokens, the components index, the messag
 	bun scripts/build-tokens.ts --check
 	bun run components -- --check
 	bun run messages -- --check
+	bun run message-ids -- --check
 	bun run emoji-data -- --check
 	bun run design --check
 

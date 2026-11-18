@@ -184,6 +184,10 @@ and ask before acting.
   CI either: `release.yaml` runs the gates itself before it publishes.
 - A change that breaks or adds something an app uses notes it in `docs/unreleased.md`, in the same
   PR. A release copies that file into its notes and empties it.
+- Message ids (`<part>.<word>`, from each `*_WORDS` name) are public: apps and the other renderers
+  translate by them, and a lost id falls back to English silently. Renaming or removing a word, or a
+  `*_WORDS` constant, names each old id in `docs/unreleased.md` under Breaking (with its new id);
+  `bun run message-ids --check` fails otherwise. A release PR runs `bun run message-ids --record`.
 - Before 1.0 a release with a breaking change moves the minor version (0.11.0 to 0.12.0); one
   without moves the patch.
 - No tags and no releases unless the owner asks for one. A release is a PR that moves the version
