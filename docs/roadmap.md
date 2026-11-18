@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.32.0** is the latest release (2026-11-18): `themeSettings` is `useThemeSettings` (breaking);
+- **0.32.1** is the latest release (2026-11-18): a sortable content column keeps room for its sort
+  arrow, so sorting never wraps its head; contract 0.32.1.
+- **0.32.0** (2026-11-18): `themeSettings` is `useThemeSettings` (breaking);
   table heads wrap to two lines in a tight table; a moved graph view keeps the chosen box after a
   re-wrap; contract 0.32.0.
 - **0.31.2** (2026-11-18): a graph only too tall for its canvas fits down to
