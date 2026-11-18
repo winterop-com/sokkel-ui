@@ -38,7 +38,7 @@ function Steps({ readOnly = false }: { readOnly?: boolean }) {
                     min={1}
                     max={8}
                     readOnly={readOnly}
-                    words={{ item: (index) => `Step ${String(index + 1)}` }}
+                    words={{ item: (place) => `Step ${String(place)}` }}
                 >
                     {(key, index) => {
                         const step = steps.rows[index].value
@@ -84,7 +84,7 @@ function Recipients() {
                     onAdd={() => recipients.add()}
                     onRemove={recipients.remove}
                     min={1}
-                    words={{ item: (index) => `Recipient ${String(index + 1)}` }}
+                    words={{ item: (place) => `Recipient ${String(place)}` }}
                 >
                     {(key, index) => (
                         <TextField
@@ -115,7 +115,7 @@ function Services() {
                     rows={services.rows}
                     onAdd={() => services.add()}
                     onRemove={services.remove}
-                    words={{ item: (index) => `Service ${String(index + 1)}` }}
+                    words={{ item: (place) => `Service ${String(place)}` }}
                 >
                     {(key, index) => (
                         <TextField

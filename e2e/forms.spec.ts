@@ -58,7 +58,7 @@ test("a repeated group's rows keep their fields as they move and go", async ({ p
     await expect(codes).toHaveCount(3)
     await page.getByRole('button', { name: 'Move up: Step 3' }).click()
     await expect(codes.nth(1)).toHaveValue('upload')
-    await page.getByRole('button', { name: 'Remove Step 1' }).click()
+    await page.getByRole('button', { name: 'Remove: Step 1' }).click()
     await expect(codes).toHaveCount(2)
     await expect(codes.nth(0)).toHaveValue('upload')
 })
