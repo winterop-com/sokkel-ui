@@ -4,6 +4,7 @@ import {
     FIT_MAX_ZOOM,
     FIT_MIN_ZOOM,
     NARROW_FIT_MIN_ZOOM,
+    fitLeast,
     fittedHeight,
     fittedZoom,
     fromElk,
@@ -146,6 +147,18 @@ describe('the elk conversation', () => {
 })
 
 describe('the fit', () => {
+    test('a drawing only too tall goes to the tall floor, even when it fits across only under the usual one', () => {
+        // 1124 by 305: across, 1088 fits at 0.785, under 0.8 but over the 0.7 that shows the height.
+        expect(fitLeast({ width: 1124, height: 305 }, { width: 1088, height: 300 }, 0.8, true, 0.7)).toBeCloseTo((305 * 0.76) / 300)
+        expect(fitLeast({ width: 1124, height: 305 }, { width: 1088, height: 450 }, 0.8, true, 0.7)).toBe(0.7)
+    })
+
+    test('a drawing too wide even at the tall floor, or not too tall, keeps the usual floor', () => {
+        expect(fitLeast({ width: 1124, height: 305 }, { width: 1300, height: 390 }, 0.8, true, 0.7)).toBe(0.8)
+        expect(fitLeast({ width: 1124, height: 600 }, { width: 1300, height: 390 }, 0.8, true, 0.7)).toBe(0.8)
+        expect(fitLeast({ width: 1124, height: 305 }, { width: 1088, height: 390 }, 0.8, true)).toBe(0.8)
+    })
+
     test('holds a fit between its two bounds', () => {
         expect(fittedZoom(3)).toBe(FIT_MAX_ZOOM)
         expect(fittedZoom(0.1)).toBe(FIT_MIN_ZOOM)

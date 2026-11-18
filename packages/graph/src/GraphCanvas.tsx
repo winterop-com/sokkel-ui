@@ -46,7 +46,7 @@ import {
     FIT_MIN_ZOOM,
     FIT_PADDING,
     FITTED_GROUND,
-    fitFloor,
+    fitLeast,
     fittedHeight,
     GRAPH_WHEEL_STEP_MS,
     MAX_ZOOM,
@@ -292,14 +292,10 @@ async function fitGraph(
     const canvas = { width: whole.width, height: whole.height - top }
     if (nodes.length === 0 || canvas.width <= 0 || canvas.height <= 0) return
     const drawing = drawingBounds(flow)
-    const room = 1 - 2 * FIT_PADDING
-    const fitsAcross = drawing.width > 0 ? (canvas.width * room) / drawing.width : minZoom
-    const fitsDown = drawing.height > 0 ? (canvas.height * room) / drawing.height : minZoom
     // On a narrow canvas the width fits first, a little under the usual least zoom if it must; a
-    // tall graph then reads down and scrolls rather than hanging off the side.
-    let least = fitFloor(canvas.width, drawing.width, minZoom, narrowFit)
-    // A drawing as wide as the canvas holds and only a little too tall goes under the least zoom to be seen whole.
-    if (tallFit < least && fitsAcross >= least && fitsDown < least) least = Math.max(tallFit, fitsDown)
+    // tall graph then reads down and scrolls rather than hanging off the side. A drawing only too
+    // tall goes under the least zoom, to `tallFit`, to be seen whole.
+    const least = fitLeast(canvas, drawing, minZoom, narrowFit, tallFit)
     const padding = fitted ? { x: FIT_PADDING, y: `${FITTED_GROUND / 2}px` as const } : FIT_PADDING
     const view = getViewportForBounds(drawing, canvas.width, canvas.height, least, FIT_MAX_ZOOM, padding)
     const placed = startOfOverflow(view, drawing, canvas)

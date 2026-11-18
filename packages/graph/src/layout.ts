@@ -792,6 +792,27 @@ export function fitFloor(canvasWidth: number, drawingWidth: number, minZoom: num
     return Math.min(minZoom, Math.max(NARROW_FIT_MIN_ZOOM, fitsAcross))
 }
 
+/**
+ * The least zoom a first fit goes to: `fitFloor`, or under it to `tallFit` for a drawing whose
+ * height is what does not fit, when the drawing fits across at the zoom that shows its height (or
+ * at `tallFit`, if even that is too short).
+ */
+export function fitLeast(
+    canvas: { width: number; height: number },
+    drawing: { width: number; height: number },
+    minZoom: number = FIT_MIN_ZOOM,
+    narrowFit = true,
+    tallFit: number = minZoom,
+): number {
+    const room = 1 - 2 * FIT_PADDING
+    const least = fitFloor(canvas.width, drawing.width, minZoom, narrowFit)
+    const fitsAcross = drawing.width > 0 ? (canvas.width * room) / drawing.width : least
+    const fitsDown = drawing.height > 0 ? (canvas.height * room) / drawing.height : least
+    if (tallFit >= least || fitsDown >= least) return least
+    const tall = Math.max(tallFit, fitsDown)
+    return fitsAcross >= tall ? tall : least
+}
+
 /** Where one press of a zoom button lands. */
 export function steppedZoom(zoom: number, way: 'in' | 'out'): number {
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, way === 'in' ? zoom * ZOOM_STEP : zoom / ZOOM_STEP))
