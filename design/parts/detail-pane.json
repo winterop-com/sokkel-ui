@@ -26,7 +26,7 @@
         "heading": "The section's title, an h3 in the small group heading's look every group shares: uppercase, a little tracked, in faint.",
         "headingRow": "With the section's actions: the heading and the actions on one row at least 28 tall, the actions at its end, 4 apart.",
         "summary": "A sentence over the facts, such as who did what, wrapping evenly.",
-        "facts": "The facts (a DescriptionList beside its terms): each term in a column as wide as termWidth, its value after it, 12 between, the pairs 8 apart. A value not given is a dash in faint.",
+        "facts": "The facts (a DescriptionList beside its terms): each term in a column as wide as termWidth, its value after it, 12 between, the pairs 8 apart. A value not given is a dash in faint. parts/description-list in its side layout.",
         "term": "A fact's term.",
         "value": "A fact's value; in the code face where the fact says code, in tabular figures where it says numeric.",
         "content": "What follows the facts, given by the app: a preview, the steps of a run, a change.",

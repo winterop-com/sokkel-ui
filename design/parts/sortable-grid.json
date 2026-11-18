@@ -1,0 +1,126 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "sortable-grid",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "SortableGrid built before this spec (d163191): drag to reorder; not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Cards the reader puts in order, as many across as the room holds. A card is dragged as a whole (or by a grip the app draws in it), the rest moving aside to show where it lands; letting go moves it, and Escape puts it back. With a card focused, the arrow keys move it a place, the focus following it, and Space or Enter picks it up to move it further. A screen reader hears each step.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/Sortable.tsx (SortableGrid, SortableGroup, SortableItem, SORTABLE_WORDS)",
+            "packages/core/src/components/DragDrop.tsx"
+        ]
+    },
+    "anatomy": {
+        "grid": "The cards in a grid of as many equal columns as fit, each at least minItemWidth (or the whole width when narrower), 12 apart.",
+        "item": "One card's cell, its content filling it. With handle item, the whole card is the grip: a grab cursor, and the focus outline when reached by keyboard.",
+        "placeholder": "While a card is dragged, its own cell stays in place at 40 percent, as the room it will leave, and the other cards move aside.",
+        "lifted": "The copy that follows the pointer: the drag engine's card (DragDrop), shared by every drag."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "items": {"type": "rows", "does": "The cards, in their order."},
+        "itemKey": {"type": "callback", "does": "Each card's key, stable across moves."},
+        "itemLabel": {"type": "callback", "does": "What a screen reader and a grip call a card."},
+        "renderItem": {
+            "type": "callback",
+            "does": "Draws a card's content, given its place, whether it is dragged, and whether it is the copy following the pointer."
+        },
+        "onMove": {"type": "callback", "does": "Moves the card at from to to; the grid draws the order it is given."},
+        "handle": {
+            "values": ["item", "grip"],
+            "default": "item",
+            "does": "item: the whole card is the grip and takes the focus. grip: the app draws a SortableGrip in each card."
+        },
+        "minItemWidth": {
+            "type": "length",
+            "default": 192,
+            "does": "The least width of a cell; the grid fits as many across as its room holds."
+        },
+        "kind": {"type": "text", "does": "What a target outside the grid takes its cards as, such as a tree's folders."},
+        "disabled": {"type": "boolean", "default": false, "does": "Nothing moves."},
+        "label": {"type": "text", "does": "What the grid is, for a screen reader."}
+    },
+    "sizes": {"grid": {"gap": 12}},
+    "layout": {"minItemWidth": {"value": 192, "note": "minItemWidth's default (12rem)."}},
+    "states": {
+        "rest": {"means": "The cards in their order."},
+        "focus": {
+            "means": "Keyboard focus on a card (handle item): the focus outline around it.",
+            "reached": "Tab",
+            "on": "keyboard"
+        },
+        "dragging": {
+            "means": "A card is being moved: its cell stays at 40 percent, a copy follows the pointer, the rest move aside.",
+            "reached": "a drag, or Space or Enter on a focused card",
+            "effect": {"opacity": 0.4}
+        }
+    },
+    "pieces": {
+        "item": {
+            "rest": {"note": "The card's own look, the app's."},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches each card in turn (handle item), or each grip."},
+        {
+            "keys": ["ArrowUp", "ArrowLeft"],
+            "does": "Moves the card a place back, the focus following it; a screen reader hears words.moved.",
+            "when": "a card has focus"
+        },
+        {
+            "keys": ["ArrowDown", "ArrowRight"],
+            "does": "Moves the card a place on, the focus following it; a screen reader hears words.moved.",
+            "when": "a card has focus"
+        },
+        {
+            "keys": ["Space", "Enter"],
+            "does": "Picks the card up to move it further with the arrows; again lets it go there.",
+            "when": "a card has focus"
+        },
+        {"keys": ["Escape"], "does": "Puts a picked-up card back where it was.", "when": "a card is being moved"}
+    ],
+    "words": {"move": "Move {item}", "moved": "{item} moved to {place} of {count}"},
+    "messages": {
+        "move": {"id": "sortable.move", "en": "Move {item}"},
+        "moved": {"id": "sortable.moved", "en": "{item} moved to {place, number} of {count, number}"}
+    },
+    "samples": {
+        "move": [{"with": {"item": "harbor"}, "says": "Move harbor"}],
+        "moved": [
+            {"with": {"item": "harbor", "place": 1, "count": 3}, "says": "harbor moved to 1 of 3"},
+            {"with": {"item": "juniper", "place": 2, "count": 1200}, "says": "juniper moved to 2 of 1,200"}
+        ]
+    },
+    "appText": {"itemLabel": "Each card's name.", "label": "The grid's name."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "dnd-kit's sortable with its rect strategy, the library's one drag engine; the keys are the library's own over dnd-kit's keyboard sensor.",
+            "The columns are a CSS grid: repeat(auto-fill, minmax(min(minItemWidth, 100%), 1fr)).",
+            "SortableList, the list beside it, is the same group in one column with a grip per row."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, SortableGrid was built (d163191) before this spec, dragging to reorder; not compared with this spec."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

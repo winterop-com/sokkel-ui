@@ -1,0 +1,105 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "badge",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "Badge built before this spec, kind as ChipTone::Kind (d163191); not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A short value as a chip: a state, a version, a count, a tag. Its variants say how loud it is; kind draws it in one of the six kind colors, a wash edged faintly in the color with its ink, for a categorical value a reader learns to tell apart at a glance (what sort of form a card is, which domain a code belongs to). The same value wears the same color wherever it is shown.",
+    "sources": {
+        "sokkel-ui": ["packages/core/src/components/ui/badge.tsx", "packages/core/src/lib/kind.ts (KIND_CHIP, kindOf)"]
+    },
+    "anatomy": {
+        "container": "The chip: 20 tall, padded 6 across and 2 down, rounded by radius-chip, a 1px edge (none but where a variant or kind draws one), text.badge, on one line; an icon, 12, before or after the words, 4 apart. As wide as its words."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["card", "popover", "sidebar"]},
+    "options": {
+        "variant": {
+            "values": ["default", "secondary", "destructive", "outline", "ghost", "link"],
+            "default": "default",
+            "does": "How loud it is: default on primary, secondary on secondary, destructive on a destructive wash, outline only edged, ghost bare, link in primary."
+        },
+        "kind": {
+            "values": ["blue", "green", "jade", "pink", "teal", "violet"],
+            "does": "One of the kind colors, laid over the variant: the color's wash at 12 percent, its edge at 30, its ink. kindOf(name) picks one steadily from a name, so the same value always wears the same color."
+        },
+        "children": {"type": "node", "does": "The words, with an icon before or after them."}
+    },
+    "sizes": {
+        "container": {
+            "height": 20,
+            "padX": 6,
+            "padY": 2,
+            "gap": 4,
+            "radius": "radius-chip",
+            "text": "text.badge",
+            "note": "Its icon 12 square."
+        }
+    },
+    "states": {
+        "rest": {"means": "The chip drawn."},
+        "hover": {
+            "means": "The pointer is over it: only ghost and link answer, and a badge drawn as a link (default, secondary, destructive and outline then wash too).",
+            "reached": "pointer over"
+        },
+        "focus": {
+            "means": "Keyboard focus on a badge drawn as a link: the focus outline.",
+            "reached": "Tab",
+            "on": "keyboard",
+            "effect": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        }
+    },
+    "variants": {
+        "default": {"rest": {"ground": "primary", "edge": "none", "ink": "primary-foreground"}},
+        "secondary": {"rest": {"ground": "secondary", "edge": "none", "ink": "secondary-foreground"}},
+        "destructive": {
+            "rest": {
+                "ground": "destructive/10",
+                "edge": "none",
+                "ink": "destructive",
+                "dark": {"ground": "destructive/20"}
+            }
+        },
+        "outline": {"rest": {"edge": "border", "ink": "foreground"}},
+        "ghost": {"rest": {"edge": "none"}, "hover": {"ground": "hover", "ink": "muted-foreground"}},
+        "link": {"rest": {"edge": "none", "ink": "primary"}, "hover": {"underline": true}},
+        "kind-blue": {"rest": {"ground": "kind-blue/12", "edge": "kind-blue/30", "ink": "kind-blue-ink"}},
+        "kind-green": {"rest": {"ground": "kind-green/12", "edge": "kind-green/30", "ink": "kind-green-ink"}},
+        "kind-jade": {"rest": {"ground": "kind-jade/12", "edge": "kind-jade/30", "ink": "kind-jade-ink"}},
+        "kind-pink": {"rest": {"ground": "kind-pink/12", "edge": "kind-pink/30", "ink": "kind-pink-ink"}},
+        "kind-teal": {"rest": {"ground": "kind-teal/12", "edge": "kind-teal/30", "ink": "kind-teal-ink"}},
+        "kind-violet": {"rest": {"ground": "kind-violet/12", "edge": "kind-violet/30", "ink": "kind-violet-ink"}}
+    },
+    "keyboard": [{"keys": ["Tab"], "does": "Reaches a badge drawn as a link (render); a plain badge takes no focus."}],
+    "words": {},
+    "messages": {},
+    "appText": {"children": "The value it says."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Base UI's useRender: render draws it as another element, such as a link, whose hover then washes default, secondary, destructive and outline ([a]:hover).",
+            "An aria-invalid badge wears the shared issue edge (INVALID_EDGE)."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, Badge was built before this spec, its kind as ChipTone::Kind (d163191); not compared with this spec."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

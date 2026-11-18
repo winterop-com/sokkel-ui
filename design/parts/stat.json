@@ -1,0 +1,135 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "stat",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "Stat built before this spec (d163191), with size lg and tiles of equal height; not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "One number with what it counts: runs today, the failure rate, the median duration. A change against an earlier period stands beside it, inked by whether the change is good, which the app says, since a rise in failures and a rise in runs mean opposite things. A state's dot may lead the label; as a tile it stands on a card of its own and may be one control that goes to what it counts; emphasis edges the one tile that asks for work in its dot's color, and size lg draws the one hero figure larger than its neighbors.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/Stat.tsx", "packages/core/src/components/Dot.tsx"]},
+    "anatomy": {
+        "container": "A column, 4 apart. As a tile: on card with a border-strong edge, rounded by radius-surface, padded 16, in card-foreground; with href or onSelect the whole tile is one control under its pieces.",
+        "label": "What it counts, cut to one line, after the dot (8 apart): plain, text.xs in muted-foreground; as a tile, text.label in foreground.",
+        "dot": "With dot: the color the app gives (a status's), small in plain, large in a tile.",
+        "value": "The number in tabular figures, its unit and the change after it on one baseline, 8 apart; 4 more above it in a tile. plain: text.page at 600; tile: text.statistic; lg: text.statistic-hero.",
+        "unit": "With unit: text.sm in muted-foreground.",
+        "change": "With change: an arrow up and right (or down and right for a change written with a minus), 14, then the change, text.xs at 500 in tabular figures, 2 apart: muted-foreground when good is not given, good when good, critical when not.",
+        "note": "With note: under the number; plain, text.xs in faint; in a tile, text.help in muted-foreground, wrapping evenly.",
+        "trend": "With trend: a small chart under the number, 4 down, such as a sparkline."
+    },
+    "standsOn": {"default": "background", "tile": "card"},
+    "alsoStandsOn": {"default": ["card"]},
+    "options": {
+        "label": {"type": "node", "does": "What it counts."},
+        "value": {"type": "node", "does": "The number."},
+        "unit": {"type": "node", "does": "Its unit, after it."},
+        "change": {
+            "type": "text",
+            "does": "The change written for a reader: +12%, -0.4s; a minus turns the arrow down."
+        },
+        "good": {"type": "boolean", "does": "Whether the change is an improvement; neutral when not given."},
+        "note": {"type": "node", "does": "A short qualifier under the number: vs last week."},
+        "trend": {"type": "node", "does": "A small chart under the number, such as a sparkline."},
+        "dot": {"type": "text", "does": "A color drawn as a dot before the label, such as a status's."},
+        "variant": {
+            "values": ["plain", "tile"],
+            "default": "plain",
+            "does": "plain sits in whatever holds it; tile is a card of its own."
+        },
+        "href": {"type": "text", "does": "Where the tile leads, such as a list filtered to what it counts."},
+        "onSelect": {"type": "callback", "does": "Called on a press on the tile."},
+        "emphasis": {
+            "type": "boolean",
+            "default": false,
+            "does": "Edges the tile in its dot's color at 55 percent: the count that asks for work."
+        },
+        "size": {
+            "values": ["md", "lg"],
+            "default": "md",
+            "does": "lg draws the number at text.statistic-hero: the one hero figure, larger than its neighbors."
+        }
+    },
+    "sizes": {
+        "container": {"gap": 4},
+        "tile": {"padX": 16, "padY": 16, "gap": 4, "radius": "radius-surface"},
+        "label": {"gap": 8},
+        "value": {"gap": 8},
+        "change": {"gap": 2},
+        "md": {"text": "text.statistic", "note": "A tile's number; plain, text.page at 600."},
+        "lg": {"text": "text.statistic-hero"}
+    },
+    "states": {
+        "rest": {"means": "The number and what it counts; a change neutral."},
+        "good": {"means": "The change is an improvement: in good.", "reached": "good true"},
+        "bad": {"means": "The change is a setback: in critical.", "reached": "good false"},
+        "hover": {
+            "means": "The pointer is over a tile that is a control: washed, its edge firmer.",
+            "reached": "pointer over, with href or onSelect"
+        },
+        "focus": {
+            "means": "Keyboard focus on the tile: the focus outline around it.",
+            "reached": "Tab, with href or onSelect",
+            "on": "keyboard"
+        }
+    },
+    "variants": {
+        "plain": {"rest": {"note": "No ground of its own: the ground it stands on."}},
+        "tile": {
+            "rest": {"ground": "card", "edge": "border-strong", "ink": "card-foreground", "radius": "radius-surface"},
+            "hover": {"ground": "hover", "edge": "foreground/25"}
+        }
+    },
+    "pieces": {
+        "label": {
+            "rest": {"ink": "muted-foreground", "text": "text.xs", "note": "plain; in a tile text.label in foreground."}
+        },
+        "value": {
+            "rest": {
+                "text": "text.page",
+                "weight": 600,
+                "note": "plain; a tile text.statistic, lg text.statistic-hero."
+            }
+        },
+        "unit": {"rest": {"ink": "muted-foreground", "text": "text.sm"}},
+        "change": {
+            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 500},
+            "good": {"ink": "good"},
+            "bad": {"ink": "critical"}
+        },
+        "note": {"rest": {"ink": "faint", "text": "text.xs", "note": "plain; in a tile text.help in muted-foreground."}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the tile when it is a control."},
+        {"keys": ["Enter"], "does": "Follows href, or calls onSelect.", "when": "the tile has focus"}
+    ],
+    "words": {},
+    "messages": {},
+    "appText": {"label": "What it counts.", "note": "The qualifier.", "change": "The change, written."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "With href or onSelect a link or a button covers the tile, named by the label and the value; the pieces over it let the pointer through.",
+            "emphasis is a color-mix of the dot's color at 55 percent: the dot is a CSS color the app gives, so the edge is not a token."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, Stat was built (d163191) before this spec, with size lg and tiles of equal height in a row; not compared with this spec."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

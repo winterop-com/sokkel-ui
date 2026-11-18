@@ -1,0 +1,130 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "api-link",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "ApiLink built before this spec (d163191), not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A small chip naming the request behind a screen, its method and path: GET /api/jobs/nightly-export. A press on its copy button copies the method and the path (or the app's own value, such as a curl line); with href the path is a link to the API's reference or the raw response; with open the whole chip is one link that opens the address in a new tab. The method is quiet for a read, in the warning ink for a write and in the critical ink for a delete.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ApiLink.tsx",
+            "packages/core/src/components/CopyButton.tsx",
+            "packages/core/src/components/Link.tsx"
+        ]
+    },
+    "anatomy": {
+        "chip": "The chip: 24 tall, on a faint muted wash with a border edge, rounded by radius-chip, 8 in at its start; the method, the path, then the copy button at its end, 6 apart. As wide as it needs, at most its room.",
+        "method": "The method in capitals, in the code face at text.xs and 500: muted-foreground for a read (GET and the rest), warning-ink for POST, PUT and PATCH, critical-ink for DELETE.",
+        "path": "The path in the code face at text.xs, cut to its room with its whole text on hover. With href, a link: underlined under the pointer, an arrow after it.",
+        "copy": "parts/button's icon-xs copy button (CopyButton), naming words.copy and saying words.copied once pressed.",
+        "arrow": "With open, an arrow up and right after the path, 12 square, in muted-foreground, standing for the new tab."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["card", "popover"]},
+    "options": {
+        "method": {"type": "text", "default": "GET", "does": "The request's method, drawn in capitals."},
+        "path": {"type": "text", "does": "The path, such as /api/jobs/nightly-export."},
+        "href": {
+            "type": "text",
+            "does": "Makes the path a link that opens in a new tab: the API's reference or the raw response."
+        },
+        "copyValue": {
+            "type": "text",
+            "does": "What the copy button copies in place of the method and the path, such as the full address or a curl line."
+        },
+        "open": {
+            "type": "boolean",
+            "default": false,
+            "does": "The whole chip is one link that opens href (or the path) in a new tab, padded 8 at both ends, in place of the copy button."
+        }
+    },
+    "sizes": {
+        "chip": {
+            "height": 24,
+            "gap": 6,
+            "radius": "radius-chip",
+            "note": "8 in at the start (layout.chipStart); with open 8 at the end too, else the copy button ends it."
+        }
+    },
+    "layout": {"chipStart": {"value": 8, "note": "The chip's padding before the method."}},
+    "states": {
+        "rest": {"means": "A read: the method in the quiet ink.", "reached": "method GET (or any other read)"},
+        "write": {"means": "A write: the method in the warning ink.", "reached": "method POST, PUT or PATCH"},
+        "delete": {"means": "A delete: the method in the critical ink.", "reached": "method DELETE"},
+        "hover": {"means": "The pointer is over the chip (open) or the path (href).", "reached": "pointer over"},
+        "focus": {
+            "means": "Keyboard focus on the chip (open) or the path (href): the focus outline.",
+            "reached": "Tab",
+            "on": "keyboard"
+        }
+    },
+    "variants": {
+        "chip": {"rest": {"ground": "muted/50", "edge": "border", "radius": "radius-chip"}},
+        "open": {
+            "rest": {"ground": "muted/50", "edge": "border", "ink": "foreground", "radius": "radius-chip"},
+            "hover": {"ground": "hover"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
+        }
+    },
+    "pieces": {
+        "method": {
+            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 500, "note": "In the code face."},
+            "write": {"ink": "warning-ink"},
+            "delete": {"ink": "critical-ink"}
+        },
+        "path": {
+            "rest": {"text": "text.xs", "note": "In the code face, in the ink of what it stands on."},
+            "hover": {"underline": true, "note": "With href."},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}, "note": "With href."}
+        },
+        "arrow": {"rest": {"ink": "muted-foreground"}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the path when it is a link, then the copy button; with open, the chip."},
+        {"keys": ["Enter"], "does": "Opens the address in a new tab.", "when": "the path or the chip (open) has focus"},
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Copies the request; the button says words.copied a moment.",
+            "when": "the copy button has focus"
+        }
+    ],
+    "words": {"copy": "Copy the request", "copied": "Copied", "opens": "opens in a new tab"},
+    "messages": {
+        "copy": {"id": "apiLink.copy", "en": "Copy the request"},
+        "copied": {"id": "apiLink.copied", "en": "Copied"},
+        "opens": {"id": "apiLink.opens", "en": "opens in a new tab"}
+    },
+    "appText": {
+        "path": "The path.",
+        "method": "The method.",
+        "copyValue": "What the copy button copies, when not the method and the path."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "A link opens with target _blank; with open, words.opens is said after the path to a screen reader only.",
+            "The copy button is CopyButton, the library's one; it takes the chip's copy and copied."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, ApiLink was built (d163191) before this spec and has not been compared with it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

@@ -1,0 +1,102 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "description-list",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "DescriptionList built before this spec, with columns 2 in the stacked layout (d163191); not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Facts about one thing as terms and values: a run's state and duration, a service's base address. A value that is missing is a quiet dash, never a blank. The pairs stand side by side (each term in a column beside its value, every pair sharing the list's term column), stacked (each term over its value) or in a row that wraps, for a strip of facts under a title; columns 2 sets the side and stacked pairs two to a row from md, and size sm fits a narrow inspector.",
+    "sources": {
+        "sokkel-ui": ["packages/core/src/components/DescriptionList.tsx (DescriptionList, DescriptionListGroup)"]
+    },
+    "anatomy": {
+        "list": "The pairs: text.sm on 20 lines (sm: text.xs on 16), the rows 8 apart (sm: 4).",
+        "term": "A fact's term: text.xs in muted-foreground. Side by side, in the list's term column, as wide as termWidth.",
+        "value": "A fact's value in the list's text; in the code face where the fact says code, in tabular figures where it says numeric, wrapping anywhere it must. A value not given is a dash in faint.",
+        "wide": "A wide fact takes the list's full width: side by side its value goes under its term; in a two-column stacked list it spans both columns."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["card", "sidebar", "popover"]},
+    "options": {
+        "items": {"type": "rows", "does": "The facts, in order: { term, value, code?, numeric?, wide? }."},
+        "layout": {
+            "values": ["side", "stacked", "row"],
+            "default": "side",
+            "does": "side: each term in a column beside its value. stacked: each term over its value. row: the pairs one after another in a line that wraps."
+        },
+        "columns": {
+            "type": "number",
+            "default": 1,
+            "does": "Two sets the side and stacked pairs two to a row from md (breakpoint-md); below it they stand one to a row."
+        },
+        "termWidth": {
+            "type": "text",
+            "default": "96",
+            "does": "How wide the term column is side by side: a CSS length, or auto for as wide as the longest term (at most 40 percent of the list), so every value starts at one line."
+        },
+        "size": {
+            "values": ["default", "sm"],
+            "default": "default",
+            "does": "sm sets the values at text.xs with tighter gaps, for a narrow inspector."
+        }
+    },
+    "sizes": {
+        "side": {
+            "gap": 12,
+            "note": "Between the term column and the values; sm 8. With columns 2, the two pairs 24 apart from md (sm 16)."
+        },
+        "stacked": {"gap": 24, "note": "Between the columns of a two-column list; sm 16. A term and its value 2 apart."},
+        "row": {
+            "gap": 20,
+            "note": "Between the pairs on a line, 4 between lines (sm: 16 and 2); a term and its value 6 apart."
+        }
+    },
+    "layout": {
+        "rowGap": {"value": 8, "note": "Between one row of pairs and the next (sm: 4)."},
+        "termWidth": {"value": 96, "note": "termWidth's default (6rem)."},
+        "termMax": {
+            "value": 0.4,
+            "note": "With termWidth auto, the term column is as wide as the longest term, at most this share of the list."
+        }
+    },
+    "states": {
+        "rest": {"means": "The facts drawn."},
+        "missing": {"means": "A fact with no value: a dash in faint.", "reached": "a value null, undefined or empty"}
+    },
+    "pieces": {
+        "term": {"rest": {"ink": "muted-foreground", "text": "text.xs"}},
+        "value": {"rest": {"text": "text.sm", "note": "In the ink of what it stands on."}, "missing": {"ink": "faint"}}
+    },
+    "keyboard": [],
+    "words": {},
+    "messages": {},
+    "appText": {"items": "Each fact's term and value."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "A dl: side by side its pairs are subgrids of the list's tracks, so every term shares one column; in a DescriptionListGroup a one-column side list takes the group's term column, lining values up across what sits between the lists.",
+            "An InlineEdit value reaches into the gap so its text starts where a plain value's does.",
+            "parts/detail-pane draws each section's facts as this list, side by side."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, DescriptionList was built (d163191) before this spec, with columns 2 in the stacked layout; not compared with this spec."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

@@ -1,0 +1,144 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "issue-count",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "IssueCount built before this spec (d163191), errors only; not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A form's issues as one control beside its verb: a figure for each kind, the errors that stop the submit in the critical ink and the warnings in the warning ink, on the tint of the worst. Pressing it opens the issues right there, each naming its field, and choosing one goes to that field and opens its mark. Nothing is drawn at zero. A dialog takes it in its count slot, beside its verbs.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/IssueMark.tsx (IssueCount, ISSUE_COUNT_WORDS)",
+            "packages/core/src/components/ui/popover.tsx"
+        ]
+    },
+    "anatomy": {
+        "face": "The control: control-sm tall, a 1px edge and a faint wash in the worst issue's tone, rounded by radius-control, text.xs at 500 in tabular figures. A button when there is a list to open, else a status. Its name says every count in words (words.errors, words.warnings), joined by a comma.",
+        "figure": "One kind's count after its mark (a circled alert for errors, a triangle for warnings), 14 square, 4 apart, padded 8 across, in the kind's ink. The warnings' figure follows the errors' behind a rule in its ink at 25 percent.",
+        "list": "The popup above the face, at its start: the issues one under the other, 4 apart, padded 6, at most 352 wide (less the window's 32).",
+        "entry": "One issue, a button: its mark (16, 2 down) and, 8 after it, the field's label in text.xs and muted-foreground over the issue's words in text.sm. Choosing it shuts the list, goes to the field and opens its mark."
+    },
+    "standsOn": {"default": "background", "entry": "popover"},
+    "alsoStandsOn": {"default": ["popover", "card"]},
+    "options": {
+        "critical": {"type": "number", "does": "How many issues stop the submit."},
+        "warning": {"type": "number", "default": 0, "does": "How many warnings."},
+        "list": {
+            "type": "rows",
+            "does": "The issues, each { label, issue, onGo, target? }: the field's label, its issue, and how to go to it. Empty, the face is a status with nothing to open."
+        },
+        "defaultOpen": {"type": "boolean", "default": false, "does": "Starts with the list open."}
+    },
+    "sizes": {
+        "face": {
+            "height": "density.control-sm",
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "note": "A finger tall below md when it opens a list."
+        },
+        "figure": {"padX": 8, "gap": 4},
+        "list": {"padX": 6, "padY": 6, "gap": 4},
+        "entry": {"padX": 8, "padY": 6, "gap": 8}
+    },
+    "states": {
+        "rest": {"means": "At least one error: the critical tone.", "reached": "critical above 0"},
+        "warning": {"means": "Warnings only: the warning tone.", "reached": "critical 0, warning above 0"},
+        "hover": {"means": "The pointer is over the face, or over an entry.", "reached": "pointer over"},
+        "focus": {
+            "means": "Keyboard focus on the face: the focus ring; on an entry, its wash.",
+            "reached": "Tab, or the arrows in the list",
+            "on": "keyboard"
+        },
+        "open": {
+            "means": "The list is open: the face washed as under the pointer.",
+            "reached": "a press, Enter or Space on the face; defaultOpen"
+        }
+    },
+    "pieces": {
+        "face": {
+            "rest": {
+                "ground": "critical/8",
+                "edge": "critical/40",
+                "radius": "radius-control",
+                "text": "text.xs",
+                "weight": 500
+            },
+            "hover": {"ground": "critical/12"},
+            "open": {"ground": "critical/12"},
+            "focus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}},
+            "warning": {"ground": "warning/8", "edge": "warning/45"},
+            "warning+hover": {"ground": "warning/12"},
+            "warning+open": {"ground": "warning/12"}
+        },
+        "figure": {
+            "rest": {
+                "ink": "critical-ink",
+                "note": "The errors' figure; the warnings' figure in warning-ink, behind a 1px rule in its own ink at 25 percent."
+            },
+            "warning": {"ink": "warning-ink"}
+        },
+        "entry": {"rest": {"radius": "radius-md"}, "hover": {"ground": "hover"}, "focus": {"ground": "hover"}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the face when it opens a list."},
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Opens the list, the focus on its first issue.",
+            "when": "the face has focus"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Goes to the issue's field and opens its mark; the list shuts.",
+            "when": "an entry has focus"
+        },
+        {"keys": ["Escape"], "does": "Shuts the list, the focus back on the face.", "when": "the list is open"}
+    ],
+    "words": {
+        "errors": {"one": "{count} error", "other": "{count} errors"},
+        "warnings": {"one": "{count} warning", "other": "{count} warnings"}
+    },
+    "messages": {
+        "errors": {"id": "issueCount.errors", "en": "{count, plural, one {# error} other {# errors}}"},
+        "warnings": {"id": "issueCount.warnings", "en": "{count, plural, one {# warning} other {# warnings}}"}
+    },
+    "samples": {
+        "errors": [
+            {"with": {"count": 1}, "says": "1 error"},
+            {"with": {"count": 3}, "says": "3 errors"},
+            {"with": {"count": 1200}, "says": "1,200 errors"}
+        ],
+        "warnings": [
+            {"with": {"count": 1}, "says": "1 warning"},
+            {"with": {"count": 3}, "says": "3 warnings"},
+            {"with": {"count": 1200}, "says": "1,200 warnings"}
+        ]
+    },
+    "appText": {"list": "Each issue's field label and words."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The list is Base UI's popover, above the face at its start, 6 off.",
+            "Its counts are never said at zero: the part draws nothing then."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, IssueCount was built (d163191) before this spec, errors only, and has not been compared with it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

@@ -1,0 +1,57 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "group-label",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "GroupLabel built before this spec, not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "The small heading over a group of entries: a rail's group, a panel's section, a palette's kind, a table's run of rows. One look for all of them, in capitals, a little tracked, in the faint ink, so a theme or a change reaches every group at once.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/GroupLabel.tsx"]},
+    "anatomy": {
+        "label": "The heading's words, in capitals, tracked wide, at text.xs and 500, in faint. An element of the app's choosing (as), a p by default."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["sidebar", "card", "popover"]},
+    "options": {
+        "as": {
+            "values": ["p", "h2", "h3", "h4", "span", "div"],
+            "default": "p",
+            "does": "The element it is drawn as, by where it sits in the page's outline: a heading where it heads a section, a p or a span where it only labels."
+        },
+        "children": {"type": "node", "does": "The heading's words."}
+    },
+    "states": {"rest": {"means": "The heading drawn."}},
+    "pieces": {
+        "label": {
+            "rest": {"ink": "faint", "text": "text.xs", "weight": 500, "note": "Uppercase, tracking wide (0.025em)."}
+        }
+    },
+    "keyboard": [],
+    "words": {},
+    "messages": {},
+    "appText": {"children": "The group's name."},
+    "rendererSpecific": {
+        "sokkel-ui": ["Uppercase and the tracking are CSS (uppercase, tracking-wide); the words are given as written."]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 1a87987, GroupLabel was built before this spec and has not been compared with it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

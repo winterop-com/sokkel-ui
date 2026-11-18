@@ -131,6 +131,15 @@
             "default": "fixed",
             "does": "auto lets rows grow to their tallest cell; every row is then drawn."
         },
+        "editing": {
+            "type": "node",
+            "does": "Edits the cells of columns with edit (tableEditing from sokkel-ui's table-editing): the arrows move the active cell, Enter or a character opens its editor, each value saved on its own through the column's save. Without it no cell edits."
+        },
+        "cellFocus": {
+            "values": ["underline", "ring", "soft", "row"],
+            "default": "underline",
+            "does": "How an editable table marks its active cell while it has the focus: underline, a line in the focus color under it; ring; soft; or row, which washes the cell's row."
+        },
         "resizable": {"type": "boolean", "default": true, "does": "Heads' end edges resize their columns."},
         "reorderable": {
             "type": "boolean",
@@ -618,7 +627,8 @@
             "Content columns are measured in the DOM and again once fonts load.",
             "Base UI's checkbox and the menus load after first paint; the boxes are drawn the same until then. The pager's page size select, the rows' right-click menus and the own search's field and finding load the first time a table that pages, has row actions or has a searchBy is drawn: until then the pager shows the page size as text, a right click on a row is the browser's, and the bar keeps the field's place.",
             "Numbers in words are formatted for en-US until a locale arrives (roadmap).",
-            "Stacked cards are windowed: only those in view and a half view either side are drawn. Cards that grow with their values (a primary value over more lines, a free title) are placed by their measured heights, each at the least it takes until it is measured, and the view stays put as cards above it are measured."
+            "Stacked cards are windowed: only those in view and a half view either side are drawn. Cards that grow with their values (a primary value over more lines, a free title) are placed by their measured heights, each at the least it takes until it is measured, and the view stays put as cards above it are measured.",
+            "An entry grid (counts entered by row and column, as a form's tally) is this table, not a part of its own: groupBy with each group's aggregate in its head, columns under band heads, editable number columns (editing, each cell saved on its own), and labeled cards with a field per column below stackBelow."
         ],
         "sokkel-egui": [
             "Reads paints (table.base.<state>.<piece>) for every color; the row tones are resolved mixes, never mixed by the widget.",
