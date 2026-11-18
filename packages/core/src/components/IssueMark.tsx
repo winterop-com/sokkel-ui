@@ -2,6 +2,7 @@ import { CircleAlert, TriangleAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { Popover, PopoverContent, PopoverDescription, PopoverTitle, PopoverTrigger } from './ui/popover'
 
 /** Something a person can press to put an issue right: use a value, check again. */
@@ -45,6 +46,9 @@ export interface IssueWords {
 
 export const ISSUE_WORDS: IssueWords = { issueCritical: 'Error: ', issueWarning: 'Warning: ' }
 
+/** Where a catalog holds the words before an issue. */
+export const ISSUE_PART: WordsPart<IssueWords> = { id: 'issue', words: ISSUE_WORDS }
+
 /** Every issue said as one sentence, for a control's `aria-label` or description. */
 export function spoken(issues: readonly Issue[], words: IssueWords = ISSUE_WORDS): string {
     return issues
@@ -70,7 +74,8 @@ export interface IssueMarkProps {
  * so a form keeps its height whatever it has to say. Nothing renders without an issue. Its name
  * says every issue, each after `words.issueCritical` ("Error: ") or `words.issueWarning`.
  */
-export function IssueMark({ issues, open, onOpenChange, className, words }: IssueMarkProps) {
+export function IssueMark({ issues, open, onOpenChange, className, words: given }: IssueMarkProps) {
+    const words = useWords(ISSUE_PART, given)
     const tone = worst(issues)
     if (tone === null) return null
     const Icon = ICON[tone]
@@ -80,7 +85,7 @@ export function IssueMark({ issues, open, onOpenChange, className, words }: Issu
                 render={
                     <button
                         type="button"
-                        aria-label={spoken(issues, { ...ISSUE_WORDS, ...words })}
+                        aria-label={spoken(issues, words)}
                         className={cn(
                             'absolute inset-y-0 right-1 my-auto flex size-(--density-control-sm) items-center justify-center rounded-md outline-none hover:bg-hover focus-visible:ring-focus focus-visible:ring-ring/50 data-popup-open:bg-hover',
                             INK[tone],
@@ -145,9 +150,22 @@ export interface IssueCountWords {
     warnings: (count: number) => string
 }
 
-const COUNT_WORDS: IssueCountWords = {
+export const ISSUE_COUNT_WORDS: IssueCountWords = {
     errors: (count) => `${String(count)} ${count === 1 ? 'error' : 'errors'}`,
     warnings: (count) => `${String(count)} ${count === 1 ? 'warning' : 'warnings'}`,
+}
+
+/** Where a catalog holds an issue count's words, and the arguments its phrases name. */
+export const ISSUE_COUNT_PART: WordsPart<IssueCountWords> = {
+    id: 'issueCount',
+    words: ISSUE_COUNT_WORDS,
+    args: { errors: 'count', warnings: 'count' },
+}
+
+/** An issue count's phrases as ICU messages in English, for the catalog. */
+export const ISSUE_COUNT_MESSAGES: WordMessages<IssueCountWords> = {
+    errors: '{count, plural, one {# error} other {# errors}}',
+    warnings: '{count, plural, one {# warning} other {# warnings}}',
 }
 
 /** One issue in a form's list: the field it belongs to, what it says, and how to go to it. */
@@ -181,7 +199,7 @@ export interface IssueCountProps {
  * opens its mark. Nothing renders at zero. A dialog takes it in its `count` slot, beside its verbs.
  */
 export function IssueCount({ critical, warning = 0, list, defaultOpen = false, words: given }: IssueCountProps) {
-    const words = { ...COUNT_WORDS, ...given }
+    const words = useWords(ISSUE_COUNT_PART, given)
     const [open, setOpen] = useState(defaultOpen)
     const tone = critical > 0 ? 'critical' : warning > 0 ? 'warning' : null
     if (tone === null) return null

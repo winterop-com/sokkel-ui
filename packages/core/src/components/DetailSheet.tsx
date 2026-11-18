@@ -6,6 +6,7 @@ import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
 import { ResizeHandle } from './ResizeHandle'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from './ui/sheet'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** The words a detail sheet says. */
 export interface DetailSheetWords {
@@ -13,7 +14,10 @@ export interface DetailSheetWords {
     resize: string
 }
 
-const WORDS: DetailSheetWords = { close: 'Close', resize: 'Resize the sheet' }
+export const DETAIL_SHEET_WORDS: DetailSheetWords = { close: 'Close', resize: 'Resize the sheet' }
+
+/** Where a catalog holds a detail sheet's words. */
+export const DETAIL_SHEET_PART: WordsPart<DetailSheetWords> = { id: 'detailSheet', words: DETAIL_SHEET_WORDS }
 
 /** The share of the window a sheet may be dragged to when no `maxSize` is given. */
 const MOST = 0.92
@@ -82,7 +86,7 @@ export function DetailSheet({
     children,
     words: given,
 }: DetailSheetProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(DETAIL_SHEET_PART, given)
     const lined = chips !== undefined || actions !== undefined
     const body = useRef<HTMLDivElement>(null)
     const sheet = useRef<HTMLDivElement>(null)

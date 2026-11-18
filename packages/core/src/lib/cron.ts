@@ -1,3 +1,4 @@
+import type { WordMessages, WordsPart } from './words'
 /** A day of the month named by a rule: the last (`L`), the last weekday (`LW`), the weekday nearest a day (`15W`). */
 export type CronDayRule = { kind: 'last' } | { kind: 'lastWeekday' } | { kind: 'nearestWeekday'; day: number }
 
@@ -416,6 +417,61 @@ export const CRON_WORDS: CronWords = {
         const full = parts.join(' ')
         return full.charAt(0).toUpperCase() + full.slice(1)
     },
+}
+
+/** Where a catalog holds a cron schedule read back's words, and the arguments its phrases name. */
+export const CRON_PART: WordsPart<CronWords> = {
+    id: 'cron',
+    words: CRON_WORDS,
+    args: {
+        ordinal: 'number',
+        everyMinutes: 'step',
+        everyHour: 'minute',
+        everyHours: 'step minute',
+        hourly: 'from to',
+        at: 'times',
+        minutesBetween: 'step from to',
+        everyMinuteBetween: 'from to',
+        everyMinuteOfHours: 'hours',
+        minutesOfHours: 'minutes hours',
+        daily: 'time',
+        onDays: 'days',
+        nearestWeekday: 'day',
+        nthOf: 'nth day',
+        lastOf: 'day',
+        weekdayRange: 'from to',
+        onWeekdays: 'days',
+        everyNthDay: 'nth',
+        either: 'days weekdays',
+        both: 'days weekdays',
+        inMonths: 'months',
+    },
+}
+
+/** A cron schedule read back's phrases as ICU messages in English, for the catalog. */
+export const CRON_MESSAGES: WordMessages<CronWords> = {
+    ordinal: '{number, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}',
+    everyMinutes: 'every {step} minutes',
+    everyHour: '{minute, plural, =0 {every hour, on the hour} other {every hour at {minute} minutes past}}',
+    everyHours: 'every {step} hours{minute, plural, =0 {} other { at {minute} minutes past}}',
+    hourly: 'every hour from {from} to {to}',
+    at: 'at {times}',
+    minutesBetween: 'every {step} minutes from {from} to {to}',
+    everyMinuteBetween: 'every minute from {from} to {to}',
+    everyMinuteOfHours: 'every minute of hours {hours}',
+    minutesOfHours: 'at minute {minutes} of hour {hours}',
+    daily: 'every day {time}',
+    onDays: 'on the {days}',
+    nearestWeekday: 'on the weekday nearest the {day}',
+    nthOf: 'on the {nth} {day} of the month',
+    lastOf: 'on the last {day} of the month',
+    weekdayRange: 'on {from} to {to}',
+    onWeekdays: 'on {days}',
+    everyNthDay: 'on every {nth} day of the month',
+    either: '{days} or {weekdays}',
+    both: '{days}, when it falls {weekdays}',
+    inMonths: 'in {months}',
+    sentence: null,
 }
 
 /** A run of whole numbers with an even step from the field's start, as `*` or `a-b/n` writes it. */

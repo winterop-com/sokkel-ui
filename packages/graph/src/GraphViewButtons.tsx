@@ -2,6 +2,7 @@ import { Scan, ZoomIn, ZoomOut } from 'lucide-react'
 import { Children, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { useGraphControls, type GraphControls } from './context'
 
@@ -23,6 +24,9 @@ export const GRAPH_VIEW_WORDS: GraphViewWords = {
     zoomOut: 'Zoom out',
     fit: 'Fit the graph',
 }
+
+/** Where a catalog holds a graph's view buttons' words. */
+export const GRAPH_VIEW_PART: WordsPart<GraphViewWords> = { id: 'graphView', words: GRAPH_VIEW_WORDS }
 
 const BUTTON =
     'flex size-7 shrink-0 items-center justify-center text-muted-foreground max-md:size-finger outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:-outline-offset-focus focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
@@ -86,7 +90,7 @@ export function GraphViewButtons({
     words: told,
     className,
 }: GraphViewButtonsProps) {
-    const words = { ...GRAPH_VIEW_WORDS, ...told }
+    const words = useWords(GRAPH_VIEW_PART, told)
     const near = useGraphControls()
     const controls = given === undefined ? near : given
     const idle = controls === null || controls.empty

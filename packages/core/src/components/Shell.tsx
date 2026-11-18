@@ -52,6 +52,7 @@ import {
     type ShellSlot,
     type StatedTrail,
 } from './shell-context'
+import { useWords, type WordsPart } from '../lib/words'
 
 export type { ShortcutGroup } from '../lib/shortcut-groups'
 export type { RailMode } from './shell-context'
@@ -317,7 +318,7 @@ export function Shell({
     errorWords,
     onPageError,
 }: ShellProps) {
-    const words = { ...SHELL_WORDS, ...given }
+    const words = useWords(SHELL_PART, given)
     // What screens ask of the rail while they are mounted, the latest last.
     const [railAsks, setRailAsks] = useState<readonly { id: string; mode: RailMode }[]>([])
     const askRail = useCallback((id: string, mode: RailMode) => {
@@ -747,6 +748,9 @@ export const SHELL_WORDS: ShellWords = {
     openPalette: 'Open the command palette',
     openShortcuts: 'Show the keyboard shortcuts',
 }
+
+/** Where a catalog holds a shell's words. */
+export const SHELL_PART: WordsPart<ShellWords> = { id: 'shell', words: SHELL_WORDS }
 
 /** What a screen inside a `Shell` can open of the shell's. */
 export interface ShellControls {

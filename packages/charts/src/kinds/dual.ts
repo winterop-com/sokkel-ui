@@ -56,8 +56,8 @@ export const dual: ChartBuilder = (spec, look) => {
             unit,
             tick:
                 own.format === undefined
-                    ? tickWriter(spec.format, unit)
-                    : (value: number) => compactWritten(own.format?.(value) ?? '', value),
+                    ? tickWriter(spec.format, unit, spec.locale)
+                    : (value: number) => compactWritten(own.format?.(value) ?? '', value, spec.locale),
             min: own.min,
             max: own.max,
             write: (value: number | null) =>

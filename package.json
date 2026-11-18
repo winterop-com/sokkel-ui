@@ -10,6 +10,7 @@
     "scripts": {
         "tokens": "bun scripts/build-tokens.ts",
         "components": "bun scripts/components-index.ts",
+        "messages": "bun scripts/messages.ts",
         "design": "bun scripts/design.ts",
         "emoji-data": "bun scripts/emoji-data.ts",
         "world-data": "bun scripts/world-data.ts",

@@ -31,6 +31,7 @@ import type { SoundKind, SoundVisualizerProps } from '@winterop-com/sokkel-ui/me
 import { isSoundVisualizer } from '@winterop-com/sokkel-ui/media/visualizer-mark'
 import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
 import { nextRepeat, type RepeatMode } from './queue'
+import type { WordMessages, WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { useFramePosition } from './use-frame-position'
 
 export type { MediaSkip } from './media-session'
@@ -121,6 +122,22 @@ export const MEDIA_BAR_WORDS: MediaBarWords = {
     area: 'Area',
     wave: 'Wave',
     ring: 'Ring',
+}
+
+/** Where a catalog holds a media bar's words, and the arguments its phrases name. */
+export const MEDIA_BAR_PART: WordsPart<MediaBarWords> = {
+    id: 'mediaBar',
+    words: MEDIA_BAR_WORDS,
+    args: { skipBack: 'seconds', skipForward: 'seconds', rate: 'rate', trackOf: 'number count', chapterOf: 'number count' },
+}
+
+/** A media bar's phrases as ICU messages in English, for the catalog. */
+export const MEDIA_BAR_MESSAGES: WordMessages<MediaBarWords> = {
+    skipBack: 'Back {seconds} seconds',
+    skipForward: 'Forward {seconds} seconds',
+    rate: '{rate}x',
+    trackOf: '{count, select, undefined {Track {number}} other {Track {number} of {count}}}',
+    chapterOf: '{count, select, undefined {Chapter {number}} other {Chapter {number} of {count}}}',
 }
 
 /** A look for the visualizer an app offers in the fullscreen view's picker, by its own id and name. */

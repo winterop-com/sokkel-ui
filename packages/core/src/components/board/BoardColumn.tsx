@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 import { DragGrip, useDragItem, useDropTarget, type DragHandleProps } from '../DragDrop'
 import { DRAG_GROUP, GRIP_ON_HOVER } from '../DragSource'
 import { BoardDrop, useBoardColumnDrag, useBoardColumnKind } from './Board'
@@ -14,10 +15,24 @@ export interface BoardColumnWords {
     move: (column: string) => string
 }
 
-const WORDS: BoardColumnWords = {
+export const BOARD_COLUMN_WORDS: BoardColumnWords = {
     limit: (count, limit) => `${count} of a limit of ${limit}`,
     over: (count, limit) => `${count - limit} over the limit of ${limit}`,
     move: (column) => `Move ${column}`,
+}
+
+/** Where a catalog holds a board column's words, and the arguments its phrases name. */
+export const BOARD_COLUMN_PART: WordsPart<BoardColumnWords> = {
+    id: 'boardColumn',
+    words: BOARD_COLUMN_WORDS,
+    args: { limit: 'count limit', move: 'column' },
+}
+
+/** A board column's phrases as ICU messages in English, for the catalog. */
+export const BOARD_COLUMN_MESSAGES: WordMessages<BoardColumnWords> = {
+    limit: '{count} of a limit of {limit}',
+    over: null,
+    move: 'Move {column}',
 }
 
 export interface BoardColumnHeadProps {
@@ -39,7 +54,7 @@ export interface BoardColumnHeadProps {
  * lanes; a plain column carries its own.
  */
 export function BoardColumnHead({ title, count, limit, icon, actions, grip, className, words: given }: BoardColumnHeadProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(BOARD_COLUMN_PART, given)
     const over = limit !== undefined && count > limit
     return (
         <div className={cn('flex h-9 items-center gap-2 px-1.5', grip !== undefined && DRAG_GROUP, className)}>
@@ -108,7 +123,7 @@ export function BoardColumn({
     className,
     words: given,
 }: BoardColumnProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(BOARD_COLUMN_PART, given)
     const name = label ?? (typeof title === 'string' ? title : id)
     const kind = useBoardColumnKind()
     const own = useId()

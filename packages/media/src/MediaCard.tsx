@@ -8,6 +8,7 @@ import { useClamped } from '@winterop-com/sokkel-ui/hooks/use-clamped'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { TITLE_LINES, type TitleLines } from '@winterop-com/sokkel-ui/lib/title-lines'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Artwork } from './Artwork'
 
 export interface MediaCardWords {
@@ -19,13 +20,23 @@ export interface MediaCardWords {
     drag: (title: string) => string
 }
 
-const WORDS: MediaCardWords = {
+export const MEDIA_CARD_WORDS: MediaCardWords = {
     play: 'Play',
     playing: 'Now playing',
     menu: 'More actions',
     watched: (percent) => `${String(percent)}% watched`,
     drag: (title) => `Drag ${title}`,
 }
+
+/** Where a catalog holds a media card's words, and the arguments its phrases name. */
+export const MEDIA_CARD_PART: WordsPart<MediaCardWords> = {
+    id: 'mediaCard',
+    words: MEDIA_CARD_WORDS,
+    args: { watched: 'percent', drag: 'title' },
+}
+
+/** A media card's phrases as ICU messages in English, for the catalog. */
+export const MEDIA_CARD_MESSAGES: WordMessages<MediaCardWords> = { watched: '{percent}% watched', drag: 'Drag {title}' }
 
 export interface MediaCardProps {
     title: string
@@ -97,7 +108,7 @@ export function MediaCard({
     className,
     words: given,
 }: MediaCardProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(MEDIA_CARD_PART, given)
     const Cover = href !== undefined ? Link : 'button'
     const interactive = href !== undefined || onSelect !== undefined
     const lines = titleLines ?? (layout === 'row' || shape === 'wide' ? 2 : 1)

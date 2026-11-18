@@ -247,7 +247,7 @@ export const heatmap: ChartBuilder = (spec, look) => {
             itemHeight: 100,
             min: low,
             max: high,
-            text: [high, low].map(tickWriter(spec.format, unitAt(spec))),
+            text: [high, low].map(tickWriter(spec.format, unitAt(spec), spec.locale)),
             textGap: 4,
             inRange: { color: scaleColors(look, scale) },
         },

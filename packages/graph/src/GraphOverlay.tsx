@@ -3,6 +3,7 @@ import { CircleAlert, Info, X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { useGraphBend, useGraphDirection } from './context'
 import { roughRoute, routedPath, type GraphDirection, type GraphPoint } from './layout'
 
@@ -304,7 +305,10 @@ export interface GraphNoticeWords {
     close: string
 }
 
-const NOTICE_WORDS: GraphNoticeWords = { close: 'Dismiss' }
+export const GRAPH_NOTICE_WORDS: GraphNoticeWords = { close: 'Dismiss' }
+
+/** Where a catalog holds a graph notice's words. */
+export const GRAPH_NOTICE_PART: WordsPart<GraphNoticeWords> = { id: 'graphNotice', words: GRAPH_NOTICE_WORDS }
 
 export interface GraphNoticeProps {
     tone?: 'critical' | 'info'
@@ -318,7 +322,7 @@ export interface GraphNoticeProps {
  * did. `critical` says a refusal; `info` says anything else. Render it as a child of the canvas.
  */
 export function GraphNotice({ tone = 'info', onClose, children, words: given }: GraphNoticeProps) {
-    const words = { ...NOTICE_WORDS, ...given }
+    const words = useWords(GRAPH_NOTICE_PART, given)
     const Icon = tone === 'critical' ? CircleAlert : Info
     return (
         <Panel position="bottom-center" className="m-3! w-max max-w-[calc(100%-1.5rem)]">

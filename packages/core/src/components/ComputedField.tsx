@@ -2,6 +2,7 @@ import { Calculator } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 import { describedBy, Field } from './Field'
 import { Input } from './ui/input'
 
@@ -13,7 +14,13 @@ export interface ComputedFieldWords {
     computed: string
 }
 
-const WORDS: ComputedFieldWords = { pending: 'Worked out once the answers it reads are given', computed: 'worked out' }
+export const COMPUTED_FIELD_WORDS: ComputedFieldWords = {
+    pending: 'Worked out once the answers it reads are given',
+    computed: 'worked out',
+}
+
+/** Where a catalog holds a computed field's words. */
+export const COMPUTED_FIELD_PART: WordsPart<ComputedFieldWords> = { id: 'computedField', words: COMPUTED_FIELD_WORDS }
 
 export interface ComputedFieldProps {
     id: string
@@ -52,7 +59,7 @@ export function ComputedField({
     className,
     words: given,
 }: ComputedFieldProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(COMPUTED_FIELD_PART, given)
     const help = (
         <span className="flex items-start gap-1.5">
             <Calculator aria-hidden className="mt-0.5 size-3.5 shrink-0" />

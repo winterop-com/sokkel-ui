@@ -1,4 +1,5 @@
 import { SortableGrip, SortableGroup, SortableItem } from '@winterop-com/sokkel-ui/Sortable'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { TrackList, type Track, type TrackListProps, type TrackListWords, type TrackRowProps } from './TrackList'
 
 export type { Track } from './TrackList'
@@ -11,9 +12,22 @@ export interface ReorderableTrackListWords extends TrackListWords {
     moved: (title: string, place: number, count: number) => string
 }
 
-const WORDS: Pick<ReorderableTrackListWords, 'move' | 'moved'> = {
+export const REORDERABLE_TRACK_LIST_WORDS: Pick<ReorderableTrackListWords, 'move' | 'moved'> = {
     move: (title) => `Move ${title}`,
     moved: (title, place, count) => `${title} moved to ${String(place)} of ${String(count)}`,
+}
+
+/** Where a catalog holds a reorderable track list's own words, and the arguments its phrases name. */
+export const REORDERABLE_TRACK_LIST_PART: WordsPart<Pick<ReorderableTrackListWords, 'move' | 'moved'>> = {
+    id: 'reorderableTrackList',
+    words: REORDERABLE_TRACK_LIST_WORDS,
+    args: { move: 'title', moved: 'title place count' },
+}
+
+/** A reorderable track list's phrases as ICU messages in English, for the catalog. */
+export const REORDERABLE_TRACK_LIST_MESSAGES: WordMessages<Pick<ReorderableTrackListWords, 'move' | 'moved'>> = {
+    move: 'Move {title}',
+    moved: '{title} moved to {place} of {count}',
 }
 
 export interface ReorderableTrackListProps extends Omit<TrackListProps, 'words' | 'row' | 'windowed'> {
@@ -42,7 +56,7 @@ function SortableRow({ track, index: _index, ...props }: TrackRowProps) {
  * row however long the list, so each can be carried past the rest.
  */
 export function ReorderableTrackList({ tracks, onMove, kind, actions, words: given, ...list }: ReorderableTrackListProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(REORDERABLE_TRACK_LIST_PART, given)
     const byId = new Map(tracks.map((track) => [track.id, track]))
     const flat = tracks.map((track) => (track.disc === undefined ? track : { ...track, disc: undefined }))
     return (

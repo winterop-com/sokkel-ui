@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 import { IconButton } from './IconButton'
 import { Button } from './ui/button'
 
@@ -17,7 +18,10 @@ export interface ChipBarWords {
     forward: string
 }
 
-const WORDS: ChipBarWords = { back: 'Scroll back', forward: 'Scroll forward' }
+export const CHIP_BAR_WORDS: ChipBarWords = { back: 'Scroll back', forward: 'Scroll forward' }
+
+/** Where a catalog holds a chip bar's words. */
+export const CHIP_BAR_PART: WordsPart<ChipBarWords> = { id: 'chipBar', words: CHIP_BAR_WORDS }
 
 export interface ChipBarProps<T extends string = string> {
     /** The row's accessible name. */
@@ -36,7 +40,7 @@ export interface ChipBarProps<T extends string = string> {
  * the row alone, never the page around it.
  */
 export function ChipBar<T extends string = string>({ label, chips, value, onValueChange, words: given, className }: ChipBarProps<T>) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CHIP_BAR_PART, given)
     const row = useRef<HTMLDivElement>(null)
     const [more, setMore] = useState({ back: false, forward: false })
 

@@ -3,11 +3,12 @@ import { Fragment, useId, useRef, useState, type PointerEvent as ReactPointerEve
 
 import { cn } from '../../lib/cn'
 import { KIND_WASH } from '../../lib/kind'
+import { useWords } from '../../lib/words'
 import type { CalendarEventDrag } from './calendar-drag'
 import { movedBy, resizedBy, type CalendarEventChange } from './event-change'
 import { useCalendarDrag, useEventKeys } from './event-keys'
 import { EventPopover, useOpenEvent } from './EventPopover'
-import { CALENDAR_WORDS, eventsOn, weekOf, type CalendarEvent, type CalendarWords } from './events'
+import { CALENDAR_PART, eventsOn, weekOf, type CalendarEvent, type CalendarWords } from './events'
 import { followPress } from './follow-press'
 import { Dot } from '../Dot'
 
@@ -83,7 +84,7 @@ export function MonthGrid<E extends CalendarEvent>({
     className,
     words: given,
 }: MonthGridProps<E>) {
-    const words = { ...CALENDAR_WORDS, ...given }
+    const words = useWords(CALENDAR_PART, given)
     const root = useRef<HTMLDivElement>(null)
     const [open, setOpen] = useOpenEvent(openEvent, onOpenEventChange)
     const days = monthDays(month, weekStartsOn)

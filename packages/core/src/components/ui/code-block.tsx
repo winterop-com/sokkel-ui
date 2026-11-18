@@ -8,6 +8,7 @@ import { Button } from './button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 import { CheckIcon, CopyIcon } from 'lucide-react'
 import { useCopy } from '../../hooks/use-copy'
+import { useWords, type WordsPart } from '../../lib/words'
 
 /** The words of a code block's copy button: its name, and its name for a moment after a press. */
 export interface CodeBlockWords {
@@ -15,7 +16,10 @@ export interface CodeBlockWords {
     copied: string
 }
 
-const COPY_WORDS: CodeBlockWords = { copy: 'Copy', copied: 'Copied' }
+export const CODE_BLOCK_WORDS: CodeBlockWords = { copy: 'Copy', copied: 'Copied' }
+
+/** Where a catalog holds a code block's words. */
+export const CODE_BLOCK_PART: WordsPart<CodeBlockWords> = { id: 'codeBlock', words: CODE_BLOCK_WORDS }
 
 // The editor's ground is laid as an image over the variant's own ground, so it washes it rather than replacing it.
 const codeBlockVariants = cva(
@@ -104,7 +108,7 @@ function CodeBlockCopyButton({
     words: given,
     ...props
 }: CodeBlockCopyButtonProps) {
-    const words = { ...COPY_WORDS, ...given }
+    const words = useWords(CODE_BLOCK_PART, given)
     const { copied, copy } = useCopy()
 
     return (

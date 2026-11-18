@@ -9,6 +9,7 @@ import { SubNav } from './SubNav'
 import { Button } from './ui/button'
 import { Spinner } from './ui/spinner'
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One step of a form filled in a step at a time. */
 export interface Step {
@@ -32,7 +33,17 @@ export interface StepIndicatorWords {
     step: (number: number, total: number) => string
 }
 
-const STEP_WORDS: StepIndicatorWords = { step: (number, total) => `Step ${String(number)} of ${String(total)}` }
+export const STEP_INDICATOR_WORDS: StepIndicatorWords = { step: (number, total) => `Step ${String(number)} of ${String(total)}` }
+
+/** Where a catalog holds a step indicator's words, and the arguments its phrases name. */
+export const STEP_INDICATOR_PART: WordsPart<StepIndicatorWords> = {
+    id: 'stepIndicator',
+    words: STEP_INDICATOR_WORDS,
+    args: { step: 'number total' },
+}
+
+/** A step indicator's phrases as ICU messages in English, for the catalog. */
+export const STEP_INDICATOR_MESSAGES: WordMessages<StepIndicatorWords> = { step: 'Step {number, number} of {total, number}' }
 
 export interface StepIndicatorProps {
     steps: readonly Step[]
@@ -97,7 +108,7 @@ function StepPress({
  * that is drawn in the primary ink as far as the person has come.
  */
 export function StepIndicator({ steps, current, onStep, orientation = 'horizontal', className, words: given }: StepIndicatorProps) {
-    const words = { ...STEP_WORDS, ...given }
+    const words = useWords(STEP_INDICATOR_PART, given)
     const label = words.step(current + 1, steps.length)
     if (orientation === 'vertical') {
         return (
@@ -200,7 +211,17 @@ export interface WizardViewWords extends WizardWords {
     resize: string
 }
 
-const WIZARD_WORDS: WizardWords = { ...STEP_WORDS, next: 'Next', back: 'Back', cancel: 'Cancel' }
+/** A wizard's own words in English. */
+export const WIZARD_WORDS: WizardWords = { ...STEP_INDICATOR_WORDS, next: 'Next', back: 'Back', cancel: 'Cancel' }
+
+/** Where a catalog holds a wizard's words; its step's are the step indicator's own. */
+export const WIZARD_PART: WordsPart<WizardWords> = { id: 'wizard', words: WIZARD_WORDS, from: [STEP_INDICATOR_PART] }
+
+/** A wizard view's own words in English. */
+export const WIZARD_VIEW_WORDS: WizardViewWords = { ...WIZARD_WORDS, resize: 'Resize the column' }
+
+/** Where a catalog holds a wizard view's words; the wizard's are the wizard's own. */
+export const WIZARD_VIEW_PART: WordsPart<WizardViewWords> = { id: 'wizardView', words: WIZARD_VIEW_WORDS, from: [WIZARD_PART] }
 
 /** The verb on the last step, which finishes. */
 export interface WizardFinish {
@@ -297,7 +318,7 @@ export function WizardDialog({
     children,
     words: given,
 }: WizardDialogProps) {
-    const words = { ...WIZARD_WORDS, ...given }
+    const words = useWords(WIZARD_PART, given)
     const moves = wizardMoves({ count: steps.length, current, onCurrentChange, finish, why, next: words.next })
     return (
         <DialogShell
@@ -377,7 +398,7 @@ export function WizardView({
     className,
     words: given,
 }: WizardViewProps) {
-    const words = { ...WIZARD_WORDS, resize: 'Resize the column', ...given }
+    const words = useWords(WIZARD_VIEW_PART, given)
     const moves = wizardMoves({ count: steps.length, current, onCurrentChange, finish, why, next: words.next })
     const side = layout === 'side'
     const shut = moves.confirm.why !== undefined || moves.busy

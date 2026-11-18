@@ -1,5 +1,6 @@
 import { cn } from '../../lib/cn'
 import { formatValue, tokenVar, type Threshold } from './thresholds'
+import { useLocale, useWords, type WordsPart } from '../../lib/words'
 
 export interface ThresholdWords {
     /** The first band's range; `{value}` is where the second band starts. */
@@ -17,6 +18,9 @@ export const THRESHOLD_LEGEND_WORDS: ThresholdWords = {
     atLeast: '{value} and up',
     noData: 'No data',
 }
+
+/** Where a catalog holds a threshold legend's words; `{value}`, `{from}` and `{to}` in them are filled by the legend, so a catalog quotes their braces. */
+export const THRESHOLD_LEGEND_PART: WordsPart<ThresholdWords> = { id: 'thresholdLegend', words: THRESHOLD_LEGEND_WORDS }
 
 const fill = (template: string, values: Record<string, string>) =>
     template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole)
@@ -73,8 +77,9 @@ export function ThresholdLegend({
     words: given,
     className,
 }: ThresholdLegendProps) {
-    const words = { ...THRESHOLD_LEGEND_WORDS, ...given }
-    const write = (value: number) => (format !== undefined ? format(value) : `${formatValue(value, decimals)}${unit}`)
+    const words = useWords(THRESHOLD_LEGEND_PART, given)
+    const locale = useLocale()
+    const write = (value: number) => (format !== undefined ? format(value) : `${formatValue(value, decimals, locale)}${unit}`)
     const bands = thresholdBands(thresholds, write, words)
     const missing = noData === false ? undefined : noData === true ? words.noData : noData
     if (layout === 'bar') {

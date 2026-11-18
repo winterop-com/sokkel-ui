@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { DataTable, type DataColumn } from '../DataTable'
 import { formatValue, thresholdColor, tokenVar, type Threshold } from './thresholds'
+import { useLocale, useWords, type WordsPart } from '../../lib/words'
 
 /** One column of a scorecard: a period or a measure, with its own scale and writing when it differs from the table's. */
 export interface ScoreColumn {
@@ -34,7 +35,10 @@ export interface ScoreWords {
     same: string
 }
 
-const WORDS: ScoreWords = { name: 'Name', noData: 'No data', up: 'Up', down: 'Down', same: 'No change' }
+export const SCORE_WORDS: ScoreWords = { name: 'Name', noData: 'No data', up: 'Up', down: 'Down', same: 'No change' }
+
+/** Where a catalog holds a score table's words. */
+export const SCORE_PART: WordsPart<ScoreWords> = { id: 'score', words: SCORE_WORDS }
 
 export interface ScoreTableProps {
     columns: readonly ScoreColumn[]
@@ -80,7 +84,8 @@ export function ScoreTable({
     words: given,
     className,
 }: ScoreTableProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SCORE_PART, given)
+    const locale = useLocale()
     const grouped = rows.some((row) => row.group !== undefined)
     const table = ((): DataColumn<ScoreRow>[] => {
         const name = nameHeader ?? words.name
@@ -98,7 +103,7 @@ export function ScoreTable({
                 const write =
                     column.format ??
                     format ??
-                    ((value: number) => `${formatValue(value, column.decimals ?? decimals)}${column.unit ?? unit}`)
+                    ((value: number) => `${formatValue(value, column.decimals ?? decimals, locale)}${column.unit ?? unit}`)
                 const toneOf = (row: ScoreRow) => {
                     const value = row.values[column.key]
                     return known(value) ? thresholdColor(value, scale) : undefined

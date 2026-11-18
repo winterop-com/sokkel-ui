@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
 import { PageState, type PageStateHeadingLevel } from './PageState'
+import { LocaleContext, type LocaleState, type WordsPart } from '../lib/words'
 
 /** What a caught failure says. */
 export interface ErrorBoundaryWords {
@@ -15,6 +16,9 @@ export const ERROR_BOUNDARY_WORDS: ErrorBoundaryWords = {
     heading: 'This page could not be drawn',
     retry: 'Try again',
 }
+
+/** Where a catalog holds a caught failure's words. */
+export const ERROR_BOUNDARY_PART: WordsPart<ErrorBoundaryWords> = { id: 'errorBoundary', words: ERROR_BOUNDARY_WORDS }
 
 export interface ErrorBoundaryProps {
     children: ReactNode
@@ -42,6 +46,8 @@ interface ErrorBoundaryState {
  * back. `Shell` wraps its page in one.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+    static contextType = LocaleContext
+
     state: ErrorBoundaryState = { error: null, resetKey: this.props.resetKey }
 
     static getDerivedStateFromError(thrown: unknown): Partial<ErrorBoundaryState> {
@@ -74,7 +80,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     render(): ReactNode {
         const { error } = this.state
         if (error === null) return this.props.children
-        const words = { ...ERROR_BOUNDARY_WORDS, ...this.props.words }
+        const own = (this.context as LocaleState | null)?.words(ERROR_BOUNDARY_PART) ?? ERROR_BOUNDARY_WORDS
+        const words = { ...own, ...this.props.words }
         const failure = (
             <PageState
                 loading={false}

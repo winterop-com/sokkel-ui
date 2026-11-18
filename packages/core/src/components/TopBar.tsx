@@ -6,6 +6,7 @@ import { shortcutLabel } from '../lib/keys'
 import { Link } from './Link'
 import { ShellPalette, ShellTrail } from './shell-context'
 import { Kbd } from './ui/kbd'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** One step of the trail to the current screen. */
 export interface Crumb {
@@ -76,6 +77,9 @@ const CRUMB_LINK =
 /** The top bar's own words in English; a bar with words of its own starts from these. */
 export const TOP_BAR_WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palette', trail: 'Where you are' }
 
+/** Where a catalog holds a top bar's words. */
+export const TOP_BAR_PART: WordsPart<TopBarWords> = { id: 'topBar', words: TOP_BAR_WORDS }
+
 /**
  * What the shell's top bar holds: a search field and the trail to the current screen at the left,
  * the button that opens the command palette and the screen's actions at the right. The field
@@ -98,7 +102,7 @@ export function TopBar({
     actions,
     words: given,
 }: TopBarProps) {
-    const words = { ...TOP_BAR_WORDS, ...given }
+    const words = useWords(TOP_BAR_PART, given)
     const stated = useContext(ShellTrail)
     const trail = stated?.trail ?? ownTrail
     const trailEnds = stated === undefined ? ownEnds : (stated.ends ?? 'current')

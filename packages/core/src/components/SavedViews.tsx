@@ -1,6 +1,7 @@
 import { Bookmark, ChevronDown, Pencil, Plus, Save, Trash2 } from 'lucide-react'
 import { useId, useRef, useState, type FormEvent } from 'react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { returnFocusOnKeyboard } from '../lib/focus'
 import { viewChanges, type ListViewState, type ViewChange } from '../lib/list-views'
@@ -58,7 +59,7 @@ export interface SavedViewsWords {
     deleteDetail: string
 }
 
-const WORDS: SavedViewsWords = {
+export const SAVED_VIEWS_WORDS: SavedViewsWords = {
     views: 'Views',
     none: 'Views',
     changed: 'Changed',
@@ -75,6 +76,12 @@ const WORDS: SavedViewsWords = {
     deleteQuestion: (name) => `Delete ${name}?`,
     deleteDetail: 'The listing stays as it is now.',
 }
+
+/** Where a catalog holds saved views's words, and the arguments its phrases name. */
+export const SAVED_VIEWS_PART: WordsPart<SavedViewsWords> = { id: 'savedViews', words: SAVED_VIEWS_WORDS, args: { deleteQuestion: 'name' } }
+
+/** Saved views's phrases as ICU messages in English, for the catalog. */
+export const SAVED_VIEWS_MESSAGES: WordMessages<SavedViewsWords> = { deleteQuestion: 'Delete {name}?' }
 
 export interface SavedViewsProps {
     views: readonly SavedView[]
@@ -123,7 +130,7 @@ export function SavedViews({
     words: given,
     className,
 }: SavedViewsProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SAVED_VIEWS_PART, given)
     const nameId = useId()
     const trigger = useRef<HTMLButtonElement>(null)
     const asking = useRef(false)

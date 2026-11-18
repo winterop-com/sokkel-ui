@@ -3,6 +3,7 @@ import { TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** Where a date falls against today: passed, near, or later. */
 export type DueState = 'overdue' | 'near' | 'later'
@@ -20,6 +21,15 @@ export const DUE_TEXT_WORDS: DueTextWords = {
     date: (date) => format(date, 'MMM d'),
     title: (date, state) => `${state === 'overdue' ? 'Overdue, was due' : 'Due'} ${format(date, 'EEEE d MMMM')}`,
     none: 'None',
+}
+
+/** Where a catalog holds a due date's words, and the arguments its phrases name. */
+export const DUE_TEXT_PART: WordsPart<DueTextWords> = { id: 'dueText', words: DUE_TEXT_WORDS, args: { date: 'date now' } }
+
+/** A due date's phrases as ICU messages in English, for the catalog. */
+export const DUE_TEXT_MESSAGES: WordMessages<DueTextWords> = {
+    date: '{date, date, ::MMMd}',
+    title: null,
 }
 
 /** Where `date` falls against `now`: before today is overdue, today up to `nearDays` ahead is near. */
@@ -61,7 +71,7 @@ export function DueText({
     words: given,
     className,
 }: DueTextProps) {
-    const words = { ...DUE_TEXT_WORDS, ...given }
+    const words = useWords(DUE_TEXT_PART, given)
     const state = date === undefined || done ? 'later' : dueState(date, now, nearDays)
     const toned = state !== 'later'
     const mark = alert && toned ? <TriangleAlert aria-hidden /> : icon

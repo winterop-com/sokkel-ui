@@ -12,9 +12,10 @@ import {
     type TimeFormat,
 } from '../lib/dates'
 import { TypedField, type EntryFieldProps } from './entry'
-import { FIELD_WORDS, type FieldWords } from './Field'
+import { FIELD_PART, FIELD_WORDS, type FieldWords } from './Field'
 import { DayPick, prefetchCalendar } from './day-pick'
 import { Picker, TimeList, useOpen } from './pickers'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export type { EntryFieldProps } from './entry'
 
@@ -40,7 +41,7 @@ export interface DateTimeFieldWords extends FieldWords {
     periods: readonly [string, string]
 }
 
-const WORDS: DateTimeFieldWords = {
+export const DATE_TIME_FIELD_WORDS: DateTimeFieldWords = {
     ...FIELD_WORDS,
     unreadable: 'Enter a date and time',
     example: (sample) => `As in ${sample}.`,
@@ -51,6 +52,22 @@ const WORDS: DateTimeFieldWords = {
     times: 'Times',
     clear: 'Clear',
     periods: ['AM', 'PM'],
+}
+
+/** Where a catalog holds a date and time field's words, and the arguments its phrases name. */
+export const DATE_TIME_FIELD_PART: WordsPart<DateTimeFieldWords> = {
+    id: 'dateTimeField',
+    words: DATE_TIME_FIELD_WORDS,
+    args: { example: 'sample', under: 'min', over: 'max', use: 'bound' },
+    from: [FIELD_PART],
+}
+
+/** A date and time field's phrases as ICU messages in English, for the catalog. */
+export const DATE_TIME_FIELD_MESSAGES: WordMessages<DateTimeFieldWords> = {
+    example: 'As in {sample}.',
+    under: 'Enter {min} or later',
+    over: 'Enter {max} or earlier',
+    use: 'Use {bound}',
 }
 
 export interface DateTimeFieldProps extends EntryFieldProps<string> {
@@ -103,7 +120,7 @@ export function DateTimeField({
     placeholder,
     ...field
 }: DateTimeFieldProps) {
-    const words = { ...WORDS, ...said }
+    const words = useWords(DATE_TIME_FIELD_PART, said)
     const time: TimeFormat = { clock, seconds, periods: words.periods }
     const [opened, setOpened] = useOpen(open, defaultOpen, onOpenChange)
     const [min, max] = [fitSeconds(field.min, seconds), fitSeconds(field.max, seconds)]

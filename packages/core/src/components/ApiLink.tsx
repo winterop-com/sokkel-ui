@@ -1,6 +1,7 @@
 import { ArrowUpRight } from 'lucide-react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 import { CopyButton } from './CopyButton'
 import { Link } from './Link'
 
@@ -11,7 +12,10 @@ export interface ApiLinkWords {
     opens: string
 }
 
-const WORDS: ApiLinkWords = { copy: 'Copy the request', copied: 'Copied', opens: 'opens in a new tab' }
+export const API_LINK_WORDS: ApiLinkWords = { copy: 'Copy the request', copied: 'Copied', opens: 'opens in a new tab' }
+
+/** Where a catalog holds an API link's words. */
+export const API_LINK_PART: WordsPart<ApiLinkWords> = { id: 'apiLink', words: API_LINK_WORDS }
 
 /** The ink a method is written in: reads quiet, writes in the warning ink, deletes in the critical. */
 function methodTone(method: string): string {
@@ -44,7 +48,7 @@ const PATH = 'min-w-0 truncate font-mono text-xs'
  * text on hover.
  */
 export function ApiLink({ method = 'GET', path, href, copyValue, open = false, className, words: given }: ApiLinkProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(API_LINK_PART, given)
     const verb = <span className={cn('shrink-0 font-mono text-xs font-medium', methodTone(method))}>{method.toUpperCase()}</span>
     if (open) {
         return (

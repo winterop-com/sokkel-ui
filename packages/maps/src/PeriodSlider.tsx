@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Slider } from '@winterop-com/sokkel-ui/primitives/slider'
 
 /** One step of a period slider: what it answers with and what it is called. */
@@ -18,7 +19,10 @@ export interface PeriodSliderWords {
     pause: string
 }
 
-const WORDS: PeriodSliderWords = { previous: 'Previous period', next: 'Next period', play: 'Play', pause: 'Pause' }
+export const PERIOD_SLIDER_WORDS: PeriodSliderWords = { previous: 'Previous period', next: 'Next period', play: 'Play', pause: 'Pause' }
+
+/** Where a catalog holds a period slider's words. */
+export const PERIOD_SLIDER_PART: WordsPart<PeriodSliderWords> = { id: 'periodSlider', words: PERIOD_SLIDER_WORDS }
 
 export interface PeriodSliderProps {
     /** What the periods are of, such as "Rainfall"; it names the slider for a screen reader. */
@@ -39,7 +43,7 @@ export interface PeriodSliderProps {
  * a time and stops at the last.
  */
 export function PeriodSlider({ label, periods, value, onValueChange, interval = 1200, words, className }: PeriodSliderProps) {
-    const said = { ...WORDS, ...words }
+    const said = useWords(PERIOD_SLIDER_PART, words)
     const index = Math.max(
         0,
         periods.findIndex((period) => period.id === value),

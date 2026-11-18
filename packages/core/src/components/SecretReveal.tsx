@@ -3,6 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { CopyButton } from './CopyButton'
+import { useWords, type WordsPart } from '../lib/words'
 
 export interface SecretRevealWords {
     /** The value's name when the label is not plain text. */
@@ -12,12 +13,15 @@ export interface SecretRevealWords {
     copied: string
 }
 
-const WORDS: SecretRevealWords = {
+export const SECRET_REVEAL_WORDS: SecretRevealWords = {
     secret: 'Secret',
     warning: 'Copy it now. It will not be shown again.',
     copy: 'Copy',
     copied: 'Copied',
 }
+
+/** Where a catalog holds a secret reveal's words. */
+export const SECRET_REVEAL_PART: WordsPart<SecretRevealWords> = { id: 'secretReveal', words: SECRET_REVEAL_WORDS }
 
 export interface SecretRevealProps {
     value: string
@@ -38,7 +42,7 @@ export interface SecretRevealProps {
  * what the secret is.
  */
 export function SecretReveal({ value, label, note, className, words: given, autoFocus = false }: SecretRevealProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SECRET_REVEAL_PART, given)
     const code = useRef<HTMLElement>(null)
     useEffect(() => {
         if (autoFocus) code.current?.focus()

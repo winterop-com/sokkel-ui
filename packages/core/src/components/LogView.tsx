@@ -1,6 +1,7 @@
 import { ArrowDown } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { literalRanges } from '../lib/search'
 import { Highlight } from './Highlight'
@@ -39,7 +40,10 @@ export interface LogViewWords {
     jump: string
 }
 
-const WORDS: LogViewWords = { empty: 'Nothing logged yet.', jump: 'Jump to newest' }
+export const LOG_VIEW_WORDS: LogViewWords = { empty: 'Nothing logged yet.', jump: 'Jump to newest' }
+
+/** Where a catalog holds a log view's words. */
+export const LOG_VIEW_PART: WordsPart<LogViewWords> = { id: 'logView', words: LOG_VIEW_WORDS }
 
 /** A line's extras as written: `key=value` pairs joined by spaces. */
 function fieldsText(fields: NonNullable<LogLine['fields']>): string {
@@ -94,7 +98,7 @@ export function LogView({
     className,
     words: given,
 }: LogViewProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(LOG_VIEW_PART, given)
     const scroller = useRef<HTMLDivElement>(null)
     const pinned = useRef(true)
     const [away, setAway] = useState(false)

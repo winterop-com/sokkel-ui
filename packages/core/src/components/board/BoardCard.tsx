@@ -6,6 +6,7 @@ import { useClamped } from '../../hooks/use-clamped'
 import { cn } from '../../lib/cn'
 import { KIND_WASH, kindOf, type KindColor } from '../../lib/kind'
 import { TITLE_LINES, type TitleLines } from '../../lib/title-lines'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 import { DueText } from '../DueText'
 import { PersonAvatar } from '../PersonAvatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
@@ -47,7 +48,7 @@ export interface BoardCardWords {
     move: (card: string) => string
 }
 
-const WORDS: BoardCardWords = {
+export const BOARD_CARD_WORDS: BoardCardWords = {
     menu: 'More actions',
     due: (date) => format(date, 'MMM d'),
     dueTitle: (date, overdue) => `${overdue ? 'Overdue, was due' : 'Due'} ${format(date, 'EEEE d MMMM')}`,
@@ -55,6 +56,23 @@ const WORDS: BoardCardWords = {
     checklist: (done, total) => `${done} of ${total} checklist items done`,
     assignee: (name) => `Assigned to ${name}`,
     move: (card) => `Move ${card}`,
+}
+
+/** Where a catalog holds a board card's words, and the arguments its phrases name. */
+export const BOARD_CARD_PART: WordsPart<BoardCardWords> = {
+    id: 'boardCard',
+    words: BOARD_CARD_WORDS,
+    args: { due: 'date', comments: 'count', checklist: 'done total', assignee: 'name', move: 'card' },
+}
+
+/** A board card's phrases as ICU messages in English, for the catalog. */
+export const BOARD_CARD_MESSAGES: WordMessages<BoardCardWords> = {
+    due: '{date, date, ::MMMd}',
+    dueTitle: null,
+    comments: '{count, plural, one {# comment} other {# comments}}',
+    checklist: '{done} of {total} checklist items done',
+    assignee: 'Assigned to {name}',
+    move: 'Move {card}',
 }
 
 export interface BoardCardProps {
@@ -138,7 +156,7 @@ function CardFace({
     words: given,
     overlay = false,
 }: BoardCardProps & { overlay?: boolean }) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(BOARD_CARD_PART, given)
     const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     const hasFoot = due !== undefined || comments !== undefined || checklist !== undefined || assignee !== undefined
     const tool = 'md:opacity-0 md:group-hover/card:opacity-100 md:focus-visible:opacity-100'

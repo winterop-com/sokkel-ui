@@ -1,10 +1,11 @@
 import { Eraser } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Field, FIELD_WORDS, type FieldWords } from './Field'
+import { Field, FIELD_PART, FIELD_WORDS, type FieldWords } from './Field'
 import type { Issue } from './IssueMark'
 import { Segmented } from './Segmented'
 import { Button } from './ui/button'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** The words a yes or no field says. */
 export interface YesNoFieldWords extends FieldWords {
@@ -16,7 +17,10 @@ export interface YesNoFieldWords extends FieldWords {
     unanswered: string
 }
 
-const WORDS: YesNoFieldWords = { yes: 'Yes', no: 'No', clear: 'Clear', unanswered: 'Not answered', ...FIELD_WORDS }
+export const YES_NO_FIELD_WORDS: YesNoFieldWords = { yes: 'Yes', no: 'No', clear: 'Clear', unanswered: 'Not answered', ...FIELD_WORDS }
+
+/** Where a catalog holds a yes-no field's words. */
+export const YES_NO_FIELD_PART: WordsPart<YesNoFieldWords> = { id: 'yesNoField', words: YES_NO_FIELD_WORDS, from: [FIELD_PART] }
 
 export interface YesNoFieldProps {
     id: string
@@ -59,7 +63,7 @@ export function YesNoField({
     className,
     words: given,
 }: YesNoFieldProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(YES_NO_FIELD_PART, given)
     const chosen = value === null ? '' : value ? 'yes' : 'no'
     const options = [{ value: 'yes', label: words.yes }, ...(yesOnly ? [] : [{ value: 'no', label: words.no }])]
     return (

@@ -5,6 +5,7 @@ import { cn } from '../lib/cn'
 import {
     AT_REST,
     draftOf,
+    EDIT_PART,
     EDIT_WORDS,
     editCycle,
     failureOf,
@@ -18,6 +19,7 @@ import {
     type EditWords,
 } from '../lib/edit'
 import { InlineEditor } from './inline-edit-parts'
+import { useLocale, useWords, type WordsPart } from '../lib/words'
 
 export type { EditedValue, EditOption, EditorKind, EditValue, EditWords }
 
@@ -29,7 +31,10 @@ export interface InlineEditWords extends EditWords {
     empty: string
 }
 
-const WORDS: InlineEditWords = { ...EDIT_WORDS, edit: 'Edit', empty: 'Empty' }
+export const INLINE_EDIT_WORDS: InlineEditWords = { ...EDIT_WORDS, edit: 'Edit', empty: 'Empty' }
+
+/** Where a catalog holds an inline edit's words. */
+export const INLINE_EDIT_PART: WordsPart<InlineEditWords> = { id: 'inlineEdit', words: INLINE_EDIT_WORDS, from: [EDIT_PART] }
 
 export interface InlineEditProps<K extends EditorKind = 'text'> {
     /** The value's name, which names the editor: Schedule, Retries, Owner. */
@@ -95,7 +100,8 @@ export interface InlineEditProps<K extends EditorKind = 'text'> {
 export function InlineEdit<K extends EditorKind = 'text'>(props: InlineEditProps<K>) {
     const { label, variant = 'field', blur = 'save', disabled = false, placeholder, defaultEditing = false, className } = props
     const kind: EditorKind = props.editor ?? 'text'
-    const words = { ...WORDS, ...props.words }
+    const words = useWords(INLINE_EDIT_PART, props.words)
+    const locale = useLocale()
     const options = kind === 'select' ? props.options : undefined
     // One kind's value is the editor's value as the cycle handles it.
     const save = props.onSave as (value: EditValue) => void | Promise<void>
@@ -204,7 +210,7 @@ export function InlineEdit<K extends EditorKind = 'text'>(props: InlineEditProps
     }
 
     const empty = value === null || value === ''
-    const shown = empty ? (placeholder ?? words.empty) : display !== undefined ? display(value) : shownValue(value, kind, options)
+    const shown = empty ? (placeholder ?? words.empty) : display !== undefined ? display(value) : shownValue(value, kind, options, locale)
     const text = (
         <span
             className={cn(

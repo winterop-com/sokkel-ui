@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type RefObject } from 'react'
 
+import type { WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { composing } from '../lib/keys'
 import { POPUP } from '../lib/popup'
@@ -39,6 +40,9 @@ export const MENTION_WORDS: MentionWords = {
     empty: 'No one by that name',
     searching: 'Searching',
 }
+
+/** Where a catalog holds the mention suggestions's words. */
+export const MENTION_PART: WordsPart<MentionWords> = { id: 'mention', words: MENTION_WORDS }
 
 /** The width of the suggestions, in pixels; `w-64` below. */
 const LIST_WIDTH = 256

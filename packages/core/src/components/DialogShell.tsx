@@ -5,6 +5,7 @@ import { BUSY_RELEASE } from '../lib/durations'
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** A dialog's width from `md` up, where it stands as a box; below `md` it is a full-screen sheet. */
 const WIDTHS = {
@@ -60,6 +61,9 @@ export interface DialogShellWords {
 
 /** A dialog's own words in English; a dialog with words of its own starts from these. */
 export const DIALOG_SHELL_WORDS: DialogShellWords = { cancel: 'Cancel', back: 'Back', close: 'Close', stopWaiting: 'Stop waiting' }
+
+/** Where a catalog holds a dialog's words. */
+export const DIALOG_SHELL_PART: WordsPart<DialogShellWords> = { id: 'dialogShell', words: DIALOG_SHELL_WORDS }
 
 /** Dims a dialog while another is open on top of it. */
 export const NESTED =
@@ -174,7 +178,7 @@ export function DialogShell({
     words: given,
 }: DialogShellProps) {
     const parts = shellParts({ confirm, actions, footer, dismissible })
-    const words = { ...DIALOG_SHELL_WORDS, ...given }
+    const words = useWords(DIALOG_SHELL_PART, given)
     const busy = confirm?.busy === true
     // A busy confirm holds the dialog until it has run `busyRelease`; then Escape and Cancel let it go.
     const released = useBusyRelease(busy, busyRelease)

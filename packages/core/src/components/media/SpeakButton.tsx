@@ -1,6 +1,7 @@
 import { CircleAlert, Square, Volume2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
+import { useWords, type WordsPart } from '../../lib/words'
 import { IconButton } from '../IconButton'
 import { Button } from '../ui/button'
 import { Spinner } from '../ui/spinner'
@@ -36,13 +37,16 @@ export interface SpeakButtonWords {
     retry: string
 }
 
-const WORDS: SpeakButtonWords = {
+export const SPEAK_BUTTON_WORDS: SpeakButtonWords = {
     speak: 'Read aloud',
     loading: 'Loading the audio',
     stop: 'Stop',
     failed: 'The audio could not be played',
     retry: 'Try again',
 }
+
+/** Where a catalog holds a speak button's words. */
+export const SPEAK_BUTTON_PART: WordsPart<SpeakButtonWords> = { id: 'speakButton', words: SPEAK_BUTTON_WORDS }
 
 export interface SpeakButtonProps {
     /**
@@ -83,7 +87,7 @@ export function SpeakButton({
     className,
     words: given,
 }: SpeakButtonProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SPEAK_BUTTON_PART, given)
     const [state, setState] = useState<SpeakState>(defaultState)
     const element = useRef<HTMLAudioElement | null>(null)
     const kept = useRef<{ url: string; made: boolean } | null>(null)

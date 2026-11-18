@@ -5,14 +5,15 @@ import { lazy, Suspense, useCallback, useLayoutEffect, useRef, useState, type Re
 import { cn } from '../lib/cn'
 import { composing, touchTyping } from '../lib/keys'
 import { accepts } from '../lib/uploads'
+import { useWords, type WordsPart } from '../lib/words'
 import { insertTranscript, useDictation, type Dictation, type DictationOptions } from '../hooks/use-dictation'
 import { useFileDrop } from '../hooks/use-file-drop'
 import { DialogShell } from './DialogShell'
-import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
+import { MENTION_PART, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { AudioPlayer } from './media/AudioPlayer'
 import { formatTime } from './media/time'
 import { wantsFirstFrame } from './media/video-source'
-import { VIDEO_PLAYER_WORDS, VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
+import { VIDEO_PLAYER_PART, VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
 import { Spinner } from './ui/spinner'
 import { Textarea } from './ui/textarea'
@@ -82,6 +83,9 @@ export const COMPOSER_DICTATION_WORDS: ComposerDictationWords = {
     failed: 'What was said could not be turned into text. Try again.',
 }
 
+/** Where a catalog holds a composer's dictation's words. */
+export const COMPOSER_DICTATION_PART: WordsPart<ComposerDictationWords> = { id: 'composerDictation', words: COMPOSER_DICTATION_WORDS }
+
 /**
  * How the composer takes dictation: `transcribe` turns a recording of the microphone into text, and
  * `recognition` opts in to the browser's own speech recognition, used ahead of it where there is
@@ -127,6 +131,9 @@ export const COMPOSER_WORDS: ComposerWords = {
     dictation: {},
     mentions: {},
 }
+
+/** Where a catalog holds a composer's words. */
+export const COMPOSER_PART: WordsPart<ComposerWords> = { id: 'composer', words: COMPOSER_WORDS }
 
 /** How much of a long text heard is kept, from its end, so what was heard last stays in view. */
 const HEARD_TAIL = 160
@@ -185,6 +192,7 @@ function uploadNote(attachment: ComposerAttachment, words: ComposerWords): strin
 
 /** One file waiting to go, drawn by its kind and whether it is still uploading. */
 function Chip({ attachment, words, onPlay }: { attachment: ComposerAttachment; words: ComposerWords; onPlay: () => void }) {
+    const play = useWords(VIDEO_PLAYER_PART).play
     const uploading = attachment.uploading === true
     const { kind, url, name } = attachment
     if (kind === 'image' && url !== undefined) {
@@ -208,7 +216,7 @@ function Chip({ attachment, words, onPlay }: { attachment: ComposerAttachment; w
         return (
             <button
                 type="button"
-                aria-label={`${words.player.play ?? VIDEO_PLAYER_WORDS.play} ${name}`}
+                aria-label={`${words.player.play ?? play} ${name}`}
                 title={name}
                 onClick={onPlay}
                 className="relative block size-14 overflow-hidden rounded-md border border-border bg-terminal outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -360,8 +368,9 @@ export function Composer({
     words: given,
     className,
 }: ComposerProps) {
-    const words = { ...COMPOSER_WORDS, ...given }
-    const said = { ...COMPOSER_DICTATION_WORDS, ...words.dictation }
+    const words = useWords(COMPOSER_PART, given)
+    const said = useWords(COMPOSER_DICTATION_PART, words.dictation)
+    const mentionWords = useWords(MENTION_PART)
     const picker = useRef<HTMLInputElement>(null)
     const root = useRef<HTMLDivElement>(null)
     const text = useRef<HTMLTextAreaElement>(null)
@@ -379,7 +388,7 @@ export function Composer({
         onChange,
         area: text,
         root,
-        words: { ...MENTION_WORDS, ...words.mentions },
+        words: { ...mentionWords, ...words.mentions },
     })
     const dictation = useDictation({
         ...dictating,

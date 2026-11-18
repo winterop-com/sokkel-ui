@@ -1,6 +1,7 @@
 import { CircleAlert, Loader2, RotateCw, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { ProseText } from './ProseText'
 import { Button } from './ui/button'
@@ -33,6 +34,9 @@ export const PAGE_STATE_WORDS: PageStateWords = {
     partRefused: 'Part of this page could not be read',
     retry: 'Try again',
 }
+
+/** Where a catalog holds a page state's words. */
+export const PAGE_STATE_PART: WordsPart<PageStateWords> = { id: 'pageState', words: PAGE_STATE_WORDS }
 
 /**
  * The heading over a failed read: a 404 is an absence and no answer is silence, not a refusal. In
@@ -133,7 +137,7 @@ export function PageState({
     words: given,
     children,
 }: PageStateProps) {
-    const words = { ...PAGE_STATE_WORDS, ...given }
+    const words = useWords(PAGE_STATE_PART, given)
     if (loading) {
         return (
             <Frame framed={frame} className="items-center text-muted-foreground">

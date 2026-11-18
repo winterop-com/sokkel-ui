@@ -3,6 +3,7 @@ import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type Re
 import { cn } from '../lib/cn'
 import { STATUS_CSS } from '../lib/status'
 import { useStatus } from './StatusProvider'
+import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One day of a thing's record. */
 export interface UptimeDay {
@@ -27,12 +28,22 @@ export interface UptimeBarWords {
     noData: string
 }
 
-const WORDS: UptimeBarWords = {
+export const UPTIME_BAR_WORDS: UptimeBarWords = {
     uptime: (percent) => `${percent} uptime`,
     since: (days) => `${String(days)} days ago`,
     today: 'Today',
     noData: 'No data',
 }
+
+/** Where a catalog holds an uptime bar's words, and the arguments its phrases name. */
+export const UPTIME_BAR_PART: WordsPart<UptimeBarWords> = {
+    id: 'uptimeBar',
+    words: UPTIME_BAR_WORDS,
+    args: { uptime: 'percent', since: 'days' },
+}
+
+/** An uptime bar's phrases as ICU messages in English, for the catalog. */
+export const UPTIME_BAR_MESSAGES: WordMessages<UptimeBarWords> = { uptime: '{percent} uptime', since: '{days, number} days ago' }
 
 export interface UptimeBarProps {
     /** The days, oldest first, the last one today. */
@@ -43,7 +54,7 @@ export interface UptimeBarProps {
     minBarWidth?: number
     /** How an uptime is written: `99.95%` by default. */
     format?: (uptime: number) => string
-    /** How a day is written in the readout: `Nov 3, 2026` by default. */
+    /** How a day is written in the readout: `Nov 3, 2026` by default, in the provider's locale. */
     formatDay?: (date: string) => string
     /** Called with the day pressed, or chosen with Enter, such as to list its incidents. */
     onSelect?: (day: UptimeDay) => void
@@ -54,12 +65,18 @@ export interface UptimeBarProps {
 /** The gap between two days, in pixels: `gap-px` below. */
 const GAP = 1
 
-const DAY = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+const DAYS = new Map<string, Intl.DateTimeFormat>()
 
-/** A `YYYY-MM-DD` day written as `Nov 3, 2026`. */
-export function formatUptimeDay(date: string): string {
+/** A `YYYY-MM-DD` day written in a locale: `Nov 3, 2026` in `en-US`. */
+export function formatUptimeDay(date: string, locale = 'en-US'): string {
     const when = new Date(`${date}T00:00:00Z`)
-    return Number.isNaN(when.getTime()) ? date : DAY.format(when)
+    if (Number.isNaN(when.getTime())) return date
+    let day = DAYS.get(locale)
+    if (day === undefined) {
+        day = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+        DAYS.set(locale, day)
+    }
+    return day.format(when)
 }
 
 /** An uptime written to two decimals: `0.99951` is `99.95%`. */
@@ -101,12 +118,13 @@ export function UptimeBar({
     label,
     minBarWidth = 3,
     format = formatUptime,
-    formatDay = formatUptimeDay,
+    formatDay,
     onSelect,
     words: given,
     className,
 }: UptimeBarProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(UPTIME_BAR_PART, given)
+    const locale = useLocale()
     const strip = useRef<HTMLDivElement>(null)
     const [fit, setFit] = useState(days.length)
     const [active, setActive] = useState<number | null>(null)
@@ -172,7 +190,9 @@ export function UptimeBar({
                 <span aria-live="polite" className="min-w-0 flex-1 truncate text-center">
                     {pointed !== undefined ? (
                         <>
-                            <span className="text-foreground">{formatDay(pointed.date)}</span>
+                            <span className="text-foreground">
+                                {formatDay === undefined ? formatUptimeDay(pointed.date, locale) : formatDay(pointed.date)}
+                            </span>
                             {' · '}
                             {pointed.uptime === null ? words.noData : format(pointed.uptime)}
                             {pointed.note !== undefined && <> · {pointed.note}</>}

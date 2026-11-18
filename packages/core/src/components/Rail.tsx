@@ -14,6 +14,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { useTrafficLights } from '../lib/desktop'
 import { usePanelSize } from '../hooks/use-panel-size'
@@ -149,6 +150,9 @@ export const RAIL_WORDS: RailWords = {
     unread: 'Unread',
     places: 'All places',
 }
+
+/** Where a catalog holds a rail's words. */
+export const RAIL_PART: WordsPart<RailWords> = { id: 'rail', words: RAIL_WORDS }
 
 /** The expanded rail's width in pixels: where it starts, and how narrow and how wide its edge drags. */
 export interface RailSize {
@@ -342,7 +346,7 @@ export function Rail({
         const target = list.querySelector<HTMLElement>('[aria-current="page"]') ?? list.querySelector<HTMLElement>('a, button')
         target?.focus()
     })
-    const words = { ...RAIL_WORDS, ...given }
+    const words = useWords(RAIL_PART, given)
     const above = body?.places === 'above'
     // Places above a body show with it whenever the rail is expanded.
     const both = above && shows !== 'icons'

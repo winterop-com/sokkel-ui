@@ -1,6 +1,7 @@
 import { format, isSameDay } from 'date-fns'
 
 import { cn } from '../../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 
 /** The words a day strip says, each a formatter so an app can write dates its own way. */
 export interface DayStripWords {
@@ -12,10 +13,24 @@ export interface DayStripWords {
     day: (date: Date) => string
 }
 
-const WORDS: DayStripWords = {
+export const DAY_STRIP_WORDS: DayStripWords = {
     weekday: (date) => format(date, 'EEEEE'),
     dayNumber: (date) => format(date, 'd'),
     day: (date) => format(date, 'EEEE d MMMM'),
+}
+
+/** Where a catalog holds a day strip's words, and the arguments its phrases name. */
+export const DAY_STRIP_PART: WordsPart<DayStripWords> = {
+    id: 'dayStrip',
+    words: DAY_STRIP_WORDS,
+    args: { weekday: 'date', dayNumber: 'date' },
+}
+
+/** A day strip's phrases as ICU messages in English, for the catalog. */
+export const DAY_STRIP_MESSAGES: WordMessages<DayStripWords> = {
+    weekday: '{date, date, ::EEEEE}',
+    dayNumber: '{date, date, ::d}',
+    day: null,
 }
 
 export interface DayStripProps {
@@ -33,7 +48,7 @@ export interface DayStripProps {
  * over its number, today in the primary ink and the chosen day filled.
  */
 export function DayStrip({ days, value, today, onValueChange, className, words: given }: DayStripProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(DAY_STRIP_PART, given)
     return (
         <div className={cn('grid gap-1', className)} style={{ gridTemplateColumns: `repeat(${String(days.length)}, minmax(0, 1fr))` }}>
             {days.map((day) => {

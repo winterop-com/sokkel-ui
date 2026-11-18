@@ -3,6 +3,7 @@ import { ChevronDown, Hash, Lock, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { ChatFace, type ChatPerson } from './ChatMessage'
 import { PersonAvatar, PresenceDot, type Presence } from './PersonAvatar'
 import { Button } from './ui/button'
@@ -36,13 +37,26 @@ export interface ChannelHeaderWords {
     tabs: string
 }
 
-const WORDS: ChannelHeaderWords = {
+export const CHANNEL_HEADER_WORDS: ChannelHeaderWords = {
     channel: 'Channel',
     private: 'Private channel',
     members: (count) => `${String(count)} ${count === 1 ? 'member' : 'members'}`,
     details: (name) => `Details for ${name}`,
     presence: { active: 'Active', away: 'Away', offline: 'Offline' },
     tabs: 'Views',
+}
+
+/** Where a catalog holds a channel header's words, and the arguments its phrases name. */
+export const CHANNEL_HEADER_PART: WordsPart<ChannelHeaderWords> = {
+    id: 'channelHeader',
+    words: CHANNEL_HEADER_WORDS,
+    args: { members: 'count', details: 'name' },
+}
+
+/** A channel header's phrases as ICU messages in English, for the catalog. */
+export const CHANNEL_HEADER_MESSAGES: WordMessages<ChannelHeaderWords> = {
+    members: '{count, plural, one {# member} other {# members}}',
+    details: 'Details for {name}',
 }
 
 export interface ChannelHeaderProps {
@@ -103,7 +117,7 @@ export function ChannelHeader({
     className,
     words: given,
 }: ChannelHeaderProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CHANNEL_HEADER_PART, given)
     const mark =
         kind === 'direct' ? (
             avatar === undefined ? (

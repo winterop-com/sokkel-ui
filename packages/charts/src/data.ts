@@ -176,16 +176,24 @@ export function asShares(series: readonly Series[]): Series[] {
     }))
 }
 
-/** A figure written for a tooltip or a label: grouped thousands, at most two decimals. */
-export const formatNumber = (value: number): string => value.toLocaleString('en-US', { maximumFractionDigits: 2 })
+/** A figure written for a tooltip or a label in a locale: grouped thousands, at most two decimals. */
+export const formatNumber = (value: number, locale = 'en-US'): string => value.toLocaleString(locale, { maximumFractionDigits: 2 })
 
-const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+const compacts = new Map<string, Intl.NumberFormat>()
 
-/** A figure written short for an axis' ticks: `1.2K` for 1,200. */
-export const formatCompact = (value: number): string => compact.format(value)
+/** A figure written short for an axis' ticks in a locale: `1.2K` for 1,200. */
+export function formatCompact(value: number, locale = 'en-US'): string {
+    let compact = compacts.get(locale)
+    if (compact === undefined) {
+        compact = new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 })
+        compacts.set(locale, compact)
+    }
+    return compact.format(value)
+}
 
 /**
- * A figure written for a value axis' tick: short from ten up, `1.2K` for 1,200, and with up to two
- * decimals below, so the ticks of a small range (0.05 apart) never read the same.
+ * A figure written for a value axis' tick in a locale: short from ten up, `1.2K` for 1,200, and with
+ * up to two decimals below, so the ticks of a small range (0.05 apart) never read the same.
  */
-export const formatTick = (value: number): string => (Math.abs(value) < 10 ? formatNumber(value) : formatCompact(value))
+export const formatTick = (value: number, locale = 'en-US'): string =>
+    Math.abs(value) < 10 ? formatNumber(value, locale) : formatCompact(value, locale)

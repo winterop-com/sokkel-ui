@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactElemen
 import { useShortcuts, type KeyBinding } from '../hooks/use-shortcuts'
 import { cn } from '../lib/cn'
 import { isApple, keyLabels, type KeyChord } from '../lib/keys'
+import { useWords, type WordsPart } from '../lib/words'
 import { ReactionBar, type QuickReaction, type ReactionBarWords, type ReactionPickerOptions } from './ReactionBar'
 import { Button } from './ui/button'
 import {
@@ -117,6 +118,9 @@ export const CALL_BAR_WORDS: CallBarWords = {
     shortcutCamera: 'Turn the camera on or off',
     reactionBar: {},
 }
+
+/** Where a catalog holds a call bar's words; its reaction bar's are that bar's own. */
+export const CALL_BAR_PART: WordsPart<CallBarWords> = { id: 'callBar', words: CALL_BAR_WORDS }
 
 export interface CallBarProps {
     /** Whether the microphone is muted, drawn in the critical tone. */
@@ -257,7 +261,7 @@ export function CallBar({
     className,
     words: given,
 }: CallBarProps) {
-    const words = { ...CALL_BAR_WORDS, ...given }
+    const words = useWords(CALL_BAR_PART, given)
     const root = useRef<HTMLDivElement>(null)
     const [room, setRoom] = useState<Room>('wide')
     const [ownMenu, setOwnMenu] = useState<CallBarMenu | null>(defaultOpenMenu)

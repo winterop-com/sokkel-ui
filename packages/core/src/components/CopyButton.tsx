@@ -2,6 +2,7 @@ import { Check, Copy } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 import { useCopy } from '../hooks/use-copy'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
@@ -12,7 +13,10 @@ export interface CopyButtonWords {
     copied: string
 }
 
-const WORDS: CopyButtonWords = { copy: 'Copy', copied: 'Copied' }
+export const COPY_BUTTON_WORDS: CopyButtonWords = { copy: 'Copy', copied: 'Copied' }
+
+/** Where a catalog holds a copy button's words. */
+export const COPY_BUTTON_PART: WordsPart<CopyButtonWords> = { id: 'copyButton', words: COPY_BUTTON_WORDS }
 
 export interface CopyButtonProps {
     value: string
@@ -40,7 +44,7 @@ export function CopyButton({
     icon,
     variant = 'ghost',
 }: CopyButtonProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(COPY_BUTTON_PART, given)
     const { copied, copy: write } = useCopy()
     const word = copied ? words.copied : words.copy
     const copy = () => write(value)

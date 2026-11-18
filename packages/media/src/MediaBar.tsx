@@ -3,12 +3,13 @@ import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type Reac
 import { usePanelSize } from '@winterop-com/sokkel-ui/hooks/use-panel-size'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ResizeHandle } from '@winterop-com/sokkel-ui/ResizeHandle'
+import { useWords } from '@winterop-com/sokkel-ui/lib/words'
 import { grows, LINE, WIDE, type MediaBarLayout } from './bar-growth'
 import { chapterIndex, chapterSpan, nextChapterStart, previousChapterStart, seekPoint, waveformSpan } from './chapters'
 import { LineBar, PanelBar, RowsBar, StageBar, type BarProps } from './MediaBarLayouts'
 import {
     kindOf,
-    MEDIA_BAR_WORDS,
+    MEDIA_BAR_PART,
     type Deck,
     type MediaBarWords,
     type MediaSteps,
@@ -313,7 +314,7 @@ export function MediaBar({
     words: given,
     className,
 }: MediaBarProps) {
-    const words = { ...MEDIA_BAR_WORDS, ...given }
+    const words = useWords(MEDIA_BAR_PART, given)
     useOneSound(() => onPlayingChange(false), playing && !muted && volume > 0, exclusive)
     const [scrub, setScrub] = useState<number | null>(null)
     const bar = useRef<HTMLDivElement | null>(null)

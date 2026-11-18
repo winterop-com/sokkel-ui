@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Button } from './ui/button'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export interface SelectionBarWords {
     /** How many are selected. */
@@ -17,6 +18,16 @@ export const SELECTION_BAR_WORDS: SelectionBarWords = {
     clear: 'Clear',
     label: 'Selection',
 }
+
+/** Where a catalog holds a selection bar's words, and the arguments its phrases name. */
+export const SELECTION_BAR_PART: WordsPart<SelectionBarWords> = {
+    id: 'selectionBar',
+    words: SELECTION_BAR_WORDS,
+    args: { selected: 'count' },
+}
+
+/** A selection bar's phrases as ICU messages in English, for the catalog. */
+export const SELECTION_BAR_MESSAGES: WordMessages<SelectionBarWords> = { selected: '{count, number} selected' }
 
 export interface SelectionBarProps {
     count: number
@@ -50,7 +61,7 @@ export function SelectionBar({
     words: given,
     className,
 }: SelectionBarProps) {
-    const words = { ...SELECTION_BAR_WORDS, ...given }
+    const words = useWords(SELECTION_BAR_PART, given)
     return (
         <div
             role="group"

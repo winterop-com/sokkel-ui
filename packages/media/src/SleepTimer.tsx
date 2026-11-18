@@ -13,6 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { chapterIndex } from './chapters'
 
 /**
@@ -46,6 +47,16 @@ export const SLEEP_TIMER_WORDS: SleepTimerWords = {
     end: 'End of episode',
     left: (time) => `${time} left`,
 }
+
+/** Where a catalog holds a sleep timer's words, and the arguments its phrases name. */
+export const SLEEP_TIMER_PART: WordsPart<SleepTimerWords> = {
+    id: 'sleepTimer',
+    words: SLEEP_TIMER_WORDS,
+    args: { minutes: 'minutes', left: 'time' },
+}
+
+/** A sleep timer's phrases as ICU messages in English, for the catalog. */
+export const SLEEP_TIMER_MESSAGES: WordMessages<SleepTimerWords> = { minutes: '{minutes} minutes', left: '{time} left' }
 
 const OFF = 'off'
 
@@ -94,7 +105,7 @@ export function SleepTimerMenu({
     className,
     words,
 }: SleepTimerMenuProps) {
-    const said = { ...SLEEP_TIMER_WORDS, ...words }
+    const said = useWords(SLEEP_TIMER_PART, words)
     const counting = typeof timer === 'number' && remaining !== undefined
     const state =
         timer === null

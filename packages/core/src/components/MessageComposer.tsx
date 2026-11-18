@@ -20,12 +20,13 @@ import {
 } from 'lucide-react'
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { returnFocusOnKeyboard } from '../lib/focus'
 import { composing, touchTyping } from '../lib/keys'
 import { EmojiPickerPopover, type EmojiPickerPopoverProps } from './EmojiPicker'
 import { Markdown, type MarkdownWords } from './Markdown'
-import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
+import { MENTION_PART, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { Segmented } from './Segmented'
 import { fitCount } from './TagChips'
 import { Checkbox } from './ui/checkbox'
@@ -147,6 +148,9 @@ export const MESSAGE_COMPOSER_WORDS: MessageComposerWords = {
         codeBlock: 'Code block',
     },
 }
+
+/** Where a catalog holds a message composer's words. */
+export const MESSAGE_COMPOSER_PART: WordsPart<MessageComposerWords> = { id: 'messageComposer', words: MESSAGE_COMPOSER_WORDS }
 
 const GROUPS: { id: string; formats: [MessageFormat, LucideIcon][] }[] = [
     {
@@ -326,7 +330,9 @@ export function MessageComposer({
     className,
     words: given,
 }: MessageComposerProps) {
-    const words = { ...MESSAGE_COMPOSER_WORDS, ...given, format: { ...MESSAGE_COMPOSER_WORDS.format, ...given?.format } }
+    const own = useWords(MESSAGE_COMPOSER_PART)
+    const words = { ...own, ...given, format: { ...own.format, ...given?.format } }
+    const mentionWords = useWords(MENTION_PART, words.mentions)
     const [formatting, setFormatting] = useState(defaultFormatting)
     const [ownMode, setOwnMode] = useState<MessageComposerMode>(defaultMode)
     const mode = preview ? (givenMode ?? ownMode) : 'write'
@@ -339,7 +345,7 @@ export function MessageComposer({
         onChange,
         area: text,
         root,
-        words: { ...MENTION_WORDS, ...words.mentions },
+        words: mentionWords,
     })
     const selection = useRef<[number, number] | null>(null)
     const wasPreviewing = useRef(previewing)

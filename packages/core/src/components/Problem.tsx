@@ -1,6 +1,7 @@
 import { CircleAlert, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { ProseText } from './ProseText'
 import { Unfoldable } from './Unfoldable'
@@ -12,9 +13,12 @@ export interface ProblemWords {
     technical: string
 }
 
-const WORDS: ProblemWords = {
+export const PROBLEM_WORDS: ProblemWords = {
     technical: 'Technical details',
 }
+
+/** Where a catalog holds a problem's words. */
+export const PROBLEM_PART: WordsPart<ProblemWords> = { id: 'problem', words: PROBLEM_WORDS }
 
 export interface ProblemProps {
     title: ReactNode
@@ -35,7 +39,7 @@ export interface ProblemProps {
  * technical details, for whoever needs it.
  */
 export function Problem({ title, detail, technical, actions, tone = 'error', className, words: given }: ProblemProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(PROBLEM_PART, given)
     const Icon = tone === 'error' ? CircleAlert : TriangleAlert
     return (
         <div

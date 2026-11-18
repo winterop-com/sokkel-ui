@@ -5,10 +5,11 @@ import { useFileDrop } from '../hooks/use-file-drop'
 import { cn } from '../lib/cn'
 import { acceptList, checkFiles, type CheckedRefusal, type RefusalReason } from '../lib/uploads'
 import { AttachmentList, type AttachmentListWords } from './AttachmentList'
-import { Field, FIELD_WORDS, describedBy, type FieldWords } from './Field'
+import { Field, FIELD_PART, FIELD_WORDS, describedBy, type FieldWords } from './Field'
 import { formatSize } from './FileList'
 import type { Issue } from './IssueMark'
 import { Button } from './ui/button'
+import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export { checkFiles, type CheckedFiles, type CheckedRefusal, type RefusalReason } from '../lib/uploads'
 
@@ -48,7 +49,17 @@ export interface FileFieldWords extends FieldWords {
     files: Partial<AttachmentListWords>
 }
 
-const listFormat = new Intl.ListFormat('en-US', { type: 'disjunction' })
+const disjunctions = new Map<string, Intl.ListFormat>()
+
+/** A list joined by "or" in a locale: `CSV or YAML`. */
+function disjunction(locale: string): Intl.ListFormat {
+    let found = disjunctions.get(locale)
+    if (found === undefined) {
+        found = new Intl.ListFormat(locale, { type: 'disjunction' })
+        disjunctions.set(locale, found)
+    }
+    return found
+}
 
 export const FILE_FIELD_WORDS: FileFieldWords = {
     ...FIELD_WORDS,
@@ -56,7 +67,7 @@ export const FILE_FIELD_WORDS: FileFieldWords = {
     drop: (many) => (many ? 'Drop files here' : 'Drop a file here'),
     dropping: 'Drop to add',
     family: (family) => `${family} files`,
-    either: (types) => listFormat.format(types),
+    either: (types) => disjunction('en-US').format(types),
     sizeLimit: (limit, each) => (each ? `up to ${limit} each` : `up to ${limit}`),
     countLimit: (limit) => (limit === 1 ? 'one file' : `at most ${String(limit)} files`),
     type: (types) => `wrong type: ${types} only`,
@@ -64,6 +75,38 @@ export const FILE_FIELD_WORDS: FileFieldWords = {
     count: (limit) => `too many: at most ${String(limit)} ${limit === 1 ? 'file' : 'files'}`,
     dismiss: (name) => `Dismiss ${name}`,
     files: {},
+}
+
+/** Where a catalog holds a file field's words, and the arguments its phrases name; `either` lists the types in the locale unless given. */
+export const FILE_FIELD_PART: WordsPart<FileFieldWords> = {
+    id: 'fileField',
+    words: FILE_FIELD_WORDS,
+    args: {
+        choose: 'many',
+        drop: 'many',
+        family: 'family',
+        sizeLimit: 'limit each',
+        countLimit: 'limit',
+        type: 'types',
+        size: 'size limit',
+        count: 'limit',
+        dismiss: 'name',
+    },
+    from: [FIELD_PART],
+}
+
+/** A file field's phrases as ICU messages in English, for the catalog. */
+export const FILE_FIELD_MESSAGES: WordMessages<FileFieldWords> = {
+    choose: '{many, select, true {Choose files} other {Choose a file}}',
+    drop: '{many, select, true {Drop files here} other {Drop a file here}}',
+    family: '{family} files',
+    either: null,
+    sizeLimit: '{each, select, true {up to {limit} each} other {up to {limit}}}',
+    countLimit: '{limit, plural, =1 {one file} other {at most # files}}',
+    type: 'wrong type: {types} only',
+    size: 'too large: {size}, at most {limit}',
+    count: '{limit, plural, one {too many: at most # file} other {too many: at most # files}}',
+    dismiss: 'Dismiss {name}',
 }
 
 /**
@@ -277,7 +320,9 @@ export function FileField({
     className,
     words: given,
 }: FileFieldProps) {
-    const words = { ...FILE_FIELD_WORDS, ...given }
+    const own = useWords(FILE_FIELD_PART)
+    const locale = useLocale()
+    const words = { ...own, either: (types: readonly string[]) => disjunction(locale).format(types), ...given }
     const picker = useRef<HTMLInputElement>(null)
     const [ownRefused, setOwnRefused] = useState<readonly CheckedRefusal[]>(defaultRefused)
     const refused = refusedProp ?? ownRefused

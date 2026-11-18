@@ -51,6 +51,7 @@ import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { isApple } from '../lib/keys'
 import { onPluginsChange, pluginLanguage, pluginLanguageForMediaType, type PluginLanguageNames } from '../lib/plugins'
 import { wikiLinksIn, type WikiLink } from '../lib/wiki-links'
+import { useWords } from '../lib/words'
 import { bracketColors as colorBrackets, indentGuides as drawGuides } from './code/guides'
 import { jq } from './code/jq'
 import { markdown } from './code/markdown'
@@ -58,7 +59,7 @@ import {
     namedSchema,
     pathRange,
     readDocument,
-    SCHEMA_WORDS,
+    SCHEMA_PART,
     schemaCompletion,
     schemaHover,
     schemaProblems,
@@ -72,7 +73,7 @@ import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
 
 export type { CodeSchemaWords } from './code/schema'
-export { SCHEMA_WORDS } from './code/schema'
+export { SCHEMA_MESSAGES, SCHEMA_PART, SCHEMA_WORDS } from './code/schema'
 export { createSharedDocument, useControlledDocument, useSharedDocument, useSharedText, type SharedDocument } from './code/shared'
 
 /** The languages the editor carries itself. */
@@ -867,6 +868,7 @@ export function CodeEditor({
     const [named, setNamed] = useState<{ address: string; schema: JsonSchema } | undefined>()
     const schema = given ?? (named !== undefined && named.address === address ? named.schema : undefined)
     const [languageReady, setLanguageReady] = useState(0)
+    const schemaWords = useWords(SCHEMA_PART)
     const props = useRef({
         marks,
         completions,
@@ -878,6 +880,7 @@ export function CodeEditor({
         schema,
         deferred,
         words,
+        schemaWords,
         language,
         resolveSchema,
         onBlur,
@@ -896,6 +899,7 @@ export function CodeEditor({
         schema,
         deferred,
         words,
+        schemaWords,
         language,
         resolveSchema,
         onBlur,
@@ -991,7 +995,15 @@ export function CodeEditor({
     const schemaFound = (state: EditorState): PathDiagnostic[] | undefined => {
         const { schema: against, words, language: lang, deferred: unchecked } = props.current
         if (against === undefined || (lang !== 'json' && lang !== 'yaml')) return []
-        return schemaProblems(state, lang, against, loadedValidate(), checkFailed.current, { ...SCHEMA_WORDS, ...words }, unchecked)
+        return schemaProblems(
+            state,
+            lang,
+            against,
+            loadedValidate(),
+            checkFailed.current,
+            { ...props.current.schemaWords, ...words },
+            unchecked,
+        )
     }
     /** Whether the schema checker is still loading for a schema, so the problems are not known yet. */
     const checking = (state: EditorState) => schemaFound(state) === undefined
@@ -1046,7 +1058,7 @@ export function CodeEditor({
                     autocomplete: schemaCompletion(
                         () => props.current.schema,
                         schemaLanguage,
-                        () => ({ ...SCHEMA_WORDS, ...props.current.words }),
+                        () => ({ ...props.current.schemaWords, ...props.current.words }),
                     ),
                 },
             ]

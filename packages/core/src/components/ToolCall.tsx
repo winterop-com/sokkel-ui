@@ -13,6 +13,7 @@ import {
     TraceLine,
     TraceTitle,
 } from './ui/trace'
+import { useWords, type WordsPart } from '../lib/words'
 
 function clip(text: string, max: number): string {
     return text.length > max ? `${text.slice(0, max - 1)}…` : text
@@ -137,10 +138,13 @@ function Calls({ calls, words, openFailed }: { calls: readonly ToolCallEntry[]; 
     )
 }
 
-const WORDS: ToolCallsWords = {
+export const TOOL_CALLS_WORDS: ToolCallsWords = {
     args: 'Arguments',
     result: 'Result',
 }
+
+/** Where a catalog holds a list of tool calls' words. */
+export const TOOL_CALLS_PART: WordsPart<ToolCallsWords> = { id: 'toolCalls', words: TOOL_CALLS_WORDS }
 
 export interface ToolCallsProps {
     calls: readonly ToolCallEntry[]
@@ -160,7 +164,7 @@ export interface ToolCallsProps {
  * ink once one has failed; then it starts open, with the failed call open inside it.
  */
 export function ToolCalls({ calls, summary, defaultOpen, words: given }: ToolCallsProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(TOOL_CALLS_PART, given)
     const running = calls.some((call) => call.status === 'running' || call.status === 'pending')
     const failed = calls.some((call) => call.status === 'error')
     const [open, setOpen] = useState(defaultOpen ?? failed)

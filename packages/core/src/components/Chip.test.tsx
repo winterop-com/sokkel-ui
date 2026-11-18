@@ -8,6 +8,12 @@ import { Surface } from './Section'
 import { StatusChip } from './StatusChip'
 import { StatusProvider } from './StatusProvider'
 
+// One test calls `Chip` as a function to reach its buttons, outside a render, where no hook can run.
+vi.mock('../lib/words', async (actual) => ({
+    ...(await actual<typeof import('../lib/words')>()),
+    useWords: <W extends object>(part: { words: W }, given?: Partial<W>): W => ({ ...part.words, ...given }),
+}))
+
 describe('Chip', () => {
     it('hands other attributes to its root, so it can be a trigger’s render target', () => {
         const html = renderToStaticMarkup(

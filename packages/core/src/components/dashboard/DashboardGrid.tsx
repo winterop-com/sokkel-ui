@@ -9,6 +9,7 @@ import { WindowedPane } from '../WindowedPane'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { PanelTools, usePanelTools } from './panel-tools'
+import { useWords, type WordsPart } from '../../lib/words'
 
 /**
  * How much of the grid's width a panel takes in a wide grid. Every panel is full width in a
@@ -65,6 +66,9 @@ export interface PanelStateWords {
 }
 
 export const PANEL_STATE_WORDS: PanelStateWords = { failed: 'This panel could not load.', retry: 'Retry', stale: 'Not up to date' }
+
+/** Where a catalog holds what a failed or stale panel says. */
+export const PANEL_STATE_PART: WordsPart<PanelStateWords> = { id: 'panelState', words: PANEL_STATE_WORDS }
 
 /**
  * How a panel failed or fell behind, the same on every dashboard panel. `error` (true, or what
@@ -129,6 +133,9 @@ export const DASHBOARD_PANEL_WORDS: PanelWords = {
     ...PANEL_STATE_WORDS,
 }
 
+/** Where a catalog holds a dashboard panel's words. */
+export const DASHBOARD_PANEL_PART: WordsPart<PanelWords> = { id: 'dashboardPanel', words: DASHBOARD_PANEL_WORDS, from: [PANEL_STATE_PART] }
+
 export interface DashboardPanelProps extends PanelStateProps {
     title: ReactNode
     subtitle?: ReactNode
@@ -180,7 +187,7 @@ export function DashboardPanel({
     className,
     children,
 }: DashboardPanelProps) {
-    const words = { ...DASHBOARD_PANEL_WORDS, ...given }
+    const words = useWords(DASHBOARD_PANEL_PART, given)
     const [ownExpanded, setOwnExpanded] = useState(false)
     const expanded = expandedProp ?? ownExpanded
     const setExpanded = (next: boolean) => {

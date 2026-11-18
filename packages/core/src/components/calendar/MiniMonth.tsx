@@ -2,6 +2,7 @@ import { addMonths, format, isSameDay, isSameMonth, isWithinInterval, startOfDay
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { cn } from '../../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 import { monthDays } from './MonthGrid'
 
 export interface MiniMonthWords {
@@ -17,13 +18,28 @@ export interface MiniMonthWords {
     day: (date: Date) => string
 }
 
-const WORDS: MiniMonthWords = {
+export const MINI_MONTH_WORDS: MiniMonthWords = {
     previous: 'Previous month',
     next: 'Next month',
     title: (month) => format(month, 'MMMM yyyy'),
     weekday: (date) => format(date, 'EEEEE'),
     dayNumber: (date) => format(date, 'd'),
     day: (date) => format(date, 'EEEE d MMMM yyyy'),
+}
+
+/** Where a catalog holds a small month's words, and the arguments its phrases name. */
+export const MINI_MONTH_PART: WordsPart<MiniMonthWords> = {
+    id: 'miniMonth',
+    words: MINI_MONTH_WORDS,
+    args: { title: 'month', weekday: 'date', dayNumber: 'date' },
+}
+
+/** A small month's phrases as ICU messages in English, for the catalog. */
+export const MINI_MONTH_MESSAGES: WordMessages<MiniMonthWords> = {
+    title: '{month, date, ::MMMMyyyy}',
+    weekday: '{date, date, ::EEEEE}',
+    dayNumber: '{date, date, ::d}',
+    day: null,
 }
 
 export interface MiniMonthProps {
@@ -60,7 +76,7 @@ export function MiniMonth({
     className,
     words: given,
 }: MiniMonthProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(MINI_MONTH_PART, given)
     const days = monthDays(month, weekStartsOn)
     const inRange = (day: Date) =>
         range !== undefined && isWithinInterval(day, { start: startOfDay(range.start), end: startOfDay(range.end) })

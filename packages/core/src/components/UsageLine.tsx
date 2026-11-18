@@ -1,4 +1,5 @@
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** The words a usage line says, and how it writes its figures. */
 export interface UsageLineWords {
@@ -46,6 +47,12 @@ export const USAGE_LINE_WORDS: UsageLineWords = {
     speed,
 }
 
+/** Where a catalog holds a usage line's words, and the arguments its phrases name. */
+export const USAGE_LINE_PART: WordsPart<UsageLineWords> = { id: 'usageLine', words: USAGE_LINE_WORDS, args: { count: 'tokens' } }
+
+/** A usage line's phrases as ICU messages in English, for the catalog. */
+export const USAGE_LINE_MESSAGES: WordMessages<UsageLineWords> = { time: null, count: '{tokens, number}', speed: null }
+
 export interface UsageLineProps {
     /** The tokens the prompt took. */
     input?: number
@@ -73,7 +80,7 @@ export interface UsageLineProps {
  * milliseconds, then in seconds; a rate of a hundred or more as a whole number.
  */
 export function UsageLine({ input, output, firstToken, rate, latency, live = false, note, className, words: given }: UsageLineProps) {
-    const words = { ...USAGE_LINE_WORDS, ...given }
+    const words = useWords(USAGE_LINE_PART, given)
     const figure = (value: string) => <span className="text-foreground">{value}</span>
     return (
         <p

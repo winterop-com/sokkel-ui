@@ -1,11 +1,12 @@
 import { CornerDownLeft, Plus } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { composing } from '../lib/keys'
 import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { failureOf } from '../lib/edit'
-import { ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
+import { ISSUE_PART, ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
 import { Input } from './ui/input'
 import { Spinner } from './ui/spinner'
 
@@ -19,7 +20,10 @@ export interface QuickAddWords extends IssueWords {
     failed: string
 }
 
-const WORDS: QuickAddWords = { add: 'Add', adding: 'Adding', failed: 'Could not add', ...ISSUE_WORDS }
+export const QUICK_ADD_WORDS: QuickAddWords = { add: 'Add', adding: 'Adding', failed: 'Could not add', ...ISSUE_WORDS }
+
+/** Where a catalog holds a quick add's words. */
+export const QUICK_ADD_PART: WordsPart<QuickAddWords> = { id: 'quickAdd', words: QUICK_ADD_WORDS, from: [ISSUE_PART] }
 
 export interface QuickAddProps {
     /**
@@ -71,7 +75,7 @@ export function QuickAdd({
     words: given,
     className,
 }: QuickAddProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(QUICK_ADD_PART, given)
     const [own, setOwn] = useState(defaultValue)
     const text = value ?? own
     const [adding, setAdding] = useState(defaultState?.adding === true)

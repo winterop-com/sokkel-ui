@@ -67,7 +67,7 @@ export const parallel: ChartBuilder = (spec, look) => {
                       type: 'value',
                       scale: true,
                       z: 3,
-                      axisLabel: { ...tickText, formatter: tickWriter(spec.format) },
+                      axisLabel: { ...tickText, formatter: tickWriter(spec.format, '', spec.locale) },
                   }
                 : { dim: index, name: field, type: 'category', data: labels[index], z: 3 },
         ),

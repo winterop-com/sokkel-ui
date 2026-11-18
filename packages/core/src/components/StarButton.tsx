@@ -3,6 +3,7 @@ import type { ComponentProps } from 'react'
 
 import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** The words the star says, each with an English default. */
 export interface StarButtonWords {
@@ -12,7 +13,10 @@ export interface StarButtonWords {
     unstar: string
 }
 
-const WORDS: StarButtonWords = { star: 'Add to favorites', unstar: 'Remove from favorites' }
+export const STAR_BUTTON_WORDS: StarButtonWords = { star: 'Add to favorites', unstar: 'Remove from favorites' }
+
+/** Where a catalog holds a star button's words. */
+export const STAR_BUTTON_PART: WordsPart<StarButtonWords> = { id: 'starButton', words: STAR_BUTTON_WORDS }
 
 export type StarButtonProps = Omit<ComponentProps<typeof IconButton>, 'label' | 'children' | 'pressed' | 'onClick'> & {
     starred?: boolean
@@ -28,7 +32,7 @@ export type StarButtonProps = Omit<ComponentProps<typeof IconButton>, 'label' | 
  * list stays quiet.
  */
 export function StarButton({ starred = false, onStarredChange, variant = 'ghost', className, words, ...props }: StarButtonProps) {
-    const said = { ...WORDS, ...words }
+    const said = useWords(STAR_BUTTON_PART, words)
     return (
         <IconButton
             {...props}

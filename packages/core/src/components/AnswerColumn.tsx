@@ -2,6 +2,7 @@ import { RotateCcw, Square, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { CopyButton } from './CopyButton'
 import { IconButton } from './IconButton'
 import { Markdown, type MarkdownWords } from './Markdown'
@@ -51,6 +52,18 @@ export const ANSWER_COLUMN_WORDS: AnswerColumnWords = {
     thoughtFor: (count) => `Thought for ${String(count)} ${count === 1 ? 'word' : 'words'}`,
     usage: {},
     markdown: {},
+}
+
+/** Where a catalog holds an answer column's words, and the arguments its phrases name. */
+export const ANSWER_COLUMN_PART: WordsPart<AnswerColumnWords> = {
+    id: 'answerColumn',
+    words: ANSWER_COLUMN_WORDS,
+    args: { thoughtFor: 'count' },
+}
+
+/** An answer column's phrases as ICU messages in English, for the catalog. */
+export const ANSWER_COLUMN_MESSAGES: WordMessages<AnswerColumnWords> = {
+    thoughtFor: '{count, plural, one {Thought for # word} other {Thought for # words}}',
 }
 
 /** Each state's chip, in the run states' colors. */
@@ -131,7 +144,7 @@ export function AnswerColumn({
     className,
     words: given,
 }: AnswerColumnProps) {
-    const words = { ...ANSWER_COLUMN_WORDS, ...given }
+    const words = useWords(ANSWER_COLUMN_PART, given)
     const going = state === 'waiting' || state === 'streaming'
     return (
         <section

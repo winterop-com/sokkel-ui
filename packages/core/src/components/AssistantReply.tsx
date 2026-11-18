@@ -16,6 +16,7 @@ import {
 import { Children, memo, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { ConfirmCard, type ConfirmCardProps } from './ConfirmCard'
 import { Reasoning, wordCount } from './reasoning'
 import { Markdown, type MarkdownInlineCode, type MarkdownWords } from './Markdown'
@@ -97,7 +98,7 @@ export { wordCount }
 
 const plural = (count: number, word: string) => `${String(count)} ${word}${count === 1 ? '' : 's'}`
 
-const WORDS: AssistantReplyWords = {
+export const ASSISTANT_REPLY_WORDS: AssistantReplyWords = {
     name: 'Assistant',
     copy: 'Copy',
     copied: 'Copied',
@@ -126,6 +127,20 @@ const WORDS: AssistantReplyWords = {
     speak: {},
     markdown: {},
     calls: {},
+}
+
+/** Where a catalog holds an assistant reply's words, and the arguments its phrases name. */
+export const ASSISTANT_REPLY_PART: WordsPart<AssistantReplyWords> = {
+    id: 'assistantReply',
+    words: ASSISTANT_REPLY_WORDS,
+    args: { version: 'at of', thoughtFor: 'count' },
+}
+
+/** An assistant reply's phrases as ICU messages in English, for the catalog. */
+export const ASSISTANT_REPLY_MESSAGES: WordMessages<AssistantReplyWords> = {
+    version: '{at} of {of}',
+    summary: null,
+    thoughtFor: 'Thought for {count, plural, one {# word} other {# words}}',
 }
 
 /** The answer read aloud: a recording the model made of it. */
@@ -279,7 +294,7 @@ export const AssistantReply = memo(function AssistantReply({
     className,
     words: given,
 }: AssistantReplyProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(ASSISTANT_REPLY_PART, given)
     const card = layout === 'card'
     const streaming = state === 'streaming'
     const failed = state === 'failed'

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, ty
 
 import { GripVertical } from 'lucide-react'
 
+import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { Dot } from './Dot'
 import { useStatus } from './StatusProvider'
@@ -63,6 +64,20 @@ export const RUN_TIMELINE_WORDS: RunTimelineWords = {
     upcoming: (lane) => `Upcoming runs of ${lane}`,
     by: (amount) => `Shift ${amount}`,
     shifted: (lane, amount) => `Upcoming runs of ${lane} shifted ${amount}`,
+}
+
+/** Where a catalog holds a run timeline's words, and the arguments its phrases name. */
+export const RUN_TIMELINE_PART: WordsPart<RunTimelineWords> = {
+    id: 'runTimeline',
+    words: RUN_TIMELINE_WORDS,
+    args: { upcoming: 'lane', by: 'amount', shifted: 'lane amount' },
+}
+
+/** A run timeline's phrases as ICU messages in English, for the catalog. */
+export const RUN_TIMELINE_MESSAGES: WordMessages<RunTimelineWords> = {
+    upcoming: 'Upcoming runs of {lane}',
+    by: 'Shift {amount}',
+    shifted: 'Upcoming runs of {lane} shifted {amount}',
 }
 
 export interface RunTimelineProps {
@@ -221,7 +236,10 @@ export function RunTimeline({
     words: given,
     className,
 }: RunTimelineProps) {
-    const words = useMemo(() => ({ ...RUN_TIMELINE_WORDS, ...given }), [given])
+    const own = useWords(RUN_TIMELINE_PART)
+    const words = useMemo(() => ({ ...own, ...given }), [own, given])
+    const providerLocale = useLocale()
+    const shownLocale = locale ?? providerLocale
     const from = timelineMs(fromTime)
     const to = timelineMs(toTime)
     const now = nowTime === undefined ? undefined : timelineMs(nowTime)
@@ -238,14 +256,14 @@ export function RunTimeline({
     const { step, ticks } = useMemo(() => timelineTicks(from, to, width || 640, timeZone), [from, to, width, timeZone])
     const grain = snap ?? step / 4
     const tickWords = useMemo(() => {
-        const day = new Intl.DateTimeFormat(locale ?? 'en-US', { month: 'short', day: 'numeric', timeZone })
-        const time = new Intl.DateTimeFormat(locale ?? 'en-US', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone })
+        const day = new Intl.DateTimeFormat(shownLocale, { month: 'short', day: 'numeric', timeZone })
+        const time = new Intl.DateTimeFormat(shownLocale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone })
         // A tick at the zone's midnight names its day; the others their time.
         return (at: number) => (step >= DAY || (at + zoneOffset(at, timeZone)) % DAY === 0 ? day.format(at) : time.format(at))
-    }, [locale, timeZone, step])
+    }, [shownLocale, timeZone, step])
     const runWords = useMemo(
         () =>
-            new Intl.DateTimeFormat(locale ?? 'en-US', {
+            new Intl.DateTimeFormat(shownLocale, {
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
@@ -253,7 +271,7 @@ export function RunTimeline({
                 hourCycle: 'h23',
                 timeZone,
             }),
-        [locale, timeZone],
+        [shownLocale, timeZone],
     )
 
     const chosen = lanes.find((lane) => lane.id === selected && lane.total !== true)

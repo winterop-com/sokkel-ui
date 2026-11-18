@@ -3,6 +3,7 @@ import type { ComponentProps, KeyboardEvent, MouseEvent, ReactNode } from 'react
 
 import { cn } from '../lib/cn'
 import { KIND_CHIP, type KindColor } from '../lib/kind'
+import { useWords, type WordsPart } from '../lib/words'
 import { Link } from './Link'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 
@@ -68,7 +69,10 @@ export interface ChipWords {
     newTab: string
 }
 
-const WORDS: ChipWords = { remove: 'Remove', newTab: 'opens in a new tab' }
+export const CHIP_WORDS: ChipWords = { remove: 'Remove', newTab: 'opens in a new tab' }
+
+/** Where a catalog holds a chip's words. */
+export const CHIP_PART: WordsPart<ChipWords> = { id: 'chip', words: CHIP_WORDS }
 
 /** The chip's words as text, for a name that says them; empty when they are not plain text. */
 function textOf(children: ReactNode): string {
@@ -191,7 +195,7 @@ export function Chip({
     className,
     ...rest
 }: ChipProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CHIP_PART, given)
     const remove = typeof words.remove === 'function' ? words.remove(textOf(children)) : words.remove
     const control = size === 'control'
     const start = control ? 'pl-2.5' : 'pl-1.5'

@@ -3,6 +3,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode 
 
 import { cn } from '../lib/cn'
 import { Link } from './Link'
+import { useWords, type WordsPart } from '../lib/words'
 
 /**
  * How a link sits among what is around it: `default` in the primary ink, underlined on hover;
@@ -20,9 +21,12 @@ export interface TextLinkWords {
     newTab: string
 }
 
-const WORDS: TextLinkWords = {
+export const TEXT_LINK_WORDS: TextLinkWords = {
     newTab: 'opens in a new tab',
 }
+
+/** Where a catalog holds a text link's words. */
+export const TEXT_LINK_PART: WordsPart<TextLinkWords> = { id: 'textLink', words: TEXT_LINK_WORDS }
 
 const VARIANT: Record<TextLinkVariant, string> = {
     default: 'text-primary-ink hover:underline',
@@ -121,7 +125,7 @@ export function TextLink(props: TextLinkProps) {
         )
     }
     const { children, variant = 'default', code = false, className, href, external = false, words: given, ...rest } = props
-    const words = { ...WORDS, ...given }
+    const words = useWords(TEXT_LINK_PART, given)
     return (
         <Link
             {...rest}

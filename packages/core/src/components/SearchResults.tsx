@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { toggleChosen, type SearchChosen, type SearchFacet, type SearchGroup, type SearchResult } from '../lib/search'
 import { GroupLabel } from './GroupLabel'
@@ -25,7 +26,7 @@ export interface SearchResultsWords {
     clear: string
 }
 
-const WORDS: SearchResultsWords = {
+export const SEARCH_RESULTS_WORDS: SearchResultsWords = {
     placeholder: 'Search',
     count: (total) => (total === 1 ? '1 result' : `${total.toLocaleString('en-US')} results`),
     facets: 'Filters',
@@ -34,6 +35,19 @@ const WORDS: SearchResultsWords = {
     empty: (query) => `Nothing matches “${query}”.`,
     failed: 'The search did not answer.',
     clear: 'Clear the search',
+}
+
+/** Where a catalog holds search results's words, and the arguments its phrases name. */
+export const SEARCH_RESULTS_PART: WordsPart<SearchResultsWords> = {
+    id: 'searchResults',
+    words: SEARCH_RESULTS_WORDS,
+    args: { count: 'total', empty: 'query' },
+}
+
+/** Search results's phrases as ICU messages in English, for the catalog. */
+export const SEARCH_RESULTS_MESSAGES: WordMessages<SearchResultsWords> = {
+    count: '{total, plural, one {# result} other {# results}}',
+    empty: 'Nothing matches “{query}”.',
 }
 
 /**
@@ -124,7 +138,7 @@ export function SearchResults({
     className,
     words: given,
 }: SearchResultsProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SEARCH_RESULTS_PART, given)
     const listed = groups.reduce((sum, group) => sum + group.results.length, 0)
     const all = total ?? groups.reduce((sum, group) => sum + (group.total ?? group.results.length), 0)
     const trimmed = query.trim()

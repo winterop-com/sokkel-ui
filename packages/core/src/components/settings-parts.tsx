@@ -5,6 +5,7 @@ import { cn } from '../lib/cn'
 import { ConfirmDialog } from './DialogShell'
 import { SettingRow, type SettingRowLayout } from './SettingRow'
 import { Button } from './ui/button'
+import type { WordMessages, WordsPart } from '../lib/words'
 
 /** One setting in a section: what it is called, what it does, and the control that sets it. */
 export interface Setting {
@@ -89,6 +90,19 @@ export const SETTINGS_WORDS: SettingsWords = {
     resetAllDetail: 'Every setting in every section goes back to its default.',
     resetConfirm: 'Reset',
     cancel: 'Cancel',
+}
+
+/** Where a catalog holds the settings' words, and the arguments its phrases name. */
+export const SETTINGS_PART: WordsPart<SettingsWords> = {
+    id: 'settings',
+    words: SETTINGS_WORDS,
+    args: { resetSection: 'section', resetSectionDetail: 'section' },
+}
+
+/** The settings' phrases as ICU messages in English, for the catalog. */
+export const SETTINGS_MESSAGES: WordMessages<SettingsWords> = {
+    resetSection: 'Reset {section} to its defaults?',
+    resetSectionDetail: 'Every setting in {section} goes back to its default.',
 }
 
 /**

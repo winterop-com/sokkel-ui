@@ -13,6 +13,7 @@ import {
     DropdownMenuTrigger,
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { fitCount } from '@winterop-com/sokkel-ui/TagChips'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 
 /** What the viewer thinks of what plays: liked, disliked, or neither. */
 export type MediaRating = 'like' | 'dislike' | null
@@ -50,6 +51,12 @@ export const MEDIA_ACTIONS_WORDS: MediaActionsWords = {
     more: 'More',
     count: (count) => short.format(count),
 }
+
+/** Where a catalog holds a media item's actions' words, and the arguments its phrases name. */
+export const MEDIA_ACTIONS_PART: WordsPart<MediaActionsWords> = { id: 'mediaActions', words: MEDIA_ACTIONS_WORDS, args: { count: 'count' } }
+
+/** A media item's actions' phrases as ICU messages in English, for the catalog. */
+export const MEDIA_ACTIONS_MESSAGES: WordMessages<MediaActionsWords> = { count: '{count, number, ::compact-short}' }
 
 /** The gap between the buttons, in pixels: `gap-2` below. */
 const GAP = 8
@@ -130,7 +137,7 @@ export function MediaActions({
     words: given,
     className,
 }: MediaActionsProps) {
-    const words = { ...MEDIA_ACTIONS_WORDS, ...given }
+    const words = useWords(MEDIA_ACTIONS_PART, given)
     const root = useRef<HTMLDivElement>(null)
     const pair = useRef<HTMLDivElement>(null)
     const ruler = useRef<HTMLDivElement>(null)

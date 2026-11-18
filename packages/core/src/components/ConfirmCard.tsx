@@ -2,6 +2,7 @@ import { ShieldAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 import { Code } from './Code'
 import { digest } from './ToolCall'
 import { Button } from './ui/button'
@@ -28,7 +29,7 @@ export interface ConfirmWords {
     details: string
 }
 
-const WORDS: ConfirmWords = {
+export const CONFIRM_WORDS: ConfirmWords = {
     approve: 'Approve',
     deny: 'Deny',
     approved: 'Approved',
@@ -37,6 +38,9 @@ const WORDS: ConfirmWords = {
     heading: 'Approval required',
     details: 'View change',
 }
+
+/** Where a catalog holds a confirm card's words. */
+export const CONFIRM_PART: WordsPart<ConfirmWords> = { id: 'confirm', words: CONFIRM_WORDS }
 
 const FRAME: Record<ConfirmAppearance, { pending: string; settled: string }> = {
     warning: {
@@ -84,7 +88,7 @@ export function ConfirmCard({
     details = false,
     words: given,
 }: ConfirmCardProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CONFIRM_PART, given)
     const pending = state === 'pending'
     const outcome = state === 'approved' ? words.approved : state === 'denied' ? words.denied : words.expired
     const headed = appearance !== 'warning'

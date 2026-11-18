@@ -1,10 +1,11 @@
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
 import { useContext, useId, type ReactNode } from 'react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import type { RequiredMark } from './Field'
 import { IconButton } from './IconButton'
-import { ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
+import { ISSUE_PART, ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
 import { DragPartsContext } from './drag-parts'
 import { Button } from './ui/button'
 
@@ -29,6 +30,12 @@ export const REPEATED_GROUP_WORDS: RepeatedGroupWords = {
     required: 'required',
     ...ISSUE_WORDS,
 }
+
+/** Where a catalog holds a repeated group's words. */
+export const REPEATED_GROUP_PART: WordsPart<RepeatedGroupWords> = { id: 'repeatedGroup', words: REPEATED_GROUP_WORDS, from: [ISSUE_PART] }
+
+/** A repeated group's phrases as ICU messages in English, for the catalog. */
+export const REPEATED_GROUP_MESSAGES: WordMessages<RepeatedGroupWords> = { item: null }
 
 export interface RepeatedGroupProps {
     /** The group's name, over its rows. */
@@ -107,7 +114,7 @@ export function RepeatedGroup({
     words: given,
     className,
 }: RepeatedGroupProps) {
-    const words = { ...REPEATED_GROUP_WORDS, ...given }
+    const words = useWords(REPEATED_GROUP_PART, given)
     const ownId = useId()
     const titleId = id ?? ownId
     const issues: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issuesGiven]

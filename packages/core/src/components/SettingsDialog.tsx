@@ -6,6 +6,7 @@ import { NESTED, SHEET } from './DialogShell'
 import { IconButton } from './IconButton'
 import { SearchField } from './SearchField'
 import {
+    SETTINGS_PART,
     SETTINGS_WORDS,
     SettingRows,
     SettingsNavList,
@@ -16,6 +17,7 @@ import {
 } from './settings-parts'
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTitle } from './ui/dialog'
+import { useWords, type WordsPart } from '../lib/words'
 
 export { filterSettings, type Setting, type SettingsGroup, type SettingsSection, type SettingsWords } from './settings-parts'
 
@@ -27,6 +29,13 @@ export interface SettingsDialogWords extends SettingsWords {
 
 /** A settings dialog's own words in English; a dialog with words of its own starts from these. */
 export const SETTINGS_DIALOG_WORDS: SettingsDialogWords = { ...SETTINGS_WORDS, close: 'Close', back: 'Back' }
+
+/** Where a catalog holds a settings dialog's words. */
+export const SETTINGS_DIALOG_PART: WordsPart<SettingsDialogWords> = {
+    id: 'settingsDialog',
+    words: SETTINGS_DIALOG_WORDS,
+    from: [SETTINGS_PART],
+}
 
 export interface SettingsDialogProps {
     open: boolean
@@ -81,9 +90,9 @@ export function SettingsDialog({
     footer,
     onReset,
     resetScope = 'section',
-    words = SETTINGS_DIALOG_WORDS,
+    words,
 }: SettingsDialogProps) {
-    const say = { ...SETTINGS_DIALOG_WORDS, ...words }
+    const say = useWords(SETTINGS_DIALOG_PART, words)
     const [phoneView, setPhoneView] = useState(phoneStart)
     const nav = useRef<HTMLElement | null>(null)
     const pane = useRef<HTMLDivElement | null>(null)

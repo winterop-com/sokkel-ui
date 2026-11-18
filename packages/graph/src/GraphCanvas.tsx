@@ -25,6 +25,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { PointMenu, menuPoint, type PointMenuItem } from '@winterop-com/sokkel-ui/PointMenu'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { GRAPH_DRAG_TYPE } from './blocks'
 import {
     GraphBendContext,
@@ -60,7 +61,7 @@ import {
     type GraphPoint,
 } from './layout'
 import type { GraphSizing } from './use-node-graph'
-import { GRAPH_VIEW_WORDS, GraphViewButtons, type GraphViewWords } from './GraphViewButtons'
+import { GRAPH_VIEW_PART, GRAPH_VIEW_WORDS, GraphViewButtons, type GraphViewWords } from './GraphViewButtons'
 
 export type { GraphBox, GraphControls } from './context'
 
@@ -95,6 +96,9 @@ export const GRAPH_WORDS: GraphWords = {
     append: 'Add a step after this one',
     insert: 'Add a step here',
 }
+
+/** Where a catalog holds a graph's words; its view buttons' are those buttons' own. */
+export const GRAPH_PART: WordsPart<GraphWords> = { id: 'graph', words: GRAPH_WORDS, from: [GRAPH_VIEW_PART] }
 
 /** A point a gesture ended at: on the screen, and in the graph's own coordinates. */
 export interface GraphPointer {
@@ -339,8 +343,8 @@ export function edgesWhileDragged<E extends Edge>(edges: readonly E[], dragged: 
 }
 
 /** The words, kept as the same object while each says the same, so words written inline do not draw every node and edge again. */
-function useWords(words: Partial<GraphWords> | undefined): GraphWords {
-    const given = { ...GRAPH_WORDS, ...words }
+function useKeptWords(words: Partial<GraphWords> | undefined): GraphWords {
+    const given = useWords(GRAPH_PART, words)
     const [kept, setKept] = useState(given)
     const keys = Object.keys(given) as (keyof GraphWords)[]
     const same = keys.length === Object.keys(kept).length && keys.every((key) => given[key] === kept[key])
@@ -455,7 +459,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     className,
     children,
 }: GraphCanvasProps<N, E>) {
-    const said = useWords(words)
+    const said = useKeptWords(words)
     const box = useRef<HTMLDivElement | null>(null)
     const [width, setWidth] = useState(0)
     const [bend, setBend] = useState(EDGE_BEND)

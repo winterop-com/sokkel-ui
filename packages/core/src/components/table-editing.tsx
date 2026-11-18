@@ -72,6 +72,10 @@ export interface TableEditingContext<T> {
     /** How many rows a move down or up steps over: a line of cards in a grid. */
     step: number
     words: Pick<DataTableWords, 'saving' | 'saveFailed' | 'notNumber' | 'issueCritical' | 'issueWarning'>
+    /** The editors' own words (save, cancel), as the locale gives them; English when not given. */
+    editWords?: EditWords
+    /** The locale a number at rest is written in; `en-US` when not given. */
+    locale?: string
     /** How the active cell is marked while the table has the focus. */
     cellFocus: CellFocus
     /** The columns whose name is cut short in a stacked line, so it says the whole of it on hover. */
@@ -131,7 +135,7 @@ export interface TableEditing {
 const cellId = (row: string, column: string) => `${row}\u0000${column}`
 
 const wordsOf = <T,>(table: TableEditingContext<T>): EditWords => ({
-    ...EDIT_WORDS,
+    ...(table.editWords ?? EDIT_WORDS),
     saving: table.words.saving,
     failed: table.words.saveFailed,
     notNumber: table.words.notNumber,
@@ -338,7 +342,11 @@ function contentOf<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: 
     const read = readDraft(edit.draft, spec.editor, words)
     const display = spec.display as ((value: EditValue, row: T) => ReactNode) | undefined
     const drawn =
-        'error' in read ? edit.draft : display === undefined ? shownValue(read.value, spec.editor, options) : display(read.value, entry.row)
+        'error' in read
+            ? edit.draft
+            : display === undefined
+              ? shownValue(read.value, spec.editor, options, table.locale)
+              : display(read.value, entry.row)
     return (
         <span
             className={cn('flex min-w-0 items-center gap-1.5', column.align === 'end' && 'flex-row-reverse')}

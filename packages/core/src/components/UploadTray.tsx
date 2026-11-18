@@ -5,6 +5,7 @@ import { useFileDrop } from '../hooks/use-file-drop'
 import { cn } from '../lib/cn'
 import { checkFiles, type CheckedRefusal, type UploadOptions } from '../lib/uploads'
 import { formatSize } from './FileList'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One file on its way up. */
 export interface Upload {
@@ -30,7 +31,7 @@ export interface UploadTrayWords {
     unfold: string
 }
 
-const WORDS: UploadTrayWords = {
+export const UPLOAD_TRAY_WORDS: UploadTrayWords = {
     uploading: (count) => `Uploading ${count} ${count === 1 ? 'file' : 'files'}`,
     finished: (done, failed) => (failed === 0 ? `${done} ${done === 1 ? 'upload' : 'uploads'} done` : `${done} done, ${failed} failed`),
     done: 'Done',
@@ -39,6 +40,19 @@ const WORDS: UploadTrayWords = {
     close: 'Close',
     fold: 'Fold the uploads',
     unfold: 'Unfold the uploads',
+}
+
+/** Where a catalog holds an upload tray's words, and the arguments its phrases name. */
+export const UPLOAD_TRAY_PART: WordsPart<UploadTrayWords> = {
+    id: 'uploadTray',
+    words: UPLOAD_TRAY_WORDS,
+    args: { uploading: 'count', finished: 'done failed' },
+}
+
+/** An upload tray's phrases as ICU messages in English, for the catalog. */
+export const UPLOAD_TRAY_MESSAGES: WordMessages<UploadTrayWords> = {
+    uploading: 'Uploading {count, plural, one {# file} other {# files}}',
+    finished: '{failed, plural, =0 {{done, plural, one {# upload done} other {# uploads done}}} other {{done} done, {failed} failed}}',
 }
 
 function Row({
@@ -148,7 +162,7 @@ export function UploadTray({
     className,
     words: given,
 }: UploadTrayProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(UPLOAD_TRAY_PART, given)
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const unfolded = open ?? ownOpen
     const toggle = () => {
@@ -224,7 +238,10 @@ export interface DropZoneWords {
     detail: string
 }
 
-const DROP_WORDS: DropZoneWords = { title: 'Drop to upload', detail: 'The files go into this folder.' }
+export const DROP_ZONE_WORDS: DropZoneWords = { title: 'Drop to upload', detail: 'The files go into this folder.' }
+
+/** Where a catalog holds a drop zone's words. */
+export const DROP_ZONE_PART: WordsPart<DropZoneWords> = { id: 'dropZone', words: DROP_ZONE_WORDS }
 
 export interface DropZoneProps extends Pick<UploadOptions, 'accept' | 'maxSize' | 'maxFiles'> {
     /** The files dropped, those that break `accept`, `maxSize` or `maxFiles` sorted out by `checkFiles` into `refused`, each with why. */
@@ -246,7 +263,7 @@ export interface DropZoneProps extends Pick<UploadOptions, 'accept' | 'maxSize' 
  * both the same limits, hand the files to the field's `value` and the refused to its `refused`.
  */
 export function DropZone({ onFiles, accept, maxSize, maxFiles, held = 0, open, children, className, words: given }: DropZoneProps) {
-    const words = { ...DROP_WORDS, ...given }
+    const words = useWords(DROP_ZONE_PART, given)
     const drop = useFileDrop((files) => {
         const checked = checkFiles(files, { accept, maxSize, maxFiles }, held)
         onFiles(checked.taken, checked.refused)

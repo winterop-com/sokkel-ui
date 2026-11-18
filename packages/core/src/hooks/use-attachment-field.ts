@@ -1,8 +1,9 @@
 import { useState } from 'react'
 
 import type { FileFieldProps, StoredFile } from '../components/FileField'
-import { UPLOAD_WORDS, type UploadOptions } from '../lib/uploads'
+import { UPLOAD_PART, type UploadOptions } from '../lib/uploads'
 import { useUploads } from './use-uploads'
+import { useWords } from '../lib/words'
 
 /** What a field's attachments came to: the stored files kept and taken out, and what each new file's upload answered. */
 export interface AttachmentChanges<R> {
@@ -42,7 +43,7 @@ export function useAttachmentField<R = unknown>({
     const stored = initial.filter((file) => !removed.has(file.id))
     const files = uploads.uploads.map((upload) => upload.file)
     const uploadOf = (file: File) => uploads.uploads.find((upload) => upload.file === file)
-    const said = options.words?.failed ?? UPLOAD_WORDS.failed
+    const said = useWords(UPLOAD_PART, options.words).failed
     const field: AttachmentFieldProps = {
         value: files,
         onChange: (next) => {

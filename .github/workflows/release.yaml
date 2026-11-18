@@ -45,6 +45,7 @@ jobs:
             - run: bun run test
             - run: bun scripts/build-tokens.ts --check
             - run: bun run components -- --check
+            - run: bun run messages -- --check
             - run: bun run emoji-data -- --check
             # The pinned copy of the sokkel-design contract that src/parts.test.ts reads; skipped when GitHub cannot be reached.
             - run: bun run design --check

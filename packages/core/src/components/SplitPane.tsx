@@ -14,6 +14,7 @@ import { useIsMobile } from '../hooks/use-mobile'
 import { cn } from '../lib/cn'
 import { parseStored, readStored, storedKey, subscribeStored, writeStored } from '../lib/stored'
 import { ResizeHandle } from './ResizeHandle'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** The words a split says. */
 export interface SplitPaneWords {
@@ -21,7 +22,10 @@ export interface SplitPaneWords {
     resize: string
 }
 
-const WORDS: SplitPaneWords = { resize: 'Resize the panes' }
+export const SPLIT_PANE_WORDS: SplitPaneWords = { resize: 'Resize the panes' }
+
+/** Where a catalog holds a split pane's words. */
+export const SPLIT_PANE_PART: WordsPart<SplitPaneWords> = { id: 'splitPane', words: SPLIT_PANE_WORDS }
 
 /** How a split lays out its two panes: side by side, or one over the other. */
 export type SplitPaneDirection = 'across' | 'down'
@@ -213,7 +217,7 @@ export function SplitPane({
     className,
     words: given,
 }: SplitPaneProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SPLIT_PANE_PART, given)
     const held = share !== undefined
     const [own, setOwn] = useOwnShare(held ? undefined : id)
     const clamp = (value: number) => clampShare(value, minShare, maxShare)

@@ -2,6 +2,7 @@ import { Layers } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import {
     DropdownMenu,
@@ -20,7 +21,10 @@ export interface BasemapWords {
     label: string
 }
 
-const WORDS: BasemapWords = { label: 'Basemap' }
+export const BASEMAP_WORDS: BasemapWords = { label: 'Basemap' }
+
+/** Where a catalog holds a basemap choice's words. */
+export const BASEMAP_PART: WordsPart<BasemapWords> = { id: 'basemap', words: BASEMAP_WORDS }
 
 export interface BasemapPreviewProps {
     basemap: Basemap
@@ -95,7 +99,7 @@ export interface BasemapSwitcherProps {
  * a map its menu opens in the map's own frame, so it still shows while the map is full screen.
  */
 export function BasemapSwitcher({ basemaps, value, onValueChange, words: given, defaultOpen = false, className }: BasemapSwitcherProps) {
-    const { label } = { ...WORDS, ...given }
+    const { label } = useWords(BASEMAP_PART, given)
     const map = useOptionalMapContext()
     return (
         <DropdownMenu defaultOpen={defaultOpen}>
@@ -142,7 +146,7 @@ export interface BasemapGalleryProps {
  * panel rather than behind a button.
  */
 export function BasemapGallery({ basemaps, value, onValueChange, words: given, className }: BasemapGalleryProps) {
-    const { label } = { ...WORDS, ...given }
+    const { label } = useWords(BASEMAP_PART, given)
     return (
         <div role="radiogroup" aria-label={label} className={cn('grid grid-cols-3 gap-1.5', className)}>
             {basemaps.map((basemap) => {

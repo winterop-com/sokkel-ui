@@ -1,3 +1,4 @@
+import { useWords, type WordsPart } from '../lib/words'
 import type { Scheme } from '../lib/appearance'
 import { Segmented } from './Segmented'
 
@@ -11,7 +12,10 @@ export interface SchemeChoiceWords {
     dark: string
 }
 
-const WORDS: SchemeChoiceWords = { scheme: 'Scheme', system: 'System', light: 'Light', dark: 'Dark' }
+export const SCHEME_CHOICE_WORDS: SchemeChoiceWords = { scheme: 'Scheme', system: 'System', light: 'Light', dark: 'Dark' }
+
+/** Where a catalog holds a scheme choice's words. */
+export const SCHEME_CHOICE_PART: WordsPart<SchemeChoiceWords> = { id: 'schemeChoice', words: SCHEME_CHOICE_WORDS }
 
 /** The schemes in the order offered when not given: the default, following the device, first. */
 export const SCHEMES_OFFERED: readonly Scheme[] = ['system', 'light', 'dark']
@@ -41,7 +45,7 @@ export function SchemeChoice({
     className,
     words: given,
 }: SchemeChoiceProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SCHEME_CHOICE_PART, given)
     return (
         <Segmented
             label={words.scheme}

@@ -495,9 +495,11 @@ Settle before 1.0:
 
 Should:
 
-- **Locale.** A `locale` (provider and prop) for number formats, collation and dates, replacing the
-  fixed `en-US` in `DataTable`, `SelectionBar`, `SearchResults`, charts, maps and the calendar; words
-  for the primitives' fixed strings (Close, the spinner, pagination, the carousel).
+- **Locale, what is left.** `LocaleProvider`, message ids and the catalogs are in; still to come are
+  words for the primitives' fixed strings (Close, the spinner, pagination, the carousel) and the
+  other English a part writes outside its `words` (the schema checker's issues), a catalog id for
+  the phrases that format rather than say (a list joined, a value worked out), dates through the
+  locale where a part still formats with date-fns in English, and right-to-left (below).
 - **Overlaps merged.** One toast (sonner or ours), one loading part, `ThemeToggle` renamed for the
   scheme it toggles, `Composer` and `MessageComposer` sharing attachments, sending and mentions,
   and the roles of `Banner`, `Problem`, `PageState` and the alert written down.

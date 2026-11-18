@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import {
+    PERIOD_ISSUE_PART,
     PERIOD_ISSUE_WORDS,
+    PERIOD_LABEL_PART,
     PERIOD_LABEL_WORDS,
     PERIOD_TYPES,
     parsePeriod,
@@ -12,7 +15,7 @@ import {
     type PeriodLabelWords,
     type PeriodType,
 } from '../lib/periods'
-import { ISSUE_EDGE, ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
+import { ISSUE_EDGE, ISSUE_PART, ISSUE_WORDS, IssueMark, type IssueWords } from './IssueMark'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from './ui/select'
 
@@ -28,13 +31,20 @@ export interface PeriodPickerWords extends PeriodIssueWords, PeriodLabelWords, I
     placeholder: string
 }
 
-const WORDS: PeriodPickerWords = {
+export const PERIOD_PICKER_WORDS: PeriodPickerWords = {
     ...PERIOD_ISSUE_WORDS,
     ...PERIOD_LABEL_WORDS,
     ...ISSUE_WORDS,
     other: 'Other period',
     typed: 'Period id',
     placeholder: 'Choose a period',
+}
+
+/** Where a catalog holds a period picker's words. */
+export const PERIOD_PICKER_PART: WordsPart<PeriodPickerWords> = {
+    id: 'periodPicker',
+    words: PERIOD_PICKER_WORDS,
+    from: [PERIOD_ISSUE_PART, PERIOD_LABEL_PART, ISSUE_PART],
 }
 
 /** The list's value for its last row, which no period id can be. */
@@ -87,11 +97,12 @@ export function PeriodPicker({
     className,
     words: given,
 }: PeriodPickerProps) {
-    const words = { ...WORDS, ...given }
+    const own = useWords(PERIOD_PICKER_PART)
+    const words = { ...own, ...given }
     const day = today ?? localToday()
     // Labeled again when the app passes new words; the ids alone decide what the list holds.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- `words` is made from `given` each render
-    const periods = useMemo(() => recentPeriods(type, day, count, words), [type, day, count, given])
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- `words` is made from `own` and `given` each render
+    const periods = useMemo(() => recentPeriods(type, day, count, words), [type, day, count, own, given])
     const ids = periods.map((period) => period.id).join(' ')
     const listed = value !== null && periods.some((period) => period.id === value)
     const [typing, setTyping] = useState(value !== null && !listed)

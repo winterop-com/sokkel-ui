@@ -1,6 +1,7 @@
 import { MoreHorizontal } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../../lib/words'
 import { cn } from '../../lib/cn'
 import { Code } from '../Code'
 import { Segmented } from '../Segmented'
@@ -24,7 +25,7 @@ export interface IOCardWords {
     none: string
 }
 
-const WORDS: IOCardWords = {
+export const IO_CARD_WORDS: IOCardWords = {
     input: 'Input',
     output: 'Output',
     schema: 'Schema',
@@ -32,6 +33,9 @@ const WORDS: IOCardWords = {
     menu: 'More actions',
     none: 'Nothing.',
 }
+
+/** Where a catalog holds an input and output card's words. */
+export const IO_CARD_PART: WordsPart<IOCardWords> = { id: 'ioCard', words: IO_CARD_WORDS }
 
 function Side({ label, side, words }: { label: string; side?: IOSide; words: IOCardWords }) {
     const [view, setView] = useState<'schema' | 'example'>('schema')
@@ -82,7 +86,7 @@ export interface IOCardProps {
  * wide card and stack on a narrow one.
  */
 export function IOCard({ title, code, description, status, menu, input, output, className, words: given }: IOCardProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(IO_CARD_PART, given)
     const heading = title ?? code
     return (
         <article

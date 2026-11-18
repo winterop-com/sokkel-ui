@@ -6,6 +6,7 @@ import { INVALID_EDGE } from '../lib/issue-edge'
 import { Tree, treeHolding, type TreeLoad, type TreeNode, type TreeTrail, type TreeWords } from './Tree'
 import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /**
  * Every node by id, with the labels of its ancestors, for the trigger to name a choice by its path:
@@ -35,7 +36,7 @@ export interface TreeSelectWords extends Omit<TreeWords, 'moved' | 'topLevel'> {
     selected: (count: number) => string
 }
 
-const WORDS: TreeSelectWords = {
+export const TREE_SELECT_WORDS: TreeSelectWords = {
     placeholder: 'Choose',
     search: 'Search',
     clear: 'Clear',
@@ -48,6 +49,12 @@ const WORDS: TreeSelectWords = {
     searching: 'Searching',
     searchFailed: 'The search did not answer.',
 }
+
+/** Where a catalog holds a tree select's words, and the arguments its phrases name. */
+export const TREE_SELECT_PART: WordsPart<TreeSelectWords> = { id: 'treeSelect', words: TREE_SELECT_WORDS, args: { selected: 'count' } }
+
+/** A tree select's phrases as ICU messages in English, for the catalog. */
+export const TREE_SELECT_MESSAGES: WordMessages<TreeSelectWords> = { selected: '{count, number} chosen' }
 
 export interface TreeSelectProps {
     id?: string
@@ -120,7 +127,7 @@ export function TreeSelect({
     className,
     invalid = false,
 }: TreeSelectProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(TREE_SELECT_PART, given)
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const open = openProp ?? ownOpen
     const setOpen = (next: boolean) => {

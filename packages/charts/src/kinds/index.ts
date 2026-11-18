@@ -57,7 +57,7 @@ export const KINDS = {
 
 export type ChartKind = keyof typeof KINDS
 
-export { CHART_WORDS } from './spec'
+export { CHART_PART, CHART_WORDS } from './spec'
 export type {
     ChartAxis,
     ChartBand,

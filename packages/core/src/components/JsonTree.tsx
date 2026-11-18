@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 
 /** The words a JSON tree says: how many keys a folded object holds, and the step that shows more of a long one. */
@@ -10,9 +11,18 @@ export interface JsonTreeWords {
     more: (count: number) => string
 }
 
-const WORDS: JsonTreeWords = {
+export const JSON_TREE_WORDS: JsonTreeWords = {
     keys: (count) => `${String(count)} ${count === 1 ? 'key' : 'keys'}`,
     more: (count) => `Show ${count.toLocaleString('en-US')} more`,
+}
+
+/** Where a catalog holds a JSON tree's words, and the arguments its phrases name. */
+export const JSON_TREE_PART: WordsPart<JsonTreeWords> = { id: 'jsonTree', words: JSON_TREE_WORDS, args: { keys: 'count', more: 'count' } }
+
+/** A JSON tree's phrases as ICU messages in English, for the catalog. */
+export const JSON_TREE_MESSAGES: WordMessages<JsonTreeWords> = {
+    keys: '{count, plural, one {# key} other {# keys}}',
+    more: 'Show {count, number} more',
 }
 
 function Scalar({ value }: { value: unknown }) {
@@ -119,7 +129,7 @@ export interface JsonTreeProps {
  * more", `words.more`) that draws as many more, so a long response opens at once.
  */
 export function JsonTree({ value, open = 2, limit = 100, className, words: given }: JsonTreeProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(JSON_TREE_PART, given)
     return (
         <div className={cn('font-mono text-xs leading-5', className)}>
             <Node value={value} depth={0} open={open} limit={Math.max(1, Math.floor(limit))} words={words} />

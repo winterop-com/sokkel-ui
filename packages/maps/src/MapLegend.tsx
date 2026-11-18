@@ -1,9 +1,19 @@
 import { List, X } from 'lucide-react'
 import { useLayoutEffect, useState } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useLocale, useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { useOptionalMapContext } from './context'
-import { NO_DATA_BACKGROUND, NO_DATA_POINT_COLOR, classLabels, scaleColors, type ClassWords, type ColorScale } from './scale'
+import {
+    CLASS_PART,
+    CLASS_WORDS,
+    NO_DATA_BACKGROUND,
+    NO_DATA_POINT_COLOR,
+    classLabels,
+    scaleColors,
+    type ClassWords,
+    type ColorScale,
+} from './scale'
 
 /** One line of a legend that keys something other than a scale, such as the selection's emphasis. */
 export interface MapLegendEntry {
@@ -35,8 +45,9 @@ function Swatch({ background, edge, shape }: { background: string; edge?: string
 }
 
 function Count({ value }: { value: number | undefined }) {
+    const locale = useLocale()
     if (value === undefined) return null
-    return <span className="ml-auto pl-3 text-muted-foreground tabular-nums">{value.toLocaleString('en-US')}</span>
+    return <span className="ml-auto pl-3 text-muted-foreground tabular-nums">{value.toLocaleString(locale)}</span>
 }
 
 /** The words a legend says, its classes' among them. */
@@ -49,7 +60,10 @@ export interface MapLegendWords extends ClassWords {
     noData: string
 }
 
-const WORDS: Omit<MapLegendWords, keyof ClassWords> = { legend: 'Legend', hide: 'Hide the legend', noData: 'No data' }
+export const MAP_LEGEND_WORDS: MapLegendWords = { ...CLASS_WORDS, legend: 'Legend', hide: 'Hide the legend', noData: 'No data' }
+
+/** Where a catalog holds a map legend's words; its classes' are the scale's own. */
+export const MAP_LEGEND_PART: WordsPart<MapLegendWords> = { id: 'mapLegend', words: MAP_LEGEND_WORDS, from: [CLASS_PART] }
 
 /** The width a legend's map is narrow below: about a phone's, where a legend open at first would cover much of it. */
 export const LEGEND_COLLAPSE_BELOW = 480
@@ -142,7 +156,7 @@ export function MapLegend({
     className,
     words: given,
 }: MapLegendProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(MAP_LEGEND_PART, given)
     const map = useOptionalMapContext()
     const width = useMapWidth(framed ? (map?.scope ?? null) : null)
     const [opened, setOpened] = useState(false)
@@ -161,7 +175,7 @@ export function MapLegend({
             </Button>
         )
     const colors = scale === undefined ? [] : scaleColors(scale)
-    const labels = scale === undefined ? [] : classLabels(scale, given)
+    const labels = scale === undefined ? [] : classLabels(scale, words)
     const list = scale === undefined || scale.kind === 'categorical' || layout === 'list'
     const classes: MapLegendEntry[] = colors.map((color, index) => ({ label: labels[index], color }))
     const lines = list ? [...classes, ...entries] : entries

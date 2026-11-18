@@ -2,6 +2,7 @@ import { PencilLine, Pin, PinOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { cn } from '../lib/cn'
+import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { type DataAction, type DataColumn, DataTable } from './DataTable'
 import { ConfirmDialog } from './DialogShell'
 import { Input } from './ui/input'
@@ -48,6 +49,16 @@ export const CONVERSATION_HISTORY_WORDS: ConversationHistoryWords = {
     empty: 'No conversations yet.',
 }
 
+/** Where a catalog holds a conversation history's words, and the arguments its phrases name. */
+export const CONVERSATION_HISTORY_PART: WordsPart<ConversationHistoryWords> = {
+    id: 'conversationHistory',
+    words: CONVERSATION_HISTORY_WORDS,
+    args: { deleteQuestion: 'title' },
+}
+
+/** A conversation history's phrases as ICU messages in English, for the catalog. */
+export const CONVERSATION_HISTORY_MESSAGES: WordMessages<ConversationHistoryWords> = { deleteQuestion: 'Delete {title}?' }
+
 type Group = 'pinned' | 'today' | 'earlier'
 
 /** The start of the day `now` falls in, in the local time zone. */
@@ -63,11 +74,11 @@ export function conversationGroup(entry: ConversationEntry, now: number): Group 
     return entry.time >= startOfDay(now) ? 'today' : 'earlier'
 }
 
-/** The time a conversation shows: the hour today, the day this year, the date before. */
-export function conversationTime(time: number, now: number): string {
-    if (time >= startOfDay(now)) return new Date(time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+/** The time a conversation shows, in a locale: the hour today, the day this year, the date before. */
+export function conversationTime(time: number, now: number, locale = 'en-US'): string {
+    if (time >= startOfDay(now)) return new Date(time).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })
     const sameYear = new Date(time).getFullYear() === new Date(now).getFullYear()
-    return new Date(time).toLocaleDateString('en-US', sameYear ? { month: 'short', day: 'numeric' } : { dateStyle: 'medium' })
+    return new Date(time).toLocaleDateString(locale, sameYear ? { month: 'short', day: 'numeric' } : { dateStyle: 'medium' })
 }
 
 /** The title being changed in place: Enter or leaving keeps it, Escape puts it back. */
@@ -137,14 +148,16 @@ export function ConversationHistory({
     onPin,
     onDelete,
     now = Date.now(),
-    formatTime = conversationTime,
+    formatTime: givenFormatTime,
     defaultRenaming,
     defaultDeleting,
     framed = true,
     className,
     words: given,
 }: ConversationHistoryProps) {
-    const words = { ...CONVERSATION_HISTORY_WORDS, ...given }
+    const words = useWords(CONVERSATION_HISTORY_PART, given)
+    const locale = useLocale()
+    const formatTime = givenFormatTime ?? ((time: number, at: number) => conversationTime(time, at, locale))
     const [renaming, setRenaming] = useState(defaultRenaming)
     const [deleting, setDeleting] = useState(defaultDeleting)
     const doomed = conversations.find((entry) => entry.id === deleting)

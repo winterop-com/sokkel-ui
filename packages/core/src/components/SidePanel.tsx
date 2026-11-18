@@ -7,6 +7,7 @@ import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 import { ShellDesktop, ShellPanelStrip } from './shell-context'
 import { GroupLabel } from './GroupLabel'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** One tab of a side panel. */
 export interface SidePanelTab {
@@ -22,7 +23,10 @@ export interface SidePanelWords {
     resize: string
 }
 
-const WORDS: SidePanelWords = { resize: 'Resize the side panel' }
+export const SIDE_PANEL_WORDS: SidePanelWords = { resize: 'Resize the side panel' }
+
+/** Where a catalog holds a side panel's words. */
+export const SIDE_PANEL_PART: WordsPart<SidePanelWords> = { id: 'sidePanel', words: SIDE_PANEL_WORDS }
 
 export interface SidePanelProps {
     tabs: SidePanelTab[]
@@ -88,7 +92,7 @@ export function SidePanel({
     className,
     words: given,
 }: SidePanelProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SIDE_PANEL_PART, given)
     const [own, setOwn] = useState(defaultActive)
     const shown = active ?? own
     const current = tabs.find((tab) => tab.id === shown) ?? tabs[0]

@@ -1,8 +1,11 @@
 import { useMemo, useState, type Ref } from 'react'
 
+import { useLocale, useWords } from '@winterop-com/sokkel-ui/lib/words'
+
 import { EChart, type ChartHandle } from './EChart'
 import { useFrameData } from './frame-data'
 import type { ChartKind, ChartSpec } from './kinds'
+import { CHART_PART } from './kinds/words'
 import type { ChartLook } from './look'
 import { readsHidden } from './kinds/load'
 import { useBuilder } from './use-builder'
@@ -68,8 +71,14 @@ export function sameSpec(a: ChartSpec, b: ChartSpec): boolean {
     )
 }
 
-/** The spec, kept as the same object while every field holds the same value, so a chart is built again only when one changes. */
-export function useSpec(spec: ChartSpec): ChartSpec {
+/**
+ * The spec, kept as the same object while every field holds the same value, so a chart is built again
+ * only when one changes; its words over the provider's, and the provider's locale where it names none.
+ */
+export function useSpec(given: ChartSpec): ChartSpec {
+    const locale = useLocale()
+    const words = useWords(CHART_PART, given.words)
+    const spec = { ...given, locale: given.locale ?? locale, words }
     const [kept, setKept] = useState(spec)
     const same = sameSpec(kept, spec)
     if (!same) setKept(spec)

@@ -1,6 +1,7 @@
 import { Paperclip } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { PersonAvatar } from './PersonAvatar'
 
@@ -18,6 +19,12 @@ export interface LetterWords {
 }
 
 export const LETTER_WORDS: LetterWords = { attached: 'Has attachments', to: (names) => `to ${names.join(', ')}` }
+
+/** Where a catalog holds a letter's words. */
+export const LETTER_PART: WordsPart<LetterWords> = { id: 'letter', words: LETTER_WORDS }
+
+/** A letter's phrases as ICU messages in English, for the catalog. */
+export const LETTER_MESSAGES: WordMessages<LetterWords> = { to: null }
 
 export interface LetterProps {
     from: LetterSender
@@ -65,7 +72,7 @@ export function Letter({
     className,
     words: given,
 }: LetterProps) {
-    const words = { ...LETTER_WORDS, ...given }
+    const words = useWords(LETTER_PART, given)
     const [own, setOwn] = useState(defaultOpen)
     const open = !foldable || (held ?? own)
     const head = (

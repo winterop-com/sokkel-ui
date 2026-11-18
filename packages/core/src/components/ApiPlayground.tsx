@@ -3,6 +3,7 @@ import { Plus, Send, SquareTerminal, X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { Code } from './Code'
 import { CopyButton } from './CopyButton'
 import { ExampleList, type ExampleGroup } from './ExampleList'
@@ -113,7 +114,7 @@ export interface ApiPlaygroundWords {
     historyNote: string
 }
 
-const WORDS: ApiPlaygroundWords = {
+export const API_PLAYGROUND_WORDS: ApiPlaygroundWords = {
     request: 'Request',
     method: 'Method',
     path: 'Path',
@@ -140,6 +141,12 @@ const WORDS: ApiPlaygroundWords = {
     history: 'Sent requests',
     historyNote: 'Newest first. Choosing one puts it back in the builder.',
 }
+
+/** Where a catalog holds an API playground's words. */
+export const API_PLAYGROUND_PART: WordsPart<ApiPlaygroundWords> = { id: 'apiPlayground', words: API_PLAYGROUND_WORDS }
+
+/** An API playground's phrases as ICU messages in English, for the catalog. */
+export const API_PLAYGROUND_MESSAGES: WordMessages<ApiPlaygroundWords> = { removeParam: null, took: null }
 
 /**
  * The path with its parameters as a query, each name and value encoded. It always starts with `/`,
@@ -243,7 +250,7 @@ export function ApiPlayground({
     className,
     words: given,
 }: ApiPlaygroundProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(API_PLAYGROUND_PART, given)
     const [request, setRequest] = useState<ApiRequest>(defaultRequest)
     const [sent, setSent] = useState<ApiSent | null>(defaultSent ?? null)
     const [busy, setBusy] = useState(false)

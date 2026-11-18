@@ -2,8 +2,9 @@ import { useContext, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { FIELD_EDGE } from '../lib/issue-edge'
+import { useWords, type WordsPart } from '../lib/words'
 import { FieldRows } from './field-rows'
-import { ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
+import { ISSUE_PART, ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
 import { Label } from './ui/label'
 
 /** The words a field says: the required word, and what its issue mark says before each message. */
@@ -24,6 +25,9 @@ export const FIELD_WORDS: FieldWords = {
     required: 'required',
     ...ISSUE_WORDS,
 }
+
+/** Where a catalog holds a field's words; what its issue mark says is the mark's own. */
+export const FIELD_PART: WordsPart<FieldWords> = { id: 'field', words: FIELD_WORDS, from: [ISSUE_PART] }
 
 export interface FieldProps {
     id: string
@@ -109,7 +113,7 @@ export function Field({
     className,
     words: given,
 }: FieldProps) {
-    const words = { ...FIELD_WORDS, ...given }
+    const words = useWords(FIELD_PART, given)
     const issues: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issuesGiven]
     const tone = worst(issues)
     const rows = useContext(FieldRows)

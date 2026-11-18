@@ -5,6 +5,7 @@ import { cn } from '../lib/cn'
 import { Chip, type ChipTone } from './Chip'
 import { useTableCell } from './table-cell'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export interface TagChipsWords {
     /** The chip that stands for the tags left out, given how many. */
@@ -15,10 +16,16 @@ export interface TagChipsWords {
     rest: (tags: readonly string[]) => string
 }
 
-const WORDS: TagChipsWords = {
+export const TAG_CHIPS_WORDS: TagChipsWords = {
     more: (count) => `+${String(count)}`,
     rest: (tags) => `${String(tags.length)} more: ${tags.join(', ')}`,
 }
+
+/** Where a catalog holds a row of tag chips' words, and the arguments its phrases name. */
+export const TAG_CHIPS_PART: WordsPart<TagChipsWords> = { id: 'tagChips', words: TAG_CHIPS_WORDS, args: { more: 'count' } }
+
+/** A row of tag chips' phrases as ICU messages in English, for the catalog. */
+export const TAG_CHIPS_MESSAGES: WordMessages<TagChipsWords> = { more: '+{count, number}', rest: null }
 
 const RING =
     'rounded-chip outline-none focus-visible:outline-focus focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid'
@@ -70,7 +77,7 @@ export interface TagChipsProps {
  * chips and each one pressable as the shown tags are.
  */
 export function TagChips({ tags, max, variant = 'secondary', mono = true, onSelect, className, words: given }: TagChipsProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(TAG_CHIPS_PART, given)
     const tone: ChipTone = variant === 'outline' ? 'outline' : 'neutral'
     const cell = useTableCell()
     const stacked = cell.stacked

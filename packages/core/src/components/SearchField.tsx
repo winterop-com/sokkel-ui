@@ -1,6 +1,7 @@
 import { Search, X } from 'lucide-react'
 import { useRef, type AriaAttributes, type ComponentProps, type Ref } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { useShortcuts } from '../hooks/use-shortcuts'
 import { cn } from '../lib/cn'
 import { Input } from './ui/input'
@@ -10,9 +11,12 @@ export interface SearchFieldWords {
     clear: string
 }
 
-const WORDS: SearchFieldWords = {
+export const SEARCH_FIELD_WORDS: SearchFieldWords = {
     clear: 'Clear the search',
 }
+
+/** Where a catalog holds a search field's words. */
+export const SEARCH_FIELD_PART: WordsPart<SearchFieldWords> = { id: 'searchField', words: SEARCH_FIELD_WORDS }
 
 /** A `data-*` attribute, passed through to the text input as it is. */
 export type SearchFieldDataAttributes = { [name: `data-${string}`]: string | number | boolean | undefined }
@@ -80,7 +84,7 @@ export function SearchField({
     inputRef,
     inputProps,
 }: SearchFieldProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SEARCH_FIELD_PART, given)
     const name = label ?? placeholder
     const input = useRef<HTMLInputElement | null>(null)
     const { onKeyDown, ...rest } = inputProps ?? {}

@@ -13,6 +13,7 @@ import {
 } from 'react'
 
 import { cn } from '../../lib/cn'
+import { useWords, type WordsPart } from '../../lib/words'
 import {
     DragDrop,
     DragGrip,
@@ -429,10 +430,13 @@ export interface BoardLaneWords {
     expand: string
 }
 
-const LANE_WORDS: BoardLaneWords = {
+export const BOARD_LANE_WORDS: BoardLaneWords = {
     collapse: 'Fold the lane',
     expand: 'Unfold the lane',
 }
+
+/** Where a catalog holds a board lane's words. */
+export const BOARD_LANE_PART: WordsPart<BoardLaneWords> = { id: 'boardLane', words: BOARD_LANE_WORDS }
 
 export interface BoardLaneProps {
     title: ReactNode
@@ -451,7 +455,7 @@ export interface BoardLaneProps {
  * the board scrolls sideways, and folds the lane away.
  */
 export function BoardLane({ title, count, columns, collapsed = false, onCollapsedChange, children, words: given }: BoardLaneProps) {
-    const words = { ...LANE_WORDS, ...given }
+    const words = useWords(BOARD_LANE_PART, given)
     return (
         <section className="flex flex-col">
             <div className="sticky left-0 z-10 flex w-max items-center gap-2 py-2 pr-3">

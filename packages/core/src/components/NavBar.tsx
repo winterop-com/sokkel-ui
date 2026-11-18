@@ -2,6 +2,7 @@ import { Menu as MenuIcon } from 'lucide-react'
 import { Menu } from '@base-ui/react/menu'
 import type { ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { POPUP } from '../lib/popup'
 import { Link } from './Link'
@@ -20,10 +21,13 @@ export interface NavBarWords {
     navigation: string
 }
 
-const WORDS: NavBarWords = {
+export const NAV_BAR_WORDS: NavBarWords = {
     menu: 'Open the navigation',
     navigation: 'Main',
 }
+
+/** Where a catalog holds a navigation bar's words. */
+export const NAV_BAR_PART: WordsPart<NavBarWords> = { id: 'navBar', words: NAV_BAR_WORDS }
 
 export interface NavBarProps {
     mark: ReactNode
@@ -41,7 +45,7 @@ export interface NavBarProps {
  * places fold into a menu. Each place is a `Link`, drawn by the app's `LinkProvider`.
  */
 export function NavBar({ mark, name, links, end, className, words: given }: NavBarProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(NAV_BAR_PART, given)
     return (
         <header className={cn('flex h-shell-top shrink-0 items-stretch gap-4 border-b border-border-strong bg-sidebar px-3', className)}>
             <div className="flex min-w-0 items-center gap-2">

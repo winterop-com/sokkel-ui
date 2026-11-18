@@ -1,6 +1,7 @@
 import { ArrowRight, RotateCw } from 'lucide-react'
 import { useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { useSearch } from '../hooks/use-search'
 import { cn } from '../lib/cn'
 import { composing } from '../lib/keys'
@@ -32,7 +33,7 @@ export interface SearchWords {
     clear: string
 }
 
-const WORDS: SearchWords = {
+export const SEARCH_WORDS: SearchWords = {
     placeholder: 'Search',
     results: 'Results',
     searching: 'Searching',
@@ -42,6 +43,21 @@ const WORDS: SearchWords = {
     tooShort: (minQuery) => `Type ${String(minQuery)} characters or more to search.`,
     seeAll: (query) => `See all results for “${query}”`,
     clear: 'Clear the search',
+}
+
+/** Where a catalog holds a search's words, and the arguments its phrases name. */
+export const SEARCH_PART: WordsPart<SearchWords> = {
+    id: 'search',
+    words: SEARCH_WORDS,
+    args: { empty: 'query', failed: '', tooShort: 'minQuery', seeAll: 'query' },
+}
+
+/** A search's phrases as ICU messages in English, for the catalog. */
+export const SEARCH_MESSAGES: WordMessages<SearchWords> = {
+    empty: 'Nothing matches “{query}”.',
+    failed: 'The search did not answer.',
+    tooShort: 'Type {minQuery} characters or more to search.',
+    seeAll: 'See all results for “{query}”',
 }
 
 /** A row of the list a person can choose: a result, Retry, or the way to the results page, highlighted as every list of choices is. */
@@ -273,7 +289,7 @@ export function Search({
     className,
     words: wordsGiven,
 }: SearchProps) {
-    const words = { ...WORDS, ...wordsGiven }
+    const words = useWords(SEARCH_PART, wordsGiven)
     const [queryHeld, setQueryHeld] = useState(defaultQuery)
     const query = given ?? queryHeld
     const setQuery = (next: string) => {

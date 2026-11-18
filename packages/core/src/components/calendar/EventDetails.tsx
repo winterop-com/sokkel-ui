@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { KIND_FILL } from '../../lib/kind'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 import { PersonAvatar } from '../PersonAvatar'
 import type { CalendarEvent } from './events'
 
@@ -39,12 +40,18 @@ function when(event: CalendarEvent): string {
     return `${format(event.start, 'EEEE d MMMM')}, ${format(event.start, 'HH:mm')} - ${format(event.end, 'HH:mm')}`
 }
 
-const WORDS: EventDetailsWords = {
+export const EVENT_DETAILS_WORDS: EventDetailsWords = {
     when,
     more: (count) => `+${String(count)}`,
     people: 'People',
     location: 'Location',
 }
+
+/** Where a catalog holds an event's details's words, and the arguments its phrases name. */
+export const EVENT_DETAILS_PART: WordsPart<EventDetailsWords> = { id: 'eventDetails', words: EVENT_DETAILS_WORDS, args: { more: 'count' } }
+
+/** An event's details's phrases as ICU messages in English, for the catalog. */
+export const EVENT_DETAILS_MESSAGES: WordMessages<EventDetailsWords> = { when: null, more: '+{count}' }
 
 /** One line of the details: its icon in the faint ink, then what it says. */
 function Line({ icon, label, children }: { icon: ReactNode; label?: string; children: ReactNode }) {
@@ -95,7 +102,7 @@ export function EventDetails({
     className,
     words: given,
 }: EventDetailsProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(EVENT_DETAILS_PART, given)
     const shown = people?.slice(0, peopleShown) ?? []
     const rest = (people?.length ?? 0) - shown.length
     const hasLines = (facts?.length ?? 0) > 0 || location !== undefined || shown.length > 0

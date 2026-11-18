@@ -1,8 +1,9 @@
 import { CalendarDays } from 'lucide-react'
 
 import { formatDate, isBefore, isoDate, ISO_DATE, readDate, type DateFormat } from '../lib/dates'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { TypedField, type EntryFieldProps } from './entry'
-import { FIELD_WORDS, type FieldWords } from './Field'
+import { FIELD_PART, FIELD_WORDS, type FieldWords } from './Field'
 import { DayPick, prefetchCalendar } from './day-pick'
 import { Picker, useOpen } from './pickers'
 
@@ -35,6 +36,22 @@ export const DATE_FIELD_WORDS: DateFieldWords = {
     use: (bound) => `Use ${bound}`,
     pick: 'Choose a date',
     clear: 'Clear',
+}
+
+/** Where a catalog holds a date field's words, and the arguments its phrases name. */
+export const DATE_FIELD_PART: WordsPart<DateFieldWords> = {
+    id: 'dateField',
+    words: DATE_FIELD_WORDS,
+    args: { example: 'sample', under: 'min', over: 'max', use: 'bound' },
+    from: [FIELD_PART],
+}
+
+/** A date field's phrases as ICU messages in English, for the catalog. */
+export const DATE_FIELD_MESSAGES: WordMessages<DateFieldWords> = {
+    example: 'As in {sample}.',
+    under: 'Enter {min} or later',
+    over: 'Enter {max} or earlier',
+    use: 'Use {bound}',
 }
 
 export interface DateFieldProps extends EntryFieldProps<string> {
@@ -75,7 +92,7 @@ export function DateField({
     placeholder,
     ...field
 }: DateFieldProps) {
-    const words = { ...DATE_FIELD_WORDS, ...said }
+    const words = useWords(DATE_FIELD_PART, said)
     const [opened, setOpened] = useOpen(open, defaultOpen, onOpenChange)
     return (
         <TypedField

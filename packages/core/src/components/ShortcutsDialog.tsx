@@ -4,6 +4,7 @@ import { useRegisteredShortcuts } from '../hooks/use-shortcuts'
 import { shortcutGroups, type ShortcutGroup } from '../lib/shortcut-groups'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { Kbd, KbdGroup } from './ui/kbd'
+import { useWords, type WordsPart } from '../lib/words'
 
 export type { Shortcut, ShortcutGroup } from '../lib/shortcut-groups'
 export { applePlatform } from '../lib/keys'
@@ -18,11 +19,14 @@ export interface ShortcutsDialogWords {
     sequence?: string
 }
 
-const WORDS: ShortcutsDialogWords = {
+export const SHORTCUTS_DIALOG_WORDS: ShortcutsDialogWords = {
     title: 'Keyboard shortcuts',
     general: 'General',
     sequence: 'then',
 }
+
+/** Where a catalog holds a shortcuts dialog's words. */
+export const SHORTCUTS_DIALOG_PART: WordsPart<ShortcutsDialogWords> = { id: 'shortcutsDialog', words: SHORTCUTS_DIALOG_WORDS }
 
 const NONE: readonly ShortcutGroup[] = []
 
@@ -55,7 +59,7 @@ export interface ShortcutsDialogProps {
  * `Shell` holds one, opened on `?` and from the account menu, when given `shortcuts`.
  */
 export function ShortcutsDialog({ open, onOpenChange, groups = NONE, words: given }: ShortcutsDialogProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SHORTCUTS_DIALOG_PART, given)
     const registered = useRegisteredShortcuts()
     const shown = useMemo(() => shortcutGroups(registered, groups, words.general), [registered, groups, words.general])
     return (

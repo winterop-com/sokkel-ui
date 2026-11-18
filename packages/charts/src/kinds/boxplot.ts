@@ -47,7 +47,7 @@ export const boxplot: ChartBuilder = (spec, look) => {
                     { label: words.median, value: written(spec, spread.median) },
                     { label: words.lower, value: written(spec, spread.lower) },
                     { label: words.low, value: written(spec, spread.low) },
-                    { label: words.count, value: formatNumber(spread.count) },
+                    { label: words.count, value: formatNumber(spread.count, spec.locale) },
                 ])
             },
         },

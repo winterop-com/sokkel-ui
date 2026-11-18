@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useClamped } from '@winterop-com/sokkel-ui/hooks/use-clamped'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Artwork } from './Artwork'
 
 /** The words the part says, each with an English default. */
@@ -22,6 +23,12 @@ export const UP_NEXT_WORDS: UpNextWords = {
     cancel: 'Cancel',
     playingIn: (seconds) => `Playing in ${String(seconds)} s`,
 }
+
+/** Where a catalog holds an up-next card's words, and the arguments its phrases name. */
+export const UP_NEXT_PART: WordsPart<UpNextWords> = { id: 'upNext', words: UP_NEXT_WORDS, args: { playingIn: 'seconds' } }
+
+/** An up-next card's phrases as ICU messages in English, for the catalog. */
+export const UP_NEXT_MESSAGES: WordMessages<UpNextWords> = { playingIn: 'Playing in {seconds} s' }
 
 /** A control drawn over the picture, light on dark in either scheme, as the player's own are. */
 const ON_PICTURE =
@@ -71,7 +78,7 @@ export function UpNext({
     words: given,
     className,
 }: UpNextProps) {
-    const words = { ...UP_NEXT_WORDS, ...given }
+    const words = useWords(UP_NEXT_PART, given)
     const counting = countdown !== undefined && countdown > 0
     const start = counting ? Math.ceil(countdown) : 0
     const [left, setLeft] = useState(start)

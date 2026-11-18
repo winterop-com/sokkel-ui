@@ -2,6 +2,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Slider } from '@winterop-com/sokkel-ui/primitives/slider'
 import type { Basemap } from './basemap'
@@ -27,7 +28,10 @@ export interface MapLayerListWords {
     basemap: string
 }
 
-const WORDS: MapLayerListWords = { show: 'Show layer', hide: 'Hide layer', opacity: 'Opacity', basemap: 'Basemap' }
+export const MAP_LAYER_LIST_WORDS: MapLayerListWords = { show: 'Show layer', hide: 'Hide layer', opacity: 'Opacity', basemap: 'Basemap' }
+
+/** Where a catalog holds a map layer list's words. */
+export const MAP_LAYER_LIST_PART: WordsPart<MapLayerListWords> = { id: 'mapLayerList', words: MAP_LAYER_LIST_WORDS }
 
 function VisibleToggle({
     name,
@@ -121,7 +125,7 @@ export interface MapLayerListProps {
  * previews and the same two controls for the basemap.
  */
 export function MapLayerList({ layers, onVisibleChange, onOpacityChange, basemap, words, className }: MapLayerListProps) {
-    const said = { ...WORDS, ...words }
+    const said = useWords(MAP_LAYER_LIST_PART, words)
     return (
         <div className={cn('flex flex-col gap-2', className)}>
             {layers.map((layer) => (

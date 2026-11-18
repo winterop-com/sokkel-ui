@@ -4,6 +4,7 @@ import { cn } from '../lib/cn'
 import { PaneHeader } from './PaneHeader'
 import { Segmented } from './Segmented'
 import { SplitPane } from './SplitPane'
+import { useWords, type WordsPart } from '../lib/words'
 
 export type EditPreviewPane = 'edit' | 'preview'
 
@@ -21,7 +22,15 @@ export interface EditPreviewWords {
     resize: string
 }
 
-const WORDS: EditPreviewWords = { edit: 'Edit', preview: 'Preview', switch: 'Show', resize: 'Resize the editor and its preview' }
+export const EDIT_PREVIEW_WORDS: EditPreviewWords = {
+    edit: 'Edit',
+    preview: 'Preview',
+    switch: 'Show',
+    resize: 'Resize the editor and its preview',
+}
+
+/** Where a catalog holds an editor and preview's words. */
+export const EDIT_PREVIEW_PART: WordsPart<EditPreviewWords> = { id: 'editPreview', words: EDIT_PREVIEW_WORDS }
 
 export interface EditPreviewProps {
     /** The editor, which fills its pane edge to edge. */
@@ -76,7 +85,7 @@ export function EditPreview({
     className,
     words: given,
 }: EditPreviewProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(EDIT_PREVIEW_PART, given)
     const [own, setOwn] = useState<EditPreviewPane>(defaultPane)
     const pane = view === 'both' ? (paneValue ?? own) : view
     const choose = (next: EditPreviewPane) => {

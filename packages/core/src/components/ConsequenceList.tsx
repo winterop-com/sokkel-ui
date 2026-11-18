@@ -1,6 +1,7 @@
 import { useId, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useLocale, useWords, type WordsPart } from '../lib/words'
 
 /** One kind of thing an action takes with it: 12 runs, 3 schedules. */
 export interface Consequence {
@@ -19,7 +20,10 @@ export interface ConsequenceListWords {
     changed: string
 }
 
-const WORDS: ConsequenceListWords = { heading: 'Also deleted', changed: 'What this changes' }
+export const CONSEQUENCE_LIST_WORDS: ConsequenceListWords = { heading: 'Also deleted', changed: 'What this changes' }
+
+/** Where a catalog holds a consequence list's words. */
+export const CONSEQUENCE_LIST_PART: WordsPart<ConsequenceListWords> = { id: 'consequenceList', words: CONSEQUENCE_LIST_WORDS }
 
 /** Other props, `data-*`, `aria-*` and `className` among them, go to the root. */
 export interface ConsequenceListProps extends Omit<ComponentProps<'div'>, 'children'> {
@@ -38,7 +42,8 @@ export interface ConsequenceListProps extends Omit<ComponentProps<'div'>, 'child
  * `heading`, which labels the list. It sits in a confirm's body, before the verb.
  */
 export function ConsequenceList({ items, tone = 'critical', heading, className, words: given, ...props }: ConsequenceListProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CONSEQUENCE_LIST_PART, given)
+    const locale = useLocale()
     const headingId = useId()
     if (items.length === 0) return null
     return (
@@ -68,7 +73,7 @@ export function ConsequenceList({ items, tone = 'critical', heading, className, 
                             {item.detail !== undefined && <span className="text-xs text-muted-foreground">{item.detail}</span>}
                         </div>
                         {item.count !== undefined && (
-                            <span className="shrink-0 font-mono text-sm leading-5 tabular-nums">{item.count.toLocaleString('en')}</span>
+                            <span className="shrink-0 font-mono text-sm leading-5 tabular-nums">{item.count.toLocaleString(locale)}</span>
                         )}
                     </li>
                 ))}

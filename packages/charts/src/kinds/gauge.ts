@@ -204,7 +204,7 @@ export const gauge: ChartBuilder = (spec, look) => {
             steps: steps.length === 0 ? [{ color: tone }] : steps.map((step) => ({ value: step.value, color: tokenOf(spec, step) })),
             tone: look.token(tone),
             write: (shown) => written(spec, shown),
-            tick: tickWriter(spec.format),
+            tick: tickWriter(spec.format, '', spec.locale),
             label: spec.total,
             shape: spec.dial,
             small: spec.small,

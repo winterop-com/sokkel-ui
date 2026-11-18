@@ -2,6 +2,7 @@ import { Search } from 'lucide-react'
 import { useEffect, useId, useState, type KeyboardEvent } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { BlockRow } from './BlockPalette'
 import { groupBlocks, type BlockGroup, type PipelineBlock } from './blocks'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
@@ -30,6 +31,9 @@ export const BLOCK_PICKER_WORDS: BlockPickerWords = {
     nothing: 'No block fits here',
     loading: 'Reading the blocks',
 }
+
+/** Where a catalog holds a block picker's words. */
+export const BLOCK_PICKER_PART: WordsPart<BlockPickerWords> = { id: 'blockPicker', words: BLOCK_PICKER_WORDS }
 
 const WIDTH = { md: 'w-64', lg: 'w-80', xl: 'w-96' } as const
 
@@ -71,7 +75,7 @@ export function BlockPicker({
     words: given,
     className,
 }: BlockPickerProps) {
-    const words = { ...BLOCK_PICKER_WORDS, ...given }
+    const words = useWords(BLOCK_PICKER_PART, given)
     const [query, setQuery] = useState('')
     const [active, setActive] = useState(0)
     const listed = loading ? [] : groupBlocks(blocks, groups, query)

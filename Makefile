@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check generated-check storybook-build baselines visual visual-update screenshots-ci layout layout-engines examples examples-web examples-list examples-site clean
+.PHONY: help install tokens messages storybook build size typecheck lint fmt fmt-check test check generated-check storybook-build baselines visual visual-update screenshots-ci layout layout-engines examples examples-web examples-list examples-site clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -11,6 +11,9 @@ install: ## Install the dependencies
 
 tokens: ## Build tokens.css and the theme files from tokens/tokens.json
 	bun run tokens
+
+messages: ## Write each package's English catalog, messages/en.json, from the parts' words
+	bun run messages
 
 storybook: ## Run the Storybook dev server on port 6106
 	bun run storybook
@@ -38,9 +41,10 @@ test: ## Run the unit tests and the library rules
 
 check: typecheck lint fmt-check test generated-check ## The fast gates to run before pushing, as CI runs them
 
-generated-check: ## Check the generated tokens, the components index, the emoji list and the design pin
+generated-check: ## Check the generated tokens, the components index, the message catalogs, the emoji list and the design pin
 	bun scripts/build-tokens.ts --check
 	bun run components -- --check
+	bun run messages -- --check
 	bun run emoji-data -- --check
 	bun run design --check
 

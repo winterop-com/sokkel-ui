@@ -4,11 +4,12 @@ import { useEffect, useId, useRef, useState, type HTMLInputAutoCompleteAttribute
 import { cn } from '../lib/cn'
 import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { FRAME_BUTTON } from './entry'
-import { describedBy, Field, FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
+import { describedBy, Field, FIELD_PART, FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { RelativeTime } from './RelativeTime'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** The words a secret field says. */
 export interface SecretFieldWords extends FieldWords {
@@ -35,6 +36,12 @@ export const SECRET_FIELD_WORDS: SecretFieldWords = {
     show: 'Show',
     hide: 'Hide',
 }
+
+/** Where a catalog holds a secret field's words. */
+export const SECRET_FIELD_PART: WordsPart<SecretFieldWords> = { id: 'secretField', words: SECRET_FIELD_WORDS, from: [FIELD_PART] }
+
+/** A secret field's phrases as ICU messages in English, for the catalog. */
+export const SECRET_FIELD_MESSAGES: WordMessages<SecretFieldWords> = { setWhen: null, replaceLabel: null }
 
 export interface SecretFieldProps {
     id: string
@@ -124,7 +131,7 @@ export function SecretField({
     bare = false,
     words: givenWords,
 }: SecretFieldProps) {
-    const words = { ...SECRET_FIELD_WORDS, ...givenWords }
+    const words = useWords(SECRET_FIELD_PART, givenWords)
     const [replacing, setReplacing] = useState(defaultReplacing)
     const [shown, setShown] = useState(false)
     const open = !sealed || replacing || value !== undefined

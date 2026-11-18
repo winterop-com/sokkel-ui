@@ -9,6 +9,7 @@ import { IconButton } from '../IconButton'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { DashboardGrid, SPAN, type PanelSpan } from './DashboardGrid'
 import { PanelToolsProvider } from './panel-tools'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 
 /** One panel's place in an arranged dashboard: its key and how wide it is. The order of the list is the order drawn. */
 export interface DashboardLayoutItem {
@@ -56,6 +57,23 @@ export const DASHBOARD_ARRANGE_WORDS: DashboardArrangeWords = {
     add: (widget) => `Add ${widget}`,
     end: 'Drop here to add at the end',
     moved: (panel, place, count) => `${panel} moved to ${String(place)} of ${String(count)}`,
+}
+
+/** Where a catalog holds a dashboard arrangement's words, and the arguments its phrases name. */
+export const DASHBOARD_ARRANGE_PART: WordsPart<DashboardArrangeWords> = {
+    id: 'dashboardArrange',
+    words: DASHBOARD_ARRANGE_WORDS,
+    args: { move: 'panel', size: 'panel', remove: 'panel', configure: 'panel', add: 'widget', moved: 'panel place count' },
+}
+
+/** A dashboard arrangement's phrases as ICU messages in English, for the catalog. */
+export const DASHBOARD_ARRANGE_MESSAGES: WordMessages<DashboardArrangeWords> = {
+    move: 'Move {panel}',
+    size: 'Size of {panel}',
+    remove: 'Remove {panel}',
+    configure: 'Configure {panel}',
+    add: 'Add {widget}',
+    moved: '{panel} moved to {place} of {count}',
 }
 
 const ALL_SPANS: readonly PanelSpan[] = ['sixth', 'quarter', 'third', 'half', 'two-thirds', 'full']
@@ -145,7 +163,7 @@ export function DashboardArrange<T extends DashboardLayoutItem>({
     className,
 }: DashboardArrangeProps<T>) {
     const kind = useId()
-    const words = { ...DASHBOARD_ARRANGE_WORDS, ...given }
+    const words = useWords(DASHBOARD_ARRANGE_PART, given)
     const ids = layout.map((item) => item.id)
     const [aim, setAim] = useState<Aim | undefined>(undefined)
     const aimed = useRef<Aim | undefined>(undefined)

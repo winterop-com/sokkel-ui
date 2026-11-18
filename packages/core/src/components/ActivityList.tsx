@@ -2,6 +2,7 @@ import { Bell } from 'lucide-react'
 import { Fragment, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Count } from './Count'
@@ -29,13 +30,19 @@ export interface ActivityWords {
     bell: (unread: number) => string
 }
 
-const WORDS: ActivityWords = {
+export const ACTIVITY_WORDS: ActivityWords = {
     title: 'Activity',
     markAllRead: 'Mark all read',
     empty: 'Nothing new.',
     unread: 'unread',
     bell: (unread) => (unread > 0 ? `Activity, ${String(unread)} unread` : 'Activity'),
 }
+
+/** Where a catalog holds an activity list's words, and the arguments its phrases name. */
+export const ACTIVITY_PART: WordsPart<ActivityWords> = { id: 'activity', words: ACTIVITY_WORDS, args: { bell: 'unread' } }
+
+/** An activity list's phrases as ICU messages in English, for the catalog. */
+export const ACTIVITY_MESSAGES: WordMessages<ActivityWords> = { bell: '{unread, plural, =0 {Activity} other {Activity, {unread} unread}}' }
 
 const INK: Record<NonNullable<ActivityItem['tone']>, string> = {
     critical: 'text-critical-ink',
@@ -66,7 +73,7 @@ export interface ActivityListProps {
  * Items stay until read. Arriving items are not announced; the bell's name says the count.
  */
 export function ActivityList({ items, onRead, onReadAll, head = true, className, words: given }: ActivityListProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(ACTIVITY_PART, given)
     const unread = items.filter((item) => item.unread === true).length
     let group: string | undefined
     return (
@@ -141,7 +148,7 @@ export type ActivityButtonProps = { unread: number; words?: Partial<ActivityWord
 
 /** The bell for the top bar, with the count of unread items on it. */
 export function ActivityButton({ unread, className, words: given, ...props }: ActivityButtonProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(ACTIVITY_PART, given)
     return (
         <Button
             variant="ghost"

@@ -1,6 +1,7 @@
 import { addDays, differenceInCalendarDays, endOfDay, format, isBefore, max, min, startOfDay } from 'date-fns'
 
 import type { KindColor } from '../../lib/kind'
+import { type WordMessages, type WordsPart } from '../../lib/words'
 
 /**
  * One thing on a calendar: a job's run, a meeting, a day away. A timed event runs from `start`
@@ -177,4 +178,21 @@ export const CALENDAR_WORDS: CalendarWords = {
             ? `${title}: ${format(start, 'EEE d MMM')} to ${format(end, 'EEE d MMM')}`
             : `${title}: ${format(start, 'EEE d MMM, HH:mm')} to ${format(end, 'HH:mm')}`,
     changeKeys: 'Alt and the arrow keys move it; with Shift they move its end.',
+}
+
+/** Where a catalog holds a calendar's words, and the arguments its phrases name. */
+export const CALENDAR_PART: WordsPart<CalendarWords> = {
+    id: 'calendar',
+    words: CALENDAR_WORDS,
+    args: { time: 'date', weekday: 'date', dayNumber: 'date', more: 'count' },
+}
+
+/** A calendar's phrases as ICU messages in English, for the catalog. */
+export const CALENDAR_MESSAGES: WordMessages<CalendarWords> = {
+    time: '{date, time, ::HHmm}',
+    hour: null,
+    weekday: '{date, date, ::EEE}',
+    dayNumber: '{date, date, ::d}',
+    more: '+{count} more',
+    changed: null,
 }

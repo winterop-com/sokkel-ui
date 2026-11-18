@@ -46,7 +46,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 `CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
 (`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 272 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 273 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 11 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -189,6 +189,7 @@ A domain package plugs into the core as a plugin an app installs once with `regi
 | **CommandPalette** | `@winterop-com/sokkel-ui/CommandPalette` | The command palette: one search over everything an app can do, grouped, each row with its icon, a hint in words or a code, and the keys that run it directly, a sequence's two presses with the word `sequence` between them as the shortcuts dialog draws them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-command-palette--closed) |
 | **Dock** | `@winterop-com/sokkel-ui/Dock` | A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the title, tools and a fold control, and its content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-workspace--list-and-panel) |
 | **Link**, LinkProvider | `@winterop-com/sokkel-ui/Link` | An anchor drawn as the app's `LinkProvider` says: its router's link for an internal address, a plain anchor otherwise. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-link-provider--router) |
+| **LocaleProvider** | `@winterop-com/sokkel-ui/LocaleProvider` | Gives every part under it a locale and a catalog of words. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-locale--english) |
 | **NavBar** | `@winterop-com/sokkel-ui/NavBar` | The app's frame along the top, for an app with few places and no rail: the mark and name, the places as links with the current one underlined, and the right-hand controls. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-link-provider--router) |
 | **Rail** | `@winterop-com/sokkel-ui/Rail` | The app's left navigation: a head with the app's mark and the collapse control, the groups, and a foot cell the shell's foot strip lines up with. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
 | **ResizeHandle** | `@winterop-com/sokkel-ui/ResizeHandle` | The edge a panel is resized by: dragged with a pointer, moved 16px a press with the arrows, sent to its limits with Home and End, and put back to `reset` with a double click or Enter. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-channel-list--channels) (in ChannelList) |

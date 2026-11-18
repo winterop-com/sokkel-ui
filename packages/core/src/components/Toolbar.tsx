@@ -14,6 +14,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** A tool that moves into the More menu when the toolbar has no room for it. */
 export interface ToolbarItem {
@@ -63,10 +64,13 @@ export interface ToolbarWords {
     moreWays: string
 }
 
-const WORDS: ToolbarWords = {
+export const TOOLBAR_WORDS: ToolbarWords = {
     more: 'More',
     moreWays: 'More ways',
 }
+
+/** Where a catalog holds a toolbar's words. */
+export const TOOLBAR_PART: WordsPart<ToolbarWords> = { id: 'toolbar', words: TOOLBAR_WORDS }
 
 /** The gap between the tools that move into More, in pixels; `gap-2` below. */
 const ITEM_GAP = 8
@@ -340,7 +344,7 @@ export function Toolbar({
     className,
     words: given,
 }: ToolbarProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(TOOLBAR_PART, given)
     const room = useRef<HTMLDivElement>(null)
     const ruler = useRef<HTMLDivElement>(null)
     const leader = useRef<HTMLDivElement>(null)

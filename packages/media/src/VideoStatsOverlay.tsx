@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { formatBitrate, formatResolution, type VideoStats } from '@winterop-com/sokkel-ui/media/video-stats'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { useLocale, useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 
 /** The words the stats overlay says, each with an English default. */
 export interface VideoStatsOverlayWords {
@@ -38,6 +39,9 @@ export const VIDEO_STATS_OVERLAY_WORDS: VideoStatsOverlayWords = {
     of: 'of',
     waiting: 'Waiting for the player',
 }
+
+/** Where a catalog holds the video stats overlay's words. */
+export const VIDEO_STATS_OVERLAY_PART: WordsPart<VideoStatsOverlayWords> = { id: 'videoStatsOverlay', words: VIDEO_STATS_OVERLAY_WORDS }
 
 /** How a headline reads: as plain news, or good, worrying or bad news, in the ink of each. */
 export type VideoStatsTone = 'neutral' | 'good' | 'warning' | 'critical'
@@ -95,7 +99,8 @@ export function VideoStatsOverlay({
     words: given,
     className,
 }: VideoStatsOverlayProps) {
-    const words = { ...VIDEO_STATS_OVERLAY_WORDS, ...given }
+    const words = useWords(VIDEO_STATS_OVERLAY_PART, given)
+    const locale = useLocale()
     const none = words.unknown
     const rows: [string, string][] =
         stats === null
@@ -109,7 +114,7 @@ export function VideoStatsOverlay({
                       words.droppedFrames,
                       stats.droppedFrames === null
                           ? none
-                          : `${stats.droppedFrames.toLocaleString('en-US')} ${words.of} ${(stats.totalFrames ?? 0).toLocaleString('en-US')}`,
+                          : `${stats.droppedFrames.toLocaleString(locale)} ${words.of} ${(stats.totalFrames ?? 0).toLocaleString(locale)}`,
                   ],
               ]
     if (stats !== null && stats.levels !== null && stats.levels > 1 && stats.level !== null) {

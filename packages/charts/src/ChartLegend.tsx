@@ -1,7 +1,8 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useMemo } from 'react'
 
 import type { DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useLocale, useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { useLegendEntries, type LegendEntries } from './chart-legend'
 import { extent } from './data'
 
@@ -33,6 +34,9 @@ export interface LegendWords {
 
 export const CHART_LEGEND_WORDS: LegendWords = { series: 'Series', min: 'Min', max: 'Max', avg: 'Avg', current: 'Current' }
 
+/** Where a catalog holds a chart legend's words. */
+export const CHART_LEGEND_PART: WordsPart<LegendWords> = { id: 'chartLegend', words: CHART_LEGEND_WORDS }
+
 /** The min, max, mean and last of a series' values, leaving out gaps. */
 export function legendStats(values: readonly (number | null | undefined)[]): Record<LegendStat, number | null> {
     const numbers = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
@@ -46,7 +50,9 @@ export function legendStats(values: readonly (number | null | undefined)[]): Rec
     }
 }
 
-const defaultFormat = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: Math.abs(value) < 10 ? 2 : 1 })
+/** A legend's figure in a locale: two decimals below ten, one above. */
+const figureFormat = (locale: string) => (value: number) =>
+    value.toLocaleString(locale, { maximumFractionDigits: Math.abs(value) < 10 ? 2 : 1 })
 
 function Swatch({ color, off }: { color: string; off: boolean }) {
     return (
@@ -94,12 +100,14 @@ export function ChartLegend({
     onHover,
     mode = 'list',
     stats = ['min', 'max', 'avg', 'current'],
-    format = defaultFormat,
+    format: givenFormat,
     figures = false,
     words: given,
     className,
 }: ChartLegendProps) {
-    const words = { ...CHART_LEGEND_WORDS, ...given }
+    const words = useWords(CHART_LEGEND_PART, given)
+    const locale = useLocale()
+    const format = useMemo(() => givenFormat ?? figureFormat(locale), [givenFormat, locale])
     const items = useLegendEntries(entries) ?? NONE
     const handlers = (key: string, off: boolean) => ({
         onClick: () => onToggle?.(key),

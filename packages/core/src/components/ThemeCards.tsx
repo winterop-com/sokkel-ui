@@ -4,6 +4,7 @@ import { Check } from 'lucide-react'
 
 import { THEMES, type ThemeOption } from '../lib/appearance'
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 
 export type { ThemeOption } from '../lib/appearance'
 
@@ -12,7 +13,10 @@ export interface ThemeCardsWords {
     theme: string
 }
 
-const WORDS: ThemeCardsWords = { theme: 'Theme' }
+export const THEME_CARDS_WORDS: ThemeCardsWords = { theme: 'Theme' }
+
+/** Where a catalog holds theme cards' words. */
+export const THEME_CARDS_PART: WordsPart<ThemeCardsWords> = { id: 'themeCards', words: THEME_CARDS_WORDS }
 
 export interface ThemeCardsProps {
     /** The chosen theme, by the name `data-theme` takes. */
@@ -36,7 +40,7 @@ export interface ThemeCardsProps {
  * the theme chosen. Beside `SchemeChoice` it makes the two settings rows of an app's look.
  */
 export function ThemeCards({ value, onValueChange, themes = THEMES, className, words: given }: ThemeCardsProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(THEME_CARDS_PART, given)
     return (
         <RadioGroupPrimitive
             data-slot="theme-cards"

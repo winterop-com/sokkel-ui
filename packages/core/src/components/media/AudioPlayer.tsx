@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type Ref } from 'react'
 
+import { useWords, type WordsPart } from '../../lib/words'
 import { cn } from '../../lib/cn'
 import { PlayButton, Position } from './MediaControls'
 import { useOneSound } from './one-sound'
@@ -11,11 +12,14 @@ export interface AudioPlayerWords {
     seek: string
 }
 
-const WORDS: AudioPlayerWords = {
+export const AUDIO_PLAYER_WORDS: AudioPlayerWords = {
     play: 'Play',
     pause: 'Pause',
     seek: 'Seek',
 }
+
+/** Where a catalog holds an audio player's words. */
+export const AUDIO_PLAYER_PART: WordsPart<AudioPlayerWords> = { id: 'audioPlayer', words: AUDIO_PLAYER_WORDS }
 
 /** How the player sits: on whatever holds it, or in a quiet card of its own, as a clip in a message. */
 export type AudioPlayerVariant = 'plain' | 'card'
@@ -65,7 +69,7 @@ export function AudioPlayer({
     audioRef,
     className,
 }: AudioPlayerProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(AUDIO_PLAYER_PART, given)
     const element = useRef<HTMLAudioElement | null>(null)
     const [playing, setPlaying] = useState(false)
     const [at, setAt] = useState(0)

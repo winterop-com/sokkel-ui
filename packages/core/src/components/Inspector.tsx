@@ -1,6 +1,7 @@
 import { MoreHorizontal, X } from 'lucide-react'
 import { useRef, type ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { CopyButton } from './CopyButton'
 import { usePanelSize } from '../hooks/use-panel-size'
@@ -16,13 +17,16 @@ export interface InspectorWords {
     copied: string
 }
 
-const WORDS: InspectorWords = {
+export const INSPECTOR_WORDS: InspectorWords = {
     menu: 'More actions',
     close: 'Close',
     resize: 'Resize the panel',
     copy: 'Copy',
     copied: 'Copied',
 }
+
+/** Where a catalog holds an inspector's words. */
+export const INSPECTOR_PART: WordsPart<InspectorWords> = { id: 'inspector', words: INSPECTOR_WORDS }
 
 export interface InspectorProps {
     title: ReactNode
@@ -78,7 +82,7 @@ export function Inspector({
     words: given,
     children,
 }: InspectorProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(INSPECTOR_PART, given)
     const panel = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: defaultSize, min: minSize, max: maxSize })
     const tool =

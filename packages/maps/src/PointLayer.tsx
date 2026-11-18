@@ -3,6 +3,7 @@ import type { ExpressionSpecification, GeoJSONSource, LayerSpecification } from 
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import { useLocale } from '@winterop-com/sokkel-ui/lib/words'
 import { useMapContext } from './context'
 import { CLASS_PROPERTY, classColor, prepareData, readValue, state, useGeoJsonLayer, type FeatureAccessor } from './layer'
 import { HIGHLIGHT_COLOR, NO_DATA_POINT_COLOR, SELECTION_COLOR, classOf, scaleColors, type ColorScale } from './scale'
@@ -78,7 +79,17 @@ export function pointRadius(size: PointSize | undefined, radius: number): Expres
     return ['interpolate', ['linear'], ['sqrt', ['max', ['to-number', ['get', SIZE_PROPERTY], 0], 0]], from[0], from[1], to[0], to[1]]
 }
 
-const COMPACT = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+const COMPACT = new Map<string, Intl.NumberFormat>()
+
+/** A cluster's count written short in a locale: `1.2K`. */
+function compact(locale: string): Intl.NumberFormat {
+    let found = COMPACT.get(locale)
+    if (found === undefined) {
+        found = new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 })
+        COMPACT.set(locale, found)
+    }
+    return found
+}
 
 /**
  * Points on the map, as circles colored by a scale or one color and sized by a value or one
@@ -104,6 +115,7 @@ export function PointLayer({
     highlighted,
 }: PointLayerProps) {
     const { map, overlay } = useMapContext()
+    const locale = useLocale()
     const prepared = useMemo(
         () =>
             prepareData(data, idProperty, (feature) => {
@@ -237,7 +249,7 @@ export function PointLayer({
                 className="absolute -translate-x-1/2 -translate-y-1/2 text-2xs leading-none font-medium text-card tabular-nums"
                 style={{ left: label.x, top: label.y }}
             >
-                {COMPACT.format(label.count)}
+                {compact(locale).format(label.count)}
             </span>
         )),
         overlay,

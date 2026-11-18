@@ -11,19 +11,19 @@ const FIGURE = /\d[\d,]*(?:\.\d+)?/
  * swapped for `formatTick`'s, keeping the words around it, so `1,500 GB` reads `1.5K GB`. Where
  * `format` writes another figure, as one that changes the unit does (`1.5 TB`), its text is kept.
  */
-export function compactWritten(text: string, value: number): string {
+export function compactWritten(text: string, value: number, locale = 'en-US'): string {
     const match = FIGURE.exec(text)
     if (match === null) return text
     const figure = Number(match[0].replaceAll(',', ''))
     const size = Math.abs(value)
     if (Math.abs(figure - size) > Math.max(0.5, size * 0.01)) return text
-    return `${text.slice(0, match.index)}${formatTick(size)}${text.slice(match.index + match[0].length)}`
+    return `${text.slice(0, match.index)}${formatTick(size, locale)}${text.slice(match.index + match[0].length)}`
 }
 
 /** How a value axis writes its ticks: through the chart's `format` where it has one, short, then the unit. */
-export function tickWriter(format: ((value: number) => string) | undefined, unit = ''): (value: number) => string {
-    if (format === undefined) return (value) => `${formatTick(value)}${unit}`
-    return (value) => `${compactWritten(format(value), value)}${unit}`
+export function tickWriter(format: ((value: number) => string) | undefined, unit = '', locale = 'en-US'): (value: number) => string {
+    if (format === undefined) return (value) => `${formatTick(value, locale)}${unit}`
+    return (value) => `${compactWritten(format(value), value, locale)}${unit}`
 }
 
 /** The category axis, its labels every `labelEvery`th category when the spec asks, written by `formatCategory`. */
@@ -40,13 +40,13 @@ export function categoryAxis(spec: ChartSpec, categories: string[]) {
  * or `%` where the figures stack to 100%.
  */
 export function valueLabels(spec: ChartSpec) {
-    if (spec.stack === 'percent') return { axisLabel: { formatter: (value: number) => `${formatNumber(value)}%` } }
+    if (spec.stack === 'percent') return { axisLabel: { formatter: (value: number) => `${formatNumber(value, spec.locale)}%` } }
     return valueTicks(spec)
 }
 
 /** A value axis' ticks, written as the tooltips write its figures, short: by the spec's `format`, then the unit of `left` or the spec's. */
 export function valueTicks(spec: ChartSpec) {
-    return { axisLabel: { formatter: tickWriter(spec.format, spec.axes?.left?.unit ?? unitAt(spec)) } }
+    return { axisLabel: { formatter: tickWriter(spec.format, spec.axes?.left?.unit ?? unitAt(spec), spec.locale) } }
 }
 
 /** The spec's steps after the first, each a dashed line across the chart at its value, in its color and labeled with its figure. */
