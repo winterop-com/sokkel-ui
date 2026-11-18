@@ -180,7 +180,25 @@
                 "kind-violet": "ansi-magenta",
                 "kind-violet-ink": "ansi-magenta",
                 "kind-pink": "ansi-bright-magenta",
-                "kind-pink-ink": "ansi-bright-magenta"
+                "kind-pink-ink": "ansi-bright-magenta",
+                "status-succeeded": "ansi-green",
+                "status-succeeded-ink": "ansi-green",
+                "status-failed": "ansi-red",
+                "status-failed-ink": "ansi-red",
+                "status-running": "ansi-blue",
+                "status-running-ink": "ansi-blue",
+                "status-queued": "ansi-blue",
+                "status-queued-ink": "ansi-blue",
+                "status-pending": "ansi-bright-black",
+                "status-pending-ink": "ansi-bright-black",
+                "status-waiting": "ansi-cyan",
+                "status-waiting-ink": "ansi-cyan",
+                "status-cancelled": "ansi-magenta",
+                "status-cancelled-ink": "ansi-magenta",
+                "status-skipped": "ansi-bright-black",
+                "status-skipped-ink": "ansi-bright-black",
+                "status-completed-with-errors": "ansi-yellow",
+                "status-completed-with-errors-ink": "ansi-yellow"
             }
         },
         "none": "NO_COLOR set: no color at all, only bold, reverse and underline. Every state is carried by its words and its glyphs (glyphs.json): a state's word beside its dot, the sort arrows, the check, the issue mark (principle 22).",
@@ -191,6 +209,47 @@
             "ansi16": "Every cell under the layer in two fixed colors, keeping its glyphs: its ink ansi-bright-black on the terminal's default ground.",
             "none": "As in sixteen colors, without color: every cell under the layer drawn plain, never bold or reversed, so the layer's own bold and reverse stand out."
         }
+    },
+    "statuses": {
+        "$description": "The states every status part (a status chip, a dot, a timeline's event, a table's status cell, a rail entry's dot) knows without being told, as sokkel-ui's lib/status holds them: each said by its name in lower case, underscores as spaces, drawn in its color's `color` (the dot, a chip's wash) with its words and an outline in its `ink`; `running` alone is live, its dot pulsing. An app names its own states with a word and one of `colors`, which win over these; a state no map knows is said by its name in `neutral`. Each glyph is the status dot (glyphs.json) beside the state's word, so a state reads without color (principle 22).",
+        "colors": {
+            "good": {"color": "good", "ink": "status-succeeded-ink"},
+            "critical": {"color": "critical", "ink": "status-failed-ink"},
+            "warning": {"color": "warning", "ink": "status-completed-with-errors-ink"},
+            "info": {"color": "info", "ink": "status-running-ink"},
+            "neutral": {"color": "faint", "ink": "muted-foreground"},
+            "succeeded": {"color": "status-succeeded", "ink": "status-succeeded-ink"},
+            "failed": {"color": "status-failed", "ink": "status-failed-ink"},
+            "running": {"color": "status-running", "ink": "status-running-ink"},
+            "queued": {"color": "status-queued", "ink": "status-queued-ink"},
+            "pending": {"color": "status-pending", "ink": "status-pending-ink"},
+            "waiting": {"color": "status-waiting", "ink": "status-waiting-ink"},
+            "cancelled": {"color": "status-cancelled", "ink": "status-cancelled-ink"},
+            "skipped": {"color": "status-skipped", "ink": "status-skipped-ink"},
+            "completed_with_errors": {
+                "color": "status-completed-with-errors",
+                "ink": "status-completed-with-errors-ink"
+            }
+        },
+        "run": {
+            "succeeded": "succeeded",
+            "failed": "failed",
+            "running": "running",
+            "queued": "queued",
+            "pending": "pending",
+            "waiting": "waiting",
+            "cancelled": "cancelled",
+            "skipped": "skipped",
+            "completed_with_errors": "completed_with_errors"
+        },
+        "health": {
+            "$description": "A health check's states (sokkel-ui #687): it passed, it found something to watch, it failed, or it could not run.",
+            "ok": "good",
+            "warn": "warning",
+            "fail": "critical",
+            "error": "critical"
+        },
+        "live": ["running"]
     },
     "themes": {"base": "tidevann", "specimens": ["tidevann", "paper", "contrast"]},
     "densities": ["regular", "compact"],
@@ -222,6 +281,17 @@
         {"id": "board-item-panel", "file": "parts/board-item-panel.json", "status": "stable"},
         {"id": "code-editor", "file": "parts/code-editor.json", "status": "stable"},
         {"id": "date-field", "file": "parts/date-field.json", "status": "stable"},
+        {"id": "banner", "file": "parts/banner.json", "status": "stable"},
+        {"id": "side-panel", "file": "parts/side-panel.json", "status": "stable"},
+        {"id": "problem", "file": "parts/problem.json", "status": "stable"},
+        {"id": "json-tree", "file": "parts/json-tree.json", "status": "stable"},
+        {"id": "secret-field", "file": "parts/secret-field.json", "status": "stable"},
+        {"id": "yes-no-field", "file": "parts/yes-no-field.json", "status": "stable"},
+        {"id": "time-field", "file": "parts/time-field.json", "status": "stable"},
+        {"id": "computed-field", "file": "parts/computed-field.json", "status": "stable"},
+        {"id": "repeated-group", "file": "parts/repeated-group.json", "status": "stable"},
+        {"id": "period-picker", "file": "parts/period-picker.json", "status": "stable"},
+        {"id": "tree-select", "file": "parts/tree-select.json", "status": "stable"},
         {"id": "chart", "file": "parts/chart.json", "status": "stable"},
         {"id": "dashboard-panel", "file": "parts/dashboard-panel.json", "status": "stable"},
         {"id": "stat-panel", "file": "parts/stat-panel.json", "status": "stable"},

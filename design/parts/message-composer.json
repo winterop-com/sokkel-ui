@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "Where a message to people is written, as at the foot of a team chat's channel: a box on the field's ground, rounded by radius-composer, with the formatting toolbar on top (its groups as its width has room for, the rest behind More, and Write and Preview at its end), the text that grows with what is typed, and a row under it with add, the text style toggle, emoji and mention at the start, then the app's actions, and a round Send at the end with an optional schedule menu. Enter sends and Shift+Enter breaks the line; on a touch screen Enter breaks the line and only Send sends. A toolbar button wraps the selection in markdown; the code block button puts it in a fence named for the language chosen. Preview draws the message as a sent one is.",
     "sources": {
@@ -265,6 +265,37 @@
         "mentions.empty": "No one by that name",
         "mentions.searching": "Searching"
     },
+    "messages": {
+        "placeholder": {"id": "messageComposer.placeholder", "en": "Message"},
+        "send": {"id": "messageComposer.send", "en": "Send"},
+        "sendLater": {"id": "messageComposer.sendLater", "en": "Schedule for later"},
+        "customTime": {"id": "messageComposer.customTime", "en": "Custom time"},
+        "alsoSend": {"id": "messageComposer.alsoSend", "en": "Also send to"},
+        "attach": {"id": "messageComposer.attach", "en": "Attach"},
+        "formatting": {"id": "messageComposer.formatting", "en": "Show or hide formatting"},
+        "emoji": {"id": "messageComposer.emoji", "en": "Emoji"},
+        "mention": {"id": "messageComposer.mention", "en": "Mention someone"},
+        "more": {"id": "messageComposer.more", "en": "More"},
+        "moreFormatting": {"id": "messageComposer.moreFormatting", "en": "More formatting"},
+        "mode": {"id": "messageComposer.mode", "en": "Write or preview"},
+        "write": {"id": "messageComposer.write", "en": "Write"},
+        "preview": {"id": "messageComposer.preview", "en": "Preview"},
+        "nothingToPreview": {"id": "messageComposer.nothingToPreview", "en": "Nothing to preview"},
+        "codeLanguage": {"id": "messageComposer.codeLanguage", "en": "Language"},
+        "plainText": {"id": "messageComposer.plainText", "en": "Plain text"},
+        "format.bold": {"id": "messageComposer.format.bold", "en": "Bold"},
+        "format.italic": {"id": "messageComposer.format.italic", "en": "Italic"},
+        "format.underline": {"id": "messageComposer.format.underline", "en": "Underline"},
+        "format.strike": {"id": "messageComposer.format.strike", "en": "Strikethrough"},
+        "format.link": {"id": "messageComposer.format.link", "en": "Link"},
+        "format.ordered": {"id": "messageComposer.format.ordered", "en": "Numbered list"},
+        "format.bullets": {"id": "messageComposer.format.bullets", "en": "Bulleted list"},
+        "format.code": {"id": "messageComposer.format.code", "en": "Code"},
+        "format.codeBlock": {"id": "messageComposer.format.codeBlock", "en": "Code block"},
+        "mentions.label": {"id": "mention.label", "en": "People to mention"},
+        "mentions.empty": {"id": "mention.empty", "en": "No one by that name"},
+        "mentions.searching": {"id": "mention.searching", "en": "Searching"}
+    },
     "appText": {
         "actions": "The app's actions and their labels.",
         "schedule": "Each time's label and detail.",
@@ -286,7 +317,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 9038006 there is no message composer."
+            "today": "As of 1a87987 there is no message composer."
         }
     ]
 }

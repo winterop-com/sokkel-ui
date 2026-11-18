@@ -1,0 +1,190 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "banner",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "Banner with its actions and the shell's banner slot, built before this spec and not yet compared against it."
+        },
+        "sokkel-tui": {
+            "state": "partial",
+            "as_of": "64f4b19",
+            "note": "Banner in four tones, one row in the shell's slot under the top bar, its paints its own reading of other parts' paints."
+        }
+    },
+    "summary": "A strip across the top of a screen or the app for a state that holds until it changes: the server is not answering, a read-only instance, a pending upgrade. The tone's mark, the words, the app's actions at the end and a dismiss, on the tone's wash with a rule in the tone under it. One line where it fits; where the strip is narrow the words wrap rather than lose what is needed to act, and the actions move under them. In the shell it stands in the banner slot between the top bar and the content, and does not scroll with the content.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/Banner.tsx",
+            "packages/core/src/components/IconButton.tsx",
+            "packages/core/src/components/ui/button.tsx",
+            "packages/core/src/components/Shell.tsx (banner)"
+        ]
+    },
+    "anatomy": {
+        "container": "The strip: a row that wraps, on the tone's wash, in the tone's ink, with a 1px rule in the tone under it. Announced as an alert in the critical tone, politely (a status) in the others.",
+        "mark": "The tone's mark at the row's start, 16 square, in the strip's ink: a circled alert (critical), a triangle (warning), an info mark (info), a circled check (good); the app's own icon in its place where given.",
+        "message": "The words the app gives (children), taking the room left. Never cut: below 256 of room the actions wrap under them, and a long line wraps.",
+        "actions": "With actions: the app's controls (most often parts/button at sm, outline) at the row's end, 8 apart.",
+        "dismiss": "With onDismiss: an icon button (parts/button, ghost, icon-sm) with an x, last in the row, named words.dismiss, its tooltip the same; its ink the strip's at rest."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["card"]},
+    "options": {
+        "tone": {
+            "values": ["critical", "warning", "info", "good"],
+            "default": "info",
+            "does": "What the state is: critical (something is broken, such as the server not answering), warning (something is held back, such as a read-only instance), info (a fact, such as a newer version), good (all is well again). It picks the wash, the rule, the ink, the mark and the announcement."
+        },
+        "icon": {"type": "node", "does": "An icon in place of the tone's mark."},
+        "actions": {
+            "type": "node",
+            "does": "Controls at the row's end, such as Retry or Reload; they wrap under the words where the strip is narrow."
+        },
+        "onDismiss": {
+            "type": "callback",
+            "does": "Given, a dismiss button ends the row and calls it; the app stops drawing the banner. Without it the banner holds until the app takes it away."
+        },
+        "children": {"type": "node", "does": "The words: what holds, and what it means for the reader."}
+    },
+    "sizes": {
+        "container": {
+            "padX": 12,
+            "padY": 6,
+            "gap": 8,
+            "note": "8 across between its pieces, layout.rowGap down between wrapped lines; the rule under it 1."
+        },
+        "mark": {"icon": 16},
+        "message": {
+            "note": "text.body, as its paint says; layout.messageBasis wide at least before the actions wrap under it."
+        },
+        "actions": {"gap": 8, "note": "Pushed to the row's end, and to a line's end when they wrap."},
+        "dismiss": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "phoneMinHeight": "spacing-finger",
+            "phoneMinWidth": "spacing-finger",
+            "note": "parts/button, ghost at icon-sm, its icon 16."
+        }
+    },
+    "layout": {
+        "rowGap": {"value": 4, "note": "Between the lines of a wrapped strip: the words, then the actions under them."},
+        "messageBasis": {
+            "value": 256,
+            "note": "The words' least room on a shared line: where less is left, the actions and the dismiss wrap to the next line."
+        }
+    },
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "gap": 1,
+        "width": "Fills the width it is given (the shell's banner slot fills the window's width beside the rail).",
+        "density": "Nothing changes: one row at both.",
+        "pieces": {
+            "container": {
+                "rows": 1,
+                "note": "One row on the tone's flat ground, in the tone's ink. The rule under it is not drawn: it has no row of its own, and the flat ground marks the strip. In the shell's banner slot it is one row under the top bar and the page starts a row lower while it shows; with no banner the slot takes no row."
+            },
+            "mark": {"width": "1 column, the tone's icon (or the app's), and a gap of 1 before the words."},
+            "message": {
+                "note": "One line, never wrapped: words that do not fit are cut with the ellipsis, and the whole is said in the status line's note while they are cut (principle 23)."
+            },
+            "actions": {
+                "rows": 1,
+                "gap": 1,
+                "note": "parts/button, one row each, at the row's end, 1 column apart and 1 after the words. A banner carries its actions in cells as on the web: they are the part's options."
+            },
+            "dismiss": {
+                "width": "3 columns: the x icon with 1 at each side, as parts/button's icon button.",
+                "note": "Last in the row, 1 column after the actions. It is drawn whenever onDismiss is given, as on the web; its name, words.dismiss, is said in the status line while it has focus (principle 23)."
+            }
+        },
+        "glyphs": [
+            "circle-alert",
+            "triangle-alert",
+            "info",
+            "circle-check",
+            "x",
+            "ellipsis",
+            "edge-start",
+            "edge-end",
+            "focus-ring-start",
+            "focus-ring-end"
+        ]
+    },
+    "states": {
+        "rest": {
+            "means": "Shown: the strip in its tone, until the app stops drawing it (after onDismiss, or when the state it says is over).",
+            "reached": "drawn"
+        }
+    },
+    "variants": {
+        "critical": {
+            "rest": {
+                "ground": "critical/12",
+                "rule": "critical/35",
+                "ink": "critical-ink",
+                "note": "The rule is under the strip only."
+            }
+        },
+        "warning": {"rest": {"ground": "warning/12", "rule": "warning/35", "ink": "warning-ink"}},
+        "info": {"rest": {"ground": "info/12", "rule": "info/35", "ink": "info-ink"}},
+        "good": {"rest": {"ground": "good/12", "rule": "good/35", "ink": "good-ink"}}
+    },
+    "pieces": {
+        "mark": {"rest": {"note": "In the strip's ink: the tone's ink."}},
+        "message": {"rest": {"text": "text.body", "note": "In the strip's ink."}},
+        "dismiss": {
+            "rest": {
+                "note": "parts/button's ghost icon button, its ink the strip's (the tone's ink) at rest in place of the icon button's quiet ink; under the pointer and in focus as parts/button's ghost."
+            }
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches each action, then the dismiss, in the row's order.",
+            "when": "with actions or onDismiss"
+        },
+        {"keys": ["Enter", "Space"], "does": "Dismisses the banner (onDismiss).", "when": "the dismiss has focus"}
+    ],
+    "words": {"dismiss": "Dismiss"},
+    "messages": {"dismiss": {"id": "banner.dismiss", "en": "Dismiss"}},
+    "appText": {
+        "children": "What holds and what it means for the reader.",
+        "actions": "The app's own controls, with their words."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "role=alert in the critical tone, role=status in the others.",
+            "The strip is a flex row that wraps (flex-wrap, gap-x-2 gap-y-1); the words take basis-3xs (256) and the rest, and the actions take ms-auto, so they move under the words where the strip is narrow.",
+            "The dismiss is IconButton with text-current, so its icon wears the tone's ink; its label is its accessible name and its tooltip.",
+            "Shell draws the banner slot as a shrink-0 box between the top bar and the page column, outside the scroller, so the banner neither scrolls nor covers the content.",
+            "The words, the actions and the dismiss are given and drawn by the app; the banner holds no shown state of its own."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared",
+            "spec": "This spec.",
+            "today": "As of 1a87987, Banner with its actions and the shell's banner slot were built before this spec and have not been compared against it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "paints",
+            "spec": "The tones' own resolved paints, flat over the surface the banner stands on (banner.<tone>.rest.container: ground, rule and ink).",
+            "today": "As of 64f4b19, its own reading of other parts' paints, since the contract had no banner: critical on page-state's failed frame, warning on page-state's failed+warning frame, info and good on a card."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "actions and dismiss",
+            "spec": "The app's actions as one-row buttons at the row's end and, with onDismiss, the x dismiss last.",
+            "today": "Not reported: its report says one row in four tones, the page a row lower while it shows, and the words in the status line when cut, but not whether it draws actions or a dismiss."
+        }
+    ]
+}

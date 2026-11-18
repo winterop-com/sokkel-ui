@@ -1,0 +1,438 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "period-picker",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "d163191",
+            "note": "PeriodPicker was built before this spec and has not been compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No period picker yet."}
+    },
+    "summary": "The period a report is made for: a select (parts/select's field trigger and list) offering the recent periods of one type, newest first, each named by its label with its id after it in the code face, then a separator and Other period last. Other period opens a text input under the select where any id is typed; the typed id is read by its shape and the value changes only once it names a period of the type, while text that does not is refused at once with parts/text-field's issue mark at the input's end, in a sentence that says what the type's ids look like. A value the list does not hold, such as an older period, opens on the typed input with its id. Ids are written as 20261108 (a day), 2026W45 (an ISO week), 202611 (a month), 202611B (two months), 2026Q4 (a quarter), 2026S2 (a half year) and 2026 (a year). As a field it sits in parts/text-field's frame: the label, the required mark, the hint, the help and the field's own issue mark.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/PeriodPicker.tsx",
+            "packages/core/src/lib/periods.ts",
+            "packages/core/src/components/ui/select.tsx",
+            "packages/core/src/components/ui/input.tsx",
+            "packages/core/src/components/IssueMark.tsx",
+            "packages/core/src/lib/issue-edge.ts",
+            "packages/core/src/lib/popup.ts"
+        ],
+        "sokkel-egui": [
+            "crates/core/src/widgets/form_fields.rs (PeriodPicker, PeriodPickerWords)",
+            "crates/core/src/periods.rs"
+        ]
+    },
+    "anatomy": {
+        "picker": "The whole: the select, and under it the typed input while Other period is chosen, 6 apart, in a column filling its container.",
+        "trigger": "parts/select's trigger, the field variant at the default size, filling the row: the chosen period's label and id, else words.other while typing, else words.placeholder, with the chevron at its end.",
+        "list": "parts/select's list, opened under the trigger (not over it), as wide as it, at most 320 tall, then it scrolls.",
+        "row": "parts/select's row: one recent period, its label then its id 8 after it on their baseline, the check at its end on the chosen one. The newest period first.",
+        "periodId": "The period's id after its label, in the code face, small and quiet; never cut short (the label is).",
+        "separator": "parts/select's separator, before Other period.",
+        "other": "The list's last row: words.other, which opens the typed input.",
+        "typed": "While Other period is chosen: a text input (parts/text-field's control) in the code face, named words.typed, its placeholder an id of the type's shape. While its issue shows, its end keeps 36 for the mark and its edge is the critical one.",
+        "issueMark": "parts/text-field's issue mark at the typed input's end, while the typed text names no period of the type; its message is the issue sentence."
+    },
+    "standsOn": {
+        "default": "background",
+        "list": "popover",
+        "row": "popover",
+        "periodId": "popover",
+        "separator": "popover",
+        "other": "popover"
+    },
+    "alsoStandsOn": {"default": ["card", "popover"]},
+    "options": {
+        "type": {
+            "values": ["daily", "weekly", "monthly", "bimonthly", "quarterly", "sixmonthly", "yearly"],
+            "does": "The type of period the report is made for; the list offers that type's recent periods, and a typed id must be of it."
+        },
+        "value": {
+            "type": "text",
+            "does": "The chosen period's id, or null for none; held from outside with onValueChange, which hears null while a typed id does not read.",
+            "sokkel-ui": "value, onValueChange"
+        },
+        "today": {
+            "type": "text",
+            "does": "The day the recent periods count back from, as YYYY-MM-DD; the clock's day in the page's own zone when not given."
+        },
+        "count": {
+            "type": "number",
+            "does": "How many recent periods are listed; the type's own number when not given: 13 days, weeks or months, 9 two-month periods, quarters or half years, 6 years."
+        },
+        "id": {
+            "type": "text",
+            "does": "The trigger's id, for a field's label; the typed input takes it with -typed after it."
+        },
+        "onIssueChange": {
+            "type": "callback",
+            "does": "Hears what is wrong with a typed id, or null once it reads or the input is empty, so a form can count it."
+        },
+        "disabled": {
+            "type": "boolean",
+            "default": false,
+            "does": "Neither the trigger nor the typed input can be used."
+        },
+        "words": {
+            "type": "node",
+            "does": "The words below: the picker's own, the period labels' and the issue sentences'."
+        }
+    },
+    "sizes": {
+        "picker": {"gap": 6, "note": "The select and the typed input, 6 apart."},
+        "trigger": {
+            "height": "density.control",
+            "radius": "radius-control",
+            "text": "text.body",
+            "phoneMinHeight": "spacing-finger",
+            "note": "parts/select's default size, filling the row (w-full)."
+        },
+        "row": {
+            "gap": 8,
+            "note": "In a row and in the trigger, the label and the id 8 apart on their baseline; the row itself is parts/select's."
+        },
+        "periodId": {"text": "text.help", "note": "In the code face."},
+        "typed": {
+            "height": "density.control",
+            "padX": 10,
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "note": "parts/text-field's control, in the code face: the text 16 below 768 and text.sm from it."
+        }
+    },
+    "layout": {
+        "listMaxHeight": {
+            "value": 320,
+            "note": "The list's most height; parts/select's list is otherwise as tall as the room."
+        },
+        "issueRoom": {"value": 36, "note": "The typed input's end padding while its issue mark shows."}
+    },
+    "states": {
+        "rest": {"means": "A recent period chosen: the trigger shows its label and id."},
+        "placeholder": {
+            "means": "Nothing chosen: the trigger shows words.placeholder in muted-foreground.",
+            "reached": "value null and not typing",
+            "sokkel-ui": "data-placeholder"
+        },
+        "focus": {
+            "means": "Keyboard focus on the trigger: parts/select's focus, the ring edge and a 1px ring.",
+            "reached": "Tab",
+            "on": "keyboard"
+        },
+        "open": {
+            "means": "The list is open under the trigger.",
+            "reached": "a press on the trigger, or Enter, Space, ArrowDown or ArrowUp on it"
+        },
+        "highlighted": {
+            "means": "A row under the pointer or reached by the keys: parts/select's accent wash, the id in accent-foreground too.",
+            "reached": "pointer over a row, the arrows, typing"
+        },
+        "chosen": {
+            "means": "The chosen period's row, or Other period's while typing: its check shows.",
+            "reached": "value"
+        },
+        "typing": {
+            "means": "Other period is chosen: the trigger says words.other and the typed input shows under it, holding what was typed.",
+            "reached": "Other period chosen, or a value the list does not hold"
+        },
+        "typedFocus": {
+            "means": "Focus in the typed input: the ring edge and a 1px ring, however the focus came.",
+            "reached": "Tab, or a press in it",
+            "on": "any",
+            "effect": {"piece": "typed", "ring": {"color": "ring", "width": 1}}
+        },
+        "invalid": {
+            "means": "The typed text names no period of the type: the input's critical edge, its end kept for the issue mark, and the mark. An empty input says nothing.",
+            "reached": "typing text that is not an id of the type"
+        },
+        "invalid+typedFocus": {
+            "means": "An invalid typed input with focus: the critical edge and the invalid ring.",
+            "reached": "focus in an invalid typed input",
+            "on": "any",
+            "effect": {"piece": "typed", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}}
+        },
+        "disabled": {
+            "means": "Cannot be used: the trigger and the typed input faded, the cursor not-allowed.",
+            "reached": "disabled",
+            "effect": {"opacity": "disabled-opacity", "cursor": "not-allowed"}
+        }
+    },
+    "pieces": {
+        "trigger": {
+            "rest": {
+                "ground": "field",
+                "edge": "input",
+                "ink": "foreground",
+                "radius": "radius-control",
+                "text": "text.body",
+                "note": "parts/select's field variant."
+            },
+            "placeholder": {"ink": "muted-foreground"},
+            "focus": {"edge": "ring", "ring": {"color": "ring", "width": 1}},
+            "disabled": {"opacity": "disabled-opacity"}
+        },
+        "list": {
+            "rest": {
+                "ground": "popover",
+                "edge": "border-strong",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "note": "Every popup's look, elevation-pop under it."
+            }
+        },
+        "row": {
+            "rest": {"ink": "popover-foreground", "radius": "radius-md", "text": "text.body"},
+            "highlighted": {"ground": "accent", "ink": "accent-foreground"}
+        },
+        "periodId": {
+            "rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face."},
+            "highlighted": {"ink": "accent-foreground"}
+        },
+        "separator": {"rest": {"ground": "border", "note": "1 tall, across the list."}},
+        "typed": {
+            "rest": {
+                "ground": "field",
+                "edge": "input",
+                "ink": "foreground",
+                "placeholder": "muted-foreground",
+                "radius": "radius-control"
+            },
+            "typedFocus": {"edge": "ring"},
+            "disabled": {"ground": "input/50", "opacity": "disabled-opacity", "dark": {"ground": "input/80"}},
+            "invalid": {"edge": "critical/80"},
+            "invalid+typedFocus": {"edge": "critical"}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the trigger, then the typed input and its issue mark while they show; disabled ones are passed over."
+        },
+        {
+            "keys": ["Enter", "Space", "ArrowDown", "ArrowUp"],
+            "does": "Opens the list, the chosen row highlighted.",
+            "when": "the trigger has focus"
+        },
+        {"keys": ["ArrowDown", "ArrowUp"], "does": "Moves the highlight a row.", "when": "the list is open"},
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Chooses the highlighted period and closes the list; on Other period, opens the typed input, keeping what was typed there.",
+            "when": "a row is highlighted"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the list without choosing, focus back on the trigger.",
+            "when": "the list is open"
+        }
+    ],
+    "words": {
+        "empty": "Type a period id.",
+        "otherType": "{id} is a {its} period; this one is {wanted}, such as {example}.",
+        "notPeriod": "{text} is not a period id. A {wanted} period is written like {example}.",
+        "monthNames.0": "January",
+        "monthNames.1": "February",
+        "monthNames.2": "March",
+        "monthNames.3": "April",
+        "monthNames.4": "May",
+        "monthNames.5": "June",
+        "monthNames.6": "July",
+        "monthNames.7": "August",
+        "monthNames.8": "September",
+        "monthNames.9": "October",
+        "monthNames.10": "November",
+        "monthNames.11": "December",
+        "shortMonthNames.0": "Jan",
+        "shortMonthNames.1": "Feb",
+        "shortMonthNames.2": "Mar",
+        "shortMonthNames.3": "Apr",
+        "shortMonthNames.4": "May",
+        "shortMonthNames.5": "Jun",
+        "shortMonthNames.6": "Jul",
+        "shortMonthNames.7": "Aug",
+        "shortMonthNames.8": "Sep",
+        "shortMonthNames.9": "Oct",
+        "shortMonthNames.10": "Nov",
+        "shortMonthNames.11": "Dec",
+        "types.daily": "Daily",
+        "types.weekly": "Weekly",
+        "types.monthly": "Monthly",
+        "types.bimonthly": "Two-monthly",
+        "types.quarterly": "Quarterly",
+        "types.sixmonthly": "Six-monthly",
+        "types.yearly": "Yearly",
+        "day": "{month} {date}, {year}",
+        "week": "Week {week}, {year} (from Mon, {startMonth} {startDate})",
+        "month": "{month} {year}",
+        "months": "{first} to {last} {year}",
+        "year": "{year}",
+        "issueCritical": "Error: ",
+        "issueWarning": "Warning: ",
+        "other": "Other period",
+        "typed": "Period id",
+        "placeholder": "Choose a period"
+    },
+    "messages": {
+        "empty": {"id": "periodIssue.empty", "en": "Type a period id."},
+        "otherType": {
+            "id": "periodIssue.otherType",
+            "en": "{id} is a {its} period; this one is {wanted}, such as {example}."
+        },
+        "notPeriod": {
+            "id": "periodIssue.notPeriod",
+            "en": "{text} is not a period id. A {wanted} period is written like {example}."
+        },
+        "monthNames.0": {"id": "periodLabel.monthNames.0", "en": "January"},
+        "monthNames.1": {"id": "periodLabel.monthNames.1", "en": "February"},
+        "monthNames.2": {"id": "periodLabel.monthNames.2", "en": "March"},
+        "monthNames.3": {"id": "periodLabel.monthNames.3", "en": "April"},
+        "monthNames.4": {"id": "periodLabel.monthNames.4", "en": "May"},
+        "monthNames.5": {"id": "periodLabel.monthNames.5", "en": "June"},
+        "monthNames.6": {"id": "periodLabel.monthNames.6", "en": "July"},
+        "monthNames.7": {"id": "periodLabel.monthNames.7", "en": "August"},
+        "monthNames.8": {"id": "periodLabel.monthNames.8", "en": "September"},
+        "monthNames.9": {"id": "periodLabel.monthNames.9", "en": "October"},
+        "monthNames.10": {"id": "periodLabel.monthNames.10", "en": "November"},
+        "monthNames.11": {"id": "periodLabel.monthNames.11", "en": "December"},
+        "shortMonthNames.0": {"id": "periodLabel.shortMonthNames.0", "en": "Jan"},
+        "shortMonthNames.1": {"id": "periodLabel.shortMonthNames.1", "en": "Feb"},
+        "shortMonthNames.2": {"id": "periodLabel.shortMonthNames.2", "en": "Mar"},
+        "shortMonthNames.3": {"id": "periodLabel.shortMonthNames.3", "en": "Apr"},
+        "shortMonthNames.4": {"id": "periodLabel.shortMonthNames.4", "en": "May"},
+        "shortMonthNames.5": {"id": "periodLabel.shortMonthNames.5", "en": "Jun"},
+        "shortMonthNames.6": {"id": "periodLabel.shortMonthNames.6", "en": "Jul"},
+        "shortMonthNames.7": {"id": "periodLabel.shortMonthNames.7", "en": "Aug"},
+        "shortMonthNames.8": {"id": "periodLabel.shortMonthNames.8", "en": "Sep"},
+        "shortMonthNames.9": {"id": "periodLabel.shortMonthNames.9", "en": "Oct"},
+        "shortMonthNames.10": {"id": "periodLabel.shortMonthNames.10", "en": "Nov"},
+        "shortMonthNames.11": {"id": "periodLabel.shortMonthNames.11", "en": "Dec"},
+        "types.daily": {"id": "periodLabel.types.daily", "en": "Daily"},
+        "types.weekly": {"id": "periodLabel.types.weekly", "en": "Weekly"},
+        "types.monthly": {"id": "periodLabel.types.monthly", "en": "Monthly"},
+        "types.bimonthly": {"id": "periodLabel.types.bimonthly", "en": "Two-monthly"},
+        "types.quarterly": {"id": "periodLabel.types.quarterly", "en": "Quarterly"},
+        "types.sixmonthly": {"id": "periodLabel.types.sixmonthly", "en": "Six-monthly"},
+        "types.yearly": {"id": "periodLabel.types.yearly", "en": "Yearly"},
+        "day": {"id": "periodLabel.day", "en": "{month} {date}, {year}"},
+        "week": {"id": "periodLabel.week", "en": "Week {week}, {year} (from Mon, {startMonth} {startDate})"},
+        "month": {"id": "periodLabel.month", "en": "{month} {year}"},
+        "months": {"id": "periodLabel.months", "en": "{first} to {last} {year}"},
+        "year": {"id": "periodLabel.year", "en": "{year}"},
+        "issueCritical": {"id": "issue.issueCritical", "en": "Error: "},
+        "issueWarning": {"id": "issue.issueWarning", "en": "Warning: "},
+        "other": {"id": "periodPicker.other", "en": "Other period"},
+        "typed": {"id": "periodPicker.typed", "en": "Period id"},
+        "placeholder": {"id": "periodPicker.placeholder", "en": "Choose a period"}
+    },
+    "samples": {
+        "otherType": [
+            {
+                "with": {"id": "2026W45", "its": "weekly", "wanted": "monthly", "example": "202611"},
+                "says": "2026W45 is a weekly period; this one is monthly, such as 202611."
+            },
+            {
+                "with": {"id": "2026Q4", "its": "quarterly", "wanted": "yearly", "example": "2026"},
+                "says": "2026Q4 is a quarterly period; this one is yearly, such as 2026."
+            }
+        ],
+        "notPeriod": [
+            {
+                "with": {"text": "harbor", "wanted": "monthly", "example": "202611"},
+                "says": "harbor is not a period id. A monthly period is written like 202611."
+            }
+        ],
+        "day": [{"with": {"month": "November", "date": 8, "year": 2026}, "says": "November 8, 2026"}],
+        "week": [
+            {
+                "with": {"week": 45, "year": 2026, "startMonth": "Nov", "startDate": 2},
+                "says": "Week 45, 2026 (from Mon, Nov 2)"
+            },
+            {
+                "with": {"week": 1, "year": 2027, "startMonth": "Jan", "startDate": 4},
+                "says": "Week 1, 2027 (from Mon, Jan 4)"
+            }
+        ],
+        "month": [{"with": {"month": "November", "year": 2026}, "says": "November 2026"}],
+        "months": [
+            {"with": {"first": "November", "last": "December", "year": 2026}, "says": "November to December 2026"}
+        ],
+        "year": [{"with": {"year": 2026}, "says": "2026"}]
+    },
+    "appText": {
+        "label": "The field's label, hint, description and help, as parts/text-field takes them around the picker."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The select is Base UI's Select (ui/select) with alignItemWithTrigger false; Other period's value is a string no id can be.",
+            "The typed input reads with parsePeriod and says its issue with periodIssue (lib/periods), which names the types by words.types in lower case.",
+            "monthNames, shortMonthNames and types are lists in sokkel-ui's words (a list of twelve, a list of twelve, a record of seven); the spec names each entry by its place or type after a dot, as the catalog does.",
+            "The period labels are worked out once per type, day, count and words (recentPeriods)."
+        ],
+        "sokkel-egui": [
+            "PeriodPicker::show draws the select and the typed input and answers with the typed id's issue; the period labels and issue sentences come from periods.rs."
+        ]
+    },
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "gap": 0,
+        "width": "The width its field gives it; the trigger and the typed input fill it.",
+        "density": "Nothing changes: the trigger, each row and the typed input are one row; the 6 px between the trigger and the typed input is no blank row.",
+        "pieces": {
+            "trigger": {
+                "rows": 1,
+                "padX": 1,
+                "note": "parts/select's field trigger: its edge as edge-start and edge-end in the edge's flat color for its state, the chevron at its end; keyboard focus as focus-ring-start and focus-ring-end beside it (principle 21)."
+            },
+            "list": {
+                "note": "parts/select's list: a box in border-strong, opening under the trigger; at most 320 px is the window less 2 rows, then it scrolls."
+            },
+            "row": {
+                "rows": 1,
+                "padX": 1,
+                "note": "The label, then the id 2 columns after it; the chosen row's check in the gutter, as parts/select's."
+            },
+            "separator": {"rows": 1, "note": "A row of the rule glyph."},
+            "typed": {
+                "rows": 1,
+                "padX": 1,
+                "note": "parts/text-field's control: its edge as edge-start and edge-end, the issue mark 1 column from its end."
+            },
+            "issueMark": {
+                "width": "1 column, in critical; its message is said in the status line while the typed input has focus (principle 23)."
+            }
+        },
+        "glyphs": [
+            "box",
+            "chevron-down",
+            "chevron-up",
+            "check",
+            "rule",
+            "circle-alert",
+            "edge-start",
+            "edge-end",
+            "focus-ring-start",
+            "focus-ring-end"
+        ],
+        "note": "What lies under the list is drawn as it is: a popup has no scrim."
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared",
+            "spec": "This spec.",
+            "today": "As of d163191, PeriodPicker was built before this spec and has not been compared with it. Read from its source: the recent periods of the type in a select with their ids, Other period, and the typed input that answers with its issue. Not there: count, disabled, onIssueChange, the issue mark at the typed input's end (the issue is handed back to the app), the code face on the typed input, and words beyond other, typed and placeholder (the period labels and the issue sentences are fixed in periods.rs)."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec, with its cells.",
+            "today": "As of 64f4b19 there is no period picker."
+        }
+    ]
+}

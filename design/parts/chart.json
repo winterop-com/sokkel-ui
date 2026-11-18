@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "8567f05"},
-        "sokkel-egui": {"state": "missing", "as_of": "b7e1763"},
-        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
     },
     "summary": "The look every chart kind shares, drawn from rows: a chart takes rows, a kind that says how to draw them and the fields to read, and draws in the theme it sits in. Quiet axes in border with their labels in muted-foreground, grid lines across the value axis a step lighter than the border, series in the theme's categorical order (or the colors a spec names, or each run state's status color with statuses), a line one and a half wide, bars at most 28 wide, a tooltip on the popover's look with a swatch, a label and a figure per series, dashed lines across at a scale's steps and down at marked categories, and a legend beside the chart whose entries hide or emphasize their series. A figure that is not there is the dash, and is left out of a tooltip. This spec is the look and the shared behavior; the kinds (bar, line, area, donut and the rest) are not specified one by one yet, and the frame around a chart (title, menu, export, expand, data view, loading, empty and failed) is parts/dashboard-panel's.",
     "sources": {
@@ -198,6 +198,25 @@
             "note": "A pie or ring slice's edge in card (pie.itemStyle.borderWidth); a heatmap cell's is 1."
         }
     },
+    "cells": {
+        "width": "Fills the box it is given.",
+        "pieces": {
+            "plot": {
+                "note": "Dots in braille, two by four a cell (parts/time-series-panel's cells); the kinds other than lines and areas have no cells reading yet."
+            },
+            "axisLine": {"note": "A row of rule under the plot."},
+            "axisLabel": {"note": "In muted-foreground, as many as fit without touching, the first and the last kept."},
+            "gridLine": {"note": "grid-dot across at each value step."},
+            "tooltip": {
+                "note": "No floating box in cells: the hovered or focused category's figures are said in the status line (principle 23), each series' swatch, name and figure."
+            },
+            "legend": {
+                "note": "A row of entries: the swatch glyph in the series' color, then its name; a hidden entry in its faded paint."
+            },
+            "missing": {"note": "The missing glyph where a figure is not there (principle 10)."}
+        },
+        "glyphs": ["rule", "grid-dot", "swatch", "missing"]
+    },
     "states": {
         "rest": {"means": "The series drawn in their colors, the axes, grid and lines quiet."},
         "hover": {
@@ -324,6 +343,29 @@
         "legend.avg": "Avg",
         "legend.current": "Current"
     },
+    "messages": {
+        "count": {"id": "chart.count", "en": "Count"},
+        "total": {"id": "chart.total", "en": "Total"},
+        "rise": {"id": "chart.rise", "en": "Rise"},
+        "fall": {"id": "chart.fall", "en": "Fall"},
+        "change": {"id": "chart.change", "en": "Change"},
+        "low": {"id": "chart.low", "en": "Low"},
+        "lower": {"id": "chart.lower", "en": "Lower quartile"},
+        "median": {"id": "chart.median", "en": "Median"},
+        "upper": {"id": "chart.upper", "en": "Upper quartile"},
+        "high": {"id": "chart.high", "en": "High"},
+        "outlier": {"id": "chart.outlier", "en": "Outlier"},
+        "ofFirst": {"id": "chart.ofFirst", "en": "of first"},
+        "target": {"id": "chart.target", "en": "Target"},
+        "observed": {"id": "chart.observed", "en": "Observed"},
+        "all": {"id": "chart.all", "en": "All"},
+        "to": {"id": "chart.to", "en": "to"},
+        "legend.series": {"id": "chartLegend.series", "en": "Series"},
+        "legend.min": {"id": "chartLegend.min", "en": "Min"},
+        "legend.max": {"id": "chartLegend.max", "en": "Max"},
+        "legend.avg": {"id": "chartLegend.avg", "en": "Avg"},
+        "legend.current": {"id": "chartLegend.current", "en": "Current"}
+    },
     "appText": {
         "label": "What the chart shows, for a screen reader.",
         "fieldNames": "What each field is called in a tooltip, an axis' name, the legend and the data view.",
@@ -345,6 +387,12 @@
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of b7e1763 the chart look is not built as a whole; StatPanel and TimeSeriesPanel draw their own (parts/time-series-panel)."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 64f4b19 the look is drawn for the time series panel only (axes, grid, labels, the legend); the other kinds are not built."
         }
     ]
 }

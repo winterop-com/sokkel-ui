@@ -1,0 +1,186 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "json-tree",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "JsonTree built before this spec, not yet compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No JSON tree yet."}
+    },
+    "summary": "A JSON value as a tree that folds, in the code face: each list or object a line with a disclosure, its key and its opening bracket, open to a depth and folded below it, a folded one showing how many entries it holds; its entries one under the other behind a guide line; strings, numbers, booleans and null inked by type. An open list or object draws its first entries up to a limit and a step under them that draws as many more.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/JsonTree.tsx (JsonTree, JsonTreeProps, JSON_TREE_WORDS, JSON_TREE_MESSAGES)",
+            "src/stories/patterns/Data.stories.tsx (Patterns/Data: JSON tree, Long JSON)",
+            "src/stories/fixtures/runPanel.tsx (a run's Outputs in a side panel)"
+        ]
+    },
+    "anatomy": {
+        "tree": "The whole tree: text.xs in the code face, lines 20 tall, taking the width it is given.",
+        "node": "A list or object's line: a button holding the disclosure, its key and its opening bracket; folded, the count and the closing bracket after it.",
+        "disclosure": "The chevron at the node's start, 14 square: pointing right while folded, turned 90 degrees down while open.",
+        "key": "An entry's name in an object, followed by a colon and a space. A list's entries have none.",
+        "bracket": "The opening and closing brackets, { } for an object and [ ] for a list.",
+        "count": "Folded only: how many entries the node holds between its brackets, 4 in from each: the words.keys phrase for an object, the bare number for a list.",
+        "entries": "An open node's entries one under the other, 7 in from the node's start behind a 1px guide line, then 4 more.",
+        "guide": "The 1px line in border down the open node's entries, under its disclosure.",
+        "leaf": "A string, number, boolean or null entry: 16 in, where a node's key starts after its disclosure, its key then its value.",
+        "string": "A string value in its quotes, breaking anywhere when longer than the room.",
+        "number": "A number value in tabular figures.",
+        "boolean": "true or false.",
+        "null": "null.",
+        "close": "Under an open node's entries, 16 in from the node's start: its closing bracket.",
+        "step": "Under an open node's shown entries when more remain, 16 in: words.more with how many a press adds (the limit, or the rest when fewer), in the primary ink."
+    },
+    "standsOn": {"default": "card"},
+    "alsoStandsOn": {"default": ["sidebar", "background"]},
+    "options": {
+        "value": {"type": "rows", "does": "The JSON value to draw: an object, a list or a scalar."},
+        "open": {
+            "type": "number",
+            "default": 2,
+            "does": "How many levels deep lists and objects start open; deeper ones start folded."
+        },
+        "limit": {
+            "type": "number",
+            "default": 100,
+            "does": "How many entries an open list or object draws before the step that draws as many more; at least 1."
+        }
+    },
+    "sizes": {
+        "tree": {"text": "text.xs", "note": "In typeface-mono, lines 20 tall (leading-5)."},
+        "disclosure": {"icon": 14},
+        "count": {"padX": 4}
+    },
+    "layout": {
+        "guideInset": {"value": 7, "note": "From the node's start to its guide line, under the disclosure's middle."},
+        "entriesInset": {"value": 4, "note": "From the guide line to the entries."},
+        "leafInset": {
+            "value": 16,
+            "note": "A leaf's start, the closing bracket's and the step's: as far in as a node's key after its disclosure."
+        },
+        "line": {"value": 20, "note": "Each line's height."}
+    },
+    "states": {
+        "rest": {"means": "A node folded, a leaf, or the tree as it is drawn."},
+        "open": {
+            "means": "A list or object unfolded: the disclosure turned down, its entries, the step when more remain, and its closing bracket on a line of its own.",
+            "reached": "a press on the node, Enter or Space on it, open"
+        },
+        "hover": {"means": "The pointer over a node or the step.", "reached": "pointer over"},
+        "focus": {"means": "Keyboard focus on a node or the step.", "reached": "Tab", "on": "keyboard"}
+    },
+    "pieces": {
+        "tree": {
+            "rest": {
+                "text": "text.xs",
+                "note": "In typeface-mono; the ink of what it stands on for what no piece inks."
+            }
+        },
+        "node": {
+            "rest": {"radius": "radius-sm"},
+            "hover": {"ground": "hover"},
+            "focus": {
+                "ring": {"color": "ring", "width": "focus-ring-width"},
+                "note": "A ring on the node's own edge, no offset."
+            }
+        },
+        "disclosure": {"rest": {"ink": "muted-foreground"}, "open": {"note": "Turned 90 degrees, pointing down."}},
+        "key": {"rest": {"ink": "foreground"}},
+        "bracket": {"rest": {"ink": "muted-foreground"}},
+        "count": {"rest": {"ink": "faint"}},
+        "guide": {"rest": {"rule": "border", "note": "1 wide, down the entries' start."}},
+        "string": {"rest": {"ink": "kind-green-ink"}},
+        "number": {"rest": {"ink": "kind-blue-ink"}},
+        "boolean": {"rest": {"ink": "kind-violet-ink"}},
+        "null": {"rest": {"ink": "muted-foreground"}},
+        "close": {"rest": {"ink": "muted-foreground"}},
+        "step": {
+            "rest": {"ink": "primary-ink", "radius": "radius-sm"},
+            "hover": {"underline": true},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches each node and each step, in the order drawn."},
+        {"keys": ["Enter", "Space"], "does": "Folds or unfolds the node.", "when": "a node has focus"},
+        {"keys": ["Enter", "Space"], "does": "Draws the next entries, up to the limit.", "when": "a step has focus"}
+    ],
+    "words": {"keys": {"one": "{count} key", "other": "{count} keys"}, "more": "Show {count} more"},
+    "messages": {
+        "keys": {"id": "jsonTree.keys", "en": "{count, plural, one {# key} other {# keys}}"},
+        "more": {"id": "jsonTree.more", "en": "Show {count, number} more"}
+    },
+    "samples": {
+        "keys": [
+            {"with": {"count": 0}, "says": "0 keys"},
+            {"with": {"count": 1}, "says": "1 key"},
+            {"with": {"count": 1200}, "says": "1200 keys"}
+        ],
+        "more": [{"with": {"count": 1}, "says": "Show 1 more"}, {"with": {"count": 1200}, "says": "Show 1,200 more"}]
+    },
+    "appText": {"value": "The JSON value: its keys and values are drawn as they are."},
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "width": "Fills its container. A node or a leaf is one row; a string longer than the room wraps at any character onto rows under it, at its start's column.",
+        "density": "Nothing changes: a node is one row at both levels, with no blank rows.",
+        "pieces": {
+            "tree": {"padX": 1, "note": "One column at its start kept for a top node's focus bar."},
+            "node": {
+                "rows": 1,
+                "note": "The disclosure, one blank column, the key and ': ' in foreground, the opening bracket in muted-foreground; folded, the count in faint 1 column in from each bracket, then the closing bracket. On hover, the node's cells on hover. Keyboard focus is focus-ring-start and focus-ring-end in ring in the cell beside each end."
+            },
+            "disclosure": {
+                "note": "chevron-right while folded, chevron-down while open, in muted-foreground: 2 columns with the blank after it (14 px)."
+            },
+            "entries": {
+                "padX": 2,
+                "note": "An open node's entries 2 columns in from its start: the guide in the first column, under the disclosure, a blank column, then each entry's row."
+            },
+            "guide": {"note": "The box glyphs' down in border, one per row of the entries."},
+            "leaf": {
+                "rows": 1,
+                "padX": 2,
+                "note": "2 columns in, where a node's key starts: the key and ': ' in foreground, then the value in its type's ink: strings kind-green-ink in their quotes, numbers kind-blue-ink, booleans kind-violet-ink, null muted-foreground."
+            },
+            "close": {
+                "rows": 1,
+                "padX": 2,
+                "note": "The closing bracket in muted-foreground, 2 columns in from the node's start."
+            },
+            "step": {
+                "rows": 1,
+                "padX": 2,
+                "note": "words.more in primary-ink, 2 columns in from the entries' start; keyboard focus as a node's."
+            }
+        },
+        "glyphs": ["chevron-right", "chevron-down", "box", "focus-ring-start", "focus-ring-end"]
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Each node is a native button with aria-expanded; the chevron turns with a transform transition.",
+            "Each node holds whether it is open, and how many entries it shows, in its own state: a new value keeps them by the entries' keys.",
+            "className lays the tree out in its container."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not yet compared",
+            "spec": "This spec.",
+            "today": "As of 1a87987 JsonTree is built, from before this spec; not yet compared with it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 64f4b19 there is no JSON tree."
+        }
+    ]
+}

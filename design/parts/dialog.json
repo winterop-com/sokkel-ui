@@ -5,8 +5,12 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {
+            "state": "built",
+            "as_of": "64f4b19",
+            "note": "With the header bar, the status row and the nested shade; what lies under it flattened under the scrim (T2)."
+        }
     },
     "summary": "A box over the page that asks or shows one thing: a title and an optional line under it, a body that scrolls when it is taller than the window allows, and a footer with Cancel and the one confirming verb at its end. The page under it is shaded and out of reach. From 768 it is a box edged in border-strong on elevation-dialog; below 768 any dialog but a ConfirmDialog is a full-screen sheet. ConfirmDialog is this dialog at its narrowest (sm, 384) and stays a box sized to its words at every width: its title is the question, its line the detail, its confirm the answer.",
     "sources": {
@@ -272,6 +276,12 @@
         }
     ],
     "words": {"cancel": "Cancel", "back": "Back", "close": "Close", "stopWaiting": "Stop waiting"},
+    "messages": {
+        "cancel": {"id": "dialogShell.cancel", "en": "Cancel"},
+        "back": {"id": "dialogShell.back", "en": "Back"},
+        "close": {"id": "dialogShell.close", "en": "Close"},
+        "stopWaiting": {"id": "dialogShell.stopWaiting", "en": "Stop waiting"}
+    },
     "appText": {
         "title": "The dialog's title, or a ConfirmDialog's question.",
         "description": "The line under it, or a ConfirmDialog's detail.",
@@ -329,12 +339,6 @@
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of 26b411f, Dialog draws the box padded 16, the title and description 8 apart, the body 16 under them and a footer band on muted/50 under a rule, over a shade/10 backdrop; ConfirmDialog draws the question, the detail, Cancel and a default or destructive answer, busy. Not yet: the corner close, the header bar, status, the footer's note and count, a shut confirm with its reason, back, actions, the nested shade, the phone sheet below 768 and fit, initial and final focus, a body that scrolls inside the window, dismissible false and closeOnOutsidePress, and the busy confirm's release (Stop waiting after busy-release)."
-        },
-        {
-            "renderer": "sokkel-tui",
-            "what": "not built yet",
-            "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no header bar, status slot or nested shade."
         }
     ]
 }

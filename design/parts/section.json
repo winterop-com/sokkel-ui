@@ -5,8 +5,12 @@
     "status": "draft",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {
+            "state": "built",
+            "as_of": "64f4b19",
+            "note": "Boxed and flat, the critical and graph tones, flush and fill."
+        }
     },
     "summary": "A titled part of a page. Boxed (the default): a bordered surface whose head is a bar of its own, its title set like a table's column heads. Flat: a heading over a rule with the content on the page's own ground. Either takes a count or fact beside the title, a description under it and actions at the head's end; a tone draws the body as a graph's dot grid or marks the section critical.",
     "sources": {
@@ -211,13 +215,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "Built in crates/core/src/widgets/section.rs (as of 9038006), with the meta, the actions, a description the head grows to hold, and flush. Not yet: the flat variant, the tones critical and graph, and fill."
-        },
-        {
-            "renderer": "sokkel-tui",
-            "what": "not built yet",
-            "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no fill."
+            "today": "Built in crates/core/src/widgets/section.rs (as of 1a87987), with the meta, the actions, a description the head grows to hold, flush, and the flat variant. Not yet: the tones critical and graph, and fill."
         }
     ]
 }

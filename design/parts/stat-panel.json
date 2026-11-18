@@ -5,8 +5,12 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "8567f05"},
-        "sokkel-egui": {"state": "partial", "as_of": "b7e1763"},
-        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {
+            "state": "built",
+            "as_of": "64f4b19",
+            "note": "In cells as proposal c4 reads it; the cells notes here say the same."
+        }
     },
     "summary": "One reading as a dashboard tile: a small title, the value written large with its unit, and optionally a trend drawn faintly behind it, a change against an earlier period in its tone, a note, and a meter toward a target. A threshold scale (or a fixed color token) picks the reading's color, which inks the value or fills the whole tile. A null value says there is no data, in neutral ink and without its trend. It shares the dashboard panel's states (parts/dashboard-panel): loading, failed in the value's place with Retry, stale marked under the value. A tile with href or onSelect is one link or button, its info and menu still their own.",
     "sources": {
@@ -130,6 +134,46 @@
         "sparkHeight": {"value": 0.45, "note": "The trend's share of the tile's height; a quarter with a target meter."},
         "meterMaxWidth": {"value": 192, "note": "The target meter is at most this wide (max-w-48)."}
     },
+    "cells": {
+        "padX": 1,
+        "width": "Its span of the dashboard grid (parts/dashboard-panel's cells).",
+        "density": "The blank rows between its pieces are there at regular and gone at compact; its height in rows follows what it holds, never 112 or 144 px.",
+        "pieces": {
+            "tile": {
+                "note": "A box in border-strong on card, its corners by radius-surface; filled, the box's ground is the reading's color and its inks on-fill."
+            },
+            "head": {
+                "rows": 1,
+                "note": "The title, then the change at the row's end; a change that does not fit drops what it is against before the title is cut. info and the menu's button after it, 3 columns each."
+            },
+            "value": {
+                "rows": 1,
+                "note": "In text.statistic: one size in a cell, so large is its weight; the unit one column after it."
+            },
+            "note": {"rows": 1, "note": "The note, or the stale mark and its words."},
+            "meter": {
+                "rows": 2,
+                "note": "The track one row (rule-heavy, the reading's color as far as the reading goes, muted past it, the tick at the target in foreground), then Target and its figure under it."
+            },
+            "spark": {
+                "rows": 1,
+                "note": "The foot row: each value one cell of spark-levels in the reading's color (muted-foreground with no reading), opaque: a cell has no faint area."
+            },
+            "failure": {"note": "What failed in the value's row, in critical-ink."}
+        },
+        "glyphs": [
+            "box",
+            "spark-levels",
+            "stale",
+            "rule-heavy",
+            "arrow-up",
+            "arrow-down",
+            "info",
+            "ellipsis",
+            "focus-ring-start",
+            "focus-ring-end"
+        ]
+    },
     "states": {
         "rest": {"means": "The title, the value with its unit, in card-foreground on card."},
         "hover": {
@@ -252,6 +296,16 @@
         "retry": "Retry",
         "stale": "Not up to date"
     },
+    "messages": {
+        "noData": {"id": "statPanel.noData", "en": "No data"},
+        "info": {"id": "statPanel.info", "en": "About this panel"},
+        "menu": {"id": "statPanel.menu", "en": "Panel actions"},
+        "loading": {"id": "statPanel.loading", "en": "Loading"},
+        "target": {"id": "statPanel.target", "en": "Target"},
+        "failed": {"id": "panelState.failed", "en": "This panel could not load."},
+        "retry": {"id": "panelState.retry", "en": "Retry"},
+        "stale": {"id": "panelState.stale", "en": "Not up to date"}
+    },
     "appText": {
         "title": "The tile's title; its unit, change, what the change is against, note, info and menu items.",
         "value": "The reading, written by format or formatValue (decimals, grouped thousands, en-US): 3526 as 3,526, 99.3 as 99.3.",
@@ -273,7 +327,7 @@
             "renderer": "sokkel-egui",
             "what": "not all built",
             "spec": "This spec.",
-            "today": "As of b7e1763 StatPanel draws the target meter (target(value, range), a 6 tall track, a tick at the target, Target and its value under it, the tile 144 tall). Not yet: the rest of the tile as specified here."
+            "today": "As of 1a87987 StatPanel draws the target meter (target(value, range), a 6 tall track, a tick at the target, Target and its value under it, the tile 144 tall), and stat tiles at size lg keep one height in a row. Not yet: the rest of the tile as specified here."
         }
     ]
 }

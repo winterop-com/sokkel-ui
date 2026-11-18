@@ -1,0 +1,479 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "tree-select",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "d163191",
+            "note": "TreeSelect was built before this spec and has not been compared with it; single choice only."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No tree select yet."}
+    },
+    "summary": "A field that picks from a hierarchy: a trigger that reads like a select and names the choice with its path, and a popup under it with a search over a tree. A single choice closes the popup and empties the search; multiple choice ticks checkboxes and keeps it open, the trigger listing the choices by name with their count at its end. The tree opens on the branches that lead to a choice, and in multiple choice a branch holding some but not all shows a dash. For a large hierarchy a level loads when it is first opened (kept for the next time the popup opens), and a search goes through the whole of it, listing each match with its path. unavailable shuts the rows that may not be chosen, with the reason at their end, while their branches still open. optional starts the list with a Clear row; otherwise a Clear button beside the search empties the choice. As a field it sits in parts/text-field's frame: the label, the required mark, the help and the issue mark.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/TreeSelect.tsx",
+            "packages/core/src/components/Tree.tsx",
+            "packages/core/src/components/ui/popover.tsx",
+            "packages/core/src/components/ui/input.tsx",
+            "packages/core/src/components/ui/checkbox-look.tsx",
+            "packages/core/src/components/Highlight.tsx",
+            "packages/core/src/lib/issue-edge.ts",
+            "packages/core/src/lib/popup.ts"
+        ],
+        "sokkel-egui": [
+            "crates/core/src/widgets/tree_select.rs (TreeSelect, TreeSelectWords)",
+            "crates/core/src/widgets/tree.rs"
+        ]
+    },
+    "anatomy": {
+        "trigger": "The control, filling its row: the value, the count with more than one choice, then the chevrons at its end, 8 apart.",
+        "value": "On one line, cut short: words.placeholder while nothing is chosen; one choice's label with its path after it, 6 apart on their baseline; several choices' labels joined by a comma and a space, all of them in its title.",
+        "path": "After one choice's label: its ancestors' labels joined by ' / ', small and quiet, cut short.",
+        "count": "With more than one choice: how many, small, quiet and in tabular figures at the trigger's end, named words.selected.",
+        "chevron": "Up and down chevrons at the trigger's end, 16, in the muted ink.",
+        "popup": "Under the trigger, 4 away, lined up with its start, on the popup's look (parts/select's list): as wide as the trigger and at least 288, padded none; the search bar over the list.",
+        "searchBar": "Across the popup's top, padded 10 across, with a rule in border under it: the search icon, the search input, and the clear button at its end, 8 apart.",
+        "searchIcon": "A magnifier at the search bar's start, 16, in the muted ink.",
+        "search": "A bare input 36 tall, named and placeheld words.search; what is typed filters the tree. It takes the focus when the popup opens.",
+        "clear": "In the search bar, while something is chosen and the field is not optional: an x and words.clear, small and quiet; it empties the choice.",
+        "list": "Under the search bar, padded 4, at most 320 tall, then it scrolls: the Clear row when optional and no search is typed, then the tree.",
+        "clearRow": "With optional, while no search is typed: a row (as the tree's) with an x in the chevron's place and words.clear, quiet; chosen while nothing is, it empties the choice and closes the popup.",
+        "row": "One node of the tree, 32 tall, corners radius-md, indented 16 a level from 4 at the top: the toggle, its icon, its checkbox in multiple choice, its label, then its reason when shut and its meta at its end, 6 apart. The chosen row is washed in single choice.",
+        "toggle": "Before a branch's label: a 20 square button with a chevron that points right while closed and down while open; a leaf keeps the room empty.",
+        "icon": "The node's icon before its label, 16, in the muted ink; an open branch shows its open icon.",
+        "checkbox": "In multiple choice: a 16 checkbox before the label, ticked when chosen, a dash when the branch holds some choices but is not chosen itself; shut with the row.",
+        "label": "The node's label, cut short; the part a search matched marked.",
+        "match": "The part of a label a search matched: a wash of primary under the primary ink, corners radius-mini.",
+        "trailPath": "On a search result from the app's search: the result's ancestors joined by ' / ' after its label, small and quiet.",
+        "reason": "On a shut row: why it cannot be chosen, small and quiet, at most half the row, all of it in its title.",
+        "meta": "A short fact at the row's end, a count or a code, small, quiet and in tabular figures.",
+        "loadingRow": "Under a branch whose level is loading: a spinner in the chevron's place and words.loading, quiet.",
+        "failedRow": "Under a branch whose level did not load: words.failed in critical, then a retry button at its end with words.retry.",
+        "retry": "A small text button with a turning arrow and words.retry, in foreground, underlined on hover.",
+        "note": "Under the tree in place of rows: words.searching with a spinner while the app's search answers, words.searchFailed with a retry when it did not, or words.empty centered when nothing matches."
+    },
+    "standsOn": {
+        "default": "popover",
+        "trigger": "background",
+        "value": "background",
+        "path": "background",
+        "count": "background",
+        "chevron": "background"
+    },
+    "options": {
+        "nodes": {
+            "type": "rows",
+            "does": "The tree's top level, each node with its id, label, meta, children or hasChildren, and icons."
+        },
+        "value": {
+            "type": "rows",
+            "does": "The chosen nodes' ids, held from outside with onValueChange.",
+            "sokkel-ui": "value, onValueChange"
+        },
+        "multiple": {
+            "type": "boolean",
+            "default": false,
+            "does": "Chooses several with checkboxes and keeps the popup open; the trigger lists the choices with their count."
+        },
+        "defaultExpanded": {
+            "type": "rows",
+            "does": "The branches unfolded when the popup first opens, besides those that lead to a choice."
+        },
+        "open": {
+            "type": "boolean",
+            "does": "Whether the popup is open, held from outside with onOpenChange; it starts at defaultOpen otherwise.",
+            "sokkel-ui": "open, defaultOpen, onOpenChange"
+        },
+        "defaultQuery": {"type": "text", "does": "The search the popup opens with, for a still view of it."},
+        "loadChildren": {
+            "type": "callback",
+            "does": "Brings the children of a node marked hasChildren when it is first opened; kept for the next time the popup opens."
+        },
+        "search": {
+            "type": "callback",
+            "does": "Answers a query over the whole hierarchy with each match and its ancestors; without it the search filters the nodes loaded so far."
+        },
+        "trails": {
+            "type": "rows",
+            "does": "Where chosen nodes not loaded yet sit, so the trigger names them by their path and the tree opens to them."
+        },
+        "unavailable": {
+            "type": "callback",
+            "does": "Why a node cannot be chosen, or nothing when it can: its row is shut with that reason, and its branch still opens."
+        },
+        "optional": {
+            "type": "boolean",
+            "default": false,
+            "does": "The question may be left unanswered: the list starts with the Clear row, and the search bar has no clear button."
+        },
+        "invalid": {
+            "type": "boolean",
+            "default": false,
+            "does": "The choice is refused: the trigger's critical edge, as a field with an issue puts on it."
+        },
+        "id": {"type": "text", "does": "The trigger's id, for a field's label."},
+        "words": {"type": "node", "does": "The words below."}
+    },
+    "sizes": {
+        "trigger": {
+            "height": "density.control",
+            "padX": 10,
+            "gap": 8,
+            "text": "text.body",
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "note": "density.control: 32 regular, 28 compact; a finger tall below 768."
+        },
+        "value": {"gap": 6, "note": "One choice's label and its path."},
+        "chevron": {"icon": 16},
+        "searchBar": {"padX": 10, "gap": 8, "note": "A 1px rule under it."},
+        "searchIcon": {"icon": 16},
+        "search": {
+            "height": 36,
+            "text": "text.body",
+            "textBelowMd": 16,
+            "phoneMinHeight": "spacing-finger",
+            "note": "16 below 768 so a phone does not zoom the page, text.sm from it."
+        },
+        "clear": {"gap": 4, "icon": 14, "text": "text.help", "radius": "radius-sm"},
+        "list": {"padX": 4, "padY": 4, "note": "At most 320 tall (layout.listMaxHeight)."},
+        "row": {
+            "height": 32,
+            "gap": 6,
+            "radius": "radius-md",
+            "note": "Indented 16 a level (layout.indent) from 4 at the top level, 8 at its end (4 with a menu)."
+        },
+        "clearRow": {
+            "height": 32,
+            "gap": 6,
+            "radius": "radius-md",
+            "text": "text.body",
+            "note": "4 at its start and 8 at its end."
+        },
+        "toggle": {"height": 20, "width": 20, "icon": 14, "radius": "radius-sm"},
+        "icon": {"icon": 16},
+        "checkbox": {"height": 16, "width": 16, "radius": "radius-sm", "note": "Its mark 14."},
+        "statusRow": {
+            "height": 32,
+            "gap": 6,
+            "note": "The loading and the failed rows, indented as the row under which they stand."
+        },
+        "retry": {"gap": 4, "icon": 14, "text": "text.help", "radius": "radius-sm"},
+        "note": {
+            "padX": 8,
+            "padY": 8,
+            "gap": 8,
+            "text": "text.body",
+            "note": "Searching and the failed search: at least 36 tall. Nothing matches: 24 above and under, centered."
+        }
+    },
+    "layout": {
+        "popupMinWidth": {"value": 288, "note": "The popup is as wide as the trigger, and at least this."},
+        "popupOffset": {"value": 4, "note": "Between the trigger and the popup."},
+        "listMaxHeight": {"value": 320, "note": "The list's most height under the search bar, then it scrolls."},
+        "indent": {"value": 16, "note": "A row's start per level below the top."},
+        "indentStart": {"value": 4, "note": "A top-level row's start."}
+    },
+    "states": {
+        "rest": {"means": "The trigger names the choice; the popup closed."},
+        "placeholder": {
+            "means": "Nothing chosen: the trigger says words.placeholder in muted-foreground.",
+            "reached": "an empty value"
+        },
+        "focus": {
+            "means": "Keyboard focus on the trigger: the ring edge and a 1px ring.",
+            "reached": "Tab",
+            "on": "keyboard",
+            "effect": {"piece": "trigger", "ring": {"color": "ring", "width": 1}}
+        },
+        "open": {
+            "means": "The popup is open, the search focused, the tree unfolded to the choices.",
+            "reached": "a press on the trigger, Enter or Space on it, open, or defaultOpen"
+        },
+        "invalid": {
+            "means": "The choice is refused: the critical edge alone at rest.",
+            "reached": "invalid, or a field's critical issue",
+            "sokkel-ui": "INVALID_EDGE (lib/issue-edge)"
+        },
+        "invalid+focus": {
+            "means": "An invalid trigger with keyboard focus: the critical edge and the invalid ring.",
+            "reached": "keyboard focus on an invalid trigger",
+            "on": "keyboard",
+            "effect": {"piece": "trigger", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}}
+        },
+        "hover": {
+            "means": "The pointer over a row, the Clear row, a toggle or the clear button: a row washed hover, a toggle or the clear button in foreground.",
+            "reached": "pointer over"
+        },
+        "rowFocus": {
+            "means": "Keyboard focus on a row or the Clear row: a focus-ring-width ring in ring inside its box.",
+            "reached": "the arrows, Home, End, or Tab into the tree",
+            "on": "keyboard"
+        },
+        "chosen": {
+            "means": "Single choice: the chosen row (or the Clear row while nothing is chosen) washed primary at 12 in primary-ink, its label medium; 18 under the pointer.",
+            "reached": "value"
+        },
+        "chosen+hover": {"means": "The chosen row under the pointer.", "reached": "pointer over the chosen row"},
+        "expanded": {
+            "means": "An open branch: its chevron points down and its children follow, indented a level.",
+            "reached": "the toggle, ArrowRight, a choice under it, defaultExpanded, or a search"
+        },
+        "checked": {"means": "Multiple choice: a chosen row's checkbox ticked, on primary.", "reached": "value"},
+        "mixed": {
+            "means": "Multiple choice: a branch not chosen that holds choices below it, its checkbox a dash on primary.",
+            "reached": "a choice under the branch"
+        },
+        "shut": {
+            "means": "A row that may not be chosen: quiet, with its reason at its end; its checkbox shut. A shut row already chosen stays as chosen, and can be unchosen.",
+            "reached": "unavailable gives a reason"
+        },
+        "searching": {
+            "means": "The app's search is answering: the note with a spinner.",
+            "reached": "a query with search"
+        },
+        "loading": {
+            "means": "A level is loading under its branch: the loading row.",
+            "reached": "opening a node marked hasChildren the first time"
+        },
+        "failed": {
+            "means": "A level or the app's search did not answer: words.failed or words.searchFailed in critical, with the retry.",
+            "reached": "loadChildren or search refused"
+        },
+        "empty": {
+            "means": "The search matches nothing: words.empty, centered.",
+            "reached": "a query that matches no node"
+        }
+    },
+    "pieces": {
+        "trigger": {
+            "rest": {
+                "ground": "field",
+                "edge": "input",
+                "ink": "inherit",
+                "radius": "radius-control",
+                "text": "text.body",
+                "note": "The page's ink: the trigger sets none of its own."
+            },
+            "focus": {"edge": "ring"},
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {"edge": "critical"}
+        },
+        "value": {"rest": {"note": "The trigger's ink."}, "placeholder": {"ink": "muted-foreground"}},
+        "path": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "count": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "chevron": {"rest": {"ink": "muted-foreground"}},
+        "popup": {
+            "rest": {
+                "ground": "popover",
+                "edge": "border-strong",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "note": "Every popup's look, elevation-pop under it."
+            }
+        },
+        "searchBar": {"rest": {"rule": "border"}},
+        "searchIcon": {"rest": {"ink": "muted-foreground"}},
+        "search": {
+            "rest": {"ground": "none", "placeholder": "muted-foreground", "ink": "inherit", "note": "The popup's ink."}
+        },
+        "clear": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-sm", "text": "text.help"},
+            "hover": {"ink": "foreground"}
+        },
+        "clearRow": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md", "text": "text.body"},
+            "hover": {"ground": "hover"},
+            "rowFocus": {"ring": {"color": "ring", "width": "focus-ring-width", "inset": "all"}},
+            "chosen": {"ground": "primary/12", "ink": "primary-ink", "weight": 500},
+            "chosen+hover": {"ground": "primary/18"}
+        },
+        "row": {
+            "rest": {
+                "ink": "inherit",
+                "radius": "radius-md",
+                "note": "The popup's ink, popover-foreground; text.body from the tree."
+            },
+            "hover": {"ground": "hover"},
+            "rowFocus": {"ring": {"color": "ring", "width": "focus-ring-width", "inset": "all"}},
+            "chosen": {"ground": "primary/12", "ink": "primary-ink", "weight": 500},
+            "chosen+hover": {"ground": "primary/18"},
+            "shut": {"ink": "muted-foreground"}
+        },
+        "toggle": {"rest": {"ink": "muted-foreground", "radius": "radius-sm"}, "hover": {"ink": "foreground"}},
+        "icon": {"rest": {"ink": "muted-foreground"}},
+        "checkbox": {
+            "rest": {"edge": "input", "radius": "radius-sm", "dark": {"ground": "input/30"}},
+            "checked": {"ground": "primary", "edge": "primary", "ink": "primary-foreground"},
+            "mixed": {"ground": "primary", "edge": "primary", "ink": "primary-foreground"},
+            "shut": {"opacity": "disabled-opacity"}
+        },
+        "match": {"rest": {"ground": "primary/15", "ink": "primary-ink", "radius": "radius-mini"}},
+        "trailPath": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "reason": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "meta": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "loadingRow": {"rest": {"ink": "muted-foreground"}},
+        "failedRow": {"rest": {"ink": "critical", "note": "words.failed's ink; the row around it muted-foreground."}},
+        "retry": {
+            "rest": {"ink": "foreground", "radius": "radius-sm", "text": "text.help"},
+            "hover": {"underline": true},
+            "rowFocus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        },
+        "note": {"rest": {"ink": "muted-foreground", "text": "text.body"}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the trigger; in the open popup, the search, the clear button, the Clear row, then the tree's one stop: the focused row, else the first."
+        },
+        {"keys": ["Enter", "Space"], "does": "Opens the popup, the search focused.", "when": "the trigger has focus"},
+        {
+            "keys": ["ArrowDown", "ArrowUp"],
+            "does": "Moves to the next or the previous visible row.",
+            "when": "a row has focus"
+        },
+        {"keys": ["Home", "End"], "does": "Moves to the first or the last visible row.", "when": "a row has focus"},
+        {
+            "keys": ["ArrowRight"],
+            "does": "Opens a closed branch; on an open one, moves to its first child.",
+            "when": "a row has focus"
+        },
+        {
+            "keys": ["ArrowLeft"],
+            "does": "Closes an open branch (not while a search is typed); otherwise moves to the row's parent.",
+            "when": "a row has focus"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Chooses the row: in single choice it closes the popup and empties the search; in multiple choice it ticks or unticks the row and the popup stays open. A shut row is not chosen.",
+            "when": "a row has focus"
+        },
+        {
+            "keys": ["Escape"],
+            "does": "Closes the popup, focus back on the trigger when it was closed from the keyboard.",
+            "when": "the popup is open"
+        }
+    ],
+    "words": {
+        "placeholder": "Choose",
+        "search": "Search",
+        "clear": "Clear",
+        "empty": "Nothing matches.",
+        "selected": "{count} chosen",
+        "actions": "Actions",
+        "loading": "Loading",
+        "failed": "This level did not load.",
+        "retry": "Try again",
+        "searching": "Searching",
+        "searchFailed": "The search did not answer."
+    },
+    "messages": {
+        "placeholder": {"id": "treeSelect.placeholder", "en": "Choose"},
+        "search": {"id": "treeSelect.search", "en": "Search"},
+        "clear": {"id": "treeSelect.clear", "en": "Clear"},
+        "empty": {"id": "treeSelect.empty", "en": "Nothing matches."},
+        "selected": {"id": "treeSelect.selected", "en": "{count, number} chosen"},
+        "actions": {"id": "treeSelect.actions", "en": "Actions"},
+        "loading": {"id": "treeSelect.loading", "en": "Loading"},
+        "failed": {"id": "treeSelect.failed", "en": "This level did not load."},
+        "retry": {"id": "treeSelect.retry", "en": "Try again"},
+        "searching": {"id": "treeSelect.searching", "en": "Searching"},
+        "searchFailed": {"id": "treeSelect.searchFailed", "en": "The search did not answer."}
+    },
+    "samples": {
+        "selected": [
+            {"with": {"count": 0}, "says": "0 chosen"},
+            {"with": {"count": 1}, "says": "1 chosen"},
+            {"with": {"count": 1200}, "says": "1200 chosen"}
+        ]
+    },
+    "appText": {
+        "nodes": "Each node's label, meta and icon.",
+        "reason": "Why a node cannot be chosen, from unavailable."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The popup is Base UI's Popover (ui/popover), anchored to the trigger; it takes Escape and a press outside, and puts focus back on the trigger after a keyboard close (returnFocusOnKeyboard).",
+            "The tree is Tree with selection single or multiple, given the select's words; its rows past a few hundred are drawn only in view of the list's scroll.",
+            "words.actions is Tree's word for a row's menu; TreeSelect gives its tree no row actions, so it is never said.",
+            "words.selected is the count's name for a screen reader (aria-label); the count drawn is the number alone."
+        ],
+        "sokkel-egui": [
+            "TreeSelect::show takes one value (Option<String>), draws the trigger with the chosen node's label and path and a popup with a search and a Tree; choosing closes it."
+        ]
+    },
+    "cells": {
+        "rows": 1,
+        "padX": 1,
+        "width": "The trigger: the width its field gives it. The popup: as wide as the trigger, and at least 34 columns (288 px).",
+        "density": "Nothing changes: the trigger, the search bar and every row are one row at both levels.",
+        "pieces": {
+            "trigger": {
+                "rows": 1,
+                "padX": 1,
+                "note": "Its ground, and its edge as edge-start and edge-end in the edge's flat color for its state (the ring edge on focus, the critical edge when invalid); keyboard focus as focus-ring-start and focus-ring-end beside it (principle 21). The count 1 column before the chevrons."
+            },
+            "chevron": {"width": "1 column at the trigger's end, before its end padding."},
+            "popup": {
+                "note": "A box in border-strong, corners by radius-surface, under the trigger; its search bar is a row, then a rule row, then the list."
+            },
+            "searchBar": {
+                "rows": 1,
+                "padX": 1,
+                "note": "The search icon, the query, then the clear button (x and its word) at the end; a rule row under it."
+            },
+            "list": {"note": "At most 320 px, which is the window less 4 rows where it has fewer, then it scrolls."},
+            "row": {
+                "rows": 1,
+                "padX": 1,
+                "note": "2 columns of indent a level (16 px); the toggle 2 columns (chevron-right closed, chevron-down open, a blank for a leaf); the checkbox (checkbox-off, checkbox-on, checkbox-mixed) and a gap of 1 in multiple choice; then the label, the reason and the meta at the end. A row with keyboard focus takes focus-mark in ring at its start; the chosen row in single choice on its wash."
+            },
+            "clearRow": {"rows": 1, "padX": 1, "note": "The x in the toggle's place, then the word."},
+            "loadingRow": {"rows": 1, "note": "The spinner in the toggle's place and the loading word."},
+            "failedRow": {"rows": 1, "note": "The failed word, then rotate-cw and the retry word at the end."},
+            "note": {
+                "rows": 1,
+                "padX": 1,
+                "note": "The searching, the failed search or nothing matches, one row each; nothing matches centered with a blank row above and under at regular."
+            }
+        },
+        "glyphs": [
+            "box",
+            "rule",
+            "chevrons-up-down",
+            "search",
+            "x",
+            "chevron-right",
+            "chevron-down",
+            "checkbox-off",
+            "checkbox-on",
+            "checkbox-mixed",
+            "focus-mark",
+            "spinner",
+            "rotate-cw",
+            "edge-start",
+            "edge-end",
+            "focus-ring-start",
+            "focus-ring-end"
+        ],
+        "note": "What lies under the popup is drawn as it is: a popup has no scrim. A shut row's reason is said in the status line while the row has focus, where it is cut short (principle 23)."
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared",
+            "spec": "This spec.",
+            "today": "As of d163191, TreeSelect was built before this spec and has not been compared with it. Read from its source: one choice (Option<String>) from given nodes, the trigger with the label and the path, a popup with a search, a clear button and a Tree; choosing closes it. Not there: multiple choice with checkboxes, the count and the dash on a branch holding choices; loadChildren, search over the whole hierarchy and trails; unavailable; optional with its Clear row; defaultQuery and open held from outside; and the words empty, selected, loading, failed, retry, searching and searchFailed."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec, with its cells.",
+            "today": "As of 64f4b19 there is no tree select."
+        }
+    ]
+}

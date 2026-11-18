@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "8567f05"},
-        "sokkel-egui": {"state": "missing", "as_of": "b7e1763"},
-        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "The code editor: a document in a language, colored by its tokens in the code-* colors, with line numbers, the caret's line shaded, bracket matching, undo and Tab indenting. Marks wash a line or underline a range (in JSON or YAML the value at a path) in a tone, a message on hover and a dot in the gutter; a JSON Schema checks a JSON or YAML document as it is typed and completes its keys and values, a key whose object requires keys going in whole as a snippet; the app's words are offered while typing and described on hover. A find and replace bar, a fold gutter, brackets colored by depth and indent guides are options, dropped past a megabyte. Boxed like a field, filling a pane, or one line at a control's height as a query bar. In markdown it completes [[links]] to other notes and follows one clicked with Mod held.",
     "sources": {
@@ -527,6 +527,29 @@
         "syntax": "Not valid {language}",
         "deprecated": "deprecated"
     },
+    "messages": {
+        "issue.required": null,
+        "issue.additional": null,
+        "issue.type": null,
+        "issue.enum": null,
+        "issue.const": null,
+        "issue.minimum": null,
+        "issue.exclusiveMinimum": null,
+        "issue.maximum": null,
+        "issue.exclusiveMaximum": null,
+        "issue.minLength": null,
+        "issue.maxLength": null,
+        "issue.pattern": null,
+        "issue.format": null,
+        "issue.minItems": null,
+        "issue.maxItems": null,
+        "issue.uniqueItems": null,
+        "issue.deprecated": null,
+        "issue.unchecked": null,
+        "issue.other": null,
+        "syntax": {"id": "schema.syntax", "en": "Not valid {language, select, json {JSON} other {YAML}}"},
+        "deprecated": {"id": "schema.deprecated", "en": "deprecated"}
+    },
     "samples": {
         "issue.required": [{"with": {"property": "schedule"}, "says": "Missing the property schedule"}],
         "issue.additional": [{"with": {"property": "retries"}, "says": "retries is not a known property"}],
@@ -604,7 +627,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of b7e1763 there is no code editor."
+            "today": "As of 1a87987 there is no code editor."
         }
     ]
 }

@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "built", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "built", "as_of": "64f4b19"}
     },
     "summary": "An app's preferences as one large dialog over the page it was opened from, on its own route (principle 9): a head with the title and a close; the sections in a column under their group titles, with a search over every setting at its top; the shown section's rows beside it, scrolling on their own; and a footer with Reset to defaults for the shown section, a note that changes are kept as they are made, and Done. Below 768 it fills the screen, and the column is a list of sections to go into.",
     "sources": {
@@ -306,6 +306,30 @@
         "close": "Close",
         "back": "Back"
     },
+    "messages": {
+        "title": {"id": "settings.title", "en": "Settings"},
+        "search": {"id": "settings.search", "en": "Search"},
+        "searchLabel": {"id": "settings.searchLabel", "en": "Search the settings"},
+        "clear": {"id": "settings.clear", "en": "Clear the search"},
+        "noMatch": {"id": "settings.noMatch", "en": "No setting matches the search."},
+        "saved": {"id": "settings.saved", "en": "Changes are saved as you make them"},
+        "done": {"id": "settings.done", "en": "Done"},
+        "reset": {"id": "settings.reset", "en": "Reset to defaults"},
+        "resetSection": {"id": "settings.resetSection", "en": "Reset {section} to its defaults?"},
+        "resetSectionDetail": {
+            "id": "settings.resetSectionDetail",
+            "en": "Every setting in {section} goes back to its default."
+        },
+        "resetAll": {"id": "settings.resetAll", "en": "Reset every setting to its default?"},
+        "resetAllDetail": {
+            "id": "settings.resetAllDetail",
+            "en": "Every setting in every section goes back to its default."
+        },
+        "resetConfirm": {"id": "settings.resetConfirm", "en": "Reset"},
+        "cancel": {"id": "settings.cancel", "en": "Cancel"},
+        "close": {"id": "settingsDialog.close", "en": "Close"},
+        "back": {"id": "settingsDialog.back", "en": "Back"}
+    },
     "samples": {
         "resetSection": [{"with": {"section": "General"}, "says": "Reset General to its defaults?"}],
         "resetSectionDetail": [
@@ -398,7 +422,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 26b411f, SettingsDialog draws the box at 896 by 704, the head (48, the title, a 28 close 16 from the end), the column (224, padded 12, the search, group titles, entries 34 tall and 2 apart with the shown one on secondary at text.action), the pane padded 32 by 20 with the section's title and its rows (16 down, title text.action, description text.body muted), and the footer (65, muted/50 under a rule, Reset to defaults while the section has reset, words.saved, Done); reset false and the search over every setting's words and keywords. Not yet: the phone (the full-screen sheet below 768, the list and the section with Back, phoneStart), resetScope all, the app's own footer note, a section's heading, lead and foot, the nested shade under the reset's question, Enter and Space on an entry, and the route."
+            "today": "As of 26b411f, SettingsDialog draws the box at 896 by 704, the head (48, the title, a 28 close 16 from the end), the column (224, padded 12, the search, group titles, entries 34 tall and 2 apart with the shown one on secondary at text.action), the pane padded 32 by 20 with the section's title and its rows (16 down, title text.action, description text.body muted), and the footer (65, muted/50 under a rule, Reset to defaults while the section has reset, words.saved, Done); reset false; since 1a87987 a choice list with each theme's sample (theme_settings' theme_list), and the search over every setting's words and keywords. Not yet: the phone (the full-screen sheet below 768, the list and the section with Back, phoneStart), resetScope all, the app's own footer note, a section's heading, lead and foot, the nested shade under the reset's question, Enter and Space on an entry, and the route."
         }
     ]
 }

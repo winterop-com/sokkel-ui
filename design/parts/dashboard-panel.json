@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "8567f05"},
-        "sokkel-egui": {"state": "missing", "as_of": "b7e1763"},
-        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
     },
     "summary": "The frame every dashboard panel shares: a box on the card ground with a head holding the title, a quiet subtitle such as the range it covers, a stale mark, the app's actions and the panel's own tools (expand, the panel menu, an arranged grid's grip and size), then the content, padded or flush, and an optional foot. It spans part of a twelve-column grid by its own width. Loading dims the content under a bar; empty says so in the content's place; failed puts what failed and Retry there; stale keeps the content and marks the head. Loading, empty, failed and stale never stand in for each other. A chart panel and a time series panel stand in it; a stat tile (parts/stat-panel) draws a smaller head of its own on the same states.",
     "sources": {
@@ -103,6 +103,54 @@
         "loadingDelay": {"value": 300, "note": "ms a query runs before the content dims and the bar shows."},
         "denseGap": {"value": 6, "note": "Between panels in a dense grid; a plain grid's gap is density.section-gap."}
     },
+    "cells": {
+        "padX": {"regular": 2, "compact": 1},
+        "padY": {"regular": 1, "compact": 0},
+        "width": "Its span of the dashboard grid: twelve columns of the grid's own width, panels one column apart and rows one blank row apart (none at compact). The spans read the grid's width in columns as they read px: wide from 122 columns (1024 px), tablet-wide from 76 (640 px), phone-wide below.",
+        "density": "The body's blank row at the top and bottom and the grid's blank row between rows of panels are there at regular and gone at compact; the body's side padding drops from 2 to 1.",
+        "pieces": {
+            "panel": {"note": "A box in border-strong, its corners by radius-surface, on card."},
+            "head": {
+                "rows": 1,
+                "padX": 1,
+                "gap": 1,
+                "note": "One row whatever its px height: the title, the subtitle one column after it, the stale mark, the app's actions, then the tools at its end; a rule row of tees in border under it."
+            },
+            "tool": {
+                "width": "3 columns each: the icon with a column either side; one column between tools.",
+                "note": "Expand is the maximize icon, the menu's button the ellipsis; with keyboard focus the bars beside its ends (principle 21)."
+            },
+            "stale": {
+                "note": "The stale glyph and since when, after the subtitle; its whole words in the status line on focus."
+            },
+            "body": {
+                "padX": {"regular": 2, "compact": 1},
+                "padY": {"regular": 1, "compact": 0},
+                "note": "No padding when flush."
+            },
+            "loadingBar": {
+                "note": "A cell has no half strength, so the content cannot stay under the bar: while loading, the spinner and words.loading stand in the content's place."
+            },
+            "empty": {"note": "words.empty centered in the body, in muted-foreground."},
+            "failure": {
+                "note": "The circle-alert mark, what failed, then Retry as a one-row button (rotate-cw); the raw message in the status line on focus."
+            },
+            "foot": {"rows": 1, "padX": 1, "note": "A rule row of tees over it, then one row."}
+        },
+        "glyphs": [
+            "box",
+            "rule",
+            "spinner",
+            "stale",
+            "circle-alert",
+            "rotate-cw",
+            "maximize",
+            "ellipsis",
+            "grip-vertical",
+            "focus-ring-start",
+            "focus-ring-end"
+        ]
+    },
     "states": {
         "rest": {"means": "The head, then the content."},
         "hover": {"means": "The pointer over a tool: the hover wash, its icon in foreground.", "reached": "the pointer"},
@@ -171,6 +219,14 @@
         "retry": "Retry",
         "stale": "Not up to date"
     },
+    "messages": {
+        "expand": {"id": "dashboardPanel.expand", "en": "Expand"},
+        "menu": {"id": "dashboardPanel.menu", "en": "Panel actions"},
+        "empty": {"id": "dashboardPanel.empty", "en": "No data for this range."},
+        "failed": {"id": "panelState.failed", "en": "This panel could not load."},
+        "retry": {"id": "panelState.retry", "en": "Retry"},
+        "stale": {"id": "panelState.stale", "en": "Not up to date"}
+    },
     "appText": {
         "title": "The panel's title; its subtitle; its actions, menu items and footer.",
         "error": "What failed, in place of words.failed, and the raw message (technical).",
@@ -191,7 +247,13 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of b7e1763 there is no dashboard panel frame."
+            "today": "As of 1a87987 there is no dashboard panel frame."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 64f4b19, drawn in cells as proposal c4 reads it: the grid by its own width, the head with the subtitle, the stale mark and the tools, the body padded or flush, the foot; loading, empty, failed with Retry and stale. Not yet: the expanded dialog and the panel menu's own menu."
         }
     ]
 }

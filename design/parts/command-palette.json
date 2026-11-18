@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
     },
     "summary": "One search over everything an app can do, over the page on Mod+K, which closes it again: a dialog box a third of the way down the window with the search at its top, the commands in groups under their titles (each row its icon, its label, a quiet hint or code after it, and at its end a summary, its kind or the keys that run it), the app's own search results under them, and an optional strip at its foot. Its active row wears the highlight every list of choices does. Choosing a row runs it and closes the palette. A command whose onSelect answers a promise holds the palette open and its row busy until it settles: fulfilled, the palette closes; rejected, it stays and says why under the rows. Once it has run busy-release (5 seconds) a Stop waiting row appears, and it or Escape lets the palette go, the command left to settle unheard.",
     "sources": {
@@ -383,6 +383,22 @@
         "retry": "Retry",
         "seeAll": "See all results for “{query}”"
     },
+    "messages": {
+        "placeholder": {"id": "commandPalette.placeholder", "en": "Search or run a command"},
+        "empty": {"id": "commandPalette.empty", "en": "No command matches."},
+        "title": {"id": "commandPalette.title", "en": "Command palette"},
+        "close": {"id": "commandPalette.close", "en": "Close"},
+        "open": {"id": "commandPalette.open", "en": "Open"},
+        "palette": {"id": "commandPalette.palette", "en": "Command palette"},
+        "sequence": {"id": "commandPalette.sequence", "en": "then"},
+        "running": {"id": "commandPalette.running", "en": "Running"},
+        "refused": {"id": "commandPalette.refused", "en": "The command did not run."},
+        "stopWaiting": {"id": "commandPalette.stopWaiting", "en": "Stop waiting"},
+        "searching": {"id": "paletteSearch.searching", "en": "Searching"},
+        "searchFailed": {"id": "paletteSearch.failed", "en": "The search did not answer."},
+        "retry": {"id": "paletteSearch.retry", "en": "Retry"},
+        "seeAll": {"id": "paletteSearch.seeAll", "en": "See all results for “{query}”"}
+    },
     "samples": {
         "searchFailed": [{"with": {"reason": "The search timed out"}, "says": "The search did not answer."}],
         "seeAll": [{"with": {"query": "harbor"}, "says": "See all results for “harbor”"}]
@@ -466,7 +482,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no app search or results, two-line rows or foot."
+            "today": "As of 64f4b19, drawn from the spec in cells, with the app's search and results, two-line rows and the foot. Not yet: See all, and minQuery and debounce as the app's options."
         }
     ]
 }

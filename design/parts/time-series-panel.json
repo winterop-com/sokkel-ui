@@ -5,8 +5,12 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "8567f05"},
-        "sokkel-egui": {"state": "partial", "as_of": "b7e1763"},
-        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {
+            "state": "built",
+            "as_of": "64f4b19",
+            "note": "Lines in braille, one series' area in blocks, stacked and stepped series, dashed references, the legend row or table; as the cells notes here say."
+        }
     },
     "summary": "A dashboard panel of values over time: each series a line, over a fading or solid area or alone, side by side or stacked, or in steps; a reference series dashed; a threshold scale's steps as dashed lines across, each in its color with its figure; and a legend under the chart as a row of entries or a table of each series' min, max, mean and current value. It stands in the dashboard panel's frame (parts/dashboard-panel: title, info, menu, export, expand, data view, loading, empty and failed) and draws parts/chart's line, area or step kind. The key to a threshold scale, ThresholdLegend, is drawn by the app beside it, as a list of bands or one strip.",
     "sources": {
@@ -119,6 +123,27 @@
             "note": "fill solid: the area at this opacity of its color; stacked 0.55 (kinds/categories.ts)."
         }
     },
+    "cells": {
+        "width": "parts/dashboard-panel's body: the chart fills it.",
+        "density": "As parts/dashboard-panel's.",
+        "pieces": {
+            "chart": {
+                "note": "The plot in braille, two by four dots a cell; the value labels at the plot's start (the middle one only with a row of its own), the grid lines across in grid-dot, the axis line under the plot as rule, and the category labels under it, as many as fit."
+            },
+            "series": {
+                "note": "Each series a line in braille in its color, each value's dot joined to the next; a cell holds one series' ink. One series with an area draws it as block columns in eighths of a cell (spark-levels' blocks); several series draw their lines alone, since overlapping areas cannot share a cell. Stacked series draw a column of bands a category, a boundary inside a cell drawn by the block's ink (the lower series) over its ground (the upper one); a stepped line holds its value, then jumps."
+            },
+            "reference": {"note": "A dashed line in braille: every other pair of dots."},
+            "thresholdLine": {"note": "A dashed line across in braille, in its color token."},
+            "mark": {"note": "A dashed line across in braille in its color, its label and value at its end."},
+            "legend": {
+                "note": "A row of entries, each the swatch glyph in its series' color and the name; legend table: a table (parts/table) of min, max, avg and current."
+            },
+            "thresholdLegend": {"note": "A row of bands, each the swatch glyph in its color token and its words."}
+        },
+        "glyphs": ["grid-dot", "rule", "swatch", "spark-levels"],
+        "note": "Braille cells (U+2800 to U+28FF) are made from dots at run time, not listed in glyphs.json; in ASCII each plotted cell is an asterisk. A cell draws one color, so where two series cross the later one's ink wins."
+    },
     "states": {
         "rest": {"means": "The series over the times, the threshold lines across, the legend under the chart."},
         "stacked": {
@@ -172,6 +197,15 @@
         "threshold.range": "{from} to {to}",
         "threshold.atLeast": "{value} and up",
         "threshold.noData": "No data"
+    },
+    "messages": {
+        "category": null,
+        "series": null,
+        "value": null,
+        "threshold.below": {"id": "thresholdLegend.below", "en": "Below '{'value'}'"},
+        "threshold.range": {"id": "thresholdLegend.range", "en": "'{'from'}' to '{'to'}'"},
+        "threshold.atLeast": {"id": "thresholdLegend.atLeast", "en": "'{'value'}' and up"},
+        "threshold.noData": {"id": "thresholdLegend.noData", "en": "No data"}
     },
     "samples": {
         "threshold.below": [{"with": {"value": "30s"}, "says": "Below 30s"}],

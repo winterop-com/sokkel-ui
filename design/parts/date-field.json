@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "8567f05"},
-        "sokkel-egui": {"state": "partial", "as_of": "b7e1763"},
-        "sokkel-tui": {"state": "missing", "as_of": "933b2da"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "A date typed in one format, with a calendar beside it to pick from. The value is a day with no time and no zone, YYYY-MM-DD, whatever format the field is written in. What is typed is read by that format alone (a pasted ISO date always reads) and written in it again once the field is left; text that is not a date keeps the value as it was and is said by the field's issue mark once the field is left. A date outside min and max is kept and said at once, with an action that puts in the bound, and the calendar offers none. An optional field that holds a date empties with a clear button. The field's label, help and issue mark are parts/text-field's: a form never changes height (principle 12).",
     "sources": {
@@ -290,6 +290,20 @@
         "pick": "Choose a date",
         "clear": "Clear"
     },
+    "messages": {
+        "required": {"id": "field.required", "en": "required"},
+        "issueCritical": {"id": "issue.issueCritical", "en": "Error: "},
+        "issueWarning": {"id": "issue.issueWarning", "en": "Warning: "},
+        "errors": {"id": "issueCount.errors", "en": "{count, plural, one {# error} other {# errors}}"},
+        "warnings": {"id": "issueCount.warnings", "en": "{count, plural, one {# warning} other {# warnings}}"},
+        "unreadable": {"id": "dateField.unreadable", "en": "Enter a date"},
+        "example": {"id": "dateField.example", "en": "As in {sample}."},
+        "under": {"id": "dateField.under", "en": "Enter {min} or later"},
+        "over": {"id": "dateField.over", "en": "Enter {max} or earlier"},
+        "use": {"id": "dateField.use", "en": "Use {bound}"},
+        "pick": {"id": "dateField.pick", "en": "Choose a date"},
+        "clear": {"id": "dateField.clear", "en": "Clear"}
+    },
     "samples": {
         "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 3}, "says": "3 errors"}],
         "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 3}, "says": "3 warnings"}],
@@ -321,19 +335,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of b7e1763, DateField draws the date-only form: YYYY-MM-DD typed or picked from a calendar. Not yet: other formats, min and max with their issue and its action, the clear button, today and weekStartsOn, Alt+ArrowDown, and the issue mark."
-        },
-        {
-            "renderer": "sokkel-egui",
-            "what": "where a problem is said",
-            "spec": "parts/text-field's issue mark at the control's end; nothing under the field (principle 12).",
-            "today": "The error is a line under the field, so the form changes height."
-        },
-        {
-            "renderer": "sokkel-egui",
-            "what": "control height",
-            "spec": "density.control: 32 at regular, 28 at compact.",
-            "today": "33 at regular since egui 0.37 (b7e1763): the text input's own height."
+            "today": "As of d163191, DateField draws the date-only form (YYYY-MM-DD typed or picked from a calendar) through Field: the required mark, the description, the help and the issue mark at the control's end. Not yet: other formats, min and max with their issue and its action, the clear button, today and weekStartsOn, and Alt+ArrowDown."
         }
     ]
 }

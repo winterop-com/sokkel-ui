@@ -1,0 +1,196 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "problem",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "Problem built before this spec, not yet compared against it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No problem yet."}
+    },
+    "summary": "Something that went wrong, said for a person in a box of its own in the content: what happened in one sentence after the tone's mark, then where and what a right value looks like, with machine words marked by backticks drawn in the code face. The raw message a program produced (a validator's, a stack trace) is folded away under Technical details, for whoever needs it, and the app's actions follow. An error or a warning, on the tone's faint wash with a rule in the tone at its start.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/Problem.tsx",
+            "packages/core/src/components/ProseText.tsx",
+            "packages/core/src/components/Unfoldable.tsx"
+        ]
+    },
+    "anatomy": {
+        "box": "The box: a column on the tone's faint wash, a 2px rule in the tone at its start, its end corners rounded by radius-control. Announced as an alert for an error, politely (a status) for a warning.",
+        "head": "The first row: the mark, then the title.",
+        "mark": "A circled alert for an error, a triangle for a warning, 16 square, in the tone; layout.markTop down, level with the title's first line.",
+        "title": "What happened, in one sentence (title), in the ink of what it stands on.",
+        "detail": "With detail: where and how to fix it, under the title and lined up with it (layout.indent), in the quiet ink; a string's backticked parts are drawn as code.",
+        "code": "A backticked part of a written detail: in the code face on a muted chip.",
+        "technical": "With technical: an unfoldable row headed words.technical, shut at first, layout.technicalIndent in, its chevron turning as it opens.",
+        "technicalText": "While the technical details are open: the raw message as written, in the code face on a muted ground, its whitespace kept and long words broken anywhere.",
+        "actions": "With actions: the app's controls (most often parts/button at sm, outline), lined up with the title, 8 apart, wrapping."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["card", "popover"]},
+    "options": {
+        "title": {"type": "node", "does": "What happened, in one sentence."},
+        "detail": {
+            "type": "node",
+            "does": "Where and how to fix it; written as text, its backticked parts are in the code face."
+        },
+        "technical": {
+            "type": "text",
+            "does": "The raw message a program produced, shown as written under the technical details, shut until the reader opens it."
+        },
+        "actions": {"type": "node", "does": "Controls under the words, such as Retry."},
+        "tone": {
+            "values": ["error", "warning"],
+            "default": "error",
+            "does": "error: it failed, said in the critical tone and announced as an alert. warning: it went through with something held back, said in the warning tone and announced politely."
+        }
+    },
+    "sizes": {
+        "box": {
+            "padX": 12,
+            "padY": 10,
+            "gap": 6,
+            "radius": "radius-control",
+            "note": "The end corners only; the start is the rule, layout.ruleWidth wide. 6 between the head, the detail, the technical details and the actions."
+        },
+        "head": {"gap": 8, "note": "The mark, then the title, set at the top."},
+        "mark": {"icon": 16},
+        "actions": {"gap": 8, "note": "layout.actionsTop more above them."}
+    },
+    "layout": {
+        "ruleWidth": {"value": 2, "note": "The rule at the box's start, in the tone."},
+        "markTop": {"value": 2, "note": "The mark's top below the title's, level with its first line."},
+        "indent": {
+            "value": 24,
+            "note": "The detail's and the actions' start: the mark's 16 and the head's 8, so they line up with the title."
+        },
+        "technicalIndent": {
+            "value": 20,
+            "note": "The technical details' start; their chevron then their heading, the raw message under the heading."
+        },
+        "actionsTop": {"value": 4, "note": "More room above the actions than between the other lines."}
+    },
+    "cells": {
+        "padX": 1,
+        "padY": 0,
+        "gap": 0,
+        "width": "The width it is given; its lines wrap to it.",
+        "density": "Nothing changes: the box has no blank rows inside at either, and the blank row before the actions stays at both.",
+        "pieces": {
+            "box": {
+                "note": "Each row on the tone's flat ground, rule-start in the tone's flat rule color in its first column, then 1 column of padding; no box glyphs, as the web draws no edge but the rule."
+            },
+            "mark": {"width": "1 column and a gap of 1 before the title, on its first line."},
+            "title": {"note": "Bold, as text.action is; it wraps under its own start."},
+            "detail": {"padX": 2, "note": "2 columns in, under the title's start; it wraps there."},
+            "technical": {
+                "rows": 1,
+                "padX": 2,
+                "note": "One row, 2 columns in: chevron-right (chevron-down while open), a gap of 1, then words.technical. While open, the raw message under it, 2 columns further in, on the muted flat ground, its own line breaks kept and long lines wrapped anywhere."
+            },
+            "actions": {
+                "rows": 1,
+                "padX": 2,
+                "gap": 1,
+                "note": "parts/button, one row each, after one blank row, 2 columns in, 1 column apart."
+            }
+        },
+        "glyphs": [
+            "rule-start",
+            "circle-alert",
+            "triangle-alert",
+            "chevron-right",
+            "chevron-down",
+            "edge-start",
+            "edge-end",
+            "focus-ring-start",
+            "focus-ring-end"
+        ]
+    },
+    "states": {
+        "rest": {"means": "An error: the critical tone, announced as an alert.", "reached": "tone error (the default)"},
+        "warning": {
+            "means": "A warning: the warning tone and its triangle, announced politely.",
+            "reached": "tone warning"
+        }
+    },
+    "pieces": {
+        "box": {
+            "rest": {
+                "ground": "critical/6",
+                "rule": "critical",
+                "radius": "radius-control",
+                "text": "text.body",
+                "note": "The rule at the start only, the end corners only rounded."
+            },
+            "warning": {"ground": "warning/6", "rule": "warning"}
+        },
+        "mark": {"rest": {"ink": "critical"}, "warning": {"ink": "warning"}},
+        "title": {"rest": {"text": "text.action", "note": "The ink of what it stands on."}},
+        "detail": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
+        "code": {"rest": {"ground": "muted", "radius": "radius-sm", "note": "In the code face, padded 4 across."}},
+        "technical": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.help",
+                "note": "The heading's words; the row washes under the pointer and takes the focus ring inside it, as an unfoldable row does."
+            }
+        },
+        "technicalText": {
+            "rest": {
+                "ground": "muted",
+                "ink": "muted-foreground",
+                "radius": "radius-sm",
+                "text": "text.help",
+                "note": "Drawn while open, in the code face, padded 8 across and 6 down."
+            }
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the technical details' row, then each action.",
+            "when": "with technical or actions"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Opens or shuts the technical details.",
+            "when": "the technical details' row has focus"
+        }
+    ],
+    "words": {"technical": "Technical details"},
+    "messages": {"technical": {"id": "problem.technical", "en": "Technical details"}},
+    "appText": {
+        "title": "What happened, in one sentence.",
+        "detail": "Where and what a right value looks like.",
+        "technical": "The raw message, as the program wrote it.",
+        "actions": "The app's own controls, with their words."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "role=alert for an error, role=status for a warning.",
+            "A string detail is drawn by ProseText, its backticked parts as code.",
+            "The technical details are an Unfoldable: a native button with aria-expanded, shut at first, the raw message in a pre.",
+            "ProblemLine, which Problem also exports, says a problem in one line with no box; it is not this part."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared",
+            "spec": "This spec.",
+            "today": "As of 1a87987, Problem was built before this spec and has not been compared against it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 64f4b19 there is no problem."
+        }
+    ]
+}

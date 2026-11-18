@@ -9,8 +9,12 @@
             "as_of": "97f92d8",
             "note": "The busy state is proposed: TextField has none yet (QuickAdd and the inline edit draw it)."
         },
-        "sokkel-egui": {"state": "partial", "as_of": "b7e1763"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {
+            "state": "built",
+            "as_of": "64f4b19",
+            "note": "The frame, the issue mark and its popover, multiline, inRow, busy and read only; masked as parts/secret-field reads it."
+        }
     },
     "summary": "A labeled text input: the field frame every field shares (label, hint, description, control, help, fallback, the issue mark) around a one-line input or a growing text area. A problem is said by a mark at the control's end, so a form never changes height.",
     "sources": {
@@ -287,6 +291,13 @@
         "errors": {"one": "{count} error", "other": "{count} errors"},
         "warnings": {"one": "{count} warning", "other": "{count} warnings"}
     },
+    "messages": {
+        "required": {"id": "field.required", "en": "required"},
+        "issueCritical": {"id": "issue.issueCritical", "en": "Error: "},
+        "issueWarning": {"id": "issue.issueWarning", "en": "Warning: "},
+        "errors": {"id": "issueCount.errors", "en": "{count, plural, one {# error} other {# errors}}"},
+        "warnings": {"id": "issueCount.warnings", "en": "{count, plural, one {# warning} other {# warnings}}"}
+    },
     "samples": {
         "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1200 errors"}],
         "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1200 warnings"}]
@@ -314,30 +325,12 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "where an error is said",
-            "spec": "An issue mark at the control's end with a popover; nothing is inserted under the field.",
-            "today": "The error is a line under the field in critical-ink, in place of the help, so the form changes height."
-        },
         {"renderer": "sokkel-egui", "what": "width", "spec": "Fills the room it is given.", "today": "280 unless set."},
         {
             "renderer": "sokkel-egui",
             "what": "missing",
-            "spec": "hint, keyHint, description, fallback, required marks, warning tone, issue actions, multiline, mono, numeric, readOnly, phone sizes.",
-            "today": "Not built."
-        },
-        {
-            "renderer": "sokkel-tui",
-            "what": "not built yet",
-            "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no multiline, inRow or busy."
-        },
-        {
-            "renderer": "sokkel-egui",
-            "what": "control height",
-            "spec": "density.control: 32 at regular, 28 at compact.",
-            "today": "As of b7e1763 (egui 0.37), a text input is 33 tall at regular."
+            "spec": "keyHint, fallback, the warning tone, issue actions, multiline, mono, numeric, readOnly, phone sizes.",
+            "today": "Not built. Since d163191 the field draws through Field: the required mark, the hint, the description, the help and the issue mark at the control's end, fields lined up across a Columns row; inputs are 32 tall with their edge since 68c156c."
         }
     ]
 }

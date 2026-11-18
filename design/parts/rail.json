@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
     },
     "summary": "The app's places down the window's start: a head with the mark and the name, groups of entries, and a foot cell for the account. Expanded, collapsed to its icons, or a strip of labeled icons; its end edge resizes it, and pulled outward expands a collapsed rail.",
     "sources": {
@@ -499,6 +499,13 @@
         "unread": "Unread",
         "places": "All places"
     },
+    "messages": {
+        "collapse": {"id": "rail.collapse", "en": "Collapse the navigation"},
+        "expand": {"id": "rail.expand", "en": "Expand the navigation"},
+        "resize": {"id": "rail.resize", "en": "Resize the navigation"},
+        "unread": {"id": "rail.unread", "en": "Unread"},
+        "places": {"id": "rail.places", "en": "All places"}
+    },
     "appText": {
         "name": "The app's name beside its mark; the name of each group without a title.",
         "places": "Every group's title, every entry's label and description, and the keywords the palette finds a place by.",
@@ -567,7 +574,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no parents or flyouts, descriptions, strip, body, resize or reorder."
+            "today": "As of 64f4b19, drawn from the spec in cells, with parents and their flyouts, descriptions, status dots, the strip and resizing by the edge. Not yet: the body and reordering."
         }
     ]
 }

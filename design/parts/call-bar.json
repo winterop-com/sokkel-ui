@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "The controls of a video or audio call, as a round bar floating over the call's picture (placement floating) or a strip docked across its foot (docked): the microphone and the camera, each a toggle with a chevron beside it opening the app's lists of devices with the chosen one checked; sharing the screen; reactions, a toggle that stands the reaction bar (parts/reaction-bar) over the bar; raising a hand; more, the app's own rows; and Leave. A muted microphone and a camera turned off are drawn in the critical tone; sharing, a raised hand and open reactions are drawn pressed. Each control is offered only when its handler is given, and one of the bar's menus is open at a time. Every control is round, and a finger square below md. The bar measures its own room: under 576 the share and hand buttons move into more, and under 416 the device lists follow as submenus there, so the bar never widens the page.",
     "sources": {
@@ -274,6 +274,25 @@
         "shortcutMicrophone": "Mute or unmute",
         "shortcutCamera": "Turn the camera on or off"
     },
+    "messages": {
+        "label": {"id": "callBar.label", "en": "Call controls"},
+        "mute": {"id": "callBar.mute", "en": "Mute"},
+        "unmute": {"id": "callBar.unmute", "en": "Unmute"},
+        "microphoneDevices": {"id": "callBar.microphoneDevices", "en": "Microphone settings"},
+        "cameraOff": {"id": "callBar.cameraOff", "en": "Turn off camera"},
+        "cameraOn": {"id": "callBar.cameraOn", "en": "Turn on camera"},
+        "cameraDevices": {"id": "callBar.cameraDevices", "en": "Camera settings"},
+        "microphone": {"id": "callBar.microphone", "en": "Microphone"},
+        "camera": {"id": "callBar.camera", "en": "Camera"},
+        "share": {"id": "callBar.share", "en": "Share screen"},
+        "reactions": {"id": "callBar.reactions", "en": "Reactions"},
+        "raiseHand": {"id": "callBar.raiseHand", "en": "Raise hand"},
+        "more": {"id": "callBar.more", "en": "More options"},
+        "leave": {"id": "callBar.leave", "en": "Leave"},
+        "shortcutGroup": {"id": "callBar.shortcutGroup", "en": "Call"},
+        "shortcutMicrophone": {"id": "callBar.shortcutMicrophone", "en": "Mute or unmute"},
+        "shortcutCamera": {"id": "callBar.shortcutCamera", "en": "Turn the camera on or off"}
+    },
     "appText": {
         "microphones": "Each device list's heading (Microphone, Speaker) and each device's label.",
         "cameras": "Each device list's heading and each device's label.",
@@ -292,7 +311,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 9038006 there is no call bar."
+            "today": "As of 1a87987 there is no call bar."
         }
     ]
 }

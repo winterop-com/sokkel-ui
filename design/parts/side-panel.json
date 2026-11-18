@@ -1,0 +1,269 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "side-panel",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "SidePanel and the Shell's panel, PanelSection and GroupLabel built before this spec, not yet compared with it."
+        },
+        "sokkel-tui": {
+            "state": "partial",
+            "as_of": "64f4b19",
+            "note": "Shell::panel at the content's end on the sidebar ground behind an edge, and DetailPane with PaneSection for it; its head, resize edge and words not reported."
+        }
+    },
+    "summary": "The panel beside a page at the window's end, as the shell's panel region holds it: a head as tall as the top bar with the panel's tabs (or its title when it has one tab), the shown tab's content scrolling under it, and a start edge that drags to resize it. PanelSection is the titled section inside it: a quiet uppercase heading with optional actions at its line's end, over its content, a rule under each section but the last.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/SidePanel.tsx (SidePanel, SidePanelProps, SidePanelTab, SIDE_PANEL_WORDS; PanelSection, PanelSectionProps)",
+            "packages/core/src/components/Shell.tsx (panel, panelOpen, onPanelOpenChange, panelStrip)",
+            "packages/core/src/components/panel-strip.tsx (PanelTabStrip, the tabs on a phone)",
+            "packages/core/src/components/ResizeHandle.tsx (the edge)",
+            "packages/core/src/hooks/use-panel-size.ts (the width held)",
+            "packages/core/src/components/GroupLabel.tsx (the section's heading)",
+            "src/stories/patterns/SidePanel.stories.tsx (Patterns/Side panel: Tabs, One tab, Sole tab)",
+            "src/stories/fixtures/runPanel.tsx (a run's Details, Log and Outputs)"
+        ]
+    },
+    "anatomy": {
+        "panel": "The panel's column (an aside): the full height it is given, on the sidebar's ground, a 1px edge in border-strong at its start, as wide as it holds (defaultSize 352, or width; held between minSize and maxSize). In the shell's sheet it takes the sheet's width and draws no start edge.",
+        "edge": "The resize edge along the panel's start (ResizeHandle): an 8 wide hit area straddling the edge, in which a 2 wide line in the accent is drawn while it is hovered, focused or dragged, and nothing otherwise. A double click puts back the default width. Not drawn in the shell's sheet, nor with resizable false.",
+        "head": "The bar over the content, as tall as the shell's top bar (spacing-shell-top) and level with it, a rule in border-strong under it: the tabs, or the title. Its end keeps 48 of room for the shell's panel toggle (patterns/shell, panelToggle), which stands in its corner while the panel is a column and open; in the sheet it keeps 8. In a desktop window with its title bar hidden the head drags the window.",
+        "title": "With one tab and soleTab title, or in the shell's sheet: an h2 naming the panel by the shown tab's label, cut short on one line. The panel is labelled by it.",
+        "tabs": "With more than one tab, or soleTab tab: a tablist of the tabs, 4 apart; the content is their tabpanel, labelled by the shown tab.",
+        "tab": "One tab: a 28 tall button with the tab's label, rounded radius-md; the shown one on the secondary ground at weight 500.",
+        "content": "The shown tab's content, filling the rest of the panel's height and scrolling within it.",
+        "section": "PanelSection, the titled section a panel's tab holds (DetailPane and BoardItemPanel draw theirs with it): padded 16 across and 12 down and up, its pieces 8 apart, a 1px rule in border under it, none under the last. It is a piece of the panel here rather than a part of its own: it has no frame, words or keys of its own, and parts/detail-pane builds on it.",
+        "heading": "The section's title: an h3 in the small group heading's look every group shares (GroupLabel): text.xs at 500, uppercase, tracked wide, in faint.",
+        "headingRow": "With the section's actions: the heading and the actions on one row at least 28 tall, the actions at its end, 4 apart.",
+        "sectionActions": "Small controls at the end of the heading's line that act on the whole section, such as Clear."
+    },
+    "standsOn": {"default": "sidebar"},
+    "options": {
+        "tabs": {
+            "type": "rows",
+            "does": "The tabs, in order: { id, label, icon?, content }; the icon is drawn over the label in the shell's tab strip on a phone (patterns/shell, panelStrip)."
+        },
+        "active": {
+            "type": "text",
+            "does": "The shown tab, held from outside with onActiveChange; left to itself the panel holds it, starting at defaultActive or the first tab."
+        },
+        "defaultActive": {"type": "text", "does": "The tab shown at the start when active is not given."},
+        "soleTab": {
+            "values": ["title", "tab"],
+            "default": "title",
+            "does": "How a panel with one tab heads it: title, a heading naming the panel; tab, a tablist of one, for a panel whose tabs come and go, so its head does not change shape with them."
+        },
+        "resizable": {"type": "boolean", "default": true, "does": "Whether the start edge drags to resize the panel."},
+        "defaultSize": {
+            "type": "number",
+            "default": 352,
+            "does": "The width in px the panel starts at and a double click on the edge (or Enter on it) returns to; 352 unless width is given."
+        },
+        "width": {
+            "type": "length",
+            "does": "A CSS width the panel starts at and returns to, when defaultSize is not given."
+        },
+        "size": {
+            "type": "number",
+            "does": "The width in px, held from outside with onSizeChange; held without a handler, the edge cannot change it."
+        },
+        "minSize": {"type": "number", "default": 280, "does": "The narrowest the edge drags the panel to."},
+        "maxSize": {"type": "number", "default": 640, "does": "The widest the edge drags the panel to."},
+        "sectionTitle": {"type": "text", "does": "PanelSection's title."},
+        "sectionActions": {"type": "node", "does": "PanelSection's actions at the end of its heading's line."}
+    },
+    "sizes": {
+        "head": {
+            "height": "spacing-shell-top",
+            "gap": 4,
+            "note": "Exactly the top bar's height. Its padding is layout.headStart at the start and layout.headEnd (layout.headEndSheet in the sheet) at the end."
+        },
+        "title": {"padX": 6},
+        "tabs": {"gap": 4},
+        "tab": {"height": 28, "padX": 10},
+        "edge": {
+            "width": 8,
+            "note": "The hit area, straddling the panel's start edge; the line drawn in it is layout.edgeLine wide."
+        },
+        "section": {"padX": 16, "padY": 12, "gap": 8},
+        "headingRow": {"height": 28, "gap": 8, "note": "At least this tall, only with the section's actions."},
+        "sectionActions": {"gap": 4}
+    },
+    "layout": {
+        "defaultSize": {
+            "value": 352,
+            "note": "The width the panel starts at unless width or defaultSize says otherwise."
+        },
+        "minSize": {"value": 280, "note": "The narrowest the edge drags it to, unless minSize says otherwise."},
+        "maxSize": {"value": 640, "note": "The widest the edge drags it to, unless maxSize says otherwise."},
+        "resizeStep": {"value": 16, "note": "How far an arrow on the edge moves it."},
+        "edgeLine": {"value": 2, "note": "The line drawn in the edge's hit area while hovered, focused or dragged."},
+        "headStart": {"value": 8, "note": "The head's padding at its start."},
+        "headEnd": {"value": 48, "note": "The head's padding at its end, room for the shell's panel toggle."},
+        "headEndSheet": {
+            "value": 8,
+            "note": "The head's padding at its end in the shell's sheet, where the toggle does not stand."
+        },
+        "roomy": {
+            "value": 1280,
+            "note": "In a Shell, from breakpoint-lg up to this window width the rail narrows to its icons while the panel is open as a column, unless the app or a screen asks for a rail mode."
+        },
+        "columnEase": {
+            "value": "motion-base",
+            "note": "The shell's column eases between none and the panel's width over this as it opens and closes."
+        }
+    },
+    "breakpoints": {
+        "sheet": {
+            "width": "below breakpoint-lg",
+            "formFactors": ["phone 360, 390, 430", "foldable 344, 690", "tablet 768"],
+            "does": [
+                "In a Shell, the panel is a sheet from the window's end over the content (patterns/shell, panel and panelSheetGap): full width up to 48 short of the window, on the scrim, closed at the start; a press outside it or Escape closes it.",
+                "The panel takes the sheet's width and draws neither its start edge nor its resize edge; its head keeps 8 at its end and names the shown tab.",
+                "With the shell's panelStrip, below breakpoint-md the tabs stand in the strip at the screen's foot instead (patterns/shell), and the sheet rises from it."
+            ]
+        },
+        "column": {
+            "width": "from breakpoint-lg",
+            "formFactors": ["tablet 1024", "desktop 1280, 1440, 1920"],
+            "does": [
+                "In a Shell, the panel is the content's end column, its head level with the top bar, open at the start; the shell's toggle stands in the head's end corner while it is open."
+            ]
+        }
+    },
+    "states": {
+        "rest": {"means": "The panel shown: its head, then the shown tab's content."},
+        "hover": {"means": "The pointer over a tab that is not shown, or over the edge.", "reached": "pointer over"},
+        "focus": {
+            "means": "Keyboard focus on a tab or on the edge.",
+            "reached": "Tab, the arrows between the tabs",
+            "on": "keyboard",
+            "sokkel-ui": "focus-visible: a tab wears the button's own focus look, a 2px ring outline 2 off; the edge shows its line."
+        },
+        "selected": {
+            "means": "The shown tab.",
+            "reached": "a press on a tab, Enter or Space on it, active, defaultActive"
+        },
+        "dragging": {"means": "The edge is being dragged.", "reached": "pointer down on the edge"},
+        "titled": {
+            "means": "One tab with soleTab title: a heading names the panel in the tabs' place, and the content is not a tabpanel.",
+            "reached": "one tab, soleTab title"
+        },
+        "sheet": {
+            "means": "In the shell's sheet below breakpoint-lg: the sheet's width, no start edge and no resize edge, the head's end padded 8 and naming the shown tab.",
+            "reached": "a Shell below breakpoint-lg"
+        }
+    },
+    "pieces": {
+        "panel": {
+            "rest": {"ground": "sidebar", "edge": "border-strong", "note": "The edge 1 wide at its start only."},
+            "sheet": {"note": "No start edge: the sheet's own shadow and the scrim set it apart."}
+        },
+        "head": {"rest": {"rule": "border-strong", "note": "1 wide under the bar."}},
+        "title": {
+            "rest": {
+                "ink": "foreground",
+                "text": "text.sm",
+                "weight": 500,
+                "note": "The panel sets no ink of its own: the shell's foreground, which the shell's frame sets around it."
+            }
+        },
+        "tab": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-md", "text": "text.sm"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "selected": {"ground": "secondary", "ink": "foreground", "weight": 500},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        },
+        "edge": {
+            "rest": {"ground": "primary", "opacity": 0, "note": "A 2 wide line centered on the panel's start edge."},
+            "hover": {"opacity": 1},
+            "focus": {"opacity": 1},
+            "dragging": {"opacity": 1}
+        },
+        "section": {"rest": {"rule": "border", "note": "1 wide under each section but the last."}},
+        "heading": {"rest": {"ink": "faint", "text": "text.xs", "weight": 500, "note": "Uppercase, tracking wide."}}
+    },
+    "keyboard": [
+        {
+            "keys": ["ArrowLeft", "ArrowRight", "Home", "End"],
+            "does": "Moves focus to the tab before or after, wrapping, or to the first or the last, without showing it.",
+            "when": "a tab has focus"
+        },
+        {"keys": ["Enter", "Space"], "does": "Shows the focused tab.", "when": "a tab has focus"},
+        {
+            "keys": ["ArrowLeft", "ArrowRight", "Home", "End", "Enter"],
+            "does": "On the edge: 16 wider (ArrowLeft) or narrower (ArrowRight) a press, the narrowest or the widest, and Enter (or a double click) puts back defaultSize.",
+            "when": "the edge has focus"
+        }
+    ],
+    "words": {"resize": "Resize the side panel"},
+    "messages": {"resize": {"id": "sidePanel.resize", "en": "Resize the side panel"}},
+    "appText": {
+        "tabs": "Each tab's label and its content.",
+        "sections": "Each PanelSection's title, its actions and its content."
+    },
+    "cells": {
+        "width": "As wide as it holds: 352 px by the rule (42 columns), held between 280 and 640 (33 and 76). A column at the content's end from lg (120 columns, index.json cells.breakpoints); below lg it is drawn over the page from the window's end, the window's width less 6 columns at most (the 48 px the shell's sheet stops short).",
+        "density": "The head is one row at both levels. A section's blank row at its top and bottom is there at regular and gone at compact; its side padding stays 2 columns.",
+        "pieces": {
+            "panel": {
+                "note": "On sidebar, behind its edge: a column of the box glyphs' down in border-strong at its start. Over the page below lg it keeps that column as its edge, since a cell grid draws no shadow, and the page under it is flattened under the scrim (principle 20)."
+            },
+            "edge": {
+                "note": "The panel's edge column is the resize edge: drawn in primary while it has focus or is dragged (or hovered, where a pointer reaches it). Not a resize edge over the page below lg."
+            },
+            "head": {
+                "rows": 1,
+                "padX": 1,
+                "gap": 1,
+                "note": "One row whatever spacing-shell-top is, then its rule, a row of the box glyphs' across in border-strong meeting the edge in a tee. Its end keeps 6 columns for the shell's panel toggle (48 px), 1 over the page below lg."
+            },
+            "title": {"rows": 1, "padX": 1, "note": "In foreground, cut short with an ellipsis."},
+            "tab": {
+                "rows": 1,
+                "padX": 1,
+                "gap": 1,
+                "note": "The label in muted-foreground; the shown tab on secondary in foreground. Keyboard focus is focus-ring-start and focus-ring-end in ring in the gap column beside each end."
+            },
+            "section": {
+                "padX": 2,
+                "padY": {"regular": 1, "compact": 0},
+                "note": "A rule row in border under each section but the last."
+            },
+            "heading": {
+                "rows": 1,
+                "gap": 1,
+                "note": "PanelSection's title, one row in faint, uppercase; the section's actions at the row's end, 1 column apart."
+            }
+        },
+        "glyphs": ["box", "rule", "ellipsis", "focus-ring-start", "focus-ring-end"]
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The tabs are Base UI's Tabs: a tablist with roving focus, activateOnFocus off and loopFocus on, the content their tabpanel labelled by the shown tab.",
+            "In a Shell with panelStrip, the panel hands its tabs up to the shell's strip (ShellPanelStrip) and on a phone draws its content as the tabpanel of the strip's tab.",
+            "The width is the aside's style, held by usePanelSize; the edge is ResizeHandle with grows -1, marked so that inside an element marked data-overlay (the shell's sheet) it is not drawn.",
+            "In a desktop window with its title bar hidden, the head is marked data-window-drag, so a press on it drags the window.",
+            "className lays the panel out in its container."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not yet compared",
+            "spec": "This spec.",
+            "today": "As of 1a87987 SidePanel and the Shell's panel, PanelSection and GroupLabel are built, from before this spec; not yet compared with it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "head, resize and words",
+            "spec": "This spec: the head with its tabs or title, the resize edge and its keys, the words.",
+            "today": "As of 64f4b19 a side panel (Shell::panel) at the content's end on the sidebar ground behind an edge, covering the page below md (90 columns) where this spec covers it below lg (120 columns), and the detail pane for it (DetailPane, PaneSection). Its head, close, resize and words are not reported."
+        }
+    ]
+}

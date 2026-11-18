@@ -5,12 +5,18 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
     },
     "summary": "The frame every sokkel app has, on every target: the rail of places on the left, a thin top bar with the trail, search and palette, the page with its header as the one thing that scrolls, the settings dialog on its own route over the page, the status foot, and the states a page's read lands in.",
     "sources": {
-        "sokkel-ui": ["packages/core/src/components/Shell.tsx", "packages/core/src/hooks/use-overlay-route.ts"],
+        "sokkel-ui": [
+            "packages/core/src/components/Shell.tsx",
+            "packages/core/src/hooks/use-overlay-route.ts",
+            "packages/core/src/components/AccountMenu.tsx (onAppearance)",
+            "packages/core/src/components/ThemePicker.tsx (themeSettings)",
+            "packages/core/src/lib/commands.ts (appearanceCommands)"
+        ],
         "sokkel-egui": [
             "crates/core/src/widgets/frame.rs (Shell; Rail, TopBar and StatusLine have their own specs, as PageHeader and PageState in page.rs do)",
             "examples/storybook/src/stories/frame.rs (Patterns/Shell)"
@@ -26,11 +32,12 @@
         "pageHeader": "The page's head (parts/page-header): its title, what is known about it, and its actions. Held above the scroller with ShellHead. No trail: in the frame the page header states its trail for the top bar (trailInTop, its default there).",
         "page": "The page's content at the page inset, its sections (parts/section) a page gap apart.",
         "pageState": "What the page's read landed in, in the content's place: loading, failed, empty, or the content (parts/page-state).",
-        "panel": "An optional side panel: a right column, a sheet, or tabs in a strip at the foot.",
+        "panel": "An optional side panel (parts/side-panel): a column at the content's end from 1024, a sheet below it, or tabs in a strip at the foot. From 1024 up to 1280 the rail narrows to its icons while the panel is open, so the page keeps its room.",
         "panelToggle": "A side panel's toggle in the window's top-right corner: over the top bar's end while the panel is closed or a sheet, in the panel header's corner while it is a column and open.",
         "foot": "The status line (parts/status-line), one row of fixed height, level with the rail's foot cell so the account and the status read as one bar. It draws the strip itself; the shell gives it the room and draws no strip of its own.",
         "palette": "The command palette over the page on Mod+K (parts/command-palette): places, the screen's commands and the app's search.",
         "settings": "The settings dialog over the page it was opened from, on its own route (parts/settings-dialog).",
+        "appearance": "Light and dark (the scheme) are chosen in two places only: Settings › Appearance (with the theme and the density) and the command palette's appearance commands. The account menu's Appearance entry opens Settings at Appearance; it holds no scheme rows of its own. Never a scheme toggle in the top bar or in the account menu.",
         "dialog": "Every dialog over the page, the settings and shortcuts dialogs among them (parts/dialog).",
         "shortcuts": "The keyboard shortcuts dialog, on ?.",
         "drawer": "Below 768 the rail as a drawer from the top bar's menu button, drawn expanded, with the account."
@@ -158,7 +165,7 @@
         },
         "settingsOpen": {
             "means": "The settings dialog over the page, on #/settings.",
-            "reached": "an action the app gives it (a row in the account menu, a palette command) or a link to #/settings"
+            "reached": "an action the app gives it (a row in the account menu, a palette command) or a link to #/settings; the account menu's Appearance opens it at the Appearance section"
         },
         "paletteOpen": {"means": "The command palette over the page.", "reached": "Mod+K, the palette button"},
         "panelOpen": {
@@ -211,6 +218,15 @@
         "openPalette": "Open the command palette",
         "openShortcuts": "Show the keyboard shortcuts"
     },
+    "messages": {
+        "menu": {"id": "shell.menu", "en": "Open the navigation"},
+        "close": {"id": "shell.close", "en": "Close the navigation"},
+        "showPanel": {"id": "shell.showPanel", "en": "Show the panel"},
+        "hidePanel": {"id": "shell.hidePanel", "en": "Hide the panel"},
+        "panelTabs": {"id": "shell.panelTabs", "en": "Panel"},
+        "openPalette": {"id": "shell.openPalette", "en": "Open the command palette"},
+        "openShortcuts": {"id": "shell.openShortcuts", "en": "Show the keyboard shortcuts"}
+    },
     "appText": {
         "places": "The app's places are the rail's groups (parts/rail); the palette repeats them.",
         "pageTitle": "Each page's title; the actions follow their context: on Runs the button is New, not New run.",
@@ -239,13 +255,13 @@
             "renderer": "sokkel-egui",
             "what": "still to build",
             "spec": "This spec.",
-            "today": "As of sokkel-egui 9038006: Shell lays out the Rail, the TopBar and the StatusLine (each with its own spec and drift) with the rail's foot cell level with the status line, PageHeader and PageState (each with its own spec and drift), Section, SettingsDialog with appearance settings and setting rows, Dialog, Select and the tooltip, DropdownMenu, CommandPalette on Mod+K, and the drawer on a phone; since egui 0.37 (24af75f) every widget names itself to a screen reader. Working apps run on it (examples/runs, examples/tasks), with settings over the page on Mod+comma and from the rail. Not yet: the panel and its toggle, the banner, and settings as a route: egui has no URL, so the dialog is open state the app holds. The page's scroll gutter is 11, where the spec proposes 10."
+            "today": "As of sokkel-egui 1a87987: Shell lays out the Rail, the TopBar and the StatusLine (each with its own spec and drift) with the rail's foot cell level with the status line, PageHeader and PageState (each with its own spec and drift), Section, SettingsDialog with appearance settings and setting rows, Dialog, Select and the tooltip, DropdownMenu, CommandPalette on Mod+K, the drawer on a phone, the side panel (Shell::panel with SidePanel, parts/side-panel) and the banner in its slot (parts/banner); the account menu offers Appearance and no scheme rows of its own (5a0158e). Every widget names itself to a screen reader. Working apps run on it, with settings over the page on Mod+comma and from the rail. Not yet: the panel's toggle in the corner, and settings as a route: egui has no URL, so the dialog is open state the app holds. The page's scroll gutter is 11, where the spec proposes 10."
         },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no panel."
+            "today": "As of 64f4b19, drawn from the spec in cells, with the side panel (Shell::panel) and the banner's slot. Not yet: what lies under the drawer flattened under its scrim (T2), and the panel's toggle as this spec draws it."
         }
     ]
 }

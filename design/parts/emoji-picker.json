@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "The full list of emoji to pick one from, in a box 320 wide and 384 tall on the popover's ground: a search over the emoji's English names and keywords with a skin tone button beside it, a grid of 8 to a row grouped by kind under headings that stay at the top as it scrolls, Recent first when there are recent emoji, and a tab per group along the foot that scrolls to its group and marks the one in view. The arrow keys move through the grid. A picked emoji goes to onPick in the chosen skin tone with its English name and joins the recent ones. The list loads the first time a picker is drawn, a spinner meanwhile, and keeps only the emoji the fonts draw. EmojiPickerPopover holds it in a popover opened from a trigger.",
     "sources": {
@@ -272,6 +272,34 @@
         "tabs": "Emoji groups",
         "label": "Emoji"
     },
+    "messages": {
+        "search": {"id": "emojiPicker.search", "en": "Search"},
+        "searchLabel": {"id": "emojiPicker.searchLabel", "en": "Search emoji"},
+        "groups.recent": {"id": "emojiPicker.groups.recent", "en": "Recent"},
+        "groups.smileys": {"id": "emojiPicker.groups.smileys", "en": "Smileys and emotion"},
+        "groups.people": {"id": "emojiPicker.groups.people", "en": "People and body"},
+        "groups.animals": {"id": "emojiPicker.groups.animals", "en": "Animals and nature"},
+        "groups.food": {"id": "emojiPicker.groups.food", "en": "Food and drink"},
+        "groups.activities": {"id": "emojiPicker.groups.activities", "en": "Activities"},
+        "groups.travel": {"id": "emojiPicker.groups.travel", "en": "Travel and places"},
+        "groups.objects": {"id": "emojiPicker.groups.objects", "en": "Objects"},
+        "groups.symbols": {"id": "emojiPicker.groups.symbols", "en": "Symbols"},
+        "groups.flags": {"id": "emojiPicker.groups.flags", "en": "Flags"},
+        "results": {"id": "emojiPicker.results", "en": "Search results"},
+        "empty": {"id": "emojiPicker.empty", "en": "No emoji found"},
+        "loading": {"id": "emojiPicker.loading", "en": "Loading emoji"},
+        "failed": {"id": "emojiPicker.failed", "en": "The emoji could not be loaded"},
+        "retry": {"id": "emojiPicker.retry", "en": "Try again"},
+        "skinTone": {"id": "emojiPicker.skinTone", "en": "Skin tone"},
+        "tones.default": {"id": "emojiPicker.tones.0", "en": "Default"},
+        "tones.light": {"id": "emojiPicker.tones.1", "en": "Light"},
+        "tones.mediumLight": {"id": "emojiPicker.tones.2", "en": "Medium-light"},
+        "tones.medium": {"id": "emojiPicker.tones.3", "en": "Medium"},
+        "tones.mediumDark": {"id": "emojiPicker.tones.4", "en": "Medium-dark"},
+        "tones.dark": {"id": "emojiPicker.tones.5", "en": "Dark"},
+        "tabs": {"id": "emojiPicker.tabs", "en": "Emoji groups"},
+        "label": {"id": "emojiPicker.label", "en": "Emoji"}
+    },
     "appText": {
         "names": "The emoji's English names and keywords come from the library's data set (emojibase), not from words."
     },
@@ -289,7 +317,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 9038006 there is no emoji picker."
+            "today": "As of 1a87987 there is no emoji picker."
         }
     ]
 }

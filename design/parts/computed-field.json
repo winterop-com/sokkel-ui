@@ -1,0 +1,144 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "computed-field",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "d163191",
+            "note": "ComputedField built before this spec, not yet compared."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
+    },
+    "summary": "An answer a form works out itself rather than asks: its label with a note that it is worked out, the value read only in the place an input would take, and under it why it is what it is, with the rule in the code face. Until the answers it reads are given it says so in the value's place. It takes no focus for typing, is out of the tab order, and is never counted as unanswered. The label and help are parts/text-field's; it has no issues.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ComputedField.tsx",
+            "packages/core/src/components/Field.tsx",
+            "packages/core/src/components/ui/input.tsx"
+        ],
+        "sokkel-egui": ["crates/core/src/widgets/form_fields.rs (ComputedField)"]
+    },
+    "anatomy": {
+        "field": "parts/text-field's frame around the control: the label, the description and the help; never a required mark or an issue mark.",
+        "hint": "words.computed beside the label, in parts/text-field's hint.",
+        "control": "parts/text-field's input, read only and out of the tab order, on muted: the value with its unit after a space, or words.pending as its placeholder while the value is none.",
+        "whyIcon": "A calculator before the why, 14 square, 6 before it, level with its first line.",
+        "why": "The help: why the answer is what it is, the rule in a sentence.",
+        "formula": "With formula: the rule as it is written (level - zero), a line of its own under the why, in the code face."
+    },
+    "standsOn": {"default": "background", "control": "background"},
+    "options": {
+        "value": {"type": "text", "does": "The answer as worked out, written as it is shown; null until it can be."},
+        "unit": {"type": "text", "does": "The unit after the value, such as m or °C."},
+        "why": {
+            "type": "node",
+            "does": "Required. Why the answer is what it is: the rule that works it out, in a sentence."
+        },
+        "formula": {"type": "text", "does": "The rule as it is written, in the code face under the why."},
+        "description": {"type": "node", "does": "Between the label and the value: what the question asks."},
+        "numeric": {
+            "type": "boolean",
+            "default": false,
+            "does": "The value in figures that line up (tabular), as a number is."
+        },
+        "words": {"type": "node", "does": "The words below."}
+    },
+    "sizes": {
+        "control": {
+            "height": "density.control",
+            "padX": 10,
+            "padY": 4,
+            "text": "text.body",
+            "textBelowMd": 16,
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "note": "parts/text-field's control: density.control, 32 regular, 28 compact."
+        },
+        "why": {"gap": 6, "icon": 14, "note": "The calculator and the why's lines, 6 apart."}
+    },
+    "states": {
+        "rest": {"means": "Holding the value worked out, with its unit."},
+        "pending": {
+            "means": "The answers it reads are not all given: words.pending in the value's place, as the placeholder.",
+            "reached": "value null"
+        },
+        "focus": {
+            "means": "A press on it or its label focuses it, though Tab passes it by: parts/text-field's focus, the ring edge and a 1px ring.",
+            "reached": "a press on the value or its label",
+            "on": "any",
+            "effect": {"piece": "control", "ring": {"color": "ring", "width": 1}}
+        }
+    },
+    "pieces": {
+        "hint": {"rest": {"ink": "faint", "text": "text.help"}},
+        "control": {
+            "rest": {
+                "ground": "muted",
+                "edge": "input",
+                "ink": "foreground",
+                "placeholder": "muted-foreground",
+                "radius": "radius-control",
+                "note": "The cursor stays the arrow: it is not typed in."
+            },
+            "focus": {"edge": "ring"}
+        },
+        "whyIcon": {"rest": {"ink": "muted-foreground"}},
+        "why": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "formula": {"rest": {"ink": "muted-foreground", "text": "text.xs", "note": "In the code face."}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Passes it by: the value is out of the tab order, since nothing is typed in it."}
+    ],
+    "words": {"pending": "Worked out once the answers it reads are given", "computed": "worked out"},
+    "messages": {
+        "pending": {"id": "computedField.pending", "en": "Worked out once the answers it reads are given"},
+        "computed": {"id": "computedField.computed", "en": "worked out"}
+    },
+    "appText": {
+        "label": "The field's label and description, as parts/text-field takes them.",
+        "why": "Required: why the answer is what it is.",
+        "formula": "Optional: the rule as written.",
+        "unit": "Optional: the value's unit."
+    },
+    "cells": {
+        "rows": 2,
+        "padX": 1,
+        "width": "The width its column gives it; else 280 px by the rule (33 columns), as parts/text-field.",
+        "density": "Nothing changes: the label, the control and the help are one row each, as parts/text-field.",
+        "pieces": {
+            "hint": {"note": "After the label and a gap of 1, in faint."},
+            "control": {
+                "rows": 1,
+                "padX": 1,
+                "note": "One row on muted's flat ground, edge-start and edge-end at its ends in the input edge's flat color; the value and its unit, or words.pending in muted-foreground. Never a Tab stop, so it draws no focus ring in cells."
+            },
+            "whyIcon": {"width": "1 column, the calculator icon, a gap of 1 after it, level with the why's first line."},
+            "why": {"note": "Under the control, wrapped to the field's width after the icon."},
+            "formula": {"rows": 1, "note": "A line of its own under the why, lined up with it."}
+        },
+        "glyphs": ["edge-start", "edge-end", "calculator"],
+        "note": "rows counts the label and the control; a description and the why with its formula add their own lines."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The value is a read-only input with tabIndex -1, described by the why and the description, so a screen reader reads why with it."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of d163191, ComputedField was built before this spec and has not been compared with it: worked out beside the label, the value with its unit read only, the calculator and the formula under it. It has no numeric option."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built",
+            "spec": "This spec.",
+            "today": "As of 64f4b19, no computed field."
+        }
+    ]
+}

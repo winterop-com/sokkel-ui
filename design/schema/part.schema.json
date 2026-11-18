@@ -96,6 +96,25 @@
             }
         },
         "words": {"type": "object", "additionalProperties": {"$ref": "#/$defs/words"}},
+        "messages": {
+            "description": "Each word's message id in sokkel-ui's catalogs (messages/en.json, resolved from the pinned commit), by the word's key: `id` is `<part>.<word>`, `en` the English as the catalog holds it, an ICU MessageFormat string, and `with` the values a word fixes where it is one form of a message that takes more (a select's other branch). null where the catalog holds no message for the word: a phrase that formats rather than says, which open-questions.md lists. Renderers key their strings by these ids and read the same catalogs, so one translation serves all three.",
+            "type": "object",
+            "additionalProperties": {
+                "oneOf": [
+                    {"type": "null"},
+                    {
+                        "type": "object",
+                        "required": ["id", "en"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "id": {"type": "string", "pattern": "^[a-z][A-Za-z0-9]*(\\.[A-Za-z0-9]+)+$"},
+                            "en": {"type": "string"},
+                            "with": {"type": "object"}
+                        }
+                    }
+                ]
+            }
+        },
         "samples": {
             "description": "What a word said as a function says for given values: each templated or counted word in `words` is sampled at zero, one and many where it counts, and with every value it interpolates, so a renderer that keeps its words as functions is checked by calling them.",
             "type": "object",

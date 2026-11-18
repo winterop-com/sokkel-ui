@@ -1,0 +1,320 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "repeated-group",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "d163191",
+            "note": "RepeatedGroup was built before this spec and has not been compared with it."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No repeated group yet."}
+    },
+    "summary": "A group of fields asked again for each of several things in a hand-composed form, such as a run's steps: a head with the group's name, its required mark, the issue mark for the group as a whole and Add at its end; a description under it; then each row in a box of its own, headed by its name (its place, counted from 1) with Move up, Move down and Remove at the end, over the row's fields. Add goes at max rows and Remove at min; Move needs more than one row, and Move up is shut on the first row and Move down on the last. readOnly takes away every button. Inside a drag scope (RepeatedDrag) each row of a group that moves gets a grip before its box that drags it and moves it with the arrow keys. What is wrong with the group as a whole is the issue mark beside its name (parts/text-field's), while each row's fields say their own.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/RepeatedGroup.tsx",
+            "packages/core/src/components/RepeatedDrag.tsx",
+            "packages/core/src/components/drag-parts.ts",
+            "packages/core/src/components/Sortable.tsx",
+            "packages/core/src/components/IssueMark.tsx",
+            "packages/core/src/components/IconButton.tsx",
+            "packages/core/src/components/ui/button.tsx"
+        ],
+        "sokkel-egui": ["crates/core/src/widgets/form_fields.rs (RepeatedGroup, RepeatedGroupWords)"]
+    },
+    "anatomy": {
+        "group": "The whole: a fieldset named by its title, the head, the description and the rows in a column, 8 apart.",
+        "head": "One row at least density.control-sm tall: the title, the required mark, the issue mark, then Add at the row's end, 8 apart.",
+        "title": "The group's name, cut short on one line; it takes the focus (tabindex -1) so a form's issue count can go to it.",
+        "requiredStar": "With required and requiredMark star: a star after the title, said as words.required to a screen reader.",
+        "requiredWord": "With required and requiredMark word: words.required after the title and outside it, small and quiet.",
+        "issueMark": "With an issue for the group as a whole (error, issues): parts/text-field's issue mark in a box control-sm square beside the title, opening the issues' messages.",
+        "add": "With onAdd, below max rows and not readOnly: parts/button's ghost at size sm, a plus then words.add, at the head's end.",
+        "description": "Under the head, 4 under it: what the group asks for, small and quiet.",
+        "row": "One answer: a box with a 1px border edge and corners radius-surface, no ground of its own, padded 12, its row head and its fields in a column 12 apart.",
+        "rowHead": "The row's name, then at its end Move up, Move down and Remove, 4 apart; pulled up and down 4 into the box's padding.",
+        "itemName": "The row's name, words.item of its place: small, medium and quiet.",
+        "moveUp": "With onMove, more than one row and not readOnly: an icon button (parts/button's ghost at size icon, in muted-foreground) with an up arrow, named words.moveUp, a colon and the row's name; shut on the first row.",
+        "moveDown": "As moveUp with a down arrow and words.moveDown; shut on the last row.",
+        "remove": "With onRemove, more rows than min and not readOnly: parts/button's ghost at size sm in muted-foreground, an x then words.remove, named words.remove and the row's name.",
+        "fields": "The row's own fields, as the app draws them for the row's key and place; they say their own issues.",
+        "grip": "Inside a RepeatedDrag, with onMove and more than one row: the drag grip before the row's box, 12 down from its top, 4 before the box, named by the row's name. Outside one, no grip and no drag engine."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["card", "popover"]},
+    "options": {
+        "label": {"type": "node", "does": "The group's name, the title over its rows."},
+        "description": {"type": "node", "does": "What the group asks for, under its name."},
+        "id": {
+            "type": "text",
+            "does": "The title's id, which takes the focus, for a form's issue count to go to it; its own when not given."
+        },
+        "required": {
+            "type": "boolean",
+            "default": false,
+            "does": "Marks the title as a required field's label is marked."
+        },
+        "requiredMark": {
+            "values": ["star", "word"],
+            "default": "star",
+            "does": "How required is marked: a star after the title, or words.required after it and outside it."
+        },
+        "error": {
+            "type": "text",
+            "does": "Why the group as a whole is refused (too few rows, one twice), as one critical issue."
+        },
+        "issues": {
+            "type": "rows",
+            "does": "The app's issues with the group as a whole, after error: the issue mark says the worst."
+        },
+        "issueOpen": {
+            "type": "boolean",
+            "does": "Whether the issue mark's message is open, held from outside with onIssueOpenChange, for a form's count to open it.",
+            "sokkel-ui": "issueOpen, onIssueOpenChange"
+        },
+        "rows": {"type": "rows", "does": "The rows' keys, in order, such as useRepeated's rows."},
+        "children": {"type": "callback", "does": "A row's fields, given its key and its place."},
+        "onAdd": {"type": "callback", "does": "Adds a row; no Add without it."},
+        "onRemove": {"type": "callback", "does": "Takes the row with a key out; no Remove without it."},
+        "onMove": {
+            "type": "callback",
+            "does": "Moves the row at one place to another: Move up and Move down on each row, and inside a RepeatedDrag the grip. No Move buttons without it."
+        },
+        "min": {
+            "type": "number",
+            "default": 0,
+            "does": "The fewest rows the group keeps: Remove goes once it has this many."
+        },
+        "max": {"type": "number", "does": "The most rows it takes: Add goes once it has this many."},
+        "readOnly": {
+            "type": "boolean",
+            "default": false,
+            "does": "Nothing can be added, removed or moved: no Add, Move or Remove."
+        },
+        "words": {"type": "node", "does": "The words below."}
+    },
+    "sizes": {
+        "group": {
+            "gap": 8,
+            "note": "The head, the description and the rows, 8 apart; the description pulled 4 up, so 4 under the head."
+        },
+        "head": {
+            "height": "density.control-sm",
+            "gap": 8,
+            "note": "At least density.control-sm tall (28 regular, 24 compact), its pieces centered."
+        },
+        "title": {"gap": 4, "text": "text.action", "note": "The name and the star 4 apart, on their baseline."},
+        "issueMark": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "note": "The box the mark sits in, beside the title."
+        },
+        "row": {
+            "padX": 12,
+            "padY": 12,
+            "gap": 12,
+            "radius": "radius-surface",
+            "note": "Its row head and fields 12 apart; the row head pulled 4 into the padding above and below it."
+        },
+        "rowHead": {"gap": 4, "note": "The row's name, then Move up, Move down and Remove at its end."},
+        "move": {
+            "height": "density.control",
+            "width": "density.control",
+            "note": "parts/button's icon size: density.control square, a finger square below 768."
+        },
+        "remove": {"note": "parts/button's sm size, as Add is."},
+        "grip": {
+            "gap": 4,
+            "note": "The grip 4 before the row's box, 12 down from its top, so it sits level with the row head."
+        }
+    },
+    "layout": {
+        "descriptionPull": {
+            "value": 4,
+            "note": "The description is pulled up 4 from the group's gap of 8, so it sits 4 under the head."
+        },
+        "rowHeadPull": {
+            "value": 4,
+            "note": "The row head is pulled 4 up and 4 down into the row's padding, so its buttons do not make it taller."
+        },
+        "gripTop": {"value": 12, "note": "The grip's top below the row's top, level with the row head."}
+    },
+    "states": {
+        "rest": {"means": "The rows as given, each with the buttons it allows."},
+        "hover": {
+            "means": "The pointer is over Add, a Move or a Remove: parts/button's ghost hover, washed hover in foreground.",
+            "reached": "pointer over"
+        },
+        "focus": {
+            "means": "Keyboard focus on Add, a Move, a Remove or a grip: parts/button's focus outline.",
+            "reached": "Tab",
+            "on": "keyboard"
+        },
+        "shut": {
+            "means": "Move up on the first row, Move down on the last: cannot be pressed, faded, out of the tab order.",
+            "reached": "the row's place",
+            "effect": {"piece": "moveUp", "opacity": "disabled-opacity", "focusable": false}
+        },
+        "required": {"means": "The title is marked by a star or the word.", "reached": "required"},
+        "invalid": {
+            "means": "The worst issue with the group is critical: the issue mark in critical-ink beside the title.",
+            "reached": "error, or a critical issue"
+        },
+        "warning": {
+            "means": "The worst issue with the group is a warning: the issue mark in warning-ink.",
+            "reached": "a warning issue"
+        },
+        "readOnly": {"means": "No Add, Move or Remove; the rows' fields are the app's to lock.", "reached": "readOnly"},
+        "dragging": {
+            "means": "Inside a RepeatedDrag, a row picked up by its grip: it lifts and the others move aside to show where it lands.",
+            "reached": "a drag on the grip, or Space or Enter on it"
+        }
+    },
+    "pieces": {
+        "title": {"rest": {"ink": "inherit", "text": "text.action", "note": "The page's ink: the group sets none."}},
+        "requiredStar": {"rest": {"ink": "critical-ink"}},
+        "requiredWord": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "description": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "row": {"rest": {"ground": "none", "edge": "border", "radius": "radius-surface"}},
+        "itemName": {"rest": {"ink": "muted-foreground", "text": "text.badge"}},
+        "add": {
+            "rest": {"note": "parts/button's ghost: no ground, the page's ink."},
+            "hover": {"ground": "hover", "ink": "foreground"}
+        },
+        "moveUp": {
+            "rest": {
+                "ink": "muted-foreground",
+                "note": "parts/button's ghost, in muted-foreground as every ghost icon button is."
+            },
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "shut": {"opacity": "disabled-opacity"}
+        },
+        "moveDown": {
+            "rest": {"ink": "muted-foreground"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "shut": {"opacity": "disabled-opacity"}
+        },
+        "remove": {
+            "rest": {"ink": "muted-foreground", "note": "parts/button's ghost, quieted to muted-foreground."},
+            "hover": {"ground": "hover", "ink": "foreground"}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches Add, the issue mark, then each row's grip, Move up, Move down and Remove and its fields; a shut Move is passed over."
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Adds a row, moves the row a place, or takes it out.",
+            "when": "Add, a Move or a Remove has focus"
+        },
+        {
+            "keys": ["ArrowUp", "ArrowDown"],
+            "does": "Moves the row a place up or down, the focus following it.",
+            "when": "a grip has focus, inside a RepeatedDrag"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Picks the row up to move with the arrows, and puts it down.",
+            "when": "a grip has focus, inside a RepeatedDrag"
+        },
+        {"keys": ["Escape"], "does": "Puts a row being dragged back where it was.", "when": "a row is picked up"}
+    ],
+    "words": {
+        "add": "Add",
+        "remove": "Remove",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "item": "Item {place}",
+        "required": "required",
+        "issueCritical": "Error: ",
+        "issueWarning": "Warning: "
+    },
+    "messages": {
+        "add": {"id": "repeatedGroup.add", "en": "Add"},
+        "remove": {"id": "repeatedGroup.remove", "en": "Remove"},
+        "moveUp": {"id": "repeatedGroup.moveUp", "en": "Move up"},
+        "moveDown": {"id": "repeatedGroup.moveDown", "en": "Move down"},
+        "item": null,
+        "required": {"id": "repeatedGroup.required", "en": "required"},
+        "issueCritical": {"id": "issue.issueCritical", "en": "Error: "},
+        "issueWarning": {"id": "issue.issueWarning", "en": "Warning: "}
+    },
+    "samples": {
+        "item": [
+            {"with": {"place": 1}, "says": "Item 1"},
+            {"with": {"place": 2}, "says": "Item 2"},
+            {"with": {"place": 1200}, "says": "Item 1200"}
+        ]
+    },
+    "appText": {
+        "label": "The group's name.",
+        "description": "What the group asks for.",
+        "error": "Why the group as a whole is refused.",
+        "fields": "Each row's fields, with their own labels and issues."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "words.item is a function of the row's index from 0 (item(0) is Item 1); the spec writes it by the place counted from 1.",
+            "Move up's name is words.moveUp, a colon, a space and words.item; Remove's is words.remove, a space and words.item; Remove shows words.remove as its label.",
+            "The grip and its drag come from the scope's DragPartsContext (RepeatedDrag, on dnd-kit's sortable), so a group outside one never loads the drag engine; SchemaForm draws its lists of records with this part.",
+            "Hold the rows with useRepeated, so each keeps its key and its fields' state as rows move."
+        ],
+        "sokkel-egui": [
+            "RepeatedGroup::show draws the rows by count and answers with RepeatedOutcome (added, removed); the app draws each row's fields in a closure."
+        ]
+    },
+    "cells": {
+        "gap": 0,
+        "width": "Fills its container; each row's box spans it.",
+        "density": "The head, a row's head and the description are one row each at both levels; the 12 px inside a row's box is a blank row at regular and none at compact, and 1 column across at both.",
+        "pieces": {
+            "head": {"rows": 1, "note": "The title, the star or the word, the issue mark, then Add at the row's end."},
+            "issueMark": {"width": "1 column, 1 after the title's mark, in the issue's tone."},
+            "description": {"note": "Its lines under the head, wrapped."},
+            "row": {
+                "padX": 1,
+                "padY": {"regular": 1, "compact": 0},
+                "note": "A box in border, corners by radius-surface; boxes stand edge to edge, the 8 px between them under a row."
+            },
+            "rowHead": {
+                "rows": 1,
+                "note": "The row's name in the badge role, then Move up, Move down and Remove at the end, 1 column apart."
+            },
+            "moveUp": {"width": "3 columns: the arrow with a column at each side; a shut one faded."},
+            "moveDown": {"width": "3 columns, as moveUp."},
+            "grip": {"width": "1 column and a gap of 1 before the box, level with the row head."}
+        },
+        "glyphs": [
+            "box",
+            "plus",
+            "x",
+            "arrow-up",
+            "arrow-down",
+            "grip-vertical",
+            "circle-alert",
+            "triangle-alert",
+            "focus-ring-start",
+            "focus-ring-end"
+        ],
+        "note": "Add, Move and Remove are parts/button's ghosts: no edge, and keyboard focus as focus-ring-start and focus-ring-end beside them (principle 21). The issue mark's message is said in the status line while the title has focus (principle 23)."
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared",
+            "spec": "This spec.",
+            "today": "As of d163191, RepeatedGroup was built before this spec and has not been compared with it. Read from its source: the title with a star, the description, Add, and each row's box with its name and Remove, which goes at min. Not there: requiredMark word, error and issues with the issue mark, onMove with Move up, Move down and the grip, max, readOnly, Add left out without onAdd, and the words moveUp, moveDown, required and the issue words."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec, with its cells.",
+            "today": "As of 64f4b19 there is no repeated group."
+        }
+    ]
+}

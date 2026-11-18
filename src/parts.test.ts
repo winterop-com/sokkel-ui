@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
 import { BOARD_CHECKLIST_WORDS, BOARD_ITEM_PANEL_WORDS, BoardChecklist, BoardItemPanel } from '@winterop-com/sokkel-ui/board/BoardItemPanel'
+import { Banner, BANNER_WORDS, type BannerTone } from '@winterop-com/sokkel-ui/Banner'
 import { CALL_BAR_SHORTCUTS, CALL_BAR_WORDS, CallBar, type CallBarProps } from '@winterop-com/sokkel-ui/CallBar'
 import { CHART_LEGEND_WORDS, ChartLegend } from '@winterop-com/sokkel-ui-charts/ChartLegend'
 import { CHART_WORDS, KINDS } from '@winterop-com/sokkel-ui-charts/kinds'
@@ -38,6 +39,7 @@ import { DASHBOARD_PANEL_WORDS, DashboardPanel, SPAN, type DashboardPanelProps }
 import { STAT_PANEL_WORDS, StatPanel, type StatPanelProps } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import { THRESHOLD_LEGEND_WORDS, ThresholdLegend } from '@winterop-com/sokkel-ui/dashboard/ThresholdLegend'
 import { CodeEditor, FOLD_KEYS, SCHEMA_WORDS, type CodeEditorProps } from '@winterop-com/sokkel-ui/CodeEditor'
+import { COMPUTED_FIELD_WORDS, ComputedField, type ComputedFieldProps } from '@winterop-com/sokkel-ui/ComputedField'
 import { DATE_FIELD_WORDS, DateField } from '@winterop-com/sokkel-ui/DateField'
 import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
 import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
@@ -46,6 +48,7 @@ import { FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
+import { JSON_TREE_WORDS, JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
 import { Letter, LETTER_WORDS } from '@winterop-com/sokkel-ui/Letter'
 import { MESSAGE_COMPOSER_WORDS, MessageComposer, type MessageComposerProps } from '@winterop-com/sokkel-ui/MessageComposer'
 import { PageHeader, PAGE_HEADER_WORDS, type PageHeaderProps } from '@winterop-com/sokkel-ui/PageHeader'
@@ -73,16 +76,26 @@ import {
 } from '@winterop-com/sokkel-ui/ReactionBar'
 import { Rail, RAIL_SIZE, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
 import { RUN_TIMELINE_WORDS, RunTimeline, type RunTimelineLane, type RunTimelineProps } from '@winterop-com/sokkel-ui/RunTimeline'
+import { SECRET_FIELD_WORDS, SecretField, type SecretFieldProps } from '@winterop-com/sokkel-ui/SecretField'
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
+import { Problem, PROBLEM_WORDS } from '@winterop-com/sokkel-ui/Problem'
+import { PERIOD_PICKER_WORDS, PeriodPicker, type PeriodPickerProps } from '@winterop-com/sokkel-ui/PeriodPicker'
 import { ProblemLine } from '@winterop-com/sokkel-ui/ProseText'
+import { REPEATED_GROUP_WORDS, RepeatedGroup, type RepeatedGroupProps } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
 import { SETTINGS_DIALOG_WORDS } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { Shell, SHELL_WORDS, type ShellProps } from '@winterop-com/sokkel-ui/Shell'
+import { PanelSection, SIDE_PANEL_WORDS, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusItem, StatusLine, type StatusLineProps } from '@winterop-com/sokkel-ui/StatusLine'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { ThemePicker, type ThemePickerProps } from '@winterop-com/sokkel-ui/ThemePicker'
+import { TIME_FIELD_WORDS, TimeField, type TimeFieldProps } from '@winterop-com/sokkel-ui/TimeField'
 import { TopBar, TOP_BAR_WORDS, type TopBarProps } from '@winterop-com/sokkel-ui/TopBar'
+import { formatMessage } from '@winterop-com/sokkel-ui/lib/message-format'
+import { YES_NO_FIELD_WORDS, YesNoField, type YesNoFieldProps } from '@winterop-com/sokkel-ui/YesNoField'
+import { Tree, type TreeNode, type TreeProps } from '@winterop-com/sokkel-ui/Tree'
+import { TREE_SELECT_WORDS, TreeSelect, type TreeSelectProps } from '@winterop-com/sokkel-ui/TreeSelect'
 
 /**
  * sokkel-ui against the sokkel-design contract. `design/` holds the contract's parts and patterns
@@ -92,6 +105,8 @@ import { TopBar, TOP_BAR_WORDS, type TopBarProps } from '@winterop-com/sokkel-ui
  *
  *   words     every word the spec lists is the component's English default, and every default is in the spec;
  *             a word said as a function says what each of the spec's samples says (zero, one, many, each value it interpolates)
+ *   messages  each word's message id is in the packages' catalogs with the English the spec gives, and that
+ *             ICU message says the word, and what each of its samples says
  *   options   each option's values are the component's variant keys or prop values, no more and no fewer
  *   sizes     each size's lengths are the tokens and steps its classes use (heights by density token)
  *   paints    each state's ground, edge, ink, rule, ring, radius, text and opacity are the classes the
@@ -204,6 +219,8 @@ interface Spec {
     pieces?: Record<string, Record<string, Paint>>
     keyboard: { keys: string[]; does: string; when?: string }[]
     words: Record<string, string | { one: string; other: string }>
+    /** Each word's message id and its English in the catalogs, or null where the catalogs hold none. */
+    messages?: Record<string, { id: string; en: string; with?: Record<string, unknown> } | null>
     samples?: Record<string, { with: Record<string, string | number | boolean>; says: string }[]>
     routes?: Record<string, string>
     drift?: { renderer: string; what: string; spec: string; today: string }[]
@@ -665,6 +682,7 @@ const FILL: Record<string, string | number> = {
     clip: 'harbor-wide',
     track: 'B-roll',
     item: 'juniper-pan',
+    when: 'yesterday',
 }
 const filled = (template: string, values: Record<string, string | number>) =>
     template.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? FILL[name]))
@@ -4462,6 +4480,146 @@ const LETTER_ADAPTER: Adapter = {
     },
 }
 
+// Banner
+
+const BANNER = source('components/Banner.tsx')
+/** Tailwind's container widths, which a `basis-<size>` class reads. */
+const TAILWIND_THEME = readFileSync(join(ROOT, 'node_modules', 'tailwindcss', 'theme.css'), 'utf8')
+/** The px a `basis-<size>` class gives an element, from the container width it names. */
+const basisOf = (element: El | undefined) => {
+    const size = /\bbasis-([a-z0-9]+)\b/.exec(classesOf(element))?.[1]
+    return size === undefined ? undefined : numberIn(TAILWIND_THEME, new RegExp(`--container-${size}: ([\\d.]+)rem`), 'rem')
+}
+/** A banner in a tone, with an action and a dismiss. */
+const banner = (tone: BannerTone = 'critical') =>
+    draw(Banner, {
+        tone,
+        actions: createElement('button', { type: 'button' }, 'Retry'),
+        onDismiss: () => undefined,
+        children: 'api.example.org is not answering.',
+    })
+/** Each piece of a banner, by its name in the spec. */
+const bannerPieces = (elements: El[]): Record<string, El | undefined> => {
+    const strip = elements[0]
+    return {
+        container: strip,
+        mark: elements.find((element) => element.tag === 'svg' && element.parent === strip),
+        message: elements.find((element) => element.tag === 'p' && element.parent === strip),
+        actions: elements.find((element) => element.tag === 'div' && element.parent === strip),
+        dismiss: elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === BANNER_WORDS.dismiss),
+    }
+}
+
+const BANNER_ADAPTER: Adapter = {
+    wordObjects: { BANNER_WORDS },
+    complete: ['BANNER_WORDS'],
+    words: { dismiss: 'BANNER_WORDS.dismiss' },
+    options: {
+        tone: [...(/export type BannerTone = ([^\n]+)/.exec(BANNER)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1]),
+    },
+    size: (size) => pieceWhere(bannerPieces(banner())[size]),
+    paint: (group, name) =>
+        group === 'variants' ? pieceWhere(bannerPieces(banner(name as BannerTone)).container) : pieceWhere(bannerPieces(banner())[name]),
+    effect: () => skip('the banner states no effects'),
+    keys: {
+        'Tab (with actions or onDismiss)': () => (focusable(bannerPieces(banner()).dismiss) ? true : 'the dismiss is out of the tab order'),
+        'Enter, Space (the dismiss has focus)': () =>
+            bannerPieces(banner()).dismiss?.attrs.type === 'button' ? true : 'the dismiss is not a native button',
+    },
+    more: () => {
+        const { container, message } = bannerPieces(banner())
+        return layoutChecks('banner', {
+            rowGap: () => lengthOn(container, lengthOf('gap-y-')),
+            messageBasis: () => basisOf(message),
+        })
+    },
+}
+
+// Problem
+
+const PROBLEM = source('components/Problem.tsx')
+/** A problem with every piece: a detail with code in it, the raw message and an action. */
+const problem = (tone: 'error' | 'warning' = 'error') =>
+    draw(Problem, {
+        tone,
+        title: '37 rows have an amount that is not a number',
+        detail: 'The first is row 112, where `amount` is `n/a`.',
+        technical: "at $.amount: 'n/a' does not match '^[0-9]+[.][0-9]{2}$'",
+        actions: createElement('button', { type: 'button' }, 'Try now'),
+    })
+/** Each piece of a problem, by its name in the spec. */
+const problemPieces = (elements: El[]): Record<string, El | undefined> => {
+    const box = elements[0]
+    const head = elements.find((element) => element.tag === 'div' && element.parent === box)
+    const unfoldable = elements.find((element) => element.attrs['data-slot'] === 'unfoldable')
+    return {
+        box,
+        head,
+        mark: elements.find((element) => element.tag === 'svg' && element.parent === head),
+        title: elements.find((element) => element.tag === 'p' && element.parent === head),
+        detail: elements.find((element) => element.tag === 'p' && element.parent === box),
+        code: elements.find((element) => element.tag === 'code'),
+        unfoldable,
+        row: unfoldable === undefined ? undefined : elements.find((element) => element.tag === 'button' && within(element, unfoldable)),
+        technical: elements.find((element) => element.tag === 'span' && /\btext-xs\b/.test(classesOf(element))),
+        actions: elements.filter((element) => element.tag === 'div' && element.parent === box).at(-1),
+    }
+}
+/** The box's classes, its end corners (`rounded-r-control`) read as the corner role that rounds them. */
+const problemBox = (elements: El[]) => classesOf(problemPieces(elements).box).replace(/\brounded-r-/, 'rounded-')
+/** The raw message's classes: it opens only on a press, which no server drawing makes, so they are read from the source. */
+const PROBLEM_RAW = literalAfter(PROBLEM, '<pre className=')
+
+const PROBLEM_ADAPTER: Adapter = {
+    wordObjects: { PROBLEM_WORDS },
+    complete: ['PROBLEM_WORDS'],
+    words: { technical: 'PROBLEM_WORDS.technical' },
+    options: { tone: propValues(PROBLEM, 'ProblemProps', 'tone') },
+    size: (size) => {
+        const elements = problem()
+        if (size === 'box') return { layers: [problemBox(elements)], on: [] }
+        return pieceWhere(problemPieces(elements)[size])
+    },
+    paint: (_, name, state) => {
+        const elements = problem(state === 'warning' ? 'warning' : 'error')
+        const pieces = problemPieces(elements)
+        switch (name) {
+            case 'box':
+                return { layers: [problemBox(elements)], on: [] }
+            case 'title':
+            case 'detail':
+                // Each takes its size from the box and its weight and ink from its own classes.
+                return inside(pieces.box, pieces[name])
+            case 'technicalText':
+                return { layers: [PROBLEM_RAW], on: [] }
+            default:
+                return pieceWhere(pieces[name])
+        }
+    },
+    effect: () => skip('the problem states no effects'),
+    keys: {
+        'Tab (with technical or actions)': () =>
+            focusable(problemPieces(problem()).row) ? true : "the technical details' row is out of the tab order",
+        "Enter, Space (the technical details' row has focus)": () => {
+            const row = problemPieces(problem()).row
+            return row?.attrs.type === 'button' && 'aria-expanded' in row.attrs
+                ? true
+                : "the technical details' row is not a native button with aria-expanded"
+        },
+    },
+    more: () => {
+        const { box, mark, detail, unfoldable, actions } = problemPieces(problem())
+        const indent = lengthOn(detail, READ.padStart)
+        return layoutChecks('problem', {
+            ruleWidth: () => numberIn(classesOf(box), /\bborder-l-(\d+)\b/),
+            markTop: () => lengthOn(mark, lengthOf('mt-')),
+            indent: () => (indent === lengthOn(actions, READ.padStart) ? indent : `${indent} for the detail, another for the actions`),
+            technicalIndent: () => lengthOn(unfoldable, READ.padStart),
+            actionsTop: () => lengthOn(actions, lengthOf('pt-')),
+        })
+    },
+}
+
 // Detail pane
 
 const DESCRIPTION_LIST = source('components/DescriptionList.tsx')
@@ -5513,6 +5671,1100 @@ const DATE_FIELD_ADAPTER: Adapter = {
     more: () => layoutChecks('date-field', { calendarLoading: () => numberIn(DAY_PICK, /flex h-72 w-(\d+) items-center/, 'step') }),
 }
 
+// Side panel
+
+const SIDE_PANEL = source('components/SidePanel.tsx')
+const PANEL_TABS = [
+    { id: 'details', label: 'Details', content: createElement('p', {}, 'run-4821') },
+    { id: 'log', label: 'Log', content: createElement('p', {}, 'fetched 1,204 records') },
+    { id: 'outputs', label: 'Outputs', content: createElement('p', {}, 'exports/harbor') },
+]
+const SIDE_PANELS = once(() => ({
+    tabbed: draw(SidePanel, { tabs: PANEL_TABS, defaultActive: 'log' }),
+    titled: draw(SidePanel, { tabs: PANEL_TABS.slice(0, 1) }),
+    section: draw(PanelSection, {
+        title: 'Run',
+        actions: createElement('button', { type: 'button' }, 'Clear'),
+        children: 'nightly-export',
+    }),
+}))
+/** The ink the shell's frame sets around its panel, which sets none of its own. */
+const SHELL_INK = /className="group\/shell relative flex [^"]*\b(text-foreground)\b/.exec(SHELL)?.[1] ?? ''
+const panelTab = (elements: El[], label: string) => elements.find((element) => element.attrs.role === 'tab' && element.text === label)
+/** Each piece of a side panel, by its name in the spec. */
+const sidePanelPieces = (): Record<string, El | undefined> => {
+    const { tabbed, titled, section } = SIDE_PANELS()
+    const edge = tabbed.find((element) => element.attrs.role === 'separator')
+    const heading = byTag(section, 'h3')
+    const row = heading?.parent
+    return {
+        panel: byTag(tabbed, 'aside'),
+        edge,
+        line: edge === undefined ? undefined : tabbed.find((element) => element.parent === edge),
+        head: tabbed.find((element) => classesOf(element).split(' ').includes('h-shell-top')),
+        title: byTag(titled, 'h2'),
+        tabs: tabbed.find((element) => element.attrs.role === 'tablist'),
+        tab: panelTab(tabbed, 'Details'),
+        shown: panelTab(tabbed, 'Log'),
+        section: byTag(section, 'section'),
+        heading,
+        headingRow: row,
+        sectionActions: row === undefined ? undefined : section.find((element) => element.parent === row && element.tag === 'div'),
+    }
+}
+
+const SIDE_PANEL_ADAPTER: Adapter = {
+    wordObjects: { SIDE_PANEL_WORDS },
+    complete: ['SIDE_PANEL_WORDS'],
+    words: { resize: 'SIDE_PANEL_WORDS.resize' },
+    options: { soleTab: propValues(SIDE_PANEL, 'SidePanelProps', 'soleTab') },
+    size: (size) => pieceWhere(sidePanelPieces()[size]),
+    paint: (_, name, state) => {
+        const pieces = sidePanelPieces()
+        if (name === 'title') {
+            const where = pieceWhere(pieces.title)
+            return where === undefined ? undefined : { ...where, around: [...(where.around ?? []), SHELL_INK] }
+        }
+        if (name === 'tab') return at(state === 'selected' ? pieces.shown : pieces.tab, state)
+        if (name === 'edge') return at(pieces.line, state)
+        return pieceWhere(pieces[name])
+    },
+    effect: () => skip('the side panel states no effects'),
+    keys: {
+        'ArrowLeft, ArrowRight, Home, End (a tab has focus)': () =>
+            /<TabsPrimitive\.List\b/.test(SIDE_PANEL) && !/activateOnFocus|loopFocus=\{false\}/.test(SIDE_PANEL)
+                ? true
+                : "the tabs are not Base UI's tablist, which moves focus without showing a tab and wraps",
+        'Enter, Space (a tab has focus)': () => (sidePanelPieces().tab?.tag === 'button' ? true : 'a tab is not a native button'),
+        'ArrowLeft, ArrowRight, Home, End, Enter (the edge has focus)': () =>
+            /<ResizeHandle[\s\S]*?onReset=\{held\.reset\}[\s\S]*?grows=\{-1\}/.test(SIDE_PANEL) &&
+            /event\.key === forward\) step\(16\)\s+else if \(event\.key === back\) step\(-16\)/.test(RESIZE_HANDLE) &&
+            /event\.key === 'Home'\) onSize\(min\)/.test(RESIZE_HANDLE) &&
+            /event\.key === 'End'\) onSize\(max\)/.test(RESIZE_HANDLE) &&
+            /event\.key === 'Enter' && \(onReset !== undefined \|\| reset !== undefined\)\) restore\(\)/.test(RESIZE_HANDLE)
+                ? true
+                : "the panel's edge misses an arrow, Home, End or Enter, or does not grow toward the start",
+    },
+    more: () => {
+        const pieces = sidePanelPieces()
+        return layoutChecks('side-panel', {
+            defaultSize: () => numberIn(SIDE_PANEL, /rest: defaultSize \?\? width \?\? (\d+)/),
+            minSize: () => numberIn(SIDE_PANEL, /minSize = (\d+)/),
+            maxSize: () => numberIn(SIDE_PANEL, /maxSize = (\d+)/),
+            resizeStep: () => numberIn(RESIZE_HANDLE, /event\.key === forward\) step\((\d+)\)/),
+            edgeLine: () => lengthOn(pieces.line, READ.width),
+            headStart: () => lengthOn(pieces.head, READ.padStart),
+            headEnd: () => numberIn(SIDE_PANEL, /sheet \? 'pr-\d+' : 'pr-(\d+)'/, 'step'),
+            headEndSheet: () => numberIn(SIDE_PANEL, /sheet \? 'pr-(\d+)'/, 'step'),
+            roomy: () => numberIn(SHELL, /const ROOMY = '\(min-width: (\d+)rem\)'/, 'rem'),
+            columnEase: () => durationIn(SHELL, /transition-\[grid-template-columns\] duration-(\w+)/),
+        })
+    },
+}
+
+// JSON tree
+
+const JSON_TREES = once(() => ({
+    folded: draw(JsonTree, {
+        value: {
+            job: 'nightly-export',
+            records: 1204,
+            retried: false,
+            error: null,
+            steps: ['fetch', 'upload'],
+            labels: { project: 'harbor' },
+        },
+        open: 1,
+    }),
+    long: draw(JsonTree, { value: { steps: ['fetch', 'transform', 'validate'] }, open: 2, limit: 1 }),
+}))
+const spanWith = (elements: El[], ink: string) =>
+    elements.find((element) => element.tag === 'span' && classesOf(element).split(' ').includes(ink))
+/** Each piece of a JSON tree, by its name in the spec. */
+const jsonTreePieces = (): Record<string, El | undefined> => {
+    const { folded, long } = JSON_TREES()
+    const node = folded.find((element) => element.tag === 'button' && element.text.startsWith('labels'))
+    return {
+        tree: folded[0],
+        node,
+        disclosure: node === undefined ? undefined : folded.find((element) => element.tag === 'svg' && within(element, node)),
+        key: folded.find((element) => element.tag === 'span' && element.text === 'job: '),
+        bracket:
+            node === undefined
+                ? undefined
+                : folded.find((element) => element.parent === node && classesOf(element) === 'text-muted-foreground'),
+        count: folded.find((element) => element.tag === 'span' && classesOf(element).split(' ').includes('text-faint')),
+        guide: folded.find((element) => element.tag === 'div' && classesOf(element).includes('border-l')),
+        leaf: folded.find((element) => element.tag === 'div' && classesOf(element) === 'pl-4'),
+        string: spanWith(folded, 'text-kind-green-ink'),
+        number: spanWith(folded, 'text-kind-blue-ink'),
+        boolean: spanWith(folded, 'text-kind-violet-ink'),
+        null: folded.find((element) => element.tag === 'span' && element.text === 'null'),
+        close: folded.find((element) => element.tag === 'div' && classesOf(element) === 'pl-4 text-muted-foreground'),
+        step: long.find((element) => element.tag === 'button' && element.text.startsWith('Show')),
+    }
+}
+const JSON_TREE_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-visible'] }
+
+const JSON_TREE_ADAPTER: Adapter = {
+    wordObjects: { JSON_TREE_WORDS },
+    complete: ['JSON_TREE_WORDS'],
+    words: {
+        keys: ['JSON_TREE_WORDS.keys', (said: (count: number) => string, fill) => said(Number(fill.count))],
+        more: ['JSON_TREE_WORDS.more', (said: (count: number) => string, fill) => said(Number(fill.count))],
+    },
+    options: {},
+    size: (size) => pieceWhere(jsonTreePieces()[size]),
+    paint: (_, name, state) => pieceWhere(jsonTreePieces()[name], JSON_TREE_ON[state] ?? []),
+    effect: () => skip('the JSON tree states no effects'),
+    keys: {
+        Tab: () => {
+            const { node, step } = jsonTreePieces()
+            return focusable(node) && focusable(step) ? true : 'a node or a step is out of the tab order'
+        },
+        'Enter, Space (a node has focus)': () => {
+            const { node } = jsonTreePieces()
+            return node?.tag === 'button' && node.attrs['aria-expanded'] !== undefined
+                ? true
+                : 'a node is not a native button with aria-expanded'
+        },
+        'Enter, Space (a step has focus)': () => (jsonTreePieces().step?.tag === 'button' ? true : 'the step is not a native button'),
+    },
+    more: () => {
+        const { tree, guide, leaf } = jsonTreePieces()
+        return layoutChecks('json-tree', {
+            guideInset: () => numberIn(classesOf(guide), /\bml-(\d+(?:\.\d+)?)\b/, 'step'),
+            entriesInset: () => numberIn(classesOf(guide), /\bpl-(\d+(?:\.\d+)?)\b/, 'step'),
+            leafInset: () => lengthOn(leaf, READ.padStart),
+            line: () => numberIn(classesOf(tree), /\bleading-(\d+)\b/, 'step'),
+        })
+    },
+}
+
+// Secret field
+
+const SECRET_FIELD = source('components/SecretField.tsx')
+const secretField = (props: Partial<SecretFieldProps> = {}) => draw(SecretField, { id: 'token', label: 'API token', ...props })
+const SECRET_FIELDS = once(() => ({
+    open: secretField({ value: 'harbor-key' }),
+    sealed: secretField({ sealed: true, setAt: '2026-11-07T09:00:00Z', now: new Date('2026-11-09T09:00:00Z') }),
+    replacing: secretField({ sealed: true, defaultReplacing: true }),
+    disabled: secretField({ disabled: true }),
+    invalid: secretField({ error: 'The token was refused' }),
+    warning: secretField({ issues: [{ tone: 'warning', text: 'Expires in a day' }] }),
+}))
+const secretFrame = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'secret-field')
+const SECRET_REPLACE = SECRET_FIELD_WORDS.replaceLabel('API token')
+const SECRET_ON: Record<string, string[]> = { hover: ['hover'], focus: ['focus-within'], keyFocus: ['focus-visible'] }
+
+/** The secret field's frame in a state: its classes, then those of the field's box around it, which puts the issue's edge on it. */
+function secretControl(state: string): Where | undefined {
+    const { open, sealed, disabled, invalid, warning } = SECRET_FIELDS()
+    const drawn = state.startsWith('invalid')
+        ? invalid
+        : state.startsWith('warning')
+          ? warning
+          : state === 'disabled'
+            ? disabled
+            : state === 'sealed'
+              ? sealed
+              : open
+    const frame = secretFrame(drawn)
+    if (frame === undefined) return undefined
+    return {
+        layers: [classesOf(frame), classesOf(frame.parent)],
+        on: state.endsWith('focus') ? ['focus-within'] : [],
+        around: ancestors(frame),
+    }
+}
+
+const SECRET_FIELD_ADAPTER: Adapter = {
+    wordObjects: { SECRET_FIELD_WORDS },
+    complete: ['SECRET_FIELD_WORDS'],
+    words: {
+        required: 'SECRET_FIELD_WORDS.required',
+        issueCritical: 'SECRET_FIELD_WORDS.issueCritical',
+        issueWarning: 'SECRET_FIELD_WORDS.issueWarning',
+        errors: [
+            'IssueCount.errors',
+            (_: never, fill) => draw(IssueCount, { critical: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+        ],
+        warnings: [
+            'IssueCount.warnings',
+            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+        ],
+        set: 'SECRET_FIELD_WORDS.set',
+        setWhen: [
+            'SECRET_FIELD_WORDS.setWhen',
+            (said: (when: ReactNode) => ReactNode, fill) =>
+                renderToStaticMarkup(createElement('span', null, said(String(fill.when)))).replace(/<[^>]+>/g, ''),
+        ],
+        replace: 'SECRET_FIELD_WORDS.replace',
+        replaceLabel: ['SECRET_FIELD_WORDS.replaceLabel', (said: (label: string) => string, fill) => said(String(fill.label))],
+        cancel: 'SECRET_FIELD_WORDS.cancel',
+        show: 'SECRET_FIELD_WORDS.show',
+        hide: 'SECRET_FIELD_WORDS.hide',
+    },
+    options: { requiredMark: propValues(SECRET_FIELD, 'SecretFieldProps', 'requiredMark') },
+    size: (size, key) => {
+        const { open, sealed } = SECRET_FIELDS()
+        if (size === 'control') return pieceWhere(secretFrame(open))
+        if (size === 'reveal') {
+            const reveal = byLabel(open, SECRET_FIELD_WORDS.show)
+            return key === 'icon' ? pieceWhere(iconOf(open, reveal)) : pieceWhere(reveal)
+        }
+        if (size === 'action') return pieceWhere(byLabel(sealed, SECRET_REPLACE))
+        if (size === 'sealedMark') return pieceWhere(iconOf(sealed, secretFrame(sealed)))
+        return undefined
+    },
+    paint: (_, name, state) => {
+        const { open, sealed, replacing } = SECRET_FIELDS()
+        const on = state.split('+').flatMap((one) => SECRET_ON[one] ?? [])
+        if (name === 'control') return secretControl(state)
+        if (name === 'reveal') return pieceWhere(byLabel(open, SECRET_FIELD_WORDS.show), on)
+        if (name === 'cancel') return pieceWhere(byText(replacing, 'button', SECRET_FIELD_WORDS.cancel), on)
+        if (name === 'replace') return pieceWhere(byLabel(sealed, SECRET_REPLACE), on)
+        if (name === 'sealedMark') return pieceWhere(iconOf(sealed, secretFrame(sealed)))
+        if (name === 'dots') return pieceWhere(byText(sealed, 'span', '••••••••'))
+        if (name === 'setNote') return pieceWhere(sealed.find((element) => element.tag === 'span' && element.text.startsWith('Set ')))
+        return undefined
+    },
+    effect: (state) => (state === 'disabled' || state.endsWith('focus') ? secretControl(state) : undefined),
+    keys: {
+        Tab: () => {
+            const { open, sealed, replacing, invalid } = SECRET_FIELDS()
+            const stops = [
+                open.find((element) => element.tag === 'input'),
+                byLabel(open, SECRET_FIELD_WORDS.show),
+                byText(replacing, 'button', SECRET_FIELD_WORDS.cancel),
+                byLabel(sealed, SECRET_REPLACE),
+                invalid.find((element) => element.attrs['aria-haspopup'] === 'dialog'),
+            ]
+            return stops.every(focusable) ? true : 'the input, the reveal, Cancel, Replace or the issue mark is out of the tab order'
+        },
+        'Enter, Space (the reveal has focus)': () => {
+            const reveal = byLabel(SECRET_FIELDS().open, SECRET_FIELD_WORDS.show)
+            return reveal?.tag === 'button' &&
+                reveal.attrs['aria-pressed'] === 'false' &&
+                /onClick=\{\(\) => setShown\(!shown\)\}/.test(SECRET_FIELD)
+                ? true
+                : 'the reveal is not a native toggle button'
+        },
+        'Enter, Space (Replace has focus)': () =>
+            byLabel(SECRET_FIELDS().sealed, SECRET_REPLACE)?.tag === 'button' &&
+            /moved\.current = 'input'\s*setReplacing\(true\)/.test(SECRET_FIELD)
+                ? true
+                : 'Replace does not open the input and move focus into it',
+        'Escape (the input of a sealed field that can be changed has focus)': () =>
+            /event\.key === 'Escape' && sealed && editable\) \{\s*event\.preventDefault\(\)\s*seal\(\)/.test(SECRET_FIELD) &&
+            /const seal = \(\) => \{\s*moved\.current = 'replace'\s*setReplacing\(false\)\s*setShown\(false\)\s*onChange\?\.\(undefined\)/.test(
+                SECRET_FIELD,
+            )
+                ? true
+                : 'Escape does not seal the field again',
+        'Enter, Space (Cancel has focus)': () =>
+            byText(SECRET_FIELDS().replacing, 'button', SECRET_FIELD_WORDS.cancel)?.tag === 'button' &&
+            /onClick=\{seal\}/.test(SECRET_FIELD)
+                ? true
+                : 'Cancel does not seal the field again',
+    },
+}
+
+// Yes-no field
+
+const YES_NO_FIELD = source('components/YesNoField.tsx')
+const yesNoField = (props: Partial<YesNoFieldProps> = {}) =>
+    draw(YesNoField, { id: 'notify', label: 'Notify on failure', value: null, onValueChange: noop, ...props })
+const YES_NO_FIELDS = once(() => ({
+    unanswered: yesNoField(),
+    answered: yesNoField({ value: true }),
+    disabled: yesNoField({ disabled: true }),
+    invalid: yesNoField({ error: 'Answer before you save' }),
+}))
+const choiceOf = (elements: El[]) => elements.find((element) => element.attrs.role === 'group')
+const optionOf = (elements: El[], label: string) =>
+    elements.find((element) => element.tag === 'button' && element.attrs['aria-pressed'] !== undefined && element.text === label)
+const YES_NO_ON: Record<string, string[]> = { hover: ['hover'], keyFocus: ['focus-visible'] }
+
+const YES_NO_FIELD_ADAPTER: Adapter = {
+    wordObjects: { YES_NO_FIELD_WORDS },
+    complete: ['YES_NO_FIELD_WORDS'],
+    words: {
+        required: 'YES_NO_FIELD_WORDS.required',
+        issueCritical: 'YES_NO_FIELD_WORDS.issueCritical',
+        issueWarning: 'YES_NO_FIELD_WORDS.issueWarning',
+        errors: [
+            'IssueCount.errors',
+            (_: never, fill) => draw(IssueCount, { critical: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+        ],
+        warnings: [
+            'IssueCount.warnings',
+            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+        ],
+        yes: 'YES_NO_FIELD_WORDS.yes',
+        no: 'YES_NO_FIELD_WORDS.no',
+        clear: 'YES_NO_FIELD_WORDS.clear',
+        unanswered: 'YES_NO_FIELD_WORDS.unanswered',
+    },
+    options: {},
+    size: (size) => {
+        const { unanswered, answered } = YES_NO_FIELDS()
+        if (size === 'choice') return pieceWhere(choiceOf(unanswered), ['md'])
+        if (size === 'option') return pieceWhere(optionOf(unanswered, YES_NO_FIELD_WORDS.yes), ['md'])
+        if (size === 'clear') return pieceWhere(byText(answered, 'button', YES_NO_FIELD_WORDS.clear))
+        return undefined
+    },
+    paint: (_, name, state) => {
+        const { unanswered, answered, disabled } = YES_NO_FIELDS()
+        const on = YES_NO_ON[state] ?? []
+        if (name === 'choice') return pieceWhere(choiceOf(state === 'disabled' ? disabled : unanswered))
+        if (name === 'option') return pieceWhere(optionOf(state === 'chosen' ? answered : unanswered, YES_NO_FIELD_WORDS.yes), on)
+        if (name === 'unanswered') return pieceWhere(byText(unanswered, 'span', YES_NO_FIELD_WORDS.unanswered))
+        if (name === 'clear') return pieceWhere(byText(answered, 'button', YES_NO_FIELD_WORDS.clear), on)
+        return undefined
+    },
+    effect: (state) => {
+        if (state !== 'disabled') return undefined
+        const { disabled } = YES_NO_FIELDS()
+        const where = pieceWhere(choiceOf(disabled))
+        return where === undefined ? undefined : { ...where, focusable: focusable(optionOf(disabled, YES_NO_FIELD_WORDS.yes)) }
+    },
+    keys: {
+        Tab: () => {
+            const { unanswered, answered, invalid } = YES_NO_FIELDS()
+            const stops = [
+                optionOf(unanswered, YES_NO_FIELD_WORDS.yes),
+                optionOf(unanswered, YES_NO_FIELD_WORDS.no),
+                byText(answered, 'button', YES_NO_FIELD_WORDS.clear),
+                invalid.find((element) => element.attrs['aria-haspopup'] === 'dialog'),
+            ]
+            return stops.every(focusable) ? true : 'an option, Clear or the issue mark is out of the tab order'
+        },
+        'Enter, Space (an option has focus)': () =>
+            optionOf(YES_NO_FIELDS().unanswered, YES_NO_FIELD_WORDS.yes)?.tag === 'button' &&
+            /onValueChange=\{\(next\) => onValueChange\(next === 'yes'\)\}/.test(YES_NO_FIELD)
+                ? true
+                : 'an option is not a native button that answers with it',
+        'Enter, Space (Clear has focus)': () =>
+            byText(YES_NO_FIELDS().answered, 'button', YES_NO_FIELD_WORDS.clear)?.tag === 'button' &&
+            /onClick=\{\(\) => onValueChange\(null\)\}/.test(YES_NO_FIELD)
+                ? true
+                : 'Clear does not take the answer back',
+    },
+    more: () =>
+        layoutChecks('yes-no-field', {
+            choiceGap: () => numberIn(YES_NO_FIELD, /<span className="flex min-w-0 flex-wrap items-center gap-(\d+)">/, 'step'),
+        }),
+}
+
+// Time field
+
+const TIME_FIELD = source('components/TimeField.tsx')
+const timeField = (props: Partial<TimeFieldProps> = {}) =>
+    draw(TimeField, { id: 'window', label: 'Window opens', value: '14:30', onValueChange: noop, ...props })
+const TIME_FIELDS = once(() => ({
+    plain: timeField({ zone: 'UTC' }),
+    disabled: timeField({ disabled: true }),
+    invalid: timeField({ error: 'Pick a later time' }),
+    warning: timeField({ issues: [{ tone: 'warning', text: 'After the nightly-export run' }] }),
+}))
+/** A time in the list, and the chosen one, which a server drawing leaves closed: their classes from the sources. */
+const TIME_ROW = literalAfter(PICKERS, 'role="option"', 'className={cn(')
+const TIME_CHOSEN = literalAfter(PICKERS, 'time === chosen && ')
+const TIME_LIST = [literalAfter(PICKERS, 'role="listbox"', 'className={cn('), literalAfter(TIME_FIELD, '<TimeList', 'className=')]
+
+const TIME_FIELD_ADAPTER: Adapter = {
+    wordObjects: { TIME_FIELD_WORDS },
+    complete: ['TIME_FIELD_WORDS'],
+    words: {
+        required: 'TIME_FIELD_WORDS.required',
+        issueCritical: 'TIME_FIELD_WORDS.issueCritical',
+        issueWarning: 'TIME_FIELD_WORDS.issueWarning',
+        errors: [
+            'IssueCount.errors',
+            (_: never, fill) => draw(IssueCount, { critical: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+        ],
+        warnings: [
+            'IssueCount.warnings',
+            (_: never, fill) => draw(IssueCount, { critical: 0, warning: Number(fill.count), list: [] })[0]?.attrs['aria-label'] ?? '',
+        ],
+        unreadable: 'TIME_FIELD_WORDS.unreadable',
+        example: ['TIME_FIELD_WORDS.example', (said: (sample: string) => string, fill) => said(String(fill.sample))],
+        under: ['TIME_FIELD_WORDS.under', (said: (min: string) => string, fill) => said(String(fill.min))],
+        over: ['TIME_FIELD_WORDS.over', (said: (max: string) => string, fill) => said(String(fill.max))],
+        use: ['TIME_FIELD_WORDS.use', (said: (bound: string) => string, fill) => said(String(fill.bound))],
+        pick: 'TIME_FIELD_WORDS.pick',
+        clear: 'TIME_FIELD_WORDS.clear',
+        'periods.am': ['TIME_FIELD_WORDS.periods', (said: readonly string[]) => said[0]],
+        'periods.pm': ['TIME_FIELD_WORDS.periods', (said: readonly string[]) => said[1]],
+    },
+    options: {
+        clock: [...(/\n\s+clock\?: ([^\n]+)/.exec(TIME_FIELD)?.[1] ?? '').matchAll(/\b(\d+)\b/g)].map((match) => match[1]),
+    },
+    size: (size, key) => {
+        const { plain } = TIME_FIELDS()
+        if (size === 'control') return pieceWhere(dateFrame(plain))
+        if (size === 'frameButton') {
+            const clear = byLabel(plain, TIME_FIELD_WORDS.clear)
+            return key === 'icon' ? pieceWhere(iconOf(plain, clear)) : pieceWhere(clear)
+        }
+        if (size === 'list') return { layers: TIME_LIST, on: [] }
+        if (size === 'time') return { layers: [TIME_ROW], on: [] }
+        return undefined
+    },
+    paint: (_, name, state) => {
+        const { plain, disabled, invalid, warning } = TIME_FIELDS()
+        const on = state.split('+').flatMap((one) => DATE_ON[one] ?? [])
+        if (name === 'control') {
+            const drawn = state.startsWith('invalid')
+                ? invalid
+                : state.startsWith('warning')
+                  ? warning
+                  : state === 'disabled'
+                    ? disabled
+                    : plain
+            return pieceWhere(dateFrame(drawn), state.endsWith('focus') ? ['focus-within'] : on)
+        }
+        if (name === 'zone') return pieceWhere(byText(plain, 'span', 'UTC'))
+        if (name === 'clear') return pieceWhere(byLabel(plain, TIME_FIELD_WORDS.clear), on)
+        if (name === 'pick') return pieceWhere(byLabel(plain, TIME_FIELD_WORDS.pick), on)
+        if (name === 'list') return { layers: CALENDAR_BOX, on: [] }
+        if (name === 'time') {
+            if (state === 'chosen') return { layers: [TIME_ROW, TIME_CHOSEN], on: [] }
+            if (state === 'timeFocus') return { layers: [TIME_ROW], on: ['focus-visible'] }
+            return { layers: [TIME_ROW], on }
+        }
+        return undefined
+    },
+    effect: (state) => {
+        const { plain, disabled, invalid, warning } = TIME_FIELDS()
+        if (state === 'focus') return pieceWhere(dateFrame(plain), ['focus-within'])
+        if (state === 'invalid+focus') return pieceWhere(dateFrame(invalid), ['focus-within'])
+        if (state === 'warning+focus') return pieceWhere(dateFrame(warning), ['focus-within'])
+        if (state === 'disabled') return pieceWhere(dateFrame(disabled))
+        return undefined
+    },
+    keys: {
+        Tab: () => {
+            const { plain } = TIME_FIELDS()
+            const input = plain.find((element) => element.tag === 'input')
+            const clear = byLabel(plain, TIME_FIELD_WORDS.clear)
+            const pick = byLabel(plain, TIME_FIELD_WORDS.pick)
+            return focusable(input) && focusable(clear) && focusable(pick)
+                ? true
+                : 'the input, the clear or the pick button is out of the tab order'
+        },
+        'Alt+ArrowDown (the input has focus and the field can be changed)': () =>
+            /if \(!event\.altKey \|\| event\.key !== 'ArrowDown'\) return/.test(TIME_FIELD) && /setOpened\(true\)/.test(TIME_FIELD)
+                ? true
+                : 'Alt+ArrowDown does not open the list',
+        'Enter, Space (the pick or the clear button has focus)': () => {
+            const { plain } = TIME_FIELDS()
+            return byLabel(plain, TIME_FIELD_WORDS.clear)?.tag === 'button' && byLabel(plain, TIME_FIELD_WORDS.pick)?.tag === 'button'
+                ? true
+                : 'the clear or the pick button is not a native button'
+        },
+        'ArrowUp, ArrowDown (the list is open)': () =>
+            /ArrowDown: at \+ 1, ArrowUp: at - 1/.test(PICKERS) && /Math\.max\(0, Math\.min\(buttons\.length - 1, to\)\)/.test(PICKERS)
+                ? true
+                : 'the arrows do not move between the times, stopping at the ends',
+        'Home, End (the list is open)': () =>
+            /Home: 0, End: buttons\.length - 1/.test(PICKERS) ? true : 'Home and End do not go to the first and the last time',
+        'Enter, Space (the list is open)': () =>
+            /onPick=\{\(time\) => \{\s*entry\.set\(seconds \? `\$\{time\}:00` : time\)\s*setOpened\(false\)/.test(TIME_FIELD)
+                ? true
+                : 'picking a time does not close the list',
+        'Escape (the list is open)': BASE_UI('Popover', 'closes on Escape and puts focus back on its trigger'),
+    },
+    more: () => layoutChecks('time-field', { listMaxHeight: () => numberIn(TIME_FIELD, /className="max-h-(\d+) /, 'step') }),
+}
+
+// Computed field
+
+const computedField = (props: Partial<ComputedFieldProps> = {}) =>
+    draw(ComputedField, {
+        id: 'depth',
+        label: 'Depth',
+        value: '4.2',
+        unit: 'm',
+        why: 'The level less the zero',
+        formula: 'level - zero',
+        ...props,
+    })
+const COMPUTED_FIELDS = once(() => ({ valued: computedField() }))
+const computedInput = (elements: El[]) => elements.find((element) => element.tag === 'input')
+
+const COMPUTED_FIELD_ADAPTER: Adapter = {
+    wordObjects: { COMPUTED_FIELD_WORDS },
+    complete: ['COMPUTED_FIELD_WORDS'],
+    words: { pending: 'COMPUTED_FIELD_WORDS.pending', computed: 'COMPUTED_FIELD_WORDS.computed' },
+    options: {},
+    size: (size, key) => {
+        const { valued } = COMPUTED_FIELDS()
+        if (size === 'control') return pieceWhere(computedInput(valued))
+        if (size === 'why') {
+            const row = valued.find((element) => element.tag === 'span' && element.parent?.attrs.id === 'depth-help')
+            return key === 'icon' ? pieceWhere(iconOf(valued, row)) : pieceWhere(row)
+        }
+        return undefined
+    },
+    paint: (_, name, state) => {
+        const { valued } = COMPUTED_FIELDS()
+        const row = valued.find((element) => element.tag === 'span' && element.parent?.attrs.id === 'depth-help')
+        if (name === 'control') return pieceWhere(computedInput(valued), state === 'focus' ? ['focus-visible'] : [])
+        if (name === 'hint') return pieceWhere(byText(valued, 'span', COMPUTED_FIELD_WORDS.computed))
+        if (name === 'whyIcon') return pieceWhere(iconOf(valued, row))
+        if (name === 'why') return pieceWhere(valued.find((element) => element.attrs.id === 'depth-help')?.parent)
+        if (name === 'formula') return pieceWhere(byText(valued, 'span', 'level - zero'))
+        return undefined
+    },
+    effect: (state) => (state === 'focus' ? pieceWhere(computedInput(COMPUTED_FIELDS().valued), ['focus-visible']) : undefined),
+    keys: {
+        Tab: () => (focusable(computedInput(COMPUTED_FIELDS().valued)) ? 'the value is in the tab order' : true),
+    },
+}
+
+// Repeated group
+
+const REPEATED_GROUP = source('components/RepeatedGroup.tsx')
+const REPEATED_DRAG = source('components/RepeatedDrag.tsx')
+const SORTABLE = source('components/Sortable.tsx')
+const STEP_ROWS = [{ key: 'fetch' }, { key: 'upload' }]
+const repeatedGroup = (props: Partial<RepeatedGroupProps> = {}) =>
+    draw(
+        TooltipProvider,
+        {},
+        createElement(RepeatedGroup, {
+            label: 'Steps',
+            rows: STEP_ROWS,
+            children: () => null,
+            onAdd: noop,
+            onRemove: noop,
+            onMove: noop,
+            ...props,
+        }),
+    )
+const REPEATED_GROUPS = once(() => ({
+    plain: repeatedGroup(),
+    marked: repeatedGroup({ required: true, description: 'Each step runs after the one before.', error: 'Add a step' }),
+    worded: repeatedGroup({ required: true, requiredMark: 'word' }),
+}))
+const groupHead = (elements: El[]) => elements.find((element) => classesOf(element).includes('min-h-(--density-control-sm)'))
+const rowHeadOf = (elements: El[]) =>
+    elements.find((element) => element.tag === 'div' && element.parent?.tag === 'section' && classesOf(element).includes('-my-1'))
+
+const REPEATED_GROUP_ADAPTER: Adapter = {
+    wordObjects: { REPEATED_GROUP_WORDS },
+    complete: ['REPEATED_GROUP_WORDS'],
+    words: {
+        add: 'REPEATED_GROUP_WORDS.add',
+        remove: 'REPEATED_GROUP_WORDS.remove',
+        moveUp: 'REPEATED_GROUP_WORDS.moveUp',
+        moveDown: 'REPEATED_GROUP_WORDS.moveDown',
+        item: ['REPEATED_GROUP_WORDS.item', (said: (index: number) => string, fill) => said(Number(fill.place) - 1)],
+        required: 'REPEATED_GROUP_WORDS.required',
+        issueCritical: 'REPEATED_GROUP_WORDS.issueCritical',
+        issueWarning: 'REPEATED_GROUP_WORDS.issueWarning',
+    },
+    options: { requiredMark: propValues(REPEATED_GROUP, 'RepeatedGroupProps', 'requiredMark') },
+    size: (size, key) => {
+        const { plain, marked } = REPEATED_GROUPS()
+        switch (size) {
+            case 'group':
+                return pieceWhere(plain.find((element) => element.tag === 'fieldset'))
+            case 'head':
+                return pieceWhere(groupHead(plain))
+            case 'title':
+                return pieceWhere(plain.find((element) => element.attrs.tabindex === '-1'))
+            case 'issueMark':
+                return pieceWhere(marked.find((element) => classesOf(element).includes('size-(--density-control-sm)')))
+            case 'row':
+                return pieceWhere(plain.find((element) => element.tag === 'section'))
+            case 'rowHead':
+                return pieceWhere(rowHeadOf(plain))
+            case 'move':
+                return pieceWhere(byLabel(plain, `${REPEATED_GROUP_WORDS.moveUp}: ${REPEATED_GROUP_WORDS.item(1)}`))
+            case 'grip':
+                return key === 'gap' ? { layers: [literalAfter(REPEATED_DRAG, '<SortableItem', 'className=')], on: [] } : undefined
+            default:
+                return undefined
+        }
+    },
+    paint: (_, name, state) => {
+        const { plain, marked, worded } = REPEATED_GROUPS()
+        const on = state === 'hover' ? ['hover'] : state === 'shut' ? ['disabled'] : []
+        const { moveUp, moveDown, item } = REPEATED_GROUP_WORDS
+        switch (name) {
+            case 'title':
+                return pieceWhere(plain.find((element) => element.attrs.tabindex === '-1'))
+            case 'requiredStar':
+                return pieceWhere(marked.find((element) => element.tag === 'span' && element.text === '*'))
+            case 'requiredWord':
+                return pieceWhere(byText(worded, 'span', REPEATED_GROUP_WORDS.required))
+            case 'description':
+                return pieceWhere(marked.find((element) => element.tag === 'p'))
+            case 'row':
+                return pieceWhere(plain.find((element) => element.tag === 'section'))
+            case 'itemName':
+                return pieceWhere(byText(plain, 'span', item(0)))
+            case 'add':
+                return pieceWhere(byText(plain, 'button', REPEATED_GROUP_WORDS.add), on)
+            // The first row's Move up and the last row's Move down are the shut ones.
+            case 'moveUp':
+                return pieceWhere(byLabel(plain, `${moveUp}: ${item(state === 'shut' ? 0 : 1)}`), on)
+            case 'moveDown':
+                return pieceWhere(byLabel(plain, `${moveDown}: ${item(state === 'shut' ? 1 : 0)}`), on)
+            case 'remove':
+                return pieceWhere(
+                    plain.find(
+                        (element) =>
+                            element.tag === 'button' && element.attrs['aria-label'] === `${REPEATED_GROUP_WORDS.remove} ${item(0)}`,
+                    ),
+                    on,
+                )
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => {
+        if (state !== 'shut') return undefined
+        const shut = byLabel(REPEATED_GROUPS().plain, `${REPEATED_GROUP_WORDS.moveUp}: ${REPEATED_GROUP_WORDS.item(0)}`)
+        return shut === undefined
+            ? undefined
+            : { layers: [classesOf(shut)], on: ['disabled'], around: ancestors(shut), focusable: focusable(shut) }
+    },
+    keys: {
+        Tab: () => {
+            const { plain } = REPEATED_GROUPS()
+            const { moveUp, moveDown, item } = REPEATED_GROUP_WORDS
+            return focusable(byText(plain, 'button', REPEATED_GROUP_WORDS.add)) &&
+                focusable(byLabel(plain, `${moveDown}: ${item(0)}`)) &&
+                !focusable(byLabel(plain, `${moveUp}: ${item(0)}`))
+                ? true
+                : 'Add or a Move is out of the tab order, or a shut Move in it'
+        },
+        'Enter, Space (Add, a Move or a Remove has focus)': () =>
+            byText(REPEATED_GROUPS().plain, 'button', REPEATED_GROUP_WORDS.add) !== undefined &&
+            byLabel(REPEATED_GROUPS().plain, `${REPEATED_GROUP_WORDS.moveDown}: ${REPEATED_GROUP_WORDS.item(0)}`)?.tag === 'button'
+                ? true
+                : 'Add or a Move is not a native button',
+        'ArrowUp, ArrowDown (a grip has focus, inside a RepeatedDrag)': () =>
+            /<SortableGrip/.test(REPEATED_DRAG) && /event\.key === 'ArrowUp'/.test(SORTABLE) && /event\.key === 'ArrowDown'/.test(SORTABLE)
+                ? true
+                : 'the grip does not move its row with the arrows',
+        'Enter, Space (a grip has focus, inside a RepeatedDrag)': () =>
+            /useSensor\(KeyboardSensor/.test(DRAG_DROP) ? true : 'no keyboard sensor picks a row up in the drag scope',
+        'Escape (a row is picked up)': () =>
+            /useSensor\(KeyboardSensor/.test(DRAG_DROP) ? true : 'no keyboard sensor puts a row back in the drag scope',
+    },
+    more: () =>
+        layoutChecks('repeated-group', {
+            descriptionPull: () => numberIn(REPEATED_GROUP, /<p className="-mt-(\d+) /, 'step'),
+            rowHeadPull: () => numberIn(REPEATED_GROUP, /<div className="-my-(\d+) /, 'step'),
+            gripTop: () => numberIn(REPEATED_DRAG, /<SortableGrip type="button" className="mt-(\d+)"/, 'step'),
+        }),
+}
+
+// Period picker
+
+const PERIOD_PICKER = source('components/PeriodPicker.tsx')
+const PERIODS = source('lib/periods.ts')
+const periodPicker = (props: Partial<PeriodPickerProps> = {}) =>
+    draw(PeriodPicker, { type: 'monthly', value: '202610', onValueChange: noop, today: '2026-11-08', ...props })
+const PERIOD_PICKERS = once(() => ({
+    plain: periodPicker(),
+    empty: periodPicker({ value: null }),
+    disabled: periodPicker({ disabled: true }),
+    typed: periodPicker({ value: '202401' }),
+    typedDisabled: periodPicker({ value: '202401', disabled: true }),
+    refused: periodPicker({ value: 'harbor' }),
+}))
+const periodTrigger = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'select-trigger')
+const periodTyped = (elements: El[]) =>
+    elements.find((element) => element.tag === 'input' && element.attrs['aria-label'] === PERIOD_PICKER_WORDS.typed)
+const periodIdOf = (elements: El[]) => elements.find((element) => element.tag === 'span' && classesOf(element).includes('font-mono'))
+const triggerOn = (elements: El[], on: string[]): Where | undefined => {
+    const trigger = periodTrigger(elements)
+    return trigger === undefined
+        ? undefined
+        : { layers: [classesOf(trigger)], on, around: ancestors(trigger), focusable: focusable(trigger) }
+}
+/** A word of the period labels that is one entry of a list or a record. */
+const entry = (path: string, at: string | number): WordSource => [path, (said: Record<string | number, string>) => said[at]]
+
+const PERIOD_PICKER_ADAPTER: Adapter = {
+    wordObjects: { PERIOD_PICKER_WORDS },
+    complete: ['PERIOD_PICKER_WORDS'],
+    words: {
+        empty: 'PERIOD_PICKER_WORDS.empty',
+        otherType: [
+            'PERIOD_PICKER_WORDS.otherType',
+            (said: (id: unknown, its: unknown, wanted: unknown, example: unknown) => string, fill) =>
+                said(fill.id, fill.its, fill.wanted, fill.example),
+        ],
+        notPeriod: [
+            'PERIOD_PICKER_WORDS.notPeriod',
+            (said: (text: unknown, wanted: unknown, example: unknown) => string, fill) => said(fill.text, fill.wanted, fill.example),
+        ],
+        ...Object.fromEntries(
+            PERIOD_PICKER_WORDS.monthNames.map((_, at) => [`monthNames.${String(at)}`, entry('PERIOD_PICKER_WORDS.monthNames', at)]),
+        ),
+        ...Object.fromEntries(
+            PERIOD_PICKER_WORDS.shortMonthNames.map((_, at) => [
+                `shortMonthNames.${String(at)}`,
+                entry('PERIOD_PICKER_WORDS.shortMonthNames', at),
+            ]),
+        ),
+        ...Object.fromEntries(
+            Object.keys(PERIOD_PICKER_WORDS.types).map((type) => [`types.${type}`, entry('PERIOD_PICKER_WORDS.types', type)]),
+        ),
+        day: [
+            'PERIOD_PICKER_WORDS.day',
+            (said: (month: unknown, date: unknown, year: unknown) => string, fill) => said(fill.month, fill.date, fill.year),
+        ],
+        week: [
+            'PERIOD_PICKER_WORDS.week',
+            (said: (week: unknown, year: unknown, startMonth: unknown, startDate: unknown) => string, fill) =>
+                said(fill.week, fill.year, fill.startMonth, fill.startDate),
+        ],
+        month: ['PERIOD_PICKER_WORDS.month', (said: (month: unknown, year: unknown) => string, fill) => said(fill.month, fill.year)],
+        months: [
+            'PERIOD_PICKER_WORDS.months',
+            (said: (first: unknown, last: unknown, year: unknown) => string, fill) => said(fill.first, fill.last, fill.year),
+        ],
+        year: ['PERIOD_PICKER_WORDS.year', (said: (year: unknown) => string, fill) => said(fill.year)],
+        issueCritical: 'PERIOD_PICKER_WORDS.issueCritical',
+        issueWarning: 'PERIOD_PICKER_WORDS.issueWarning',
+        other: 'PERIOD_PICKER_WORDS.other',
+        typed: 'PERIOD_PICKER_WORDS.typed',
+        placeholder: 'PERIOD_PICKER_WORDS.placeholder',
+    },
+    options: { type: [...(/export type PeriodType = ([^\n]+)/.exec(PERIODS)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1]) },
+    size: (size) => {
+        const { plain, typed } = PERIOD_PICKERS()
+        switch (size) {
+            case 'picker':
+                return pieceWhere(plain[0])
+            case 'trigger':
+                return triggerOn(plain, ['data-[size=default]'])
+            case 'row':
+                return pieceWhere(periodIdOf(plain)?.parent)
+            case 'periodId':
+                return pieceWhere(periodIdOf(plain))
+            case 'typed':
+                return pieceWhere(periodTyped(typed))
+            default:
+                return undefined
+        }
+    },
+    paint: (_, name, state) => {
+        const { plain, empty, disabled, typed, typedDisabled, refused } = PERIOD_PICKERS()
+        switch (name) {
+            case 'trigger':
+                if (state === 'placeholder') return triggerOn(empty, ['data-placeholder'])
+                if (state === 'disabled') return triggerOn(disabled, ['disabled'])
+                return triggerOn(plain, state === 'focus' ? ['focus-visible'] : [])
+            case 'list':
+                return { layers: [POPUP_LOOK, SELECT_LIST.list], on: [] }
+            case 'row':
+                return { layers: [SELECT_LIST.row], on: rowOn(state) }
+            case 'periodId':
+                return { layers: [SELECT_LIST.row, classesOf(periodIdOf(plain))], on: rowOn(state) }
+            case 'separator':
+                return { layers: [SELECT_LIST.separator], on: [] }
+            case 'typed': {
+                const drawn = state.startsWith('invalid') ? refused : state === 'disabled' ? typedDisabled : typed
+                const on = state === 'disabled' ? ['disabled'] : state.endsWith('typedFocus') ? ['focus-visible'] : []
+                return pieceWhere(periodTyped(drawn), state.startsWith('invalid') ? ['aria-invalid', ...on] : on)
+            }
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => {
+        const { disabled, typed, refused } = PERIOD_PICKERS()
+        if (state === 'typedFocus') return pieceWhere(periodTyped(typed), ['focus-visible'])
+        if (state === 'invalid+typedFocus') return pieceWhere(periodTyped(refused), ['aria-invalid', 'focus-visible'])
+        if (state === 'disabled') return triggerOn(disabled, ['disabled'])
+        return undefined
+    },
+    keys: {
+        Tab: () => {
+            const { plain, typed, disabled } = PERIOD_PICKERS()
+            return focusable(periodTrigger(plain)) && focusable(periodTyped(typed)) && !focusable(periodTrigger(disabled))
+                ? true
+                : 'the trigger or the typed input is out of the tab order, or a disabled one in it'
+        },
+        'Enter, Space, ArrowDown, ArrowUp (the trigger has focus)': () => {
+            const trigger = periodTrigger(PERIOD_PICKERS().plain)
+            return trigger?.tag === 'button' && trigger.attrs.role === 'combobox' ? true : "the trigger is not Base UI's combobox button"
+        },
+        'ArrowDown, ArrowUp (the list is open)': BASE_UI('select', 'moves the highlight'),
+        'Enter, Space (a row is highlighted)': () =>
+            /if \(next === OTHER\) \{\s*setTyping\(true\)/.test(PERIOD_PICKER) ? true : 'Other period does not open the typed input',
+        'Escape (the list is open)': () => focusBack(SELECT),
+    },
+    more: () =>
+        layoutChecks('period-picker', {
+            listMaxHeight: () => numberIn(PERIOD_PICKER, /<SelectContent alignItemWithTrigger=\{false\} className="max-h-(\d+)"/, 'step'),
+            issueRoom: () => numberIn(PERIOD_PICKER, /cn\('pr-(\d+)', ISSUE_EDGE\.critical\)/, 'step'),
+        }),
+}
+
+// Tree select
+
+const TREE_SELECT = source('components/TreeSelect.tsx')
+const TREE = source('components/Tree.tsx')
+const POPOVER = source('components/ui/popover.tsx')
+const BARE_INPUT = literalAfter(source('components/ui/input.tsx'), 'const BARE =')
+const REGIONS: TreeNode[] = [
+    {
+        id: 'europe',
+        label: 'Europe',
+        icon: Folder,
+        meta: 2,
+        children: [
+            {
+                id: 'norway',
+                label: 'Norway',
+                children: [
+                    { id: 'bergen', label: 'Bergen' },
+                    { id: 'oslo', label: 'Oslo' },
+                ],
+            },
+            { id: 'portugal', label: 'Portugal' },
+        ],
+    },
+]
+const treeSelect = (props: Partial<TreeSelectProps> = {}) =>
+    draw(TreeSelect, { nodes: REGIONS, value: ['bergen'], onValueChange: noop, ...props })
+const tree = (props: Partial<TreeProps> = {}) =>
+    draw(Tree, {
+        label: TREE_SELECT_WORDS.search,
+        nodes: REGIONS,
+        selected: ['bergen'],
+        defaultExpanded: ['europe', 'norway'],
+        unavailable: (node: TreeNode) => (node.id === 'oslo' ? 'Outside the assignment' : undefined),
+        ...props,
+    })
+const TREE_SELECTS = once(() => ({
+    plain: treeSelect(),
+    empty: treeSelect({ value: [] }),
+    several: treeSelect({ value: ['bergen', 'portugal'] }),
+    refused: treeSelect({ invalid: true }),
+    single: tree(),
+    multiple: tree({ selection: 'multiple' }),
+    found: tree({ query: 'Ber' }),
+}))
+const treeTrigger = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'popover-trigger')
+const treeRow = (elements: El[], id: string) =>
+    elements.find((element) => element.attrs.role === 'treeitem' && element.attrs['data-id'] === id)
+/** A node's own icon, after its toggle's chevron: the first row's 16 icon. */
+const nodeIcon = (elements: El[]) => {
+    const row = treeRow(elements, 'europe')
+    return row === undefined
+        ? undefined
+        : elements.find((element) => element.tag === 'svg' && classesOf(element).includes('size-4') && within(element, row))
+}
+const treeToggle = (elements: El[]) =>
+    elements.find((element) => element.tag === 'button' && element.attrs.tabindex === '-1' && classesOf(element).includes('size-5'))
+/** The popup's parts, which open in a portal no server drawing reaches: their classes are read from the sources. */
+const TREE_SELECT_POPUP = {
+    popup: [POPUP_LOOK, literalAfter(POPOVER, 'data-slot="popover-content"'), literalAfter(TREE_SELECT, '<PopoverContent', 'className=')],
+    searchBar: literalAfter(TREE_SELECT, '<PopoverContent', '<div className='),
+    searchIcon: literalAfter(TREE_SELECT, '<Search className='),
+    search: [BARE_INPUT, literalAfter(TREE_SELECT, 'aria-label={words.search}', 'className=')],
+    clear: literalAfter(TREE_SELECT, '!optional && (', 'className='),
+    clearIcon: literalAfter(TREE_SELECT, '!optional && (', '<X className='),
+    list: /<div className="(max-h-\d+ overflow-y-auto p-\d+)"/.exec(TREE_SELECT)?.[1] ?? '',
+    clearRow: literalAfter(TREE_SELECT, 'aria-pressed={value.length === 0}', 'className={cn('),
+    clearRowChosen: literalAfter(TREE_SELECT, 'aria-pressed={value.length === 0}', 'value.length === 0 &&'),
+    statusRow: literalAfter(TREE, 'key={`${row.node.id}:status`}', 'className='),
+    failed: literalAfter(TREE, 'key={`${row.node.id}:status`}', '<span className="size-5 shrink-0" aria-hidden />', '<span className='),
+    retry: literalAfter(TREE, 'onClick={() => retry(row.node.id)}', 'className='),
+    retryIcon: literalAfter(TREE, 'onClick={() => retry(row.node.id)}', '<RotateCw className='),
+    trailPath: literalAfter(TREE, '<span className="max-w-2/3 shrink-0 truncate">', '<span className='),
+    note: literalAfter(TREE, "note === 'searching' ? (", '<p className='),
+}
+const TREE_ON: Record<string, string[]> = {
+    hover: ['hover'],
+    focus: ['focus-visible'],
+    rowFocus: ['focus-visible'],
+    invalid: ['aria-invalid'],
+    'invalid+focus': ['aria-invalid', 'focus-visible'],
+    'chosen+hover': ['hover'],
+    checked: ['data-checked'],
+    mixed: ['data-indeterminate'],
+    shut: ['disabled'],
+}
+const treeKey = (pattern: RegExp, missing: string) => () => (pattern.test(TREE) ? true : missing)
+
+const TREE_SELECT_ADAPTER: Adapter = {
+    wordObjects: { TREE_SELECT_WORDS },
+    complete: ['TREE_SELECT_WORDS'],
+    words: {
+        placeholder: 'TREE_SELECT_WORDS.placeholder',
+        search: 'TREE_SELECT_WORDS.search',
+        clear: 'TREE_SELECT_WORDS.clear',
+        empty: 'TREE_SELECT_WORDS.empty',
+        selected: ['TREE_SELECT_WORDS.selected', (said: (count: number) => string, fill) => said(Number(fill.count))],
+        actions: 'TREE_SELECT_WORDS.actions',
+        loading: 'TREE_SELECT_WORDS.loading',
+        failed: 'TREE_SELECT_WORDS.failed',
+        retry: 'TREE_SELECT_WORDS.retry',
+        searching: 'TREE_SELECT_WORDS.searching',
+        searchFailed: 'TREE_SELECT_WORDS.searchFailed',
+    },
+    options: {},
+    size: (size, key) => {
+        const { plain, single, multiple } = TREE_SELECTS()
+        const trigger = treeTrigger(plain)
+        const literal = (classes: string): Where => ({ layers: [classes], on: [] })
+        switch (size) {
+            case 'trigger':
+                return pieceWhere(trigger)
+            case 'value':
+                return pieceWhere(plain.find((element) => element.tag === 'span' && element.parent === trigger))
+            case 'chevron':
+                return pieceWhere(iconOf(plain, trigger))
+            case 'searchBar':
+                return literal(TREE_SELECT_POPUP.searchBar)
+            case 'searchIcon':
+                return literal(TREE_SELECT_POPUP.searchIcon)
+            case 'search':
+                return { layers: TREE_SELECT_POPUP.search, on: [] }
+            case 'clear':
+                return literal(key === 'icon' ? TREE_SELECT_POPUP.clearIcon : TREE_SELECT_POPUP.clear)
+            case 'list':
+                return literal(TREE_SELECT_POPUP.list)
+            case 'clearRow':
+                return literal(TREE_SELECT_POPUP.clearRow)
+            case 'row':
+                return pieceWhere(treeRow(single, 'europe'))
+            case 'toggle':
+                return key === 'icon' ? pieceWhere(iconOf(single, treeToggle(single))) : pieceWhere(treeToggle(single))
+            case 'icon':
+                return pieceWhere(nodeIcon(single))
+            case 'checkbox':
+                return pieceWhere(multiple.find((element) => element.attrs['data-slot'] === 'checkbox'))
+            case 'statusRow':
+                return literal(TREE_SELECT_POPUP.statusRow)
+            case 'retry':
+                return literal(key === 'icon' ? TREE_SELECT_POPUP.retryIcon : TREE_SELECT_POPUP.retry)
+            case 'note':
+                return literal(TREE_SELECT_POPUP.note)
+            default:
+                return undefined
+        }
+    },
+    paint: (_, name, state) => {
+        const { plain, empty, several, refused, single, multiple, found } = TREE_SELECTS()
+        const on = state.split('+').flatMap((one) => TREE_ON[one] ?? [])
+        const literal = (...layers: string[]): Where => ({ layers, on })
+        switch (name) {
+            case 'trigger':
+                return pieceWhere(treeTrigger(state.startsWith('invalid') ? refused : plain), on)
+            case 'value':
+                return pieceWhere(
+                    empty.find(
+                        (element) =>
+                            element.tag === 'span' && element.text === TREE_SELECT_WORDS.placeholder && element.parent?.tag === 'span',
+                    ),
+                )
+            case 'path':
+                return pieceWhere(plain.find((element) => element.tag === 'span' && element.text === 'Europe / Norway'))
+            case 'count':
+                return pieceWhere(several.find((element) => element.attrs['aria-label'] === TREE_SELECT_WORDS.selected(2)))
+            case 'chevron':
+                return pieceWhere(iconOf(plain, treeTrigger(plain)))
+            case 'popup':
+                return { layers: TREE_SELECT_POPUP.popup, on: [] }
+            case 'searchBar':
+                return literal(TREE_SELECT_POPUP.searchBar)
+            case 'searchIcon':
+                return literal(TREE_SELECT_POPUP.searchIcon)
+            case 'search':
+                return { layers: TREE_SELECT_POPUP.search, on: [] }
+            case 'clear':
+                return literal(TREE_SELECT_POPUP.clear)
+            case 'clearRow':
+                return literal(TREE_SELECT_POPUP.clearRow, ...(state.startsWith('chosen') ? [TREE_SELECT_POPUP.clearRowChosen] : []))
+            case 'row':
+                return pieceWhere(treeRow(single, state.startsWith('chosen') ? 'bergen' : state === 'shut' ? 'oslo' : 'europe'), on)
+            case 'toggle':
+                return pieceWhere(treeToggle(single), on)
+            case 'icon':
+                return pieceWhere(nodeIcon(single))
+            case 'checkbox':
+                return pieceWhere(
+                    multiple.find((element) => element.attrs['data-slot'] === 'checkbox'),
+                    on,
+                )
+            case 'match':
+                return pieceWhere(found.find((element) => element.tag === 'mark'))
+            case 'trailPath':
+                return literal(TREE_SELECT_POPUP.trailPath)
+            case 'reason':
+                return pieceWhere(single.find((element) => element.tag === 'span' && element.attrs.title === 'Outside the assignment'))
+            case 'meta':
+                return pieceWhere(
+                    single.find((element) => element.tag === 'span' && element.text === '2' && classesOf(element).includes('tabular-nums')),
+                )
+            case 'loadingRow':
+                return literal(TREE_SELECT_POPUP.statusRow)
+            case 'failedRow':
+                return literal(TREE_SELECT_POPUP.statusRow, TREE_SELECT_POPUP.failed)
+            case 'retry':
+                return literal(TREE_SELECT_POPUP.retry)
+            case 'note':
+                return literal(TREE_SELECT_POPUP.note)
+            default:
+                return undefined
+        }
+    },
+    effect: (state) => {
+        const { plain, refused } = TREE_SELECTS()
+        if (state === 'focus') return pieceWhere(treeTrigger(plain), ['focus-visible'])
+        if (state === 'invalid+focus') return pieceWhere(treeTrigger(refused), ['aria-invalid', 'focus-visible'])
+        return undefined
+    },
+    keys: {
+        Tab: () => (focusable(treeTrigger(TREE_SELECTS().plain)) ? true : 'the trigger is out of the tab order'),
+        'Enter, Space (the trigger has focus)': () =>
+            treeTrigger(TREE_SELECTS().plain)?.tag === 'button' ? true : "the trigger is not Base UI's popover button",
+        'ArrowDown, ArrowUp (a row has focus)': treeKey(
+            /event\.key === 'ArrowDown'[\s\S]*event\.key === 'ArrowUp'/,
+            'the tree does not move by ArrowDown and ArrowUp',
+        ),
+        'Home, End (a row has focus)': treeKey(
+            /event\.key === 'Home'[\s\S]*event\.key === 'End'/,
+            'the tree does not move by Home and End',
+        ),
+        'ArrowRight (a row has focus)': treeKey(
+            /event\.key === 'ArrowRight' && branch && !expanded\) toggle/,
+            'ArrowRight does not open a branch',
+        ),
+        'ArrowLeft (a row has focus)': treeKey(
+            /event\.key === 'ArrowLeft' && branch && expanded && matches === null\) toggle/,
+            'ArrowLeft does not close a branch',
+        ),
+        'Enter, Space (a row has focus)': () =>
+            /event\.key === 'Enter' \|\| event\.key === ' '\) choose\(current\)/.test(TREE) &&
+            /if \(!multiple\) \{\s*setOpen\(false\)/.test(TREE_SELECT)
+                ? true
+                : 'a row is not chosen by Enter or Space, or a single choice does not close the popup',
+        'Escape (the popup is open)': () => focusBack(POPOVER),
+    },
+    more: () =>
+        layoutChecks('tree-select', {
+            popupMinWidth: () => numberIn(TREE_SELECT_POPUP.popup[2], /\bmin-w-(\d+)\b/, 'step'),
+            popupOffset: () => numberIn(POPOVER, /sideOffset = (\d+),/),
+            listMaxHeight: () => numberIn(TREE_SELECT_POPUP.list, /\bmax-h-(\d+)\b/, 'step'),
+            indent: () => numberIn(TREE, /paddingLeft: `calc\(\$\{row\.level - 1\} \* (\d+)rem/, 'rem'),
+            indentStart: () => numberIn(TREE, /paddingLeft: `calc\(\$\{row\.level - 1\} \* \d+rem \+ ([\d.]+)rem\)`/, 'rem'),
+        }),
+}
+
 /**
  * Each sokkel-ui drift entry in a spec, by its `what`, with the checks it covers: they may differ,
  * and must, or the entry is stale. A function instead says whether the difference is still there,
@@ -5560,6 +6812,17 @@ const ADAPTERS: Record<string, Adapter> = {
     'time-series-panel': TIME_SERIES_PANEL_ADAPTER,
     'code-editor': CODE_EDITOR_ADAPTER,
     'date-field': DATE_FIELD_ADAPTER,
+    banner: BANNER_ADAPTER,
+    problem: PROBLEM_ADAPTER,
+    'side-panel': SIDE_PANEL_ADAPTER,
+    'json-tree': JSON_TREE_ADAPTER,
+    'secret-field': SECRET_FIELD_ADAPTER,
+    'yes-no-field': YES_NO_FIELD_ADAPTER,
+    'time-field': TIME_FIELD_ADAPTER,
+    'computed-field': COMPUTED_FIELD_ADAPTER,
+    'repeated-group': REPEATED_GROUP_ADAPTER,
+    'period-picker': PERIOD_PICKER_ADAPTER,
+    'tree-select': TREE_SELECT_ADAPTER,
 }
 
 // The checks, walked from each spec
@@ -5770,6 +7033,55 @@ function keyChecks(spec: Spec, adapter: Adapter): Check[] {
     })
 }
 
+// Message ids: each word's id and its English in the catalogs every package writes (`bun run messages`)
+
+const CATALOG: Record<string, string> = Object.assign(
+    {},
+    ...readdirSync(join(ROOT, 'packages')).flatMap((pkg) => {
+        try {
+            return [JSON.parse(readFileSync(join(ROOT, 'packages', pkg, 'messages', 'en.json'), 'utf8')) as Record<string, string>]
+        } catch {
+            return []
+        }
+    }),
+) as Record<string, string>
+
+/** Thousands written plain: the catalog's counts group them where the English functions do not yet (open-questions.md, words and their message ids). */
+const ungrouped = (text: string) => text.replace(/(\d),(\d{3})/g, '$1$2')
+
+function messageChecks(spec: Spec): Check[] {
+    const checks: Check[] = []
+    for (const [key, message] of Object.entries(spec.messages ?? {})) {
+        if (message === null) continue
+        const held = CATALOG[message.id]
+        checks.push(check(`messages.${key}`, `${message.id}: ${message.en}`, held === undefined ? 'no such id' : `${message.id}: ${held}`))
+        if (held === undefined) continue
+        const word = spec.words[key]
+        const say = (values: Record<string, unknown>) => {
+            try {
+                return ungrouped(formatMessage(held, { ...message.with, ...values }))
+            } catch (error) {
+                return `a message that cannot be read: ${(error as Error).message}`
+            }
+        }
+        // A plain word whose braces the part fills itself is the message as it reads.
+        if (typeof word === 'string' && say({}) === word) continue
+        const samples = spec.samples?.[key]
+        if (samples !== undefined) {
+            for (const sample of samples)
+                checks.push(check(`messages.${key} with ${JSON.stringify(sample.with)}`, ungrouped(sample.says), say(sample.with)))
+        } else if (typeof word === 'string') checks.push(check(`messages.${key} says`, word, say({})))
+        else {
+            checks.push(check(`messages.${key} says one`, filled(word.one, { count: 1 }), say({ count: 1 })))
+            checks.push(check(`messages.${key} says other`, filled(word.other, { count: 5 }), say({ count: 5 })))
+        }
+    }
+    for (const key of Object.keys(spec.words)) {
+        if (spec.messages !== undefined && !(key in spec.messages)) checks.push(check(`messages.${key}`, 'its message id', 'no entry'))
+    }
+    return checks
+}
+
 /** Every check of a part, made once. */
 const made = new Map<string, Check[]>()
 function checksOf(id: string): Check[] {
@@ -5780,6 +7092,7 @@ function checksOf(id: string): Check[] {
     if (spec === undefined || adapter === undefined) return []
     const all = [
         ...wordChecks(spec, adapter),
+        ...messageChecks(spec),
         ...optionChecks(spec, adapter),
         ...sizeChecks(spec, adapter),
         ...paintMapChecks(spec, adapter),
@@ -5815,6 +7128,7 @@ describe('the design pin', () => {
 for (const id of SPECS.keys()) {
     describe(id, () => {
         it('says the words the spec lists, and no word it does not', () => holds(id, 'words.'))
+        it("keys its words by the catalogs' message ids", () => holds(id, 'messages.'))
         it('takes the values each option lists', () => holds(id, 'options.'))
         it('draws each size at the lengths the spec gives', () => holds(id, 'sizes.'))
         it('paints each state as the spec does', () => holds(id, 'variants.', 'pieces.', 'states.'))
