@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isStatusColor, resolveStatus, RUN_STATUS_MAP, RUN_STATUSES, STATUS_CSS, type StatusMap } from './status'
+import { HEALTH_STATUSES, isStatusColor, resolveStatus, RUN_STATUS_MAP, RUN_STATUSES, STATUS_CSS, type StatusMap } from './status'
 
 const STATES: StatusMap = {
     draft: { color: 'neutral' },
@@ -13,6 +13,16 @@ describe('resolveStatus', () => {
     it('knows every run state by its name, in its own color', () => {
         for (const status of RUN_STATUSES) expect(resolveStatus(status).color).toBe(status)
         expect(resolveStatus('completed_with_errors')).toMatchObject({ label: 'completed with errors', color: 'completed_with_errors' })
+    })
+
+    it('knows every health state by its name, in a kind color', () => {
+        expect(HEALTH_STATUSES.map((status) => resolveStatus(status))).toEqual([
+            { label: 'ok', color: 'good', live: false },
+            { label: 'warn', color: 'warning', live: false },
+            { label: 'fail', color: 'critical', live: false },
+            { label: 'error', color: 'critical', live: false },
+        ])
+        expect(resolveStatus('ok', { ok: { label: 'healthy', color: 'good' } })).toMatchObject({ label: 'healthy' })
     })
 
     it("says an app's state in its words, or by its name, in its color", () => {

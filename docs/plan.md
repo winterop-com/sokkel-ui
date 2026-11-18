@@ -690,7 +690,8 @@ panel's or a dialog's size, with a leading `glyph`, `chips` and a one-line `desc
 `DetailSheet` is one thing's detail in a sheet from the right, its chips and actions on one line
 under the title, its body the parts its own page draws; `SourceSheet` is one.
 
-`StatusChip` knows the nine run states without being told; an app names its own (`draft`,
+`StatusChip` knows the nine run states and a health check's four (`ok` good, `warn` warning,
+`fail` and `error` critical) without being told; an app names its own (`draft`,
 `review`, `published`) with their words and a color (good, critical, warning, info, neutral or a
 run state's) in a map, given to one chip as `statuses` or set once for the app by a
 `StatusProvider`, which adds to the run states and may reword or recolor them. `Dot`'s `status` and

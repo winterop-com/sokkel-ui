@@ -8,7 +8,7 @@ import { StatusChip, type Status, type StatusMap } from '@winterop-com/sokkel-ui
 import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
 
 /**
- * A state as a chip. The run states are known without being told; an app's own states take their
+ * A state as a chip. The run states and the health states are known without being told; an app's own states take their
  * words and a color from a map, given to one chip or set once for the app by a `StatusProvider`,
  * which a dot and a timeline read too.
  */
@@ -26,6 +26,8 @@ const RUN_STATES: Status[] = [
     'skipped',
     'completed_with_errors',
 ]
+
+const HEALTH_STATES: Status[] = ['ok', 'warn', 'fail', 'error']
 
 /** Tidevann's own states for a job's definition, each with its color and, where its name is not the word, its words. */
 const JOB_STATES: StatusMap = {
@@ -61,6 +63,25 @@ export const WithDot: StoryObj = {
                 <Dot status="failed" size="md" label="failed" />
                 <span className="font-mono">sync-inventory</span>
                 <StatusChip status="failed" dot />
+            </Row>
+        </Stack>
+    ),
+}
+
+/** Every health state, known without being told: a check that passed, found something to watch, failed, or could not run. */
+export const HealthStates: StoryObj = {
+    name: 'Health states',
+    render: () => (
+        <Stack gap="md">
+            <Row gap="xs" wrap>
+                {HEALTH_STATES.map((status) => (
+                    <StatusChip key={status} status={status} dot />
+                ))}
+            </Row>
+            <Row gap="xs">
+                <Dot status="warn" size="md" label="warn" />
+                <span className="font-mono">api.example.org</span>
+                <StatusChip status="warn" dot />
             </Row>
         </Stack>
     ),

@@ -1,14 +1,14 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '../lib/cn'
-import type { RunStatus, StatusColor, StatusMap } from '../lib/status'
+import type { HealthStatus, RunStatus, StatusColor, StatusMap } from '../lib/status'
 import { Dot } from './Dot'
 import { useStatus, useStatusDot } from './StatusProvider'
 
-export type { RunStatus, StatusColor, StatusDefinition, StatusMap } from '../lib/status'
+export type { HealthStatus, RunStatus, StatusColor, StatusDefinition, StatusMap } from '../lib/status'
 
-/** The states a status chip knows without being told: a run's, each drawn in its own status color. */
-export type Status = RunStatus
+/** The states a status chip knows without being told: a run's, each in its own status color, and a health check's, in a kind color. */
+export type Status = RunStatus | HealthStatus
 
 /** Each color as a chip: a faint wash of it with its ink, a skip as a dashed edge. */
 const CHIP: Record<StatusColor, string> = {
@@ -32,7 +32,7 @@ const CHIP: Record<StatusColor, string> = {
 const LIVE = 'animate-live'
 
 export interface StatusChipProps extends Omit<ComponentProps<'span'>, 'children'> {
-    /** A run state, or any state the app names in `statuses` or a `StatusProvider`. */
+    /** A run or health state, or any state the app names in `statuses` or a `StatusProvider`. */
     status: Status | (string & {})
     /** The words, over the map's. */
     label?: string

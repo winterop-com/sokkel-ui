@@ -281,7 +281,7 @@ const BADGE_TONE = {
 /** A source's box: dashed on the canvas's own ground. */
 const SOURCE = 'border-dashed bg-canvas shadow-none'
 
-const DOT_TONE: Record<Status, string> = {
+const DOT_TONE: Record<RunStatus, string> = {
     succeeded: 'bg-status-succeeded',
     failed: 'bg-status-failed',
     running: 'bg-status-running motion-safe:animate-pulse',
