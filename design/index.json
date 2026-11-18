@@ -1,6 +1,6 @@
 {
     "$description": "The sokkel-design contract: its version, which moves in lockstep with sokkel-ui before 1.0, the foundations every part refers to, and every part and pattern with its status. Every part is stable: the contract holds it as sokkel-ui draws it, and a renderer's state and drift say what is built and compared. How far each renderer has built a part is its own field, `renderers`, in the part's file. CHANGELOG.md says what each version changed.",
-    "version": "0.31.2",
+    "version": "0.32.0",
     "renderers": [
         {
             "id": "sokkel-ui",
