@@ -402,6 +402,7 @@ const CORE_AREAS: Record<string, string> = {
     PageState: 'Actions, dialogs and feedback',
     PointMenu: 'Actions, dialogs and feedback',
     Problem: 'Actions, dialogs and feedback',
+    PromptDialog: 'Actions, dialogs and feedback',
     SettingsDialog: 'Actions, dialogs and feedback',
     ShortcutsDialog: 'Actions, dialogs and feedback',
     StarButton: 'Actions, dialogs and feedback',

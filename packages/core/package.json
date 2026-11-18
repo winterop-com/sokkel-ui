@@ -492,6 +492,10 @@
             "types": "./dist/components/ProfileRow.d.ts",
             "import": "./dist/components/ProfileRow.js"
         },
+        "./PromptDialog": {
+            "types": "./dist/components/PromptDialog.d.ts",
+            "import": "./dist/components/PromptDialog.js"
+        },
         "./ProseText": {
             "types": "./dist/components/ProseText.d.ts",
             "import": "./dist/components/ProseText.js"

@@ -3,4 +3,10 @@
 What changed since 0.32.1, for the next release's notes. A release copies this into its GitHub
 release and empties it.
 
-Nothing yet.
+## Added
+
+- `PromptDialog` (`@winterop-com/sokkel-ui/PromptDialog`): a dialog that asks for one value. One
+  text field, or a `SecretField` with `secret`, Cancel and Submit, Enter submitting; `validate` gives
+  the issue under the field and shuts Submit, an async `onSubmit` holds the dialog busy, and a failed
+  one leaves it open with why above the verbs. Its words are `PROMPT_DIALOG_WORDS`, ids
+  `promptDialog.*`.
