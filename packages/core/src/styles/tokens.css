@@ -265,6 +265,35 @@
     --z-index-toast: var(--layer-toast);
 }
 
+@theme inline static {
+    --color-accent: var(--accent);
+    --color-background: var(--background);
+    --color-border: var(--border);
+    --color-popover: var(--popover);
+    --color-sidebar: var(--sidebar);
+    --font-mono: var(--typeface-mono);
+    --font-sans: var(--typeface-sans);
+    --leading-code: 1.5rem;
+    --radius-md: var(--radius);
+    --radius-node: var(--radius);
+    --shadow-pop: var(--elevation-pop);
+    --spacing-finger: 44px;
+    --spacing-shell-foot: 46px;
+    --spacing-shell-tabs: 56px;
+    --spacing-shell-top: 46px;
+    --spacing-traffic-lights: 80px;
+    --text-2xs: 0.6875rem;
+    --text-base: 1rem;
+    --text-base--line-height: 1.5rem;
+    --text-sm: 0.9375rem;
+    --text-xs: 0.8125rem;
+    --text-xs--line-height: 1.25rem;
+}
+
+@theme static {
+    --spacing: 0.25rem;
+}
+
 :root,
 :where([data-theme-scope]) {
     --typeface-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
