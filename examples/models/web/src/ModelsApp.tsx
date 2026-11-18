@@ -31,7 +31,7 @@ import {
 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -101,7 +101,6 @@ const SERVER: Record<string, ServerState> = { up: 'up', down: 'down', starting: 
 export function ModelsApp({ frame }: { frame: Frame }) {
     const app = useApp()
     const { models, conversations, downloads, runner, loaded, prefs } = app
-    const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
     const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['library'] })
     const [first = 'library', ...rest] = settings.route
@@ -294,8 +293,7 @@ export function ModelsApp({ frame }: { frame: Frame }) {
                             where="tidevann.example.org"
                             local
                             onSettings={() => go('/settings')}
-                            scheme={look.scheme}
-                            onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                            onAppearance={() => go(APPEARANCE)}
                         />
                     }
                 />

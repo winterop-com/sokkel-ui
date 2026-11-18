@@ -9,7 +9,7 @@ import { Bell, Database, LayoutDashboard, Palette } from 'lucide-react'
 import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { DEFAULT_PREFERENCES, type Preferences, preferences } from './data'
 import { SelectInput } from './inputs'
 import { INTERVALS, PRESETS, type Zone } from './query'
@@ -22,7 +22,7 @@ const KEEPS = [
 
 /** The app's preferences as a dialog: dashboards, alerts, the look and the demo's data. */
 export function SettingsPage({ prefs, frame, open, onClose }: { prefs: Preferences; frame: Frame; open: boolean; onClose: () => void }) {
-    const [active, setActive] = useState('dashboards')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'dashboards')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const { settings, setSettings } = frame.appearance

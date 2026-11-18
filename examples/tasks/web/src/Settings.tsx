@@ -9,7 +9,7 @@ import { Database, ListTodo, Palette, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { DEFAULT_PREFS, PEOPLE, PROJECTS, type Person, type Prefs, type Project } from './data'
 
 /** The preferences each section holds, so Reset to defaults puts back those and leaves the rest. */
@@ -62,7 +62,7 @@ export function Settings({
     onClose: () => void
 }) {
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [active, setActive] = useState('lists')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'lists')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const [busy, setBusy] = useState(false)

@@ -96,17 +96,20 @@ const SECTION_KEYS: Record<string, (keyof Options)[]> = {
 export function Settings({
     options,
     appearance,
+    section,
     open,
     onClose,
 }: {
     options: Options
     appearance: AppearanceState
+    /** The section shown first, as the account menu's Appearance names; Board when none. */
+    section?: string
     open: boolean
     onClose: () => void
 }) {
     const rows = useRows()
     const state = useLive()
-    const [active, setActive] = useState('board')
+    const [active, setActive] = useState(section ?? 'board')
     const [search, setSearch] = useState('')
     const [target, setTarget] = useState<ServiceId>('api')
     const [site, setSite] = useState('singapore')

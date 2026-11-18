@@ -37,7 +37,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -74,7 +74,6 @@ const TITLES: Record<string, string> = {
 /** The podcasts app: the rail of places, the page the route names, the player along the foot, and the palette. */
 export function Podcasts({ frame }: { frame: Frame }) {
     const state = usePodcasts()
-    const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
     const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['home'] })
     const [first = 'home', second, third] = settings.route
@@ -343,8 +342,7 @@ export function Podcasts({ frame }: { frame: Frame }) {
                                 name="ada"
                                 where="tidevann.example.org"
                                 onSettings={() => go('/settings')}
-                                scheme={look.scheme}
-                                onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                                onAppearance={() => go(APPEARANCE)}
                                 onSignOut={() => go('/home')}
                             />
                         }

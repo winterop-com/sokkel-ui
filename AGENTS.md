@@ -159,6 +159,9 @@ and ask before acting.
 - Every example has Settings, and only as a `SettingsDialog` over the page it was opened from, on
   `#/settings` through the library's `useOverlayRoute` (`hooks/use-overlay-route`): never a routed
   page, never settings embedded in the layout.
+- Light and dark are chosen only in Settings › Appearance and the command palette
+  (`appearanceCommands`): the account menu's Appearance entry opens Settings at Appearance, and
+  there is never a scheme toggle in the top bar or the account menu.
 - A settings dialog keeps the dialog's own footer words, and its Reset to defaults resets the shown
   section; a section with nothing to put back says `reset: false`.
 - The trail lives in the top bar only, on every page; the page header shows the title and its

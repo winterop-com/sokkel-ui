@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -63,7 +63,6 @@ export const videoText = (video: Video) => `${video.title} ${channelOf(video).na
 /** Tidevann's video site: the rail of its places, the palette, the page the address names, and what is being made at the foot. */
 export function Site({ frame }: { frame: Frame }) {
     const prefs = usePrefs()
-    const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
     const settings = useOverlayRoute(frame.route, 'settings')
     const route = settings.route
@@ -294,8 +293,7 @@ export function Site({ frame }: { frame: Frame }) {
                             where="tidevann.example.org"
                             local
                             onSettings={() => go('/settings')}
-                            scheme={look.scheme}
-                            onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                            onAppearance={() => go(APPEARANCE)}
                         />
                     }
                 />

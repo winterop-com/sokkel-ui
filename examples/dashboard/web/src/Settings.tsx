@@ -9,14 +9,14 @@ import { Database, LayoutDashboard, Palette, Radio } from 'lucide-react'
 import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { prefs as prefsStore } from './collections'
 import { DEFAULT_PREFS, PACES, type Pace, type Prefs } from './model'
 import { CARRIED } from './themes'
 
 /** The person's settings, kept by the backend as each is changed; the look is kept in this browser. */
 export function Settings({ prefs, frame, onClose }: { prefs: Prefs; frame: Frame; onClose: () => void }) {
-    const [active, setActive] = useState('live')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'live')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
     const { settings, setSettings } = frame.appearance

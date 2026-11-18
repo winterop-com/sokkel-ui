@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -98,7 +98,6 @@ function useRowActions(): (node: TreeNode) => DataAction[] {
 export function Notes({ frame }: { frame: Frame }) {
     const state = useVault()
     const { vault, prefs, setPrefs, open, openDay, newNote, ask, order, place, save, drafts } = state
-    const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from.
     const settings = useOverlayRoute(frame.route, 'settings', { fallback: ['notes'] })
     const [first = 'notes', second] = settings.route
@@ -360,8 +359,7 @@ export function Notes({ frame }: { frame: Frame }) {
                                 name="ada"
                                 where="tidevann.example.org"
                                 onSettings={() => go('/settings')}
-                                scheme={look.scheme}
-                                onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                                onAppearance={() => go(APPEARANCE)}
                                 onSignOut={() => go('/notes')}
                             />
                         }

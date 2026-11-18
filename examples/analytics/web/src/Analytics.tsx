@@ -62,7 +62,6 @@ const LABELS: Record<PageId | 'settings' | 'missing', string> = {
 /** Tidevann's analytics: the rail of its pages, the palette, the page the address names, and the live stream's state at the foot. */
 export function Analytics({ frame }: { frame: Frame }) {
     const { world, error, view, settingsOpen, href, prefs, setView, stream, money, toggleStream } = useApp()
-    const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from, which keeps its whole address,
     // range and segment included, to go back to.
     const settings = useOverlayRoute(settingsOpen ? ['settings'] : frame.route, 'settings')
@@ -254,8 +253,7 @@ export function Analytics({ frame }: { frame: Frame }) {
                             where="tidevann.example.org"
                             local
                             onSettings={() => go(href('settings'))}
-                            scheme={look.scheme}
-                            onSchemeChange={(scheme) => setLook({ ...look, scheme })}
+                            onAppearance={() => go(href('settings/appearance'))}
                         />
                     }
                 />

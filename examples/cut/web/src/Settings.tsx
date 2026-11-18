@@ -8,13 +8,13 @@ import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { Database, Film, Palette, Play, Scissors } from 'lucide-react'
 import { useState } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { settingsSection, type Frame } from 'tidevann-shared/frame'
 import { prefs as prefsStore } from './collections'
 import { DEFAULT_PREFS, EXPORT_SIZES, type ExportSize, type Prefs } from './model'
 
 /** The person's settings, kept by the backend as each is changed; the look is kept in this browser. */
 export function Settings({ prefs, frame, onClose }: { prefs: Prefs; frame: Frame; onClose: () => void }) {
-    const [active, setActive] = useState('playback')
+    const [active, setActive] = useState(() => settingsSection(frame.route) ?? 'playback')
     const [search, setSearch] = useState('')
     const { settings, setSettings } = frame.appearance
     const set = (patch: Partial<Prefs>) => void prefsStore.update(prefs.id, patch)

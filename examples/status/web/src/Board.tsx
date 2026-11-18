@@ -27,7 +27,7 @@ import {
 } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, settingsSection, type Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
@@ -77,7 +77,6 @@ export function Board({ frame }: { frame: Frame }) {
     const rows = useRows()
     const [reporting, setReporting] = useState(false)
     const [handingOver, setHandingOver] = useState(false)
-    const { settings: look, setSettings: setLook } = frame.appearance
 
     // Settings open as a dialog over the page they were opened from.
     const overlay = useOverlayRoute(frame.route, 'settings')
@@ -280,9 +279,8 @@ export function Board({ frame }: { frame: Frame }) {
                             <AccountMenu
                                 name={ME}
                                 where="tidevann.example.org"
-                                scheme={look.scheme}
-                                onSchemeChange={(scheme) => setLook({ ...look, scheme })}
                                 onSettings={() => go('/settings')}
+                                onAppearance={() => go(APPEARANCE)}
                                 onSignOut={() => go('/public')}
                             />
                         }
@@ -324,7 +322,15 @@ export function Board({ frame }: { frame: Frame }) {
             </Shell>
             <NewIncidentDialog open={reporting} onOpenChange={setReporting} me={ME} service={service} />
             <HandOverDialog open={handingOver} onOpenChange={setHandingOver} />
-            {overlay.open && <Settings options={options} appearance={frame.appearance} open onClose={overlay.close} />}
+            {overlay.open && (
+                <Settings
+                    options={options}
+                    appearance={frame.appearance}
+                    section={settingsSection(frame.route)}
+                    open
+                    onClose={overlay.close}
+                />
+            )}
         </>
     )
 }

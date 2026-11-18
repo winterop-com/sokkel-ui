@@ -63,7 +63,7 @@ import {
     tasks,
 } from './data'
 import { Settings } from './Settings'
-import type { Frame } from 'tidevann-shared/frame'
+import { APPEARANCE, type Frame } from 'tidevann-shared/frame'
 import { go } from 'tidevann-shared/router'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { TidevannMark } from 'tidevann-shared/mark'
@@ -428,13 +428,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                             name="ada"
                             where="tidevann.example.org"
                             onSettings={() => go('/settings')}
-                            scheme={frame.appearance.settings.scheme}
-                            onSchemeChange={(scheme) =>
-                                frame.appearance.setSettings({
-                                    ...frame.appearance.settings,
-                                    scheme,
-                                })
-                            }
+                            onAppearance={() => go(APPEARANCE)}
                         />
                     }
                 />
