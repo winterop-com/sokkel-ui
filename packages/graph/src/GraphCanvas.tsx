@@ -171,6 +171,20 @@ export interface GraphEditing {
     onDropItem?: (item: string, at: GraphPointer) => void
 }
 
+/** How long after a resize a new placement counts as the graph laid out anew for it. */
+const RELAYOUT_AFTER_RESIZE_MS = 1000
+
+/** Whether a box, in the graph's own pixels, is wholly in a canvas of this size under this view. */
+export function boxInView(
+    box: { x: number; y: number; width: number; height: number },
+    view: { x: number; y: number; zoom: number },
+    canvas: { width: number; height: number },
+): boolean {
+    const left = box.x * view.zoom + view.x
+    const top = box.y * view.zoom + view.y
+    return left >= 0 && top >= 0 && left + box.width * view.zoom <= canvas.width && top + box.height * view.zoom <= canvas.height
+}
+
 /** How finely a canvas's room is told apart for wrapping, so a resize lays the graph out again only past a step. */
 const ROOM_STEP = 48
 
@@ -1025,23 +1039,32 @@ function FitToGraph({
         return () => cancelAnimationFrame(frame)
     }, [direction, flow, updateInternals])
 
-    // A view the reader moved keeps its zoom as the canvas is resized, and brings the chosen node back into it.
+    // A view the reader moved keeps its zoom as the canvas is resized, and brings the chosen node back
+    // into it: at once, and again once the graph is laid out anew for the new size.
+    const resizedAt = useRef<number | undefined>(undefined)
+    const showChosen = useCallback(() => {
+        const chosen = flow.getNodes().find((node) => node.selected === true)
+        if (chosen === undefined) return
+        const { width, height } = store.getState()
+        const box = { ...chosen.position, width: chosen.width ?? 0, height: chosen.height ?? 0 }
+        const view = flow.getViewport()
+        if (!boxInView(box, view, { width, height }))
+            void flow.setCenter(box.x + box.width / 2, box.y + box.height / 2, { zoom: view.zoom, duration: 0 })
+    }, [flow, store])
     useEffect(() => {
         if (!moved) return
         return store.subscribe((state, before) => {
             if (state.width === before.width && state.height === before.height) return
-            const chosen = flow.getNodes().find((node) => node.selected === true)
-            if (chosen === undefined) return
-            const view = flow.getViewport()
-            const width = chosen.width ?? 0
-            const height = chosen.height ?? 0
-            const left = chosen.position.x * view.zoom + view.x
-            const top = chosen.position.y * view.zoom + view.y
-            const inside = left >= 0 && top >= 0 && left + width * view.zoom <= state.width && top + height * view.zoom <= state.height
-            if (!inside)
-                void flow.setCenter(chosen.position.x + width / 2, chosen.position.y + height / 2, { zoom: view.zoom, duration: 0 })
+            resizedAt.current = Date.now()
+            showChosen()
         })
-    }, [flow, store, moved])
+    }, [store, moved, showChosen])
+    useEffect(() => {
+        const at = resizedAt.current
+        if (!moved || placement === '' || at === undefined || Date.now() - at > RELAYOUT_AFTER_RESIZE_MS) return
+        const frame = requestAnimationFrame(showChosen)
+        return () => cancelAnimationFrame(frame)
+    }, [moved, placement, showChosen])
 
     useEffect(() => {
         if (moved || placement === '') return

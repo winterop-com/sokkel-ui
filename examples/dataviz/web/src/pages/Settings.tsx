@@ -4,7 +4,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { useThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ChartColumn, Database, Hash, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { resetAll } from 'tidevann-shared/backend'
@@ -146,7 +146,7 @@ export function SettingsPage({
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        ...themeSettings({
+                        ...useThemeSettings({
                             value: settings,
                             onChange: setSettings,
                             themes: frame.themes,

@@ -5,7 +5,7 @@ import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
-import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { useThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import type { AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
 import { CORNERS, DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -453,7 +453,7 @@ export function Settings({
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        ...themeSettings({
+                        ...useThemeSettings({
                             value: appearance.settings,
                             onChange: appearance.setSettings,
                             themes: APP_THEMES,

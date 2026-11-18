@@ -24,7 +24,7 @@ import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/Sett
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusLine, StatusItem } from '@winterop-com/sokkel-ui/StatusLine'
 import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
-import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { useThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { dhis2Plugin } from '@winterop-com/sokkel-ui-dhis2/plugin'
 import { Calculator, Database, FunctionSquare, GitBranch, ListChecks, Network, Settings, ShieldCheck } from 'lucide-react'
@@ -221,7 +221,7 @@ export function App() {
                     id: 'appearance',
                     label: 'Appearance',
                     settings: [
-                        ...themeSettings({
+                        ...useThemeSettings({
                             value: settings,
                             onChange: setSettings,
                             themes: frame.themes,

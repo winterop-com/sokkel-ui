@@ -250,7 +250,7 @@ Every app has the same frame: `Shell` with a `Rail` of its places, the command p
 Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local` until the app has
 sign-in, and a `StatusLine` as the shell's `foot`, which draws the foot strip itself in the room the
 shell gives it and which the account sits level with as one bar across the window's bottom edge.
-Light and dark are a setting: the scheme is chosen only in Settings › Appearance (`themeSettings`,
+Light and dark are a setting: the scheme is chosen only in Settings › Appearance (`useThemeSettings`,
 `ThemePicker`) and in the command palette (`appearanceCommands`), never with a toggle in the top
 bar and never in the account menu, whose Appearance entry (`onAppearance`) opens Settings at
 Appearance.

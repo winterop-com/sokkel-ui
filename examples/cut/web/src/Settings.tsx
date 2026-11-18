@@ -4,7 +4,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { useThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { Database, Film, Palette, Play, Scissors } from 'lucide-react'
 import { useState } from 'react'
 
@@ -131,7 +131,7 @@ export function Settings({ prefs, frame, onClose }: { prefs: Prefs; frame: Frame
                     id: 'appearance',
                     label: 'Appearance',
                     icon: Palette,
-                    settings: themeSettings({
+                    settings: useThemeSettings({
                         value: settings,
                         onChange: setSettings,
                         themes: frame.themes,

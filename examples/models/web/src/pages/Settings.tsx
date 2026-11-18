@@ -8,7 +8,7 @@ import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
-import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { useThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ArrowDownToLine, Boxes, Cpu, Database, FolderOpen, Palette } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -265,7 +265,7 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        ...themeSettings({
+                        ...useThemeSettings({
                             value: look,
                             onChange: setLook,
                             themes: frame.themes,

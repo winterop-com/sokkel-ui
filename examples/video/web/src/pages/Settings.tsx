@@ -1,7 +1,7 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { themeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
+import { useThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE } from '@winterop-com/sokkel-ui/lib/appearance'
 import {
     CAPTION_BACKGROUNDS,
@@ -278,7 +278,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                     label: 'Appearance',
                     icon: Palette,
                     settings: [
-                        ...themeSettings({
+                        ...useThemeSettings({
                             value: look,
                             onChange: setLook,
                             themes: frame.themes,

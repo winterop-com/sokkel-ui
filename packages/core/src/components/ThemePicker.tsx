@@ -28,7 +28,7 @@ export interface ThemePickerWords {
     motionSystem: string
     motionOn: string
     motionOff: string
-    /** The lines under each choice's title when `themeSettings` makes them settings rows. */
+    /** The lines under each choice's title when `useThemeSettings` makes them settings rows. */
     themeHint: string
     schemeHint: string
     schemeSystemHint: string
@@ -123,7 +123,7 @@ export function ThemePicker({ className, ...props }: ThemePickerProps) {
  * beside it while the row has room, under it on a phone. The themes as a list or as cards sit
  * under their row's line.
  */
-export function themeSettings(props: Omit<ThemePickerProps, 'className'>): Setting[] {
+export function useThemeSettings(props: Omit<ThemePickerProps, 'className'>): Setting[] {
     return choices(props, true).map(({ id, title, description, keywords, control, wide }) => ({
         id,
         title,
