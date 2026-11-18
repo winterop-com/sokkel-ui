@@ -225,8 +225,8 @@
         "rows": 1,
         "padX": 1,
         "gap": 2,
-        "width": "Fills its container. A column given in px is round(px / 8.4) columns; one sized by its content measures its widest drawn cell, at most 320 px (38 columns). Below 576 px of its own box (69 columns) its rows become cards.",
-        "density": "A row, the head and the foot are one row at both levels. compact drops the list's side padding from 2 to 1 and a card's blank row.",
+        "width": "Fills its container. A column given in px is round(px / 8.4) columns; one sized by its content starts at its widest drawn cell or its whole head with its sort glyph, whichever is wider, at most 320 px (38 columns), and gives way to its head's longest word as the table runs short. Below 576 px of its own box (69 columns) its rows become cards.",
+        "density": "A row, the head and the foot are one row at both levels, a wrapped head two. compact drops the list's side padding from 2 to 1 and a card's blank row.",
         "sizes": {
             "table": {"rows": 1, "padX": 1, "note": "Every row and the head one row; cells 2 apart."},
             "list": {"rows": 1, "padX": {"regular": 2, "compact": 1}}
@@ -237,7 +237,7 @@
             },
             "head": {
                 "rows": 1,
-                "note": "The label, then the sort glyph after 1 column on the sorted column (sortable on the column with keyboard focus)."
+                "note": "The label, then the sort glyph after 1 column on the sorted column (sortable on the column with keyboard focus). 1 row; 2 where a head wraps (layout.headLines), the rule and the rows below moving down, past two cut with an ellipsis. A press on either line is a press on the head."
             },
             "row": {
                 "rows": 1,
