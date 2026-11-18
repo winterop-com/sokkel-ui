@@ -10,7 +10,7 @@
             "as_of": "1a87987",
             "note": "Problem built before this spec, not yet compared against it."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No problem yet."}
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No problem yet."}
     },
     "summary": "Something that went wrong, said for a person in a box of its own in the content: what happened in one sentence after the tone's mark, then where and what a right value looks like, with machine words marked by backticks drawn in the code face. The raw message a program produced (a validator's, a stack trace) is folded away under Technical details, for whoever needs it, and the app's actions follow. An error or a warning, on the tone's faint wash with a rule in the tone at its start.",
     "sources": {
@@ -190,7 +190,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 64f4b19 there is no problem."
+            "today": "As of b99664f there is no problem."
         }
     ]
 }

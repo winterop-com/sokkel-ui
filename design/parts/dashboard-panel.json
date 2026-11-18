@@ -6,7 +6,11 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "8567f05"},
         "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
-        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
+        "sokkel-tui": {
+            "state": "partial",
+            "as_of": "b99664f",
+            "note": "In cells as proposal c4 reads it, the stale mark from glyphs.json; not yet the expanded dialog and the panel menu's own menu."
+        }
     },
     "summary": "The frame every dashboard panel shares: a box on the card ground with a head holding the title, a quiet subtitle such as the range it covers, a stale mark, the app's actions and the panel's own tools (expand, the panel menu, an arranged grid's grip and size), then the content, padded or flush, and an optional foot. It spans part of a twelve-column grid by its own width. Loading dims the content under a bar; empty says so in the content's place; failed puts what failed and Retry there; stale keeps the content and marks the head. Loading, empty, failed and stale never stand in for each other. A chart panel and a time series panel stand in it; a stat tile (parts/stat-panel) draws a smaller head of its own on the same states.",
     "sources": {
@@ -253,7 +257,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 64f4b19, drawn in cells as proposal c4 reads it: the grid by its own width, the head with the subtitle, the stale mark and the tools, the body padded or flush, the foot; loading, empty, failed with Retry and stale. Not yet: the expanded dialog and the panel menu's own menu."
+            "today": "As of b99664f, drawn in cells as proposal c4 reads it: the grid by its own width, the head with the subtitle, the stale mark (glyphs.json) and the tools, the body padded or flush, the foot; loading, empty, failed with Retry and stale. Not yet: the expanded dialog, the panel menu's own menu, and its words keyed by their message ids."
         }
     ]
 }

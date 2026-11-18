@@ -10,7 +10,7 @@
             "as_of": "d163191",
             "note": "TreeSelect was built before this spec and has not been compared with it; single choice only."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No tree select yet."}
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No tree select yet."}
     },
     "summary": "A field that picks from a hierarchy: a trigger that reads like a select and names the choice with its path, and a popup under it with a search over a tree. A single choice closes the popup and empties the search; multiple choice ticks checkboxes and keeps it open, the trigger listing the choices by name with their count at its end. The tree opens on the branches that lead to a choice, and in multiple choice a branch holding some but not all shows a dash. For a large hierarchy a level loads when it is first opened (kept for the next time the popup opens), and a search goes through the whole of it, listing each match with its path. unavailable shuts the rows that may not be chosen, with the reason at their end, while their branches still open. optional starts the list with a Clear row; otherwise a Clear button beside the search empties the choice. As a field it sits in parts/text-field's frame: the label, the required mark, the help and the issue mark.",
     "sources": {
@@ -470,7 +470,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec, with its cells.",
-            "today": "As of 64f4b19 there is no tree select."
+            "today": "As of b99664f there is no tree select."
         }
     ]
 }

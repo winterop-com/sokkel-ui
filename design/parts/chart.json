@@ -6,7 +6,11 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "8567f05"},
         "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
-        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
+        "sokkel-tui": {
+            "state": "partial",
+            "as_of": "b99664f",
+            "note": "The look for the time series panel only; its glyphs (spark-levels, swatch) from glyphs.json."
+        }
     },
     "summary": "The look every chart kind shares, drawn from rows: a chart takes rows, a kind that says how to draw them and the fields to read, and draws in the theme it sits in. Quiet axes in border with their labels in muted-foreground, grid lines across the value axis a step lighter than the border, series in the theme's categorical order (or the colors a spec names, or each run state's status color with statuses), a line one and a half wide, bars at most 28 wide, a tooltip on the popover's look with a swatch, a label and a figure per series, dashed lines across at a scale's steps and down at marked categories, and a legend beside the chart whose entries hide or emphasize their series. A figure that is not there is the dash, and is left out of a tooltip. This spec is the look and the shared behavior; the kinds (bar, line, area, donut and the rest) are not specified one by one yet, and the frame around a chart (title, menu, export, expand, data view, loading, empty and failed) is parts/dashboard-panel's.",
     "sources": {
@@ -392,7 +396,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 64f4b19 the look is drawn for the time series panel only (axes, grid, labels, the legend); the other kinds are not built."
+            "today": "As of b99664f the look is drawn for the time series panel only (axes, grid, labels, the legend), its glyphs read from glyphs.json; the other kinds are not built."
         }
     ]
 }

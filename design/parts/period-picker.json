@@ -10,7 +10,7 @@
             "as_of": "d163191",
             "note": "PeriodPicker was built before this spec and has not been compared with it."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No period picker yet."}
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No period picker yet."}
     },
     "summary": "The period a report is made for: a select (parts/select's field trigger and list) offering the recent periods of one type, newest first, each named by its label with its id after it in the code face, then a separator and Other period last. Other period opens a text input under the select where any id is typed; the typed id is read by its shape and the value changes only once it names a period of the type, while text that does not is refused at once with parts/text-field's issue mark at the input's end, in a sentence that says what the type's ids look like. A value the list does not hold, such as an older period, opens on the typed input with its id. Ids are written as 20261108 (a day), 2026W45 (an ISO week), 202611 (a month), 202611B (two months), 2026Q4 (a quarter), 2026S2 (a half year) and 2026 (a year). As a field it sits in parts/text-field's frame: the label, the required mark, the hint, the help and the field's own issue mark.",
     "sources": {
@@ -440,7 +440,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec, with its cells.",
-            "today": "As of 64f4b19 there is no period picker."
+            "today": "As of b99664f there is no period picker."
         }
     ]
 }

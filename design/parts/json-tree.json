@@ -10,7 +10,7 @@
             "as_of": "1a87987",
             "note": "JsonTree built before this spec, not yet compared with it."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No JSON tree yet."}
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No JSON tree yet."}
     },
     "summary": "A JSON value as a tree that folds, in the code face: each list or object a line with a disclosure, its key and its opening bracket, open to a depth and folded below it, a folded one showing how many entries it holds; its entries one under the other behind a guide line; strings, numbers, booleans and null inked by type. An open list or object draws its first entries up to a limit and a step under them that draws as many more.",
     "sources": {
@@ -190,7 +190,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 64f4b19 there is no JSON tree."
+            "today": "As of b99664f there is no JSON tree."
         }
     ]
 }
