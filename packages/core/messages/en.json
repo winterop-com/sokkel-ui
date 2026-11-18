@@ -1,4 +1,10 @@
 {
+    "accountMenu.account": "Account",
+    "accountMenu.appearance": "Appearance",
+    "accountMenu.settings": "Settings",
+    "accountMenu.shortcuts": "Keyboard shortcuts",
+    "accountMenu.signIn": "Sign in",
+    "accountMenu.signOut": "Sign out",
     "activity.bell": "{unread, plural, =0 {Activity} other {Activity, {unread} unread}}",
     "activity.empty": "Nothing new.",
     "activity.markAllRead": "Mark all read",

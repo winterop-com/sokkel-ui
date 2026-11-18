@@ -5,6 +5,7 @@ import { useContext } from 'react'
 import { ShortcutRegistry, useShortcuts } from '../hooks/use-shortcuts'
 import { cn } from '../lib/cn'
 import { POPUP } from '../lib/popup'
+import { useWords, type WordsPart } from '../lib/words'
 import { RailCollapsed, ShellDrawer, ShellShortcuts } from './shell-context'
 import { menu as Menu } from './ui/deferred-menu'
 
@@ -90,7 +91,7 @@ export function AccountMenu({
     defaultOpen = false,
     words: given,
 }: AccountMenuProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(ACCOUNT_MENU_PART, given)
     const drawer = useContext(ShellDrawer)
     // A rail a screen narrows through the shell decides in place of the app's own.
     const narrowed = useContext(RailCollapsed)
@@ -237,7 +238,7 @@ export interface AccountMenuWords {
     account: string
 }
 
-const WORDS: AccountMenuWords = {
+export const ACCOUNT_MENU_WORDS: AccountMenuWords = {
     settings: 'Settings',
     appearance: 'Appearance',
     shortcuts: 'Keyboard shortcuts',
@@ -245,3 +246,6 @@ const WORDS: AccountMenuWords = {
     signIn: 'Sign in',
     account: 'Account',
 }
+
+/** Where a catalog holds an account menu's words. */
+export const ACCOUNT_MENU_PART: WordsPart<AccountMenuWords> = { id: 'accountMenu', words: ACCOUNT_MENU_WORDS }
