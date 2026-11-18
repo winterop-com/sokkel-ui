@@ -1,0 +1,359 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "time-field",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "d163191",
+            "note": "TimeField built before this spec, 24-hour only, not yet compared."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
+    },
+    "summary": "A time of day typed on a 24 or a 12-hour clock, with a list of times beside it to pick from. The value is a time on the wall clock with no zone, HH:mm (or HH:mm:ss with seconds), on either clock. 930, 9.30 and 9:30 pm all read, and what reads is written again in the field's clock once the field is left; text that is not a time keeps the value as it was and is said by the issue mark once the field is left. A time outside min and max is kept and said at once, with an action that puts in the bound, and the list offers only the times between them, every step minutes. zone names the zone the time is read in after the input. An optional field that holds a time empties with a clear button. The label, help and issue mark are parts/text-field's: a form never changes height (principle 12).",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/TimeField.tsx",
+            "packages/core/src/components/entry.tsx",
+            "packages/core/src/components/pickers.tsx",
+            "packages/core/src/components/Field.tsx",
+            "packages/core/src/lib/dates.ts",
+            "packages/core/src/lib/issue-edge.ts"
+        ],
+        "sokkel-egui": ["crates/core/src/widgets/form_fields.rs (TimeField)"]
+    },
+    "anatomy": {
+        "field": "parts/text-field's frame around the control: the label with its hint and required mark, the description, the help and the fallback under it, and the issue mark with its popover.",
+        "control": "The frame: the input, the zone, then the frame's buttons at its end, 4 apart; focusing anywhere in it but a button focuses the input.",
+        "input": "The time written on the field's clock, in tabular figures; hh:mm, hh:mm:ss or h:mm AM (the first period word) as its placeholder unless one is given.",
+        "zone": "With zone: its name after the input in muted-foreground, words only; the value carries no zone.",
+        "clear": "With an optional field that holds text and can be changed: a frame button with an x, named and titled words.clear; it empties the field and puts focus back in the input.",
+        "pick": "While the field can be changed: a frame button with a clock, named and titled words.pick, that opens the list under the frame.",
+        "list": "The popup under the frame, lined up with its start, on the popup's look (parts/select's popup), named words.pick: the times of the day every step minutes from midnight that lie between min and max, scrolled to the chosen time, or the first after it, which takes focus.",
+        "time": "One time in the list, written on the field's clock without seconds; the chosen one on secondary at 500."
+    },
+    "standsOn": {
+        "default": "background",
+        "control": "background",
+        "zone": "field",
+        "clear": "field",
+        "pick": "field",
+        "list": "popover",
+        "time": "popover"
+    },
+    "options": {
+        "value": {
+            "type": "text",
+            "does": "The time, as HH:mm (HH:mm:ss with seconds), or null for none; held from outside with onValueChange, or started at defaultValue.",
+            "sokkel-ui": "value, defaultValue, onValueChange"
+        },
+        "clock": {
+            "values": ["12", "24"],
+            "default": "24",
+            "does": "How the time is written: 14:30 on the 24-hour clock, 2:30 PM on the 12-hour one with words.periods. The value is the same on either."
+        },
+        "seconds": {"type": "boolean", "default": false, "does": "The time takes seconds: HH:mm:ss, read and written."},
+        "step": {"type": "number", "default": 30, "does": "The minutes between the times the list offers."},
+        "zone": {
+            "type": "text",
+            "does": "The zone the time is read in, written after the input (UTC); words only, the value carries no zone."
+        },
+        "min": {
+            "type": "text",
+            "does": "The earliest time allowed: a time before it is kept and said, with an action that puts it in, and the list offers none before it."
+        },
+        "max": {"type": "text", "does": "The latest time allowed, as min is the earliest."},
+        "open": {
+            "type": "boolean",
+            "does": "Whether the list is open, held from outside with onOpenChange; it starts at defaultOpen otherwise.",
+            "sokkel-ui": "open, defaultOpen, onOpenChange"
+        },
+        "placeholder": {"type": "text", "does": "The input's placeholder; the clock's pattern when not given."},
+        "required": {
+            "type": "boolean",
+            "default": false,
+            "does": "Marks the label (parts/text-field) and takes away the clear button."
+        },
+        "disabled": {"type": "boolean", "default": false, "does": "Cannot be used: faded, no buttons."},
+        "readOnly": {
+            "type": "boolean",
+            "default": false,
+            "does": "Shows the time with no buttons; focusable and selectable."
+        },
+        "error": {
+            "type": "text",
+            "does": "Why the value is refused, as one critical issue beside the field's own (parts/text-field's issues)."
+        },
+        "issues": {
+            "type": "rows",
+            "does": "The app's issues, with the field's own: parts/text-field's issue mark says the worst."
+        },
+        "onIssueChange": {
+            "type": "callback",
+            "does": "Hears the field's own issue (a time it cannot read, a time out of bounds) each time it changes, and null once it is gone."
+        },
+        "mono": {"type": "boolean", "default": false, "does": "The time in the code face."},
+        "words": {"type": "node", "does": "The words below, with parts/text-field's."}
+    },
+    "sizes": {
+        "control": {
+            "height": "density.control",
+            "padX": 10,
+            "gap": 4,
+            "radius": "radius-control",
+            "phoneMinHeight": "spacing-finger",
+            "note": "parts/date-field's control: density.control (32 regular, 28 compact); the end padding 4 while it holds buttons. The text 16 below 768 and text.sm from it."
+        },
+        "frameButton": {
+            "height": "density.control-xs",
+            "width": "density.control-xs",
+            "icon": 14,
+            "radius": "radius-sm",
+            "note": "The clear and the pick buttons: control-xs square (24, 20 compact)."
+        },
+        "list": {
+            "width": 128,
+            "padX": 6,
+            "padY": 6,
+            "gap": 2,
+            "note": "At most 256 tall (layout.listMaxHeight), then it scrolls."
+        },
+        "time": {"height": 32, "padX": 8, "text": "text.sm", "radius": "radius-md"}
+    },
+    "layout": {"listMaxHeight": {"value": 256, "note": "The list's most height before it scrolls."}},
+    "states": {
+        "rest": {"means": "Empty with its placeholder, or holding a time written on the field's clock."},
+        "hover": {
+            "means": "The pointer is over a frame button (washed hover, its icon in foreground) or a time in the list (washed hover). The control itself has no hover look.",
+            "reached": "pointer over"
+        },
+        "focus": {
+            "means": "Focus anywhere in the frame: the ring edge and a 1px ring, however the focus came.",
+            "reached": "Tab, or a press anywhere in the frame",
+            "on": "any",
+            "sokkel-ui": "focus-within:border-ring focus-within:ring-1 focus-within:ring-ring on the frame",
+            "effect": {"piece": "control", "ring": {"color": "ring", "width": 1}}
+        },
+        "keyFocus": {
+            "means": "Keyboard focus on a frame button: a focus-ring-width ring in ring at half strength.",
+            "reached": "Tab",
+            "on": "keyboard"
+        },
+        "disabled": {
+            "means": "Cannot be used: faded, no buttons, the cursor not-allowed.",
+            "reached": "disabled",
+            "effect": {"piece": "control", "opacity": "disabled-opacity", "cursor": "not-allowed"}
+        },
+        "readOnly": {
+            "means": "The time shown with no buttons; focusable and selectable. No look of its own.",
+            "reached": "readOnly"
+        },
+        "invalid": {
+            "means": "The worst issue is critical: a time it cannot read (once the field is left), a time outside the bounds, or the app's error. The edge alone at rest.",
+            "reached": "an unreadable time left, a time out of bounds, error, or a critical issue"
+        },
+        "invalid+focus": {
+            "means": "An invalid field with focus: the critical edge and the invalid ring.",
+            "reached": "focus in an invalid field",
+            "on": "any",
+            "effect": {"piece": "control", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}}
+        },
+        "warning": {"means": "The worst issue is a warning.", "reached": "a warning issue"},
+        "warning+focus": {
+            "means": "A field with a warning, focused: the warning edge and a 1px ring in warning at a quarter.",
+            "reached": "focus in a field with a warning",
+            "on": "any",
+            "effect": {"piece": "control", "ring": {"color": "warning/25", "width": 1}}
+        },
+        "open": {
+            "means": "The list is open: its button washed hover.",
+            "reached": "a press on the pick button, Alt+ArrowDown in the input, or open"
+        },
+        "chosen": {"means": "The chosen time in the list: on secondary at 500.", "reached": "the field's value"},
+        "timeFocus": {
+            "means": "The list's focused time: the focus outline in ring, focus-ring-width.",
+            "reached": "the arrows, Home and End in the list, or the list opening on its time",
+            "on": "keyboard"
+        }
+    },
+    "pieces": {
+        "control": {
+            "rest": {
+                "ground": "field",
+                "edge": "input",
+                "ink": "inherit",
+                "radius": "radius-control",
+                "note": "The page's ink: neither the frame nor its bare input sets one."
+            },
+            "focus": {"edge": "ring"},
+            "disabled": {"ground": "input/50", "opacity": "disabled-opacity"},
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {"edge": "critical"},
+            "warning": {"edge": "warning/80"},
+            "warning+focus": {"edge": "warning"}
+        },
+        "zone": {"rest": {"ink": "muted-foreground"}},
+        "clear": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-sm"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "keyFocus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}}
+        },
+        "pick": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-sm"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "keyFocus": {"ring": {"color": "ring/50", "width": "focus-ring-width"}},
+            "open": {"ground": "hover"}
+        },
+        "list": {
+            "rest": {
+                "ground": "popover",
+                "edge": "border-strong",
+                "ink": "popover-foreground",
+                "radius": "radius-surface",
+                "note": "The popup's look (lib/popup), elevation-pop under it."
+            }
+        },
+        "time": {
+            "rest": {"radius": "radius-md", "text": "text.sm"},
+            "hover": {"ground": "hover"},
+            "chosen": {"ground": "secondary", "weight": 500},
+            "timeFocus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Focuses the input, then the clear and the pick buttons, then the issue mark when there is one."
+        },
+        {
+            "keys": ["Alt+ArrowDown"],
+            "does": "Opens the list.",
+            "when": "the input has focus and the field can be changed"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Opens the list, or empties the field.",
+            "when": "the pick or the clear button has focus"
+        },
+        {
+            "keys": ["ArrowUp", "ArrowDown"],
+            "does": "Moves to the time before or after, stopping at the first and the last.",
+            "when": "the list is open"
+        },
+        {"keys": ["Home", "End"], "does": "Moves to the first or the last time.", "when": "the list is open"},
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Picks the focused time (with :00 when the field takes seconds) and closes the list.",
+            "when": "the list is open"
+        },
+        {"keys": ["Escape"], "does": "Closes the list, focus back on the pick button.", "when": "the list is open"}
+    ],
+    "words": {
+        "required": "required",
+        "issueCritical": "Error: ",
+        "issueWarning": "Warning: ",
+        "errors": {"one": "{count} error", "other": "{count} errors"},
+        "warnings": {"one": "{count} warning", "other": "{count} warnings"},
+        "unreadable": "Enter a time",
+        "example": "As in {sample}.",
+        "under": "Enter {min} or later",
+        "over": "Enter {max} or earlier",
+        "use": "Use {bound}",
+        "pick": "Choose a time",
+        "clear": "Clear",
+        "periods.am": "AM",
+        "periods.pm": "PM"
+    },
+    "messages": {
+        "required": {"id": "field.required", "en": "required"},
+        "issueCritical": {"id": "issue.issueCritical", "en": "Error: "},
+        "issueWarning": {"id": "issue.issueWarning", "en": "Warning: "},
+        "errors": {"id": "issueCount.errors", "en": "{count, plural, one {# error} other {# errors}}"},
+        "warnings": {"id": "issueCount.warnings", "en": "{count, plural, one {# warning} other {# warnings}}"},
+        "unreadable": {"id": "timeField.unreadable", "en": "Enter a time"},
+        "example": {"id": "timeField.example", "en": "As in {sample}."},
+        "under": {"id": "timeField.under", "en": "Enter {min} or later"},
+        "over": {"id": "timeField.over", "en": "Enter {max} or earlier"},
+        "use": {"id": "timeField.use", "en": "Use {bound}"},
+        "pick": {"id": "timeField.pick", "en": "Choose a time"},
+        "clear": {"id": "timeField.clear", "en": "Clear"},
+        "periods.am": {"id": "timeField.periods.0", "en": "AM"},
+        "periods.pm": {"id": "timeField.periods.1", "en": "PM"}
+    },
+    "samples": {
+        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1200 errors"}],
+        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1200 warnings"}],
+        "example": [
+            {"with": {"sample": "14:30"}, "says": "As in 14:30."},
+            {"with": {"sample": "2:30 PM"}, "says": "As in 2:30 PM."},
+            {"with": {"sample": "14:30:00"}, "says": "As in 14:30:00."}
+        ],
+        "under": [{"with": {"min": "09:00"}, "says": "Enter 09:00 or later"}],
+        "over": [{"with": {"max": "5:00 PM"}, "says": "Enter 5:00 PM or earlier"}],
+        "use": [{"with": {"bound": "09:00"}, "says": "Use 09:00"}]
+    },
+    "appText": {
+        "label": "The field's label, hint, description, help and fallback, as parts/text-field takes them.",
+        "zone": "The zone's name, such as UTC.",
+        "error": "Why the app refuses the value."
+    },
+    "cells": {
+        "rows": 2,
+        "padX": 1,
+        "width": "The width its column gives it; else 280 px by the rule (33 columns), as parts/text-field.",
+        "density": "Nothing changes: the label, the control and the help are one row each, as parts/text-field.",
+        "pieces": {
+            "control": {
+                "rows": 1,
+                "padX": 1,
+                "note": "parts/text-field's control: edge-start and edge-end at its ends in the edge's flat color for its state."
+            },
+            "zone": {"note": "After the input and a gap of 1, in muted-foreground."},
+            "clear": {
+                "width": "1 column, x, a gap of 1 before it. An icon alone: words.clear is said in the status line while it has focus (principle 23)."
+            },
+            "pick": {
+                "width": "1 column, the clock icon, a gap of 1 before it; words.pick is said in the status line while it has focus."
+            },
+            "list": {
+                "padX": 1,
+                "note": "A box under the control on the popup's ground, lined up with its start, 16 columns wide (128 px) inside its edge, as many rows as fit up to 256 px of 32 px rows (8), then it scrolls."
+            },
+            "time": {
+                "rows": 1,
+                "note": "One time a row; the chosen one on its flat ground and bold; the focused one takes focus-mark at its start."
+            }
+        },
+        "glyphs": [
+            "x",
+            "box",
+            "focus-mark",
+            "circle-alert",
+            "triangle-alert",
+            "edge-start",
+            "edge-end",
+            "focus-ring-start",
+            "focus-ring-end",
+            "clock"
+        ],
+        "note": "rows counts the label and the control; a description and help add their own lines."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The list is Base UI's Popover anchored to the frame; it takes Escape and a press outside and puts focus back on its trigger.",
+            "The field and its date siblings share the typed field (entry.tsx, TypedField): reading, writing, bounds and issues.",
+            "min and max are fitted to the field's seconds (fitSeconds) before they are compared; each bound and the example (14:30, or 14:30:00) are written on the field's clock."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of d163191, TimeField was built before this spec and has not been compared with it. It draws the 24-hour clock alone, hh:mm read with a colon: no clock option (the 12-hour form and its period words), no seconds, zone, min and max with their issue and its action, clear button, readOnly or disabled, Alt+ArrowDown, or the list's keys; it does not read 930, 9.30 or a period word. Its unreadable word is one sentence with the example, its error is said under the field (parts/text-field's drift), and its list rows are control tall with the chosen one on primary."
+        },
+        {"renderer": "sokkel-tui", "what": "not built", "spec": "This spec.", "today": "As of 64f4b19, no time field."}
+    ]
+}

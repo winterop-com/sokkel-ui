@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "built", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "built", "as_of": "64f4b19"}
     },
     "summary": "The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and the content. A failure is headed by what the server answered, with its diagnostic and the problems it named under the heading and Try again; a failed read of secondary data is a warning about part of the page. Drawn in a box of its own, or unframed inside a panel.",
     "sources": {
@@ -221,6 +221,14 @@
         "unreachable": "The server is not answering",
         "partRefused": "Part of this page could not be read",
         "retry": "Try again"
+    },
+    "messages": {
+        "loading": {"id": "pageState.loading", "en": "Loading"},
+        "refused": {"id": "pageState.refused", "en": "The server refused this read"},
+        "missing": {"id": "pageState.missing", "en": "Nothing is there"},
+        "unreachable": {"id": "pageState.unreachable", "en": "The server is not answering"},
+        "partRefused": {"id": "pageState.partRefused", "en": "Part of this page could not be read"},
+        "retry": {"id": "pageState.retry", "en": "Try again"}
     },
     "appText": {
         "error": "What the server said, or the app's sentence in its place.",

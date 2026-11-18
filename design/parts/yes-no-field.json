@@ -1,0 +1,248 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "yes-no-field",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "d163191",
+            "note": "YesNoField built before this spec, not yet compared."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
+    },
+    "summary": "A question answered yes or no that may also be left unanswered: Yes and No side by side, neither chosen until one is, and Clear beside them once answered, which takes the answer back, so an optional question never has to keep a No it was not given. While unanswered it says so. A required question has no Clear, and yesOnly offers Yes alone, for a question that keeps no No. The label, help and issue mark are parts/text-field's: a form never changes height (principle 12).",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/YesNoField.tsx",
+            "packages/core/src/components/Segmented.tsx",
+            "packages/core/src/components/Field.tsx",
+            "packages/core/src/components/ui/button.tsx"
+        ],
+        "sokkel-egui": ["crates/core/src/widgets/form_fields.rs (YesNoField)"]
+    },
+    "anatomy": {
+        "field": "parts/text-field's frame around the choice: the label with its required mark, the description, the help under it, and the issue mark with its popover.",
+        "choice": "Yes and No as one segmented control (the track look at md), named by the field's label; the label points at it.",
+        "option": "Yes or No: a button pressed (aria-pressed) while it is the answer; neither is pressed while unanswered.",
+        "unanswered": "While unanswered: words.unanswered beside the choice, 8 after it.",
+        "clear": "Once answered, unless required: parts/button's ghost at sm with an eraser and words.clear, 8 after the choice; it takes the answer back."
+    },
+    "standsOn": {"default": "background", "choice": "background", "option": "muted", "clear": "background"},
+    "options": {
+        "value": {
+            "type": "text",
+            "does": "The answer: yes, no, or none while unanswered; held from outside with onValueChange.",
+            "sokkel-ui": "value (true, false or null), onValueChange"
+        },
+        "required": {
+            "type": "boolean",
+            "default": false,
+            "does": "Marks the label with the star (parts/text-field) and takes away Clear."
+        },
+        "yesOnly": {
+            "type": "boolean",
+            "default": false,
+            "does": "Offers Yes alone, for a question whose No is never kept: unanswered stands for it."
+        },
+        "description": {"type": "node", "does": "Between the label and the choice: what the question asks."},
+        "help": {"type": "node", "does": "Under the choice."},
+        "error": {
+            "type": "text",
+            "does": "Why the answer is refused, as one critical issue (parts/text-field's issues)."
+        },
+        "issues": {"type": "rows", "does": "The app's issues: parts/text-field's issue mark says the worst."},
+        "disabled": {
+            "type": "boolean",
+            "default": false,
+            "does": "Cannot be answered: the choice faded and out of the tab order, Clear disabled."
+        },
+        "words": {"type": "node", "does": "The words below, with parts/text-field's."}
+    },
+    "sizes": {
+        "choice": {
+            "height": "density.control",
+            "radius": "radius-control",
+            "note": "From md, the options in a row at least density.control tall (32 regular, 28 compact), 1 inside its edge; below md a grid two wide that fills the row, an odd last option spanning both."
+        },
+        "option": {
+            "height": "density.control-sm",
+            "padX": 12,
+            "text": "text.sm",
+            "radius": "radius-mini",
+            "note": "From md at least control-sm tall, as wide as it needs, the options sharing the row; below md each a finger tall (spacing-finger), padded 4 above and below."
+        },
+        "clear": {
+            "height": "density.control-sm",
+            "padX": 10,
+            "gap": 4,
+            "icon": 14,
+            "text": "text.badge",
+            "radius": "radius-control",
+            "radiusMax": 12,
+            "phoneMinHeight": "spacing-finger",
+            "note": "parts/button's sm."
+        }
+    },
+    "layout": {
+        "choiceGap": {"value": 8, "note": "Between the choice and the unanswered words or Clear; the row wraps."}
+    },
+    "states": {
+        "rest": {
+            "means": "Unanswered: neither option pressed, words.unanswered beside the choice.",
+            "reached": "value none"
+        },
+        "hover": {
+            "means": "The pointer is over an option that is not the answer, or over Clear.",
+            "reached": "pointer over"
+        },
+        "keyFocus": {
+            "means": "Keyboard focus on an option: the focus outline in ring, 1 off; on Clear, parts/button's focus outline.",
+            "reached": "Tab",
+            "on": "keyboard"
+        },
+        "chosen": {
+            "means": "The answer: raised on the track, on card with a 1px ring in border-strong (input in dark), at 500, with the node shadow in light.",
+            "reached": "value yes or no"
+        },
+        "disabled": {
+            "means": "Cannot be answered: the choice at disabled-opacity, its options out of the tab order, Clear disabled.",
+            "reached": "disabled",
+            "effect": {"piece": "choice", "opacity": "disabled-opacity", "focusable": false}
+        },
+        "invalid": {
+            "means": "The worst issue is critical: the issue mark at the row's end. The choice keeps its own edge: the issue's edge lands on the row that holds it, which has none.",
+            "reached": "error, or a critical issue"
+        },
+        "warning": {"means": "The worst issue is a warning: the mark in warning-ink.", "reached": "a warning issue"}
+    },
+    "pieces": {
+        "choice": {
+            "rest": {
+                "ground": "muted",
+                "edge": "border",
+                "radius": "radius-control",
+                "dark": {"ground": "background", "edge": "border-strong"}
+            },
+            "disabled": {"opacity": "disabled-opacity"}
+        },
+        "option": {
+            "rest": {"ink": "muted-foreground", "radius": "radius-mini"},
+            "hover": {"ground": "foreground/5", "ink": "foreground"},
+            "chosen": {
+                "ground": "card",
+                "ink": "foreground",
+                "weight": 500,
+                "ring": {"color": "border-strong", "width": 1, "dark": {"color": "input"}},
+                "dark": {"ground": "input/70"}
+            },
+            "keyFocus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": 1}}
+        },
+        "unanswered": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "clear": {
+            "rest": {"ground": "none", "edge": "none", "ink": "inherit", "radius": "radius-control"},
+            "hover": {"ground": "hover", "ink": "foreground"},
+            "keyFocus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Focuses Yes, then No, then Clear when there is one, then the issue mark when there is one."
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Answers with the option; pressing the answer again keeps it.",
+            "when": "an option has focus"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Takes the answer back: the field is unanswered.",
+            "when": "Clear has focus"
+        }
+    ],
+    "words": {
+        "required": "required",
+        "issueCritical": "Error: ",
+        "issueWarning": "Warning: ",
+        "errors": {"one": "{count} error", "other": "{count} errors"},
+        "warnings": {"one": "{count} warning", "other": "{count} warnings"},
+        "yes": "Yes",
+        "no": "No",
+        "clear": "Clear",
+        "unanswered": "Not answered"
+    },
+    "messages": {
+        "required": {"id": "field.required", "en": "required"},
+        "issueCritical": {"id": "issue.issueCritical", "en": "Error: "},
+        "issueWarning": {"id": "issue.issueWarning", "en": "Warning: "},
+        "errors": {"id": "issueCount.errors", "en": "{count, plural, one {# error} other {# errors}}"},
+        "warnings": {"id": "issueCount.warnings", "en": "{count, plural, one {# warning} other {# warnings}}"},
+        "yes": {"id": "yesNoField.yes", "en": "Yes"},
+        "no": {"id": "yesNoField.no", "en": "No"},
+        "clear": {"id": "yesNoField.clear", "en": "Clear"},
+        "unanswered": {"id": "yesNoField.unanswered", "en": "Not answered"}
+    },
+    "samples": {
+        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1200 errors"}],
+        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1200 warnings"}]
+    },
+    "appText": {
+        "label": "The question, which also names the choice; the description and help as parts/text-field takes them.",
+        "error": "Why the app refuses the answer."
+    },
+    "cells": {
+        "rows": 2,
+        "padX": 1,
+        "width": "The width its column gives it; the choice as wide as its options, the unanswered words or Clear after it.",
+        "density": "Nothing changes: the label and the choice are one row each, as parts/text-field.",
+        "pieces": {
+            "choice": {
+                "rows": 1,
+                "padX": 1,
+                "note": "One row: edge-start and edge-end at its ends in the edge's flat color, the options inside it with a gap of 1 between them, which holds an option's focus-ring-start or focus-ring-end."
+            },
+            "option": {
+                "rows": 1,
+                "padX": 1,
+                "note": "Its word with padX 1; the answer on its chosen paint's flat ground and bold, and in reverse video without color."
+            },
+            "unanswered": {"note": "After the choice and a gap of 1, in muted-foreground."},
+            "clear": {
+                "rows": 1,
+                "note": "parts/button's ghost in cells after the choice and a gap of 1: its eraser icon and its word, the icon left out in ASCII."
+            }
+        },
+        "glyphs": [
+            "edge-start",
+            "edge-end",
+            "focus-ring-start",
+            "focus-ring-end",
+            "circle-alert",
+            "triangle-alert",
+            "eraser"
+        ],
+        "note": "rows counts the label and the choice; a description and help add their own lines. Each option and Clear is a stop of its own, as on the web."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The choice is Segmented at md with the track look; below md it lays its options out as a grid two wide.",
+            "The issue mark is placed at the end of the row holding the choice, which keeps 36 at its end for it."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of d163191, YesNoField was built before this spec and has not been compared with it: Yes and No as a Segmented, Not answered, and Clear as a ghost sm button with the eraser. It takes one error, said under the field (parts/text-field's drift), and no issues or disabled."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built",
+            "spec": "This spec.",
+            "today": "As of 64f4b19, no yes-no field."
+        }
+    ]
+}

@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
     },
     "summary": "A menu of actions opened from a trigger: rows a control tall with an icon, a label and the keys that do the same, groups under labels, separators, check and radio rows with their marks in a gutter at the start, rows that open a submenu beside them, and destructive rows in the destructive ink. As wide as its widest row; every row a finger tall on a phone; the arrows stop at its first and last rows.",
     "sources": {
@@ -360,7 +360,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no radio groups; one submenu level."
+            "today": "As of 64f4b19, drawn from the spec in cells, with radio rows; one submenu level."
         }
     ]
 }

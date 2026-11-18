@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "One work item of a board as a side panel's tab holds it, in two parts that work together. BoardItemPanel: a head with the item's code over its title and a line of its column's chip and its labels, then its description, its fields, its checklist and its activity, each a section of its own (parts/detail-pane's sections), drawn only when given. BoardChecklist: the checklist as such a section, its heading saying the steps done of the steps in all, a bar filled as far, and each step a checkbox field that ticks it, a done step's words struck through and quiet. The checklist is held from outside: a tick calls onStepChange; without it the steps are read only.",
     "sources": {
@@ -153,6 +153,13 @@
         "checklist.title": "Checklist {done}/{total}",
         "checklist.progress": "Checklist done"
     },
+    "messages": {
+        "description": {"id": "boardItemPanel.description", "en": "Description"},
+        "fields": {"id": "boardItemPanel.fields", "en": "Fields"},
+        "activity": {"id": "boardItemPanel.activity", "en": "Activity"},
+        "checklist.title": {"id": "boardChecklist.title", "en": "Checklist {done}/{total}"},
+        "checklist.progress": {"id": "boardChecklist.progress", "en": "Checklist done"}
+    },
     "samples": {
         "checklist.title": [
             {"with": {"done": 0, "total": 4}, "says": "Checklist 0/4"},
@@ -182,7 +189,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 9038006 there is no board item panel or checklist."
+            "today": "As of 1a87987 there is no board item panel or checklist."
         }
     ]
 }

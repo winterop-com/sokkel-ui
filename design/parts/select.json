@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "built", "as_of": "64f4b19", "note": "With swatches, details and alignItemWithTrigger."}
     },
     "summary": "One value chosen from a list: a trigger that shows the chosen option, or the placeholder, with a chevron at its end, and the list it opens: rows padded 4 in from its edge, each with an optional lead (an icon, or a theme's swatch) 8 before the label, a quiet detail at the row's end or under the label, and a check on the chosen one; groups under labels, separators between them, and arrows that scroll a long list. As a field it wears the text field's frame (parts/text-field): the label, the help and the issue mark.",
     "sources": {
@@ -459,13 +459,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 26b411f, Select draws the field trigger at density.control with the value, the chevron and an optional swatch, and a list of rows with a check on the chosen one. Not yet: size sm, the quiet variant, the placeholder, widest, invalid, disabled and readOnly, option icons and details (end and below, chosenDetail), disabled options, groups with labels and separators, scroll arrows, mono, finger-tall rows below 768, and the keys (opening from the keyboard, the arrows, Home, End, typing, Enter, Space, Escape)."
-        },
-        {
-            "renderer": "sokkel-tui",
-            "what": "not built yet",
-            "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no swatches, detail under the label or alignItemWithTrigger."
+            "today": "As of 26b411f, Select draws the field trigger at density.control with the value, the chevron and an optional swatch, and a list of rows with a check on the chosen one. Since d163191 options carry a code each and the trigger a placeholder. Not yet: size sm, the quiet variant, widest, invalid, disabled and readOnly, option icons and details (end and below, chosenDetail), disabled options, groups with labels and separators, scroll arrows, mono, finger-tall rows below 768, and the keys (opening from the keyboard, the arrows, Home, End, typing, Enter, Space, Escape)."
         }
     ]
 }

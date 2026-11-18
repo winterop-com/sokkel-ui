@@ -5,8 +5,12 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "1a87987",
+            "note": "Built from this spec, but for the handle's arrow keys and its 300 ms touch hold."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "Jobs and their runs along one time axis, in a box on the card: a legend of the states the runs show, a ruler of ticks that fit the width on the time zone's clock, and a lane per job, its name and a detail line at the start and its runs where they fell, each a mark in its state's color (a bar as long as it took when it has an end), runs still to come hollow, a line at the current time across every lane. A lane is chosen by a press on its name or anywhere in its track, drawn raised; with onShift the chosen lane's upcoming runs drag sideways as one, snapped, a card at the pointer saying how far, and the arrow keys move them from the keyboard. The runs stay where they are until the app moves them. A total lane, such as how many run at once, closes the list.",
     "sources": {
@@ -250,6 +254,14 @@
         "by": "Shift {amount}",
         "shifted": "Upcoming runs of {lane} shifted {amount}"
     },
+    "messages": {
+        "now": {"id": "runTimeline.now", "en": "Now"},
+        "scheduled": {"id": "runTimeline.scheduled", "en": "Scheduled"},
+        "hint": {"id": "runTimeline.hint", "en": "Drag the selected job's upcoming runs to shift them"},
+        "upcoming": {"id": "runTimeline.upcoming", "en": "Upcoming runs of {lane}"},
+        "by": {"id": "runTimeline.by", "en": "Shift {amount}"},
+        "shifted": {"id": "runTimeline.shifted", "en": "Upcoming runs of {lane} shifted {amount}"}
+    },
     "samples": {
         "upcoming": [{"with": {"lane": "sync-inventory"}, "says": "Upcoming runs of sync-inventory"}],
         "by": [
@@ -280,9 +292,9 @@
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not built yet",
-            "spec": "This spec.",
-            "today": "As of 9038006 there is no run timeline."
+            "what": "the handle's keys and touch",
+            "spec": "Left and Right shift a pending run's handle by a step, and a touch holds 300 ms before it drags.",
+            "today": "As of 1a87987 the handle moves by the pointer only: no arrow-key shift and no touch hold."
         }
     ]
 }

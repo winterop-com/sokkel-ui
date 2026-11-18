@@ -9,8 +9,8 @@
             "as_of": "97f92d8",
             "note": "Counts in words are formatted for en-US, not the app's locale (drift)."
         },
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
     },
     "summary": "The one table: every listing and table, five rows or fifty thousand, flat, grouped or a tree. Rows at the density's row height, drawing only those in view; heads that sort and resize; selection with a bar; one row picked for a detail beside it; rows stacked as cards when its own box is narrow.",
     "sources": {
@@ -481,6 +481,66 @@
         "unreachable": "The server is not answering",
         "retry": "Try again"
     },
+    "messages": {
+        "columns": {"id": "dataTable.columns", "en": "Columns"},
+        "actions": {"id": "dataTable.actions", "en": "Actions"},
+        "tableView": {"id": "dataTable.tableView", "en": "Table"},
+        "gridView": {"id": "dataTable.gridView", "en": "Grid"},
+        "sort": {"id": "dataTable.sort", "en": "Sort"},
+        "unsorted": {"id": "dataTable.unsorted", "en": "As given"},
+        "ascending": {"id": "dataTable.ascending", "en": "Ascending"},
+        "descending": {"id": "dataTable.descending", "en": "Descending"},
+        "rows": {"id": "dataTable.rows", "en": "{count, plural, one {# row} other {# rows}}"},
+        "loaded": {"id": "dataTable.loaded", "en": "{count, number} loaded"},
+        "range": {"id": "dataTable.range", "en": "{from, number}–{to, number} of {total, number}"},
+        "page": {"id": "dataTable.page", "en": "Page {page, number} of {pages, number}"},
+        "perPage": {"id": "dataTable.perPage", "en": "Rows per page"},
+        "firstPage": {"id": "dataTable.firstPage", "en": "First page"},
+        "previousPage": {"id": "dataTable.previousPage", "en": "Previous page"},
+        "nextPage": {"id": "dataTable.nextPage", "en": "Next page"},
+        "lastPage": {"id": "dataTable.lastPage", "en": "Last page"},
+        "selected": {"id": "dataTable.selected", "en": "{count, number} selected"},
+        "clear": {"id": "dataTable.clear", "en": "Clear"},
+        "selection": {"id": "dataTable.selection", "en": "Selection"},
+        "selectAll": {"id": "dataTable.selectAll", "en": "Select all rows"},
+        "selectEvery": {"id": "dataTable.selectEvery", "en": "Select all {count, number}"},
+        "allSelected": {"id": "dataTable.allSelected", "en": "All {count, number} selected"},
+        "selectRow": {"id": "dataTable.selectRow", "en": "Select row"},
+        "expand": {"id": "dataTable.expand", "en": "Expand"},
+        "collapse": {"id": "dataTable.collapse", "en": "Collapse"},
+        "loadMore": {
+            "id": "dataTable.loadMore",
+            "en": "{count, select, undefined {Load more} other {Load {count, number} more}}"
+        },
+        "loadMoreCount": {
+            "id": "dataTable.loadMore",
+            "en": "{count, select, undefined {Load more} other {Load {count, number} more}}"
+        },
+        "loadingChildren": {"id": "dataTable.loadingChildren", "en": "Loading"},
+        "resize": {"id": "dataTable.resize", "en": "Resize {column}"},
+        "moveUp": {"id": "dataTable.moveUp", "en": "Move {column} up"},
+        "moveDown": {"id": "dataTable.moveDown", "en": "Move {column} down"},
+        "empty": {"id": "dataTable.empty", "en": "Nothing here."},
+        "selectGroup": {"id": "dataTable.selectGroup", "en": "Select group"},
+        "showGroup": {
+            "id": "dataTable.foldGroup",
+            "en": "{folded, select, true {Show group} other {Hide group}}",
+            "with": {"folded": true}
+        },
+        "hideGroup": {"id": "dataTable.foldGroup", "en": "{folded, select, true {Show group} other {Hide group}}"},
+        "groupCount": {"id": "dataTable.groupCount", "en": "{count, number}"},
+        "saving": {"id": "dataTable.saving", "en": "Saving"},
+        "saveFailed": {"id": "dataTable.saveFailed", "en": "Could not save"},
+        "notNumber": {"id": "dataTable.notNumber", "en": "Enter a number"},
+        "moveRow": {"id": "dataTable.moveRow", "en": "Move {row}"},
+        "rowMoved": {"id": "dataTable.rowMoved", "en": "{row} moved to {place, number} of {count, number}"},
+        "issueCritical": {"id": "issue.issueCritical", "en": "Error: "},
+        "issueWarning": {"id": "issue.issueWarning", "en": "Warning: "},
+        "refused": {"id": "pageState.refused", "en": "The server refused this read"},
+        "missing": {"id": "pageState.missing", "en": "Nothing is there"},
+        "unreachable": {"id": "pageState.unreachable", "en": "The server is not answering"},
+        "retry": {"id": "pageState.retry", "en": "Try again"}
+    },
     "samples": {
         "rows": [
             {"with": {"count": 0}, "says": "0 rows"},
@@ -565,7 +625,7 @@
             "renderer": "sokkel-egui",
             "what": "the parts not built yet",
             "spec": "This spec.",
-            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-egui 9038006). Has: rows at density.row, drawing only those in view; heads in table-head-* that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); stacked cards below its width (compact and labeled); row actions as a menu; paging with a page size; cell editing (text, date, select); row reorder by its grip; keyboard row navigation and the head row by keys; the toolbar line and the foot; words as fields. Not yet: grouping, trees, detail rows, and its own loading and failed states (it is wrapped in PageState)."
+            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-egui 1a87987). Has: rows at density.row, drawing only those in view, their height set or auto and a cell of two lines; heads in text.column-head and table-head-ink (68c156c) that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); stacked cards below its width (compact and labeled); row actions as a menu, inside the row's padding when the table fits its room (minWidth auto); a row's chevron and its detail row; grouping by a column (groupBy); paging with a page size; cell editing (text, date, select); row reorder by its grip; keyboard row navigation and the head row by keys; the toolbar line and the foot; words as fields. A grid of numbers by row and column (EntryGrid: bands over the columns, folding row groups with their count, rows stacked into named fields when narrow) is drawn as its own widget where the web draws a grouped, banded, editable DataTable. Not yet: trees, and its own loading and failed states (it is wrapped in PageState)."
         },
         {
             "renderer": "sokkel-ui",
@@ -577,7 +637,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with the table variant only: no bar, list variant, groups, trees, details, row actions, paging, editing, resize, reorder or grid."
+            "today": "As of 64f4b19, drawn from the spec in cells: the table and list variants, the bar, groups, trees, details, row actions, paging, editing (text only), and column resize. Not yet: date and select editors, reordering, and the grid."
         }
     ]
 }

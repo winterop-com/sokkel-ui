@@ -5,8 +5,12 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {
+            "state": "built",
+            "as_of": "64f4b19",
+            "note": "Every variant and state, icon buttons, inGroup; one row at every size with the edge glyphs and the focus ring beside its ends."
+        }
     },
     "summary": "A button: words, an icon and words, or an icon alone named by its label. A button that cannot act says why; a busy one keeps its place and its focus.",
     "sources": {
@@ -362,14 +366,8 @@
         {
             "renderer": "sokkel-egui",
             "what": "missing options and states",
-            "spec": "Icon sizes, IconButton (label, pressed, shortcut), destructiveHover, opensMenu and open, inGroup, iconPlace end, invalid, phone heights below md, the xs hit area, and a reason's tooltip on a tap.",
-            "today": "Not built."
-        },
-        {
-            "renderer": "sokkel-tui",
-            "what": "not built yet",
-            "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no inGroup."
+            "spec": "Icon sizes, IconButton (label, shortcut), destructiveHover, opensMenu and open, inGroup, iconPlace end, invalid, phone heights below md, the xs hit area, and a reason's tooltip on a tap.",
+            "today": "Not built. pressed is built since 68c156c (a toggle's muted ground)."
         }
     ]
 }

@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
     },
     "summary": "One thing's detail as a side panel's tab holds it, such as the run, the file or the event chosen in the page beside it: titled sections one under the other, each with an optional sentence, its facts as terms beside their values, and whatever else it shows after them (a preview, the steps of a run, a change), then the thing's verbs on a line at the end. Every section takes the panel's width with a rule under it, the last excepted, and each section's terms line up in one column.",
     "sources": {
@@ -91,7 +91,13 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 9038006 there is no detail pane."
+            "today": "As of 1a87987 there is no detail pane."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 64f4b19, DetailPane and PaneSection are drawn in the side panel, not yet compared against this spec."
         }
     ]
 }

@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "Where a message to an assistant is written: a box on the field's ground, rounded by radius-composer, holding a text that grows with what is typed up to textMaxHeight, the files waiting to go, and the controls: attach, the app's tools, the microphone and a round Send, which becomes Stop while an answer streams. Enter sends and Shift+Enter breaks the line; on a touch screen Enter breaks the line and only Send sends. Files come in by the attach button, a paste or a drop; Send waits while a file uploads or a dictation runs. Stacked, the text is on top and the controls in a row under it. Inline, it is one line, a pill, until the text (or the placeholder, while there is none) does not fit there or files, dictation or a failure show: then it opens into the box, and it closes back once the text fits again, its corners easing between the two.",
     "sources": {
@@ -277,6 +277,36 @@
         "mentions.empty": "No one by that name",
         "mentions.searching": "Searching"
     },
+    "messages": {
+        "placeholder": {"id": "composer.placeholder", "en": "Ask anything"},
+        "send": {"id": "composer.send", "en": "Send"},
+        "stop": {"id": "composer.stop", "en": "Stop"},
+        "attach": {"id": "composer.attach", "en": "Attach files"},
+        "remove": {"id": "composer.remove", "en": "Remove"},
+        "drop": {"id": "composer.drop", "en": "Drop files to attach them"},
+        "cancel": {"id": "composer.cancel", "en": "Cancel upload"},
+        "uploading": {"id": "composer.uploading", "en": "Uploading"},
+        "waiting": {"id": "composer.waiting", "en": "Waiting for files to upload"},
+        "close": {"id": "composer.close", "en": "Close"},
+        "dictation.dictate": {"id": "composerDictation.dictate", "en": "Dictate"},
+        "dictation.finish": {"id": "composerDictation.finish", "en": "Finish dictating"},
+        "dictation.cancel": {"id": "composerDictation.cancel", "en": "Cancel dictation"},
+        "dictation.recording": {"id": "composerDictation.recording", "en": "Listening"},
+        "dictation.transcribing": {"id": "composerDictation.transcribing", "en": "Transcribing"},
+        "dictation.level": {"id": "composerDictation.level", "en": "Voice level"},
+        "dictation.refused": {
+            "id": "composerDictation.refused",
+            "en": "The microphone is not allowed. Allow it for this site to dictate."
+        },
+        "dictation.missing": {"id": "composerDictation.missing", "en": "No microphone was found."},
+        "dictation.failed": {
+            "id": "composerDictation.failed",
+            "en": "What was said could not be turned into text. Try again."
+        },
+        "mentions.label": {"id": "mention.label", "en": "People to mention"},
+        "mentions.empty": {"id": "mention.empty", "en": "No one by that name"},
+        "mentions.searching": {"id": "mention.searching", "en": "Searching"}
+    },
     "appText": {
         "tools": "The app's tools and their names.",
         "files": "Each file's name and detail; a remove or cancel button says words.remove or words.cancel with the file's name, an uploading file words.uploading with its share (Uploading · 40%).",
@@ -297,7 +327,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 9038006 there is no composer."
+            "today": "As of 1a87987 there is no composer."
         }
     ]
 }

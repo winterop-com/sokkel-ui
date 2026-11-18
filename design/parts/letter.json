@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "One letter in a thread of mail: a head with the sender's picture, their name, their address while open, the time at the end with a paperclip before it when files came along, and under the name the recipients while open or the letter's first words while folded. The body follows under the head, lined up with the name from 640 up. The head is a button that folds and unfolds the letter, as a thread folds the letters already read; foldable false keeps a letter open (the thread's latest) with a head that is no button. A rule under each letter sets the letters of a thread apart.",
     "sources": {
@@ -109,6 +109,7 @@
         {"keys": ["Enter", "Space"], "does": "Folds or unfolds the letter.", "when": "a foldable head has focus"}
     ],
     "words": {"attached": "Has attachments", "to": "to {names}"},
+    "messages": {"attached": {"id": "letter.attached", "en": "Has attachments"}, "to": null},
     "samples": {
         "to": [
             {"with": {"names": "ada"}, "says": "to ada"},
@@ -132,7 +133,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 9038006 there is no letter."
+            "today": "As of 1a87987 there is no letter."
         }
     ]
 }

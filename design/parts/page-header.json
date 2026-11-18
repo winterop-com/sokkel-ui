@@ -5,8 +5,12 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "partial", "as_of": "9038006"},
-        "sokkel-tui": {"state": "partial", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-tui": {
+            "state": "built",
+            "as_of": "64f4b19",
+            "note": "With the aside, the lead, wordsOnly and singleLine."
+        }
     },
     "summary": "A page's head: its title (the name, else the code) with a count beside it, the code, a description and a line of facts under it, an optional back button and picture before it, and the page's actions at the row's end with the primary one last. The actions stay on the title's row while there is room and wrap under it otherwise; actions given as items fold into More instead.",
     "sources": {
@@ -242,6 +246,12 @@
         {"keys": ["Enter", "Space"], "does": "Calls onBack.", "when": "the back button has focus"}
     ],
     "words": {"back": "Back", "trail": "Where you are", "more": "More", "moreWays": "More ways"},
+    "messages": {
+        "back": {"id": "pageHeader.back", "en": "Back"},
+        "trail": {"id": "pageHeader.trail", "en": "Where you are"},
+        "more": {"id": "pageHeader.more", "en": "More"},
+        "moreWays": {"id": "pageHeader.moreWays", "en": "More ways"}
+    },
     "appText": {
         "title": "The page's title, its code, count, description and meta.",
         "trail": "Every crumb's label.",
@@ -292,12 +302,6 @@
             "what": "not built yet",
             "spec": "This spec.",
             "today": "As of 9038006, PageHeader draws the title in text.page-title and page-title-ink (else foreground), a count in text.help, chips as its meta, the code under the title in the code face, a description in text.body, the back button, the title edited in place, and actions from the row's end. Not yet: the trail, the aside, the lead, items folding into More with the primary and wordsOnly, actionsFill, singleLine, and the words trail, more and moreWays."
-        },
-        {
-            "renderer": "sokkel-tui",
-            "what": "not built yet",
-            "spec": "This spec.",
-            "today": "As of 7bf2ece, drawn from the spec in cells, with no lead, aside, wordsOnly or singleLine."
         }
     ]
 }

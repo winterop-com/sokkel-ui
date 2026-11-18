@@ -5,8 +5,8 @@
     "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
-        "sokkel-egui": {"state": "missing", "as_of": "9038006"},
-        "sokkel-tui": {"state": "missing", "as_of": "7bf2ece"}
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "The multi-track timeline of a video editor, in a box on the card: a row per track, its header at the start (its kind's icon, its name, and with onTrackChange toggles to mute or hide it and to lock it), and its lane after it, under a ruler of timecode that fits the zoom. Clips are blocks in their color with their label, an audio clip drawing its waveform and a title dashed; the chosen ones are outlined. A press or a drag on the ruler moves the playhead, a line across every track. With onClipsChange a clip drags along its track or onto another of the same kind and either end trims it, snapped to the playhead, other clips' edges and 0, a card at the pointer saying the new start or length, never landing on another clip. With onDrop a thing dragged from another part of the same drag area lands on a track that takes it, an outline showing where. The lanes scroll sideways and down while the ruler stays at the top, the headers at the start and the playhead's timecode over both. The clips stay where they are until the app moves them.",
     "sources": {
@@ -359,6 +359,44 @@
         "zoomOut": "Zoom out",
         "zoomFit": "Fit"
     },
+    "messages": {
+        "label": {"id": "clipTimeline.label", "en": "Timeline"},
+        "playhead": {"id": "clipTimeline.playhead", "en": "Playhead"},
+        "kinds.video": {"id": "clipTimeline.kinds.video", "en": "Video"},
+        "kinds.audio": {"id": "clipTimeline.kinds.audio", "en": "Audio"},
+        "kinds.title": {"id": "clipTimeline.kinds.title", "en": "Title"},
+        "mute": {"id": "clipTimeline.mute", "en": "Mute"},
+        "lock": {"id": "clipTimeline.lock", "en": "Lock"},
+        "hide": {"id": "clipTimeline.hide", "en": "Hide"},
+        "clip": {"id": "clipTimeline.clip", "en": "{label}, {start} to {end}"},
+        "start": {"id": "clipTimeline.start", "en": "Start {at}"},
+        "length": {"id": "clipTimeline.length", "en": "Length {length}"},
+        "moved": {
+            "id": "clipTimeline.moved",
+            "en": "{track, select, undefined {{clip} moved to {at}} other {{clip} moved to {track} at {at}}}"
+        },
+        "movedTo": {
+            "id": "clipTimeline.moved",
+            "en": "{track, select, undefined {{clip} moved to {at}} other {{clip} moved to {track} at {at}}}"
+        },
+        "trimmed": {"id": "clipTimeline.trimmed", "en": "{clip} trimmed to {length}"},
+        "split": {"id": "clipTimeline.split", "en": "{clip} split at {at}"},
+        "deleted": {
+            "id": "clipTimeline.deleted",
+            "en": "{count, plural, =1 {Clip} other {# clips}} deleted{ripple, select, true {, the gap closed} other {}}"
+        },
+        "deletedRipple": {
+            "id": "clipTimeline.deleted",
+            "en": "{count, plural, =1 {Clip} other {# clips}} deleted{ripple, select, true {, the gap closed} other {}}",
+            "with": {"ripple": true}
+        },
+        "blocked": {"id": "clipTimeline.blocked", "en": "{clip} cannot go there"},
+        "dropped": {"id": "clipTimeline.dropped", "en": "{item} added to {track} at {at}"},
+        "at": {"id": "clipTimeline.at", "en": "Playhead at {at}"},
+        "zoomIn": {"id": "clipTimeline.zoomIn", "en": "Zoom in"},
+        "zoomOut": {"id": "clipTimeline.zoomOut", "en": "Zoom out"},
+        "zoomFit": {"id": "clipTimeline.zoomFit", "en": "Fit"}
+    },
     "samples": {
         "clip": [
             {
@@ -417,7 +455,7 @@
             "renderer": "sokkel-egui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 9038006 there is no clip timeline."
+            "today": "As of 1a87987 there is no clip timeline."
         }
     ]
 }
