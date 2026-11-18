@@ -42,7 +42,7 @@
     "options": {
         "columns": {
             "type": "columns",
-            "does": "Each column: id, header, width (a track such as 8rem or minmax(12rem,1fr), or content: as wide as its widest cell and its head on one line up to maxWidth, never narrower than its head's longest word), cell, align (start, center, end), sortValue, hideable, resizable, stack (lead, line, primary, secondary, none; a primary value takes up to stackLines lines, two by default), band, aggregate, fill, edit."
+            "does": "Each column: id, header, width (a track such as 8rem or minmax(12rem,1fr), or content: as wide as its widest cell and its head on one line, a sortable head with room for its sort arrow, up to maxWidth, never narrower than its head's longest word), cell, align (start, center, end), sortValue, hideable, resizable, stack (lead, line, primary, secondary, none; a primary value takes up to stackLines lines, two by default), band, aggregate, fill, edit."
         },
         "rows": {"type": "rows", "does": "The rows, with rowKey giving each a stable key."},
         "variant": {
@@ -182,7 +182,7 @@
         "contentColumnMax": 320,
         "headLines": {
             "value": 2,
-            "note": "A head's name wraps between its words onto at most two lines, the head row growing to hold them (one line fills the row height, padded by half of what the row leaves over a line); past two it is cut with an ellipsis, its whole name on hover. A name never breaks inside a word; a word wider than its column is cut with an ellipsis. A content column is never narrower than its head's longest word, past its maxWidth too, so its head wraps between words."
+            "note": "A head's name wraps between its words onto at most two lines, the head row growing to hold them (one line fills the row height, padded by half of what the row leaves over a line); past two it is cut with an ellipsis, its whole name on hover. A name never breaks inside a word; a word wider than its column is cut with an ellipsis. A content column is never narrower than its head's longest word, past its maxWidth too, so its head wraps between words. A sortable content column keeps room for its sort arrow (18) while unsorted, so sorting it never wraps its head."
         },
         "overscanRows": 8,
         "stackBelow": {"value": 576, "note": "px of the table's own box."},

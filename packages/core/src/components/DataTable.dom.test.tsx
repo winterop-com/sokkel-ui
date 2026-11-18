@@ -405,6 +405,35 @@ describe('a table first drawn hidden', () => {
     })
 })
 
+describe('a sortable content column', () => {
+    it('keeps room for its sort arrow while unsorted, so sorting never wraps its head', async () => {
+        const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
+        const rect = Element.prototype.getBoundingClientRect
+        Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 1000 })
+        // The head and every cell are 120 wide; the head needs 18 more for the arrow it shows once sorted.
+        Element.prototype.getBoundingClientRect = function (this: Element) {
+            return DOMRect.fromRect({ width: this.hasAttribute('data-track') ? 120 : 0, height: 40 })
+        }
+        try {
+            const sized: DataColumn<Job>[] = [
+                { id: 'name', header: 'Name', width: 'content', cell: (job) => job.name, sortValue: (job) => job.name },
+                { id: 'id', header: 'Id', width: '1fr', cell: (job) => job.id },
+            ]
+            const at = await mount(
+                <div style={{ height: 400, overflow: 'auto' }}>
+                    <DataTable columns={sized} rows={jobs} rowKey={(job) => job.id} />
+                </div>,
+            )
+            await settle()
+            const template = at.querySelector<HTMLElement>('[data-row]')?.style.gridTemplateColumns ?? ''
+            expect(template).toContain('138px')
+        } finally {
+            Element.prototype.getBoundingClientRect = rect
+            if (width !== undefined) Object.defineProperty(HTMLElement.prototype, 'clientWidth', width)
+        }
+    })
+})
+
 describe('the own search', () => {
     it('draws a field of its own and keeps the rows whose text holds every word typed', async () => {
         const at = await mount(
