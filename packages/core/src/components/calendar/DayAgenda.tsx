@@ -3,8 +3,9 @@ import { Fragment, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { KIND_FILL } from '../../lib/kind'
+import { useWords } from '../../lib/words'
 import { EventPopover, useOpenEvent } from './EventPopover'
-import { CALENDAR_WORDS, eventsOn, type CalendarEvent, type CalendarWords } from './events'
+import { CALENDAR_PART, eventsOn, type CalendarEvent, type CalendarWords } from './events'
 
 export interface DayAgendaProps<E extends CalendarEvent> {
     day: Date
@@ -35,7 +36,7 @@ export function DayAgenda<E extends CalendarEvent>({
     className,
     words: given,
 }: DayAgendaProps<E>) {
-    const words = { ...CALENDAR_WORDS, ...given }
+    const words = useWords(CALENDAR_PART, given)
     const [open, setOpen] = useOpenEvent(openEvent, onOpenEventChange)
     const list = eventsOn(events, day)
     const today = now !== undefined && isSameDay(day, now)

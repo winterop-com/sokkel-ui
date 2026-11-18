@@ -7,6 +7,7 @@ import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { Spinner } from '../ui/spinner'
+import { useLocale, useWords, type WordMessages, type WordsPart } from '../../lib/words'
 
 /** The calendar and its date library, fetched when the picker is first pointed at, focused or opened. */
 const loadCalendar = () => import('../ui/calendar')
@@ -81,12 +82,15 @@ export interface TimeRangeWords {
     range: (from: Date, to: Date) => string
 }
 
-const TIME_RANGE_WORDS: Omit<TimeRangeWords, 'range'> = {
+export const TIME_RANGE_WORDS: Omit<TimeRangeWords, 'range'> = {
     custom: 'Custom range',
     apply: 'Apply',
     start: 'Start time',
     end: 'End time',
 }
+
+/** Where a catalog holds a time range picker's words; `range` writes a span in the locale. */
+export const TIME_RANGE_PART: WordsPart<Omit<TimeRangeWords, 'range'>> = { id: 'timeRange', words: TIME_RANGE_WORDS }
 
 export interface TimeRangePickerProps {
     value: TimeRangeValue
@@ -137,7 +141,9 @@ export function TimeRangePicker({
     words: given,
     className,
 }: TimeRangePickerProps) {
-    const words: TimeRangeWords = { ...TIME_RANGE_WORDS, range: (from, to) => rangeLabel(from, to, 'en-US', clock), ...given }
+    const own = useWords(TIME_RANGE_PART)
+    const locale = useLocale()
+    const words: TimeRangeWords = { ...own, range: (from, to) => rangeLabel(from, to, locale, clock), ...given }
     const id = useId()
     const prefetch = () => {
         void loadCalendar()
@@ -259,13 +265,21 @@ export interface RefreshWords {
     seconds: (count: number) => string
 }
 
-const REFRESH_WORDS: RefreshWords = {
+export const REFRESH_WORDS: RefreshWords = {
     refresh: 'Refresh',
     every: 'Refresh every',
     off: 'Off',
     pause: 'Pause',
     resume: 'Resume',
     seconds: (count) => (count < 60 ? `${count}s` : `${count / 60}m`),
+}
+
+/** Where a catalog holds a refresh control's words. */
+export const REFRESH_PART: WordsPart<RefreshWords> = { id: 'refresh', words: REFRESH_WORDS }
+
+/** A refresh control's phrases as ICU messages in English, for the catalog. */
+export const REFRESH_MESSAGES: WordMessages<RefreshWords> = {
+    seconds: null,
 }
 
 export interface RefreshControlProps {
@@ -306,7 +320,7 @@ export function RefreshControl({
     updated,
     words: given,
 }: RefreshControlProps) {
-    const words = { ...REFRESH_WORDS, ...given }
+    const words = useWords(REFRESH_PART, given)
     const pausable = onPausedChange !== undefined && interval > 0
     return (
         <div className="flex items-center gap-2">

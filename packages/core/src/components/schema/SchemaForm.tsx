@@ -3,11 +3,13 @@ import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 import { Banner } from '../Banner'
 import { Field, type RequiredMark } from '../Field'
 import { IssueMarks } from '../IssueMarks'
 import {
     ISSUE_EDGE,
+    ISSUE_PART,
     ISSUE_WORDS,
     IssueCount,
     IssueMark,
@@ -120,7 +122,7 @@ function say(issue: SchemaIssue, schema: JsonSchema): { text: string; detail?: s
     return { text: issue.kind === 'type' && issue.expected === 'integer' ? 'Enter a whole number' : 'Enter a number' }
 }
 
-const WORDS: SchemaFormWords = {
+export const SCHEMA_FORM_WORDS: SchemaFormWords = {
     say,
     use: (fix) => (Array.isArray(fix) ? 'Use the list without the extras' : `Use ${typeof fix === 'string' ? fix : literal(fix)}`),
     add: 'Add',
@@ -145,6 +147,27 @@ const WORDS: SchemaFormWords = {
     fewer: 'Fewer fields',
     marks: 'Issues in this form',
     ...ISSUE_WORDS,
+}
+
+/** Where a catalog holds a schema form's words, and the arguments its phrases name. */
+export const SCHEMA_FORM_PART: WordsPart<SchemaFormWords> = {
+    id: 'schemaForm',
+    words: SCHEMA_FORM_WORDS,
+    args: { mapKey: 'field row', mapValue: 'field row', useDefault: 'value', more: 'count' },
+    from: [ISSUE_PART],
+}
+
+/** A schema form's phrases as ICU messages in English, for the catalog. */
+export const SCHEMA_FORM_MESSAGES: WordMessages<SchemaFormWords> = {
+    say: null,
+    use: null,
+    item: null,
+    fallback: null,
+    mapKey: '{field} key {row}',
+    mapValue: '{field} value {row}',
+    removeEntry: null,
+    useDefault: 'Default ({value})',
+    more: '{count, plural, one {# more field} other {# more fields}}',
 }
 
 /**
@@ -376,7 +399,7 @@ export function useSchemaForm(
         words?: Partial<SchemaFormWords>
     } = {},
 ): SchemaFormState {
-    const words = { ...WORDS, ...given_ }
+    const words = useWords(SCHEMA_FORM_PART, given_)
     const base = useId()
     const [own, setOwn] = useState<unknown>(() => initial ?? initialValue(schema))
     const value = outside === undefined ? own : outside
@@ -778,7 +801,7 @@ interface FieldLook {
     required: string
 }
 
-const FieldLookContext = createContext<FieldLook>({ requiredMark: 'star', fallbacks: false, required: WORDS.required })
+const FieldLookContext = createContext<FieldLook>({ requiredMark: 'star', fallbacks: false, required: SCHEMA_FORM_WORDS.required })
 
 function Control({
     form,

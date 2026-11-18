@@ -78,7 +78,7 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
 
     const last = panels.length - 1
     const layout = linkedLayout(panels.map((panel) => Math.max(0, panel.style.weight ?? 1)))
-    const ticks = (unit: number) => tickWriter(spec.format, unitAt(spec, unit))
+    const ticks = (unit: number) => tickWriter(spec.format, unitAt(spec, unit), spec.locale)
     // One measure split into panels shares a scale, so their heights compare; separate fields keep their own.
     const shared = (spec.scales ?? (spec.series === undefined ? 'own' : 'shared')) === 'shared'
     const figures = panels.flatMap((panel) => panel.values).filter((value): value is number => value !== null)

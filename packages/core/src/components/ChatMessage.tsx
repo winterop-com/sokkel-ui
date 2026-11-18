@@ -3,6 +3,7 @@ import { ChevronRight, Ellipsis, FileText, MessageSquareText, SmilePlus } from '
 import { isValidElement, memo, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import type { DragData } from './DragDrop'
 import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSource'
 import { AudioPlayer } from './media/AudioPlayer'
@@ -66,7 +67,7 @@ export interface ChatMessageWords {
     dragFile: (name: string) => string
 }
 
-const WORDS: ChatMessageWords = {
+export const CHAT_MESSAGE_WORDS: ChatMessageWords = {
     edited: '(edited)',
     editedAt: (when) => `Edited ${when}`,
     react: 'Add a reaction',
@@ -77,6 +78,21 @@ const WORDS: ChatMessageWords = {
     viewThread: 'View thread',
     player: {},
     dragFile: (name) => `Drag ${name}`,
+}
+
+/** Where a catalog holds a chat message's words, and the arguments its phrases name. */
+export const CHAT_MESSAGE_PART: WordsPart<ChatMessageWords> = {
+    id: 'chatMessage',
+    words: CHAT_MESSAGE_WORDS,
+    args: { editedAt: 'when', replies: 'count', lastReply: 'when', dragFile: 'name' },
+}
+
+/** A chat message's phrases as ICU messages in English, for the catalog. */
+export const CHAT_MESSAGE_MESSAGES: WordMessages<ChatMessageWords> = {
+    editedAt: 'Edited {when}',
+    replies: '{count, plural, one {# reply} other {# replies}}',
+    lastReply: 'Last reply {when}',
+    dragFile: 'Drag {name}',
 }
 
 /** The link glyph drawn before every link in a body, as a mask so it takes the link's color. */
@@ -210,7 +226,7 @@ export const ChatMessage = memo(function ChatMessage({
     className,
     words: given,
 }: ChatMessageProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CHAT_MESSAGE_PART, given)
     const [menuOpen, setMenuOpen] = useState(false)
     const [reacting, setReacting] = useState(false)
     const lit = active || menuOpen || reacting

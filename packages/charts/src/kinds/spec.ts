@@ -4,6 +4,9 @@ import { RUN_STATUS_MAP, STATUS_CSS, type StatusMap } from '@winterop-com/sokkel
 
 import { formatNumber, type Aggregate, type Row } from '../data'
 import { tokenColor, type ChartLook } from '../look'
+import { CHART_WORDS, type ChartWords } from './words'
+
+export { CHART_PART, CHART_WORDS, type ChartWords } from './words'
 
 /**
  * What a chart draws, read from rows. Which fields each kind reads is said by the kind: most put
@@ -61,6 +64,8 @@ export interface ChartSpec {
      * the figure it writes for a tick is swapped for a compact one, so `1,500 GB` reads `1.5K GB`.
      */
     format?: (value: number) => string
+    /** The locale figures are written in without a `format`; a `Chart` takes the provider's (`useLocale`), `en-US` without one. */
+    locale?: string
     /** A unit written after each figure, on the value axis too, such as `s` or `%`, or one for each `y` field in order. */
     unit?: string | readonly string[]
     /** What a field is called where the chart names it, such as a scatter's axes and tooltip; the field's own name where none is given. */
@@ -299,47 +304,6 @@ export interface ChartStep {
     label?: string
 }
 
-/** The words a chart writes itself, beside the names its rows give. */
-export interface ChartWords {
-    count: string
-    total: string
-    rise: string
-    fall: string
-    change: string
-    low: string
-    lower: string
-    median: string
-    upper: string
-    high: string
-    outlier: string
-    ofFirst: string
-    target: string
-    observed: string
-    /** The one group a scatter or a parallel chart draws without `series`. */
-    all: string
-    /** Between the ends of a range in a tooltip, `10 to 90`. */
-    to: string
-}
-
-export const CHART_WORDS: ChartWords = {
-    count: 'Count',
-    total: 'Total',
-    rise: 'Rise',
-    fall: 'Fall',
-    change: 'Change',
-    low: 'Low',
-    lower: 'Lower quartile',
-    median: 'Median',
-    upper: 'Upper quartile',
-    high: 'High',
-    outlier: 'Outlier',
-    ofFirst: 'of first',
-    target: 'Target',
-    observed: 'Observed',
-    all: 'All',
-    to: 'to',
-}
-
 /** The spec's words over the English defaults. */
 export const wordsOf = (spec: ChartSpec): ChartWords => ({ ...CHART_WORDS, ...spec.words })
 
@@ -356,7 +320,7 @@ export function unitAt(spec: ChartSpec, index = 0): string {
 /** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
 export function written(spec: ChartSpec, value: number | null | undefined, field = 0): string {
     if (value === null || value === undefined) return '-'
-    return `${(spec.format ?? formatNumber)(value)}${unitAt(spec, field)}`
+    return `${spec.format === undefined ? formatNumber(value, spec.locale) : spec.format(value)}${unitAt(spec, field)}`
 }
 
 /** The `y` fields as a list. */

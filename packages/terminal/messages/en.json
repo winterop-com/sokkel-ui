@@ -1,0 +1,7 @@
+{
+    "terminal.exited": "exited with {code}",
+    "terminalView.clear": "Clear",
+    "terminalView.copied": "Copied",
+    "terminalView.copy": "Copy",
+    "terminalView.latest": "Jump to latest"
+}

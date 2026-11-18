@@ -1,6 +1,7 @@
 import { Avatar } from '@base-ui/react/avatar'
 import { useState } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { KIND_WASH, kindOf, type KindColor } from '../lib/kind'
 
@@ -28,7 +29,10 @@ export interface PersonAvatarWords {
     presence: Record<Presence, string>
 }
 
-const WORDS: PersonAvatarWords = { presence: { active: 'Active', away: 'Away', offline: 'Offline' } }
+export const PERSON_AVATAR_WORDS: PersonAvatarWords = { presence: { active: 'Active', away: 'Away', offline: 'Offline' } }
+
+/** Where a catalog holds a person's avatar's words. */
+export const PERSON_AVATAR_PART: WordsPart<PersonAvatarWords> = { id: 'personAvatar', words: PERSON_AVATAR_WORDS }
 
 export interface PresenceDotProps {
     presence: Presence
@@ -42,10 +46,11 @@ export interface PresenceDotProps {
  * container sets it), so it reads as cut out of whatever it overlaps.
  */
 export function PresenceDot({ presence, label, className }: PresenceDotProps) {
+    const words = useWords(PERSON_AVATAR_PART)
     return (
         <span
             role="img"
-            aria-label={label ?? WORDS.presence[presence]}
+            aria-label={label ?? words.presence[presence]}
             className={cn(
                 'size-2 shrink-0 rounded-full border-2 ring-2 ring-[color:var(--avatar-ring,var(--color-background))]',
                 PRESENCE[presence],
@@ -99,7 +104,7 @@ export function PersonAvatar({
     className,
     words: given,
 }: PersonAvatarProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(PERSON_AVATAR_PART, given)
     const fit = SIZE[size]
     // By code point, so a name that starts outside the basic plane keeps its whole first letter.
     const letters = [

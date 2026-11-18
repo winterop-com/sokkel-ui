@@ -1,4 +1,5 @@
 import { formatSize } from '../components/FileList'
+import type { WordMessages, WordsPart } from './words'
 
 /**
  * Files on their way up, as a store a hook or a test can drive: what is accepted and what refused
@@ -53,6 +54,20 @@ export const UPLOAD_WORDS: UploadWords = {
     size: (name, limit) => `${name} is larger than ${limit}.`,
     count: (name, limit) => `${name} was not added: at most ${String(limit)} files.`,
     failed: 'Failed',
+}
+
+/** Where a catalog holds what uploads say of a file refused or failed, and the arguments its phrases name. */
+export const UPLOAD_PART: WordsPart<UploadWords> = {
+    id: 'upload',
+    words: UPLOAD_WORDS,
+    args: { type: 'name', size: 'name limit', count: 'name limit' },
+}
+
+/** The upload phrases as ICU messages in English, for the catalog. */
+export const UPLOAD_MESSAGES: WordMessages<UploadWords> = {
+    type: '{name} is not a type that can be added.',
+    size: '{name} is larger than {limit}.',
+    count: '{name} was not added: at most {limit} files.',
 }
 
 export interface UploadOptions<R = unknown> {

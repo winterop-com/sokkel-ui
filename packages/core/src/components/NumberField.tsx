@@ -1,8 +1,9 @@
 import { Minus, Plus } from 'lucide-react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { readNumber, stepNumber, writeNumber } from '../lib/numbers'
 import { FRAME_BUTTON, TypedField, type EntryFieldProps } from './entry'
-import { FIELD_WORDS, type FieldWords } from './Field'
+import { FIELD_PART, FIELD_WORDS, type FieldWords } from './Field'
 
 export type { EntryFieldProps } from './entry'
 
@@ -26,7 +27,7 @@ export interface NumberFieldWords extends FieldWords {
     decrease: string
 }
 
-const WORDS: NumberFieldWords = {
+export const NUMBER_FIELD_WORDS: NumberFieldWords = {
     ...FIELD_WORDS,
     unreadable: 'Enter a number',
     whole: 'Enter a whole number',
@@ -36,6 +37,22 @@ const WORDS: NumberFieldWords = {
     use: (bound) => `Use ${bound}`,
     increase: 'Increase',
     decrease: 'Decrease',
+}
+
+/** Where a catalog holds a number field's words, and the arguments its phrases name. */
+export const NUMBER_FIELD_PART: WordsPart<NumberFieldWords> = {
+    id: 'numberField',
+    words: NUMBER_FIELD_WORDS,
+    args: { example: 'sample', under: 'min', over: 'max', use: 'bound' },
+    from: [FIELD_PART],
+}
+
+/** A number field's phrases as ICU messages in English, for the catalog. */
+export const NUMBER_FIELD_MESSAGES: WordMessages<NumberFieldWords> = {
+    example: 'As in {sample}.',
+    under: 'Enter {min} or more',
+    over: 'Enter {max} or less',
+    use: 'Use {bound}',
 }
 
 export interface NumberFieldProps extends EntryFieldProps<number> {
@@ -75,7 +92,7 @@ export function NumberField({
     words: said,
     ...field
 }: NumberFieldProps) {
-    const words = { ...WORDS, ...said }
+    const words = useWords(NUMBER_FIELD_PART, said)
     const { min, max } = field
     const by = (entry: { value: number | null; set: (value: number) => void }, steps: number) =>
         entry.set(stepNumber(entry.value, steps, { step, min, max }))

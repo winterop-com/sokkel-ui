@@ -4,7 +4,8 @@ import type { AttachmentFile } from '../components/AttachmentList'
 import type { ComposerAttachment } from '../components/Composer'
 import { formatSize } from '../components/FileList'
 import type { Upload as TrayUpload } from '../components/UploadTray'
-import { UPLOAD_WORDS, UploadStore, type RefusedFile, type Upload, type UploadOptions } from '../lib/uploads'
+import { UPLOAD_PART, UploadStore, type RefusedFile, type Upload, type UploadOptions } from '../lib/uploads'
+import { useWords } from '../lib/words'
 
 export type { RefusalReason, RefusedFile, Upload, UploadContext, UploadOptions, Uploader, UploadState, UploadWords } from '../lib/uploads'
 export { accepts, UPLOAD_WORDS } from '../lib/uploads'
@@ -39,13 +40,14 @@ export function useUploads<R = unknown>(
         attachment?: (upload: Upload<R>) => Partial<AttachmentFile>
     },
 ) {
+    const words = useWords(UPLOAD_PART, options.words)
     const store = useRef<UploadStore<R> | null>(null)
-    if (store.current === null) store.current = new UploadStore(options)
-    // The latest uploader and limits apply to files added from now on.
-    store.current.options = options
+    if (store.current === null) store.current = new UploadStore({ ...options, words })
+    // The latest uploader, limits and words apply to files added from now on.
+    store.current.options = { ...options, words }
     const own = store.current
     const { uploads, refused } = useSyncExternalStore(own.subscribe, own.get, own.get)
-    const failed = options.words?.failed ?? UPLOAD_WORDS.failed
+    const failed = words.failed
     const describe = options.attachment
     const files = useMemo(
         () =>

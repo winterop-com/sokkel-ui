@@ -4,6 +4,7 @@ import { useRef, type ComponentProps, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** The words a dock says. */
 export interface DockWords {
@@ -12,11 +13,14 @@ export interface DockWords {
     resize: string
 }
 
-const WORDS: DockWords = {
+export const DOCK_WORDS: DockWords = {
     fold: 'Fold the panel',
     unfold: 'Unfold the panel',
     resize: 'Resize the panel',
 }
+
+/** Where a catalog holds a dock's words. */
+export const DOCK_PART: WordsPart<DockWords> = { id: 'dock', words: DOCK_WORDS }
 
 export interface DockProps extends Omit<ComponentProps<'section'>, 'title' | 'children' | 'ref' | 'style'> {
     title: ReactNode
@@ -70,7 +74,7 @@ export function Dock({
     children,
     ...props
 }: DockProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(DOCK_PART, given)
     const dock = useRef<HTMLElement>(null)
     const held = usePanelSize({
         size,

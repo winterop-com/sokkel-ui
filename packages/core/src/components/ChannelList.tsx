@@ -7,6 +7,7 @@ import type { ChannelOrderPress } from './channel-order'
 import { DragPartsContext } from './drag-parts'
 import type { RailDrop } from './Rail'
 import type { KindColor } from '../lib/kind'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { Count } from './Count'
 import { Link } from './Link'
 import { PersonAvatar, PresenceDot, type Presence } from './PersonAvatar'
@@ -82,7 +83,7 @@ export interface ChannelListWords {
     moved: (entry: string, place: number, count: number) => string
 }
 
-const WORDS: ChannelListWords = {
+export const CHANNEL_LIST_WORDS: ChannelListWords = {
     add: (section) => `Add to ${section}`,
     collapse: (section) => `Show or hide ${section}`,
     mentions: (count) => `${String(count)} mention${count === 1 ? '' : 's'}`,
@@ -92,6 +93,21 @@ const WORDS: ChannelListWords = {
     nothing: 'No conversation matches.',
     resize: 'Resize the conversation list',
     moved: (entry, place, count) => `${entry} moved to ${String(place)} of ${String(count)}`,
+}
+
+/** Where a catalog holds a channel list's words, and the arguments its phrases name. */
+export const CHANNEL_LIST_PART: WordsPart<ChannelListWords> = {
+    id: 'channelList',
+    words: CHANNEL_LIST_WORDS,
+    args: { add: 'section', collapse: 'section', mentions: 'count', moved: 'entry place count' },
+}
+
+/** A channel list's phrases as ICU messages in English, for the catalog. */
+export const CHANNEL_LIST_MESSAGES: WordMessages<ChannelListWords> = {
+    add: 'Add to {section}',
+    collapse: 'Show or hide {section}',
+    mentions: '{count, plural, one {# mention} other {# mentions}}',
+    moved: '{entry} moved to {place} of {count}',
 }
 
 const ROW =
@@ -184,7 +200,7 @@ export function ChannelList({
 }: ChannelListProps) {
     const list = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: 256, min: minSize, max: maxSize })
-    const words = { ...WORDS, ...given }
+    const words = useWords(CHANNEL_LIST_PART, given)
     const [ownFolded, setOwnFolded] = useState<readonly string[]>(defaultFolded)
     const [ownQuery, setOwnQuery] = useState('')
     const folds = heldFolded ?? ownFolded

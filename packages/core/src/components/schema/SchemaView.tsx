@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 
+import { useWords, type WordsPart } from '../../lib/words'
 import { cn } from '../../lib/cn'
 import { childSchema, constraints, literal, resolve, typeLabel, type JsonSchema } from './read'
 
@@ -15,7 +16,7 @@ export interface SchemaViewWords {
     empty: string
 }
 
-const WORDS: SchemaViewWords = {
+export const SCHEMA_VIEW_WORDS: SchemaViewWords = {
     required: 'required',
     optional: 'optional',
     default: 'default',
@@ -25,6 +26,9 @@ const WORDS: SchemaViewWords = {
     deprecated: 'deprecated',
     empty: 'No fields.',
 }
+
+/** Where a catalog holds a schema view's words. */
+export const SCHEMA_VIEW_PART: WordsPart<SchemaViewWords> = { id: 'schemaView', words: SCHEMA_VIEW_WORDS }
 
 function Field({
     name,
@@ -173,7 +177,7 @@ export interface SchemaViewProps {
  * of objects fold open, to `open` levels at first; local `$ref`s and `allOf` are followed.
  */
 export function SchemaView({ schema, open = 1, words: given, className }: SchemaViewProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SCHEMA_VIEW_PART, given)
     return (
         <div className={cn('text-sm', className)}>
             <Fields schema={schema} root={schema} depth={0} open={open} words={words} />

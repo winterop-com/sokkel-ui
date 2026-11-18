@@ -2,6 +2,7 @@ import { X, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One open document: a note, a file, a query. */
 export interface DocumentTab {
@@ -24,10 +25,18 @@ export interface DocumentTabsWords {
     unsaved: string
 }
 
-const WORDS: DocumentTabsWords = {
+export const DOCUMENT_TABS_WORDS: DocumentTabsWords = {
     label: 'Open documents',
     close: (label) => `Close ${label}`,
     unsaved: 'Not saved yet',
+}
+
+/** Where a catalog holds a row of document tabs' words, and the arguments its phrases name. */
+export const DOCUMENT_TABS_PART: WordsPart<DocumentTabsWords> = { id: 'documentTabs', words: DOCUMENT_TABS_WORDS, args: { close: 'label' } }
+
+/** A row of document tabs' phrases as ICU messages in English, for the catalog. */
+export const DOCUMENT_TABS_MESSAGES: WordMessages<DocumentTabsWords> = {
+    close: 'Close {label}',
 }
 
 export interface DocumentTabsProps {
@@ -51,7 +60,7 @@ export interface DocumentTabsProps {
  * the strip scrolls sideways, keeping the shown tab in view, while `end` stays at its end.
  */
 export function DocumentTabs({ tabs, active, onActiveChange, onClose, end, className, words: given }: DocumentTabsProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(DOCUMENT_TABS_PART, given)
     const strip = useRef<HTMLDivElement>(null)
 
     // The shown tab is scrolled into view as it changes, opened from elsewhere or reached by the keys.

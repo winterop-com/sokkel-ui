@@ -1,7 +1,9 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
+
 import { sessionWrite, type SessionWritten, type TerminalEntry } from './session'
-import { TerminalView, type TerminalHandle } from './TerminalView'
+import { TERMINAL_VIEW_PART, TERMINAL_VIEW_WORDS, TerminalView, type TerminalHandle } from './TerminalView'
 
 export type { TerminalEntry } from './session'
 
@@ -13,13 +15,21 @@ export interface TerminalWords {
     exited: (code: number) => string
 }
 
-const WORDS: TerminalWords = {
-    copy: 'Copy',
-    copied: 'Copied',
-    clear: 'Clear',
-    latest: 'Jump to latest',
+export const TERMINAL_WORDS: TerminalWords = {
+    ...TERMINAL_VIEW_WORDS,
     exited: (code) => `exited with ${code}`,
 }
+
+/** Where a catalog holds a terminal's words, and the arguments its phrases name; the view's are the view's own. */
+export const TERMINAL_PART: WordsPart<TerminalWords> = {
+    id: 'terminal',
+    words: TERMINAL_WORDS,
+    args: { exited: 'code' },
+    from: [TERMINAL_VIEW_PART],
+}
+
+/** A terminal's phrases as ICU messages in English, for the catalog. */
+export const TERMINAL_MESSAGES: WordMessages<TerminalWords> = { exited: 'exited with {code}' }
 
 // xterm draws no cursor until the terminal is focused, typed into or switches screens, so showing it
 // also switches to the normal screen, where a read-only terminal already is.
@@ -63,7 +73,7 @@ export function Terminal({
 }: TerminalProps) {
     const view = useRef<TerminalHandle>(null)
     const written = useRef<SessionWritten | undefined>(undefined)
-    const words = { ...WORDS, ...given }
+    const words = useWords(TERMINAL_PART, given)
     const exited = words.exited
 
     // The view disposes its engine when its effects are cleaned up and makes an empty one when they

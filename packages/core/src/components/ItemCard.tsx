@@ -1,6 +1,7 @@
 import { Check, MoreHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import type { TitleLines } from '../lib/title-lines'
 import { ItemHeading, identityOf } from './ItemHeading'
@@ -18,9 +19,12 @@ export interface ItemCardWords {
     menu: string
 }
 
-const WORDS: ItemCardWords = {
+export const ITEM_CARD_WORDS: ItemCardWords = {
     menu: 'More actions',
 }
+
+/** Where a catalog holds an item card's words. */
+export const ITEM_CARD_PART: WordsPart<ItemCardWords> = { id: 'itemCard', words: ITEM_CARD_WORDS }
 
 export interface ItemCardProps {
     /** The name; with none, the code is the title. */
@@ -73,7 +77,7 @@ export function ItemCard({
     className,
     words: given,
 }: ItemCardProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(ITEM_CARD_PART, given)
     const { heading } = identityOf(title, code)
     const interactive = href !== undefined || onSelect !== undefined
     const Cover = href !== undefined ? Link : 'button'

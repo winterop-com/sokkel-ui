@@ -1,5 +1,6 @@
 import { Paperclip, Star } from 'lucide-react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import type { DragData } from './DragDrop'
 import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSource'
@@ -25,7 +26,7 @@ export interface MessageRowWords {
     drag: (subject: string) => string
 }
 
-const WORDS: MessageRowWords = {
+export const MESSAGE_ROW_WORDS: MessageRowWords = {
     select: (from) => `Select the message from ${from}`,
     star: 'Star',
     unstar: 'Remove the star',
@@ -33,6 +34,20 @@ const WORDS: MessageRowWords = {
     attachment: 'Has attachments',
     thread: (count) => `${count} messages`,
     drag: (subject) => `Drag ${subject}`,
+}
+
+/** Where a catalog holds a message row's words, and the arguments its phrases name. */
+export const MESSAGE_ROW_PART: WordsPart<MessageRowWords> = {
+    id: 'messageRow',
+    words: MESSAGE_ROW_WORDS,
+    args: { select: 'from', thread: 'count', drag: 'subject' },
+}
+
+/** A message row's phrases as ICU messages in English, for the catalog. */
+export const MESSAGE_ROW_MESSAGES: WordMessages<MessageRowWords> = {
+    select: 'Select the message from {from}',
+    thread: '{count} messages',
+    drag: 'Drag {subject}',
 }
 
 export interface MessageRowProps {
@@ -100,7 +115,7 @@ export function MessageRow({
     className,
     words: given,
 }: MessageRowProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(MESSAGE_ROW_PART, given)
     const gutter = onCheckedChange !== undefined || onStarredChange !== undefined
     return (
         <DragSource drag={drag === undefined ? undefined : { compact: true, ...drag }}>

@@ -491,6 +491,33 @@ on a press, so a long document opens on its changes; `foldDiff` is that fold as 
 the rows of what an action takes or changes under a heading that labels the list, its other props
 going to its root.
 
+## Translating
+
+Every word a part says is a prop with an English default, and every word has a stable message id,
+so an app translates the library from one catalog. A part's words are its `<NAME>_WORDS`, with
+`<NAME>_PART` beside them (`lib/words`): the part's id, the name in camel case
+(`DATA_TABLE_WORDS` is `dataTable`), the names of each phrase's arguments in the order the phrase
+takes them, and the parts whose words it spreads, whose words keep those parts' ids. A word's id is
+the part's id and its key (`dataTable.rows`), a nested word's the path to it
+(`emojiPicker.groups.recent`, `emojiPicker.tones.0`). Each phrase, a word that takes arguments, has
+its English as an ICU message in `<NAME>_MESSAGES` beside the words (`rows: '{count, plural, one {#
+row} other {# rows}}'`); a test formats each one against its English function over sample arguments,
+so the two never part, and checks every `<NAME>_WORDS` has its part under the id its name makes. A
+phrase that formats rather than says (a list joined, a value worked out, markup) has a null message
+and is changed only through `words`.
+
+`bun run messages` writes each package's catalog, `messages/en.json`, from the parts: every word by
+id, a plain word quoted where ICU would read it otherwise; `--check` fails a catalog the parts no
+longer make. An app translates that file with any ICU tool and hands the result to
+`LocaleProvider` with its `locale`; every part asks for its words through `useWords(PART, words)`,
+which gives the part's own `words` over the catalog's translation over the English. The catalog is
+read by the library's own ICU subset (`lib/message-format`: arguments, `plural` and `selectordinal`
+with `#`, `=n` and `offset`, `select`, and `number`, `date` and `time` with their styles and the
+common skeletons), which loads with the provider, so an app without one pays only for the hook.
+Plurals follow `Intl.PluralRules` in the locale. `useLocale()` gives the provider's locale, `en-US`
+without one, and every number, date, list and sort the parts write follows it; a part's own
+`locale` prop still wins.
+
 ## Typefaces
 
 Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,

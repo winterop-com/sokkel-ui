@@ -2,6 +2,7 @@ import { Search, X } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from './ui/command'
 import { Input } from './ui/input'
 
@@ -30,13 +31,16 @@ export interface CapabilityPickerWords {
     other: string
 }
 
-const WORDS: CapabilityPickerWords = {
+export const CAPABILITY_PICKER_WORDS: CapabilityPickerWords = {
     search: 'Search',
     filters: 'Filter by what it can do',
     empty: 'Nothing matches.',
     clear: 'Clear the filters',
     other: 'Other',
 }
+
+/** Where a catalog holds a capability picker's words. */
+export const CAPABILITY_PICKER_PART: WordsPart<CapabilityPickerWords> = { id: 'capabilityPicker', words: CAPABILITY_PICKER_WORDS }
 
 /** Whether an item has every chosen capability and matches the query in its code, name or description. */
 function matches(item: PickerItem, chosen: ReadonlySet<string>, query: string): boolean {
@@ -72,7 +76,7 @@ export function CapabilityPicker({
     className,
     words: given,
 }: CapabilityPickerProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CAPABILITY_PICKER_PART, given)
     const [query, setQuery] = useState(defaultQuery)
     const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set(defaultCapabilities))
     const q = query.trim()

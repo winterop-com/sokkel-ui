@@ -13,6 +13,7 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** One other way to do the action, in the split button's menu. */
 export interface SplitButtonItem {
@@ -37,7 +38,10 @@ export interface SplitButtonWords {
     moreHint?: string
 }
 
-const WORDS: SplitButtonWords = { more: 'More ways' }
+export const SPLIT_BUTTON_WORDS: SplitButtonWords = { more: 'More ways' }
+
+/** Where a catalog holds a split button's words. */
+export const SPLIT_BUTTON_PART: WordsPart<SplitButtonWords> = { id: 'splitButton', words: SPLIT_BUTTON_WORDS }
 
 /** The icon button's size beside each text size, so both halves stand the same height. */
 /** The line between the halves of a filled button, its own ground mixed with its ink. */
@@ -94,7 +98,7 @@ export function SplitButton({
     className,
     words: given,
 }: SplitButtonProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SPLIT_BUTTON_PART, given)
     const group = useRef<HTMLDivElement>(null)
     const held = reason !== undefined && reason !== null && reason !== false
     const separator = SEPARATOR[variant]

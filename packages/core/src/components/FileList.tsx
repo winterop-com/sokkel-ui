@@ -6,6 +6,7 @@ import { DataTable, type DataColumn, type DataSort, type DataTableProps, type Da
 import type { DragData } from './DragDrop'
 import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER, type DragSourceState } from './DragSource'
 import { Checkbox } from './ui/checkbox'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** What a file is, which picks its icon and how it previews. */
 export type FileKind = 'folder' | 'image' | 'table' | 'json' | 'text' | 'code' | 'pdf' | 'archive' | 'other'
@@ -47,7 +48,7 @@ export interface FileListWords {
     drag: (name: string) => string
 }
 
-const WORDS: FileListWords = {
+export const FILE_LIST_WORDS: FileListWords = {
     name: 'Name',
     size: 'Size',
     modified: 'Modified',
@@ -57,6 +58,19 @@ const WORDS: FileListWords = {
     selectEntry: (name) => `Select ${name}`,
     empty: 'This folder is empty.',
     drag: (name) => `Drag ${name}`,
+}
+
+/** Where a catalog holds a file list's words, and the arguments its phrases name. */
+export const FILE_LIST_PART: WordsPart<FileListWords> = {
+    id: 'fileList',
+    words: FILE_LIST_WORDS,
+    args: { selectEntry: 'name', drag: 'name' },
+}
+
+/** A file list's phrases as ICU messages in English, for the catalog. */
+export const FILE_LIST_MESSAGES: WordMessages<FileListWords> = {
+    selectEntry: 'Select {name}',
+    drag: 'Drag {name}',
 }
 
 const ICONS: Record<FileKind, { icon: LucideIcon; tone: string }> = {
@@ -223,7 +237,7 @@ export function FileList({
     words: given,
     tableWords,
 }: FileListProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords<FileListWords>(FILE_LIST_PART, given)
     // A column sorts from its head only when the app hears it; the app orders the entries, folders first.
     const sortable = (value: (entry: FileEntry) => string | number) => (onSortChange === undefined ? {} : { sortValue: value })
     const columns: DataColumn<FileEntry>[] = [
@@ -335,7 +349,7 @@ export function FileTile({
     drag,
     words: given,
 }: FileTileProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords<FileListWords>(FILE_LIST_PART, given)
     return (
         <DragSource drag={drag === undefined ? undefined : { compact: true, ...drag }}>
             {(source) => (
@@ -465,7 +479,7 @@ export function FileGrid({
     className,
     words: given,
 }: FileGridProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords<FileListWords>(FILE_LIST_PART, given)
     if (entries.length === 0) return <>{empty ?? <p className="py-3 text-sm text-muted-foreground">{words.empty}</p>}</>
     const chosen = new Set(selected)
     return (

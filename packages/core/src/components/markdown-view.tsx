@@ -15,6 +15,7 @@ import {
 import ReactMarkdown, { defaultUrlTransform, type Components, type Options, type UrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { hasMath, normalizeMath } from '../lib/math'
 import { TABLE_HEAD_TEXT } from '../lib/table'
@@ -158,7 +159,7 @@ export interface MarkdownWords extends Record<CalloutKind, string> {
     diagram: Partial<MermaidDiagramWords>
 }
 
-const WORDS: MarkdownWords = {
+export const MARKDOWN_WORDS: MarkdownWords = {
     note: 'Note',
     tip: 'Tip',
     important: 'Important',
@@ -167,6 +168,9 @@ const WORDS: MarkdownWords = {
     code: {},
     diagram: {},
 }
+
+/** Where a catalog holds rendered markdown's words. */
+export const MARKDOWN_PART: WordsPart<MarkdownWords> = { id: 'markdown', words: MARKDOWN_WORDS }
 
 const CALLOUTS: Record<CalloutKind, { icon: LucideIcon; frame: string; ink: string }> = {
     note: { icon: Info, frame: 'border-info/45 bg-info/8', ink: 'text-info-ink' },
@@ -773,7 +777,7 @@ interface ViewContext {
 
 const View = createContext<ViewContext>({
     streaming: false,
-    words: WORDS,
+    words: MARKDOWN_WORDS,
     parts: undefined,
     links: undefined,
     follow: { current: undefined },
@@ -937,7 +941,8 @@ export const MarkdownView = memo(function MarkdownView({
 }: MarkdownViewProps) {
     // The words are held by their text, so an object made anew each render keeps the context.
     const said = JSON.stringify(given ?? null)
-    const words = useMemo<MarkdownWords>(() => ({ ...WORDS, ...(JSON.parse(said) as Partial<MarkdownWords> | null) }), [said])
+    const own = useWords(MARKDOWN_PART)
+    const words = useMemo<MarkdownWords>(() => ({ ...own, ...(JSON.parse(said) as Partial<MarkdownWords> | null) }), [own, said])
     // The latest handler, read on a press, so a handler made anew each render keeps the context.
     const follow = useRef(onLink)
     follow.current = onLink

@@ -12,6 +12,7 @@
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
         "dist",
+        "messages",
         "src",
         "!src/**/*.test.*"
     ],
@@ -22,6 +23,7 @@
     "exports": {
         "./styles.css": "./src/styles.css",
         "./sources/*.css": "./dist/sources/*.css",
+        "./messages/*.json": "./messages/*.json",
         "./Terminal": {
             "types": "./dist/Terminal.d.ts",
             "import": "./dist/Terminal.js"

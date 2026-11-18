@@ -29,6 +29,7 @@ import {
     type DragGripProps,
     type DragHandleProps,
 } from './DragDrop'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** The words a sortable group says, each with an English default. */
 export interface SortableWords {
@@ -41,6 +42,19 @@ export interface SortableWords {
 export const SORTABLE_WORDS: SortableWords = {
     move: (item) => `Move ${item}`,
     moved: (item, place, count) => `${item} moved to ${String(place)} of ${String(count)}`,
+}
+
+/** Where a catalog holds a sortable list's words, and the arguments its phrases name. */
+export const SORTABLE_PART: WordsPart<SortableWords> = {
+    id: 'sortable',
+    words: SORTABLE_WORDS,
+    args: { move: 'item', moved: 'item place count' },
+}
+
+/** A sortable list's phrases as ICU messages in English, for the catalog. */
+export const SORTABLE_MESSAGES: WordMessages<SortableWords> = {
+    move: 'Move {item}',
+    moved: '{item} moved to {place, number} of {count, number}',
 }
 
 /** How items move aside as one is dragged: down a list, or across and down a grid. */
@@ -113,7 +127,8 @@ export function SortableGroup({
     children,
 }: SortableGroupProps) {
     const scope = useId()
-    const words = useMemo(() => ({ ...SORTABLE_WORDS, ...given }), [given])
+    const own = useWords(SORTABLE_PART)
+    const words = useMemo(() => ({ ...own, ...given }), [own, given])
     const [said, setSaid] = useState('')
     const refocus = useRef<string | null>(null)
     const moved = useRef(onMove)

@@ -9,6 +9,7 @@ import { Segmented } from './Segmented'
 import { ThemeCards } from './ThemeCards'
 import { ThemeSwatch } from './theme-swatch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { useWords, type WordsPart } from '../lib/words'
 
 export type { ThemeOption, ThemeSettings } from '../lib/appearance'
 
@@ -37,7 +38,7 @@ export interface ThemePickerWords {
     motionHint: string
 }
 
-const WORDS: ThemePickerWords = {
+export const THEME_PICKER_WORDS: ThemePickerWords = {
     theme: 'Theme',
     scheme: 'Scheme',
     dark: 'Dark',
@@ -60,6 +61,9 @@ const WORDS: ThemePickerWords = {
     typefaceHint: 'The type the text is set in.',
     motionHint: 'Whether parts move as they open and change.',
 }
+
+/** Where a catalog holds a theme picker's words. */
+export const THEME_PICKER_PART: WordsPart<ThemePickerWords> = { id: 'themePicker', words: THEME_PICKER_WORDS }
 
 export interface ThemePickerProps {
     value: ThemeSettings
@@ -155,7 +159,7 @@ function choices(
     }: Omit<ThemePickerProps, 'className'>,
     beside: boolean,
 ): Part[] {
-    const words = { ...WORDS, ...given }
+    const words = useWords(THEME_PICKER_PART, given)
     const levels = densities ?? [
         { value: 'regular', label: words.regular },
         { value: 'compact', label: words.compact },

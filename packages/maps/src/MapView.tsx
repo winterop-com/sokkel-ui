@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 import { Link } from '@winterop-com/sokkel-ui/Link'
 import { useLongWait } from '@winterop-com/sokkel-ui/Loaders'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '@winterop-com/sokkel-ui/lib/fullscreen'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -65,7 +66,7 @@ export interface MapWords {
     unreadable: (count: number) => string
 }
 
-const WORDS: MapWords = {
+export const MAP_WORDS: MapWords = {
     zoomIn: 'Zoom in',
     zoomOut: 'Zoom out',
     fit: 'Fit to the data',
@@ -83,6 +84,15 @@ const WORDS: MapWords = {
         count === 1
             ? '1 geometry could not be read and is not drawn.'
             : `${count.toLocaleString('en-US')} geometries could not be read and are not drawn.`,
+}
+
+/** Where a catalog holds a map's words, and the arguments its phrases name. */
+export const MAP_PART: WordsPart<MapWords> = { id: 'map', words: MAP_WORDS, args: { unreadable: 'count' } }
+
+/** A map's phrases as ICU messages in English, for the catalog. */
+export const MAP_MESSAGES: WordMessages<MapWords> = {
+    unreadable:
+        '{count, plural, =1 {1 geometry could not be read and is not drawn.} other {# geometries could not be read and are not drawn.}}',
 }
 
 /** How the map is projected: flat, or as a globe. */
@@ -436,7 +446,7 @@ export function MapView({
     className,
     children,
 }: MapViewProps) {
-    const said = { ...WORDS, ...words }
+    const said = useWords(MAP_PART, words)
     const shown = controls === false ? null : controls === true ? CONTROLS : { ...CONTROLS, ...controls }
     const [supported] = useState(webglAvailable)
     const [maplibre, setMaplibre] = useState<Engine | 'failed' | undefined>(loaded)

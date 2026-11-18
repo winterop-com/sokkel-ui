@@ -7,6 +7,7 @@ import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
 import { ImageAnnotations, type ImageBox } from './ImageAnnotations'
 import { Button } from './ui/button'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** The words an image lightbox says. */
 export interface ImageLightboxWords {
@@ -24,7 +25,7 @@ export interface ImageLightboxWords {
     count: (index: number, total: number) => string
 }
 
-const WORDS: ImageLightboxWords = {
+export const IMAGE_LIGHTBOX_WORDS: ImageLightboxWords = {
     open: 'Open the image full screen',
     close: 'Close',
     previous: 'Previous image',
@@ -34,6 +35,18 @@ const WORDS: ImageLightboxWords = {
     fit: 'Fit to screen',
     actual: 'Actual size',
     count: (index, total) => `${String(index)} of ${String(total)}`,
+}
+
+/** Where a catalog holds an image lightbox's words, and the arguments its phrases name. */
+export const IMAGE_LIGHTBOX_PART: WordsPart<ImageLightboxWords> = {
+    id: 'imageLightbox',
+    words: IMAGE_LIGHTBOX_WORDS,
+    args: { count: 'index total' },
+}
+
+/** An image lightbox's phrases as ICU messages in English, for the catalog. */
+export const IMAGE_LIGHTBOX_MESSAGES: WordMessages<ImageLightboxWords> = {
+    count: '{index} of {total}',
 }
 
 /** One image a lightbox moves between. */
@@ -483,7 +496,7 @@ export function ImageLightbox({
     index = 0,
     words: given,
 }: ImageLightboxProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(IMAGE_LIGHTBOX_PART, given)
     const [open, setOpen] = useState(defaultOpen)
     const room = useRef<HTMLDivElement>(null)
     const shown = images === undefined || images.length === 0 ? [{ src, alt, boxes }] : images

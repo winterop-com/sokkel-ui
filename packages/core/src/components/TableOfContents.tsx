@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 import { cn } from '../lib/cn'
 import { Dot } from './Dot'
 import { GroupLabel } from './GroupLabel'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** One entry of a table of contents: the heading's id, its text, its level, and a mark before it such as its state. */
 export interface ContentsEntry {
@@ -70,10 +71,14 @@ export interface TableOfContentsWords {
     state: Record<ContentsState, string>
 }
 
-const WORDS: TableOfContentsWords = {
+/** A table of contents' own words in English. */
+export const TABLE_OF_CONTENTS_WORDS: TableOfContentsWords = {
     title: 'On this page',
     state: { complete: 'Complete', issues: 'Needs attention', open: 'Not started' },
 }
+
+/** Where a catalog holds a table of contents' words. */
+export const TABLE_OF_CONTENTS_PART: WordsPart<TableOfContentsWords> = { id: 'tableOfContents', words: TABLE_OF_CONTENTS_WORDS }
 
 function StateMark({ state, words }: { state: ContentsState; words: TableOfContentsWords }) {
     if (state === 'complete') return <CheckCircle2 className="size-4 text-good-ink" aria-label={words.state.complete} />
@@ -100,7 +105,8 @@ export interface TableOfContentsProps {
  * `useActiveHeading` says which entry is current as the page scrolls.
  */
 export function TableOfContents({ entries, active, onJump, className, words: given }: TableOfContentsProps) {
-    const words = { ...WORDS, ...given, state: { ...WORDS.state, ...given?.state } }
+    const own = useWords(TABLE_OF_CONTENTS_PART)
+    const words = { ...own, ...given, state: { ...own.state, ...given?.state } }
     if (entries.length === 0) return null
     const top = Math.min(...entries.map((entry) => entry.level))
     return (

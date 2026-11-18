@@ -60,7 +60,7 @@ export function dataCell(column: DataViewColumn, row: Row, spec: ChartSpec): str
     if (!column.numeric) return labelOf(value)
     const figure = column.plain === true ? null : numberOf(value)
     if (figure === null) return value === null || value === undefined || value === '' ? '—' : labelOf(value)
-    return `${(spec.format ?? formatNumber)(figure)}${unitAt(spec, column.unit)}`
+    return `${spec.format === undefined ? formatNumber(figure, spec.locale) : spec.format(figure)}${unitAt(spec, column.unit)}`
 }
 
 /** The widest a column of labels grows to fit its longest label, in rem; a longer one is cut short. */

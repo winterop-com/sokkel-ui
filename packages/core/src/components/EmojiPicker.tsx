@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEve
 
 import { useStored } from '../hooks/use-stored'
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 import {
     EMOJI_GROUPS,
     inTone,
@@ -73,6 +74,9 @@ export const EMOJI_PICKER_WORDS: EmojiPickerWords = {
     tabs: 'Emoji groups',
     label: 'Emoji',
 }
+
+/** Where a catalog holds an emoji picker's words: `emojiPicker.groups.recent`, `emojiPicker.tones.0`. */
+export const EMOJI_PICKER_PART: WordsPart<EmojiPickerWords> = { id: 'emojiPicker', words: EMOJI_PICKER_WORDS }
 
 const ICONS: Record<EmojiSection, LucideIcon> = {
     recent: Clock,
@@ -181,7 +185,8 @@ export function EmojiPicker({
     className,
     words: given,
 }: EmojiPickerProps) {
-    const words = { ...EMOJI_PICKER_WORDS, ...given, groups: { ...EMOJI_PICKER_WORDS.groups, ...given?.groups } }
+    const own = useWords(EMOJI_PICKER_PART)
+    const words = { ...own, ...given, groups: { ...own.groups, ...given?.groups } }
     const { data, failed, retry } = useEmojiData()
     const [storedRecent, setStoredRecent] = useStored<string[]>(`${storeKey}.recent`, [], { check: isEmojiList })
     const [storedTone, setStoredTone] = useStored<SkinTone>(`${storeKey}.tone`, 0, { check: isTone })
@@ -554,6 +559,7 @@ export function EmojiPickerPopover({
         onOpenChange?.(next)
     }
     const preload = () => void loadEmojiData().catch(() => undefined)
+    const label = useWords(EMOJI_PICKER_PART).label
     return (
         <Popover open={shown} onOpenChange={setOpen}>
             {trigger !== undefined && <PopoverTrigger render={trigger} onPointerEnter={preload} onFocus={preload} />}
@@ -563,7 +569,7 @@ export function EmojiPickerPopover({
                 align={align}
                 initialFocus={false}
                 collisionPadding={8}
-                aria-label={picker.words?.label ?? EMOJI_PICKER_WORDS.label}
+                aria-label={picker.words?.label ?? label}
                 className={cn('w-auto max-w-[calc(100vw-1rem)] gap-0 p-0', className)}
             >
                 <EmojiPicker

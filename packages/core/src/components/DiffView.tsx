@@ -3,6 +3,7 @@ import { UnfoldVerticalIcon } from 'lucide-react'
 
 import { cn } from '../lib/cn'
 import { CodeBlock, CodeBlockActions, CodeBlockContent, CodeBlockHeader, CodeBlockLine, CodeBlockTitle } from './ui/code-block'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One line of a line diff: kept, added in the new text, or removed from the old. */
 export interface DiffLine {
@@ -90,9 +91,17 @@ export interface DiffViewWords {
     folded: (count: number) => string
 }
 
-const WORDS: DiffViewWords = {
+export const DIFF_VIEW_WORDS: DiffViewWords = {
     unchanged: 'No changes',
     folded: (count) => (count === 1 ? '1 unchanged line' : `${count.toLocaleString('en')} unchanged lines`),
+}
+
+/** Where a catalog holds a diff view's words, and the arguments its phrases name. */
+export const DIFF_VIEW_PART: WordsPart<DiffViewWords> = { id: 'diffView', words: DIFF_VIEW_WORDS, args: { folded: 'count' } }
+
+/** A diff view's phrases as ICU messages in English, for the catalog. */
+export const DIFF_VIEW_MESSAGES: WordMessages<DiffViewWords> = {
+    folded: '{count, plural, one {# unchanged line} other {# unchanged lines}}',
 }
 
 export interface DiffViewProps {
@@ -118,7 +127,7 @@ export interface DiffViewProps {
  * so a long text opens on its changes.
  */
 export function DiffView({ before, after, title, size = 'default', context = 3, actions, className, words: given }: DiffViewProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(DIFF_VIEW_PART, given)
     const lines = useMemo(() => diffLines(before, after), [before, after])
     const [open, setOpen] = useState<{ of: readonly DiffLine[]; starts: ReadonlySet<number> }>({ of: lines, starts: new Set() })
     const opened = open.of === lines ? open.starts : new Set<number>()

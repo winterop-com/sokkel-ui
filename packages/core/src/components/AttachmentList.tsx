@@ -9,6 +9,7 @@ import { VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
 import { Spinner } from './ui/spinner'
 import { Attachment, AttachmentAction, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from './ui/attachment'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One file in an attachment list. */
 export interface AttachmentFile {
@@ -58,6 +59,20 @@ export const ATTACHMENT_LIST_WORDS: AttachmentListWords = {
     drag: (name) => `Drag ${name}`,
 }
 
+/** Where a catalog holds an attachment list's words, and the arguments its phrases name; its players' are the video player's own. */
+export const ATTACHMENT_LIST_PART: WordsPart<AttachmentListWords> = {
+    id: 'attachmentList',
+    words: ATTACHMENT_LIST_WORDS,
+    args: { remove: 'name', cancel: 'name', drag: 'name' },
+}
+
+/** An attachment list's phrases as ICU messages in English, for the catalog. */
+export const ATTACHMENT_LIST_MESSAGES: WordMessages<AttachmentListWords> = {
+    remove: 'Remove {name}',
+    cancel: 'Cancel upload {name}',
+    drag: 'Drag {name}',
+}
+
 /** A file's drag with a small card at the pointer, unless its data says otherwise. */
 const withCompact = (drag: DragData | undefined): DragData | undefined => (drag === undefined ? undefined : { compact: true, ...drag })
 
@@ -101,7 +116,7 @@ export interface AttachmentListProps {
  * the grip at its end, shown on hover or focus; a recording's player keeps its own press.
  */
 export function AttachmentList({ files, onRemove, onCancel, size = 'sm', drag, words: given, className }: AttachmentListProps) {
-    const words = { ...ATTACHMENT_LIST_WORDS, ...given }
+    const words = useWords(ATTACHMENT_LIST_PART, given)
     return (
         <ul data-slot="attachment-list" className={cn('flex min-w-0 flex-wrap items-stretch gap-2', className)}>
             {files.map((file) => {

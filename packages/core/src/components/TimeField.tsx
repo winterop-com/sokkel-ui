@@ -2,8 +2,9 @@ import { Clock } from 'lucide-react'
 
 import { fitSeconds, formatTime, isBefore, readTime, timesOfDay, type TimeFormat } from '../lib/dates'
 import { TypedField, type EntryFieldProps } from './entry'
-import { FIELD_WORDS, type FieldWords } from './Field'
+import { FIELD_PART, FIELD_WORDS, type FieldWords } from './Field'
 import { Picker, TimeList, useOpen } from './pickers'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export type { EntryFieldProps } from './entry'
 
@@ -27,7 +28,7 @@ export interface TimeFieldWords extends FieldWords {
     periods: readonly [string, string]
 }
 
-const WORDS: TimeFieldWords = {
+export const TIME_FIELD_WORDS: TimeFieldWords = {
     ...FIELD_WORDS,
     unreadable: 'Enter a time',
     example: (sample) => `As in ${sample}.`,
@@ -37,6 +38,22 @@ const WORDS: TimeFieldWords = {
     pick: 'Choose a time',
     clear: 'Clear',
     periods: ['AM', 'PM'],
+}
+
+/** Where a catalog holds a time field's words, and the arguments its phrases name. */
+export const TIME_FIELD_PART: WordsPart<TimeFieldWords> = {
+    id: 'timeField',
+    words: TIME_FIELD_WORDS,
+    args: { example: 'sample', under: 'min', over: 'max', use: 'bound' },
+    from: [FIELD_PART],
+}
+
+/** A time field's phrases as ICU messages in English, for the catalog. */
+export const TIME_FIELD_MESSAGES: WordMessages<TimeFieldWords> = {
+    example: 'As in {sample}.',
+    under: 'Enter {min} or later',
+    over: 'Enter {max} or earlier',
+    use: 'Use {bound}',
 }
 
 export interface TimeFieldProps extends EntryFieldProps<string> {
@@ -76,7 +93,7 @@ export function TimeField({
     placeholder,
     ...field
 }: TimeFieldProps) {
-    const words = { ...WORDS, ...said }
+    const words = useWords(TIME_FIELD_PART, said)
     const format: TimeFormat = { clock, seconds, periods: words.periods }
     const [opened, setOpened] = useOpen(open, defaultOpen, onOpenChange)
     const [min, max] = [fitSeconds(field.min, seconds), fitSeconds(field.max, seconds)]

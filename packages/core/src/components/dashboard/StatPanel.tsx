@@ -8,8 +8,17 @@ import { LoadingOverlay } from '../Loaders'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { PanelTools } from './panel-tools'
-import { PANEL_STATE_WORDS, SPAN, StaleMark, type PanelSpan, type PanelStateProps, type PanelStateWords } from './DashboardGrid'
+import {
+    PANEL_STATE_PART,
+    PANEL_STATE_WORDS,
+    SPAN,
+    StaleMark,
+    type PanelSpan,
+    type PanelStateProps,
+    type PanelStateWords,
+} from './DashboardGrid'
 import { formatValue, thresholdColor, tokenVar, type Threshold } from './thresholds'
+import { useLocale, useWords, type WordsPart } from '../../lib/words'
 
 export interface StatWords {
     noData: string
@@ -28,6 +37,13 @@ export const STAT_PANEL_WORDS: StatWords & PanelStateWords = {
     loading: 'Loading',
     target: 'Target',
     ...PANEL_STATE_WORDS,
+}
+
+/** Where a catalog holds a stat panel's words. */
+export const STAT_PANEL_PART: WordsPart<StatWords & PanelStateWords> = {
+    id: 'statPanel',
+    words: STAT_PANEL_WORDS,
+    from: [PANEL_STATE_PART],
 }
 
 /** How far a reading has come toward its target: a track with the reading filled in and a tick at the target. */
@@ -182,12 +198,13 @@ export function StatPanel({
     words: given,
     className,
 }: StatPanelProps) {
-    const words = { ...STAT_PANEL_WORDS, ...given }
+    const words = useWords(STAT_PANEL_PART, given)
+    const locale = useLocale()
     const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     const tone = value === null ? undefined : (thresholdColor(value, thresholds) ?? color)
     const filled = colorMode === 'background' && tone !== undefined
     const inked = colorMode === 'value' && tone !== undefined
-    const written = value === null ? words.noData : format !== undefined ? format(value) : formatValue(value, decimals)
+    const written = value === null ? words.noData : format !== undefined ? format(value) : formatValue(value, decimals, locale)
     const rising = delta !== undefined && !delta.startsWith('-')
     const style = tone === undefined ? undefined : ({ '--tone': tokenVar(tone) } as CSSProperties)
     const interactive = href !== undefined || onSelect !== undefined
@@ -331,7 +348,7 @@ export function StatPanel({
                                 value={value}
                                 target={target}
                                 range={targetRange}
-                                written={`${format !== undefined ? format(target) : formatValue(target, decimals)}${typeof unit === 'string' ? unit : ''}`}
+                                written={`${format !== undefined ? format(target) : formatValue(target, decimals, locale)}${typeof unit === 'string' ? unit : ''}`}
                                 label={words.target}
                                 filled={filled}
                             />

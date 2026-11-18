@@ -143,6 +143,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         EChart: 'the raw ECharts wrapper `Chart` and the panels draw through; an app draws a chart with `Chart` and a kind, never with an ECharts option it builds',
         engine: 'the ECharts parts a chart loads on first use',
         'kinds/axes': 'the axes, ticks and marks the builders share, apart from any builder',
+        'kinds/words':
+            'the words a chart writes itself, apart from the builders; `ChartWords`, `CHART_WORDS` and `CHART_PART` are exported by `kinds`',
         'kinds/boxplot': KIND_BUILDER,
         'kinds/bullet': KIND_BUILDER,
         'kinds/calendar': KIND_BUILDER,
@@ -272,6 +274,7 @@ const CORE_AREAS: Record<string, string> = {
     TableOfContents: 'Frame and navigation',
     SchemeToggle: 'Frame and navigation',
     ThemePicker: 'Frame and navigation',
+    LocaleProvider: 'Frame and navigation',
     ThemeCards: 'Frame and navigation',
     SchemeChoice: 'Frame and navigation',
     ThemeToggle: 'Frame and navigation',

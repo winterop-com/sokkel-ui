@@ -1,8 +1,9 @@
 import { useId, useState, type HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
-import { describeCron, knownZone, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
-import { FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
+import { CRON_PART, describeCron, knownZone, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { FIELD_PART, FIELD_WORDS, type FieldWords, type RequiredMark } from './Field'
 import { ISSUE_EDGE, IssueMark } from './IssueMark'
 import { Input } from './ui/input'
 
@@ -23,7 +24,7 @@ export interface CronFieldWords extends FieldWords {
     missing: string
 }
 
-const WORDS: CronFieldWords = {
+export const CRON_FIELD_WORDS: CronFieldWords = {
     label: 'Schedule',
     invalid: 'Not a cron expression',
     invalidDetail: 'Five fields: minute, hour, day of the month, month, weekday. As in 0 2 * * 1-5.',
@@ -36,7 +37,16 @@ const WORDS: CronFieldWords = {
     ...FIELD_WORDS,
 }
 
-const defaultDescribe = (expression: string) => describeCron(expression)
+/** Where a catalog holds a cron field's words, and the arguments its phrases name. */
+export const CRON_FIELD_PART: WordsPart<CronFieldWords> = {
+    id: 'cronField',
+    words: CRON_FIELD_WORDS,
+    args: { next: 'count' },
+    from: [FIELD_PART],
+}
+
+/** A cron field's phrases as ICU messages in English, for the catalog. */
+export const CRON_FIELD_MESSAGES: WordMessages<CronFieldWords> = { next: 'Next {count} runs' }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const pad = (number: number) => String(number).padStart(2, '0')
@@ -145,7 +155,7 @@ export function CronField({
     readOnly = false,
     paused = false,
     presets,
-    describe = defaultDescribe,
+    describe: givenDescribe,
     format = formatRun,
     issueOpen,
     onIssueOpenChange,
@@ -153,7 +163,9 @@ export function CronField({
     words: said,
     ...rest
 }: CronFieldProps) {
-    const words = { ...WORDS, zone: timeZone, ...said }
+    const words = { ...useWords(CRON_FIELD_PART), zone: timeZone, ...said }
+    const cronWords = useWords(CRON_PART)
+    const describe = givenDescribe ?? ((expression: string) => describeCron(expression, cronWords))
     const own = useId()
     const id = given ?? own
     const empty = value.trim() === ''

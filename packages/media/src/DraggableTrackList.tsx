@@ -2,6 +2,7 @@ import { createContext, useContext, useId, useMemo } from 'react'
 
 import { DragDrop, DragGrip, useDragItem, type DragData, type DragHandleProps } from '@winterop-com/sokkel-ui/DragDrop'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { TrackList, type Track, type TrackListProps, type TrackListWords, type TrackRowProps } from './TrackList'
 
 export type { Track } from './TrackList'
@@ -12,7 +13,17 @@ export interface DraggableTrackListWords extends TrackListWords {
     drag: (title: string) => string
 }
 
-const WORDS: Pick<DraggableTrackListWords, 'drag'> = { drag: (title) => `Drag ${title}` }
+export const DRAGGABLE_TRACK_LIST_WORDS: Pick<DraggableTrackListWords, 'drag'> = { drag: (title) => `Drag ${title}` }
+
+/** Where a catalog holds a draggable track list's own words, and the arguments its phrases name. */
+export const DRAGGABLE_TRACK_LIST_PART: WordsPart<Pick<DraggableTrackListWords, 'drag'>> = {
+    id: 'draggableTrackList',
+    words: DRAGGABLE_TRACK_LIST_WORDS,
+    args: { drag: 'title' },
+}
+
+/** A draggable track list's phrases as ICU messages in English, for the catalog. */
+export const DRAGGABLE_TRACK_LIST_MESSAGES: WordMessages<Pick<DraggableTrackListWords, 'drag'>> = { drag: 'Drag {title}' }
 
 export interface DraggableTrackListProps extends Omit<TrackListProps, 'words' | 'row'> {
     /**
@@ -60,7 +71,8 @@ function DragRow({ track, index: _index, className, ...props }: TrackRowProps) {
 
 function RowGrip({ title }: { title: string }) {
     const handle = useContext(HandleContext)
-    const words = useContext(ScopeContext)?.words ?? WORDS
+    const own = useWords(DRAGGABLE_TRACK_LIST_PART)
+    const words = useContext(ScopeContext)?.words ?? own
     if (handle === null) return null
     // A narrow list folds the grip away for the title's room; a phone's targets wait in a drawer, and a finger drags the row itself.
     return <DragGrip handle={handle} label={words.drag(title)} className="@max-md:hidden" />
@@ -75,7 +87,7 @@ function RowGrip({ title }: { title: string }) {
  * the app's, inside the same `DragDrop` the app draws around the page. The list keeps its own order.
  */
 export function DraggableTrackList({ kind, actions, words: given, ...list }: DraggableTrackListProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(DRAGGABLE_TRACK_LIST_PART, given)
     const mark = useId()
     const scope: RowScope = {
         list: mark,

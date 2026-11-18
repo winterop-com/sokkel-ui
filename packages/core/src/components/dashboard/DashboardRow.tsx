@@ -4,14 +4,23 @@ import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible'
 import { DashboardGrid } from './DashboardGrid'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 
 /** The words a dashboard row; `panels` counts what a collapsed row holds says. */
 export interface DashboardRowWords {
     panels: (count: number) => string
 }
 
-const WORDS: DashboardRowWords = {
+export const DASHBOARD_ROW_WORDS: DashboardRowWords = {
     panels: (n: number) => `${n} ${n === 1 ? 'panel' : 'panels'}`,
+}
+
+/** Where a catalog holds a dashboard row's words, and the arguments its phrases name. */
+export const DASHBOARD_ROW_PART: WordsPart<DashboardRowWords> = { id: 'dashboardRow', words: DASHBOARD_ROW_WORDS, args: { panels: 'n' } }
+
+/** A dashboard row's phrases as ICU messages in English, for the catalog. */
+export const DASHBOARD_ROW_MESSAGES: WordMessages<DashboardRowWords> = {
+    panels: '{n, plural, one {# panel} other {# panels}}',
 }
 
 export interface DashboardRowProps {
@@ -45,7 +54,7 @@ export function DashboardRow({
     className,
     children,
 }: DashboardRowProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(DASHBOARD_ROW_PART, given)
     return (
         <Collapsible
             defaultOpen={defaultOpen}

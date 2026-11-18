@@ -1,6 +1,7 @@
 import { Code2, Image } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { cssPixels } from '../lib/css-pixels'
 import { CopyButton } from './CopyButton'
@@ -149,6 +150,9 @@ export const MERMAID_DIAGRAM_WORDS: MermaidDiagramWords = {
     copied: 'Copied',
 }
 
+/** Where a catalog holds a diagram's words. */
+export const MERMAID_DIAGRAM_PART: WordsPart<MermaidDiagramWords> = { id: 'mermaidDiagram', words: MERMAID_DIAGRAM_WORDS }
+
 export interface MermaidDiagramProps {
     code: string
     streaming?: boolean
@@ -171,7 +175,7 @@ export interface MermaidDiagramProps {
  * large as the window allows; Escape or the close button brings it back.
  */
 export function MermaidDiagram({ code, streaming = false, title, defaultExpanded = false, words: given }: MermaidDiagramProps) {
-    const words = { ...MERMAID_DIAGRAM_WORDS, ...given }
+    const words = useWords(MERMAID_DIAGRAM_PART, given)
     const look = useLook()
     const host = useRef<HTMLDivElement>(null)
     const [drawn, setDrawn] = useState<Drawn | null>(null)

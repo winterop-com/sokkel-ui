@@ -8,6 +8,7 @@ import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type 
 
 import { useCopy } from '@winterop-com/sokkel-ui/hooks/use-copy'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 
 import { hasBox, linkHandler } from './host'
 import { readTerminalLook, useLookKey, type TerminalLook } from './look'
@@ -43,7 +44,10 @@ export interface TerminalViewWords {
     latest: string
 }
 
-const WORDS: TerminalViewWords = { copy: 'Copy', copied: 'Copied', clear: 'Clear', latest: 'Jump to latest' }
+export const TERMINAL_VIEW_WORDS: TerminalViewWords = { copy: 'Copy', copied: 'Copied', clear: 'Clear', latest: 'Jump to latest' }
+
+/** Where a catalog holds a terminal view's words. */
+export const TERMINAL_VIEW_PART: WordsPart<TerminalViewWords> = { id: 'terminalView', words: TERMINAL_VIEW_WORDS }
 
 export interface TerminalViewProps {
     ref?: Ref<TerminalHandle>
@@ -128,7 +132,7 @@ export function TerminalView({
     /** Writes the terminal has not yet parsed, and whether it has opened; the frame says it is settling until both are done. */
     const busy = useRef({ writes: 0, open: false })
     const [away, setAway] = useState(false)
-    const words = { ...WORDS, ...given }
+    const words = useWords(TERMINAL_VIEW_PART, given)
     const { copied, copy: toClipboard } = useCopy()
     const lookKey = useLookKey()
 

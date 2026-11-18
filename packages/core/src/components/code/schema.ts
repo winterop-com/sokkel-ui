@@ -7,6 +7,7 @@ import type { EditorView } from '@codemirror/view'
 import { literal, resolve, typeLabel, type JsonSchema } from '../schema/read'
 import { pointer, valueAt, withoutDeferred, type DeferredValue, type Path, type SchemaIssue } from '../schema/issues'
 import type { validate } from '../schema/validate'
+import { type WordMessages, type WordsPart } from '../../lib/words'
 
 type SyntaxNode = ReturnType<typeof syntaxTree>['topNode']
 
@@ -89,6 +90,15 @@ export const SCHEMA_WORDS: CodeSchemaWords = {
     },
     syntax: (language) => `Not valid ${language === 'json' ? 'JSON' : 'YAML'}`,
     deprecated: 'deprecated',
+}
+
+/** Where a catalog holds a code editor's schema checks's words, and the arguments its phrases name. */
+export const SCHEMA_PART: WordsPart<CodeSchemaWords> = { id: 'schema', words: SCHEMA_WORDS, args: { syntax: 'language' } }
+
+/** A code editor's schema checks's phrases as ICU messages in English, for the catalog. */
+export const SCHEMA_MESSAGES: WordMessages<CodeSchemaWords> = {
+    say: null,
+    syntax: 'Not valid {language, select, json {JSON} other {YAML}}',
 }
 
 const text = (state: EditorState, node: SyntaxNode) => state.sliceDoc(node.from, node.to)

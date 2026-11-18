@@ -2,6 +2,7 @@ import { useRef } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { useFollow } from './use-follow'
 
 /** One line of a transcript: what was said, from the second it starts, and who said it. */
@@ -28,6 +29,12 @@ export const TRANSCRIPT_WORDS: TranscriptWords = {
     none: 'No transcript',
     seek: (time, text) => `Play from ${time}: ${text}`,
 }
+
+/** Where a catalog holds a transcript's words, and the arguments its phrases name. */
+export const TRANSCRIPT_PART: WordsPart<TranscriptWords> = { id: 'transcript', words: TRANSCRIPT_WORDS, args: { seek: 'time text' } }
+
+/** A transcript's phrases as ICU messages in English, for the catalog. */
+export const TRANSCRIPT_MESSAGES: WordMessages<TranscriptWords> = { seek: 'Play from {time}: {text}' }
 
 /** The line being said at `position`: the last one started by then, or -1 before the first. */
 export function transcriptLineAt(lines: readonly TranscriptLine[], position: number): number {
@@ -62,7 +69,7 @@ export interface TranscriptProps {
  * on an episode's page or in the fullscreen view in the visualizer's place (`MediaBar`'s `lyrics`).
  */
 export function Transcript({ lines, position = 0, onSeek, follow = true, className, words }: TranscriptProps) {
-    const said = { ...TRANSCRIPT_WORDS, ...words }
+    const said = useWords(TRANSCRIPT_PART, words)
     const at = transcriptLineAt(lines, position)
     const box = useRef<HTMLDivElement | null>(null)
     const line = useRef<HTMLLIElement | null>(null)

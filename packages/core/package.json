@@ -17,6 +17,7 @@
         "src/lib",
         "src/styles",
         "!src/**/*.test.*",
+        "messages",
         "tokens"
     ],
     "type": "module",
@@ -45,6 +46,7 @@
         "./motion.css": "./src/styles/motion.css",
         "./typography.css": "./src/styles/typography.css",
         "./tokens.json": "./tokens/tokens.json",
+        "./messages/*.json": "./messages/*.json",
         "./appearance.js": "./dist/appearance.js",
         "./vite": {
             "types": "./dist/lib/vite.d.ts",
@@ -405,6 +407,10 @@
         "./Loading": {
             "types": "./dist/components/Loading.d.ts",
             "import": "./dist/components/Loading.js"
+        },
+        "./LocaleProvider": {
+            "types": "./dist/components/LocaleProvider.d.ts",
+            "import": "./dist/components/LocaleProvider.js"
         },
         "./LogView": {
             "types": "./dist/components/LogView.d.ts",
@@ -1306,6 +1312,10 @@
             "types": "./dist/lib/appearance.d.ts",
             "import": "./dist/lib/appearance.js"
         },
+        "./lib/catalog": {
+            "types": "./dist/lib/catalog.d.ts",
+            "import": "./dist/lib/catalog.js"
+        },
         "./lib/cn": {
             "types": "./dist/lib/cn.d.ts",
             "import": "./dist/lib/cn.js"
@@ -1358,6 +1368,10 @@
             "types": "./dist/lib/mentions.d.ts",
             "import": "./dist/lib/mentions.js"
         },
+        "./lib/message-format": {
+            "types": "./dist/lib/message-format.d.ts",
+            "import": "./dist/lib/message-format.js"
+        },
         "./lib/numbers": {
             "types": "./dist/lib/numbers.d.ts",
             "import": "./dist/lib/numbers.js"
@@ -1393,6 +1407,10 @@
         "./lib/wiki-links": {
             "types": "./dist/lib/wiki-links.d.ts",
             "import": "./dist/lib/wiki-links.js"
+        },
+        "./lib/words": {
+            "types": "./dist/lib/words.d.ts",
+            "import": "./dist/lib/words.js"
         }
     },
     "publishConfig": {

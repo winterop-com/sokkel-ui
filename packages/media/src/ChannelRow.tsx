@@ -5,6 +5,7 @@ import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ProfileRow } from '@winterop-com/sokkel-ui/ProfileRow'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 
 /** The words the row says, each with an English default. */
 export interface ChannelRowWords {
@@ -20,6 +21,14 @@ export const CHANNEL_ROW_WORDS: ChannelRowWords = {
     follow: 'Follow',
     following: 'Following',
     followers: (count) => `${short.format(count)} ${count === 1 ? 'follower' : 'followers'}`,
+}
+
+/** Where a catalog holds a channel row's words, and the arguments its phrases name. */
+export const CHANNEL_ROW_PART: WordsPart<ChannelRowWords> = { id: 'channelRow', words: CHANNEL_ROW_WORDS, args: { followers: 'count' } }
+
+/** A channel row's phrases as ICU messages in English, for the catalog. */
+export const CHANNEL_ROW_MESSAGES: WordMessages<ChannelRowWords> = {
+    followers: '{count, number, ::compact-short} {count, plural, =1 {follower} other {followers}}',
 }
 
 export interface ChannelRowProps {
@@ -68,7 +77,7 @@ export function ChannelRow({
     words: given,
     className,
 }: ChannelRowProps) {
-    const words = { ...CHANNEL_ROW_WORDS, ...given }
+    const words = useWords(CHANNEL_ROW_PART, given)
     return (
         <div data-slot="channel-row" className={cn('@container/channel min-w-0', className)}>
             <div className="flex min-w-0 flex-col gap-3 @2xl/channel:flex-row @2xl/channel:items-center @2xl/channel:gap-6">

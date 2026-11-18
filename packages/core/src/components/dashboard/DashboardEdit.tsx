@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react'
 
 import { Button } from '../ui/button'
 import type { DashboardLayoutItem } from './DashboardArrange'
+import { useWords, type WordsPart } from '../../lib/words'
 
 /** The words a dashboard's edit buttons say, each with an English default. */
 export interface DashboardEditWords {
@@ -21,6 +22,9 @@ export const DASHBOARD_EDIT_WORDS: DashboardEditWords = {
     reset: 'Reset',
     isDefault: 'The dashboard is as it comes.',
 }
+
+/** Where a catalog holds the words of a dashboard's edit controls. */
+export const DASHBOARD_EDIT_PART: WordsPart<DashboardEditWords> = { id: 'dashboardEdit', words: DASHBOARD_EDIT_WORDS }
 
 export interface DashboardEditOptions<T extends DashboardLayoutItem> {
     /** The layout as kept. */
@@ -126,7 +130,7 @@ export function DashboardEditActions<T extends DashboardLayoutItem>({
     primary,
     words: given,
 }: DashboardEditActionsProps<T>) {
-    const words = { ...DASHBOARD_EDIT_WORDS, ...given }
+    const words = useWords(DASHBOARD_EDIT_PART, given)
     if (!edit.editing)
         return (
             <>

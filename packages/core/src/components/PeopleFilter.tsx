@@ -1,3 +1,4 @@
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
 import { PersonAvatar } from './PersonAvatar'
@@ -8,10 +9,23 @@ export interface PeopleFilterWords {
     stop: (name: string) => string
 }
 
-const WORDS: PeopleFilterWords = {
+export const PEOPLE_FILTER_WORDS: PeopleFilterWords = {
     label: 'People',
     show: (name) => `Show ${name}'s items`,
     stop: (name) => `Stop showing only ${name}'s items`,
+}
+
+/** Where a catalog holds a people filter's words, and the arguments its phrases name. */
+export const PEOPLE_FILTER_PART: WordsPart<PeopleFilterWords> = {
+    id: 'peopleFilter',
+    words: PEOPLE_FILTER_WORDS,
+    args: { show: 'name', stop: 'name' },
+}
+
+/** A people filter's phrases as ICU messages in English, for the catalog. */
+export const PEOPLE_FILTER_MESSAGES: WordMessages<PeopleFilterWords> = {
+    show: "Show {name}'s items",
+    stop: "Stop showing only {name}'s items",
 }
 
 export interface PeopleFilterProps {
@@ -28,7 +42,7 @@ export interface PeopleFilterProps {
  * person's items, more than one can be on, and once any is on the others fade until hovered.
  */
 export function PeopleFilter({ people, chosen, onChange, className, words: given }: PeopleFilterProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(PEOPLE_FILTER_PART, given)
     return (
         <div role="group" aria-label={words.label} className={cn('flex items-center -space-x-1', className)}>
             {people.map((person) => {

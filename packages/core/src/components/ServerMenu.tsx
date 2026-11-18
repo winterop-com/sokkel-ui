@@ -18,6 +18,7 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /**
  * Whether the server answers: it does, it does not, or the app is asking it now; or a state the app
@@ -38,7 +39,7 @@ export interface ServerMenuWords {
     checkedAt: (ago: string) => string
 }
 
-const WORDS: ServerMenuWords = {
+export const SERVER_MENU_WORDS: ServerMenuWords = {
     up: 'Connected',
     down: 'Not answering',
     checking: 'Checking',
@@ -46,6 +47,12 @@ const WORDS: ServerMenuWords = {
     label: 'Server',
     checkedAt: (ago) => `Checked ${ago}`,
 }
+
+/** Where a catalog holds a server menu's words, and the arguments its phrases name. */
+export const SERVER_MENU_PART: WordsPart<ServerMenuWords> = { id: 'serverMenu', words: SERVER_MENU_WORDS, args: { checkedAt: 'ago' } }
+
+/** A server menu's phrases as ICU messages in English, for the catalog. */
+export const SERVER_MENU_MESSAGES: WordMessages<ServerMenuWords> = { checkedAt: 'Checked {ago}' }
 
 /** One thing the app checks on the server, such as a service it depends on. */
 export interface ServerCheck {
@@ -148,7 +155,7 @@ export function ServerMenu({
     className,
     words: given,
 }: ServerMenuProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SERVER_MENU_PART, given)
     const known: StatusMap = {
         up: { label: words.up, color: 'succeeded' },
         down: { label: words.down, color: 'failed' },

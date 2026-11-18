@@ -6,6 +6,7 @@ import { formatPercent } from '../lib/percent'
 import { IconButton } from './IconButton'
 import { Button, buttonVariants } from './ui/button'
 import { ProgressRing } from './ui/progress-ring'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** Where a download stands: not started, under way, held part way, or done and kept on the device. */
 export type DownloadState = 'idle' | 'running' | 'paused' | 'kept'
@@ -31,7 +32,7 @@ export interface DownloadButtonWords {
     removeArmedLabel: string
 }
 
-const WORDS: DownloadButtonWords = {
+export const DOWNLOAD_BUTTON_WORDS: DownloadButtonWords = {
     download: 'Download',
     progress: (count, total) => `${String(count)} of ${String(total)}`,
     share: formatPercent,
@@ -44,6 +45,19 @@ const WORDS: DownloadButtonWords = {
     remove: 'Remove?',
     removeLabel: 'Kept on this device. Remove it',
     removeArmedLabel: 'Press again to remove this download',
+}
+
+/** Where a catalog holds a download button's words, and the arguments its phrases name. */
+export const DOWNLOAD_BUTTON_PART: WordsPart<DownloadButtonWords> = {
+    id: 'downloadButton',
+    words: DOWNLOAD_BUTTON_WORDS,
+    args: { progress: 'count total' },
+}
+
+/** A download button's phrases as ICU messages in English, for the catalog. */
+export const DOWNLOAD_BUTTON_MESSAGES: WordMessages<DownloadButtonWords> = {
+    progress: '{count} of {total}',
+    share: null,
 }
 
 /** How long a first press to remove stays armed, in milliseconds. */
@@ -119,7 +133,7 @@ export function DownloadButton({
     className,
     words: given,
 }: DownloadButtonProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(DOWNLOAD_BUTTON_PART, given)
     const [armed, setArmed] = useState(defaultArmed)
     useEffect(() => {
         if (!armed) return

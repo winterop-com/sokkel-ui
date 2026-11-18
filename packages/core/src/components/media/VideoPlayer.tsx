@@ -13,6 +13,7 @@ import {
     type Ref,
 } from 'react'
 
+import { useWords, type WordsPart } from '../../lib/words'
 import { useStored } from '../../hooks/use-stored'
 import { cn } from '../../lib/cn'
 import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '../../lib/fullscreen'
@@ -155,6 +156,9 @@ export const VIDEO_PLAYER_WORDS: VideoPlayerWords = {
     unsupported: 'This video cannot be played in this browser',
     retry: 'Retry',
 }
+
+/** Where a catalog holds a video player's words. */
+export const VIDEO_PLAYER_PART: WordsPart<VideoPlayerWords> = { id: 'videoPlayer', words: VIDEO_PLAYER_WORDS }
 
 /** What an app does to a player from outside, as its own shortcuts and controls drive it. */
 export interface VideoPlayerHandle {
@@ -454,7 +458,7 @@ export function VideoPlayer({
     videoRef,
     className,
 }: VideoPlayerProps) {
-    const words = { ...VIDEO_PLAYER_WORDS, ...given }
+    const words = useWords(VIDEO_PLAYER_PART, given)
     const root = useRef<HTMLDivElement | null>(null)
     const video = useRef<HTMLVideoElement | null>(null)
     const controls = useRef<HTMLDivElement | null>(null)

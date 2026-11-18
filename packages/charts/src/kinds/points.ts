@@ -35,7 +35,7 @@ export const scatter: ChartBuilder = (spec, look) => {
             type: 'value',
             scale: spec.fit === true,
             splitLine: { show: true, lineStyle: { color: look.grid } },
-            axisLabel: { formatter: tickWriter(spec.format) },
+            axisLabel: { formatter: tickWriter(spec.format, '', spec.locale) },
             ...(xName === undefined ? {} : { name: xName, nameLocation: 'middle', nameGap: 22 }),
         },
         yAxis: { type: 'value', scale: spec.fit === true, ...valueLabels(spec), ...(yName === undefined ? {} : { name: yName }) },

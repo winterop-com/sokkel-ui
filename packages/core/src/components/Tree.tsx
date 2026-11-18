@@ -23,6 +23,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Spinner } from './ui/spinner'
 import { Highlight } from './Highlight'
 import { literalRanges } from '../lib/search'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One node of a tree: what it answers with, what it is called, and what is under it. */
 export interface TreeNode {
@@ -86,7 +87,7 @@ export interface TreeWords {
     topLevel: string
 }
 
-const WORDS: TreeWords = {
+export const TREE_WORDS: TreeWords = {
     actions: 'Actions',
     loading: 'Loading',
     failed: 'This level did not load.',
@@ -97,6 +98,12 @@ const WORDS: TreeWords = {
     moved: (item, into, place, count) => `${item} moved to ${String(place)} of ${String(count)} in ${into}`,
     topLevel: 'the top level',
 }
+
+/** Where a catalog holds a tree's words, and the arguments its phrases name. */
+export const TREE_PART: WordsPart<TreeWords> = { id: 'tree', words: TREE_WORDS, args: { moved: 'item into place count' } }
+
+/** A tree's phrases as ICU messages in English, for the catalog. */
+export const TREE_MESSAGES: WordMessages<TreeWords> = { moved: '{item} moved to {place, number} of {count, number} in {into}' }
 
 /** A node's children as far as they are known: given, loaded, or not yet. */
 export function childrenOf(node: TreeNode, loads: TreeLoads = NO_LOADS): readonly TreeNode[] | undefined {
@@ -603,7 +610,7 @@ export function Tree({
     label,
     className,
 }: TreeProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(TREE_PART, given)
     const [open, setOpen] = useState<Set<string>>(() => new Set(defaultExpanded))
     const [loads, setLoads] = useState<Map<string, TreeLoad>>(() => new Map())
     const asked = useRef(new Set<string>())

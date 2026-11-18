@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { ConfirmDialog } from './DialogShell'
 
 /** What a guarded dialog wires up: its own `onOpenChange`, and the confirm's state. */
@@ -56,12 +57,15 @@ export interface UnsavedChangesWords {
     discard: string
 }
 
-const WORDS: UnsavedChangesWords = {
+export const UNSAVED_CHANGES_WORDS: UnsavedChangesWords = {
     question: 'Discard your changes?',
     detail: 'What you changed in this form has not been saved.',
     keep: 'Keep editing',
     discard: 'Discard',
 }
+
+/** Where a catalog holds the words of the question a guarded dialog asks. */
+export const UNSAVED_CHANGES_PART: WordsPart<UnsavedChangesWords> = { id: 'unsavedChanges', words: UNSAVED_CHANGES_WORDS }
 
 export interface UnsavedChangesDialogProps {
     guard: UnsavedGuard
@@ -73,7 +77,7 @@ export interface UnsavedChangesDialogProps {
  * it guards, so it opens on top of it, and pass it the guard from `useUnsavedGuard`.
  */
 export function UnsavedChangesDialog({ guard, words: given }: UnsavedChangesDialogProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(UNSAVED_CHANGES_PART, given)
     return (
         <ConfirmDialog
             open={guard.asking}
@@ -95,6 +99,9 @@ export const LEAVE_WORDS: UnsavedChangesWords = {
     keep: 'Stay',
     discard: 'Leave',
 }
+
+/** Where a catalog holds the words of the leave question. */
+export const LEAVE_PART: WordsPart<UnsavedChangesWords> = { id: 'leave', words: LEAVE_WORDS }
 
 /** The leave question outside React: open while an ask waits for its answer. */
 export interface LeaveQuestion {
@@ -207,7 +214,7 @@ export function useUnsavedChanges(
     dirty: boolean,
     { words: given, defaultAsking = false, hashRoutes = false, overlays = [] }: UnsavedChangesOptions = {},
 ): UnsavedChanges {
-    const words = { ...LEAVE_WORDS, ...given }
+    const words = useWords(LEAVE_PART, given)
     const [asking, setAsking] = useState(defaultAsking)
     const [question] = useState(() => leaveQuestion(setAsking))
     const latest = useRef(dirty)

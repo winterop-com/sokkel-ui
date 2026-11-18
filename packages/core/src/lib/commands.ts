@@ -3,6 +3,7 @@ import { Monitor, Moon, Palette, Rows3, Sun } from 'lucide-react'
 import type { PaletteCommand, PaletteGroup, PaletteRun } from '../components/CommandPalette'
 import type { RailEntry, RailGroup } from '../components/Rail'
 import { THEMES, type Scheme, type ThemeOption, type ThemeSettings } from './appearance'
+import type { WordsPart } from './words'
 
 /**
  * The palette's active row among the rows it draws, in their order: the one chosen while it is still
@@ -204,7 +205,7 @@ export interface AppearanceCommandWords {
     switch: string
 }
 
-const WORDS: AppearanceCommandWords = {
+export const APPEARANCE_COMMAND_WORDS: AppearanceCommandWords = {
     scheme: 'Scheme',
     light: 'Light',
     dark: 'Dark',
@@ -216,6 +217,9 @@ const WORDS: AppearanceCommandWords = {
     current: 'in use',
     switch: 'Switch',
 }
+
+/** Where a catalog holds the appearance commands' words. */
+export const APPEARANCE_COMMAND_PART: WordsPart<AppearanceCommandWords> = { id: 'appearanceCommand', words: APPEARANCE_COMMAND_WORDS }
 
 /**
  * The parts of the look the palette offers, each the choice in use and how to change it, for an
@@ -269,7 +273,7 @@ export function appearanceCommands(
                   onThemeChange: (theme) => whole.onChange({ ...whole.settings, theme }),
               }
     const { themes = THEMES, words: given } = (whole === undefined ? (second as AppearanceCommandOptions | undefined) : third) ?? {}
-    const words = { ...WORDS, ...given }
+    const words = { ...APPEARANCE_COMMAND_WORDS, ...given }
     const hint = (inUse: boolean) => (inUse ? words.current : undefined)
     const schemes = [
         { value: 'light', label: words.light, icon: Sun },

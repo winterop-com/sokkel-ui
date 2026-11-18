@@ -5,7 +5,7 @@ import { compactWritten, tickWriter } from './kinds/axes'
 
 describe('formatTick', () => {
     it('keeps the ticks of a small range apart', () => {
-        expect([0, 0.05, 0.1, 0.15, 0.2].map(formatTick)).toEqual(['0', '0.05', '0.1', '0.15', '0.2'])
+        expect([0, 0.05, 0.1, 0.15, 0.2].map((value) => formatTick(value))).toEqual(['0', '0.05', '0.1', '0.15', '0.2'])
     })
 
     it('writes a large value short', () => {

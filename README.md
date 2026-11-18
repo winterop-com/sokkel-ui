@@ -174,6 +174,49 @@ component exports the type of its props as `<Component>Props` from the same path
 `DataTableProps` from `@winterop-com/sokkel-ui/DataTable`, and a type those props name is exported
 there too.
 
+### Translating
+
+Every word a part says is a prop with an English default (`words`), and every word also has a
+message id, so an app can translate the whole library from one catalog instead of part by part.
+Wrap the app once in `LocaleProvider` (`@winterop-com/sokkel-ui/LocaleProvider`):
+
+```tsx
+import en from '@winterop-com/sokkel-ui/messages/en.json'
+import { LocaleProvider } from '@winterop-com/sokkel-ui/LocaleProvider'
+
+import nb from './messages/nb.json'
+
+export function Root() {
+    return (
+        <LocaleProvider locale="nb-NO" messages={{ ...en, ...nb }}>
+            <App />
+        </LocaleProvider>
+    )
+}
+```
+
+- **Ids** are `<part>.<word>`: the part's words constant named in camel case and the word's key, as
+  `DATA_TABLE_WORDS.rows` is `dataTable.rows` and `CALL_BAR_WORDS.leave` is `callBar.leave`. A
+  nested word adds its path (`emojiPicker.groups.recent`), a word in a list its place
+  (`emojiPicker.tones.0`). Words a part takes from another part (`DATE_FIELD_WORDS` spreads
+  `FIELD_WORDS`) keep that part's ids (`field.required`), so each is translated once.
+- **Catalogs.** Each package carries its English catalog, `messages/en.json`
+  (`@winterop-com/sokkel-ui/messages/en.json`, `@winterop-com/sokkel-ui-charts/messages/en.json`, and
+  so on for every add-on with words), written by `bun run messages` from the parts' words. Each value
+  is an ICU MessageFormat string, so any ICU tool or translation service reads and writes them: a
+  phrase that counts is a plural (`{count, plural, one {# row} other {# rows}}`), one that chooses a
+  select, and numbers and dates are `{count, number}` and `{at, date, ::MMMd}`. Plural categories
+  follow the locale (`few` and `many` where it has them).
+- **Precedence.** A part's own `words` win over the catalog, word by word, and the catalog over the
+  English default. A word the catalog does not hold stays English; spreading `en.json` under a
+  translation, as above, also formats every untranslated number and date in the locale.
+- **Locale.** `locale` (a BCP 47 tag, `en-US` without a provider) is what numbers, dates, lists,
+  sorting and plurals follow everywhere, charts and maps included; `useLocale()` reads it. A part's
+  own `locale` prop still wins.
+
+An app without a provider pays only for the hook that asks for one; the catalog reader loads with
+`LocaleProvider`.
+
 ### Only the classes an app uses
 
 `styles.css` points Tailwind at every module of the core, so an app's CSS carries the classes of

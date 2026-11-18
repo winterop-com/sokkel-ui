@@ -14,7 +14,9 @@ const engines = vi.hoisted(() => [] as Engine[])
 
 // Stands in for TerminalView with the same lifecycle: the engine is made in a mount effect and
 // disposed in its cleanup, and a write while there is none waits for the next one.
-vi.mock('./TerminalView', () => ({
+vi.mock('./TerminalView', async (original) => ({
+    TERMINAL_VIEW_WORDS: (await original<typeof import('./TerminalView')>()).TERMINAL_VIEW_WORDS,
+    TERMINAL_VIEW_PART: (await original<typeof import('./TerminalView')>()).TERMINAL_VIEW_PART,
     TerminalView: ({ ref }: { ref?: Ref<TerminalHandle> }) => {
         const engine = useRef<Engine | null>(null)
         const pending = useRef<string[]>([])

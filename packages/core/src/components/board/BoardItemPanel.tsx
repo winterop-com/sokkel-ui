@@ -7,6 +7,7 @@ import { PanelSection } from '../SidePanel'
 import { Timeline, type TimelineEvent } from '../Timeline'
 import { Badge } from '../ui/badge'
 import { Progress } from '../ui/progress'
+import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 
 /** One step of a work item's checklist and whether it is done. */
 export interface ChecklistStep {
@@ -25,6 +26,16 @@ export const BOARD_CHECKLIST_WORDS: BoardChecklistWords = {
     progress: 'Checklist done',
 }
 
+/** Where a catalog holds a board item's checklist's words, and the arguments its phrases name. */
+export const BOARD_CHECKLIST_PART: WordsPart<BoardChecklistWords> = {
+    id: 'boardChecklist',
+    words: BOARD_CHECKLIST_WORDS,
+    args: { title: 'done total' },
+}
+
+/** A board item's checklist's phrases as ICU messages in English, for the catalog. */
+export const BOARD_CHECKLIST_MESSAGES: WordMessages<BoardChecklistWords> = { title: 'Checklist {done}/{total}' }
+
 export interface BoardChecklistProps {
     steps: readonly ChecklistStep[]
     /** A step ticked or unticked, by its place in `steps`; without it the steps are read only. */
@@ -38,7 +49,7 @@ export interface BoardChecklistProps {
  * through and quiet. The checklist is held from outside: a tick calls `onStepChange`.
  */
 export function BoardChecklist({ steps, onStepChange, words: given }: BoardChecklistProps) {
-    const words = { ...BOARD_CHECKLIST_WORDS, ...given }
+    const words = useWords(BOARD_CHECKLIST_PART, given)
     const done = steps.filter((step) => step.done).length
     return (
         <PanelSection title={words.title(done, steps.length)}>
@@ -72,6 +83,12 @@ export const BOARD_ITEM_PANEL_WORDS: Omit<BoardItemPanelWords, 'checklist'> = {
     description: 'Description',
     fields: 'Fields',
     activity: 'Activity',
+}
+
+/** Where a catalog holds a board item panel's words. */
+export const BOARD_ITEM_PANEL_PART: WordsPart<Omit<BoardItemPanelWords, 'checklist'>> = {
+    id: 'boardItemPanel',
+    words: BOARD_ITEM_PANEL_WORDS,
 }
 
 export interface BoardItemPanelProps {
@@ -111,7 +128,7 @@ export function BoardItemPanel({
     activity,
     words: given,
 }: BoardItemPanelProps) {
-    const words = { ...BOARD_ITEM_PANEL_WORDS, ...given }
+    const words = useWords(BOARD_ITEM_PANEL_PART, given)
     const chips = state !== undefined || labels !== undefined
     return (
         <>

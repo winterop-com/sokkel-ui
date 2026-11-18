@@ -7,6 +7,7 @@
 import type { IssueWords } from '../components/IssueMark'
 import { composing, type ComposingPress } from './keys'
 import { readNumber } from './numbers'
+import type { WordsPart } from './words'
 
 /** Which control edits a value: a line of text, several lines, a number, a date, a time of day, or one of a list. */
 export type EditorKind = 'text' | 'multiline' | 'number' | 'date' | 'time' | 'select'
@@ -51,6 +52,9 @@ export const EDIT_WORDS: EditWords = {
     cancel: 'Cancel',
 }
 
+/** Where a catalog holds an editor's words. */
+export const EDIT_PART: WordsPart<EditWords> = { id: 'edit', words: EDIT_WORDS }
+
 /** The text an editor starts from for a value. */
 export function draftOf(value: EditValue | undefined): string {
     return value === null || value === undefined ? '' : String(value)
@@ -78,10 +82,10 @@ export function readDraft(
     return value === undefined ? { error: words.notNumber } : { value }
 }
 
-/** A value as an editor draws it at rest: a number in figures, a choice by its label, text as typed. */
-export function shownValue(value: EditValue | undefined, kind: EditorKind, options?: readonly EditOption[]): string {
+/** A value as an editor draws it at rest: a number in figures in the locale, a choice by its label, text as typed. */
+export function shownValue(value: EditValue | undefined, kind: EditorKind, options?: readonly EditOption[], locale = 'en-US'): string {
     if (value === null || value === undefined) return ''
-    if (kind === 'number' && typeof value === 'number') return value.toLocaleString('en-US', { maximumFractionDigits: 20 })
+    if (kind === 'number' && typeof value === 'number') return value.toLocaleString(locale, { maximumFractionDigits: 20 })
     if (kind === 'select') {
         const option = options?.find((one) => one.value === value)
         return option?.label ?? String(value)

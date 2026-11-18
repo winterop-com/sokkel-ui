@@ -7,6 +7,7 @@ import { IconButton } from './IconButton'
 import { Surface } from './Section'
 import { SplitPane } from './SplitPane'
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
+import { useWords, type WordsPart } from '../lib/words'
 
 export interface WindowedPaneWords {
     /** The expand button's label. */
@@ -22,6 +23,9 @@ export const WINDOWED_PANE_WORDS: WindowedPaneWords = {
     close: 'Close',
     away: 'Shown in a window.',
 }
+
+/** Where a catalog holds a windowed pane's words. */
+export const WINDOWED_PANE_PART: WordsPart<WindowedPaneWords> = { id: 'windowedPane', words: WINDOWED_PANE_WORDS }
 
 interface Windowed {
     /** Whether the content is drawn in the window now. */
@@ -126,7 +130,7 @@ export function WindowedPane({
     className,
     words: given,
 }: WindowedPaneProps) {
-    const words = { ...WINDOWED_PANE_WORDS, ...given }
+    const words = useWords(WINDOWED_PANE_PART, given)
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const open = heldOpen ?? ownOpen
     // The whole page takes the screen, so whatever the window's content opens over it still shows.

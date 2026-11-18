@@ -10,6 +10,7 @@
  * two-month period is named by its first month, which is odd. Days are `YYYY-MM-DD`, as the date
  * fields hold them, never a `Date`, so a period never moves across a time zone.
  */
+import type { WordMessages, WordsPart } from './words'
 
 /** The kinds of period a report may be made for. */
 export type PeriodType = 'daily' | 'weekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'sixmonthly' | 'yearly'
@@ -74,6 +75,22 @@ export const PERIOD_LABEL_WORDS: PeriodLabelWords = {
     month: (month, year) => `${month} ${String(year)}`,
     months: (first, last, year) => `${first} to ${last} ${String(year)}`,
     year: (year) => String(year),
+}
+
+/** Where a catalog holds a period label's words, and the arguments its phrases name. */
+export const PERIOD_LABEL_PART: WordsPart<PeriodLabelWords> = {
+    id: 'periodLabel',
+    words: PERIOD_LABEL_WORDS,
+    args: { day: 'month date year', week: 'week year startMonth startDate', month: 'month year', months: 'first last year', year: 'year' },
+}
+
+/** A period label's phrases as ICU messages in English, for the catalog. */
+export const PERIOD_LABEL_MESSAGES: WordMessages<PeriodLabelWords> = {
+    day: '{month} {date}, {year}',
+    week: 'Week {week}, {year} (from Mon, {startMonth} {startDate})',
+    month: '{month} {year}',
+    months: '{first} to {last} {year}',
+    year: '{year}',
 }
 
 const pad = (value: number) => String(value).padStart(2, '0')
@@ -272,6 +289,19 @@ export const PERIOD_ISSUE_WORDS: PeriodIssueWords = {
     empty: 'Type a period id.',
     otherType: (id, its, wanted, example) => `${id} is a ${its} period; this one is ${wanted}, such as ${example}.`,
     notPeriod: (text, wanted, example) => `${text} is not a period id. A ${wanted} period is written like ${example}.`,
+}
+
+/** Where a catalog holds the sentences a period issue says, and the arguments its phrases name. */
+export const PERIOD_ISSUE_PART: WordsPart<PeriodIssueWords> = {
+    id: 'periodIssue',
+    words: PERIOD_ISSUE_WORDS,
+    args: { otherType: 'id its wanted example', notPeriod: 'text wanted example' },
+}
+
+/** A period issue's phrases as ICU messages in English, for the catalog. */
+export const PERIOD_ISSUE_MESSAGES: WordMessages<PeriodIssueWords> = {
+    otherType: '{id} is a {its} period; this one is {wanted}, such as {example}.',
+    notPeriod: '{text} is not a period id. A {wanted} period is written like {example}.',
 }
 
 /**

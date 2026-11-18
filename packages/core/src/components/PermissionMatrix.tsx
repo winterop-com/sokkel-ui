@@ -1,6 +1,7 @@
 import { Lock } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { TABLE_HEAD_TEXT } from '../lib/table'
 import { DataTable, type DataColumn } from './DataTable'
@@ -47,13 +48,26 @@ export interface PermissionMatrixWords {
     held: (granted: number, total: number) => string
 }
 
-const WORDS: PermissionMatrixWords = {
+export const PERMISSION_MATRIX_WORDS: PermissionMatrixWords = {
     permission: 'Permission',
     role: 'Role',
     builtIn: 'Built in, read-only',
     changed: 'Changed',
     toggle: (permission, role) => `${permission} for ${role}`,
     held: (granted, total) => `${String(granted)} of ${String(total)}`,
+}
+
+/** Where a catalog holds a permission matrix's words, and the arguments its phrases name. */
+export const PERMISSION_MATRIX_PART: WordsPart<PermissionMatrixWords> = {
+    id: 'permissionMatrix',
+    words: PERMISSION_MATRIX_WORDS,
+    args: { toggle: 'permission role', held: 'granted total' },
+}
+
+/** A permission matrix's phrases as ICU messages in English, for the catalog. */
+export const PERMISSION_MATRIX_MESSAGES: WordMessages<PermissionMatrixWords> = {
+    toggle: '{permission} for {role}',
+    held: '{granted} of {total}',
 }
 
 const has = (grants: Grants | undefined, role: string, permission: string) => grants?.[role]?.includes(permission) === true
@@ -96,7 +110,7 @@ interface MatrixLine {
  * above to choose which, so a phone reads one column instead of scrolling through all of them.
  */
 export function PermissionMatrix({ roles, groups, value, saved, onChange, className, words: given }: PermissionMatrixProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(PERMISSION_MATRIX_PART, given)
     // One role at a time once the permission column and every role's column no longer fit.
     const box = useRef<HTMLDivElement>(null)
     const [width, setWidth] = useState(1200)

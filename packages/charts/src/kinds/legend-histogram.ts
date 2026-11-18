@@ -13,7 +13,7 @@ export function binned(spec: ChartSpec) {
     const bins: Bins = binsFor(numbers(spec.rows), spec.bins)
     // Without a format an edge is written to the decimals the width needs, so 0.001 to 0.002 never reads 0-0.
     const decimals = edgeDecimals(bins.width)
-    const write = spec.format ?? ((value: number) => value.toLocaleString('en-US', { maximumFractionDigits: decimals }))
+    const write = spec.format ?? ((value: number) => value.toLocaleString(spec.locale ?? 'en-US', { maximumFractionDigits: decimals }))
     const labels = Array.from({ length: bins.count }, (_, index) => {
         const from = bins.start + index * bins.width
         return `${write(from)}–${write(from + bins.width)}${unitAt(spec)}`

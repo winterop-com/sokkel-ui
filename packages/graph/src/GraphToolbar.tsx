@@ -2,6 +2,7 @@ import { CircleAlert, CircleCheck, Network, Redo2, Scan, Undo2, ZoomIn, ZoomOut 
 import { Children, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { useGraphControls } from './context'
@@ -41,6 +42,16 @@ export const GRAPH_TOOLBAR_WORDS: GraphToolbarWords = {
     issues: (count) => `${String(count)} to fix`,
     clean: 'No problems',
 }
+
+/** Where a catalog holds a graph toolbar's words, and the arguments its phrases name. */
+export const GRAPH_TOOLBAR_PART: WordsPart<GraphToolbarWords> = {
+    id: 'graphToolbar',
+    words: GRAPH_TOOLBAR_WORDS,
+    args: { issues: 'count' },
+}
+
+/** A graph toolbar's phrases as ICU messages in English, for the catalog. */
+export const GRAPH_TOOLBAR_MESSAGES: WordMessages<GraphToolbarWords> = { issues: '{count} to fix' }
 
 const BUTTON =
     'flex size-7 shrink-0 items-center justify-center rounded-chip text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:-outline-offset-focus focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
@@ -121,7 +132,7 @@ export function GraphToolbar({
     words: given,
     className,
 }: GraphToolbarProps) {
-    const words = { ...GRAPH_TOOLBAR_WORDS, ...given }
+    const words = useWords(GRAPH_TOOLBAR_PART, given)
     const controls = useGraphControls()
     const history = onUndo !== undefined || onRedo !== undefined
     // An empty canvas has nothing to zoom, fit or tidy, so the view's buttons step aside.

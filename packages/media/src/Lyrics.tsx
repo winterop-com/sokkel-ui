@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { lyricLineAt, parseLyrics, type LyricLine, type ParsedLyrics } from './lrc'
 import { useFollow } from './use-follow'
 
@@ -13,6 +14,9 @@ export interface LyricsWords {
 }
 
 export const LYRICS_WORDS: LyricsWords = { label: 'Lyrics', none: 'No lyrics' }
+
+/** Where a catalog holds the lyrics' words. */
+export const LYRICS_PART: WordsPart<LyricsWords> = { id: 'lyrics', words: LYRICS_WORDS }
 
 export interface LyricsProps {
     lyrics: string | ParsedLyrics
@@ -39,7 +43,7 @@ export interface LyricsProps {
  * lines grow with the box: larger once it is as wide as a tablet.
  */
 export function Lyrics({ lyrics, position = 0, onSeek, follow = true, className, words }: LyricsProps) {
-    const said = { ...LYRICS_WORDS, ...words }
+    const said = useWords(LYRICS_PART, words)
     const read = useMemo(() => (typeof lyrics === 'string' ? parseLyrics(lyrics) : lyrics), [lyrics])
     const at = read.timed ? lyricLineAt(read.lines, position) : -1
     const box = useRef<HTMLDivElement | null>(null)

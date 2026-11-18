@@ -19,6 +19,7 @@ import { Segmented } from './Segmented'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export type { Filter, FilterOperator, FilterOption, FilterType }
 
@@ -80,9 +81,28 @@ export interface FilterBarWords {
     range: (from: string, to: string) => string
 }
 
-const DAY = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
+const days = new Map<string, Intl.DateTimeFormat>()
 
-const WORDS: FilterBarWords = {
+/** A number typed as text said in a locale, with its unit; text that is not a number as it is. */
+function sayNumber(value: string, unit: string | undefined, locale: string): string {
+    const number = Number(value)
+    const said = value.trim() !== '' && Number.isFinite(number) ? number.toLocaleString(locale) : value
+    return unit === undefined ? said : `${said} ${unit}`
+}
+
+/** A day (`YYYY-MM-DD`) said in a locale as its month and day: `Nov 2`; text that is not a day as it is. */
+function sayDate(value: string, locale: string): string {
+    const [year, month, day] = value.split('-').map(Number)
+    if (year === undefined || month === undefined || day === undefined || [year, month, day].some(Number.isNaN)) return value
+    let format = days.get(locale)
+    if (format === undefined) {
+        format = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' })
+        days.set(locale, format)
+    }
+    return format.format(new Date(year, month - 1, day))
+}
+
+export const FILTER_BAR_WORDS: FilterBarWords = {
     add: 'Filter',
     addMore: 'Add filter',
     fields: 'Filter by',
@@ -111,21 +131,33 @@ const WORDS: FilterBarWords = {
     search: 'Search',
     empty: 'Nothing matches.',
     more: (count) => `+${String(count)}`,
-    number: (value, unit) => {
-        const number = Number(value)
-        const said = value.trim() !== '' && Number.isFinite(number) ? number.toLocaleString('en-US') : value
-        return unit === undefined ? said : `${said} ${unit}`
-    },
-    date: (value) => {
-        const [year, month, day] = value.split('-').map(Number)
-        if (year === undefined || month === undefined || day === undefined || [year, month, day].some(Number.isNaN)) return value
-        return DAY.format(new Date(year, month - 1, day))
-    },
+    number: (value, unit) => sayNumber(value, unit, 'en-US'),
+    date: (value) => sayDate(value, 'en-US'),
     range: (from, to) => `${from} – ${to}`,
 }
 
+/** Where a catalog holds a filter bar's words, and the arguments its phrases name; `number` and `date` write values in the locale unless given. */
+export const FILTER_BAR_PART: WordsPart<FilterBarWords> = {
+    id: 'filterBar',
+    words: FILTER_BAR_WORDS,
+    args: { remove: 'field', more: 'count', range: 'from to' },
+}
+
+/** A filter bar's phrases as ICU messages in English, for the catalog. */
+export const FILTER_BAR_MESSAGES: WordMessages<FilterBarWords> = {
+    remove: 'Remove {field}',
+    more: '+{count}',
+    number: null,
+    date: null,
+    range: '{from} – {to}',
+}
+
 /** How a filter is said on its chip: the operator in the quiet ink, then its value. */
-export function saidFilter<T>(filter: Filter, field: FilterField<T>, words: FilterBarWords = WORDS): { operator: string; value: string } {
+export function saidFilter<T>(
+    filter: Filter,
+    field: FilterField<T>,
+    words: FilterBarWords = FILTER_BAR_WORDS,
+): { operator: string; value: string } {
     const one = (value: string) =>
         field.format?.(value) ??
         (field.type === 'date' ? words.date(value) : field.type === 'number' ? words.number(value, field.unit) : value)
@@ -194,7 +226,15 @@ export function FilterBar<T = unknown>({
     words: given,
     className,
 }: FilterBarProps<T>) {
-    const words = { ...WORDS, ...given, operators: { ...WORDS.operators, ...given?.operators } }
+    const ownWords = useWords(FILTER_BAR_PART)
+    const locale = useLocale()
+    const words: FilterBarWords = {
+        ...ownWords,
+        number: (value, unit) => sayNumber(value, unit, locale),
+        date: (value) => sayDate(value, locale),
+        ...given,
+        operators: { ...ownWords.operators, ...given?.operators },
+    }
     const [own, setOwn] = useState<readonly Filter[]>(defaultFilters ?? [])
     const held = filters ?? own
     const change = (next: Filter[]) => {

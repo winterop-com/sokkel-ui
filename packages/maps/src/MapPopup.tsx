@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { createPortal } from 'react-dom'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { useMapContext } from './context'
 import { anchorOf, type LngLat } from './geometry'
@@ -36,7 +37,10 @@ export interface MapPopupWords {
     close: string
 }
 
-const WORDS: MapPopupWords = { close: 'Close' }
+export const MAP_POPUP_WORDS: MapPopupWords = { close: 'Close' }
+
+/** Where a catalog holds a map popup's words. */
+export const MAP_POPUP_PART: WordsPart<MapPopupWords> = { id: 'mapPopup', words: MAP_POPUP_WORDS }
 
 export interface MapPopupProps {
     /** The feature the card points at, from a point's position or inside a polygon. */
@@ -70,7 +74,7 @@ export function MapPopup({
     children,
     className,
 }: MapPopupProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(MAP_POPUP_PART, given)
     const { map, overlay } = useMapContext()
     const card = useRef<HTMLDivElement>(null)
     const anchor = at ?? (feature === undefined ? null : anchorOf(feature))

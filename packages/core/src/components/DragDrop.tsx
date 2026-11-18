@@ -44,6 +44,7 @@ import {
 
 import { useReducedMotion } from '../hooks/use-reduced-motion'
 import { cn } from '../lib/cn'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /**
  * What a thing being dragged, or a place it is dropped on, carries: what kind it is, its name for a
@@ -95,6 +96,32 @@ export const DRAG_DROP_WORDS: DragDropWords = {
     placed: (item, place, count) => `${item} was dropped at ${String(place)} of ${String(count)}.`,
     putBack: (item) => `${item} was put back.`,
     cancelled: (item) => `Moving ${item} was cancelled; it is back where it was.`,
+}
+
+/** Where a catalog holds what drag and drop says, and the arguments its phrases name. */
+export const DRAG_DROP_PART: WordsPart<DragDropWords> = {
+    id: 'dragDrop',
+    words: DRAG_DROP_WORDS,
+    args: {
+        pickedUp: 'item',
+        over: 'item target',
+        place: 'item place count',
+        dropped: 'item target',
+        placed: 'item place count',
+        putBack: 'item',
+        cancelled: 'item',
+    },
+}
+
+/** Drag and drop's phrases as ICU messages in English, for the catalog. */
+export const DRAG_DROP_MESSAGES: WordMessages<DragDropWords> = {
+    pickedUp: 'Picked up {item}.',
+    over: '{item} is over {target}.',
+    place: '{item} is at {place} of {count}.',
+    dropped: '{item} was dropped on {target}.',
+    placed: '{item} was dropped at {place} of {count}.',
+    putBack: '{item} was put back.',
+    cancelled: 'Moving {item} was cancelled; it is back where it was.',
 }
 
 /** The data a thing or a target carries, or undefined for one that carries none of the library's. */
@@ -346,7 +373,8 @@ export function useInDragDrop(): boolean {
 
 /** The words of the nearest `DragDrop`, for a part's own announcements. */
 export function useDragWords(): DragDropWords {
-    return useContext(ScopeContext)?.words ?? DRAG_DROP_WORDS
+    const own = useWords(DRAG_DROP_PART)
+    return useContext(ScopeContext)?.words ?? own
 }
 
 export interface DragDropHandlers {
@@ -411,7 +439,8 @@ function DragDropRoot({
     words?: Partial<DragDropWords>
     handlers: DragDropHandlers
 }) {
-    const words = useMemo(() => ({ ...DRAG_DROP_WORDS, ...given }), [given])
+    const own = useWords(DRAG_DROP_PART)
+    const words = useMemo(() => ({ ...own, ...given }), [own, given])
     const dragging = useRef(false)
     // Gone mid-drag, it hands the page its own cursor back and stops following the pointer.
     useEffect(

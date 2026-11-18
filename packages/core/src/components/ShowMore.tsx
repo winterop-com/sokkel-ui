@@ -1,13 +1,17 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 
 export interface ShowMoreWords {
     more: string
     less: string
 }
 
-const WORDS: ShowMoreWords = { more: 'Show more', less: 'Show less' }
+export const SHOW_MORE_WORDS: ShowMoreWords = { more: 'Show more', less: 'Show less' }
+
+/** Where a catalog holds a show-more button's words. */
+export const SHOW_MORE_PART: WordsPart<ShowMoreWords> = { id: 'showMore', words: SHOW_MORE_WORDS }
 
 export interface ShowMoreProps {
     /** How many lines show while it is folded. */
@@ -45,7 +49,7 @@ export function ShowMore({
     className,
     words: given,
 }: ShowMoreProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SHOW_MORE_PART, given)
     const [own, setOwn] = useState(defaultOpen)
     const open = openValue ?? own
     const [overflows, setOverflows] = useState(false)

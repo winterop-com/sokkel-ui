@@ -6,6 +6,7 @@ import { useBusyRelease } from '../hooks/use-busy-release'
 import { cn } from '../lib/cn'
 import { WAIT_SHOWN } from '../lib/durations'
 import { INVALID_EDGE, ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { Spinner } from './ui/spinner'
 
 export interface AsyncSelectWords {
@@ -27,7 +28,7 @@ export interface AsyncSelectWords {
     remove: (label: string) => string
 }
 
-const WORDS: AsyncSelectWords = {
+export const ASYNC_SELECT_WORDS: AsyncSelectWords = {
     placeholder: 'Choose',
     search: 'Search',
     loading: 'Searching',
@@ -39,6 +40,20 @@ const WORDS: AsyncSelectWords = {
     create: (text) => `Create "${text}"`,
     createFailed: 'It could not be created.',
     remove: (label) => `Remove ${label}`,
+}
+
+/** Where a catalog holds an async select's words, and the arguments its phrases name. */
+export const ASYNC_SELECT_PART: WordsPart<AsyncSelectWords> = {
+    id: 'asyncSelect',
+    words: ASYNC_SELECT_WORDS,
+    args: { typeMore: 'characters', create: 'text', remove: 'label' },
+}
+
+/** An async select's phrases as ICU messages in English, for the catalog. */
+export const ASYNC_SELECT_MESSAGES: WordMessages<AsyncSelectWords> = {
+    typeMore: 'Type {characters} or more characters to search.',
+    create: 'Create "{text}"',
+    remove: 'Remove {label}',
 }
 
 /** Where the next page of options starts, as the app's loader names it: a page number, an offset, a token. */
@@ -314,7 +329,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
         className,
         words: given,
     } = props
-    const words = { ...WORDS, ...given }
+    const words = useWords(ASYNC_SELECT_PART, given)
     const [open, setOpen] = useState(defaultOpen)
     const [query, setQuery] = useState(defaultQuery)
     const [answer, setAnswer] = useState<AsyncAnswer<T>>(NO_ANSWER)

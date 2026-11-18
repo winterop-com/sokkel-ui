@@ -3,6 +3,7 @@ import { useEffect, useId, useState, type ReactNode } from 'react'
 
 import { DialogShell } from './DialogShell'
 import { Input } from './ui/input'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export interface TypedConfirmWords {
     /** The line above the input, with the code to type drawn in the code face. */
@@ -12,11 +13,17 @@ export interface TypedConfirmWords {
     cancel: string
 }
 
-const WORDS: TypedConfirmWords = {
+export const TYPED_CONFIRM_WORDS: TypedConfirmWords = {
     prompt: (code) => <>Type {code} to confirm.</>,
     why: 'Type the code to confirm.',
     cancel: 'Cancel',
 }
+
+/** Where a catalog holds a typed confirm dialog's words. */
+export const TYPED_CONFIRM_PART: WordsPart<TypedConfirmWords> = { id: 'typedConfirm', words: TYPED_CONFIRM_WORDS }
+
+/** A typed confirm dialog's phrases as ICU messages in English, for the catalog. */
+export const TYPED_CONFIRM_MESSAGES: WordMessages<TypedConfirmWords> = { prompt: null }
 
 export interface TypedConfirmDialogProps {
     open: boolean
@@ -45,7 +52,7 @@ export function TypedConfirmDialog({
     children,
     words: given,
 }: TypedConfirmDialogProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(TYPED_CONFIRM_PART, given)
     const id = useId()
     const [typed, setTyped] = useState('')
     useEffect(() => {

@@ -1,5 +1,6 @@
 import { Field } from './Field'
 import { Input } from './ui/input'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** The words a code field says when a value cannot be made into a code. */
 export interface CodeWords {
@@ -8,11 +9,14 @@ export interface CodeWords {
     required: string
 }
 
-const WORDS: CodeWords = {
+export const CODE_WORDS: CodeWords = {
     startWithLetter: 'Start with a letter.',
     onlyAllowed: 'Use only letters, digits and hyphens.',
     required: 'required',
 }
+
+/** Where a catalog holds a code field's words. */
+export const CODE_PART: WordsPart<CodeWords> = { id: 'code', words: CODE_WORDS }
 
 /**
  * What typing makes of a code before it is checked: lower case, and spaces and underscores as
@@ -23,7 +27,7 @@ export function normalizeCode(text: string): string {
 }
 
 /** Why a code is refused, said as the one thing to change, or null when it is a code. */
-export function codeProblem(code: string, words: CodeWords = WORDS): string | null {
+export function codeProblem(code: string, words: CodeWords = CODE_WORDS): string | null {
     if (code === '') return null
     if (!/^[a-z]/.test(code)) return words.startWithLetter
     if (!/^[a-z][a-z0-9-]*$/.test(code)) return words.onlyAllowed
@@ -45,7 +49,7 @@ export interface CodeFieldProps {
  * face shows the value as it will be written in documents and addresses.
  */
 export function CodeField({ id, label = 'Code', value, onChange, required = true, words: given }: CodeFieldProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CODE_PART, given)
     const problem = codeProblem(value, words)
     return (
         <Field id={id} label={label} required={required} error={problem} words={{ required: words.required }}>

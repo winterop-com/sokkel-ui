@@ -34,10 +34,11 @@ import {
 } from 'react'
 
 import { cn } from '../lib/cn'
+import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { stepTo } from '../lib/reorder'
 import type { DragHandleProps } from './DragDrop'
 import type { IssueWords } from './IssueMark'
-import { PAGE_STATE_WORDS, PageState, type PageStateWords, type ReadOutcome } from './PageState'
+import { PAGE_STATE_PART, PageState, type PageStateWords, type ReadOutcome } from './PageState'
 import { ResizeHandle } from './ResizeHandle'
 import type { SearchFieldProps } from './SearchField'
 import { NO_CELL, TableCellContext } from './table-cell'
@@ -51,7 +52,7 @@ import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { GROUP_HEAD_TEXT, STACK_EDIT_HEIGHT, TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnBands, columnName, columnOrder } from '../lib/table'
-import type { CellAt, EditedValue, EditOption, EditorKind, EditValue } from '../lib/edit'
+import { EDIT_PART, type CellAt, type EditedValue, type EditOption, type EditorKind, type EditValue } from '../lib/edit'
 import type { CellEdit, CellFocus, OpenCell, TableEditing, TableEditingContext } from './table-editing'
 import type { RowDropAt, TableRowDrag } from './table-reorder'
 
@@ -340,6 +341,48 @@ export const DATA_TABLE_WORDS: DataTableWords = {
     rowMoved: (row, place, count) => `${row} moved to ${place.toLocaleString('en-US')} of ${count.toLocaleString('en-US')}`,
 }
 
+/** Where a catalog holds a data table's words, and the arguments its phrases name. */
+export const DATA_TABLE_PART: WordsPart<DataTableWords> = {
+    id: 'dataTable',
+    words: DATA_TABLE_WORDS,
+    args: {
+        rows: 'count',
+        loaded: 'count',
+        range: 'from to total',
+        page: 'page pages',
+        selected: 'count',
+        selectEvery: 'count',
+        allSelected: 'count',
+        loadMore: 'count',
+        resize: 'column',
+        moveUp: 'column',
+        moveDown: 'column',
+        foldGroup: 'folded',
+        groupCount: 'count',
+        moveRow: 'row',
+        rowMoved: 'row place count',
+    },
+}
+
+/** A data table's phrases as ICU messages in English, for the catalog. */
+export const DATA_TABLE_MESSAGES: WordMessages<DataTableWords> = {
+    rows: '{count, plural, one {# row} other {# rows}}',
+    loaded: '{count, number} loaded',
+    range: '{from, number}–{to, number} of {total, number}',
+    page: 'Page {page, number} of {pages, number}',
+    selected: '{count, number} selected',
+    selectEvery: 'Select all {count, number}',
+    allSelected: 'All {count, number} selected',
+    loadMore: '{count, select, undefined {Load more} other {Load {count, number} more}}',
+    resize: 'Resize {column}',
+    moveUp: 'Move {column} up',
+    moveDown: 'Move {column} down',
+    foldGroup: '{folded, select, true {Show group} other {Hide group}}',
+    groupCount: '{count, number}',
+    moveRow: 'Move {row}',
+    rowMoved: '{row} moved to {place, number} of {count, number}',
+}
+
 /** A row as drawn: where it sits in the tree, and whether it has children and shows them. */
 export interface FlatRow<T> {
     row: T
@@ -352,10 +395,15 @@ export interface FlatRow<T> {
     waiting: boolean
 }
 
-const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' })
+const collators = new Map<string, Intl.Collator>()
 
 /** The rows in a column's order, stable, so rows that compare equal keep the order they came in. */
-export function sortRows<T>(rows: readonly T[], value: (row: T) => string | number, direction: 'asc' | 'desc'): T[] {
+export function sortRows<T>(rows: readonly T[], value: (row: T) => string | number, direction: 'asc' | 'desc', locale = 'en-US'): T[] {
+    let collator = collators.get(locale)
+    if (collator === undefined) {
+        collator = new Intl.Collator(locale, { numeric: true, sensitivity: 'base' })
+        collators.set(locale, collator)
+    }
     const keyed = rows.map((row, index) => ({ row, index, value: value(row) }))
     const sign = direction === 'asc' ? 1 : -1
     keyed.sort((a, b) => {
@@ -1684,7 +1732,10 @@ export function DataTable<T>({
     words: ownWords,
     className,
 }: DataTableProps<T>) {
-    const words = { ...DATA_TABLE_WORDS, ...ownWords }
+    const words = useWords(DATA_TABLE_PART, ownWords)
+    const pageState = useWords(PAGE_STATE_PART)
+    const editWords = useWords(EDIT_PART)
+    const locale = useLocale()
     // The table's own search, fetched once it has a `searchBy`: its field, and the rows cut to those whose text holds every word typed.
     const [query, setQuery] = useState('')
     const ownSearch = searchBy !== undefined && givenSearch === undefined
@@ -1747,8 +1798,8 @@ export function DataTable<T>({
         (level: readonly T[]) =>
             manualSort || sort === null || sortColumn?.sortValue === undefined
                 ? level
-                : sortRows(level, sortColumn.sortValue, sort.direction),
-        [manualSort, sort, sortColumn],
+                : sortRows(level, sortColumn.sortValue, sort.direction, locale),
+        [manualSort, sort, sortColumn, locale],
     )
     const [folded, setFolded] = useHeld(foldedValue, defaultFoldedGroups, onFoldedGroupsChange)
     const grouped = groupBy !== undefined && paging === undefined
@@ -2333,6 +2384,8 @@ export function DataTable<T>({
                   grid: gridView,
                   step: gridView ? perLine : 1,
                   words,
+                  editWords,
+                  locale,
                   cellFocus,
                   labelCut: labels.cut,
               }
@@ -2975,14 +3028,14 @@ export function DataTable<T>({
     const refusedLine = (line: RefusedLine<T>, kind: 'row' | 'item', index = 0) => {
         const said = (
             <>
-                <span className="min-w-0 truncate text-critical">{words.refused ?? PAGE_STATE_WORDS.refused}</span>
+                <span className="min-w-0 truncate text-critical">{words.refused ?? pageState.refused}</span>
                 <button
                     type="button"
                     onClick={() => retryChildren(line.entry.key)}
                     className="flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground hover:underline focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                 >
                     <RotateCwIcon className="size-3.5" aria-hidden />
-                    {words.retry ?? PAGE_STATE_WORDS.retry}
+                    {words.retry ?? pageState.retry}
                 </button>
             </>
         )

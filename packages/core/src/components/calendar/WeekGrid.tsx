@@ -12,11 +12,12 @@ import {
 
 import { cn } from '../../lib/cn'
 import { KIND_EDGE, KIND_FILL, KIND_INK, KIND_WASH } from '../../lib/kind'
+import { useWords } from '../../lib/words'
 import type { CalendarCarry, CalendarEventDrag } from './calendar-drag'
 import { landingAt, movedBy, movedTo, resizedBy, snapTo, SNAP_MINUTES, type CalendarEventChange } from './event-change'
 import { useCalendarDrag, useEventKeys } from './event-keys'
 import { EventPopover, useOpenEvent } from './EventPopover'
-import { CALENDAR_WORDS, gridMinute, layoutDay, layoutSpans, type CalendarEvent, type CalendarWords } from './events'
+import { CALENDAR_PART, gridMinute, layoutDay, layoutSpans, type CalendarEvent, type CalendarWords } from './events'
 import { followPress } from './follow-press'
 
 export type { CalendarEventChange } from './event-change'
@@ -102,7 +103,7 @@ export function WeekGrid<E extends CalendarEvent>({
     className,
     words: given,
 }: WeekGridProps<E>) {
-    const words = { ...CALENDAR_WORDS, ...given }
+    const words = useWords(CALENDAR_PART, given)
     const root = useRef<HTMLDivElement>(null)
     const body = useRef<HTMLDivElement>(null)
     const [open, setOpen] = useOpenEvent(openEvent, onOpenEventChange)

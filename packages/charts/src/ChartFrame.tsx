@@ -3,15 +3,16 @@ import { Suspense, lazy, memo, useState, type ReactNode, type RefObject } from '
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { download } from '@winterop-com/sokkel-ui/lib/download'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { LoadingOverlay } from '@winterop-com/sokkel-ui/Loaders'
-import { WINDOWED_PANE_WORDS, WindowedPane, useWindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
+import { WINDOWED_PANE_PART, WINDOWED_PANE_WORDS, WindowedPane, useWindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { useLegendEntries, type LegendEntries } from './chart-legend'
 import { ChartLegend, type LegendStat, type LegendWords } from './ChartLegend'
 import type { ChartHandle } from './EChart'
 import { FrameDataContext, type FrameData } from './frame-data'
-import { PANEL_STATE_WORDS, PanelFailure, StaleMark } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { PANEL_STATE_PART, PANEL_STATE_WORDS, PanelFailure, StaleMark } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { PanelTools, usePanelTools } from '@winterop-com/sokkel-ui/dashboard/panel-tools'
 
 /** What the frame hands its chart: the legend's state, the handle the chart fills for export, and where it is drawn. */
@@ -48,20 +49,25 @@ export interface ChartFrameWords {
     legend?: Partial<LegendWords>
 }
 
-const WORDS: ChartFrameWords = {
+export const CHART_FRAME_WORDS: ChartFrameWords = {
     info: 'About this panel',
     export: 'Export',
     svg: 'Export as SVG',
     png: 'Export as PNG',
-    expand: WINDOWED_PANE_WORDS.expand,
+    ...WINDOWED_PANE_WORDS,
     menu: 'Panel actions',
-    close: WINDOWED_PANE_WORDS.close,
-    away: WINDOWED_PANE_WORDS.away,
     empty: 'No data for this range.',
     loading: 'Loading',
     data: 'Data',
     chart: 'Chart',
     ...PANEL_STATE_WORDS,
+}
+
+/** Where a catalog holds a chart frame's words; its window's and its panel state's are those parts' own. */
+export const CHART_FRAME_PART: WordsPart<ChartFrameWords> = {
+    id: 'chartFrame',
+    words: CHART_FRAME_WORDS,
+    from: [WINDOWED_PANE_PART, PANEL_STATE_PART],
 }
 
 const ChartDataTable = lazy(() => import('./ChartDataTable').then((module) => ({ default: module.ChartDataTable })))
@@ -179,7 +185,7 @@ export function ChartFrame({
     className,
     children,
 }: ChartFrameProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(CHART_FRAME_PART, given)
     const legend = useLegendEntries(entries)
     const [exports, setExports] = useState(false)
     // The chart inside fills the handle as it mounts and empties it as it goes, so Export is offered only while one can draw an image.

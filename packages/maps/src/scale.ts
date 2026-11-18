@@ -1,3 +1,5 @@
+import type { WordsPart } from '@winterop-com/sokkel-ui/lib/words'
+
 /** One category of a categorical scale: the value it matches, what it is called, and its color. */
 export interface ScaleCategory {
     value: string | number
@@ -80,10 +82,17 @@ export const AREA_EMPHASIS: Record<'selected' | 'highlighted' | 'plain', Emphasi
 /** The categorical colors, in the order categories take them. */
 export const CATEGORY_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
 
-const NUMBER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 })
+const NUMBERS = new Map<string, (value: number) => string>()
 
-function defaultFormat(value: number): string {
-    return NUMBER.format(value)
+/** A scale's values written in a locale, to a tenth at most. */
+function defaultFormat(locale = 'en-US'): (value: number) => string {
+    let found = NUMBERS.get(locale)
+    if (found === undefined) {
+        const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
+        found = (value) => number.format(value)
+        NUMBERS.set(locale, found)
+    }
+    return found
 }
 
 /**
@@ -117,12 +126,15 @@ export function sequentialScale({
     breaks,
     hue = 'var(--chart-2)',
     colors,
-    format = defaultFormat,
+    locale,
+    format = defaultFormat(locale),
 }: {
     breaks: number[]
     hue?: string
     /** One color per class, one more than the breaks, in place of the ramp. */
     colors?: string[]
+    /** The locale the breaks are written in without a `format`, `en-US` by default: `useLocale()` gives the app's. */
+    locale?: string
     format?: (value: number) => string
 }): SequentialScale {
     const count = breaks.length + 1
@@ -144,12 +156,15 @@ export function divergingScale({
     midpoint = 0,
     low = 'var(--chart-2)',
     high = 'var(--chart-5)',
-    format = defaultFormat,
+    locale,
+    format = defaultFormat(locale),
 }: {
     breaks: number[]
     midpoint?: number
     low?: string
     high?: string
+    /** The locale the breaks are written in without a `format`, `en-US` by default: `useLocale()` gives the app's. */
+    locale?: string
     format?: (value: number) => string
 }): DivergingScale {
     const count = breaks.length + 1
@@ -210,7 +225,10 @@ export interface ClassWords {
     above: string
 }
 
-const CLASS_WORDS: ClassWords = { all: 'All values', below: 'Below', above: 'and above' }
+export const CLASS_WORDS: ClassWords = { all: 'All values', below: 'Below', above: 'and above' }
+
+/** Where a catalog holds the words a scale's classes are written in. */
+export const CLASS_PART: WordsPart<ClassWords> = { id: 'class', words: CLASS_WORDS }
 
 /** Each class written out: "Below 200", "200 – 260", "380 and above", or a category's label. */
 export function classLabels(scale: ColorScale, words?: Partial<ClassWords>): string[] {

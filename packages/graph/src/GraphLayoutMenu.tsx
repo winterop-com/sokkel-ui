@@ -11,6 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { GraphToolbarButton } from './GraphToolbar'
 import type { GraphDirection, GraphRouting, GraphSpacing } from './layout'
 
@@ -53,6 +54,9 @@ export const GRAPH_LAYOUT_MENU_WORDS: GraphLayoutMenuWords = {
     roomy: 'Roomy',
 }
 
+/** Where a catalog holds a graph layout menu's words. */
+export const GRAPH_LAYOUT_MENU_PART: WordsPart<GraphLayoutMenuWords> = { id: 'graphLayoutMenu', words: GRAPH_LAYOUT_MENU_WORDS }
+
 const DIRECTIONS: readonly GraphDirection[] = ['right', 'down']
 const ROUTINGS: readonly GraphRouting[] = ['orthogonal', 'polyline', 'splines']
 const SPACINGS: readonly GraphSpacing[] = ['compact', 'normal', 'roomy']
@@ -93,7 +97,7 @@ export function GraphLayoutMenu({
     words: given,
     className,
 }: GraphLayoutMenuProps) {
-    const words = { ...GRAPH_LAYOUT_MENU_WORDS, ...given }
+    const words = useWords(GRAPH_LAYOUT_MENU_PART, given)
     const groups = (
         [
             ['direction', DIRECTIONS],

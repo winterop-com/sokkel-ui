@@ -15,6 +15,7 @@ import {
 
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import type { ClipArrival, ClipCarry, ClipGrip } from './clip-timeline-drag'
 import type { DragData } from './DragDrop'
 import { IconButton } from './IconButton'
@@ -128,6 +129,38 @@ export const CLIP_TIMELINE_WORDS: ClipTimelineWords = {
     zoomIn: 'Zoom in',
     zoomOut: 'Zoom out',
     zoomFit: 'Fit',
+}
+
+/** Where a catalog holds a clip timeline's words, and the arguments its phrases name. */
+export const CLIP_TIMELINE_PART: WordsPart<ClipTimelineWords> = {
+    id: 'clipTimeline',
+    words: CLIP_TIMELINE_WORDS,
+    args: {
+        clip: 'label start end',
+        start: 'at',
+        length: 'length',
+        moved: 'clip at track',
+        trimmed: 'clip length',
+        split: 'clip at',
+        deleted: 'count ripple',
+        blocked: 'clip',
+        dropped: 'item track at',
+        at: 'at',
+    },
+}
+
+/** A clip timeline's phrases as ICU messages in English, for the catalog. */
+export const CLIP_TIMELINE_MESSAGES: WordMessages<ClipTimelineWords> = {
+    clip: '{label}, {start} to {end}',
+    start: 'Start {at}',
+    length: 'Length {length}',
+    moved: '{track, select, undefined {{clip} moved to {at}} other {{clip} moved to {track} at {at}}}',
+    trimmed: '{clip} trimmed to {length}',
+    split: '{clip} split at {at}',
+    deleted: '{count, plural, =1 {Clip} other {# clips}} deleted{ripple, select, true {, the gap closed} other {}}',
+    blocked: '{clip} cannot go there',
+    dropped: '{item} added to {track} at {at}',
+    at: 'Playhead at {at}',
 }
 
 export interface ClipTimelineProps {
@@ -417,7 +450,8 @@ export function ClipTimeline({
     words: given,
     className,
 }: ClipTimelineProps) {
-    const words = useMemo(() => ({ ...CLIP_TIMELINE_WORDS, ...given }), [given])
+    const ownWords = useWords(CLIP_TIMELINE_PART)
+    const words = useMemo(() => ({ ...ownWords, ...given }), [ownWords, given])
     const frame = 1 / Math.max(Math.round(fps), 1)
     const toFrame = (time: number) => Math.round(time / frame) * frame
 

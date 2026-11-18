@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { IconButton } from './IconButton'
 import { PersonAvatar } from './PersonAvatar'
 import { ReactionChips, ReactionPopover, mineOf, type ChatReaction, type ReactionBarProps } from './ReactionBar'
@@ -52,7 +53,7 @@ export interface CommentThreadWords {
     hideReplies: string
 }
 
-const WORDS: CommentThreadWords = {
+export const COMMENT_THREAD_WORDS: CommentThreadWords = {
     like: 'Like',
     dislike: 'Dislike',
     react: 'Add a reaction',
@@ -65,13 +66,29 @@ const WORDS: CommentThreadWords = {
     hideReplies: 'Hide replies',
 }
 
+/** Where a catalog holds a comment thread's words, and the arguments its phrases name. */
+export const COMMENT_THREAD_PART: WordsPart<CommentThreadWords> = {
+    id: 'commentThread',
+    words: COMMENT_THREAD_WORDS,
+    args: { pinned: 'by', replies: 'count' },
+}
+
+/** A comment thread's phrases as ICU messages in English, for the catalog. */
+export const COMMENT_THREAD_MESSAGES: WordMessages<CommentThreadWords> = {
+    pinned: '{by, select, undefined {Pinned} other {Pinned by {by}}}',
+    replies: '{count, plural, one {# reply} other {# replies}}',
+}
+
 export interface CommentComposerWords {
     placeholder: string
     submit: string
     cancel: string
 }
 
-const COMPOSER_WORDS: CommentComposerWords = { placeholder: 'Add a comment', submit: 'Comment', cancel: 'Cancel' }
+export const COMMENT_COMPOSER_WORDS: CommentComposerWords = { placeholder: 'Add a comment', submit: 'Comment', cancel: 'Cancel' }
+
+/** Where a catalog holds a comment thread's composer's words. */
+export const COMMENT_COMPOSER_PART: WordsPart<CommentComposerWords> = { id: 'commentComposer', words: COMMENT_COMPOSER_WORDS }
 
 export interface CommentComposerProps {
     /** Who is writing, drawn as their picture. */
@@ -104,7 +121,7 @@ export function CommentComposer({
     className,
     words: given,
 }: CommentComposerProps) {
-    const words = { ...COMPOSER_WORDS, ...given }
+    const words = useWords(COMMENT_COMPOSER_PART, given)
     const [draft, setDraft] = useState('')
     const submit = () => {
         if (draft.trim() === '') return
@@ -194,7 +211,7 @@ export function CommentItem({
     words: given,
     composerWords,
 }: CommentItemProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(COMMENT_THREAD_PART, given)
     const [open, setOpen] = useState(openReplies?.includes(comment.id) ?? false)
     const [replying, setReplying] = useState(false)
     const replies = comment.replies ?? []

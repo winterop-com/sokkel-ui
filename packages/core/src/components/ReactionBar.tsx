@@ -3,7 +3,8 @@ import { useState, type KeyboardEvent, type ReactElement, type ReactNode } from 
 
 import { cn } from '../lib/cn'
 import { POPUP } from '../lib/popup'
-import { EMOJI_PICKER_WORDS, EmojiPickerPopover, loadEmojiData, type EmojiPickerProps, type EmojiPickerWords } from './EmojiPicker'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { EmojiPickerPopover, loadEmojiData, type EmojiPickerProps, type EmojiPickerWords } from './EmojiPicker'
 import { Popover, PopoverContent, PopoverTrigger, type PopoverContentProps } from './ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
@@ -68,6 +69,9 @@ export const REACTION_BAR_WORDS: ReactionBarWords = {
     picker: {},
 }
 
+/** Where a catalog holds a reaction bar's words; its full list's are the emoji picker's own. */
+export const REACTION_BAR_PART: WordsPart<ReactionBarWords> = { id: 'reactionBar', words: REACTION_BAR_WORDS }
+
 /** The options the bar hands its full emoji list. */
 export type ReactionPickerOptions = Omit<EmojiPickerProps, 'onPick' | 'onClose' | 'className' | 'autoFocus' | 'words'>
 
@@ -121,7 +125,7 @@ export function ReactionBar({
     className,
     words: given,
 }: ReactionBarProps) {
-    const words = { ...REACTION_BAR_WORDS, ...given }
+    const words = useWords(REACTION_BAR_PART, given)
     const button = cn(
         'flex shrink-0 items-center justify-center rounded-full font-emoji outline-none hover:bg-hover focus-visible:outline-focus focus-visible:outline-offset-focus-inset focus-visible:outline-ring focus-visible:outline-solid aria-pressed:bg-primary/12 aria-pressed:ring-1 aria-pressed:ring-primary/60',
         size === 'md' ? 'size-9 text-emoji' : 'size-7 text-base',
@@ -171,7 +175,7 @@ export function ReactionBar({
                     onOpenChange={onMoreOpenChange}
                     side="top"
                     align="end"
-                    words={{ ...EMOJI_PICKER_WORDS, ...words.picker }}
+                    words={words.picker}
                     onPick={onReact}
                     trigger={
                         <button
@@ -225,6 +229,7 @@ export function ReactionPopover({
         onOpenChange?.(next)
     }
     const preload = () => void loadEmojiData().catch(() => undefined)
+    const label = useWords(REACTION_BAR_PART).label
     return (
         <Popover open={shown} onOpenChange={setOpen}>
             {trigger !== undefined && <PopoverTrigger render={trigger} onPointerEnter={preload} onFocus={preload} />}
@@ -233,7 +238,7 @@ export function ReactionPopover({
                 side={side}
                 align={align}
                 collisionPadding={8}
-                aria-label={words?.label ?? REACTION_BAR_WORDS.label}
+                aria-label={words?.label ?? label}
                 className="w-auto max-w-[calc(100vw-1rem)] gap-0 p-1"
             >
                 <ReactionBar
@@ -263,6 +268,16 @@ export const REACTION_CHIPS_WORDS: ReactionChipsWords = {
     count: (label, count) => `${label}, ${String(count)}`,
 }
 
+/** Where a catalog holds the words of a row of reactions, and the arguments its phrases name. */
+export const REACTION_CHIPS_PART: WordsPart<ReactionChipsWords> = {
+    id: 'reactionChips',
+    words: REACTION_CHIPS_WORDS,
+    args: { count: 'label count' },
+}
+
+/** A row of reactions' phrases as ICU messages in English, for the catalog. */
+export const REACTION_CHIPS_MESSAGES: WordMessages<ReactionChipsWords> = { count: '{label}, {count}' }
+
 export interface ReactionChipsProps {
     reactions: readonly ChatReaction[]
     /** Called with a reaction's id when it is pressed, to add or take back yours. */
@@ -291,7 +306,7 @@ export function mineOf(reactions: readonly ChatReaction[]): string[] {
  * and no way to add one.
  */
 export function ReactionChips({ reactions, onReact, onReaction, onAddReaction, bar, className, words: given }: ReactionChipsProps) {
-    const words = { ...REACTION_CHIPS_WORDS, ...given }
+    const words = useWords(REACTION_CHIPS_PART, given)
     const canAdd = onReaction !== undefined || onAddReaction !== undefined
     if (reactions.length === 0 && !canAdd) return null
     const add = (

@@ -2,6 +2,7 @@ import { Box } from 'lucide-react'
 import { useState, type DragEvent } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { useWords, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { blockBadge, GRAPH_DRAG_TYPE, groupBlocks, type BlockGroup, type PipelineBlock } from './blocks'
 import { Chip } from '@winterop-com/sokkel-ui/Chip'
@@ -26,6 +27,9 @@ export const BLOCK_PALETTE_WORDS: BlockPaletteWords = {
     hint: 'Drag a block onto the canvas, or click it to add it after the chosen step.',
     clear: 'Clear the search',
 }
+
+/** Where a catalog holds a block palette's words. */
+export const BLOCK_PALETTE_PART: WordsPart<BlockPaletteWords> = { id: 'blockPalette', words: BLOCK_PALETTE_WORDS }
 
 export interface BlockRowProps {
     block: PipelineBlock
@@ -89,7 +93,7 @@ export interface BlockPaletteProps {
  * `GRAPH_DRAG_TYPE`; a click picks it. The palette fills its column and its list scrolls.
  */
 export function BlockPalette({ blocks, groups, onPick, query: held, onQueryChange, words: given, className }: BlockPaletteProps) {
-    const words = { ...BLOCK_PALETTE_WORDS, ...given }
+    const words = useWords(BLOCK_PALETTE_PART, given)
     const [own, setOwn] = useState('')
     const query = held ?? own
     const setQuery = (next: string) => {

@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useContext, type ReactNode } from 'react'
 
+import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
 import { identityOf } from './ItemHeading'
@@ -22,6 +23,9 @@ export interface PageHeaderWords {
 
 /** A page header's own words in English; a header with words of its own starts from these. */
 export const PAGE_HEADER_WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are', more: 'More', moreWays: 'More ways' }
+
+/** Where a catalog holds a page header's words. */
+export const PAGE_HEADER_PART: WordsPart<PageHeaderWords> = { id: 'pageHeader', words: PAGE_HEADER_WORDS }
 
 export interface PageHeaderProps {
     /** The page's title: its text, or a part drawn in its place, such as an `InlineEdit` with `variant="title"`. */
@@ -126,7 +130,7 @@ export function PageHeader({
     const inShell = useContext(ShellTrailAsk) !== undefined
     const toTop = trailInTop && inShell
     useShellTrail(toTop ? trail : undefined, { ends: 'ancestor' })
-    const said = { ...PAGE_HEADER_WORDS, ...words }
+    const said = useWords(PAGE_HEADER_PART, words)
     const identity = identityOf(title, code)
     const showCode = identity.code !== undefined
     // A code standing as the title is cut short rather than wrapped, unless the app says otherwise.

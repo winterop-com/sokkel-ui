@@ -4,6 +4,7 @@ import { usePanelSize } from '../hooks/use-panel-size'
 import { cn } from '../lib/cn'
 import { GroupLabel } from './GroupLabel'
 import { ResizeHandle } from './ResizeHandle'
+import { useWords, type WordsPart } from '../lib/words'
 
 const SHOWN = {
     always: 'flex',
@@ -17,9 +18,12 @@ export interface SubNavWords {
     resize: string
 }
 
-const WORDS: SubNavWords = {
+export const SUB_NAV_WORDS: SubNavWords = {
     resize: 'Resize the column',
 }
+
+/** Where a catalog holds a sub-navigation's words. */
+export const SUB_NAV_PART: WordsPart<SubNavWords> = { id: 'subNav', words: SUB_NAV_WORDS }
 
 export interface SubNavProps {
     /** A group label over the content, such as "Folders". */
@@ -73,7 +77,7 @@ export function SubNav({
     className,
     words: given,
 }: SubNavProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SUB_NAV_PART, given)
     const column = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: 240, min: minSize, max: maxSize })
     const top = title !== undefined || search !== undefined || actions !== undefined

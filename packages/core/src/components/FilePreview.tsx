@@ -5,6 +5,7 @@ import { Code } from './Code'
 import { DataTable, type DataColumn } from './DataTable'
 import { FileTypeIcon, type FileKind } from './FileList'
 import { JsonTree } from './JsonTree'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export type { FileKind } from './FileList'
 
@@ -18,12 +19,21 @@ export interface FilePreviewWords {
     cut: string
 }
 
-const WORDS: FilePreviewWords = {
+export const FILE_PREVIEW_WORDS: FilePreviewWords = {
     rows: (shown, total) => (shown === total ? `${total} rows` : `First ${shown} of ${total} rows`),
     firstRows: (shown) => `First ${shown} rows`,
     unreadable: 'This JSON does not parse; its text is shown.',
     none: 'No preview for this kind of file.',
     cut: 'Only the start of this file is shown.',
+}
+
+/** Where a catalog holds a file preview's words, and the arguments its phrases name. */
+export const FILE_PREVIEW_PART: WordsPart<FilePreviewWords> = { id: 'filePreview', words: FILE_PREVIEW_WORDS, args: { firstRows: 'shown' } }
+
+/** A file preview's phrases as ICU messages in English, for the catalog. */
+export const FILE_PREVIEW_MESSAGES: WordMessages<FilePreviewWords> = {
+    rows: null,
+    firstRows: 'First {shown} rows',
 }
 
 /** The cells of a CSV text: commas split, double quotes hold commas and doubled quotes. With `limit`, it stops after that many rows. */
@@ -171,7 +181,7 @@ export function FilePreview({
     className,
     words: given,
 }: FilePreviewProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(FILE_PREVIEW_PART, given)
     const cut = whole !== undefined && whole.length > maxLength
     const text = cut ? whole.slice(0, maxLength) : whole
     const room = fill ? FILL : CAPPED

@@ -3,6 +3,7 @@ import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useWords, type WordsPart } from '../lib/words'
 
 export type BannerTone = 'critical' | 'warning' | 'info' | 'good'
 
@@ -20,9 +21,12 @@ export interface BannerWords {
     dismiss: string
 }
 
-const WORDS: BannerWords = {
+export const BANNER_WORDS: BannerWords = {
     dismiss: 'Dismiss',
 }
+
+/** Where a catalog holds a banner's words. */
+export const BANNER_PART: WordsPart<BannerWords> = { id: 'banner', words: BANNER_WORDS }
 
 export interface BannerProps {
     tone?: BannerTone
@@ -40,7 +44,7 @@ export interface BannerProps {
  * phone the words wrap rather than lose what is needed to act, and the actions move under them.
  */
 export function Banner({ tone = 'info', icon, actions, onDismiss, className, words: given, children }: BannerProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(BANNER_PART, given)
     const Icon = ICON[tone]
     return (
         <div

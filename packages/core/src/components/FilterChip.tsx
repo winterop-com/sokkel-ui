@@ -13,6 +13,7 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One value a filter can take. */
 export interface FilterOption {
@@ -38,12 +39,25 @@ export interface FilterChipWords {
     empty: string
 }
 
-const WORDS: FilterChipWords = {
+export const FILTER_CHIP_WORDS: FilterChipWords = {
     clear: (facet) => `Clear ${facet}`,
     any: 'Any',
     more: (count) => `+${String(count)}`,
     search: 'Search',
     empty: 'Nothing matches.',
+}
+
+/** Where a catalog holds a filter chip's words, and the arguments its phrases name. */
+export const FILTER_CHIP_PART: WordsPart<FilterChipWords> = {
+    id: 'filterChip',
+    words: FILTER_CHIP_WORDS,
+    args: { clear: 'facet', more: 'count' },
+}
+
+/** A filter chip's phrases as ICU messages in English, for the catalog. */
+export const FILTER_CHIP_MESSAGES: WordMessages<FilterChipWords> = {
+    clear: 'Clear {facet}',
+    more: '+{count}',
 }
 
 /** Past this many values a chip's menu holds a search over them. */
@@ -56,7 +70,7 @@ const SEARCH_PAST = 8
 export function saidOptions(
     options: readonly FilterOption[],
     chosen: readonly string[],
-    more: (count: number) => string = WORDS.more,
+    more: (count: number) => string = FILTER_CHIP_WORDS.more,
     picked = false,
 ): string | undefined {
     const ordered = picked
@@ -157,7 +171,7 @@ export function FilterChip({
     className,
     words: given,
 }: FilterChipProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(FILTER_CHIP_PART, given)
     const chipRef = useRef<HTMLSpanElement>(null)
     const popupRef = useRef<HTMLDivElement>(null)
     const [own, setOwn] = useState<readonly string[]>(defaultSelected ?? [])

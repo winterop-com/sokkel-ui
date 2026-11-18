@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from './ui/alert'
 import { Button } from './ui/button'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from './ui/input-group'
 import { Spinner } from './ui/spinner'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** What a person typed to sign in; the fields the form does not ask for stay empty. */
 export interface SignInValues {
@@ -78,7 +79,7 @@ export interface SignInWords {
     noAnswer: string
 }
 
-const WORDS: SignInWords = {
+export const SIGN_IN_WORDS: SignInWords = {
     title: 'Sign in',
     server: 'Server',
     serverHint: 'https://example.org',
@@ -103,6 +104,9 @@ const WORDS: SignInWords = {
     asking: 'asking',
     noAnswer: 'no answer',
 }
+
+/** Where a catalog holds a sign-in page's words. */
+export const SIGN_IN_PART: WordsPart<SignInWords> = { id: 'signIn', words: SIGN_IN_WORDS }
 
 const EMPTY: SignInValues = { server: '', user: '', password: '', token: '', remember: false }
 
@@ -410,7 +414,7 @@ export function SignIn({
     className,
     words: given,
 }: SignInProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SIGN_IN_PART, given)
     const id = useId()
     const theme = useThemeName()
     const root = useRef<HTMLDivElement>(null)

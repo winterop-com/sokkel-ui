@@ -3,7 +3,8 @@ import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
-import { ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { ISSUE_PART, ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
 import { Input } from './ui/input'
 
 /** One recipient: the address, and the name to show in its place when there is one. */
@@ -21,13 +22,27 @@ export interface AddressInputWords extends IssueWords {
     removeInvalid: string
 }
 
-const WORDS: AddressInputWords = {
+export const ADDRESS_INPUT_WORDS: AddressInputWords = {
     placeholder: 'Add people',
     remove: (who) => `Remove ${who}`,
     invalid: 'Not an email address',
     issue: (count) => (count === 1 ? '1 address is not an email address' : `${String(count)} addresses are not email addresses`),
     removeInvalid: 'Remove them',
     ...ISSUE_WORDS,
+}
+
+/** Where a catalog holds an address input's words, and the arguments its phrases name. */
+export const ADDRESS_INPUT_PART: WordsPart<AddressInputWords> = {
+    id: 'addressInput',
+    words: ADDRESS_INPUT_WORDS,
+    args: { remove: 'who', issue: 'count' },
+    from: [ISSUE_PART],
+}
+
+/** An address input's phrases as ICU messages in English, for the catalog. */
+export const ADDRESS_INPUT_MESSAGES: WordMessages<AddressInputWords> = {
+    remove: 'Remove {who}',
+    issue: '{count, plural, =1 {1 address is not an email address} other {# addresses are not email addresses}}',
 }
 
 /** What an address may hold on either side of its `@`: no spaces and none of `@<>,;`. */
@@ -116,7 +131,7 @@ export function AddressInput({
     className,
     words: given,
 }: AddressInputProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(ADDRESS_INPUT_PART, given)
     const [draft, setDraft] = useState('')
     const input = useRef<HTMLInputElement>(null)
     const wrong = value.filter((entry) => !valid(entry.address))

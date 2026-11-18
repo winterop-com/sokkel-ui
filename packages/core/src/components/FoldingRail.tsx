@@ -6,6 +6,7 @@ import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
 import { PaneHeader } from './PaneHeader'
 import { ResizeHandle } from './ResizeHandle'
+import { useWords, type WordsPart } from '../lib/words'
 
 /** The words a folding rail says. */
 export interface FoldingRailWords {
@@ -16,7 +17,10 @@ export interface FoldingRailWords {
     resize: string
 }
 
-const WORDS: FoldingRailWords = { fold: 'Fold', unfold: 'Unfold', resize: 'Resize' }
+export const FOLDING_RAIL_WORDS: FoldingRailWords = { fold: 'Fold', unfold: 'Unfold', resize: 'Resize' }
+
+/** Where a catalog holds a folding rail's words. */
+export const FOLDING_RAIL_PART: WordsPart<FoldingRailWords> = { id: 'foldingRail', words: FOLDING_RAIL_WORDS }
 
 export interface FoldingRailProps {
     /** The rail's name: its head's title, and written down the strip it folds to. */
@@ -76,7 +80,7 @@ export function FoldingRail({
     className,
     words: given,
 }: FoldingRailProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(FOLDING_RAIL_PART, given)
     const [own, setOwn] = useState(defaultFolded)
     const shut = folded ?? own
     const fold = (next: boolean) => {

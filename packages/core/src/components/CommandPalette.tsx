@@ -9,6 +9,7 @@ import { BUSY_RELEASE } from '../lib/durations'
 import { keyLabels } from '../lib/keys'
 import { cn } from '../lib/utils'
 import { searchWait, type SearchGroup, type SearchResult, type SearchSource } from '../lib/search'
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { ProblemLine } from './ProseText'
 import { SearchResultBody, type SearchDetailTone } from './Search'
 import { Button } from './ui/button'
@@ -168,6 +169,19 @@ export const PALETTE_SEARCH_WORDS: PaletteSearchWords = {
     seeAll: (query) => `See all results for “${query}”`,
 }
 
+/** Where a catalog holds a command palette's search's words, and the arguments its phrases name. */
+export const PALETTE_SEARCH_PART: WordsPart<PaletteSearchWords> = {
+    id: 'paletteSearch',
+    words: PALETTE_SEARCH_WORDS,
+    args: { failed: '', seeAll: 'query' },
+}
+
+/** A command palette's search's phrases as ICU messages in English, for the catalog. */
+export const PALETTE_SEARCH_MESSAGES: WordMessages<PaletteSearchWords> = {
+    failed: 'The search did not answer.',
+    seeAll: 'See all results for “{query}”',
+}
+
 /**
  * How the palette matches its commands to what is typed. `fuzzy` finds a command by the letters
  * typed in their order, best match first. `terms` wants every word typed in the command's label,
@@ -212,6 +226,9 @@ export const COMMAND_PALETTE_WORDS: CommandPaletteWords = {
     refused: 'The command did not run.',
     stopWaiting: 'Stop waiting',
 }
+
+/** Where a catalog holds a command palette's words. */
+export const COMMAND_PALETTE_PART: WordsPart<CommandPaletteWords> = { id: 'commandPalette', words: COMMAND_PALETTE_WORDS }
 
 /** The strip along the palette's foot: the app's mark and name at its start, the keys at its end. */
 export interface PaletteFoot {
@@ -323,7 +340,7 @@ export function CommandPalette({
     className,
     words: given,
 }: CommandPaletteProps) {
-    const words = { ...COMMAND_PALETTE_WORDS, ...given }
+    const words = useWords(COMMAND_PALETTE_PART, given)
     const merged = useMemo(() => mergeCommands(groups), [groups])
     const [query, setQuery] = useState(defaultQuery)
     // Each opening starts from `defaultQuery`, not from what was typed the last time it was open.
@@ -400,7 +417,7 @@ export function CommandPalette({
     // An earlier query's results stay while the next answer comes, out of reach at once, and dimmed and passed
     // over once the wait is slow; with none, the list says it is searching then. A quicker answer draws neither.
     const { stale, searching, dimmed } = searchWait(answer, answer.slow)
-    const said = { ...PALETTE_SEARCH_WORDS, ...search?.words }
+    const said = useWords(PALETTE_SEARCH_PART, search?.words)
     const trimmed = query.trim()
     // The row to the full results page stays in sight under the scrolling rows.
     const seeAll = search?.onSeeAll !== undefined && trimmed !== ''

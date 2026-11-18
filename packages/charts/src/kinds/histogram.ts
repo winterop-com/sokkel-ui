@@ -21,7 +21,7 @@ export const histogram: ChartBuilder = (spec, look) => {
                     points[0]?.axisValueLabel ?? '',
                     points.map((point) => ({
                         label: point.seriesName,
-                        value: spec.stack === 'percent' ? `${(point.value ?? 0).toFixed(1)}%` : formatNumber(point.value ?? 0),
+                        value: spec.stack === 'percent' ? `${(point.value ?? 0).toFixed(1)}%` : formatNumber(point.value ?? 0, spec.locale),
                         color: point.color,
                     })),
                 ),

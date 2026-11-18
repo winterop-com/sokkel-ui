@@ -1,3 +1,4 @@
+import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { FormBar } from './FormBar'
 import { Button } from './ui/button'
 
@@ -8,11 +9,19 @@ export interface SaveBarWords {
     saving: string
 }
 
-const WORDS: SaveBarWords = {
+export const SAVE_BAR_WORDS: SaveBarWords = {
     unsaved: (count) => (count === 1 ? '1 unsaved change' : `${String(count)} unsaved changes`),
     discard: 'Discard',
     save: 'Save',
     saving: 'Saving',
+}
+
+/** Where a catalog holds a save bar's words, and the arguments its phrases name. */
+export const SAVE_BAR_PART: WordsPart<SaveBarWords> = { id: 'saveBar', words: SAVE_BAR_WORDS, args: { unsaved: 'count' } }
+
+/** A save bar's phrases as ICU messages in English, for the catalog. */
+export const SAVE_BAR_MESSAGES: WordMessages<SaveBarWords> = {
+    unsaved: '{count, plural, one {# unsaved change} other {# unsaved changes}}',
 }
 
 export interface SaveBarProps {
@@ -34,7 +43,7 @@ export interface SaveBarProps {
  * keeps its full height.
  */
 export function SaveBar({ count, onSave, onDiscard, busy = false, inset = 'page', className, words: given }: SaveBarProps) {
-    const words = { ...WORDS, ...given }
+    const words = useWords(SAVE_BAR_PART, given)
     if (count === 0) return null
     return (
         <FormBar

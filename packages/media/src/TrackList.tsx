@@ -6,6 +6,7 @@ import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Link } from '@winterop-com/sokkel-ui/Link'
 import { formatRemaining, formatTime } from '@winterop-com/sokkel-ui/media/time'
+import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { useFollow } from './use-follow'
 
 /** One row of a track list. */
@@ -34,7 +35,21 @@ export interface TrackListWords {
     disc: (disc: number) => string
 }
 
-const WORDS: TrackListWords = { play: (title) => `Play ${title}`, playing: 'Now playing', disc: (disc) => `Disc ${String(disc)}` }
+export const TRACK_LIST_WORDS: TrackListWords = {
+    play: (title) => `Play ${title}`,
+    playing: 'Now playing',
+    disc: (disc) => `Disc ${String(disc)}`,
+}
+
+/** Where a catalog holds a track list's words, and the arguments its phrases name. */
+export const TRACK_LIST_PART: WordsPart<TrackListWords> = {
+    id: 'trackList',
+    words: TRACK_LIST_WORDS,
+    args: { play: 'title', disc: 'disc' },
+}
+
+/** A track list's phrases as ICU messages in English, for the catalog. */
+export const TRACK_LIST_MESSAGES: WordMessages<TrackListWords> = { play: 'Play {title}', disc: 'Disc {disc}' }
 
 /** Whether the tracks lie on more than one disc, a track without one being on the first. */
 function manyDiscs(tracks: readonly Track[]): boolean {
@@ -147,7 +162,7 @@ export function TrackList({
     className,
     words,
 }: TrackListProps) {
-    const said = { ...WORDS, ...words }
+    const said = useWords(TRACK_LIST_PART, words)
     const followed = useRef<HTMLLIElement | null>(null)
     // Keyed on the row being there too, so rows that arrive after `current` still bring it into view.
     const listed = current !== undefined && tracks.some((track) => track.id === current)
