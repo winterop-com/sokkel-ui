@@ -8,6 +8,7 @@ import { literal, resolve, typeLabel, type JsonSchema } from '../schema/read'
 import { pointer, valueAt, withoutDeferred, type DeferredValue, type Path, type SchemaIssue } from '../schema/issues'
 import type { validate } from '../schema/validate'
 import { type WordMessages, type WordsPart } from '../../lib/words'
+import { writeCount } from '../../lib/numbers'
 
 type SyntaxNode = ReturnType<typeof syntaxTree>['topNode']
 
@@ -36,69 +37,153 @@ export interface ReadDocument {
     documents?: { value: unknown; spans: Map<string, Span> }[]
 }
 
-/** The words a schema check says, so an app can translate them. */
+/** The words a schema check says, so an app can translate them: a phrase for each kind of issue (`sayIssue` picks it), the syntax error and the completion's mark. */
 export interface CodeSchemaWords {
-    /** An issue in a few words. */
-    say: (issue: SchemaIssue) => string
+    /** A required property is missing, given its name. */
+    required: (property: string) => string
+    /** A property the schema does not know, given its name. */
+    additional: (property: string) => string
+    /** The value is not of the type, given the type's name (object, string). */
+    type: (expected: string) => string
+    /** The value is none of the allowed ones, given them listed as written. */
+    enum: (values: string) => string
+    /** The value is not the one allowed, given it as written. */
+    const: (value: string) => string
+    minimum: (limit: number) => string
+    exclusiveMinimum: (limit: number) => string
+    maximum: (limit: number) => string
+    exclusiveMaximum: (limit: number) => string
+    minLength: (limit: number) => string
+    maxLength: (limit: number) => string
+    pattern: (pattern: string) => string
+    format: (format: string) => string
+    minItems: (limit: number) => string
+    maxItems: (limit: number) => string
+    uniqueItems: string
+    /** A deprecated key is used. */
+    deprecatedKey: string
+    /** The schema cannot be compiled, given why. */
+    unchecked: (reason: string) => string
+    /** A rule without words of its own, given the validator's message, its first letter capitalized. */
+    other: (message: string) => string
     /** The text is not valid in the language. */
     syntax: (language: SchemaLanguage) => string
     /** Beside a deprecated key offered in completion. */
     deprecated: string
 }
 
-const plural = (count: number, unit: string) => `${String(count)} ${count === 1 ? unit : `${unit}s`}`
-const article = (word: string) => (/^[aeiou]/.test(word) ? `an ${word}` : `a ${word}`)
+const counted = (count: number, unit: string) => `${writeCount(count)} ${count === 1 ? unit : `${unit}s`}`
 
 export const SCHEMA_WORDS: CodeSchemaWords = {
-    say: (issue) => {
-        switch (issue.kind) {
-            case 'required':
-                return `Missing the property ${String(issue.path[issue.path.length - 1])}`
-            case 'additional':
-                return `${issue.property} is not a known property`
-            case 'type':
-                return `Expected ${article(issue.expected)}`
-            case 'enum':
-                return `Expected one of ${issue.values.map(literal).join(', ')}`
-            case 'const':
-                return `Expected ${literal(issue.value)}`
-            case 'minimum':
-                return issue.exclusive ? `Must be more than ${String(issue.limit)}` : `Must be at least ${String(issue.limit)}`
-            case 'maximum':
-                return issue.exclusive ? `Must be less than ${String(issue.limit)}` : `Must be at most ${String(issue.limit)}`
-            case 'minLength':
-                return `Use at least ${plural(issue.limit, 'character')}`
-            case 'maxLength':
-                return `Use at most ${plural(issue.limit, 'character')}`
-            case 'pattern':
-                return `Must match ${issue.pattern}`
-            case 'format':
-                return issue.phrase ?? `Expected the ${issue.format} format`
-            case 'minItems':
-                return `Needs at least ${plural(issue.limit, 'item')}`
-            case 'maxItems':
-                return `Holds at most ${plural(issue.limit, 'item')}`
-            case 'uniqueItems':
-                return 'Each item only once'
-            case 'deprecated':
-                return 'Deprecated: still accepted, and may be removed in a later version'
-            case 'unchecked':
-                return `The schema cannot be checked: ${issue.reason}`
-            case 'other':
-                return issue.message.charAt(0).toUpperCase() + issue.message.slice(1)
-        }
-    },
+    required: (property) => `Missing the property ${property}`,
+    additional: (property) => `${property} is not a known property`,
+    type: (expected) => `Expected ${/^[aeiou]/.test(expected) ? 'an' : 'a'} ${expected}`,
+    enum: (values) => `Expected one of ${values}`,
+    const: (value) => `Expected ${value}`,
+    minimum: (limit) => `Must be at least ${writeCount(limit)}`,
+    exclusiveMinimum: (limit) => `Must be more than ${writeCount(limit)}`,
+    maximum: (limit) => `Must be at most ${writeCount(limit)}`,
+    exclusiveMaximum: (limit) => `Must be less than ${writeCount(limit)}`,
+    minLength: (limit) => `Use at least ${counted(limit, 'character')}`,
+    maxLength: (limit) => `Use at most ${counted(limit, 'character')}`,
+    pattern: (pattern) => `Must match ${pattern}`,
+    format: (format) => `Expected the ${format} format`,
+    minItems: (limit) => `Needs at least ${counted(limit, 'item')}`,
+    maxItems: (limit) => `Holds at most ${counted(limit, 'item')}`,
+    uniqueItems: 'Each item only once',
+    deprecatedKey: 'Deprecated: still accepted, and may be removed in a later version',
+    unchecked: (reason) => `The schema cannot be checked: ${reason}`,
+    other: (message) => message,
     syntax: (language) => `Not valid ${language === 'json' ? 'JSON' : 'YAML'}`,
     deprecated: 'deprecated',
 }
 
 /** Where a catalog holds a code editor's schema checks's words, and the arguments its phrases name. */
-export const SCHEMA_PART: WordsPart<CodeSchemaWords> = { id: 'schema', words: SCHEMA_WORDS, args: { syntax: 'language' } }
+export const SCHEMA_PART: WordsPart<CodeSchemaWords> = {
+    id: 'schema',
+    words: SCHEMA_WORDS,
+    args: {
+        required: 'property',
+        additional: 'property',
+        type: 'expected',
+        enum: 'values',
+        const: 'value',
+        minimum: 'limit',
+        exclusiveMinimum: 'limit',
+        maximum: 'limit',
+        exclusiveMaximum: 'limit',
+        minLength: 'limit',
+        maxLength: 'limit',
+        pattern: 'pattern',
+        format: 'format',
+        minItems: 'limit',
+        maxItems: 'limit',
+        unchecked: 'reason',
+        other: 'message',
+        syntax: 'language',
+    },
+}
 
 /** A code editor's schema checks's phrases as ICU messages in English, for the catalog. */
 export const SCHEMA_MESSAGES: WordMessages<CodeSchemaWords> = {
-    say: null,
+    required: 'Missing the property {property}',
+    additional: '{property} is not a known property',
+    type: 'Expected {expected, select, array {an array} object {an object} integer {an integer} other {a {expected}}}',
+    enum: 'Expected one of {values}',
+    const: 'Expected {value}',
+    minimum: 'Must be at least {limit, number}',
+    exclusiveMinimum: 'Must be more than {limit, number}',
+    maximum: 'Must be at most {limit, number}',
+    exclusiveMaximum: 'Must be less than {limit, number}',
+    minLength: 'Use at least {limit, plural, one {# character} other {# characters}}',
+    maxLength: 'Use at most {limit, plural, one {# character} other {# characters}}',
+    pattern: 'Must match {pattern}',
+    format: 'Expected the {format} format',
+    minItems: 'Needs at least {limit, plural, one {# item} other {# items}}',
+    maxItems: 'Holds at most {limit, plural, one {# item} other {# items}}',
+    unchecked: 'The schema cannot be checked: {reason}',
+    other: '{message}',
     syntax: 'Not valid {language, select, json {JSON} other {YAML}}',
+}
+
+/** An issue in a few words, by its kind's phrase. */
+export function sayIssue(words: CodeSchemaWords, issue: SchemaIssue): string {
+    switch (issue.kind) {
+        case 'required':
+            return words.required(String(issue.path[issue.path.length - 1]))
+        case 'additional':
+            return words.additional(issue.property)
+        case 'type':
+            return words.type(issue.expected)
+        case 'enum':
+            return words.enum(issue.values.map(literal).join(', '))
+        case 'const':
+            return words.const(literal(issue.value))
+        case 'minimum':
+            return issue.exclusive ? words.exclusiveMinimum(issue.limit) : words.minimum(issue.limit)
+        case 'maximum':
+            return issue.exclusive ? words.exclusiveMaximum(issue.limit) : words.maximum(issue.limit)
+        case 'minLength':
+            return words.minLength(issue.limit)
+        case 'maxLength':
+            return words.maxLength(issue.limit)
+        case 'pattern':
+            return words.pattern(issue.pattern)
+        case 'format':
+            return issue.phrase ?? words.format(issue.format)
+        case 'minItems':
+            return words.minItems(issue.limit)
+        case 'maxItems':
+            return words.maxItems(issue.limit)
+        case 'uniqueItems':
+            return words.uniqueItems
+        case 'deprecated':
+            return words.deprecatedKey
+        case 'unchecked':
+            return words.unchecked(issue.reason)
+        case 'other':
+            return words.other(issue.message.charAt(0).toUpperCase() + issue.message.slice(1))
+    }
 }
 
 const text = (state: EditorState, node: SyntaxNode) => state.sliceDoc(node.from, node.to)
@@ -358,7 +443,7 @@ export function schemaDiagnostics(
         withoutDeferred(check(schema, value), value, deferred).map((issue) => ({
             ...place(issue, spans, state),
             severity: issue.tone === 'critical' ? ('error' as const) : ('warning' as const),
-            message: words.say(issue),
+            message: sayIssue(words, issue),
             path: issue.kind === 'additional' ? [...issue.path, issue.property] : issue.path,
         })),
     )
@@ -386,7 +471,7 @@ export function schemaProblems(
     if (failed === null) return undefined
     const first = state.doc.line(1)
     const issue: SchemaIssue = { kind: 'unchecked', reason: failed, path: [], tone: 'critical' }
-    return [{ from: first.from, to: first.to, severity: 'error', message: words.say(issue), path: [] }]
+    return [{ from: first.from, to: first.to, severity: 'error', message: sayIssue(words, issue), path: [] }]
 }
 
 /** A diagnostic with the path of the value it is about, when a schema check found it. */

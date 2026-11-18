@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenu
 import { DashboardGrid, SPAN, type PanelSpan } from './DashboardGrid'
 import { PanelToolsProvider } from './panel-tools'
 import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
+import { writeCount } from '../../lib/numbers'
 
 /** One panel's place in an arranged dashboard: its key and how wide it is. The order of the list is the order drawn. */
 export interface DashboardLayoutItem {
@@ -56,7 +57,7 @@ export const DASHBOARD_ARRANGE_WORDS: DashboardArrangeWords = {
     palette: 'Widgets',
     add: (widget) => `Add ${widget}`,
     end: 'Drop here to add at the end',
-    moved: (panel, place, count) => `${panel} moved to ${String(place)} of ${String(count)}`,
+    moved: (panel, place, count) => `${panel} moved to ${writeCount(place)} of ${writeCount(count)}`,
 }
 
 /** Where a catalog holds a dashboard arrangement's words, and the arguments its phrases name. */

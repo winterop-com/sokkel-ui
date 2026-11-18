@@ -3,7 +3,7 @@ import { useContext, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { FIELD_EDGE } from '../lib/issue-edge'
 import { useWords, type WordsPart } from '../lib/words'
-import { FieldRows } from './field-rows'
+import { FieldRows, FieldTone } from './field-rows'
 import { ISSUE_PART, ISSUE_WORDS, IssueMark, worst, type Issue, type IssueWords } from './IssueMark'
 import { Label } from './ui/label'
 
@@ -121,8 +121,8 @@ export function Field({
     // The control keeps one place in the tree whether or not it has issues, so an issue coming or
     // going never mounts it afresh and loses what it holds.
     const control = (
-        <div className={cn('relative min-w-0', tone !== null && ['[&>:first-child]:pr-9', FIELD_EDGE[tone]])}>
-            {children}
+        <div className={cn('relative min-w-0', tone !== null && ['[&>:first-child:not([data-field-edge=own])]:pr-9', FIELD_EDGE[tone]])}>
+            <FieldTone.Provider value={tone}>{children}</FieldTone.Provider>
             {tone !== null && <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} words={words} />}
         </div>
     )

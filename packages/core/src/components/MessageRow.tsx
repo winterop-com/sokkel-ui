@@ -7,6 +7,7 @@ import { DRAG_GROUP, DragSource, DragSourceGrip, GRIP_ON_HOVER } from './DragSou
 import { Checkbox } from './ui/checkbox'
 import { Highlight } from './Highlight'
 import { literalRanges } from '../lib/search'
+import { writeCount } from '../lib/numbers'
 
 /** A label a message carries: its name, and the color of its dot as any CSS color. */
 export interface MessageLabel {
@@ -32,7 +33,7 @@ export const MESSAGE_ROW_WORDS: MessageRowWords = {
     unstar: 'Remove the star',
     unread: 'Unread',
     attachment: 'Has attachments',
-    thread: (count) => `${count} messages`,
+    thread: (count) => `${writeCount(count)} messages`,
     drag: (subject) => `Drag ${subject}`,
 }
 

@@ -29,7 +29,7 @@ function index(
     return out
 }
 
-export interface TreeSelectWords extends Omit<TreeWords, 'moved' | 'topLevel'> {
+export interface TreeSelectWords extends Omit<TreeWords, 'moved' | 'topLevel' | 'actions'> {
     placeholder: string
     search: string
     clear: string
@@ -41,8 +41,7 @@ export const TREE_SELECT_WORDS: TreeSelectWords = {
     search: 'Search',
     clear: 'Clear',
     empty: 'Nothing matches.',
-    selected: (count) => `${count} chosen`,
-    actions: 'Actions',
+    selected: (count) => `${count.toLocaleString('en-US')} chosen`,
     loading: 'Loading',
     failed: 'This level did not load.',
     retry: 'Try again',
@@ -229,7 +228,7 @@ export function TreeSelect({
                         <button
                             type="button"
                             onClick={() => onValueChange([])}
-                            className="flex items-center gap-1 rounded-sm text-xs text-muted-foreground hover:text-foreground"
+                            className="flex items-center gap-1 rounded-sm text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                         >
                             <X className="size-3.5" aria-hidden />
                             {words.clear}

@@ -71,9 +71,9 @@ describe('BoardItemPanel', () => {
 
     it("says the checklist's heading with its count as its words give it", () => {
         expect([0, 1, 1200].map((done) => BOARD_CHECKLIST_WORDS.title(done, 1200))).toEqual([
-            'Checklist 0/1200',
-            'Checklist 1/1200',
-            'Checklist 1200/1200',
+            'Checklist 0/1,200',
+            'Checklist 1/1,200',
+            'Checklist 1,200/1,200',
         ])
         const page = draw(
             <BoardItemPanel

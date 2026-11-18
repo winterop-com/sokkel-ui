@@ -45,26 +45,26 @@ export function Problem({ title, detail, technical, actions, tone = 'error', cla
         <div
             role={tone === 'error' ? 'alert' : 'status'}
             className={cn(
-                'flex flex-col gap-1.5 rounded-r-control border-l-2 py-2.5 pr-3 pl-3 text-sm',
+                'flex flex-col gap-1.5 rounded-e-control border-s-2 py-2.5 ps-3 pe-3 text-sm',
                 tone === 'error' ? 'border-critical bg-critical/6' : 'border-warning bg-warning/6',
                 className,
             )}
         >
             <div className="flex items-start gap-2">
-                <Icon className={cn('mt-0.5 size-4 shrink-0', tone === 'error' ? 'text-critical' : 'text-warning')} aria-hidden />
+                <Icon className={cn('mt-0.5 size-4 shrink-0', tone === 'error' ? 'text-critical-ink' : 'text-warning-ink')} aria-hidden />
                 <p className="font-medium">{title}</p>
             </div>
             {detail !== undefined && (
-                <p className="pl-6 text-muted-foreground">{typeof detail === 'string' ? <ProseText text={detail} /> : detail}</p>
+                <p className="ps-6 text-muted-foreground">{typeof detail === 'string' ? <ProseText text={detail} /> : detail}</p>
             )}
             {technical !== undefined && (
-                <Unfoldable heading={<span className="text-xs font-normal text-muted-foreground">{words.technical}</span>} className="pl-5">
+                <Unfoldable heading={<span className="text-xs font-normal text-muted-foreground">{words.technical}</span>} className="ps-5">
                     <pre className="overflow-x-auto rounded-sm bg-muted px-2 py-1.5 font-mono text-xs [overflow-wrap:anywhere] whitespace-pre-wrap text-muted-foreground">
                         {technical}
                     </pre>
                 </Unfoldable>
             )}
-            {actions !== undefined && <div className="flex flex-wrap gap-2 pt-1 pl-6">{actions}</div>}
+            {actions !== undefined && <div className="flex flex-wrap gap-2 ps-6 pt-1">{actions}</div>}
         </div>
     )
 }

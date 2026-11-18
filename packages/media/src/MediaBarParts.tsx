@@ -33,6 +33,7 @@ import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
 import { nextRepeat, type RepeatMode } from './queue'
 import type { WordMessages, WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { useFramePosition } from './use-frame-position'
+import { writeCount } from '@winterop-com/sokkel-ui/lib/numbers'
 
 export type { MediaSkip } from './media-session'
 export type { RepeatMode } from './queue'
@@ -97,8 +98,8 @@ export const MEDIA_BAR_WORDS: MediaBarWords = {
     next: 'Next',
     previousChapter: 'Previous chapter',
     nextChapter: 'Next chapter',
-    skipBack: (seconds) => `Back ${String(seconds)} seconds`,
-    skipForward: (seconds) => `Forward ${String(seconds)} seconds`,
+    skipBack: (seconds) => `Back ${writeCount(seconds)} seconds`,
+    skipForward: (seconds) => `Forward ${writeCount(seconds)} seconds`,
     speed: 'Playback speed',
     rate: formatRate,
     live: 'Live',
@@ -111,8 +112,10 @@ export const MEDIA_BAR_WORDS: MediaBarWords = {
     volume: 'Volume',
     seek: 'Seek',
     resize: 'Resize the player',
-    trackOf: (number, count) => (count === undefined ? `Track ${String(number)}` : `Track ${String(number)} of ${String(count)}`),
-    chapterOf: (number, count) => (count === undefined ? `Chapter ${String(number)}` : `Chapter ${String(number)} of ${String(count)}`),
+    trackOf: (number, count) =>
+        count === undefined ? `Track ${writeCount(number)}` : `Track ${writeCount(number)} of ${writeCount(count)}`,
+    chapterOf: (number, count) =>
+        count === undefined ? `Chapter ${writeCount(number)}` : `Chapter ${writeCount(number)} of ${writeCount(count)}`,
     fullscreen: 'Fullscreen',
     exitFullscreen: 'Exit fullscreen',
     nowPlaying: 'Now playing',

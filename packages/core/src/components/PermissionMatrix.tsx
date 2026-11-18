@@ -7,6 +7,7 @@ import { TABLE_HEAD_TEXT } from '../lib/table'
 import { DataTable, type DataColumn } from './DataTable'
 import { Checkbox } from './ui/checkbox'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
+import { writeCount } from '../lib/numbers'
 
 /** One role, a column of the matrix. A locked role is built in, and its column is read-only. */
 export interface MatrixRole {
@@ -54,7 +55,7 @@ export const PERMISSION_MATRIX_WORDS: PermissionMatrixWords = {
     builtIn: 'Built in, read-only',
     changed: 'Changed',
     toggle: (permission, role) => `${permission} for ${role}`,
-    held: (granted, total) => `${String(granted)} of ${String(total)}`,
+    held: (granted, total) => `${writeCount(granted)} of ${writeCount(total)}`,
 }
 
 /** Where a catalog holds a permission matrix's words, and the arguments its phrases name. */

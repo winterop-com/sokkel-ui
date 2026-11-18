@@ -59,7 +59,7 @@ describe("a schema form's list of records", () => {
         const html = renderToStaticMarkup(<Form schema={schema} initial={{ services: [{ name: 'api' }] }} />)
         expect(html).toContain('<fieldset')
         expect(html).toContain('<span class="sr-only">required</span>')
-        expect(html).toContain('aria-label="Remove Item 1"')
+        expect(html).toContain('aria-label="Remove: Item 1"')
     })
 
     it('draws a grip on each row only inside a RepeatedDrag', () => {
@@ -72,5 +72,29 @@ describe("a schema form's list of records", () => {
         const dragged = renderToStaticMarkup(<RepeatedDrag>{group}</RepeatedDrag>)
         expect(dragged).toContain('aria-label="Move Item 1"')
         expect(dragged).toContain('aria-label="Move Item 2"')
+    })
+})
+
+describe("a repeated group's moves", () => {
+    it('names each control with its action and the row, and keeps a shut move reachable with why', () => {
+        const html = renderToStaticMarkup(
+            <RepeatedGroup
+                label="Steps"
+                rows={[{ key: 'fetch' }, { key: 'upload' }]}
+                onAdd={() => {}}
+                onRemove={() => {}}
+                onMove={() => {}}
+            >
+                {() => null}
+            </RepeatedGroup>,
+        )
+        expect(html).toContain('aria-label="Move up: Item 1"')
+        expect(html).toContain('aria-label="Remove: Item 2"')
+        const shut = /<button[^>]*aria-label="Move up: Item 1"[^>]*>/.exec(html)?.[0] ?? ''
+        expect(shut).toContain('aria-disabled="true"')
+        expect(shut).not.toContain(' disabled=""')
+        expect(shut).toContain('aria-describedby')
+        expect(html).toContain('Already first')
+        expect(html).toContain('Already last')
     })
 })

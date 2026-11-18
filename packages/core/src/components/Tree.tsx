@@ -95,7 +95,7 @@ export const TREE_WORDS: TreeWords = {
     searching: 'Searching',
     searchFailed: 'The search did not answer.',
     empty: 'Nothing matches.',
-    moved: (item, into, place, count) => `${item} moved to ${String(place)} of ${String(count)} in ${into}`,
+    moved: (item, into, place, count) => `${item} moved to ${place.toLocaleString('en-US')} of ${count.toLocaleString('en-US')} in ${into}`,
     topLevel: 'the top level',
 }
 

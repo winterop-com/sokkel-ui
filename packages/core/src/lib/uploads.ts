@@ -1,5 +1,6 @@
 import { formatSize } from '../components/FileList'
 import type { WordMessages, WordsPart } from './words'
+import { writeCount } from './numbers'
 
 /**
  * Files on their way up, as a store a hook or a test can drive: what is accepted and what refused
@@ -51,8 +52,8 @@ export interface UploadWords {
 
 export const UPLOAD_WORDS: UploadWords = {
     type: (name) => `${name} is not a type that can be added.`,
-    size: (name, limit) => `${name} is larger than ${limit}.`,
-    count: (name, limit) => `${name} was not added: at most ${String(limit)} files.`,
+    size: (name, limit) => `${name} is larger than ${writeCount(limit)}.`,
+    count: (name, limit) => `${name} was not added: at most ${writeCount(limit)} files.`,
     failed: 'Failed',
 }
 

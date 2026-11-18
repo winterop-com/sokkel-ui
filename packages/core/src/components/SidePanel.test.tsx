@@ -112,3 +112,10 @@ describe('PanelTabStrip', () => {
         expect(stripStep('Enter', 1, 3)).toBeUndefined()
     })
 })
+
+describe('SidePanel ink', () => {
+    it("writes in the sidebar's ink on the sidebar's ground", () => {
+        const html = renderToStaticMarkup(<SidePanel tabs={TABS} />)
+        expect(html).toMatch(/bg-sidebar text-sidebar-foreground/)
+    })
+})

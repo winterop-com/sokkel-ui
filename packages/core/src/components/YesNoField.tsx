@@ -2,9 +2,11 @@ import { Eraser } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Field, FIELD_PART, FIELD_WORDS, type FieldWords } from './Field'
-import type { Issue } from './IssueMark'
+import { worst, type Issue } from './IssueMark'
 import { Segmented } from './Segmented'
 import { Button } from './ui/button'
+import { cn } from '../lib/cn'
+import { ISSUE_WITHIN_EDGE } from '../lib/issue-edge'
 import { useWords, type WordsPart } from '../lib/words'
 
 /** The words a yes or no field says. */
@@ -65,6 +67,7 @@ export function YesNoField({
 }: YesNoFieldProps) {
     const words = useWords(YES_NO_FIELD_PART, given)
     const chosen = value === null ? '' : value ? 'yes' : 'no'
+    const tone = worst([...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...(issues ?? [])])
     const options = [{ value: 'yes', label: words.yes }, ...(yesOnly ? [] : [{ value: 'no', label: words.no }])]
     return (
         <Field
@@ -78,7 +81,8 @@ export function YesNoField({
             issues={issues}
             className={className}
         >
-            <span className="flex min-w-0 flex-wrap items-center gap-2">
+            {/* The choice wears the issue's edge itself, the row keeping the mark's room at its end. */}
+            <span data-field-edge="own" className={cn('flex min-w-0 flex-wrap items-center gap-2', tone !== null && 'pr-9')}>
                 <Segmented
                     id={id}
                     size="md"
@@ -86,6 +90,12 @@ export function YesNoField({
                     value={chosen}
                     options={options}
                     disabled={disabled}
+                    className={cn(
+                        tone !== null && [
+                            ISSUE_WITHIN_EDGE[tone],
+                            tone === 'critical' ? 'dark:border-critical/80' : 'dark:border-warning/80',
+                        ],
+                    )}
                     onValueChange={(next) => onValueChange(next === 'yes')}
                 />
                 {value === null ? (

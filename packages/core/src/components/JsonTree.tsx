@@ -4,24 +4,31 @@ import { useState } from 'react'
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 
-/** The words a JSON tree says: how many keys a folded object holds, and the step that shows more of a long one. */
+/** The words a JSON tree says: how many keys a folded object holds and how many items a folded list holds, and the step that shows more of a long one. */
 export interface JsonTreeWords {
     keys: (count: number) => string
+    items: (count: number) => string
     /** The step under a long list or object's shown entries, `count` the entries a press adds. */
     more: (count: number) => string
 }
 
 export const JSON_TREE_WORDS: JsonTreeWords = {
-    keys: (count) => `${String(count)} ${count === 1 ? 'key' : 'keys'}`,
+    keys: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'key' : 'keys'}`,
+    items: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'item' : 'items'}`,
     more: (count) => `Show ${count.toLocaleString('en-US')} more`,
 }
 
 /** Where a catalog holds a JSON tree's words, and the arguments its phrases name. */
-export const JSON_TREE_PART: WordsPart<JsonTreeWords> = { id: 'jsonTree', words: JSON_TREE_WORDS, args: { keys: 'count', more: 'count' } }
+export const JSON_TREE_PART: WordsPart<JsonTreeWords> = {
+    id: 'jsonTree',
+    words: JSON_TREE_WORDS,
+    args: { keys: 'count', items: 'count', more: 'count' },
+}
 
 /** A JSON tree's phrases as ICU messages in English, for the catalog. */
 export const JSON_TREE_MESSAGES: WordMessages<JsonTreeWords> = {
     keys: '{count, plural, one {# key} other {# keys}}',
+    items: '{count, plural, one {# item} other {# items}}',
     more: 'Show {count, number} more',
 }
 
@@ -76,7 +83,7 @@ function Node({ name, value, depth, open, limit, words }: NodeProps) {
                     {start}
                     {!expanded && (
                         <>
-                            <span className="px-1 text-faint">{list ? entries.length : words.keys(entries.length)}</span>
+                            <span className="px-1 text-faint">{list ? words.items(entries.length) : words.keys(entries.length)}</span>
                             {end}
                         </>
                     )}

@@ -91,9 +91,9 @@ export const DRAG_DROP_WORDS: DragDropWords = {
         'To pick it up, press Space or Enter. Move it with the arrow keys, press Space or Enter to drop it, or Escape to put it back.',
     pickedUp: (item) => `Picked up ${item}.`,
     over: (item, target) => `${item} is over ${target}.`,
-    place: (item, place, count) => `${item} is at ${String(place)} of ${String(count)}.`,
+    place: (item, place, count) => `${item} is at ${place.toLocaleString('en-US')} of ${count.toLocaleString('en-US')}.`,
     dropped: (item, target) => `${item} was dropped on ${target}.`,
-    placed: (item, place, count) => `${item} was dropped at ${String(place)} of ${String(count)}.`,
+    placed: (item, place, count) => `${item} was dropped at ${place.toLocaleString('en-US')} of ${count.toLocaleString('en-US')}.`,
     putBack: (item) => `${item} was put back.`,
     cancelled: (item) => `Moving ${item} was cancelled; it is back where it was.`,
 }

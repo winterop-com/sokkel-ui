@@ -29,6 +29,11 @@ export function writeNumber(value: number): string {
     return String(value)
 }
 
+/** A count or a place in an English default word: its thousands grouped, as the catalogs' ICU messages write it ("1,200"); a string is said as it is. */
+export function writeCount(value: number | string): string {
+    return typeof value === 'number' ? value.toLocaleString('en-US') : value
+}
+
 /** The plain format: `writeNumber` and `readNumber`. */
 export const PLAIN_NUMBER: NumberFormat = { format: writeNumber, parse: readNumber }
 

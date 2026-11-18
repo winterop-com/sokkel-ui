@@ -17,7 +17,7 @@ export interface TagChipsWords {
 }
 
 export const TAG_CHIPS_WORDS: TagChipsWords = {
-    more: (count) => `+${String(count)}`,
+    more: (count) => `+${count.toLocaleString('en-US')}`,
     rest: (tags) => `${String(tags.length)} more: ${tags.join(', ')}`,
 }
 

@@ -5,6 +5,7 @@ import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 import { DragGrip, useDragItem, useDropTarget, type DragHandleProps } from '../DragDrop'
 import { DRAG_GROUP, GRIP_ON_HOVER } from '../DragSource'
 import { BoardDrop, useBoardColumnDrag, useBoardColumnKind } from './Board'
+import { writeCount } from '../../lib/numbers'
 
 export interface BoardColumnWords {
     /** What the count says when a limit is set, as a tooltip. */
@@ -16,7 +17,7 @@ export interface BoardColumnWords {
 }
 
 export const BOARD_COLUMN_WORDS: BoardColumnWords = {
-    limit: (count, limit) => `${count} of a limit of ${limit}`,
+    limit: (count, limit) => `${writeCount(count)} of a limit of ${writeCount(limit)}`,
     over: (count, limit) => `${count - limit} over the limit of ${limit}`,
     move: (column) => `Move ${column}`,
 }

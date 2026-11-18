@@ -62,7 +62,7 @@ export const COMMENT_THREAD_WORDS: CommentThreadWords = {
     creator: 'creator',
     pinned: (by) => (by === undefined ? 'Pinned' : `Pinned by ${by}`),
     edited: '(edited)',
-    replies: (count) => `${String(count)} ${count === 1 ? 'reply' : 'replies'}`,
+    replies: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'reply' : 'replies'}`,
     hideReplies: 'Hide replies',
 }
 

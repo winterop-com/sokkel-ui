@@ -40,7 +40,7 @@ export interface ChannelHeaderWords {
 export const CHANNEL_HEADER_WORDS: ChannelHeaderWords = {
     channel: 'Channel',
     private: 'Private channel',
-    members: (count) => `${String(count)} ${count === 1 ? 'member' : 'members'}`,
+    members: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'member' : 'members'}`,
     details: (name) => `Details for ${name}`,
     presence: { active: 'Active', away: 'Away', offline: 'Offline' },
     tabs: 'Views',

@@ -27,10 +27,10 @@ export const ISSUE_WITHIN_EDGE = {
     warning: 'border-warning/80 focus-within:border-warning focus-within:ring-warning/25',
 } as const
 
-/** The edge for the worst issue's tone, put by a field on its control, the first child of the box that holds it. */
+/** The edge for the worst issue's tone, put by a field on its control, the first child of the box that holds it, unless that control draws its own (`data-field-edge="own"`). */
 export const FIELD_EDGE = {
     critical:
-        '[&>:first-child]:border-critical/80 [&>:first-child]:focus-visible:border-critical [&>:first-child]:focus-visible:ring-invalid [&>:first-child]:focus-visible:ring-invalid-ring',
+        '[&>:first-child:not([data-field-edge=own])]:border-critical/80 [&>:first-child:not([data-field-edge=own])]:focus-visible:border-critical [&>:first-child:not([data-field-edge=own])]:focus-visible:ring-invalid [&>:first-child:not([data-field-edge=own])]:focus-visible:ring-invalid-ring',
     warning:
-        '[&>:first-child]:border-warning/80 [&>:first-child]:focus-visible:border-warning [&>:first-child]:focus-visible:ring-warning/25',
+        '[&>:first-child:not([data-field-edge=own])]:border-warning/80 [&>:first-child:not([data-field-edge=own])]:focus-visible:border-warning [&>:first-child:not([data-field-edge=own])]:focus-visible:ring-warning/25',
 } as const

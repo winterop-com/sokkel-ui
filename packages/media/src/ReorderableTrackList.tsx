@@ -1,6 +1,7 @@
 import { SortableGrip, SortableGroup, SortableItem } from '@winterop-com/sokkel-ui/Sortable'
 import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { TrackList, type Track, type TrackListProps, type TrackListWords, type TrackRowProps } from './TrackList'
+import { writeCount } from '@winterop-com/sokkel-ui/lib/numbers'
 
 export type { Track } from './TrackList'
 
@@ -14,7 +15,7 @@ export interface ReorderableTrackListWords extends TrackListWords {
 
 export const REORDERABLE_TRACK_LIST_WORDS: Pick<ReorderableTrackListWords, 'move' | 'moved'> = {
     move: (title) => `Move ${title}`,
-    moved: (title, place, count) => `${title} moved to ${String(place)} of ${String(count)}`,
+    moved: (title, place, count) => `${title} moved to ${writeCount(place)} of ${writeCount(count)}`,
 }
 
 /** Where a catalog holds a reorderable track list's own words, and the arguments its phrases name. */

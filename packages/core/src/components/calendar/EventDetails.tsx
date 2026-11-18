@@ -7,6 +7,7 @@ import { KIND_FILL } from '../../lib/kind'
 import { useWords, type WordMessages, type WordsPart } from '../../lib/words'
 import { PersonAvatar } from '../PersonAvatar'
 import type { CalendarEvent } from './events'
+import { writeCount } from '../../lib/numbers'
 
 /** A person at an event, by name, with their picture when there is one. */
 export interface EventPerson {
@@ -42,7 +43,7 @@ function when(event: CalendarEvent): string {
 
 export const EVENT_DETAILS_WORDS: EventDetailsWords = {
     when,
-    more: (count) => `+${String(count)}`,
+    more: (count) => `+${writeCount(count)}`,
     people: 'People',
     location: 'Location',
 }

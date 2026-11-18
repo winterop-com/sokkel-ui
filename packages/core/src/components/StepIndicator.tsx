@@ -33,7 +33,9 @@ export interface StepIndicatorWords {
     step: (number: number, total: number) => string
 }
 
-export const STEP_INDICATOR_WORDS: StepIndicatorWords = { step: (number, total) => `Step ${String(number)} of ${String(total)}` }
+export const STEP_INDICATOR_WORDS: StepIndicatorWords = {
+    step: (number, total) => `Step ${number.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}`,
+}
 
 /** Where a catalog holds a step indicator's words, and the arguments its phrases name. */
 export const STEP_INDICATOR_PART: WordsPart<StepIndicatorWords> = {

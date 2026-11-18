@@ -122,7 +122,8 @@ export const CLIP_TIMELINE_WORDS: ClipTimelineWords = {
     moved: (clip, at, track) => (track === undefined ? `${clip} moved to ${at}` : `${clip} moved to ${track} at ${at}`),
     trimmed: (clip, length) => `${clip} trimmed to ${length}`,
     split: (clip, at) => `${clip} split at ${at}`,
-    deleted: (count, ripple) => `${count === 1 ? 'Clip' : `${String(count)} clips`} deleted${ripple ? ', the gap closed' : ''}`,
+    deleted: (count, ripple) =>
+        `${count === 1 ? 'Clip' : `${count.toLocaleString('en-US')} clips`} deleted${ripple ? ', the gap closed' : ''}`,
     blocked: (clip) => `${clip} cannot go there`,
     dropped: (item, track, at) => `${item} added to ${track} at ${at}`,
     at: (at) => `Playhead at ${at}`,

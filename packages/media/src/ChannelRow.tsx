@@ -28,7 +28,7 @@ export const CHANNEL_ROW_PART: WordsPart<ChannelRowWords> = { id: 'channelRow', 
 
 /** A channel row's phrases as ICU messages in English, for the catalog. */
 export const CHANNEL_ROW_MESSAGES: WordMessages<ChannelRowWords> = {
-    followers: '{count, number, ::compact-short} {count, plural, =1 {follower} other {followers}}',
+    followers: '{count, number, ::compact-short .#} {count, plural, =1 {follower} other {followers}}',
 }
 
 export interface ChannelRowProps {

@@ -14,6 +14,7 @@ import {
 } from './ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
+import { writeCount } from '../lib/numbers'
 
 /** One value a filter can take. */
 export interface FilterOption {
@@ -42,7 +43,7 @@ export interface FilterChipWords {
 export const FILTER_CHIP_WORDS: FilterChipWords = {
     clear: (facet) => `Clear ${facet}`,
     any: 'Any',
-    more: (count) => `+${String(count)}`,
+    more: (count) => `+${writeCount(count)}`,
     search: 'Search',
     empty: 'Nothing matches.',
 }

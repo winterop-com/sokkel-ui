@@ -11,6 +11,7 @@ import { DueText } from '../DueText'
 import { PersonAvatar } from '../PersonAvatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { BoardGrip, BoardItem } from './Board'
+import { writeCount } from '../../lib/numbers'
 
 /** A label on a card: its name, and the color it wears, which follows from the name by default. */
 export interface BoardLabelSpec {
@@ -52,8 +53,8 @@ export const BOARD_CARD_WORDS: BoardCardWords = {
     menu: 'More actions',
     due: (date) => format(date, 'MMM d'),
     dueTitle: (date, overdue) => `${overdue ? 'Overdue, was due' : 'Due'} ${format(date, 'EEEE d MMMM')}`,
-    comments: (count) => `${count} ${count === 1 ? 'comment' : 'comments'}`,
-    checklist: (done, total) => `${done} of ${total} checklist items done`,
+    comments: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'comment' : 'comments'}`,
+    checklist: (done, total) => `${writeCount(done)} of ${writeCount(total)} checklist items done`,
     assignee: (name) => `Assigned to ${name}`,
     move: (card) => `Move ${card}`,
 }

@@ -15,6 +15,7 @@ import {
 } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { chapterIndex } from './chapters'
+import { writeCount } from '@winterop-com/sokkel-ui/lib/numbers'
 
 /**
  * When playback stops: after a number of minutes of playing, at the end of the chapter playing
@@ -42,7 +43,7 @@ export interface SleepTimerWords {
 export const SLEEP_TIMER_WORDS: SleepTimerWords = {
     label: 'Sleep timer',
     off: 'Off',
-    minutes: (minutes) => `${String(minutes)} minutes`,
+    minutes: (minutes) => `${writeCount(minutes)} minutes`,
     chapter: 'End of chapter',
     end: 'End of episode',
     left: (time) => `${time} left`,

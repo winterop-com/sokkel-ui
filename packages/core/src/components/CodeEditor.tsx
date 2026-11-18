@@ -73,7 +73,7 @@ import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
 
 export type { CodeSchemaWords } from './code/schema'
-export { SCHEMA_MESSAGES, SCHEMA_PART, SCHEMA_WORDS } from './code/schema'
+export { SCHEMA_MESSAGES, SCHEMA_PART, SCHEMA_WORDS, sayIssue } from './code/schema'
 export { createSharedDocument, useControlledDocument, useSharedDocument, useSharedText, type SharedDocument } from './code/shared'
 
 /** The languages the editor carries itself. */

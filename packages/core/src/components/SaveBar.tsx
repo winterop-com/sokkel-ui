@@ -10,7 +10,7 @@ export interface SaveBarWords {
 }
 
 export const SAVE_BAR_WORDS: SaveBarWords = {
-    unsaved: (count) => (count === 1 ? '1 unsaved change' : `${String(count)} unsaved changes`),
+    unsaved: (count) => (count === 1 ? '1 unsaved change' : `${count.toLocaleString('en-US')} unsaved changes`),
     discard: 'Discard',
     save: 'Save',
     saving: 'Saving',

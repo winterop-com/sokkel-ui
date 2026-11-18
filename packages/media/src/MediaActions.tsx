@@ -56,7 +56,7 @@ export const MEDIA_ACTIONS_WORDS: MediaActionsWords = {
 export const MEDIA_ACTIONS_PART: WordsPart<MediaActionsWords> = { id: 'mediaActions', words: MEDIA_ACTIONS_WORDS, args: { count: 'count' } }
 
 /** A media item's actions' phrases as ICU messages in English, for the catalog. */
-export const MEDIA_ACTIONS_MESSAGES: WordMessages<MediaActionsWords> = { count: '{count, number, ::compact-short}' }
+export const MEDIA_ACTIONS_MESSAGES: WordMessages<MediaActionsWords> = { count: '{count, number, ::compact-short .#}' }
 
 /** The gap between the buttons, in pixels: `gap-2` below. */
 const GAP = 8

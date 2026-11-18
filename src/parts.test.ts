@@ -11,6 +11,7 @@ import { Banner, BANNER_WORDS, type BannerTone } from '@winterop-com/sokkel-ui/B
 import { CALL_BAR_SHORTCUTS, CALL_BAR_WORDS, CallBar, type CallBarProps } from '@winterop-com/sokkel-ui/CallBar'
 import { CHART_LEGEND_WORDS, ChartLegend } from '@winterop-com/sokkel-ui-charts/ChartLegend'
 import { CHART_WORDS, KINDS } from '@winterop-com/sokkel-ui-charts/kinds'
+import { PANEL_WORDS } from '@winterop-com/sokkel-ui-charts/dashboard/series'
 import {
     COMMAND_PALETTE_WORDS,
     CommandPalette,
@@ -38,7 +39,7 @@ import { DataTable, DATA_TABLE_WORDS, headEntered, headStep, type DataColumn, ty
 import { DASHBOARD_PANEL_WORDS, DashboardPanel, SPAN, type DashboardPanelProps } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { STAT_PANEL_WORDS, StatPanel, type StatPanelProps } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import { THRESHOLD_LEGEND_WORDS, ThresholdLegend } from '@winterop-com/sokkel-ui/dashboard/ThresholdLegend'
-import { CodeEditor, FOLD_KEYS, SCHEMA_WORDS, type CodeEditorProps } from '@winterop-com/sokkel-ui/CodeEditor'
+import { CodeEditor, FOLD_KEYS, SCHEMA_WORDS, sayIssue, type CodeEditorProps } from '@winterop-com/sokkel-ui/CodeEditor'
 import { COMPUTED_FIELD_WORDS, ComputedField, type ComputedFieldProps } from '@winterop-com/sokkel-ui/ComputedField'
 import { DATE_FIELD_WORDS, DateField } from '@winterop-com/sokkel-ui/DateField'
 import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
@@ -342,7 +343,13 @@ function utility(token: string): Utility {
 }
 
 /** Variants that hold wherever the part is drawn: a guard that only turns a state off, or a selector that reaches the piece itself. */
-const GUARDS = new Set(['not-aria-disabled', 'not-aria-[haspopup]', '[&>:first-child]', '[&>[data-track]>*]'])
+const GUARDS = new Set([
+    'not-aria-disabled',
+    'not-aria-[haspopup]',
+    '[&>:first-child]',
+    '[&>:first-child:not([data-field-edge=own])]',
+    '[&>[data-track]>*]',
+])
 
 /**
  * Where a piece is drawn in one state: its classes as layers (a later layer wins a tie, as a part
@@ -492,7 +499,7 @@ const READ = {
     padX: lengthOf('px-'),
     padY: lengthOf('py-'),
     pad: lengthOf('p-'),
-    padStart: lengthOf('pl-'),
+    padStart: lengthOf('pl-', 'ps-'),
     padEnd: lengthOf('pr-'),
     gap: lengthOf('gap-'),
     gapX: lengthOf('gap-x-'),
@@ -646,6 +653,7 @@ const focusable = (element: El | undefined) => element !== undefined && !('disab
 /** The values a sample fills a word's slots with. */
 const FILL: Record<string, string | number> = {
     count: 3,
+    action: 'Remove',
     from: 1,
     to: 50,
     total: 120,
@@ -4443,7 +4451,7 @@ const LETTER_ADAPTER: Adapter = {
     complete: ['LETTER_WORDS'],
     words: {
         attached: 'LETTER_WORDS.attached',
-        to: ['LETTER_WORDS.to', (said: (names: readonly string[]) => string, fill) => said(String(fill.names).split(', '))],
+        to: ['LETTER_WORDS.to', (said: (names: string) => string, fill) => said(String(fill.names))],
     },
     options: {},
     size: (size, key) => {
@@ -4565,8 +4573,13 @@ const problemPieces = (elements: El[]): Record<string, El | undefined> => {
         actions: elements.filter((element) => element.tag === 'div' && element.parent === box).at(-1),
     }
 }
-/** The box's classes, its end corners (`rounded-r-control`) read as the corner role that rounds them. */
-const problemBox = (elements: El[]) => classesOf(problemPieces(elements).box).replace(/\brounded-r-/, 'rounded-')
+/** The box's classes, its end corners (`rounded-e-control`) read as the corner role that rounds them, its logical sides as the sides they are left to right. */
+const problemBox = (elements: El[]) =>
+    classesOf(problemPieces(elements).box)
+        .replace(/\brounded-e-/, 'rounded-')
+        .replace(/\bborder-s-/, 'border-l-')
+        .replace(/\bps-/, 'pl-')
+        .replace(/\bpe-/, 'pr-')
 /** The raw message's classes: it opens only on a press, which no server drawing makes, so they are read from the source. */
 const PROBLEM_RAW = literalAfter(PROBLEM, '<pre className=')
 
@@ -4611,7 +4624,7 @@ const PROBLEM_ADAPTER: Adapter = {
         const { box, mark, detail, unfoldable, actions } = problemPieces(problem())
         const indent = lengthOn(detail, READ.padStart)
         return layoutChecks('problem', {
-            ruleWidth: () => numberIn(classesOf(box), /\bborder-l-(\d+)\b/),
+            ruleWidth: () => numberIn(classesOf(box), /\bborder-s-(\d+)\b/),
             markTop: () => lengthOn(mark, lengthOf('mt-')),
             indent: () => (indent === lengthOn(actions, READ.padStart) ? indent : `${indent} for the detail, another for the actions`),
             technicalIndent: () => lengthOn(unfoldable, READ.padStart),
@@ -4786,7 +4799,6 @@ const CHART_THEME = chartSource('theme.ts')
 const CHART_AXES = chartSource('kinds/axes.ts')
 const CHART_CATEGORIES = chartSource('kinds/categories.ts')
 const TIME_SERIES_PANEL = chartSource('dashboard/TimeSeriesPanel.tsx')
-const PANEL_SERIES = chartSource('dashboard/series.ts')
 
 /** The classes a panel's content takes while it loads long enough to dim (`LoadingOverlay`, after its delay). */
 const DIMMED = literalAfter(LOADERS, 'long &&')
@@ -5120,12 +5132,7 @@ const thresholdPieces = (list: El[], bar: El[]): Record<string, El | undefined> 
 const thresholdWord = (said: string, fill: Record<string, string | number>) =>
     said.replace(/\{(\w+)\}/g, (whole, key: string) => (fill[key] === undefined ? whole : String(fill[key])))
 /** The panel's field names, the defaults `usePanelFields` gives its words. */
-const PANEL_FIELD_WORDS = Object.fromEntries(
-    [...(/const \{ ([^}]+) \} = words \?\? \{\}/.exec(PANEL_SERIES)?.[1] ?? '').matchAll(/(\w+) = '([^']+)'/g)].map((match) => [
-        match[1],
-        match[2],
-    ]),
-)
+const PANEL_FIELD_WORDS = PANEL_WORDS
 
 const TIME_SERIES_PANEL_ADAPTER: Adapter = {
     wordObjects: { PANEL_FIELD_WORDS, THRESHOLD_LEGEND_WORDS },
@@ -5389,7 +5396,7 @@ const foldsOn =
     }
 
 /** Says a schema issue of a kind as the words do, from a sample's values. */
-const sayIssue = (kind: string) => (say: typeof SCHEMA_WORDS.say, fill: Record<string, string | number>) => {
+const sayKind = (kind: string) => (_: never, fill: Record<string, string | number>) => {
     // A counted rule (a length, a number of items) says its count; a bound says its limit.
     const limit = Number(/^(min|max)(Length|Items)$/.test(kind) ? fill.count : fill.limit)
     const issues: Record<string, object> = {
@@ -5418,7 +5425,7 @@ const sayIssue = (kind: string) => (say: typeof SCHEMA_WORDS.say, fill: Record<s
         unchecked: { kind: 'unchecked', reason: String(fill.reason) },
         other: { kind: 'other', keyword: 'minLength', message: String(fill.message) },
     }
-    return say({ path: [], tone: 'critical', ...issues[kind] } as unknown as Parameters<typeof SCHEMA_WORDS.say>[0])
+    return sayIssue(SCHEMA_WORDS, { path: [], tone: 'critical', ...issues[kind] } as unknown as Parameters<typeof sayIssue>[1])
 }
 const ISSUE_KINDS = [
     'required',
@@ -5452,7 +5459,12 @@ const CODE_EDITOR_ADAPTER: Adapter = {
     wordObjects: { SCHEMA_WORDS },
     complete: ['SCHEMA_WORDS'],
     words: {
-        ...Object.fromEntries(ISSUE_KINDS.map((kind) => [`issue.${kind}`, ['SCHEMA_WORDS.say', sayIssue(kind)] as WordSource])),
+        ...Object.fromEntries(
+            ISSUE_KINDS.map((kind) => [
+                `issue.${kind}`,
+                [`SCHEMA_WORDS.${kind === 'deprecated' ? 'deprecatedKey' : kind}`, sayKind(kind)] as WordSource,
+            ]),
+        ),
         // The slot is the language's name as said (JSON); the function takes the language (json).
         syntax: [
             'SCHEMA_WORDS.syntax',
@@ -5811,6 +5823,7 @@ const JSON_TREE_ADAPTER: Adapter = {
     complete: ['JSON_TREE_WORDS'],
     words: {
         keys: ['JSON_TREE_WORDS.keys', (said: (count: number) => string, fill) => said(Number(fill.count))],
+        items: ['JSON_TREE_WORDS.items', (said: (count: number) => string, fill) => said(Number(fill.count))],
         more: ['JSON_TREE_WORDS.more', (said: (count: number) => string, fill) => said(Number(fill.count))],
     },
     options: {},
@@ -6053,7 +6066,7 @@ const YES_NO_FIELD_ADAPTER: Adapter = {
     },
     more: () =>
         layoutChecks('yes-no-field', {
-            choiceGap: () => numberIn(YES_NO_FIELD, /<span className="flex min-w-0 flex-wrap items-center gap-(\d+)">/, 'step'),
+            choiceGap: () => numberIn(YES_NO_FIELD, /'flex min-w-0 flex-wrap items-center gap-(\d+)'/, 'step'),
         }),
 }
 
@@ -6261,7 +6274,13 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
         remove: 'REPEATED_GROUP_WORDS.remove',
         moveUp: 'REPEATED_GROUP_WORDS.moveUp',
         moveDown: 'REPEATED_GROUP_WORDS.moveDown',
-        item: ['REPEATED_GROUP_WORDS.item', (said: (index: number) => string, fill) => said(Number(fill.place) - 1)],
+        item: ['REPEATED_GROUP_WORDS.item', (said: (place: number) => string, fill) => said(Number(fill.place))],
+        itemAction: [
+            'REPEATED_GROUP_WORDS.itemAction',
+            (said: (action: string, item: string) => string, fill) => said(String(fill.action), String(fill.item)),
+        ],
+        first: 'REPEATED_GROUP_WORDS.first',
+        last: 'REPEATED_GROUP_WORDS.last',
         required: 'REPEATED_GROUP_WORDS.required',
         issueCritical: 'REPEATED_GROUP_WORDS.issueCritical',
         issueWarning: 'REPEATED_GROUP_WORDS.issueWarning',
@@ -6283,7 +6302,9 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
             case 'rowHead':
                 return pieceWhere(rowHeadOf(plain))
             case 'move':
-                return pieceWhere(byLabel(plain, `${REPEATED_GROUP_WORDS.moveUp}: ${REPEATED_GROUP_WORDS.item(1)}`))
+                return pieceWhere(
+                    byLabel(plain, REPEATED_GROUP_WORDS.itemAction(REPEATED_GROUP_WORDS.moveUp, REPEATED_GROUP_WORDS.item(2))),
+                )
             case 'grip':
                 return key === 'gap' ? { layers: [literalAfter(REPEATED_DRAG, '<SortableItem', 'className=')], on: [] } : undefined
             default:
@@ -6292,8 +6313,8 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
     },
     paint: (_, name, state) => {
         const { plain, marked, worded } = REPEATED_GROUPS()
-        const on = state === 'hover' ? ['hover'] : state === 'shut' ? ['disabled'] : []
-        const { moveUp, moveDown, item } = REPEATED_GROUP_WORDS
+        const on = state === 'hover' ? ['hover'] : state === 'shut' ? ['aria-disabled'] : []
+        const { moveUp, moveDown, remove, item, itemAction } = REPEATED_GROUP_WORDS
         switch (name) {
             case 'title':
                 return pieceWhere(plain.find((element) => element.attrs.tabindex === '-1'))
@@ -6306,20 +6327,17 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
             case 'row':
                 return pieceWhere(plain.find((element) => element.tag === 'section'))
             case 'itemName':
-                return pieceWhere(byText(plain, 'span', item(0)))
+                return pieceWhere(byText(plain, 'span', item(1)))
             case 'add':
                 return pieceWhere(byText(plain, 'button', REPEATED_GROUP_WORDS.add), on)
             // The first row's Move up and the last row's Move down are the shut ones.
             case 'moveUp':
-                return pieceWhere(byLabel(plain, `${moveUp}: ${item(state === 'shut' ? 0 : 1)}`), on)
+                return pieceWhere(byLabel(plain, itemAction(moveUp, item(state === 'shut' ? 1 : 2))), on)
             case 'moveDown':
-                return pieceWhere(byLabel(plain, `${moveDown}: ${item(state === 'shut' ? 1 : 0)}`), on)
+                return pieceWhere(byLabel(plain, itemAction(moveDown, item(state === 'shut' ? 2 : 1))), on)
             case 'remove':
                 return pieceWhere(
-                    plain.find(
-                        (element) =>
-                            element.tag === 'button' && element.attrs['aria-label'] === `${REPEATED_GROUP_WORDS.remove} ${item(0)}`,
-                    ),
+                    plain.find((element) => element.tag === 'button' && element.attrs['aria-label'] === itemAction(remove, item(1))),
                     on,
                 )
             default:
@@ -6328,24 +6346,28 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
     },
     effect: (state) => {
         if (state !== 'shut') return undefined
-        const shut = byLabel(REPEATED_GROUPS().plain, `${REPEATED_GROUP_WORDS.moveUp}: ${REPEATED_GROUP_WORDS.item(0)}`)
+        const shut = byLabel(
+            REPEATED_GROUPS().plain,
+            REPEATED_GROUP_WORDS.itemAction(REPEATED_GROUP_WORDS.moveUp, REPEATED_GROUP_WORDS.item(1)),
+        )
         return shut === undefined
             ? undefined
-            : { layers: [classesOf(shut)], on: ['disabled'], around: ancestors(shut), focusable: focusable(shut) }
+            : { layers: [classesOf(shut)], on: ['aria-disabled'], around: ancestors(shut), focusable: focusable(shut) }
     },
     keys: {
         Tab: () => {
             const { plain } = REPEATED_GROUPS()
-            const { moveUp, moveDown, item } = REPEATED_GROUP_WORDS
+            const { moveUp, moveDown, item, itemAction } = REPEATED_GROUP_WORDS
             return focusable(byText(plain, 'button', REPEATED_GROUP_WORDS.add)) &&
-                focusable(byLabel(plain, `${moveDown}: ${item(0)}`)) &&
-                !focusable(byLabel(plain, `${moveUp}: ${item(0)}`))
+                focusable(byLabel(plain, itemAction(moveDown, item(1)))) &&
+                focusable(byLabel(plain, itemAction(moveUp, item(1))))
                 ? true
-                : 'Add or a Move is out of the tab order, or a shut Move in it'
+                : 'Add or a Move, a shut one included, is out of the tab order'
         },
         'Enter, Space (Add, a Move or a Remove has focus)': () =>
             byText(REPEATED_GROUPS().plain, 'button', REPEATED_GROUP_WORDS.add) !== undefined &&
-            byLabel(REPEATED_GROUPS().plain, `${REPEATED_GROUP_WORDS.moveDown}: ${REPEATED_GROUP_WORDS.item(0)}`)?.tag === 'button'
+            byLabel(REPEATED_GROUPS().plain, REPEATED_GROUP_WORDS.itemAction(REPEATED_GROUP_WORDS.moveDown, REPEATED_GROUP_WORDS.item(1)))
+                ?.tag === 'button'
                 ? true
                 : 'Add or a Move is not a native button',
         'ArrowUp, ArrowDown (a grip has focus, inside a RepeatedDrag)': () =>
@@ -6608,7 +6630,6 @@ const TREE_SELECT_ADAPTER: Adapter = {
         clear: 'TREE_SELECT_WORDS.clear',
         empty: 'TREE_SELECT_WORDS.empty',
         selected: ['TREE_SELECT_WORDS.selected', (said: (count: number) => string, fill) => said(Number(fill.count))],
-        actions: 'TREE_SELECT_WORDS.actions',
         loading: 'TREE_SELECT_WORDS.loading',
         failed: 'TREE_SELECT_WORDS.failed',
         retry: 'TREE_SELECT_WORDS.retry',
@@ -6777,7 +6798,63 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {}
+const PENDING: Record<string, Record<string, string>> = {
+    'board-item-panel': {
+        'words.checklist.title with {"done":1200,"total":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'clip-timeline': {
+        'words.deleted with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+        'words.deletedRipple with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'code-editor': {
+        'words.issue.maxItems with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+        'words.issue.maxLength with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+        'words.issue.minItems with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+        'words.issue.minLength with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'json-tree': {
+        'words.keys with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    problem: {
+        'pieces.mark.rest.ink': "the mark is in the tone's ink",
+        'pieces.mark.warning.ink': "the mark is in the tone's ink",
+    },
+    'reaction-bar': {
+        'words.count with {"label":"thumbs up","count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'repeated-group': {
+        'states.shut.effect.focusable': 'a shut Move says why and stays reachable',
+        'words.item with {"place":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'secret-field': {
+        'states.invalid+focus.effect.ring.color': 'the frame wears the issue edge and the invalid ring in a field',
+        'states.invalid+focus.effect.ring.width': 'the frame wears the issue edge and the invalid ring in a field',
+        'states.warning+focus.effect.ring.color': 'the frame wears the issue edge and the invalid ring in a field',
+        'words.errors with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+        'words.replaceLabel with {"label":"Password"}': 'Replace is given the label as it reads mid-sentence',
+        'words.warnings with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'side-panel': {
+        'pieces.title.rest.ink': "the panel writes in the sidebar's ink",
+    },
+    'text-field': {
+        'words.errors with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+        'words.warnings with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'time-field': {
+        'words.errors with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+        'words.warnings with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'tree-select': {
+        'messages.actions': 'the tree select no longer holds the actions word',
+        'words.actions': 'the tree select no longer holds the actions word',
+        'words.selected with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+    'yes-no-field': {
+        'words.errors with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+        'words.warnings with {"count":1200}': 'counts group their thousands, as the catalog writes them',
+    },
+}
 
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
