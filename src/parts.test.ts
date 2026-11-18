@@ -6799,6 +6799,13 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
 const PENDING: Record<string, Record<string, string>> = {
+    'period-picker': {
+        'messages.day': 'a year is written without groups',
+        'messages.week': 'a year is written without groups',
+        'messages.month': 'a year is written without groups',
+        'messages.months': 'a year is written without groups',
+        'messages.year': 'a year is written without groups',
+    },
     'board-item-panel': {
         'words.checklist.title with {"done":1200,"total":1200}': 'counts group their thousands, as the catalog writes them',
     },

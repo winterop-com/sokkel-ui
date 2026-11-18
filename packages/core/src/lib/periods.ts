@@ -86,11 +86,11 @@ export const PERIOD_LABEL_PART: WordsPart<PeriodLabelWords> = {
 
 /** A period label's phrases as ICU messages in English, for the catalog. */
 export const PERIOD_LABEL_MESSAGES: WordMessages<PeriodLabelWords> = {
-    day: '{month} {date}, {year}',
-    week: 'Week {week}, {year} (from Mon, {startMonth} {startDate})',
-    month: '{month} {year}',
-    months: '{first} to {last} {year}',
-    year: '{year}',
+    day: '{month} {date}, {year, number, ::group-off}',
+    week: 'Week {week}, {year, number, ::group-off} (from Mon, {startMonth} {startDate})',
+    month: '{month} {year, number, ::group-off}',
+    months: '{first} to {last} {year, number, ::group-off}',
+    year: '{year, number, ::group-off}',
 }
 
 const pad = (value: number) => String(value).padStart(2, '0')

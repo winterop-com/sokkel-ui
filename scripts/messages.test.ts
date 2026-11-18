@@ -55,7 +55,7 @@ function samples(message: string, arg: string): unknown[] {
         return [...new Set(keys.filter((key) => key !== 'other')), 'something else'].map((key) => (key === 'undefined' ? undefined : key))
     }
     // A plain argument that counts or places is a number, written as the locale writes numbers.
-    if (/^(count|place|total|limit|done|failed|shown|index|granted|unread|number|seconds|minutes|tokens)$/.test(arg))
+    if (/^(count|place|total|limit|done|failed|shown|index|granted|unread|number|seconds|minutes|tokens|year)$/.test(arg))
         return [0, 1, 2, 1200, 12345]
     return ['nightly-export', 'grace']
 }

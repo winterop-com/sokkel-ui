@@ -3,7 +3,8 @@
  * `selectordinal` with `#`, `=n` and `offset:`, `select`, `number` (with `integer`, `percent` and the
  * skeletons `::compact-short`, `::compact-long`, `::percent`, `::integer` and `::.##`), and `date` and
  * `time` (with `short`, `medium`, `long`, `full` and a skeleton such as `::MMMd` or `::HHmm`).
- * A number in a plain argument is written in the locale, its thousands grouped, as ICU writes it.
+ * A number in a plain argument is written in the locale, its thousands grouped, as ICU writes it; a
+ * year or a code is written `{year, number, ::group-off}`.
  * Quoting follows ICU: `''` is an apostrophe and `'{…}'` is literal text. Plurals ask
  * `Intl.PluralRules` and numbers and dates `Intl`, in the locale given.
  */
