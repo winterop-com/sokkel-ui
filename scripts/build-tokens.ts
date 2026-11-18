@@ -28,11 +28,17 @@
  * An elevation is written as its layers, each an x, y, blur and spread in px and a color, so a
  * renderer that reads no CSS takes the same shadow; the CSS writes it as a box-shadow.
  *
+ * The theme variables the packages' code names at run time (theme-reads.ts) are written again in a
+ * static `@theme` block, so every stylesheet carries them, the lean one too; a change to what the code
+ * names is a change to tokens.css.
+ *
  *   bun scripts/build-tokens.ts          write the CSS
  *   bun scripts/build-tokens.ts --check  fail when the CSS is not what the tokens make
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+
+import { themeReads } from './theme-reads'
 
 /** One layer of an elevation: its offset, blur and spread in px, and its color. */
 interface ShadowLayer {
@@ -100,6 +106,9 @@ function darkOf(theme: { light: Vars; dark: Vars }): Vars {
 /** Every file the tokens make, by path. */
 const files = new Map<string, string>()
 
+// The theme variables the packages' code names at run time.
+const reads = themeReads(tokens.theme)
+
 // Density: the default level answers on `:root`, every level on its own `[data-density]` and on its own scope.
 const levels = Object.keys(tokens.density).filter((key) => key !== 'default' && !key.startsWith('$'))
 const prefixed = (vars: Vars): Vars => Object.fromEntries(Object.entries(vars).map(([name, value]) => [`density-${name}`, value]))
@@ -110,6 +119,9 @@ files.set(
         HEADER,
         '@custom-variant dark (&:is(.dark *));\n',
         block(['@theme inline'], tokens.theme),
+        // The theme variables the packages' code names, written whatever classes the app uses.
+        block(['@theme inline static'], Object.fromEntries(reads.own.map((name) => [name, tokens.theme[name] as string]))),
+        block(['@theme static'], reads.tailwind),
         // Every scope, of whichever theme, starts from tidevann's whole set, so no token of the
         // page's theme reaches into it; `:where` keeps these under any theme's own scope rule.
         block([':root', ':where([data-theme-scope])'], base.light),

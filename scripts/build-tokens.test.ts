@@ -3,6 +3,8 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+import { themeReads } from './theme-reads'
+
 const CORE = join(import.meta.dirname, '..', 'packages', 'core')
 const css = readFileSync(join(CORE, 'src', 'styles', 'tokens.css'), 'utf8')
 
@@ -41,5 +43,22 @@ describe('the token build', () => {
             expect(rem(compact[name])).toBeLessThan(rem(regular[name]))
             if (index > 0) expect(rem(compact[name])).toBe(rem(regular[SIZES[index - 1]]))
         }
+    })
+})
+
+describe('the theme variables the code reads', () => {
+    const theme = (JSON.parse(readFileSync(join(CORE, 'tokens', 'tokens.json'), 'utf8')) as { theme: Record<string, unknown> }).theme
+    /** The variables tokens.css writes in a static `@theme` block, which every stylesheet carries whatever classes it reads. */
+    const always = new Set(
+        [...css.matchAll(/^@theme ([^{]*)\{([^}]*)\}/gm)]
+            .filter(([, options]) => options.split(/\s+/).includes('static'))
+            .flatMap(([, , body]) => [...body.matchAll(/--([\w-]+):/g)].map(([, name]) => name)),
+    )
+
+    it('are written in a static theme block, so the lean stylesheet carries them too', () => {
+        const reads = themeReads(theme)
+        const missing = [...reads.own, ...Object.keys(reads.tailwind)].filter((name) => !always.has(name))
+        expect(missing, `${missing.join(', ')}: run bun run tokens`).toEqual([])
+        expect(always).toContain('font-mono')
     })
 })
