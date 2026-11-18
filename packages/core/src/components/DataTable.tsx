@@ -1268,6 +1268,9 @@ const MUTED_CELLS = '[&>[data-track]>*]:opacity-60'
 const MUTED_ITEM = '*:opacity-60'
 /** The widest a `content` column grows when it names no `maxWidth`. */
 const CONTENT_MAX = '20rem'
+/** The room a sort arrow takes beside a head's name: its 14 px icon and the 4 px gap before it. */
+const SORT_ARROW_ROOM = 18
+
 /** A column's name in its head: wrapped between words onto a second line, and cut only past that or within a word too wide. */
 const HEAD_NAME = 'line-clamp-2 min-w-0 text-ellipsis'
 
@@ -2159,13 +2162,15 @@ export function DataTable<T>({
         const words: Record<string, number> = {}
         for (const column of contentColumns) {
             // The head counts among the cells, its name on one line; its longest word is the least it wraps to.
+            // A sortable head keeps room for its sort arrow while unsorted, so sorting it never wraps it.
+            const arrow = column.sortValue !== undefined && sort?.column !== column.id ? SORT_ARROW_ROOM : 0
             let widest = 0
-            for (const cell of box.querySelectorAll(`[data-track="${CSS.escape(column.id)}"]`))
-                widest = Math.max(widest, cell.getBoundingClientRect().width)
+            for (const cell of box.querySelectorAll<HTMLElement>(`[data-track="${CSS.escape(column.id)}"]`))
+                widest = Math.max(widest, cell.getBoundingClientRect().width + (cell.getAttribute('role') === 'columnheader' ? arrow : 0))
             if (widest > 0) next[column.id] = Math.ceil(Math.max(widest, column.minSize ?? 0))
             const head = box.querySelector<HTMLElement>(`[role="columnheader"][data-track="${CSS.escape(column.id)}"]`)
             const word = head === null ? 0 : headWordWidth(head)
-            if (word > 0) words[column.id] = Math.ceil(word)
+            if (word > 0) words[column.id] = Math.ceil(word + arrow)
         }
         capped.current = undefined
         setContentWidths((before) => ({ ...before, ...next }))
