@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.31.0** is the latest release (2026-11-18): translation from one catalog (`LocaleProvider`, message
+- **0.31.1** is the latest release (2026-11-18): the lean stylesheet carries every theme variable the
+  library's code reads (the code editor's mono face), and the contract's leading tokens; contract 0.31.1.
+- **0.31.0** (2026-11-18): translation from one catalog (`LocaleProvider`, message
   ids, ICU catalogs, plurals, the locale reaching every formatter), health states, light and dark only
   in Settings and the palette, capital table heads at the cells' size, and eleven parts specified in
   sokkel-design with message ids on every spec; the contract at 0.31.0.
