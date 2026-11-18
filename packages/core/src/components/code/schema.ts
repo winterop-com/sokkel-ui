@@ -53,12 +53,12 @@ export interface CodeSchemaWords {
     exclusiveMinimum: (limit: number) => string
     maximum: (limit: number) => string
     exclusiveMaximum: (limit: number) => string
-    minLength: (limit: number) => string
-    maxLength: (limit: number) => string
+    minLength: (count: number) => string
+    maxLength: (count: number) => string
     pattern: (pattern: string) => string
     format: (format: string) => string
-    minItems: (limit: number) => string
-    maxItems: (limit: number) => string
+    minItems: (count: number) => string
+    maxItems: (count: number) => string
     uniqueItems: string
     /** A deprecated key is used. */
     deprecatedKey: string
@@ -84,12 +84,12 @@ export const SCHEMA_WORDS: CodeSchemaWords = {
     exclusiveMinimum: (limit) => `Must be more than ${writeCount(limit)}`,
     maximum: (limit) => `Must be at most ${writeCount(limit)}`,
     exclusiveMaximum: (limit) => `Must be less than ${writeCount(limit)}`,
-    minLength: (limit) => `Use at least ${counted(limit, 'character')}`,
-    maxLength: (limit) => `Use at most ${counted(limit, 'character')}`,
+    minLength: (count) => `Use at least ${counted(count, 'character')}`,
+    maxLength: (count) => `Use at most ${counted(count, 'character')}`,
     pattern: (pattern) => `Must match ${pattern}`,
     format: (format) => `Expected the ${format} format`,
-    minItems: (limit) => `Needs at least ${counted(limit, 'item')}`,
-    maxItems: (limit) => `Holds at most ${counted(limit, 'item')}`,
+    minItems: (count) => `Needs at least ${counted(count, 'item')}`,
+    maxItems: (count) => `Holds at most ${counted(count, 'item')}`,
     uniqueItems: 'Each item only once',
     deprecatedKey: 'Deprecated: still accepted, and may be removed in a later version',
     unchecked: (reason) => `The schema cannot be checked: ${reason}`,
@@ -112,12 +112,12 @@ export const SCHEMA_PART: WordsPart<CodeSchemaWords> = {
         exclusiveMinimum: 'limit',
         maximum: 'limit',
         exclusiveMaximum: 'limit',
-        minLength: 'limit',
-        maxLength: 'limit',
+        minLength: 'count',
+        maxLength: 'count',
         pattern: 'pattern',
         format: 'format',
-        minItems: 'limit',
-        maxItems: 'limit',
+        minItems: 'count',
+        maxItems: 'count',
         unchecked: 'reason',
         other: 'message',
         syntax: 'language',
@@ -135,12 +135,12 @@ export const SCHEMA_MESSAGES: WordMessages<CodeSchemaWords> = {
     exclusiveMinimum: 'Must be more than {limit, number}',
     maximum: 'Must be at most {limit, number}',
     exclusiveMaximum: 'Must be less than {limit, number}',
-    minLength: 'Use at least {limit, plural, one {# character} other {# characters}}',
-    maxLength: 'Use at most {limit, plural, one {# character} other {# characters}}',
+    minLength: 'Use at least {count, plural, one {# character} other {# characters}}',
+    maxLength: 'Use at most {count, plural, one {# character} other {# characters}}',
     pattern: 'Must match {pattern}',
     format: 'Expected the {format} format',
-    minItems: 'Needs at least {limit, plural, one {# item} other {# items}}',
-    maxItems: 'Holds at most {limit, plural, one {# item} other {# items}}',
+    minItems: 'Needs at least {count, plural, one {# item} other {# items}}',
+    maxItems: 'Holds at most {count, plural, one {# item} other {# items}}',
     unchecked: 'The schema cannot be checked: {reason}',
     other: '{message}',
     syntax: 'Not valid {language, select, json {JSON} other {YAML}}',
