@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.30.1** is the latest release (2026-11-17): a table's column heads one text step above their
+- **0.31.0** is the latest release (2026-11-18): translation from one catalog (`LocaleProvider`, message
+  ids, ICU catalogs, plurals, the locale reaching every formatter), health states, light and dark only
+  in Settings and the palette, capital table heads at the cells' size, and eleven parts specified in
+  sokkel-design with message ids on every spec; the contract at 0.31.0.
+- **0.30.1** (2026-11-17): a table's column heads one text step above their
   cells, and the examples' map data from Natural Earth; sokkel-design's contract at 0.30.1.
 - **0.30.0** (2026-11-17): `CallBar`, `Letter`, `DetailPane`, `BoardItemPanel`,
   a table's own search and windowed growing cards, `TrackList` links and windowing, a live force
