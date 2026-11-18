@@ -25,6 +25,9 @@ release and empties it.
   arguments and the parts it takes words from) and, where it has phrases, `<NAME>_MESSAGES`, their
   English as ICU messages. The words constants that were private are exported under names made
   from their types (`TREE_WORDS`, `MAP_POPUP_WORDS`, `CODE_BLOCK_WORDS`).
+- Health states, known to every status part without a map: `ok` (good), `warn` (warning), `fail`
+  and `error` (critical), said by their names (`HEALTH_STATUSES`, `HEALTH_STATUS_MAP` and the type
+  `HealthStatus` in `lib/status`; `StatusChip`'s `Status` takes them). An app's map still wins.
 - `lib/message-format`: `formatMessage`, `compileMessage` and `messageArguments`, the library's
   ICU subset, for an app's own messages.
 

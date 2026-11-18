@@ -10,6 +10,9 @@ export type RunStatus =
     | 'skipped'
     | 'completed_with_errors'
 
+/** The states of a health check: it passed, it found something to watch, it failed, or it could not run. */
+export type HealthStatus = 'ok' | 'warn' | 'fail' | 'error'
+
 /**
  * The color a state is drawn in: one of the kind colors (good, critical, warning, info, neutral), or
  * a run state's own status color, such as `cancelled` for something set aside.
@@ -50,6 +53,16 @@ export const RUN_STATUSES: readonly RunStatus[] = [
 /** The run states, each in its own color and said by its name. */
 export const RUN_STATUS_MAP: StatusMap = Object.fromEntries(RUN_STATUSES.map((status) => [status, { color: status }]))
 
+export const HEALTH_STATUSES: readonly HealthStatus[] = ['ok', 'warn', 'fail', 'error']
+
+/** The health states, each said by its name in a kind color: ok good, warn warning, fail and error critical. */
+export const HEALTH_STATUS_MAP: StatusMap = {
+    ok: { color: 'good' },
+    warn: { color: 'warning' },
+    fail: { color: 'critical' },
+    error: { color: 'critical' },
+}
+
 /**
  * Each color as a CSS color, for a part that draws it (`Dot`, `Timeline`) or takes one (`Stat`'s and
  * `Segmented`'s `dot`, a chart series). It is the raw token, not Tailwind's `--color-*` name, which
@@ -88,12 +101,12 @@ export function isStatusColor(value: string): value is StatusColor {
 }
 
 /**
- * A state looked up in the app's map, then among the run states. A state neither knows is said by
+ * A state looked up in the app's map, then among the run states, then the health states. A state none knows is said by
  * its own name, underscores as spaces, and drawn in `fallback` (neutral by default), so a value the app has not mapped yet still
  * reads.
  */
 export function resolveStatus(status: string, map: StatusMap = RUN_STATUS_MAP, fallback: StatusColor = 'neutral'): ResolvedStatus {
-    const found = entry(map, status) ?? entry(RUN_STATUS_MAP, status)
+    const found = entry(map, status) ?? entry(RUN_STATUS_MAP, status) ?? entry(HEALTH_STATUS_MAP, status)
     const color = found?.color ?? fallback
     return { label: found?.label ?? status.replaceAll('_', ' '), color, live: found?.live ?? color === 'running' }
 }
