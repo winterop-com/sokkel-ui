@@ -396,6 +396,16 @@ describe('content widths', () => {
         expect(contentTrack(undefined, {})).toBe('0px')
     })
 
+    it('is never narrower than its head’s longest word, past its most too, so the head wraps between words', () => {
+        expect(contentTrack(40, { maxWidth: '4rem' }, 96)).toBe('max(min(40px, 4rem), 96px)')
+        expect(contentTrack(40, {}, 0)).toBe('min(40px, 20rem)')
+        expect(contentTrack(undefined, {}, 96)).toBe('0px')
+        expect(columnLeast({ id: 'seen', width: 'content', maxWidth: '4rem' }, undefined, { seen: 40 }, { seen: 96 })).toBe(
+            'max(min(40px, 4rem), 96px)',
+        )
+        expect(columnLeast({ id: 'seen', width: 'content' }, 120, { seen: 40 }, { seen: 96 })).toBe('120px')
+    })
+
     it('counts a content column’s measured need in the least width, a dragged width over it', () => {
         const step = { id: 'step', width: 'content' }
         expect(columnLeast(step, undefined, { step: 71 })).toBe('min(71px, 20rem)')

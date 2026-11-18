@@ -3,7 +3,7 @@
         "engines": [],
         "start": 197.3,
         "lazy": 67.5,
-        "css": 52.7
+        "css": 52.8
     },
     "forms-lean": {
         "engines": [],
@@ -13,11 +13,11 @@
     },
     "dashboard": {
         "engines": ["echarts", "dnd-kit"],
-        "start": 213.4,
+        "start": 213.7,
         "lazy": 467.8,
-        "css": 52.9,
+        "css": 53.0,
         "first": {
-            "budget": 410.9,
+            "budget": 411.2,
             "fetches": [
                 "packages/charts/dist/engine.js",
                 "packages/charts/dist/kinds/categories.js",
@@ -30,7 +30,7 @@
         "engines": ["maplibre"],
         "start": 171,
         "lazy": 335,
-        "css": 63.1
+        "css": 63.2
     },
     "music": {
         "engines": [],

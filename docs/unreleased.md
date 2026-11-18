@@ -9,6 +9,15 @@ release and empties it.
   provider, so it is a hook and is called in a component's render, as any hook. Calling it outside
   one threw "Invalid hook call".
 
+## Changed
+
+- `DataTable`: in a tight table, a column head wider than its column wraps between its words onto a
+  second line, and the head row grows to hold it, rather than being cut on one line ("Delivers
+  thr..."). Only past two lines is a head cut, its whole name still in its `title`; a single word
+  wider than its column is cut with an ellipsis, never broken. Heads keep their size, one text step
+  above the cells, and a table whose heads all fit looks as before. A `content` column is never
+  narrower than its head's longest word, past its `maxWidth` too.
+
 ## Fixed
 
 - A graph view the reader moved brings the chosen box back into view again once the graph is laid

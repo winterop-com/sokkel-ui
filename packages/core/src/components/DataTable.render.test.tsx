@@ -134,6 +134,38 @@ describe('a column with a head, a centered cell and a fill', () => {
     })
 })
 
+describe('a head too wide for its column', () => {
+    const html = renderToStaticMarkup(
+        <DataTable
+            columns={[
+                { id: 'job', header: 'Job', width: '1fr', cell: (row: { id: string }) => row.id, sortValue: (row) => row.id },
+                { id: 'through', header: 'Delivers through', width: '4rem', cell: () => 'worker' },
+                { id: 'seen', header: 'Last seen', width: '4rem', align: 'end', cell: () => '2h' },
+            ]}
+            rows={[{ id: 'nightly-export' }]}
+            rowKey={(row) => row.id}
+        />,
+    )
+    const head = html.slice(html.indexOf('aria-rowindex="1"'), html.indexOf('aria-rowindex="2"'))
+
+    it('wraps between words onto a second line and is cut only past it, its whole name on hover', () => {
+        expect(head).toMatch(/<span data-head-name="true" class="line-clamp-2 min-w-0 text-ellipsis text-start" title="Delivers through">/)
+        expect(head).not.toContain('truncate')
+    })
+
+    it('lines a wrapped name up with its column, at the end for an end-aligned one', () => {
+        expect(head).toMatch(/class="line-clamp-2 min-w-0 text-ellipsis text-end" title="Last seen"/)
+        expect(head).toMatch(/<button[^>]*><span data-head-name="true" class="line-clamp-2 min-w-0 text-ellipsis text-start" title="Job">/)
+    })
+
+    it('holds the row height on one line and grows the head row for two, its rows keeping theirs', () => {
+        expect(head).toMatch(/aria-rowindex="1" class="[^"]*min-h-\(--density-row\)/)
+        expect(head).not.toMatch(/aria-rowindex="1" class="[^"]*[ "]h-\(--density-row\)/)
+        expect(head).toContain('py-[calc((var(--density-row)-1lh-1px)/2)]')
+        expect(html).toMatch(/aria-rowindex="2"[^>]*class="[^"]*h-\(--density-row\)/)
+    })
+})
+
 describe('a table sorted by keys from its head row', () => {
     const html = renderToStaticMarkup(
         <DataTable
@@ -148,7 +180,7 @@ describe('a table sorted by keys from its head row', () => {
 
     it('keeps the rows and heads one tab stop: the grid takes the focus and its sortable heads do not', () => {
         expect(html).toMatch(/role="grid"[^>]*tabindex="0"/)
-        expect(html).toMatch(/<button type="button" tabindex="-1"[^>]*><span class="truncate" title="Job">Job<\/span>/)
+        expect(html).toMatch(/<button type="button" tabindex="-1"[^>]*><span data-head-name="true" class="[^"]*" title="Job">Job<\/span>/)
     })
 
     it('marks the head the keys move to with the button’s own focus look', () => {
@@ -576,7 +608,7 @@ describe("a column head and a group's head", () => {
                         <DataTable columns={columns} rows={rows} rowKey={(job) => job.id} {...props} />
                     </div>,
                 )
-                const head = /role="row" aria-rowindex="1" class="([^"]*)"/.exec(html)?.[1].split(' ') ?? []
+                const head = /aria-rowindex="1" class="([^"]*)"/.exec(html)?.[1].split(' ') ?? []
                 expect(head).toContain('text-column-head')
                 expect(head).toContain('text-table-head-ink')
                 const row = /class="([^"]*)"[^>]*data-row="nightly-export"|data-row="nightly-export"[^>]*class="([^"]*)"/.exec(html)

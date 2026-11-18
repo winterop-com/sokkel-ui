@@ -3,7 +3,7 @@ import { act, useCallback, useState, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { DataTable, type DataColumn } from './DataTable'
+import { DataTable, headWordWidth, type DataColumn } from './DataTable'
 
 declare global {
     var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
@@ -308,6 +308,50 @@ describe('stacked cards with a free title', () => {
         } finally {
             if (width !== undefined) Object.defineProperty(HTMLElement.prototype, 'clientWidth', width)
         }
+    })
+})
+
+describe('a content column’s head', () => {
+    // Each letter of a word is 8 wide; the name on one line is 8 a letter, its head 24 wider for its padding.
+    const rect = Element.prototype.getBoundingClientRect
+    const rangeRect = Range.prototype.getBoundingClientRect
+    beforeEach(() => {
+        Range.prototype.getBoundingClientRect = function (this: Range) {
+            return DOMRect.fromRect({ width: 8 * this.toString().length, height: 24 })
+        }
+        Element.prototype.getBoundingClientRect = function (this: Element) {
+            const name = this.matches('[data-head-name]') ? this : this.querySelector('[data-head-name]')
+            const width = this.matches('[data-head-name]') ? 0 : this.matches('[role="columnheader"]') ? 24 : 0
+            return DOMRect.fromRect({ width: width + 8 * (name?.textContent?.length ?? 0), height: 40 })
+        }
+    })
+    afterEach(() => {
+        Element.prototype.getBoundingClientRect = rect
+        Range.prototype.getBoundingClientRect = rangeRect
+    })
+
+    it('reads its longest word with the head’s padding, and nothing for a head drawn from `head`', () => {
+        const head = document.createElement('span')
+        head.setAttribute('role', 'columnheader')
+        head.innerHTML = '<span data-head-name>Delivers through</span>'
+        expect(headWordWidth(head)).toBe(8 * 'Delivers'.length + 24)
+        head.innerHTML = '<span><b>Delivers</b> through</span>'
+        expect(headWordWidth(head)).toBe(0)
+    })
+
+    it('keeps its column at least as wide as that word, past the column’s most', async () => {
+        const narrow: DataColumn<Job>[] = [
+            { id: 'name', header: 'Name', width: '1fr', cell: (job) => job.name },
+            { id: 'through', header: 'Delivers through', width: 'content', maxWidth: '2rem', cell: () => 'api' },
+        ]
+        const at = await mount(
+            <div style={{ height: 400, overflow: 'auto' }}>
+                <DataTable columns={narrow} rows={jobs} rowKey={(job) => job.id} />
+            </div>,
+        )
+        const template = at.querySelector<HTMLElement>('[data-row]')?.style.gridTemplateColumns ?? ''
+        expect(template).toContain(`${String(8 * 'Delivers'.length + 24)}px)`)
+        expect(template).toContain('2rem')
     })
 })
 

@@ -121,7 +121,9 @@ export interface DataColumn<T> {
     band?: string
     /**
      * A CSS grid track (`8rem`, `minmax(12rem,1fr)`), or `content`: as wide as the widest of its
-     * head and the cells drawn, up to `maxWidth`, the other columns sharing what is left. Its cells
+     * head and the cells drawn, up to `maxWidth` but never narrower than the head's longest word, the
+     * other columns sharing what is left. A head wider than its column wraps at its words onto a
+     * second line, and is cut only past that, its whole name on hover. Its cells
      * are measured at their own width, again once fonts load or a cell is cut short, and the width
      * counts toward when the table stacks. A dragged width wins over either.
      */
@@ -700,13 +702,36 @@ function trackMin(width: string): string {
 
 /**
  * A `content` column's track once its cells are measured: the widest cell (`need`, in pixels), no
- * narrower than its `minWidth` and no wider than its `maxWidth`. With no measure yet it is the floor.
+ * narrower than its `minWidth` and no wider than its `maxWidth`, but never narrower than its head's
+ * longest word (`word`, in pixels), so a head wraps between words. With no measure yet it is the floor.
  */
-export function contentTrack(need: number | undefined, column: { minWidth?: string; maxWidth?: string }): string {
+export function contentTrack(need: number | undefined, column: { minWidth?: string; maxWidth?: string }, word?: number): string {
     const most = column.maxWidth ?? CONTENT_MAX
     const at = need === undefined ? undefined : `${String(need)}px`
     const floor = column.minWidth === undefined ? at : at === undefined ? column.minWidth : `max(${at}, ${column.minWidth})`
-    return floor === undefined ? '0px' : `min(${floor}, ${most})`
+    const track = floor === undefined ? '0px' : `min(${floor}, ${most})`
+    return word === undefined || word <= 0 || floor === undefined ? track : `max(${track}, ${String(word)}px)`
+}
+
+/**
+ * The width a column's head takes at its name's longest word, its padding and marks included, read
+ * while the name lies on one line; 0 for a head drawn from `head` or where no text is laid out.
+ */
+export function headWordWidth(head: HTMLElement): number {
+    const name = head.querySelector<HTMLElement>('[data-head-name]')
+    const text = name?.firstChild
+    if (name == null || text?.nodeType !== Node.TEXT_NODE || typeof document.createRange !== 'function') return 0
+    const range = document.createRange()
+    if (typeof range.getBoundingClientRect !== 'function') return 0
+    let word = 0
+    for (const match of (text.textContent ?? '').matchAll(/\S+/g)) {
+        range.setStart(text, match.index)
+        range.setEnd(text, match.index + match[0].length)
+        word = Math.max(word, range.getBoundingClientRect().width)
+    }
+    if (word === 0) return 0
+    // The rest of the head beside the name: its padding, a row's grip room, a sort arrow.
+    return word + head.getBoundingClientRect().width - name.getBoundingClientRect().width
 }
 
 /**
@@ -718,9 +743,10 @@ export function columnLeast(
     column: { id: string; width: string; minWidth?: string; maxWidth?: string },
     dragged: number | undefined,
     needs: Readonly<Record<string, number>>,
+    words: Readonly<Record<string, number>> = NO_WIDTHS,
 ): string {
     if (dragged !== undefined) return `${String(dragged)}px`
-    return column.width === 'content' ? contentTrack(needs[column.id], column) : trackMin(column.width)
+    return column.width === 'content' ? contentTrack(needs[column.id], column, words[column.id]) : trackMin(column.width)
 }
 
 /** The width a table stacks below when it names none: a phone's for a list, which also stacks once its columns no longer fit, and a little wider for a table. */
@@ -1242,6 +1268,8 @@ const MUTED_CELLS = '[&>[data-track]>*]:opacity-60'
 const MUTED_ITEM = '*:opacity-60'
 /** The widest a `content` column grows when it names no `maxWidth`. */
 const CONTENT_MAX = '20rem'
+/** A column's name in its head: wrapped between words onto a second line, and cut only past that or within a word too wide. */
+const HEAD_NAME = 'line-clamp-2 min-w-0 text-ellipsis'
 
 /** How a row reads: `muted` dims it, such as an account switched off; the status tones tint it. */
 export type DataRowTone = 'muted' | 'critical' | 'warning'
@@ -2104,6 +2132,8 @@ export function DataTable<T>({
     const widest = group?.widest
     const contentWidths = useMemo(() => (widest === undefined ? ownWidths : widestOf([ownWidths, widest])), [widest, ownWidths])
     const [measuring, setMeasuring] = useState(true)
+    // Each measured content column's head at its longest word, the least its column is drawn at.
+    const [headWords, setHeadWords] = useState<Readonly<Record<string, number>>>(NO_WIDTHS)
     // Columns cut at their `maxWidth` once measured, whose cut cells call for no new measure; unknown until drawn so.
     const capped = useRef<ReadonlySet<string> | undefined>(undefined)
     // Fonts that load after a measure change what the cells need, a fallback face being narrower or wider.
@@ -2126,14 +2156,20 @@ export function DataTable<T>({
         const box = gridBox.current
         if (!measuring || contentColumns.length === 0 || box === null) return
         const next: Record<string, number> = {}
+        const words: Record<string, number> = {}
         for (const column of contentColumns) {
+            // The head counts among the cells, its name on one line; its longest word is the least it wraps to.
             let widest = 0
             for (const cell of box.querySelectorAll(`[data-track="${CSS.escape(column.id)}"]`))
                 widest = Math.max(widest, cell.getBoundingClientRect().width)
             if (widest > 0) next[column.id] = Math.ceil(Math.max(widest, column.minSize ?? 0))
+            const head = box.querySelector<HTMLElement>(`[role="columnheader"][data-track="${CSS.escape(column.id)}"]`)
+            const word = head === null ? 0 : headWordWidth(head)
+            if (word > 0) words[column.id] = Math.ceil(word)
         }
         capped.current = undefined
         setContentWidths((before) => ({ ...before, ...next }))
+        setHeadWords((before) => ({ ...before, ...words }))
         setMeasuring(false)
     })
     // A content cell whose size or content changes, its value grown or its face loaded, is measured again once cut short.
@@ -2247,7 +2283,7 @@ export function DataTable<T>({
         if (dragged !== undefined) return `${String(dragged)}px`
         if (column.width !== 'content') return column.width
         const need = contentWidths[column.id]
-        return measuring || need === undefined ? 'max-content' : contentTrack(need, column)
+        return measuring || need === undefined ? 'max-content' : contentTrack(need, column, headWords[column.id])
     }
     // The first column makes room for the row's grip, so its own content keeps the width it was given.
     const trackAt = (column: DataColumn<T>, index: number) =>
@@ -2256,7 +2292,7 @@ export function DataTable<T>({
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
     const least = [
         selectable ? CHECK : undefined,
-        ...shown.map((column) => columnLeast(column, widths[column.id], contentWidths)),
+        ...shown.map((column) => columnLeast(column, widths[column.id], contentWidths, headWords)),
         endWidth,
     ].filter(Boolean)
     if (list) least.push('2 * var(--density-panel-pad)', `${String(0.75 * (least.length - 1))}rem`)
@@ -3508,7 +3544,6 @@ export function DataTable<T>({
                                     'grid items-center',
                                     TABLE_HEAD_ROW,
                                     list ? 'min-h-(--density-panel-head)' : 'min-h-(--density-row)',
-                                    !tallHeads && (list ? 'h-(--density-panel-head)' : 'h-(--density-row)'),
                                     spaced,
                                     TABLE_HEAD_TEXT,
                                 )}
@@ -3528,6 +3563,8 @@ export function DataTable<T>({
                                 {shown.map((column, index) => {
                                     const sorted = sort?.column === column.id ? sort.direction : undefined
                                     const head = headRef(column.id)
+                                    const nameAlign =
+                                        column.align === 'end' ? 'text-end' : column.align === 'center' ? 'text-center' : 'text-start'
                                     return (
                                         <span
                                             key={column.id}
@@ -3542,7 +3579,12 @@ export function DataTable<T>({
                                                 pad,
                                                 column.align === 'end' && 'justify-end',
                                                 column.align === 'center' && 'justify-center',
-                                                tallHeads && 'py-1.5',
+                                                // One line of a name fills the row's height exactly, its rule below included; a name wrapped to two grows it.
+                                                tallHeads
+                                                    ? 'py-1.5'
+                                                    : list
+                                                      ? 'py-[calc((var(--density-panel-head)-1lh-1px)/2)]'
+                                                      : 'py-[calc((var(--density-row)-1lh-1px)/2)]',
                                                 index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
                                                 bandEdge(index) && edge,
                                             )}
@@ -3551,7 +3593,7 @@ export function DataTable<T>({
                                             {index === 0 && gripped && <span aria-hidden className="mr-1 w-6 shrink-0" />}
                                             {column.sortValue === undefined ? (
                                                 column.head === undefined ? (
-                                                    <span className="truncate" title={column.header}>
+                                                    <span data-head-name className={cn(HEAD_NAME, nameAlign)} title={column.header}>
                                                         {column.header}
                                                     </span>
                                                 ) : (
@@ -3572,7 +3614,7 @@ export function DataTable<T>({
                                                     )}
                                                 >
                                                     {column.head === undefined ? (
-                                                        <span className="truncate" title={column.header}>
+                                                        <span data-head-name className={cn(HEAD_NAME, nameAlign)} title={column.header}>
                                                             {column.header}
                                                         </span>
                                                     ) : (
