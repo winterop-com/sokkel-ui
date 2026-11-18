@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.31.2** is the latest release (2026-11-18): a graph only too tall for its canvas fits down to
+- **0.32.0** is the latest release (2026-11-18): `themeSettings` is `useThemeSettings` (breaking);
+  table heads wrap to two lines in a tight table; a moved graph view keeps the chosen box after a
+  re-wrap; contract 0.32.0.
+- **0.31.2** (2026-11-18): a graph only too tall for its canvas fits down to
   `tallFit` on its first fit; contract 0.31.2. 0.31.1 before it: the lean stylesheet carries every
   theme variable the library's code reads, and the contract's leading tokens.
 - **0.31.0** (2026-11-18): translation from one catalog (`LocaleProvider`, message
