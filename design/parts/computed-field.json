@@ -10,7 +10,7 @@
             "as_of": "d163191",
             "note": "ComputedField built before this spec, not yet compared."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No computed field yet."}
     },
     "summary": "An answer a form works out itself rather than asks: its label with a note that it is worked out, the value read only in the place an input would take, and under it why it is what it is, with the rule in the code face. Until the answers it reads are given it says so in the value's place. It takes no focus for typing, is out of the tab order, and is never counted as unanswered. The label and help are parts/text-field's; it has no issues.",
     "sources": {
@@ -138,7 +138,7 @@
             "renderer": "sokkel-tui",
             "what": "not built",
             "spec": "This spec.",
-            "today": "As of 64f4b19, no computed field."
+            "today": "As of b99664f there is no computed field."
         }
     ]
 }

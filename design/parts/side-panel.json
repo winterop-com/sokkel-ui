@@ -12,8 +12,8 @@
         },
         "sokkel-tui": {
             "state": "partial",
-            "as_of": "64f4b19",
-            "note": "Shell::panel at the content's end on the sidebar ground behind an edge, and DetailPane with PaneSection for it; its head, resize edge and words not reported."
+            "as_of": "b99664f",
+            "note": "Shell::panel on side-panel.base.rest.panel at the content's end behind an edge, and DetailPane with PaneSection for it; not yet its tabs and head."
         }
     },
     "summary": "The panel beside a page at the window's end, as the shell's panel region holds it: a head as tall as the top bar with the panel's tabs (or its title when it has one tab), the shown tab's content scrolling under it, and a start edge that drags to resize it. PanelSection is the titled section inside it: a quiet uppercase heading with optional actions at its line's end, over its content, a rule under each section but the last.",
@@ -263,7 +263,7 @@
             "renderer": "sokkel-tui",
             "what": "head, resize and words",
             "spec": "This spec: the head with its tabs or title, the resize edge and its keys, the words.",
-            "today": "As of 64f4b19 a side panel (Shell::panel) at the content's end on the sidebar ground behind an edge, covering the page below md (90 columns) where this spec covers it below lg (120 columns), and the detail pane for it (DetailPane, PaneSection). Its head, close, resize and words are not reported."
+            "today": "As of b99664f a side panel (Shell::panel) at the content's end on side-panel.base.rest.panel behind an edge, covering the page below md (90 columns) where this spec covers it below lg (120 columns), and the detail pane for it (DetailPane, PaneSection). Not yet: its tabs and its head; its close, resize and words are not reported, and its words are not keyed by their message ids yet."
         }
     ]
 }

@@ -10,7 +10,7 @@
             "as_of": "d163191",
             "note": "YesNoField built before this spec, not yet compared."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No yes-no field yet."}
     },
     "summary": "A question answered yes or no that may also be left unanswered: Yes and No side by side, neither chosen until one is, and Clear beside them once answered, which takes the answer back, so an optional question never has to keep a No it was not given. While unanswered it says so. A required question has no Clear, and yesOnly offers Yes alone, for a question that keeps no No. The label, help and issue mark are parts/text-field's: a form never changes height (principle 12).",
     "sources": {
@@ -247,7 +247,7 @@
             "renderer": "sokkel-tui",
             "what": "not built",
             "spec": "This spec.",
-            "today": "As of 64f4b19, no yes-no field."
+            "today": "As of b99664f there is no yes-no field."
         }
     ]
 }

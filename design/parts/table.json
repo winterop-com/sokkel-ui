@@ -10,7 +10,11 @@
             "note": "Counts in words are formatted for en-US, not the app's locale (drift)."
         },
         "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
-        "sokkel-tui": {"state": "partial", "as_of": "64f4b19"}
+        "sokkel-tui": {
+            "state": "partial",
+            "as_of": "555b9ae",
+            "note": "A head wraps to two rows where it must (layout.headLines, contract 0.32.0)."
+        }
     },
     "summary": "The one table: every listing and table, five rows or fifty thousand, flat, grouped or a tree. Rows at the density's row height, drawing only those in view; heads that sort and resize; selection with a bar; one row picked for a detail beside it; rows stacked as cards when its own box is narrow.",
     "sources": {
@@ -641,7 +645,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec.",
-            "today": "As of 64f4b19, drawn from the spec in cells: the table and list variants, the bar, groups, trees, details, row actions, paging, editing (text only), and column resize. Not yet: date and select editors, reordering, and the grid."
+            "today": "As of 555b9ae, drawn from the spec in cells: the table and list variants, the bar, groups, trees, details, row actions, paging, editing (text only), column resize, and heads that wrap to two rows where they must (layout.headLines). Not yet: date and select editors, reordering, the grid, and its words keyed by their message ids."
         }
     ]
 }

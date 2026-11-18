@@ -10,7 +10,7 @@
             "as_of": "d163191",
             "note": "TimeField built before this spec, 24-hour only, not yet compared."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No time field yet."}
     },
     "summary": "A time of day typed on a 24 or a 12-hour clock, with a list of times beside it to pick from. The value is a time on the wall clock with no zone, HH:mm (or HH:mm:ss with seconds), on either clock. 930, 9.30 and 9:30 pm all read, and what reads is written again in the field's clock once the field is left; text that is not a time keeps the value as it was and is said by the issue mark once the field is left. A time outside min and max is kept and said at once, with an action that puts in the bound, and the list offers only the times between them, every step minutes. zone names the zone the time is read in after the input. An optional field that holds a time empties with a clear button. The label, help and issue mark are parts/text-field's: a form never changes height (principle 12).",
     "sources": {
@@ -354,6 +354,11 @@
             "spec": "This spec.",
             "today": "As of d163191, TimeField was built before this spec and has not been compared with it. It draws the 24-hour clock alone, hh:mm read with a colon: no clock option (the 12-hour form and its period words), no seconds, zone, min and max with their issue and its action, clear button, readOnly or disabled, Alt+ArrowDown, or the list's keys; it does not read 930, 9.30 or a period word. Its unreadable word is one sentence with the example, its error is said under the field (parts/text-field's drift), and its list rows are control tall with the chosen one on primary."
         },
-        {"renderer": "sokkel-tui", "what": "not built", "spec": "This spec.", "today": "As of 64f4b19, no time field."}
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built",
+            "spec": "This spec.",
+            "today": "As of b99664f there is no time field."
+        }
     ]
 }

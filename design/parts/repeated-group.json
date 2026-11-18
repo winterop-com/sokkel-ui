@@ -10,7 +10,7 @@
             "as_of": "d163191",
             "note": "RepeatedGroup was built before this spec and has not been compared with it."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No repeated group yet."}
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No repeated group yet."}
     },
     "summary": "A group of fields asked again for each of several things in a hand-composed form, such as a run's steps: a head with the group's name, its required mark, the issue mark for the group as a whole and Add at its end; a description under it; then each row in a box of its own, headed by its name (its place, counted from 1) with Move up, Move down and Remove at the end, over the row's fields. Add goes at max rows and Remove at min; Move needs more than one row, and Move up is shut on the first row and Move down on the last. readOnly takes away every button. Inside a drag scope (RepeatedDrag) each row of a group that moves gets a grip before its box that drags it and moves it with the arrow keys. What is wrong with the group as a whole is the issue mark beside its name (parts/text-field's), while each row's fields say their own.",
     "sources": {
@@ -324,7 +324,7 @@
             "renderer": "sokkel-tui",
             "what": "not built yet",
             "spec": "This spec, with its cells.",
-            "today": "As of 64f4b19 there is no repeated group."
+            "today": "As of b99664f there is no repeated group."
         }
     ]
 }

@@ -297,7 +297,10 @@
         {"id": "stat-panel", "file": "parts/stat-panel.json", "status": "stable"},
         {"id": "time-series-panel", "file": "parts/time-series-panel.json", "status": "stable"}
     ],
-    "patterns": [{"id": "shell", "file": "patterns/shell.json", "status": "stable"}],
+    "patterns": [
+        {"id": "shell", "file": "patterns/shell.json", "status": "stable"},
+        {"id": "prompt", "file": "patterns/prompt.json", "status": "stable"}
+    ],
     "principles": "principles.md",
     "glyphs": "glyphs.json",
     "specimens": "specimens.json",

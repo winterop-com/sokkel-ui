@@ -12,8 +12,8 @@
         },
         "sokkel-tui": {
             "state": "partial",
-            "as_of": "64f4b19",
-            "note": "Banner in four tones, one row in the shell's slot under the top bar, its paints its own reading of other parts' paints."
+            "as_of": "b99664f",
+            "note": "Banner in four tones on banner.{tone}.rest.container, one row in the shell's slot under the top bar; its words are not keyed by their message ids yet."
         }
     },
     "summary": "A strip across the top of a screen or the app for a state that holds until it changes: the server is not answering, a read-only instance, a pending upgrade. The tone's mark, the words, the app's actions at the end and a dismiss, on the tone's wash with a rule in the tone under it. One line where it fits; where the strip is narrow the words wrap rather than lose what is needed to act, and the actions move under them. In the shell it stands in the banner slot between the top bar and the content, and does not scroll with the content.",
@@ -176,15 +176,15 @@
         },
         {
             "renderer": "sokkel-tui",
-            "what": "paints",
-            "spec": "The tones' own resolved paints, flat over the surface the banner stands on (banner.<tone>.rest.container: ground, rule and ink).",
-            "today": "As of 64f4b19, its own reading of other parts' paints, since the contract had no banner: critical on page-state's failed frame, warning on page-state's failed+warning frame, info and good on a card."
+            "what": "actions and dismiss",
+            "spec": "The app's actions as one-row buttons at the row's end and, with onDismiss, the x dismiss last.",
+            "today": "Not reported as of b99664f: its reports say one row in four tones, now on the contract's paints (banner.{tone}.rest.container), the page a row lower while it shows, and the words in the status line when cut, but not whether it draws actions or a dismiss."
         },
         {
             "renderer": "sokkel-tui",
-            "what": "actions and dismiss",
-            "spec": "The app's actions as one-row buttons at the row's end and, with onDismiss, the x dismiss last.",
-            "today": "Not reported: its report says one row in four tones, the page a row lower while it shows, and the words in the status line when cut, but not whether it draws actions or a dismiss."
+            "what": "message ids",
+            "spec": "This spec.",
+            "today": "As of b99664f its words are not keyed by their message ids yet."
         }
     ]
 }

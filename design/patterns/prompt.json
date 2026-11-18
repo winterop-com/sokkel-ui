@@ -1,0 +1,165 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "prompt",
+    "kind": "pattern",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "7f043d4"},
+        "sokkel-egui": {
+            "state": "missing",
+            "as_of": "1a87987",
+            "note": "No prompt yet; an app draws a dialog with a field itself."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No prompt yet."}
+    },
+    "summary": "A dialog that asks for one value: parts/dialog at sm, its title what is asked and an optional line under it, one field in its body (parts/text-field, or parts/secret-field for a secret), and Cancel and Submit. Enter in the field submits. Submit is shut while the field is empty, and while the app's check refuses the value, whose issue the field shows as fields show issues. While the app takes the value the dialog is busy as a dialog's confirm is; when taking it fails, the dialog stays open and says why in its status slot, a problem line, and the value stays to try again. Taken, the dialog closes.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/PromptDialog.tsx",
+            "packages/core/src/components/DialogShell.tsx",
+            "packages/core/src/components/TextField.tsx",
+            "packages/core/src/components/SecretField.tsx",
+            "packages/core/src/components/ProseText.tsx (ProblemLine)"
+        ]
+    },
+    "anatomy": {
+        "dialog": "parts/dialog at width sm (384) and phone fit: a box sized to its content at every width, as a ConfirmDialog is.",
+        "title": "What is asked: \"New project\", \"API token for api\" (the app's).",
+        "description": "One optional line under the title on what the value is for.",
+        "field": "The one field, the body's only content: parts/text-field (one line), or parts/secret-field with secret. Its label, hint, help and placeholder are the app's; its issue is the app's check's. Opening focuses it.",
+        "status": "parts/dialog's status slot, between the body and the footer: why taking the value failed, a problem line (parts/problem's line form) in critical ink.",
+        "cancel": "parts/dialog's Cancel, saying words.cancel; Stop waiting once a busy submit has run busy-release.",
+        "submit": "The dialog's confirm (parts/button, default), saying words.submit, and words.submitting with its spinner while busy. Shut, with its reason, while the field is empty (words.empty) or refused (the issue)."
+    },
+    "standsOn": {"default": "popover"},
+    "options": {
+        "open": {"type": "boolean", "does": "Shown over the page.", "sokkel-ui": "open, onOpenChange"},
+        "title": {"type": "node", "does": "What is asked."},
+        "description": {"type": "node", "does": "One line under the title on what the value is for."},
+        "label": {"type": "text", "does": "The field's label, as parts/text-field takes it."},
+        "hint": {"type": "text", "does": "A short note beside the label: a unit, a format."},
+        "help": {"type": "text", "does": "A sentence under the input."},
+        "placeholder": {"type": "text", "does": "The empty input's placeholder."},
+        "defaultValue": {
+            "type": "text",
+            "default": "",
+            "does": "What the field holds each time the dialog opens: a rename starts from the name. Every opening starts over: the value, the issue shown and the failure."
+        },
+        "secret": {
+            "type": "boolean",
+            "default": false,
+            "does": "The value is a secret: parts/secret-field, masked with its Show and Hide reveal, in the code face.",
+            "sokkel-ui": "secret (SecretField)"
+        },
+        "mono": {
+            "type": "boolean",
+            "default": false,
+            "does": "The value in the code face, for codes, keys and addresses, as parts/text-field's mono."
+        },
+        "allowEmpty": {
+            "type": "boolean",
+            "default": false,
+            "does": "An empty value may be submitted; without it Submit is shut while the field is empty, saying words.empty."
+        },
+        "validate": {
+            "type": "callback",
+            "does": "Says why a value is refused, or nothing. Its issue is the field's (a critical issue, as parts/text-field draws one), shown once something is typed or Submit is pressed, and Submit is shut with it as the reason."
+        },
+        "onSubmit": {
+            "type": "callback",
+            "does": "Takes the value. The dialog closes once it returns, or once the work it starts settles; while that work runs the dialog is busy; when it fails the dialog stays open and says why (the failure's own message, or words.failed).",
+            "sokkel-ui": "onSubmit: (value) => void | Promise<void>; a rejected promise is the failure"
+        },
+        "busy": {
+            "type": "boolean",
+            "default": false,
+            "does": "Held busy from outside, as while the app's own request for the value runs."
+        },
+        "error": {
+            "type": "node",
+            "does": "A failure said from outside, in the status slot, in place of the one the dialog keeps."
+        }
+    },
+    "layout": {
+        "width": {
+            "value": 384,
+            "note": "parts/dialog's sm: the box at 384 from 768, and at its width inside the window's margins below it (phone fit)."
+        }
+    },
+    "states": {
+        "rest": {"means": "Open over the page with the field focused, Submit ready."},
+        "empty": {
+            "means": "The field is empty: Submit is shut, its reason words.empty (parts/dialog's shut confirm). Enter does nothing.",
+            "reached": "an empty field, without allowEmpty"
+        },
+        "invalid": {
+            "means": "The app's check refuses the value: the field shows the issue as a critical issue (parts/text-field's invalid), and Submit is shut with the issue as its reason. Enter or a press on Submit shows the issue at once, even before anything is typed.",
+            "reached": "validate gives an issue, once something is typed or Submit is pressed",
+            "sokkel-ui": "TextField or SecretField error; DialogConfirm why"
+        },
+        "busy": {
+            "means": "The value is being taken: Submit spins and says words.submitting, the field is read only, and Cancel, Escape and the backdrop wait as parts/dialog's busy confirm does, until busy-release.",
+            "reached": "onSubmit's work running, or busy",
+            "sokkel-ui": "DialogConfirm busy, busyLabel; the field readOnly"
+        },
+        "failed": {
+            "means": "Taking the value failed: the dialog stays open, the value kept, and the status slot says why in a problem line; Submit tries again.",
+            "reached": "onSubmit fails, or error",
+            "sokkel-ui": "DialogShell status with a ProblemLine"
+        }
+    },
+    "keyboard": [
+        {"keys": ["Enter"], "does": "Submits the value.", "when": "the field has focus, and Submit is not shut or busy"},
+        {
+            "keys": ["Escape"],
+            "does": "Closes the dialog, nothing taken, as parts/dialog's Escape does.",
+            "when": "not busy, or busy past busy-release"
+        },
+        {
+            "keys": ["Tab"],
+            "does": "Moves through the field (and a secret's reveal), Cancel and Submit, held inside the dialog."
+        }
+    ],
+    "words": {
+        "submit": "Submit",
+        "submitting": "Submitting",
+        "cancel": "Cancel",
+        "empty": "Fill in the field first.",
+        "failed": "Could not submit. Try again."
+    },
+    "messages": {
+        "submit": {"id": "promptDialog.submit", "en": "Submit"},
+        "submitting": {"id": "promptDialog.submitting", "en": "Submitting"},
+        "cancel": {"id": "promptDialog.cancel", "en": "Cancel"},
+        "empty": {"id": "promptDialog.empty", "en": "Fill in the field first."},
+        "failed": {"id": "promptDialog.failed", "en": "Could not submit. Try again."}
+    },
+    "appText": {
+        "title": "What is asked.",
+        "description": "The line under it.",
+        "label": "The field's label, hint, help and placeholder.",
+        "issue": "Why the value is refused, from validate.",
+        "failure": "Why taking the value failed: the failure's message, or error.",
+        "verbs": "An app names Submit for what it does (Create, Save) through words, as words follow their context."
+    },
+    "cells": {
+        "width": "parts/dialog's sm, 46 columns, at most the window less 4; a box sized to its content at every width (phone fit).",
+        "note": "parts/dialog's cells with parts/text-field's (or parts/secret-field's) one field as the body; the status slot is one row over the footer while a failure is said."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "PromptDialog draws DialogShell with width sm and phone fit, its confirm { label: words.submit, busyLabel: words.submitting, busy, why }, and the failure as a ProblemLine in status.",
+            "Enter is read on the field's keydown (and not while an input method is composing); the field is a TextField, or a SecretField with secret.",
+            "A submit that settles after the dialog was closed and opened again changes nothing: each opening is a round of its own."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built",
+            "spec": "This spec.",
+            "today": "As of 1a87987, no prompt: an app draws a Dialog with a field in its body."
+        },
+        {"renderer": "sokkel-tui", "what": "not built", "spec": "This spec.", "today": "As of 64f4b19, no prompt."}
+    ]
+}

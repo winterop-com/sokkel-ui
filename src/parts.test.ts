@@ -83,6 +83,7 @@ import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/Sele
 import { Problem, PROBLEM_WORDS } from '@winterop-com/sokkel-ui/Problem'
 import { PERIOD_PICKER_WORDS, PeriodPicker, type PeriodPickerProps } from '@winterop-com/sokkel-ui/PeriodPicker'
 import { ProblemLine } from '@winterop-com/sokkel-ui/ProseText'
+import { PROMPT_DIALOG_WORDS } from '@winterop-com/sokkel-ui/PromptDialog'
 import { REPEATED_GROUP_WORDS, RepeatedGroup, type RepeatedGroupProps } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
 import { SETTINGS_DIALOG_WORDS } from '@winterop-com/sokkel-ui/SettingsDialog'
@@ -6800,6 +6801,42 @@ const TREE_SELECT_ADAPTER: Adapter = {
         }),
 }
 
+// Prompt
+
+const PROMPT = source('components/PromptDialog.tsx')
+
+/** The prompt is the dialog's frame with one field: its looks are parts/dialog's and the field's, so its words, width and keys are its own. */
+const PROMPT_ADAPTER: Adapter = {
+    wordObjects: { PROMPT_DIALOG_WORDS },
+    complete: ['PROMPT_DIALOG_WORDS'],
+    words: {
+        submit: 'PROMPT_DIALOG_WORDS.submit',
+        submitting: 'PROMPT_DIALOG_WORDS.submitting',
+        cancel: 'PROMPT_DIALOG_WORDS.cancel',
+        empty: 'PROMPT_DIALOG_WORDS.empty',
+        failed: 'PROMPT_DIALOG_WORDS.failed',
+    },
+    options: {},
+    size: () => undefined,
+    paint: () => undefined,
+    effect: () => undefined,
+    keys: {
+        'Enter (the field has focus, and Submit is not shut or busy)': () =>
+            /event\.key !== 'Enter'/.test(PROMPT) && /if \(busy \|\| why !== undefined\) return/.test(PROMPT)
+                ? true
+                : 'Enter in the field does not submit, or submits while shut or busy',
+        'Escape (not busy, or busy past busy-release)': () =>
+            /<DialogShell/.test(PROMPT) && !/dismissible=\{false\}/.test(PROMPT) ? true : 'the prompt is not a dismissible DialogShell',
+        Tab: () => (/<DialogShell/.test(PROMPT) ? true : 'the prompt is not drawn in DialogShell, which holds focus inside'),
+    },
+    more: () => {
+        const wanted = SPECS.get('prompt')?.layout?.width
+        const value = typeof wanted === 'object' && 'value' in wanted ? wanted.value : wanted
+        const named = /width="(\w+)"/.exec(PROMPT)?.[1]
+        return [check('layout.width', String(value), named === undefined ? undefined : widthFrom(DIALOG_WIDTHS[named]))]
+    },
+}
+
 /**
  * Each sokkel-ui drift entry in a spec, by its `what`, with the checks it covers: they may differ,
  * and must, or the entry is stale. A function instead says whether the difference is still there,
@@ -6858,6 +6895,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'repeated-group': REPEATED_GROUP_ADAPTER,
     'period-picker': PERIOD_PICKER_ADAPTER,
     'tree-select': TREE_SELECT_ADAPTER,
+    prompt: PROMPT_ADAPTER,
 }
 
 // The checks, walked from each spec
