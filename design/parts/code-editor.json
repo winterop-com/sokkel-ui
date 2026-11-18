@@ -528,25 +528,40 @@
         "deprecated": "deprecated"
     },
     "messages": {
-        "issue.required": null,
-        "issue.additional": null,
-        "issue.type": null,
-        "issue.enum": null,
-        "issue.const": null,
-        "issue.minimum": null,
-        "issue.exclusiveMinimum": null,
-        "issue.maximum": null,
-        "issue.exclusiveMaximum": null,
-        "issue.minLength": null,
-        "issue.maxLength": null,
-        "issue.pattern": null,
-        "issue.format": null,
-        "issue.minItems": null,
-        "issue.maxItems": null,
-        "issue.uniqueItems": null,
-        "issue.deprecated": null,
-        "issue.unchecked": null,
-        "issue.other": null,
+        "issue.required": {"id": "schema.required", "en": "Missing the property {property}"},
+        "issue.additional": {"id": "schema.additional", "en": "{property} is not a known property"},
+        "issue.type": {
+            "id": "schema.type",
+            "en": "Expected {expected, select, array {an array} object {an object} integer {an integer} other {a {expected}}}"
+        },
+        "issue.enum": {"id": "schema.enum", "en": "Expected one of {values}"},
+        "issue.const": {"id": "schema.const", "en": "Expected {value}"},
+        "issue.minimum": {"id": "schema.minimum", "en": "Must be at least {limit, number}"},
+        "issue.exclusiveMinimum": {"id": "schema.exclusiveMinimum", "en": "Must be more than {limit, number}"},
+        "issue.maximum": {"id": "schema.maximum", "en": "Must be at most {limit, number}"},
+        "issue.exclusiveMaximum": {"id": "schema.exclusiveMaximum", "en": "Must be less than {limit, number}"},
+        "issue.minLength": {
+            "id": "schema.minLength",
+            "en": "Use at least {count, plural, one {# character} other {# characters}}"
+        },
+        "issue.maxLength": {
+            "id": "schema.maxLength",
+            "en": "Use at most {count, plural, one {# character} other {# characters}}"
+        },
+        "issue.pattern": {"id": "schema.pattern", "en": "Must match {pattern}"},
+        "issue.format": {"id": "schema.format", "en": "Expected the {format} format"},
+        "issue.minItems": {
+            "id": "schema.minItems",
+            "en": "Needs at least {count, plural, one {# item} other {# items}}"
+        },
+        "issue.maxItems": {"id": "schema.maxItems", "en": "Holds at most {count, plural, one {# item} other {# items}}"},
+        "issue.uniqueItems": {"id": "schema.uniqueItems", "en": "Each item only once"},
+        "issue.deprecated": {
+            "id": "schema.deprecatedKey",
+            "en": "Deprecated: still accepted, and may be removed in a later version"
+        },
+        "issue.unchecked": {"id": "schema.unchecked", "en": "The schema cannot be checked: {reason}"},
+        "issue.other": {"id": "schema.other", "en": "{message}"},
         "syntax": {"id": "schema.syntax", "en": "Not valid {language, select, json {JSON} other {YAML}}"},
         "deprecated": {"id": "schema.deprecated", "en": "deprecated"}
     },
@@ -569,22 +584,22 @@
         "issue.minLength": [
             {"with": {"count": 0}, "says": "Use at least 0 characters"},
             {"with": {"count": 1}, "says": "Use at least 1 character"},
-            {"with": {"count": 1200}, "says": "Use at least 1200 characters"}
+            {"with": {"count": 1200}, "says": "Use at least 1,200 characters"}
         ],
         "issue.maxLength": [
             {"with": {"count": 0}, "says": "Use at most 0 characters"},
             {"with": {"count": 1}, "says": "Use at most 1 character"},
-            {"with": {"count": 1200}, "says": "Use at most 1200 characters"}
+            {"with": {"count": 1200}, "says": "Use at most 1,200 characters"}
         ],
         "issue.minItems": [
             {"with": {"count": 0}, "says": "Needs at least 0 items"},
             {"with": {"count": 1}, "says": "Needs at least 1 item"},
-            {"with": {"count": 1200}, "says": "Needs at least 1200 items"}
+            {"with": {"count": 1200}, "says": "Needs at least 1,200 items"}
         ],
         "issue.maxItems": [
             {"with": {"count": 0}, "says": "Holds at most 0 items"},
             {"with": {"count": 1}, "says": "Holds at most 1 item"},
-            {"with": {"count": 1200}, "says": "Holds at most 1200 items"}
+            {"with": {"count": 1200}, "says": "Holds at most 1,200 items"}
         ],
         "issue.pattern": [{"with": {"pattern": "^[a-z-]+$"}, "says": "Must match ^[a-z-]+$"}],
         "issue.format": [{"with": {"format": "date"}, "says": "Expected the date format"}],
@@ -594,7 +609,7 @@
                 "says": "The schema cannot be checked: the checker did not load"
             }
         ],
-        "issue.other": [{"with": {"message": "must not be empty"}, "says": "Must not be empty"}],
+        "issue.other": [{"with": {"message": "Must not be empty"}, "says": "Must not be empty"}],
         "syntax": [
             {"with": {"language": "json"}, "says": "Not valid JSON"},
             {"with": {"language": "yaml"}, "says": "Not valid YAML"}

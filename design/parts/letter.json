@@ -109,7 +109,10 @@
         {"keys": ["Enter", "Space"], "does": "Folds or unfolds the letter.", "when": "a foldable head has focus"}
     ],
     "words": {"attached": "Has attachments", "to": "to {names}"},
-    "messages": {"attached": {"id": "letter.attached", "en": "Has attachments"}, "to": null},
+    "messages": {
+        "attached": {"id": "letter.attached", "en": "Has attachments"},
+        "to": {"id": "letter.to", "en": "to {names}"}
+    },
     "samples": {
         "to": [
             {"with": {"names": "ada"}, "says": "to ada"},
@@ -120,7 +123,7 @@
         "from": "The sender's name, address and picture.",
         "time": "When it was sent, as the app writes it.",
         "snippet": "The letter's first words.",
-        "to": "The recipients' names, which words.to joins with a comma and a space."
+        "to": "The recipients' names, which the letter lists in the locale (Intl.ListFormat, \"me, linus, margaret\") and gives words.to as one string."
     },
     "rendererSpecific": {
         "sokkel-ui": [

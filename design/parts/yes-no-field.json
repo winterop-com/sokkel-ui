@@ -112,10 +112,13 @@
             "effect": {"piece": "choice", "opacity": "disabled-opacity", "focusable": false}
         },
         "invalid": {
-            "means": "The worst issue is critical: the issue mark at the row's end. The choice keeps its own edge: the issue's edge lands on the row that holds it, which has none.",
+            "means": "The worst issue is critical: the choice wears the critical edge (and the invalid ring while focus is in it), the row keeping the mark's room at its end, the issue mark there.",
             "reached": "error, or a critical issue"
         },
-        "warning": {"means": "The worst issue is a warning: the mark in warning-ink.", "reached": "a warning issue"}
+        "warning": {
+            "means": "The worst issue is a warning: the choice wears the warning edge, the mark in warning-ink.",
+            "reached": "a warning issue"
+        }
     },
     "pieces": {
         "choice": {
@@ -125,7 +128,9 @@
                 "radius": "radius-control",
                 "dark": {"ground": "background", "edge": "border-strong"}
             },
-            "disabled": {"opacity": "disabled-opacity"}
+            "disabled": {"opacity": "disabled-opacity"},
+            "invalid": {"edge": "critical/80", "dark": {"edge": "critical/80"}},
+            "warning": {"edge": "warning/80", "dark": {"edge": "warning/80"}}
         },
         "option": {
             "rest": {"ink": "muted-foreground", "radius": "radius-mini"},
@@ -185,8 +190,8 @@
         "unanswered": {"id": "yesNoField.unanswered", "en": "Not answered"}
     },
     "samples": {
-        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1200 errors"}],
-        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1200 warnings"}]
+        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1,200 errors"}],
+        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1,200 warnings"}]
     },
     "appText": {
         "label": "The question, which also names the choice; the description and help as parts/text-field takes them.",

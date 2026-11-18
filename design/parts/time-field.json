@@ -283,8 +283,8 @@
         "periods.pm": {"id": "timeField.periods.1", "en": "PM"}
     },
     "samples": {
-        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1200 errors"}],
-        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1200 warnings"}],
+        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1,200 errors"}],
+        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1,200 warnings"}],
         "example": [
             {"with": {"sample": "14:30"}, "says": "As in 14:30."},
             {"with": {"sample": "2:30 PM"}, "says": "As in 2:30 PM."},

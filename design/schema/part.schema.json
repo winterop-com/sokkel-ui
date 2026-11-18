@@ -10,7 +10,7 @@
         "$schema": {"type": "string"},
         "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
         "kind": {"enum": ["part", "pattern"]},
-        "status": {"enum": ["draft", "stable"]},
+        "status": {"const": "stable"},
         "renderers": {
             "description": "How far each renderer has built the part from its spec, and at which commit of its own repository that was read. `status` is the contract's; this is each renderer's, so a third renderer neither blocks a stable part nor is left out of it. The prose of what differs stays in `drift`.",
             "type": "object",

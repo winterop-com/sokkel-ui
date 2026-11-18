@@ -39,7 +39,7 @@
         "searchBar": "Across the popup's top, padded 10 across, with a rule in border under it: the search icon, the search input, and the clear button at its end, 8 apart.",
         "searchIcon": "A magnifier at the search bar's start, 16, in the muted ink.",
         "search": "A bare input 36 tall, named and placeheld words.search; what is typed filters the tree. It takes the focus when the popup opens.",
-        "clear": "In the search bar, while something is chosen and the field is not optional: an x and words.clear, small and quiet; it empties the choice.",
+        "clear": "In the search bar, while something is chosen and the field is not optional: an x and words.clear, small and quiet; it empties the choice; keyboard focus as the frame's focus outline, in ring, focus-ring-offset off.",
         "list": "Under the search bar, padded 4, at most 320 tall, then it scrolls: the Clear row when optional and no search is typed, then the tree.",
         "clearRow": "With optional, while no search is typed: a row (as the tree's) with an x in the chevron's place and words.clear, quiet; chosen while nothing is, it empties the choice and closes the popup.",
         "row": "One node of the tree, 32 tall, corners radius-md, indented 16 a level from 4 at the top: the toggle, its icon, its checkbox in multiple choice, its label, then its reason when shut and its meta at its end, 6 apart. The chosen row is washed in single choice.",
@@ -364,7 +364,6 @@
         "clear": "Clear",
         "empty": "Nothing matches.",
         "selected": "{count} chosen",
-        "actions": "Actions",
         "loading": "Loading",
         "failed": "This level did not load.",
         "retry": "Try again",
@@ -377,7 +376,6 @@
         "clear": {"id": "treeSelect.clear", "en": "Clear"},
         "empty": {"id": "treeSelect.empty", "en": "Nothing matches."},
         "selected": {"id": "treeSelect.selected", "en": "{count, number} chosen"},
-        "actions": {"id": "treeSelect.actions", "en": "Actions"},
         "loading": {"id": "treeSelect.loading", "en": "Loading"},
         "failed": {"id": "treeSelect.failed", "en": "This level did not load."},
         "retry": {"id": "treeSelect.retry", "en": "Try again"},
@@ -388,7 +386,7 @@
         "selected": [
             {"with": {"count": 0}, "says": "0 chosen"},
             {"with": {"count": 1}, "says": "1 chosen"},
-            {"with": {"count": 1200}, "says": "1200 chosen"}
+            {"with": {"count": 1200}, "says": "1,200 chosen"}
         ]
     },
     "appText": {
@@ -399,7 +397,6 @@
         "sokkel-ui": [
             "The popup is Base UI's Popover (ui/popover), anchored to the trigger; it takes Escape and a press outside, and puts focus back on the trigger after a keyboard close (returnFocusOnKeyboard).",
             "The tree is Tree with selection single or multiple, given the select's words; its rows past a few hundred are drawn only in view of the list's scroll.",
-            "words.actions is Tree's word for a row's menu; TreeSelect gives its tree no row actions, so it is never said.",
             "words.selected is the count's name for a screen reader (aria-label); the count drawn is the number alone."
         ],
         "sokkel-egui": [

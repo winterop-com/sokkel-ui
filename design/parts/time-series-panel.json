@@ -199,9 +199,9 @@
         "threshold.noData": "No data"
     },
     "messages": {
-        "category": null,
-        "series": null,
-        "value": null,
+        "category": {"id": "panel.category", "en": "Category"},
+        "series": {"id": "panel.series", "en": "Series"},
+        "value": {"id": "panel.value", "en": "Value"},
         "threshold.below": {"id": "thresholdLegend.below", "en": "Below '{'value'}'"},
         "threshold.range": {"id": "thresholdLegend.range", "en": "'{'from'}' to '{'to'}'"},
         "threshold.atLeast": {"id": "thresholdLegend.atLeast", "en": "'{'value'}' and up"},

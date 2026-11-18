@@ -165,7 +165,7 @@
             {"with": {"done": 0, "total": 4}, "says": "Checklist 0/4"},
             {"with": {"done": 1, "total": 1}, "says": "Checklist 1/1"},
             {"with": {"done": 2, "total": 4}, "says": "Checklist 2/4"},
-            {"with": {"done": 1200, "total": 1200}, "says": "Checklist 1200/1200"}
+            {"with": {"done": 1200, "total": 1200}, "says": "Checklist 1,200/1,200"}
         ]
     },
     "appText": {
