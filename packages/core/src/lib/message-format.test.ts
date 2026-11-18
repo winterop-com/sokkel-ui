@@ -117,5 +117,6 @@ describe('a number in a plain argument', () => {
         expect(formatMessage('{count} runs', { count: 1200 })).toBe('1,200 runs')
         expect(plain(formatMessage('{count} runs', { count: 1200 }, 'nb-NO'))).toBe('1 200 runs')
         expect(formatMessage('{name}', { name: '1200' })).toBe('1200')
+        expect(formatMessage('{year, number, ::group-off}', { year: 2026 })).toBe('2026')
     })
 })

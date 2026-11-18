@@ -69,7 +69,8 @@ release and empties it.
   the larger head size they read loud and cut their words short.
 - Counts read the same with and without `LocaleProvider`: every English default that says a count
   or a place groups its thousands ("1,200 errors"), as the catalogs' ICU messages do, and a number
-  in a plain ICU argument (`{count}`) is written in the locale, as ICU writes it. The follower and
+  in a plain ICU argument (`{count}`) is written in the locale, as ICU writes it. A year is written
+  `{year, number, ::group-off}` in the period labels' messages, so it never reads "2,026". The follower and
   like counts' messages keep a decimal (`::compact-short .#`, "12.3K") as their English does.
 - `SecretField` in a field wears the issue edge and the invalid ring on focus, as every typed field
   does; it showed the plain focus ring.
