@@ -419,11 +419,11 @@
         "split": [{"with": {"clip": "harbor-wide", "at": "00:00:05:00"}, "says": "harbor-wide split at 00:00:05:00"}],
         "deleted": [
             {"with": {"count": 1}, "says": "Clip deleted"},
-            {"with": {"count": 1200}, "says": "1200 clips deleted"}
+            {"with": {"count": 1200}, "says": "1,200 clips deleted"}
         ],
         "deletedRipple": [
             {"with": {"count": 1}, "says": "Clip deleted, the gap closed"},
-            {"with": {"count": 1200}, "says": "1200 clips deleted, the gap closed"}
+            {"with": {"count": 1200}, "says": "1,200 clips deleted, the gap closed"}
         ],
         "blocked": [{"with": {"clip": "harbor-wide"}, "says": "harbor-wide cannot go there"}],
         "dropped": [

@@ -130,7 +130,7 @@
             },
             "warning": {"ground": "warning/6", "rule": "warning"}
         },
-        "mark": {"rest": {"ink": "critical"}, "warning": {"ink": "warning"}},
+        "mark": {"rest": {"ink": "critical-ink"}, "warning": {"ink": "warning-ink"}},
         "title": {"rest": {"text": "text.action", "note": "The ink of what it stands on."}},
         "detail": {"rest": {"ink": "muted-foreground", "text": "text.body"}},
         "code": {"rest": {"ground": "muted", "radius": "radius-sm", "note": "In the code face, padded 4 across."}},

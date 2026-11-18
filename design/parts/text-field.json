@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "text-field",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "renderers": {
         "sokkel-ui": {
             "state": "partial",
@@ -299,8 +299,8 @@
         "warnings": {"id": "issueCount.warnings", "en": "{count, plural, one {# warning} other {# warnings}}"}
     },
     "samples": {
-        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1200 errors"}],
-        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1200 warnings"}]
+        "errors": [{"with": {"count": 1}, "says": "1 error"}, {"with": {"count": 1200}, "says": "1,200 errors"}],
+        "warnings": [{"with": {"count": 1}, "says": "1 warning"}, {"with": {"count": 1200}, "says": "1,200 warnings"}]
     },
     "appText": {
         "label": "Required.",
@@ -331,6 +331,18 @@
             "what": "missing",
             "spec": "keyHint, fallback, the warning tone, issue actions, multiline, mono, numeric, readOnly, phone sizes.",
             "today": "Not built. Since d163191 the field draws through Field: the required mark, the hint, the description, the help and the issue mark at the control's end, fields lined up across a Columns row; inputs are 32 tall with their edge since 68c156c."
+        },
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec, side by side with sokkel-ui (specimens).",
+            "today": "As of 1a87987, built from the spec (partial) but not yet compared side by side with sokkel-ui's specimens."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not compared yet",
+            "spec": "This spec, side by side with sokkel-ui (specimens).",
+            "today": "As of 64f4b19, built from the spec (built) but not yet compared side by side with sokkel-ui's specimens."
         }
     ]
 }

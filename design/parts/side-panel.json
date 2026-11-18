@@ -167,7 +167,7 @@
         "head": {"rest": {"rule": "border-strong", "note": "1 wide under the bar."}},
         "title": {
             "rest": {
-                "ink": "foreground",
+                "ink": "sidebar-foreground",
                 "text": "text.sm",
                 "weight": 500,
                 "note": "The panel sets no ink of its own: the shell's foreground, which the shell's frame sets around it."

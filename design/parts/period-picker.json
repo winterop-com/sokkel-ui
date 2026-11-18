@@ -157,6 +157,10 @@
             "on": "any",
             "effect": {"piece": "typed", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}}
         },
+        "fieldInvalid": {
+            "means": "In a Field with a critical issue: the trigger wears the critical edge and keeps the mark's room at its end, never the whole picker (data-field-edge=\"own\").",
+            "reached": "a Field's error or critical issue around the picker"
+        },
         "disabled": {
             "means": "Cannot be used: the trigger and the typed input faded, the cursor not-allowed.",
             "reached": "disabled",
@@ -175,7 +179,8 @@
             },
             "placeholder": {"ink": "muted-foreground"},
             "focus": {"edge": "ring", "ring": {"color": "ring", "width": 1}},
-            "disabled": {"opacity": "disabled-opacity"}
+            "disabled": {"opacity": "disabled-opacity"},
+            "fieldInvalid": {"edge": "critical/80"}
         },
         "list": {
             "rest": {
@@ -318,11 +323,14 @@
         "types.quarterly": {"id": "periodLabel.types.quarterly", "en": "Quarterly"},
         "types.sixmonthly": {"id": "periodLabel.types.sixmonthly", "en": "Six-monthly"},
         "types.yearly": {"id": "periodLabel.types.yearly", "en": "Yearly"},
-        "day": {"id": "periodLabel.day", "en": "{month} {date}, {year}"},
-        "week": {"id": "periodLabel.week", "en": "Week {week}, {year} (from Mon, {startMonth} {startDate})"},
-        "month": {"id": "periodLabel.month", "en": "{month} {year}"},
-        "months": {"id": "periodLabel.months", "en": "{first} to {last} {year}"},
-        "year": {"id": "periodLabel.year", "en": "{year}"},
+        "day": {"id": "periodLabel.day", "en": "{month} {date}, {year, number, ::group-off}"},
+        "week": {
+            "id": "periodLabel.week",
+            "en": "Week {week}, {year, number, ::group-off} (from Mon, {startMonth} {startDate})"
+        },
+        "month": {"id": "periodLabel.month", "en": "{month} {year, number, ::group-off}"},
+        "months": {"id": "periodLabel.months", "en": "{first} to {last} {year, number, ::group-off}"},
+        "year": {"id": "periodLabel.year", "en": "{year, number, ::group-off}"},
         "issueCritical": {"id": "issue.issueCritical", "en": "Error: "},
         "issueWarning": {"id": "issue.issueWarning", "en": "Warning: "},
         "other": {"id": "periodPicker.other", "en": "Other period"},

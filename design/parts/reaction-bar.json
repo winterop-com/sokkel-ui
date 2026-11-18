@@ -213,7 +213,7 @@
         "count": [
             {"with": {"label": "thumbs up", "count": 0}, "says": "thumbs up, 0"},
             {"with": {"label": "thumbs up", "count": 1}, "says": "thumbs up, 1"},
-            {"with": {"label": "thumbs up", "count": 1200}, "says": "thumbs up, 1200"}
+            {"with": {"label": "thumbs up", "count": 1200}, "says": "thumbs up, 1,200"}
         ]
     },
     "appText": {

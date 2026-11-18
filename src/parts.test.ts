@@ -45,7 +45,7 @@ import { DATE_FIELD_WORDS, DateField } from '@winterop-com/sokkel-ui/DateField'
 import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
 import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
 import { EMOJI_PICKER_WORDS, EmojiPicker } from '@winterop-com/sokkel-ui/EmojiPicker'
-import { FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
+import { Field, FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
@@ -5993,6 +5993,7 @@ const YES_NO_FIELDS = once(() => ({
     answered: yesNoField({ value: true }),
     disabled: yesNoField({ disabled: true }),
     invalid: yesNoField({ error: 'Answer before you save' }),
+    warned: yesNoField({ issues: [{ tone: 'warning', text: 'Usually answered yes' }] }),
 }))
 const choiceOf = (elements: El[]) => elements.find((element) => element.attrs.role === 'group')
 const optionOf = (elements: El[], label: string) =>
@@ -6030,7 +6031,12 @@ const YES_NO_FIELD_ADAPTER: Adapter = {
     paint: (_, name, state) => {
         const { unanswered, answered, disabled } = YES_NO_FIELDS()
         const on = YES_NO_ON[state] ?? []
-        if (name === 'choice') return pieceWhere(choiceOf(state === 'disabled' ? disabled : unanswered))
+        if (name === 'choice') {
+            const { invalid, warned } = YES_NO_FIELDS()
+            return pieceWhere(
+                choiceOf(state === 'disabled' ? disabled : state === 'invalid' ? invalid : state === 'warning' ? warned : unanswered),
+            )
+        }
         if (name === 'option') return pieceWhere(optionOf(state === 'chosen' ? answered : unanswered, YES_NO_FIELD_WORDS.yes), on)
         if (name === 'unanswered') return pieceWhere(byText(unanswered, 'span', YES_NO_FIELD_WORDS.unanswered))
         if (name === 'clear') return pieceWhere(byText(answered, 'button', YES_NO_FIELD_WORDS.clear), on)
@@ -6400,6 +6406,13 @@ const PERIOD_PICKERS = once(() => ({
     typed: periodPicker({ value: '202401' }),
     typedDisabled: periodPicker({ value: '202401', disabled: true }),
     refused: periodPicker({ value: 'harbor' }),
+    // In a field with a critical issue, the trigger wears the edge.
+    inField: draw(Field, {
+        id: 'period',
+        label: 'Period',
+        error: 'Choose a period',
+        children: createElement(PeriodPicker, { type: 'monthly', value: '202610', onValueChange: noop, today: '2026-11-08' }),
+    }),
 }))
 const periodTrigger = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'select-trigger')
 const periodTyped = (elements: El[]) =>
@@ -6485,6 +6498,7 @@ const PERIOD_PICKER_ADAPTER: Adapter = {
             case 'trigger':
                 if (state === 'placeholder') return triggerOn(empty, ['data-placeholder'])
                 if (state === 'disabled') return triggerOn(disabled, ['disabled'])
+                if (state === 'fieldInvalid') return triggerOn(PERIOD_PICKERS().inField, [])
                 return triggerOn(plain, state === 'focus' ? ['focus-visible'] : [])
             case 'list':
                 return { layers: [POPUP_LOOK, SELECT_LIST.list], on: [] }
@@ -6798,70 +6812,7 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {
-    'period-picker': {
-        'messages.day': 'a year is written without groups',
-        'messages.week': 'a year is written without groups',
-        'messages.month': 'a year is written without groups',
-        'messages.months': 'a year is written without groups',
-        'messages.year': 'a year is written without groups',
-    },
-    'board-item-panel': {
-        'words.checklist.title with {"done":1200,"total":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'clip-timeline': {
-        'words.deleted with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-        'words.deletedRipple with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'code-editor': {
-        'words.issue.maxItems with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-        'words.issue.maxLength with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-        'words.issue.minItems with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-        'words.issue.minLength with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'json-tree': {
-        'words.keys with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    problem: {
-        'pieces.mark.rest.ink': "the mark is in the tone's ink",
-        'pieces.mark.warning.ink': "the mark is in the tone's ink",
-    },
-    'reaction-bar': {
-        'words.count with {"label":"thumbs up","count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'repeated-group': {
-        'states.shut.effect.focusable': 'a shut Move says why and stays reachable',
-        'words.item with {"place":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'secret-field': {
-        'states.invalid+focus.effect.ring.color': 'the frame wears the issue edge and the invalid ring in a field',
-        'states.invalid+focus.effect.ring.width': 'the frame wears the issue edge and the invalid ring in a field',
-        'states.warning+focus.effect.ring.color': 'the frame wears the issue edge and the invalid ring in a field',
-        'words.errors with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-        'words.replaceLabel with {"label":"Password"}': 'Replace is given the label as it reads mid-sentence',
-        'words.warnings with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'side-panel': {
-        'pieces.title.rest.ink': "the panel writes in the sidebar's ink",
-    },
-    'text-field': {
-        'words.errors with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-        'words.warnings with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'time-field': {
-        'words.errors with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-        'words.warnings with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'tree-select': {
-        'messages.actions': 'the tree select no longer holds the actions word',
-        'words.actions': 'the tree select no longer holds the actions word',
-        'words.selected with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-    'yes-no-field': {
-        'words.errors with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-        'words.warnings with {"count":1200}': 'counts group their thousands, as the catalog writes them',
-    },
-}
+const PENDING: Record<string, Record<string, string>> = {}
 
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
@@ -7130,9 +7081,6 @@ const CATALOG: Record<string, string> = Object.assign(
     }),
 ) as Record<string, string>
 
-/** Thousands written plain: the catalog's counts group them where the English functions do not yet (open-questions.md, words and their message ids). */
-const ungrouped = (text: string) => text.replace(/(\d),(\d{3})/g, '$1$2')
-
 function messageChecks(spec: Spec): Check[] {
     const checks: Check[] = []
     for (const [key, message] of Object.entries(spec.messages ?? {})) {
@@ -7143,7 +7091,7 @@ function messageChecks(spec: Spec): Check[] {
         const word = spec.words[key]
         const say = (values: Record<string, unknown>) => {
             try {
-                return ungrouped(formatMessage(held, { ...message.with, ...values }))
+                return formatMessage(held, { ...message.with, ...values })
             } catch (error) {
                 return `a message that cannot be read: ${(error as Error).message}`
             }
@@ -7153,7 +7101,7 @@ function messageChecks(spec: Spec): Check[] {
         const samples = spec.samples?.[key]
         if (samples !== undefined) {
             for (const sample of samples)
-                checks.push(check(`messages.${key} with ${JSON.stringify(sample.with)}`, ungrouped(sample.says), say(sample.with)))
+                checks.push(check(`messages.${key} with ${JSON.stringify(sample.with)}`, sample.says, say(sample.with)))
         } else if (typeof word === 'string') checks.push(check(`messages.${key} says`, word, say({})))
         else {
             checks.push(check(`messages.${key} says one`, filled(word.one, { count: 1 }), say({ count: 1 })))

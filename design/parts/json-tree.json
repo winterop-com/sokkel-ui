@@ -22,7 +22,7 @@
     },
     "anatomy": {
         "tree": "The whole tree: text.xs in the code face, lines 20 tall, taking the width it is given.",
-        "node": "A list or object's line: a button holding the disclosure, its key and its opening bracket; folded, the count and the closing bracket after it.",
+        "node": "A list or object's line: a button holding the disclosure, its key and its opening bracket; folded, the count (words.items of a list, words.keys of an object) and the closing bracket after it.",
         "disclosure": "The chevron at the node's start, 14 square: pointing right while folded, turned 90 degrees down while open.",
         "key": "An entry's name in an object, followed by a colon and a space. A list's entries have none.",
         "bracket": "The opening and closing brackets, { } for an object and [ ] for a list.",
@@ -111,18 +111,28 @@
         {"keys": ["Enter", "Space"], "does": "Folds or unfolds the node.", "when": "a node has focus"},
         {"keys": ["Enter", "Space"], "does": "Draws the next entries, up to the limit.", "when": "a step has focus"}
     ],
-    "words": {"keys": {"one": "{count} key", "other": "{count} keys"}, "more": "Show {count} more"},
+    "words": {
+        "keys": {"one": "{count} key", "other": "{count} keys"},
+        "items": {"one": "{count} item", "other": "{count} items"},
+        "more": "Show {count} more"
+    },
     "messages": {
         "keys": {"id": "jsonTree.keys", "en": "{count, plural, one {# key} other {# keys}}"},
+        "items": {"id": "jsonTree.items", "en": "{count, plural, one {# item} other {# items}}"},
         "more": {"id": "jsonTree.more", "en": "Show {count, number} more"}
     },
     "samples": {
         "keys": [
             {"with": {"count": 0}, "says": "0 keys"},
             {"with": {"count": 1}, "says": "1 key"},
-            {"with": {"count": 1200}, "says": "1200 keys"}
+            {"with": {"count": 1200}, "says": "1,200 keys"}
         ],
-        "more": [{"with": {"count": 1}, "says": "Show 1 more"}, {"with": {"count": 1200}, "says": "Show 1,200 more"}]
+        "more": [{"with": {"count": 1}, "says": "Show 1 more"}, {"with": {"count": 1200}, "says": "Show 1,200 more"}],
+        "items": [
+            {"with": {"count": 0}, "says": "0 items"},
+            {"with": {"count": 1}, "says": "1 item"},
+            {"with": {"count": 1200}, "says": "1,200 items"}
+        ]
     },
     "appText": {"value": "The JSON value: its keys and values are drawn as they are."},
     "cells": {

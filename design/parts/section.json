@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "section",
     "kind": "part",
-    "status": "draft",
+    "status": "stable",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
         "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
@@ -216,6 +216,18 @@
             "what": "not built yet",
             "spec": "This spec.",
             "today": "Built in crates/core/src/widgets/section.rs (as of 1a87987), with the meta, the actions, a description the head grows to hold, flush, and the flat variant. Not yet: the tones critical and graph, and fill."
+        },
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec, side by side with sokkel-ui (specimens).",
+            "today": "As of 1a87987, built from the spec (partial) but not yet compared side by side with sokkel-ui's specimens."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not compared yet",
+            "spec": "This spec, side by side with sokkel-ui (specimens).",
+            "today": "As of 64f4b19, built from the spec (built) but not yet compared side by side with sokkel-ui's specimens."
         }
     ]
 }
