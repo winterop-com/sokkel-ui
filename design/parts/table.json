@@ -26,7 +26,7 @@
         "frame": "The table's own box: edge and corners; off when the table sits in a panel that frames it.",
         "bar": "Over the head: search, the toolbar's tools, the count, the sort menu (grid view), the view switch and the columns menu. Replaced by the selection bar while rows are selected.",
         "selectionBar": "How many are selected, Clear, the app's bulk actions, and the offer to select every row on every page.",
-        "head": "The column names in one row that stays put while rows scroll; each sortable head a button, each resizable head with a handle at its end edge.",
+        "head": "The column names in one row that stays put while rows scroll; each sortable head a button, each resizable head with a handle at its end edge. A name wider than its column wraps between its words onto a second line, lined up as its column is, and the head row grows to hold it; only past two lines is it cut, its whole name on hover. A head row whose names all fit stays at its row height.",
         "row": "One line at the row height: an optional select box, the cells, an optional menu button at the end; the first cell stays put while rows scroll sideways.",
         "groupHead": "A row over each group: fold control, select box, label, count, each column's aggregate.",
         "detail": "A row's own detail, under it across the table's width.",
@@ -42,7 +42,7 @@
     "options": {
         "columns": {
             "type": "columns",
-            "does": "Each column: id, header, width (a track such as 8rem or minmax(12rem,1fr), or content: as wide as its widest cell up to maxWidth), cell, align (start, center, end), sortValue, hideable, resizable, stack (lead, line, primary, secondary, none; a primary value takes up to stackLines lines, two by default), band, aggregate, fill, edit."
+            "does": "Each column: id, header, width (a track such as 8rem or minmax(12rem,1fr), or content: as wide as its widest cell and its head on one line up to maxWidth, never narrower than its head's longest word), cell, align (start, center, end), sortValue, hideable, resizable, stack (lead, line, primary, secondary, none; a primary value takes up to stackLines lines, two by default), band, aggregate, fill, edit."
         },
         "rows": {"type": "rows", "does": "The rows, with rowKey giving each a stable key."},
         "variant": {
@@ -180,6 +180,10 @@
         "headRowList": "density.panel-head",
         "selectColumn": 40,
         "contentColumnMax": 320,
+        "headLines": {
+            "value": 2,
+            "note": "A head's name wraps between its words onto at most two lines, the head row growing to hold them (one line fills the row height, padded by half of what the row leaves over a line); past two it is cut with an ellipsis, its whole name on hover. A name never breaks inside a word; a word wider than its column is cut with an ellipsis. A content column is never narrower than its head's longest word, past its maxWidth too, so its head wraps between words."
+        },
         "overscanRows": 8,
         "stackBelow": {"value": 576, "note": "px of the table's own box."},
         "minWidthTable": {"value": 768, "note": "48rem."},

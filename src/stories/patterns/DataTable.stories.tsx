@@ -793,6 +793,39 @@ export const ContentWidths: StoryObj = {
     render: () => <DataTable variant="list" columns={JOB_COLUMNS} rows={JOBS} rowKey={(job) => job.id} stackBelow="64rem" />,
 }
 
+const TIGHT_COLUMNS: DataColumn<Job>[] = [
+    { id: 'job', header: 'Job', width: 'minmax(8rem,1fr)', cell: (job) => <span className="font-mono">{job.id}</span> },
+    { id: 'service', header: 'Delivers through', width: '6rem', cell: (job) => <span className="font-mono">{job.service}</span> },
+    { id: 'step', header: 'Last step', width: '5.5rem', cell: (job) => <span className="font-mono">{job.step}</span> },
+    {
+        id: 'runs',
+        header: 'Runs this week',
+        width: '5.5rem',
+        align: 'end',
+        cell: (job) => <span className="tabular-nums">{job.runs.toLocaleString('en-US')}</span>,
+        sortValue: (job) => job.runs,
+    },
+    { id: 'state', header: 'State', width: '8rem', cell: (job) => <StatusChip status={job.state} /> },
+]
+
+/**
+ * Columns sized for their values under heads wider than them: a head that does not fit wraps between
+ * its words onto a second line and the head row grows to hold it, the name cut only past two lines
+ * and whole on hover. The sorted head keeps its arrow beside the wrapped name, at the column's end.
+ */
+export const TightHeads: StoryObj = {
+    name: 'Tight heads',
+    render: () => (
+        <DataTable
+            variant="list"
+            columns={TIGHT_COLUMNS}
+            rows={JOBS}
+            rowKey={(job) => job.id}
+            defaultSort={{ column: 'runs', direction: 'desc' }}
+        />
+    ),
+}
+
 const FILLED_COLUMNS: DataColumn<Job>[] = [
     {
         id: 'job',
