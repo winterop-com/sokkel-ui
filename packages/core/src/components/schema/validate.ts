@@ -1,4 +1,4 @@
-import Ajv2020, { type ErrorObject, type ValidateFunction } from 'ajv/dist/2020'
+import Ajv2020, { type ErrorObject, type ValidateFunction } from 'ajv/dist/2020.js'
 import type { RegExpEngine } from 'ajv/dist/types'
 import addFormats from 'ajv-formats'
 
