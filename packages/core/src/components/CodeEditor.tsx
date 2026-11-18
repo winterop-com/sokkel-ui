@@ -749,6 +749,12 @@ export interface CodeEditorProps {
     /** Leaves a value unchecked by the schema, and anything inside it, such as one holding a reference filled in later. */
     deferred?: (value: unknown) => boolean
     /**
+     * The YAML version a YAML document's plain values are read by, for the schema check, its hover
+     * and completion and `onDocument`: `1.1` reads them as a YAML 1.1 server does, yes, no, on and
+     * off as booleans and `010` as octal.
+     */
+    yamlVersion?: '1.1' | '1.2'
+    /**
      * Finds the schema a document names for itself, when `schema` is not given: a top-level `$schema`
      * key, or a `# yaml-language-server: $schema=<address>` line in YAML. The editor fetches nothing;
      * a document in the JSON Schema 2020-12 dialect is checked against it without this. It is called
@@ -839,6 +845,7 @@ export function CodeEditor({
     variant = 'field',
     schema: given,
     deferred,
+    yamlVersion = '1.2',
     resolveSchema,
     reveal,
     onProblems,
@@ -879,6 +886,7 @@ export function CodeEditor({
         keys,
         schema,
         deferred,
+        yamlVersion,
         words,
         schemaWords,
         language,
@@ -898,6 +906,7 @@ export function CodeEditor({
         keys,
         schema,
         deferred,
+        yamlVersion,
         words,
         schemaWords,
         language,
@@ -912,9 +921,9 @@ export function CodeEditor({
     const readSoon = (editor: EditorView, wait: number) => {
         clearTimeout(reading.current)
         reading.current = setTimeout(() => {
-            const { onDocument: hear, language: lang } = props.current
+            const { onDocument: hear, language: lang, yamlVersion: version } = props.current
             if (hear === undefined || (lang !== 'json' && lang !== 'yaml') || view.current !== editor) return
-            const read = readDocument(editor.state, lang)
+            const read = readDocument(editor.state, lang, undefined, version)
             if (read === null || read.broken !== undefined) return
             if (read.documents === undefined) hear(read.value)
             else
@@ -993,7 +1002,7 @@ export function CodeEditor({
     }
     /** What the schema finds in a state: undefined while the checker loads, an error that it cannot check once it failed to. */
     const schemaFound = (state: EditorState): PathDiagnostic[] | undefined => {
-        const { schema: against, words, language: lang, deferred: unchecked } = props.current
+        const { schema: against, words, language: lang, deferred: unchecked, yamlVersion: version } = props.current
         if (against === undefined || (lang !== 'json' && lang !== 'yaml')) return []
         return schemaProblems(
             state,
@@ -1003,6 +1012,7 @@ export function CodeEditor({
             checkFailed.current,
             { ...props.current.schemaWords, ...words },
             unchecked,
+            version,
         )
     }
     /** Whether the schema checker is still loading for a schema, so the problems are not known yet. */
@@ -1059,13 +1069,14 @@ export function CodeEditor({
                         () => props.current.schema,
                         schemaLanguage,
                         () => ({ ...props.current.schemaWords, ...props.current.words }),
+                        yamlVersion,
                     ),
                 },
             ]
             return [
                 EditorState.languageData.of(() => data),
                 hoverTooltip(
-                    schemaHover(() => props.current.schema, schemaLanguage),
+                    schemaHover(() => props.current.schema, schemaLanguage, yamlVersion),
                     { hoverTime: 300 },
                 ),
             ]
@@ -1390,7 +1401,7 @@ export function CodeEditor({
 
     useEffect(() => {
         view.current?.dispatch({ effects: compartments.current.schema.reconfigure(extensions.schema()) })
-    }, [schemaLanguage])
+    }, [schemaLanguage, yamlVersion])
 
     // The schema checker loads with the first schema; what it finds is drawn as soon as it is there.
     useEffect(() => {
@@ -1407,7 +1418,7 @@ export function CodeEditor({
         editor.dispatch({ effects: setMarks.of({ marks, language: pathLanguage }) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
         else if (diagnosticCount(editor.state) > 0) editor.dispatch(setDiagnostics(editor.state, []))
-    }, [marks, schema, words, language])
+    }, [marks, schema, words, language, yamlVersion])
 
     return (
         <div

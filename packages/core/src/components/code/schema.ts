@@ -15,6 +15,13 @@ type SyntaxNode = ReturnType<typeof syntaxTree>['topNode']
 /** The languages a schema can check. */
 export type SchemaLanguage = 'json' | 'yaml'
 
+/**
+ * The YAML version a plain scalar is read by: `1.2` by its core schema; `1.1` as YAML 1.1 servers
+ * read it, where yes, no, on, off, y and n are booleans, `010` is octal, `0b101` binary, `1_000` a
+ * thousand and `1:30` ninety.
+ */
+export type YamlVersion = '1.1' | '1.2'
+
 /** Where a value is written in the document, and its key when it has one. */
 export interface Span {
     from: number
@@ -250,13 +257,14 @@ function parseString(source: string): string {
     }
 }
 
-/** A plain YAML scalar as the core schema reads it: null, a boolean, a number, else the string. */
-export function yamlScalar(source: string): unknown {
+/** A plain YAML scalar as YAML 1.2's core schema reads it, or YAML 1.1's: null, a boolean, a number, else the string. */
+export function yamlScalar(source: string, version: YamlVersion = '1.2'): unknown {
     const plain = source
         .split('\n')
         .map((line) => line.trim())
         .join(' ')
     if (/^(?:~|null|Null|NULL|)$/.test(plain)) return null
+    if (version === '1.1') return yaml11Scalar(plain)
     if (/^(?:true|True|TRUE)$/.test(plain)) return true
     if (/^(?:false|False|FALSE)$/.test(plain)) return false
     if (/^[-+]?\d+$/.test(plain)) return Number(plain)
@@ -264,6 +272,25 @@ export function yamlScalar(source: string): unknown {
     if (/^0x[0-9a-fA-F]+$/.test(plain)) return Number.parseInt(plain.slice(2), 16)
     if (/^[-+]?(?:\.\d+|\d+(?:\.\d*)?)(?:[eE][-+]?\d+)?$/.test(plain)) return Number(plain)
     if (/^[-+]?\.(?:inf|Inf|INF)$/.test(plain)) return plain.startsWith('-') ? -Infinity : Infinity
+    if (/^\.(?:nan|NaN|NAN)$/.test(plain)) return Number.NaN
+    return plain
+}
+
+/** A plain scalar, not null, as YAML 1.1's types read it; an underscore in a number is only a separator. */
+function yaml11Scalar(plain: string): unknown {
+    if (/^(?:y|Y|yes|Yes|YES|on|On|ON|true|True|TRUE)$/.test(plain)) return true
+    if (/^(?:n|N|no|No|NO|off|Off|OFF|false|False|FALSE)$/.test(plain)) return false
+    const sign = plain.startsWith('-') ? -1 : 1
+    const digits = plain.replace(/^[-+]/, '').replaceAll('_', '')
+    if (/^[-+]?0b[01_]+$/.test(plain)) return sign * Number.parseInt(digits.slice(2), 2)
+    if (/^[-+]?0x[0-9a-fA-F_]+$/.test(plain)) return sign * Number.parseInt(digits.slice(2), 16)
+    if (/^[-+]?0[0-7_]+$/.test(plain)) return sign * Number.parseInt(digits, 8)
+    if (/^[-+]?(?:0|[1-9][\d_]*)$/.test(plain)) return sign * Number(digits)
+    // Sexagesimal, base 60: 1:30 is 90, and 1:30.5 is 90.5.
+    if (/^[-+]?[1-9][\d_]*(?::[0-5]?\d)+$/.test(plain) || /^[-+]?\d[\d_]*(?::[0-5]?\d)+\.[\d_]*$/.test(plain))
+        return sign * digits.split(':').reduce((sum, part) => sum * 60 + Number(part), 0)
+    if (/^[-+]?(?:\d[\d_]*\.[\d_]*|\.\d[\d_]*)(?:[eE][-+]?\d+)?$/.test(plain)) return sign * Number(digits)
+    if (/^[-+]?\.(?:inf|Inf|INF)$/.test(plain)) return sign * Infinity
     if (/^\.(?:nan|NaN|NAN)$/.test(plain)) return Number.NaN
     return plain
 }
@@ -302,6 +329,7 @@ function readYaml(
     path: Path,
     spans: Map<string, Span>,
     anchors: Anchors,
+    version: YamlVersion,
     key?: Span['key'],
 ): unknown {
     if (node === null) {
@@ -311,7 +339,7 @@ function readYaml(
     }
     if (node.name === 'Tagged' || node.name === 'Anchored') {
         const inner = children(node).find((child) => !['Tag', 'Anchor'].includes(child.name)) ?? null
-        const value = readYaml(state, inner, path, spans, anchors, key)
+        const value = readYaml(state, inner, path, spans, anchors, version, key)
         const anchor = node.getChild('Anchor')
         if (anchor !== null) anchors.set(text(state, anchor).slice(1), value)
         return value
@@ -327,7 +355,7 @@ function readYaml(
                 const value = children(pair).find((child) => !['Key', ':', 'Comment'].includes(child.name)) ?? null
                 if (name === null) continue
                 if (isMerge(state, name)) {
-                    const from = readYaml(state, value, path, new Map(), anchors)
+                    const from = readYaml(state, value, path, new Map(), anchors, version)
                     for (const one of Array.isArray(from) ? from : [from])
                         if (one !== null && typeof one === 'object' && !Array.isArray(one)) merged.push(one as Record<string, unknown>)
                     continue
@@ -335,7 +363,7 @@ function readYaml(
                 const scalar = name.firstChild
                 const label =
                     scalar?.name === 'QuotedLiteral' ? yamlQuoted(text(state, scalar)) : text(state, name).trim().replace(/\s+/g, ' ')
-                own(out, label, readYaml(state, value, [...path, label], spans, anchors, { from: name.from, to: name.to }))
+                own(out, label, readYaml(state, value, [...path, label], spans, anchors, version, { from: name.from, to: name.to }))
             }
             if (merged.length === 0) return out
             // The mapping's own keys win, then the merged mappings in the order they are listed.
@@ -349,14 +377,14 @@ function readYaml(
                 .filter((child) => child.name === 'Item')
                 .map((item, index) => {
                     const value = children(item).find((child) => child.name !== 'Comment') ?? null
-                    return readYaml(state, value ?? item, [...path, index], spans, anchors)
+                    return readYaml(state, value ?? item, [...path, index], spans, anchors, version)
                 })
         case 'Alias':
             return anchors.get(text(state, node).slice(1)) ?? null
         case 'Item':
             return null
         case 'Literal':
-            return yamlScalar(text(state, node))
+            return yamlScalar(text(state, node), version)
         case 'QuotedLiteral':
             return yamlQuoted(text(state, node))
         case 'BlockLiteral':
@@ -366,23 +394,32 @@ function readYaml(
     }
 }
 
-/** Documents already read, by their text and language: a text is never changed, only replaced. */
-const readings = new WeakMap<EditorState['doc'], Partial<Record<SchemaLanguage, ReadDocument>>>()
+/** How a document is read: JSON, or YAML by one of its versions. */
+type Reading = 'json' | `yaml ${YamlVersion}`
+
+/** Documents already read, by their text and how they were read: a text is never changed, only replaced. */
+const readings = new WeakMap<EditorState['doc'], Partial<Record<Reading, ReadDocument>>>()
 
 /**
- * A JSON or YAML document read into a value, with where each value is written. Null when the
- * document is too large to parse in the time given. A text is read once per language, so the marks
- * and the check of one edit share one reading.
+ * A JSON or YAML document read into a value, with where each value is written, YAML's plain
+ * scalars by `yamlVersion`. Null when the document is too large to parse in the time given. A text
+ * is read once per language and version, so the marks and the check of one edit share one reading.
  */
-export function readDocument(state: EditorState, language: SchemaLanguage, timeout = 400): ReadDocument | null {
-    const known = readings.get(state.doc)?.[language]
+export function readDocument(
+    state: EditorState,
+    language: SchemaLanguage,
+    timeout = 400,
+    yamlVersion: YamlVersion = '1.2',
+): ReadDocument | null {
+    const reading: Reading = language === 'json' ? 'json' : `yaml ${yamlVersion}`
+    const known = readings.get(state.doc)?.[reading]
     if (known !== undefined) return known
-    const read = readTree(state, language, timeout)
-    if (read !== null) readings.set(state.doc, { ...readings.get(state.doc), [language]: read })
+    const read = readTree(state, language, timeout, yamlVersion)
+    if (read !== null) readings.set(state.doc, { ...readings.get(state.doc), [reading]: read })
     return read
 }
 
-function readTree(state: EditorState, language: SchemaLanguage, timeout: number): ReadDocument | null {
+function readTree(state: EditorState, language: SchemaLanguage, timeout: number, yamlVersion: YamlVersion): ReadDocument | null {
     const tree = ensureSyntaxTree(state, state.doc.length, timeout)
     if (tree === null) return null
     const spans = new Map<string, Span>()
@@ -395,7 +432,7 @@ function readTree(state: EditorState, language: SchemaLanguage, timeout: number)
     const documents = tree.topNode.getChildren('Document').map((document, index) => {
         const root = children(document).find((child) => !['DirectiveEnd', 'DocEnd', 'Comment', 'Directive'].includes(child.name)) ?? null
         const own = index === 0 ? spans : new Map<string, Span>()
-        return { value: root === null ? null : readYaml(state, root, [], own, new Map()), spans: own }
+        return { value: root === null ? null : readYaml(state, root, [], own, new Map(), yamlVersion), spans: own }
     })
     return {
         value: documents[0]?.value ?? null,
@@ -433,9 +470,10 @@ export function schemaDiagnostics(
     check: typeof validate,
     words: CodeSchemaWords = SCHEMA_WORDS,
     deferred?: DeferredValue,
+    yamlVersion: YamlVersion = '1.2',
 ): PathDiagnostic[] {
     if (state.doc.length === 0) return []
-    const read = readDocument(state, language)
+    const read = readDocument(state, language, undefined, yamlVersion)
     if (read === null) return []
     if (read.broken !== undefined) return [{ ...read.broken, severity: 'error', message: words.syntax(language) }]
     // Each document of a stream is checked against the schema on its own.
@@ -463,10 +501,11 @@ export function schemaProblems(
     failed: string | null,
     words: CodeSchemaWords = SCHEMA_WORDS,
     deferred?: DeferredValue,
+    yamlVersion: YamlVersion = '1.2',
 ): PathDiagnostic[] | undefined {
-    if (check !== undefined) return schemaDiagnostics(state, language, schema, check, words, deferred)
+    if (check !== undefined) return schemaDiagnostics(state, language, schema, check, words, deferred, yamlVersion)
     if (state.doc.length === 0) return []
-    const broken = readDocument(state, language)?.broken
+    const broken = readDocument(state, language, undefined, yamlVersion)?.broken
     if (broken !== undefined) return [{ ...broken, severity: 'error', message: words.syntax(language) }]
     if (failed === null) return undefined
     const first = state.doc.line(1)
@@ -742,8 +781,14 @@ export function schemasAt(schema: JsonSchema, path: Path, root: JsonSchema = sch
     return current
 }
 
+/** A value written in YAML, a string quoted when either version would read it as something else. */
 const quoteYaml = (value: unknown) =>
-    typeof value === 'string' && /^[\w./@-][\w ./@-]*$/.test(value) && typeof yamlScalar(value) === 'string' ? value : literal(value)
+    typeof value === 'string' &&
+    /^[\w./@-][\w ./@-]*$/.test(value) &&
+    typeof yamlScalar(value) === 'string' &&
+    typeof yamlScalar(value, '1.1') === 'string'
+        ? value
+        : literal(value)
 
 /** The end of the JSON string that opens at `start`, just past its closing quote; one left open ends with its line. */
 function stringEnd(source: string, start: number): number {
@@ -997,6 +1042,7 @@ export function schemaCompletion(
     schema: () => JsonSchema | undefined,
     language: SchemaLanguage,
     words: () => CodeSchemaWords = () => SCHEMA_WORDS,
+    yamlVersion: YamlVersion = '1.2',
 ) {
     return (context: CompletionContext): CompletionResult | null => {
         const current = schema()
@@ -1015,7 +1061,7 @@ export function schemaCompletion(
                   ? jsonKeys(source, context.pos)
                   : yamlKeys(context.state, context.pos, column)
         // The document as written so far, so a conditional schema offers the keys of the branch that applies.
-        const read = readDocument(context.state, language, 100)
+        const read = readDocument(context.state, language, 100, yamlVersion)
         const options = schemaOptions(
             current,
             language,
@@ -1049,11 +1095,11 @@ export function schemaCompletion(
 }
 
 /** What the schema says of the key under the pointer: its type and its description. */
-export function schemaHover(schema: () => JsonSchema | undefined, language: SchemaLanguage) {
+export function schemaHover(schema: () => JsonSchema | undefined, language: SchemaLanguage, yamlVersion: YamlVersion = '1.2') {
     return (view: EditorView, pos: number) => {
         const current = schema()
         if (current === undefined) return null
-        const read = readDocument(view.state, language, 100)
+        const read = readDocument(view.state, language, 100, yamlVersion)
         if (read === null) return null
         const span = [...read.spans.values()].find((each) => each.key !== undefined && each.key.from <= pos && pos <= each.key.to)
         if (span?.key === undefined) return null
