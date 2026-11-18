@@ -19,8 +19,8 @@ const NUMERIC_X: readonly ChartKind[] = ['scatter', 'parallel', 'histogram']
 
 /**
  * The columns a chart's rows are shown in: the fields its spec reads, from the outermost in (the
- * grid's facet, a nesting path, `x`, `series`), then its figures (`y`, `value`, `history` and
- * `points`), each once and headed by its name in `fieldNames`. A fan's bands stand around its `y`
+ * grid's facet, a nesting path, `x`, `series`), then its figures (a candlestick's `ohlc` fields,
+ * `y`, `value`, `history` and `points`), each once and headed by its name in `fieldNames`. A fan's bands stand around its `y`
  * in quantile order: the bands' lows from the outermost in, then `y`, then their highs from the
  * innermost out. The spec's `dataFields` follow. A spec that names no field shows every field of
  * its rows.
@@ -36,6 +36,9 @@ export function dataColumns(kind: ChartKind, spec: ChartSpec, facet?: string): D
     for (const field of spec.path ?? []) add(field, false)
     add(spec.x, NUMERIC_X.includes(kind))
     add(spec.series, false)
+    const ohlc = spec.ohlc
+    if (ohlc !== undefined) for (const field of [ohlc.open, ohlc.high, ohlc.low, ohlc.close]) add(field, true)
+    add(ohlc?.volume, true, 1)
     for (const band of bands) add(band.low, true)
     fieldsOf(spec).forEach((field, index) => add(field, true, index))
     for (const band of [...bands].reverse()) add(band.high, true)

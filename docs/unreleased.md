@@ -10,3 +10,9 @@ release and empties it.
   the issue under the field and shuts Submit, an async `onSubmit` holds the dialog busy, and a failed
   one leaves it open with why above the verbs. Its words are `PROMPT_DIALOG_WORDS`, ids
   `promptDialog.*`.
+- The `candlestick` chart kind, for prices or readings over time as open, high, low and close: a
+  candle per category, rises in `good` and falls in `critical` (or what `colors` names for Rise and
+  Fall), with the spec fields `ohlc` (`{ open, high, low, close, volume?, style? }`, `style: 'bars'`
+  for OHLC bars; a `volume` field draws bars in a panel under the candles) and `averages` (moving
+  averages of the closes, `[5, 20]`), and `zoom` as the linked chart has. New chart words `open`,
+  `close` and `average` (ids `chart.open`, `chart.close`, `chart.average`). Story Charts/Candlestick.

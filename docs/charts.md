@@ -75,8 +75,8 @@ export function RunsPerDay() {
 **The data view.** A `Chart` or `ChartGrid` in a frame tells the frame what it draws, and the
 frame's Data button shows those rows as a table (`DataTable`, unframed and with no bar) in the
 chart's place, until Chart brings it back. The columns are the fields the spec reads, from the
-outermost in (a grid's facet, `path`, `x`, `series`), then the figures (`y`, `value`, `history`,
-`points`), headed by their `fieldNames` and written with the spec's `format` and `unit`. A fan's
+outermost in (a grid's facet, `path`, `x`, `series`), then the figures (a candlestick's `ohlc`
+fields, `y`, `value`, `history`, `points`), headed by their `fieldNames` and written with the spec's `format` and `unit`. A fan's
 `bands` stand around its `y` in quantile order: the bands' lows from the outermost in, the median,
 then their highs from the innermost out (`q10`, `q25`, `median`, `q75`, `q90`). The spec's
 `dataFields` add fields the chart does not draw but a reader needs beside it, such as the place the
@@ -176,12 +176,12 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `bins`           | How many bins a histogram splits its numbers into, or `{ width }` for how wide each is, with `start` and `count` for the edges themselves.                                                                    |
 | `steps`          | Steps along the value axis, each a `value` where it starts, a `color` token and a `label`: thresholds, bands. A line draws each after the first as a dashed line across, kept when the legend hides a series. |
 | `min`, `max`     | Where the value axis starts and ends, for a kind that fixes it, such as a gauge's dial or a heatmap's scale.                                                                                                  |
-| `words`          | The words a chart writes itself (Count, Total, Rise, Fall, Target and others), for translation.                                                                                                               |
+| `words`          | The words a chart writes itself (Count, Total, Rise, Fall, Open, Close, Target and others), for translation.                                                                                                  |
 | `path`           | The fields from the outermost in, for a kind that nests or flows through stages.                                                                                                                              |
 | `dial`           | A gauge's shape: `arc` (the default), `ring`, `half`, `bands` or `needle`.                                                                                                                                    |
 | `panels`         | How each panel of a linked chart is drawn, by its field's or series' name: `mark` (`bar`, `line`, `area`), `hang`, `weight`.                                                                                  |
 | `scales`         | Whether a linked chart's panels share one value scale: `shared` for panels split by `series`, `own` for separate fields.                                                                                      |
-| `zoom`           | The part of a linked chart's axis in view at first: `[from, to]` in percent, or the first and last category.                                                                                                  |
+| `zoom`           | The part of a linked or candlestick chart's axis in view at first: `[from, to]` in percent, or the first and last category.                                                                                   |
 | `stacks`         | The stack each series joins, by its name; series sharing one are drawn on top of each other.                                                                                                                  |
 | `dashed`         | Series drawn as a thin dashed line with no area: a reference, such as a target or the period before.                                                                                                          |
 | `layers`         | How a two-axis chart draws each series or field, by its name: `mark` (`bar`, `line`) and `axis` (`left`, `right`).                                                                                            |
@@ -196,6 +196,8 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `history`        | The field drawn as a solid line on the rows before a fan's forecast starts.                                                                                                                                   |
 | `bridge`         | Whether a fan's median is drawn from the last `history` figure, so history and forecast read as one line; true by default.                                                                                    |
 | `marks`          | Lines down the chart at categories of `x`, each dashed, with a `label` at its top and a `color` token: where a forecast starts.                                                                               |
+| `ohlc`           | The fields a candlestick reads its `open`, `high`, `low` and `close` from, its `volume` drawn as bars in a panel under it, and its `style`: `candles` (the default) or `bars`.                                |
+| `averages`       | Moving averages a candlestick draws over its closes, each a line over this many categories: `[5, 20]`.                                                                                                        |
 
 **Ticks.** A value axis writes its ticks as the tooltips write its figures: by `format`, then the
 unit, so ticks and tooltips never disagree on a unit. Ticks are short: the figure `format` writes
@@ -214,7 +216,8 @@ one day stay two categories. A histogram writes its bins' edges to the decimals 
 
 **Categories.** `formatCategory` writes a category where the chart shows it: on the category
 axis and as the tooltip's title, on the kinds with a category axis (`bar`, `line`, `area`, `step`,
-`range`, `fan`, `heatmap`, `dual`, `linked`, `boxplot`, `waterfall`, `bullet` and `rose`). The
+`range`, `fan`, `heatmap`, `dual`, `linked`, `candlestick`, `boxplot`, `waterfall`, `bullet` and
+`rose`). The
 category stays the key everywhere else: the rows, `order`, `marks`, `zoom` and the frame's data
 view, which shows the rows as they are.
 
@@ -310,6 +313,24 @@ and the wheel with a mouse). `panels` draws each, by its field's or series' name
 or an area (`mark`), hanging from its top on an inverted axis (`hang`), as rain hangs over the
 flow it feeds, and sets its share of the height (`weight`). `zoom` opens it on a window. Hiding a
 series in the legend drops its panel.
+
+### Open, high, low and close
+
+| Kind          | For                                                                                         | Reads                                                                                                                                            | Story              |
+| ------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ |
+| `candlestick` | Prices or readings over time: a candle per category from its open to its close, low to high | `x`, `ohlc`, `averages`, `order`, `zoom`, `colors`, `palette`, `smooth`, `format`, `unit`, `fieldNames`, `words`, `labelEvery`, `formatCategory` | Charts/Candlestick |
+
+A category that closes at or above its open rises, in the `good` tone, and one below falls, in the
+`critical` tone, as a waterfall's rises and falls; `colors` names others for the words `Rise` and
+`Fall`, and the legend hides either. Several rows of one category make one candle: the first open,
+the last close, the highest high and the lowest low, so hourly readings draw daily candles. The
+value axis fits the figures in view. `ohlc.volume` adds a panel of bars under the candles on the
+same axis, each in its candle's tone, named through `fieldNames` and written with the second
+`unit`; `averages` draws a moving average of the closes per span, `Average 5`, in the palette's
+colors. `zoom` adds the linked chart's zoom: a slider under the panels, a drag or a pinch, moving
+both panels together. `ohlc.style` `bars` draws a line from the low to the high with a tick left at
+the open and right at the close in place of each candle. The tooltip writes Open, High, Low and
+Close, the averages and the volume.
 
 ## Adding a kind
 

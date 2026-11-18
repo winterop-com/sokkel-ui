@@ -36,6 +36,7 @@ const FILES: Record<ChartKind, Load | [Load, string]> = {
     range: steps,
     fan: () => import('./fan'),
     linked: () => import('./linked'),
+    candlestick: () => import('./candlestick'),
 }
 
 /** The kinds whose builder reads what the legend hides; the others are hidden by series name in the drawn chart, so a toggle builds nothing again. */

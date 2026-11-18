@@ -8009,7 +8009,9 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {}
+const PENDING: Record<string, Record<string, string>> = {
+    chart: { 'options.kind': 'the candlestick kind, specified in the chart family next' },
+}
 
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
