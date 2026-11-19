@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import { GraphEditingContext } from './context'
-import { boxInView, GraphCanvas, type GraphEditing } from './GraphCanvas'
+import { boxInView, edgeClickAlone, GraphCanvas, type GraphEditing } from './GraphCanvas'
 
 declare global {
     var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
@@ -70,5 +70,18 @@ describe('boxInView', () => {
     })
     it('measures under the view zoom', () => {
         expect(boxInView({ ...box, y: 700 }, { x: 0, y: 0, zoom: 0.5 }, { width: 1024, height: 720 })).toBe(true)
+    })
+})
+
+describe('edgeClickAlone', () => {
+    const plain = { shiftKey: false, metaKey: false, ctrlKey: false }
+    it('makes a clicked edge the only choice', () => {
+        expect(edgeClickAlone(plain, false)).toBe(true)
+        expect(edgeClickAlone(plain, true)).toBe(true)
+    })
+    it('adds the edge to the choice when the adding key is held where several may be chosen', () => {
+        expect(edgeClickAlone({ ...plain, shiftKey: true }, true)).toBe(false)
+        expect(edgeClickAlone({ ...plain, metaKey: true }, true)).toBe(false)
+        expect(edgeClickAlone({ ...plain, ctrlKey: true }, false)).toBe(true)
     })
 })

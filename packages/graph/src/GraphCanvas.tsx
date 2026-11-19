@@ -339,6 +339,14 @@ export function pickedNode(changes: readonly NodeChange[]): string | undefined {
 }
 
 /**
+ * Whether a click on an edge makes it the only choice, letting go of the chosen nodes so a delete
+ * removes the edge alone: it does unless the key that adds to a choice is held where several may be chosen.
+ */
+export function edgeClickAlone(event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }, multiple: boolean): boolean {
+    return !(multiple && (event.shiftKey || event.metaKey || event.ctrlKey))
+}
+
+/**
  * The edges with the route elk drew dropped from each one whose end is being dragged, so it follows
  * the box as a line between their handles rather than staying where the box was.
  */
@@ -714,6 +722,15 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                                   if (!gone.has(edge.source) && !gone.has(edge.target))
                                                       editing.onDisconnect(edge.id, edge.source, edge.target)
                                               setChosenEdge(null)
+                                          }
+                                        : undefined
+                                }
+                                onEdgeClick={
+                                    editable
+                                        ? (event) => {
+                                              if (!edgeClickAlone(event, multiple)) return
+                                              onSelect?.(null)
+                                              onSelectionChange?.([])
                                           }
                                         : undefined
                                 }
