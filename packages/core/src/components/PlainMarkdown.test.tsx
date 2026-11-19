@@ -2,8 +2,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import { Markdown } from './Markdown'
-import { linkAllowed } from './markdown-view'
-import { loadHtml, PlainMarkdown } from './PlainMarkdown'
+import { linkAllowed, markdownHeadings } from './markdown-view'
+import { loadHtml, PlainMarkdown, splitFrontmatter } from './PlainMarkdown'
 
 const draw = (content: string, props: Partial<Parameters<typeof PlainMarkdown>[0]> = {}) =>
     renderToStaticMarkup(<PlainMarkdown content={content} {...props} />)
@@ -183,5 +183,153 @@ describe('PlainMarkdown inert lines with marks', () => {
         expect(html).toMatch(/<mark class="[^"]*bg-primary\/15[^"]*">the export<\/mark>/)
         expect(draw(LINE, { inline: true, highlight: 'nightly export' })).toContain('<code>nightly export</code>')
         expect(draw(LINE, { inline: true, highlight: '  ' })).not.toContain('<mark')
+    })
+})
+
+const NOTES = { onOpen: () => undefined }
+
+describe('PlainMarkdown notes as vaults write them', () => {
+    const FRONT = '---\ntitle: Nightly export\ntags: [harbor]\n---\n# Steps\n\nFetch, then upload.'
+
+    it('leaves the frontmatter out, with no rule and no heading made of it', () => {
+        const html = draw(FRONT)
+        expect(html).not.toContain('<hr')
+        expect(html).not.toContain('title: Nightly export')
+        expect(html).toContain('<h1')
+        expect(html).toContain('Fetch, then upload.')
+    })
+
+    it('keeps a reply that opens with a rule and a sentence whole', () => {
+        const reply = '---\nThe export finished at noon.\n---\nAll steps succeeded.'
+        expect(splitFrontmatter(reply).frontmatter).toBeUndefined()
+        expect(draw(reply)).toContain('The export finished at noon.')
+        expect(draw(reply)).toContain('<hr')
+    })
+
+    it('shows the frontmatter as YAML code, or reads it as markdown, when asked', () => {
+        expect(draw(FRONT, { frontmatter: 'show' })).toContain('title: Nightly export')
+        expect(draw(FRONT, { frontmatter: 'show' })).not.toContain('<hr')
+        expect(draw(FRONT, { frontmatter: 'markdown' })).toContain('<hr')
+    })
+
+    it('parts the frontmatter from the body, and lists no heading made of it', () => {
+        expect(splitFrontmatter(FRONT)).toEqual({
+            frontmatter: 'title: Nightly export\ntags: [harbor]',
+            body: '# Steps\n\nFetch, then upload.',
+        })
+        expect(splitFrontmatter('---\n---\nBody')).toEqual({ frontmatter: '', body: 'Body' })
+        expect(splitFrontmatter('Body\n---\nmore')).toEqual({ frontmatter: undefined, body: 'Body\n---\nmore' })
+        expect(splitFrontmatter('---\nnever closed')).toEqual({ frontmatter: undefined, body: '---\nnever closed' })
+        expect(splitFrontmatter('---\nlist:\n  - a\n- b\n# comment\n"quoted key": 1\n---\n').frontmatter).toBe(
+            'list:\n  - a\n- b\n# comment\n"quoted key": 1',
+        )
+        expect(markdownHeadings('---\ntitle: x\n---\n## Steps', [1, 2]).map((heading) => heading.label)).toEqual(['Steps'])
+    })
+
+    it('never draws an HTML comment, HTML allowed or not', async () => {
+        const text = 'Before <!-- unseen --> after\n\n<!--\na block\n-->\n\nEnd'
+        expect(draw(text)).not.toContain('unseen')
+        expect(draw(text)).not.toContain('a block')
+        expect(draw(text)).not.toContain('&lt;!--')
+        expect(draw(text)).toContain('End')
+        await loadHtml()
+        expect(draw(text, { allowHtml: true })).not.toContain('unseen')
+    })
+
+    it('keeps a part marker, which is a comment too', () => {
+        expect(draw('<!-- part:run -->', { parts: { run: <span>the run</span> } })).toContain('the run')
+    })
+
+    it('draws a note embed as a link in a frame, never a stray "!"', () => {
+        const html = draw('![[nightly-export]]', { links: NOTES })
+        expect(html).not.toContain('!')
+        expect(html).toMatch(/<div data-embed="nightly-export"[^>]*><a href="#" data-wiki-link="nightly-export"/)
+        expect(draw('See ![[nightly-export#Steps]] here.', { links: NOTES })).toMatch(/See <span data-embed="nightly-export"/)
+    })
+
+    it('draws a note embed with the app’s embed when it gives one', () => {
+        const html = draw('![[nightly-export#Steps]]', {
+            links: { ...NOTES, embed: (target, heading) => <em>{`${target}/${heading ?? ''}`}</em> },
+        })
+        expect(html).toContain('<em>nightly-export/Steps</em>')
+    })
+
+    it('draws an image embed as an image, a number after the bar as its width, and other files as links', () => {
+        const html = draw('![[tide chart.png|300]] ![[map.png|the harbor]] ![[runs.pdf]]', { links: NOTES })
+        expect(html).toContain('<img src="tide%20chart.png" alt="tide chart.png" data-embed="tide chart.png" width="300"/>')
+        expect(html).toContain('alt="the harbor"')
+        expect(html).toMatch(/<a [^>]*href="runs.pdf"[^>]*>runs.pdf<\/a>/)
+        expect(html).not.toContain('!')
+    })
+
+    it('rewrites image and link addresses through resolveUrl, then holds links to their schemes', () => {
+        const resolveUrl = (url: string, use: 'image' | 'link') =>
+            use === 'image' ? `https://files.example.org/${url}` : `ftp://example.org/${url}`
+        const html = draw('![chart](attachments/chart.png) [notes](attachments/notes.pdf) [[harbor]]', {
+            resolveUrl,
+            links: NOTES,
+            linkSchemes: ['https'],
+        })
+        expect(html).toContain('src="https://files.example.org/attachments/chart.png"')
+        expect(html).not.toContain('ftp:')
+        expect(html).toContain('data-wiki-link="harbor"')
+    })
+
+    it('draws a blob or data image only when resolveUrl gives it, never from the text alone', () => {
+        const dataImage = 'data:image/png;base64,AAAA'
+        expect(draw('![chart](chart.png)', { resolveUrl: () => dataImage })).toContain(`src="${dataImage}"`)
+        expect(draw('![chart](chart.png)', { resolveUrl: () => 'blob:https://example.org/1' })).toContain(
+            'src="blob:https://example.org/1"',
+        )
+        expect(draw(`![chart](${dataImage})`, { resolveUrl: (url) => url })).not.toContain('data:image')
+        expect(draw(`![chart](${dataImage})`)).not.toContain('data:image')
+        expect(draw('![chart](chart.png)', { resolveUrl: () => 'javascript:alert(1)' })).not.toContain('javascript:')
+    })
+
+    it('titles a callout with the rest of its first line', () => {
+        const html = draw('> [!warning] Before a *rerun*\n> Move the file aside.')
+        expect(html).toMatch(/<p class="[^"]*">Before a <em>rerun<\/em><\/p>/)
+        expect(html).not.toContain('>Warning<')
+        expect(html).toContain('Move the file aside.')
+    })
+
+    it('keeps the kind’s word as the title when none is written', () => {
+        expect(draw('> [!NOTE]\n> The export reads only.')).toMatch(/<p class="[^"]*">Note<\/p>/)
+    })
+
+    it('draws further markers as the nearest kind, titled with their own word', () => {
+        const html = draw('> [!todo]\n> Rebuild the index.')
+        expect(html).toContain('data-callout="note"')
+        expect(html).toMatch(/<p class="[^"]*">Todo<\/p>/)
+        expect(draw('> [!bug] Fails on upload')).toContain('data-callout="caution"')
+        expect(draw('> [!unknown] Stays a quote')).toContain('<blockquote>')
+    })
+
+    it('folds a callout closed with "-" and open with "+"', () => {
+        const closed = draw('> [!tip]- Folded\n> Out of sight.')
+        expect(closed).toMatch(/<details data-callout="tip" class="[^"]*">/)
+        expect(closed).toContain('Out of sight.')
+        expect(draw('> [!tip]+ Unfolded\n> In sight.')).toMatch(/<details data-callout="tip" open=""/)
+    })
+
+    it('draws ==words== highlighted, but not "a == b"', () => {
+        const html = draw('The ==failed== step, where a == b, and `==code==`.')
+        expect(html).toContain('<mark data-marked="">failed</mark>')
+        expect(html).toContain('a == b')
+        expect(html).toContain('<code>==code==</code>')
+    })
+
+    it('marks search words inside a highlight too', () => {
+        expect(draw('==nightly export==', { highlight: 'export' })).toMatch(
+            /<mark data-marked="">nightly <mark class="[^"]*">export<\/mark><\/mark>/,
+        )
+    })
+
+    it('shows what it does not read as typed: %%comments%%, inline footnotes, block ids, and a single line break', () => {
+        const html = draw('%%draft%% then ^[an aside] and a block ^abc123\nnext line')
+        expect(html).toContain('%%draft%%')
+        expect(html).toContain('^[an aside]')
+        expect(html).toContain('^abc123\nnext line')
+        expect(html).not.toContain('<br')
     })
 })

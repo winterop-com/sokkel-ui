@@ -473,7 +473,13 @@ inside code. `Markdown`'s `links` draws them as links the app follows (`onOpen`,
 `exists` denies drawn faint, `onTag` for the tags), and `wikiLinksIn`, `tagsIn` and `mentionsOf`
 give an app a note's links, its tags and where a name is written unlinked, for backlinks. A
 backlink's line is drawn as Markdown in the row that opens its note: `live={false}` draws every link
-as its words and `highlight` marks the name where it stands. Any other
+as its words and `highlight` marks the name where it stands. A note is read as a vault writes it: its
+YAML frontmatter left out (`frontmatter`, `splitFrontmatter`), HTML comments never drawn, a callout
+titled by the rest of its first line and folded by `-` or `+`, the further callout markers drawn as
+the nearest of the five kinds, `==words==` highlighted, and `![[...]]` an embed: a note through
+`links.embed`, an image at the size after its bar, any other file a link. `resolveUrl` points an
+image's or a link's address at the app's own server. `%%comments%%`, inline footnotes and block ids
+are not read, and a single line break stays a space, as CommonMark has it. Any other
 link opens in a new tab unless `onLink` takes it: the app's own routes and the times in an episode's
 notes stay in the page. Text other people wrote is held to what the app allows: `images={false}` draws an
 image as its alt text and address and fetches nothing, `linkSchemes` lists the schemes a link may
