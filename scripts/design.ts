@@ -1,6 +1,7 @@
 /**
  * Keep `design/`, the copy of the sokkel-design contract that `src/parts.test.ts` checks the
- * components against: its `index.json` and the JSON files under `schema/`, `parts/` and `patterns/`,
+ * components against: its `index.json`, the JSON files under `schema/`, `parts/` and `patterns/`,
+ * and the markdown tree's fixtures under `markdown/fixtures/` (which `lib/markdown-tree`'s test reads),
  * as they are at the commit `design/pin.json` names. The copy is written as the contract has it,
  * byte for byte, and never edited here: a change to a spec is a sokkel-design PR, then a moved pin.
  *
@@ -28,9 +29,17 @@ interface Pin {
     commit: string
 }
 
-/** The contract's files the copy holds: the index, its pin on sokkel-ui, and the JSON of the schemas, parts and patterns. */
+/**
+ * The contract's files the copy holds: the index, its pin on sokkel-ui, the JSON of the schemas,
+ * parts and patterns, and the markdown tree's fixtures (texts and the trees they read into).
+ */
 function copied(path: string): boolean {
-    return path === 'index.json' || path === 'sokkel-ui.json' || /^(schema|parts|patterns)\/[^/]+\.json$/.test(path)
+    return (
+        path === 'index.json' ||
+        path === 'sokkel-ui.json' ||
+        /^(schema|parts|patterns)\/[^/]+\.json$/.test(path) ||
+        /^markdown\/fixtures\/[^/]+\.(md|json)$/.test(path)
+    )
 }
 
 const TOKENS = 'packages/core/tokens/tokens.json'
@@ -115,7 +124,7 @@ function fetched(repo: string, ref: string): { commit: string; files: Map<string
 
 /** The contract's files in a checkout and its HEAD, refusing a checkout whose copied files differ from that commit. */
 function checkout(dir: string): { commit: string; files: Map<string, Buffer> } {
-    const changed = git(['status', '--porcelain', '--', 'index.json', 'schema', 'parts', 'patterns'], dir).trim()
+    const changed = git(['status', '--porcelain', '--', 'index.json', 'schema', 'parts', 'patterns', 'markdown'], dir).trim()
     if (changed !== '')
         throw new Error(
             `${dir} has uncommitted changes in the contract's files; commit them first, so the pin names what is copied:\n${changed}`,
@@ -131,7 +140,7 @@ function local(): Map<string, Buffer> {
     const files = new Map<string, Buffer>()
     for (const name of ['index.json', 'sokkel-ui.json'])
         if (existsSync(join(DESIGN, name))) files.set(name, readFileSync(join(DESIGN, name)))
-    for (const folder of ['schema', 'parts', 'patterns']) {
+    for (const folder of ['schema', 'parts', 'patterns', 'markdown/fixtures']) {
         if (!existsSync(join(DESIGN, folder))) continue
         for (const name of readdirSync(join(DESIGN, folder))) {
             const path = `${folder}/${name}`

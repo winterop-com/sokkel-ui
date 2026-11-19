@@ -6,6 +6,8 @@ import { HARBOR_DUSK } from '../fixtures/photos'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Field } from '@winterop-com/sokkel-ui/Field'
+import { JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
+import { parseMarkdown } from '@winterop-com/sokkel-ui/lib/markdown-tree'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { Markdown, markdownHeadings, markdownSection } from '@winterop-com/sokkel-ui/Markdown'
@@ -342,6 +344,34 @@ function Embeds() {
     )
 }
 
+/** A note a server read once into its tree, sent as JSON and drawn from it. */
+const SERVED = parseMarkdown(`---
+owner: grace
+project: harbor
+---
+# Retry a run
+
+A failed run starts again from ==the failed step==; see [[nightly-export]]. #runbook
+
+> [!warning] One retry at a time
+> A second run overwrites the first one's upload.`)
+
+/** The tree beside the page it draws: what a server sends, and what the app shows of it. */
+function FromTree() {
+    return (
+        <Row gap="3xl" align="start" wrap className="p-6">
+            <Stack gap="sm" className="min-w-0 flex-1 basis-80">
+                <GroupLabel as="h2">Drawn</GroupLabel>
+                <Markdown tree={SERVED} scale="document" links={{ onOpen: () => undefined, onTag: () => undefined }} />
+            </Stack>
+            <Stack gap="sm" className="min-w-0 flex-1 basis-80">
+                <GroupLabel as="h2">Tree</GroupLabel>
+                <JsonTree value={SERVED} open={3} />
+            </Stack>
+        </Row>
+    )
+}
+
 /** A note as a vault keeps it: frontmatter, a hidden comment, titled and folded callouts, embeds, a highlight and Rust. */
 const VAULT_NOTE = `---
 title: Nightly export
@@ -582,6 +612,12 @@ export const Vault: StoryObj = { name: 'Vault note', render: () => <VaultNote />
 export const Embedded: StoryObj = { name: 'Embeds', render: () => <Embeds /> }
 /** A note's frontmatter properties left out, the default, and shown above it with `frontmatter="show"`. */
 export const Frontmatter: StoryObj = { name: 'Properties', render: () => <Properties /> }
+/**
+ * A note drawn from its tree: `parseMarkdown` (from `lib/markdown-tree`) reads the text once, as a
+ * server would, with its frontmatter's properties, links, tag, highlight and callout as nodes of their
+ * own, and `Markdown`'s `tree` draws it as it would the text.
+ */
+export const Tree: StoryObj = { name: 'From a tree', render: () => <FromTree /> }
 
 /**
  * The lines that link to a note, each drawn as Markdown in the row that opens its note: strong

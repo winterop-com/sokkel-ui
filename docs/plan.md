@@ -479,7 +479,13 @@ titled by the rest of its first line and folded by `-` or `+`, the further callo
 the nearest of the five kinds, `==words==` highlighted, and `![[...]]` an embed: a note through
 `links.embed`, an image at the size after its bar, any other file a link. `resolveUrl` points an
 image's or a link's address at the app's own server. `%%comments%%`, inline footnotes and block ids
-are not read, and a single line break stays a space, as CommonMark has it. Any other
+are not read, and a single line break stays a space, as CommonMark has it. A text is read once into
+its tree (`lib/markdown-parse`), mdast with those nodes as nodes of their own, and the tree is drawn:
+the tree holds what the text says and never what the app allows, which is held as it is drawn.
+`parseMarkdown` in `lib/markdown-tree` reads the same tree without React, its frontmatter's
+properties read, so a server reads a note once for every renderer, and `Markdown`'s `tree` draws it as
+the text would draw; sokkel-design's `markdown/` holds the format and the fixtures every reader
+matches. Any other
 link opens in a new tab unless `onLink` takes it: the app's own routes and the times in an episode's
 notes stay in the page. Text other people wrote is held to what the app allows: `images={false}` draws an
 image as its alt text and address and fetches nothing, `linkSchemes` lists the schemes a link may

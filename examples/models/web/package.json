@@ -22,8 +22,10 @@
         "rehype-sanitize": "^6.0.0",
         "remark-gfm": "^4.0.1",
         "remark-math": "^6.0.0",
+        "remark-parse": "^11.0.0",
         "shiki": "^4.6.0",
-        "tidevann-shared": "file:../../shared"
+        "tidevann-shared": "file:../../shared",
+        "unified": "^11.0.5"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.3.4",

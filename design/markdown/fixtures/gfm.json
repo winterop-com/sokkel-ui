@@ -1,0 +1,205 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "table",
+      "align": [
+        "left",
+        "center",
+        "right"
+      ],
+      "children": [
+        {
+          "type": "tableRow",
+          "children": [
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Job"
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "State"
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Rows"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "children": [
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "nightly-export"
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "failed"
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "children": [
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "sync-inventory"
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "succeeded"
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "1,204"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "start": null,
+      "spread": false,
+      "children": [
+        {
+          "type": "listItem",
+          "spread": false,
+          "checked": true,
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Rotate the keys"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "spread": false,
+          "checked": false,
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Ask margaret"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "delete",
+          "children": [
+            {
+              "type": "text",
+              "value": "retired"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " jobs, "
+        },
+        {
+          "type": "link",
+          "title": null,
+          "url": "http://www.example.org",
+          "children": [
+            {
+              "type": "text",
+              "value": "www.example.org"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": ", and a note."
+        },
+        {
+          "type": "footnoteReference",
+          "identifier": "utc",
+          "label": "utc"
+        }
+      ]
+    },
+    {
+      "type": "footnoteDefinition",
+      "identifier": "utc",
+      "label": "utc",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "Every time is in UTC."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -14,13 +14,21 @@ import {
     type ReactNode,
 } from 'react'
 import ReactMarkdown, { defaultUrlTransform, type Components, type Options, type UrlTransform } from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 
 import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
-import { hasMath, normalizeMath } from '../lib/math'
+import {
+    BLOCK_CONTAINERS,
+    nodesOf,
+    parseTree,
+    splitFrontmatter,
+    treeText,
+    type CalloutKind,
+    type MarkdownNode,
+    type MarkdownTree,
+} from '../lib/markdown-parse'
+import { hasMath } from '../lib/math'
 import { TABLE_HEAD_TEXT } from '../lib/table'
-import { readWikiLink, tagMatches, wikiLinksIn } from '../lib/wiki-links'
 import { Code } from './Code'
 import { highlightMark } from './Highlight'
 import { Link } from './Link'
@@ -80,35 +88,8 @@ function uniqueIds(): (id: string) => string {
     }
 }
 
-/** A frontmatter block: `---` on the first line, then anything, closed by `---` or `...` on a line of its own. */
-const FRONTMATTER = /^---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/
-
-/**
- * Whether a block reads as YAML properties: each line blank, a comment, indented under the line
- * before, a list item, or a key without spaces and a colon. A text that opens with a rule and a
- * sentence is no frontmatter.
- */
-function propertiesLike(block: string): boolean {
-    const lines = block.split(/\r?\n/)
-    return (
-        lines.some((line) => line.trim() !== '') &&
-        lines.every((line) => line.trim() === '' || /^(\s|#|- |-$|[\w.-]+:(\s|$)|"[^"\n]*":(\s|$)|'[^'\n]*':(\s|$))/.test(line))
-    )
-}
-
-/**
- * A markdown text parted into its frontmatter and the rest: the YAML between a `---` on the text's
- * first line and the next line that is `---` or `...`, when every line of it reads as properties,
- * and the text after it. Otherwise the frontmatter is undefined and the body is the whole text. The
- * YAML is returned as written, for the app to read its properties with a YAML reader of its own.
- */
-export function splitFrontmatter(content: string): { frontmatter: string | undefined; body: string } {
-    const match = FRONTMATTER.exec(content)
-    if (match === null) return { frontmatter: undefined, body: content }
-    const block = match[1] ?? ''
-    if (block.trim() !== '' && !propertiesLike(block)) return { frontmatter: undefined, body: content }
-    return { frontmatter: block, body: content.slice(match[0].length) }
-}
+export { splitFrontmatter }
+export type { CalloutKind, MarkdownNode, MarkdownTree }
 
 /** A setext heading's underline: `===` under a level 1 heading, `---` under a level 2 one. */
 const SETEXT = /^ {0,3}(=+|-+)\s*$/
@@ -150,13 +131,23 @@ function linkWords(text: string): string {
 }
 
 /**
- * The headings of a markdown text at the given levels, outside fenced code and frontmatter, in order:
- * those written with `#` and those underlined with `===` or `---`. Their ids are those `anchors`
- * gives, a repeated heading numbered after the first.
+ * The headings of a markdown text, or of its tree, at the given levels, outside fenced code and
+ * frontmatter, in order: those written with `#` and those underlined with `===` or `---`. Their ids
+ * are those `anchors` gives, a repeated heading numbered after the first.
  */
-export function markdownHeadings(content: string, levels: readonly number[] = [2, 3]): MarkdownHeading[] {
+export function markdownHeadings(content: string | MarkdownTree, levels: readonly number[] = [2, 3]): MarkdownHeading[] {
     const out: MarkdownHeading[] = []
     const unique = uniqueIds()
+    if (typeof content !== 'string') {
+        for (const { node } of nodesOf(content as unknown as MarkdownNode)) {
+            if (node.type !== 'heading') continue
+            const label = treeText(node).trim()
+            const id = unique(headingId(label))
+            const level = Number(node.depth)
+            if (levels.includes(level)) out.push({ id, label, level })
+        }
+        return out
+    }
     let fenced = false
     const lines = splitFrontmatter(content).body.split('\n')
     for (const [index, line] of lines.entries()) {
@@ -207,43 +198,6 @@ export function markdownSection(content: string, heading: string): string | unde
     return start < 0 ? undefined : lines.slice(start).join('\n').trimEnd()
 }
 
-/** The kinds of callout a quote becomes when its first line is `[!NOTE]`, `[!TIP]` and so on. */
-export type CalloutKind = 'note' | 'tip' | 'important' | 'warning' | 'caution'
-
-/**
- * The kind each callout marker draws: GitHub's five as themselves, and the further markers linked
- * notes use, each as the one of the five nearest it. Any other marker leaves the quote a quote.
- */
-const CALLOUT_MARKERS: Readonly<Record<string, CalloutKind>> = {
-    note: 'note',
-    info: 'note',
-    todo: 'note',
-    abstract: 'note',
-    summary: 'note',
-    tldr: 'note',
-    example: 'note',
-    quote: 'note',
-    cite: 'note',
-    tip: 'tip',
-    hint: 'tip',
-    success: 'tip',
-    check: 'tip',
-    done: 'tip',
-    important: 'important',
-    question: 'important',
-    help: 'important',
-    faq: 'important',
-    warning: 'warning',
-    attention: 'warning',
-    caution: 'caution',
-    danger: 'caution',
-    error: 'caution',
-    failure: 'caution',
-    fail: 'caution',
-    missing: 'caution',
-    bug: 'caution',
-}
-
 /** The words markdown says: each callout's title, and the words of its code blocks and diagrams. */
 export interface MarkdownWords extends Record<CalloutKind, string> {
     /** The words of each code block's copy button. */
@@ -287,45 +241,8 @@ function hastText(node: HastNode): string {
     return (node.children ?? []).map(hastText).join('')
 }
 
-/** The slice of an mdast node the plugin below reads and writes. */
-interface MdastNode {
-    type: string
-    value?: string
-    url?: string
-    alt?: string
-    data?: Record<string, unknown>
-    children?: MdastNode[]
-}
-
-/** The marker of a part an app embeds: `<!-- WORD:ID -->`, where the ID is letters, digits, `-`, `_`, `.` and `:`. */
-function partMarker(word: string): RegExp {
-    return new RegExp(`^<!--\\s*${word.replace(/[^\w-]/g, '')}:([\\w.:-]+)\\s*-->$`)
-}
-
 /** The app's own parts: a map by ID, or a function that draws the part an ID names. */
 export type MarkdownParts = Readonly<Record<string, ReactNode>> | ((id: string) => ReactNode)
-
-/**
- * Turns each part marker into a placeholder element the `parts` map fills: a block where the
- * marker stands on a line of its own, inline where it sits inside a paragraph.
- */
-function remarkParts(word: string) {
-    const marker = partMarker(word)
-    return () => (tree: MdastNode) => {
-        const visit = (node: MdastNode, inline: boolean) => {
-            if (node.children === undefined) return
-            node.children = node.children.map((child) => {
-                const match = child.type === 'html' ? marker.exec((child.value ?? '').trim()) : null
-                if (match === null) {
-                    visit(child, inline || child.type === 'paragraph' || child.type === 'heading')
-                    return child
-                }
-                return { type: 'part', children: [], data: { hName: inline ? 'span' : 'div', hProperties: { dataPart: match[1] } } }
-            })
-        }
-        visit(tree, false)
-    }
-}
 
 /**
  * Links between notes and tags on them, followed by the app: `[[Note]]`, `[[Note|words]]` and
@@ -346,218 +263,90 @@ export interface MarkdownLinks {
     embed?: (target: string, heading?: string) => ReactNode
 }
 
-/** The file endings a `![[file]]` embed draws as an image. */
-const IMAGE_FILE = /\.(apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i
-
-/** A file ending other than a note's: `![[file]]` with one is a link to the file. */
-const OTHER_FILE = /\.(?!md$)[a-z\d]{1,8}$/i
-
-/** The size after an image embed's `|`: a width, or a width and a height as `300x200`. */
-const IMAGE_SIZE = /^(\d+)(?:x(\d+))?$/
-
-/**
- * What a `![[...]]` embed stands for: an image drawn at the size after its `|` (or with the words
- * after it as its alt text), a link to any other file, or a note drawn by `embed` or as a link.
- */
-function embedNode(inside: string, link: MdastNode): MdastNode {
-    const read = readWikiLink(inside)
-    if (IMAGE_FILE.test(read.target)) {
-        const size = IMAGE_SIZE.exec(read.label ?? '')
-        const properties: Record<string, unknown> = { dataEmbed: read.target }
-        if (size !== null) {
-            properties.width = Number(size[1])
-            if (size[2] !== undefined) properties.height = Number(size[2])
-        }
-        return {
-            type: 'image',
-            url: read.target,
-            alt: size === null ? (read.label ?? read.target) : read.target,
-            data: { hProperties: properties },
-        } as MdastNode
-    }
-    if (OTHER_FILE.test(read.target)) {
-        return { type: 'link', url: read.target, children: [{ type: 'text', value: read.label ?? read.target }] } as MdastNode
-    }
-    return {
-        type: 'wikiEmbed',
-        children: [link],
-        data: { hName: 'span', hProperties: { dataEmbed: read.target, dataHeading: read.heading } },
-    }
-}
-
-/** Turns each `[[link]]`, and each `#tag` when tags are followed, into a link element the renderer below draws. */
-function remarkWikiLinks(tags: boolean) {
-    const split = (value: string): MdastNode[] => {
-        const found = [
-            ...wikiLinksIn(value).map((link) => {
-                const node: MdastNode = {
-                    type: 'wikiLink',
-                    children: [
-                        {
-                            type: 'text',
-                            value: link.label ?? (link.heading === undefined ? link.target : `${link.target} › ${link.heading}`),
-                        },
-                    ],
-                    data: { hName: 'a', hProperties: { href: '#', dataWikiLink: link.target, dataHeading: link.heading } },
-                }
-                // A `!` before the link makes it an embed, the `!` part of it.
-                if (value[link.from - 1] !== '!') return { from: link.from, to: link.to, node }
-                return { from: link.from - 1, to: link.to, node: embedNode(value.slice(link.from + 2, link.to - 2), node) }
-            }),
-            ...(tags
-                ? tagMatches(value).map((match) => ({
-                      from: match.from,
-                      to: match.to,
-                      node: {
-                          type: 'tagLink',
-                          children: [{ type: 'text', value: `#${match.tag}` }],
-                          data: { hName: 'a', hProperties: { href: '#', dataTag: match.tag } },
-                      },
-                  }))
-                : []),
-        ].sort((a, b) => a.from - b.from)
-        if (found.length === 0) return [{ type: 'text', value }]
-        const out: MdastNode[] = []
-        let at = 0
-        for (const { from, to, node } of found) {
-            if (from < at) continue
-            if (from > at) out.push({ type: 'text', value: value.slice(at, from) })
-            out.push(node)
-            at = to
-        }
-        if (at < value.length) out.push({ type: 'text', value: value.slice(at) })
-        return out
-    }
-    /** A paragraph holding one note embed and nothing else becomes the embed, as a block. */
-    const lift = (node: MdastNode): MdastNode => {
-        if (node.type !== 'paragraph') return node
-        const held = (node.children ?? []).filter((child) => !(child.type === 'text' && (child.value ?? '').trim() === ''))
-        const only = held.length === 1 ? held[0] : undefined
-        if (only?.type !== 'wikiEmbed') return node
-        return { ...only, data: { ...only.data, hName: 'div' } }
-    }
-    return () => (tree: MdastNode) => {
-        const visit = (node: MdastNode) => {
-            if (node.children === undefined || node.type === 'link' || node.type === 'linkReference') return
-            node.children = node.children.flatMap((child) => {
-                if (child.type === 'text') return split(child.value ?? '')
-                visit(child)
-                return [lift(child)]
-            })
-        }
-        visit(tree)
-    }
-}
-
-/** An HTML comment and nothing else, which is never drawn. */
-const COMMENT = /^<!--(?:(?!-->)[\s\S])*-->$/
-
-/** Drops each HTML comment, so `<!-- ... -->` draws nothing whether or not HTML is allowed. */
-function remarkComments() {
-    return (tree: MdastNode) => {
-        const visit = (node: MdastNode) => {
-            if (node.children === undefined) return
-            node.children = node.children.filter((child) => !(child.type === 'html' && COMMENT.test((child.value ?? '').trim())))
-            for (const child of node.children) visit(child)
-        }
-        visit(tree)
-    }
-}
-
-/** `==words==`: a non-space after the opening `==`, a non-space before the closing one, on one line. */
-const MARKED = /==(?=[^\s=])([^\n]*?[^\s=])==/g
-
-/** Draws each `==words==` as a highlight, outside code and math. */
-function remarkMarked() {
-    const split = (value: string): MdastNode[] => {
-        const out: MdastNode[] = []
-        let at = 0
-        for (const match of value.matchAll(MARKED)) {
-            if (match.index > at) out.push({ type: 'text', value: value.slice(at, match.index) })
-            out.push({
-                type: 'marked',
-                children: [{ type: 'text', value: match[1] }],
-                data: { hName: 'mark', hProperties: { dataMarked: '' } },
-            })
-            at = match.index + match[0].length
-        }
-        if (out.length === 0) return [{ type: 'text', value }]
-        if (at < value.length) out.push({ type: 'text', value: value.slice(at) })
-        return out
-    }
-    return (tree: MdastNode) => {
-        const visit = (node: MdastNode) => {
-            if (node.children === undefined) return
-            node.children = node.children.flatMap((child) => {
-                if (child.type === 'text') return split(child.value ?? '')
-                visit(child)
-                return [child]
-            })
-        }
-        visit(tree)
-    }
-}
-
 function partFor(parts: MarkdownParts | undefined, id: string): ReactNode {
     return typeof parts === 'function' ? parts(id) : parts?.[id]
 }
 
-/** A callout's marker: `[!kind]`, `-` folded or `+` unfolded, and the space before its title. */
-const CALLOUT = /^\[!([a-z][\w-]*)\]([+-]?)[ \t]*/i
-
-/**
- * Takes a callout's title off its first paragraph: the nodes before the first line's end, or before
- * a hard break. The paragraph keeps the rest.
- */
-function calloutTitle(first: HastNode): HastNode[] {
-    const title: HastNode[] = []
-    const rest: HastNode[] = []
-    let done = false
-    for (const child of first.children ?? []) {
-        if (done) rest.push(child)
-        else if (child.type === 'element' && child.tagName === 'br') done = true
-        else if (child.type === 'text' && (child.value ?? '').includes('\n')) {
-            const value = child.value ?? ''
-            const end = value.indexOf('\n')
-            if (end > 0) title.push({ type: 'text', value: value.slice(0, end) })
-            if (end + 1 < value.length) rest.push({ type: 'text', value: value.slice(end + 1) })
-            done = true
-        } else title.push(child)
-    }
-    first.children = rest
-    const last = title.at(-1)
-    if (last?.type === 'text') last.value = (last.value ?? '').trimEnd()
-    return title.filter((node) => !(node.type === 'text' && node.value === ''))
+/** The slice of mdast-util-to-hast's state the handlers below use. */
+interface ToHast {
+    all: (node: MarkdownNode) => HastNode[]
+    one: (node: MarkdownNode, parent: MarkdownNode | undefined) => HastNode | HastNode[] | undefined
+    wrap: (nodes: HastNode[], loose?: boolean) => HastNode[]
 }
 
+/** Draws one node of the tree as HTML. */
+type TreeHandler = (state: ToHast, node: MarkdownNode, parent: MarkdownNode | undefined) => HastNode | HastNode[] | undefined
+
+const element = (tagName: string, properties: Record<string, unknown>, children: HastNode[]): HastNode => ({
+    type: 'element',
+    tagName,
+    properties,
+    children,
+})
+
+/** Whether a node stands as a block: its parent holds blocks. */
+const standsAlone = (parent: MarkdownNode | undefined) => parent !== undefined && BLOCK_CONTAINERS.has(parent.type)
+
 /**
- * Marks `[!KIND]` quotes as callouts with the marker removed, the rest of its line as the title, and
- * `-` or `+` after the marker as folded or unfolded; and gives headings ids when `anchors` is set, each once.
+ * How the nodes linked notes add to mdast are drawn as HTML, by what the view follows: `[[links]]`
+ * as links with `linked` (else their words), `#tags` as links with `tagged` (else their text).
  */
+function treeHandlers(linked: boolean, tagged: boolean): Record<string, TreeHandler> {
+    const noteLink = (state: ToHast, node: MarkdownNode) =>
+        element('a', { href: '#', dataWikiLink: node.target, dataHeading: node.heading }, state.all(node))
+    return {
+        part: (_, node, parent) => element(standsAlone(parent) ? 'div' : 'span', { dataPart: node.id }, []),
+        highlight: (state, node) => element('mark', { dataMarked: '' }, state.all(node)),
+        wikiLink: (state, node) => (linked ? noteLink(state, node) : state.all(node)),
+        tag: (_, node) => {
+            const words: HastNode = { type: 'text', value: `#${String(node.tag)}` }
+            return tagged ? element('a', { href: '#', dataTag: node.tag }, [words]) : words
+        },
+        embed: (state, node, parent) => {
+            if (node.kind === 'image') {
+                const properties: Record<string, unknown> = { dataEmbed: node.target }
+                if (typeof node.width === 'number') properties.width = node.width
+                if (typeof node.height === 'number') properties.height = node.height
+                return state.one(
+                    { type: 'image', url: String(node.target), alt: node.alt, title: null, data: { hProperties: properties } },
+                    parent,
+                )
+            }
+            if (node.kind === 'file')
+                return state.one({ type: 'link', url: String(node.target), title: null, children: node.children }, parent)
+            return element(
+                standsAlone(parent) ? 'div' : 'span',
+                { dataEmbed: node.target, dataHeading: node.heading },
+                linked ? [noteLink(state, node)] : state.all(node),
+            )
+        },
+        callout: (state, node) => {
+            const [first, ...rest] = node.children ?? []
+            const titled = first?.type === 'calloutTitle'
+            const title = element('div', { dataCalloutTitle: node.kind }, titled ? state.all(first) : [])
+            const body = state.all({ ...node, children: titled ? rest : (node.children ?? []) })
+            return element('blockquote', { dataCallout: node.kind, dataFold: node.fold }, [title, ...state.wrap(body, true)])
+        },
+        inlineMath: (_, node) => element('code', { className: ['language-math', 'math-inline'] }, [{ type: 'text', value: node.value }]),
+        math: (_, node) =>
+            element('pre', {}, [element('code', { className: ['language-math', 'math-display'] }, [{ type: 'text', value: node.value }])]),
+    }
+}
+
+/** Whether a tree holds math. */
+function treeHasMath(tree: MarkdownTree): boolean {
+    for (const { node } of nodesOf(tree as unknown as MarkdownNode)) if (node.type === 'math' || node.type === 'inlineMath') return true
+    return false
+}
+
+/** Gives headings ids when `anchors` is set, each once. */
 function rehypeDocument(anchors: boolean) {
     return () => (tree: HastNode) => {
+        if (!anchors) return
         const unique = uniqueIds()
         const visit = (node: HastNode) => {
-            if (anchors && node.tagName !== undefined && /^h[1-6]$/.test(node.tagName)) {
+            if (node.tagName !== undefined && /^h[1-6]$/.test(node.tagName)) {
                 node.properties = { ...node.properties, id: unique(headingId(hastText(node))) }
-            }
-            if (node.tagName === 'blockquote') {
-                const first = node.children?.find((child) => child.type === 'element')
-                const text = first?.tagName === 'p' ? first.children?.[0] : undefined
-                const marker = text?.type === 'text' ? CALLOUT.exec(text.value ?? '') : null
-                const named = marker === null ? undefined : marker[1].toLowerCase()
-                const kind = named === undefined ? undefined : CALLOUT_MARKERS[named]
-                if (first !== undefined && text !== undefined && marker !== null && named !== undefined && kind !== undefined) {
-                    text.value = (text.value ?? '').slice(marker[0].length)
-                    let title = calloutTitle(first)
-                    // A marker other than the kind's own is the title when none is written, as typed but capitalized.
-                    if (title.length === 0 && named !== kind) title = [{ type: 'text', value: named[0].toUpperCase() + named.slice(1) }]
-                    const empty = (first.children ?? []).every((child) => child.type === 'text' && (child.value ?? '').trim() === '')
-                    node.children = (node.children ?? []).filter((child) => !(child === first && empty))
-                    node.children.unshift({ type: 'element', tagName: 'div', properties: { dataCalloutTitle: kind }, children: title })
-                    const fold = marker[2] === '-' ? 'closed' : marker[2] === '+' ? 'open' : undefined
-                    node.properties = { ...node.properties, dataCallout: kind, dataFold: fold }
-                }
             }
             for (const child of node.children ?? []) visit(child)
         }
@@ -892,7 +681,15 @@ export type MarkdownUrlResolver = (url: string, use: MarkdownUrlUse) => string
 export type MarkdownFrontmatter = 'hide' | 'show' | 'markdown'
 
 export interface MarkdownProps {
-    content: string
+    /** The text, as written. */
+    content?: string
+    /**
+     * The text already read into its tree, as `parseMarkdown` from `lib/markdown-tree` reads it (on a
+     * server, once for every renderer): drawn in place of `content`, with nothing read again. The tree
+     * holds what the text says; what the app allows (`links`, `images`, `linkSchemes`, `resolveUrl`,
+     * `live`, `allowHtml`) is held as it is drawn, as for text.
+     */
+    tree?: MarkdownTree
     /**
      * What becomes of a YAML frontmatter block at the top of the text (`---` on the first line, closed
      * by `---` or `...`, every line between reading as properties, so a text that opens with a rule
@@ -1264,7 +1061,8 @@ export const MARKDOWN_COMPONENTS: Components = {
 export const MarkdownView = memo(function MarkdownView({
     useMath,
     Diagram,
-    content,
+    content = '',
+    tree,
     frontmatter = 'hide',
     resolveUrl,
     streaming = false,
@@ -1304,31 +1102,36 @@ export const MarkdownView = memo(function MarkdownView({
     // faster than a parse are drawn together rather than one parse each.
     const deferred = useDeferredValue(content)
     const given = streaming ? deferred : content
-    const split = useMemo(
-        () => (frontmatter === 'markdown' ? { frontmatter: undefined, body: given } : splitFrontmatter(given)),
-        [frontmatter, given],
+    const needsMath = useMemo(
+        () => math && useMath !== undefined && (tree === undefined ? hasMath(given) : treeHasMath(tree)),
+        [math, useMath, tree, given],
     )
-    const shown = split.body
-    const needsMath = useMemo(() => math && useMath !== undefined && hasMath(shown), [math, useMath, shown])
     // The same hook every render of a view: `Markdown` always passes one, `PlainMarkdown` never does.
     const katex = useMath?.(needsMath)
-    const source = useMemo(
-        () => (math && useMath !== undefined ? normalizeMath(shown, { streaming }) : shown),
-        [math, useMath, shown, streaming],
-    )
     // Without `live` the links between notes are read too, so each is drawn as the words it shows.
     const linked = links !== undefined || !live
     const tagged = live && links?.onTag !== undefined
-    const remark: Options['remarkPlugins'] = useMemo(() => {
-        // Parts first, so a part's marker is never dropped as a comment.
-        const plugins: NonNullable<Options['remarkPlugins']> = [remarkGfm, remarkParts(word), remarkComments]
-        if (katex !== undefined && math) plugins.push(katex.remarkMath)
-        // After math, so `==` in a formula is never read as a highlight.
-        plugins.push(remarkMarked)
-        // After math, so a formula's text is never read for links or tags.
-        if (linked) plugins.push(remarkWikiLinks(tagged))
-        return plugins
-    }, [katex, math, word, linked, tagged])
+    const reader = math && katex !== undefined ? katex.remarkMath : undefined
+    // The tree, read once while the text and what it is read by stand: a render for anything else (a
+    // highlight, a caret, a scheme) draws it again without reading it again.
+    const parsed = useMemo(
+        () =>
+            tree ??
+            parseTree(given, {
+                math: reader,
+                normalizeMath: math && useMath !== undefined,
+                streaming,
+                frontmatter: frontmatter !== 'markdown',
+                wikiLinks: linked,
+                tags: tagged,
+                partMarker: word,
+                positions: false,
+            }),
+        [tree, given, reader, math, useMath, streaming, frontmatter, linked, tagged, word],
+    )
+    const yaml = parsed.children[0]?.type === 'yaml' ? (parsed.children[0].value ?? '') : undefined
+    const remark: Options['remarkPlugins'] = useMemo(() => [() => () => structuredClone(parsed)], [parsed])
+    const toHast = useMemo(() => ({ handlers: treeHandlers(linked, tagged) }) as Options['remarkRehypeOptions'], [linked, tagged])
     const htmlEngine = useHtmlEngine(allowHtml)
     // The schemes are held by their text, so a list made anew each render keeps the plugins.
     const schemesKey = JSON.stringify(linkSchemes ?? null)
@@ -1365,16 +1168,17 @@ export const MarkdownView = memo(function MarkdownView({
         () => (
             <ReactMarkdown
                 remarkPlugins={remark}
+                remarkRehypeOptions={toHast}
                 rehypePlugins={rehype}
                 components={MARKDOWN_COMPONENTS}
                 urlTransform={urlTransform}
                 // Until the HTML engine loads, the tags are left out rather than shown as typed.
                 skipHtml={skipHtml}
             >
-                {source}
+                {''}
             </ReactMarkdown>
         ),
-        [remark, rehype, urlTransform, skipHtml, source],
+        [remark, toHast, rehype, urlTransform, skipHtml],
     )
     const Root = inline ? 'span' : 'div'
     return (
@@ -1390,9 +1194,7 @@ export const MarkdownView = memo(function MarkdownView({
                 className,
             )}
         >
-            {frontmatter === 'show' && !inline && split.frontmatter !== undefined ? (
-                <Code value={split.frontmatter} language="yaml" words={words.code} />
-            ) : null}
+            {frontmatter === 'show' && !inline && yaml !== undefined ? <Code value={yaml} language="yaml" words={words.code} /> : null}
             <View.Provider value={view}>{drawn}</View.Provider>
         </Root>
     )

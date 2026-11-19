@@ -1,0 +1,186 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "callout",
+      "kind": "note",
+      "marker": "note",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "The export reads only."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warning",
+      "marker": "warning",
+      "children": [
+        {
+          "type": "calloutTitle",
+          "children": [
+            {
+              "type": "text",
+              "value": "Before a "
+            },
+            {
+              "type": "emphasis",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "rerun"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "Move "
+            },
+            {
+              "type": "inlineCode",
+              "value": "rejected/"
+            },
+            {
+              "type": "text",
+              "value": " aside first."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "important",
+      "marker": "question",
+      "fold": "closed",
+      "children": [
+        {
+          "type": "calloutTitle",
+          "children": [
+            {
+              "type": "text",
+              "value": "Why from the failed step?"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "The steps before it keep their output."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "tip",
+      "marker": "success",
+      "fold": "open",
+      "children": [
+        {
+          "type": "calloutTitle",
+          "children": [
+            {
+              "type": "text",
+              "value": "Last run"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "All five steps succeeded."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "note",
+      "marker": "todo",
+      "children": [
+        {
+          "type": "calloutTitle",
+          "children": [
+            {
+              "type": "text",
+              "value": "Todo"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "Ask grace about retention."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "tip",
+      "marker": "tip",
+      "children": [
+        {
+          "type": "callout",
+          "kind": "caution",
+          "marker": "caution",
+          "children": [
+            {
+              "type": "calloutTitle",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Nested"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Inside a tip."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "[!unknown] A marker no kind knows\nstays a quote."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

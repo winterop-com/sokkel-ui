@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { BookOpen, Braces, FileText, FolderTree, LayoutDashboard, Play, Settings } from 'lucide-react'
+import { BookOpen, Braces, FileText, ListTree, FolderTree, LayoutDashboard, Play, Settings } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { CodeEditor } from '@winterop-com/sokkel-ui/CodeEditor'
 import { EditPreview, type EditPreviewView } from '@winterop-com/sokkel-ui/EditPreview'
+import { JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
+import { parseMarkdown } from '@winterop-com/sokkel-ui/lib/markdown-tree'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Markdown, markdownSection, splitFrontmatter, type MarkdownLinks, type MarkdownParts } from '@winterop-com/sokkel-ui/Markdown'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
@@ -24,7 +26,8 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
  * Everything `Markdown` draws, one page per kind, in the app's frame: the pages listed beside the
- * page, each written in the editor beside its live preview, so a change shows as it is typed.
+ * page, each written in the editor beside its live preview, so a change shows as it is typed. The
+ * text is read once into its tree (`parseMarkdown`) and the preview draws the tree; Show tree shows it.
  */
 const GROUPS: RailGroup[] = [
     {
@@ -326,15 +329,26 @@ const VIEWS = [
 
 const PAGES: TreeNode[] = SAMPLES.map((sample) => ({ id: sample.id, label: sample.title, icon: FileText }))
 
-function MarkdownApp({ start = 'text', view: initialView = 'both' }: { start?: string; view?: EditPreviewView }) {
+function MarkdownApp({
+    start = 'text',
+    view: initialView = 'both',
+    tree: initialTree = false,
+}: {
+    start?: string
+    view?: EditPreviewView
+    tree?: boolean
+}) {
     const [collapsed, setCollapsed] = useState(false)
     const [chosen, setChosen] = useState(start)
     const [texts, setTexts] = useState<Record<string, string>>(() => Object.fromEntries(SAMPLES.map((sample) => [sample.id, sample.text])))
     const [view, setView] = useState<EditPreviewView>(initialView)
     const [properties, setProperties] = useState(false)
+    const [showTree, setShowTree] = useState(initialTree)
     const [followed, setFollowed] = useState('Nothing followed yet')
     const sample = SAMPLES.find((one) => one.id === chosen) ?? SAMPLES[0]
     const text = texts[sample.id] ?? sample.text
+    // Read once into its tree, as a server would; the preview draws the tree, and Show tree shows it.
+    const tree = useMemo(() => parseMarkdown(text), [text])
 
     const links = useMemo<MarkdownLinks>(() => {
         const plain: MarkdownLinks = {
@@ -400,6 +414,10 @@ function MarkdownApp({ start = 'text', view: initialView = 'both' }: { start?: s
                             title={sample.title}
                             actions={
                                 <>
+                                    <Toggle size="sm" pressed={showTree} onPressedChange={setShowTree}>
+                                        <ListTree aria-hidden />
+                                        Show tree
+                                    </Toggle>
                                     <Toggle size="sm" pressed={properties} onPressedChange={setProperties}>
                                         <Braces aria-hidden />
                                         Show properties
@@ -422,17 +440,21 @@ function MarkdownApp({ start = 'text', view: initialView = 'both' }: { start?: s
                                 />
                             }
                             preview={
-                                <Markdown
-                                    content={text}
-                                    scale="document"
-                                    anchors
-                                    links={links}
-                                    parts={PARTS}
-                                    frontmatter={properties ? 'show' : 'hide'}
-                                    resolveUrl={(url, use) => (use === 'image' && url.endsWith('harbor.svg') ? HARBOR_DUSK : url)}
-                                />
+                                showTree ? (
+                                    <JsonTree value={tree} open={3} />
+                                ) : (
+                                    <Markdown
+                                        tree={tree}
+                                        scale="document"
+                                        anchors
+                                        links={links}
+                                        parts={PARTS}
+                                        frontmatter={properties ? 'show' : 'hide'}
+                                        resolveUrl={(url, use) => (use === 'image' && url.endsWith('harbor.svg') ? HARBOR_DUSK : url)}
+                                    />
+                                )
                             }
-                            words={{ edit: 'Markdown' }}
+                            words={{ edit: 'Markdown', preview: showTree ? 'Tree' : 'Preview' }}
                         />
                     </Stack>
                 </Row>
@@ -452,3 +474,5 @@ export const Callouts: StoryObj = { render: () => <MarkdownApp start="callouts" 
 export const Embeds: StoryObj = { render: () => <MarkdownApp start="embeds" view="preview" /> }
 /** Code in eight languages, Rust among them. */
 export const Code: StoryObj = { render: () => <MarkdownApp start="code" view="preview" /> }
+/** The properties page beside its tree: what `parseMarkdown` reads the text into, the frontmatter's properties first. */
+export const Parsed: StoryObj = { name: 'Tree', render: () => <MarkdownApp start="properties" tree /> }

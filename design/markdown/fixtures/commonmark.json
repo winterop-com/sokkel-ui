@@ -1,0 +1,277 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "heading",
+      "depth": 1,
+      "children": [
+        {
+          "type": "text",
+          "value": "Nightly export"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "The export runs "
+        },
+        {
+          "type": "strong",
+          "children": [
+            {
+              "type": "text",
+              "value": "every night"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " at "
+        },
+        {
+          "type": "emphasis",
+          "children": [
+            {
+              "type": "text",
+              "value": "02:00 UTC"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": ", as "
+        },
+        {
+          "type": "inlineCode",
+          "value": "nightly-export"
+        },
+        {
+          "type": "text",
+          "value": ".\nA line break inside a paragraph is a space.\nA hard break ends this line"
+        },
+        {
+          "type": "break"
+        },
+        {
+          "type": "text",
+          "value": "and starts the next."
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "depth": 2,
+      "children": [
+        {
+          "type": "text",
+          "value": "Steps"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "ordered": true,
+      "start": 1,
+      "spread": false,
+      "children": [
+        {
+          "type": "listItem",
+          "spread": false,
+          "checked": null,
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "fetch"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "spread": false,
+          "checked": null,
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "transform"
+                }
+              ]
+            },
+            {
+              "type": "list",
+              "ordered": false,
+              "start": null,
+              "spread": false,
+              "children": [
+                {
+                  "type": "listItem",
+                  "spread": false,
+                  "checked": null,
+                  "children": [
+                    {
+                      "type": "paragraph",
+                      "children": [
+                        {
+                          "type": "text",
+                          "value": "validate"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "spread": false,
+          "checked": null,
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "upload"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "A quote from the harbor office."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "thematicBreak"
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "See "
+        },
+        {
+          "type": "link",
+          "title": "Tides",
+          "url": "https://example.org/tides",
+          "children": [
+            {
+              "type": "text",
+              "value": "the tide tables"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " and "
+        },
+        {
+          "type": "image",
+          "title": null,
+          "url": "harbor.png",
+          "alt": "the harbor"
+        },
+        {
+          "type": "text",
+          "value": ".\nA "
+        },
+        {
+          "type": "linkReference",
+          "children": [
+            {
+              "type": "text",
+              "value": "reference link"
+            }
+          ],
+          "label": "tides",
+          "identifier": "tides",
+          "referenceType": "full"
+        },
+        {
+          "type": "text",
+          "value": " and "
+        },
+        {
+          "type": "link",
+          "title": null,
+          "url": "https://example.org",
+          "children": [
+            {
+              "type": "text",
+              "value": "https://example.org"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "."
+        }
+      ]
+    },
+    {
+      "type": "definition",
+      "identifier": "tides",
+      "label": "tides",
+      "title": null,
+      "url": "https://example.org/tides"
+    },
+    {
+      "type": "code",
+      "lang": null,
+      "meta": null,
+      "value": "indented code"
+    },
+    {
+      "type": "code",
+      "lang": "python",
+      "meta": null,
+      "value": "def failed(runs):\n    return [run for run in runs if run.state == \"failed\"]"
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "html",
+          "value": "<b>"
+        },
+        {
+          "type": "text",
+          "value": "raw"
+        },
+        {
+          "type": "html",
+          "value": "</b>"
+        },
+        {
+          "type": "text",
+          "value": " HTML stays a node of its own."
+        }
+      ]
+    }
+  ]
+}

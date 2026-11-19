@@ -12,6 +12,8 @@ export type {
     MarkdownLinks,
     MarkdownParts,
     MarkdownProps,
+    MarkdownTree,
+    MarkdownNode,
     MarkdownUrlResolver,
     MarkdownUrlUse,
     MarkdownWords,

@@ -1,5 +1,5 @@
 {
     "$description": "The sokkel-design commit design/ is a copy of. Move it with `bun run design --ref <ref>`; never edit the copy.",
     "repo": "https://github.com/winterop-com/sokkel-design",
-    "commit": "505a65761cf6dc679029ee95beede9b169947804"
+    "commit": "86339d80c9a7519bc1a9ff36087d8c052258667a"
 }
