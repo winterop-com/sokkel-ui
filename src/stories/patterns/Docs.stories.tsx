@@ -6,8 +6,9 @@ import { HARBOR_DUSK } from '../fixtures/photos'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Field } from '@winterop-com/sokkel-ui/Field'
+import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
-import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
+import { Markdown, markdownHeadings, markdownSection } from '@winterop-com/sokkel-ui/Markdown'
 import { PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
 import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/TableOfContents'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -253,6 +254,94 @@ function LinkedNote() {
     )
 }
 
+/** Callouts as linked notes write them: titled by their first line, folded, and the further markers. */
+const TITLED_CALLOUTS = `> [!warning] Before a rerun
+> Move \`rejected/\` aside first.
+
+> [!question]- Why from the failed step?
+> The steps before it keep their output, so nothing is read twice.
+
+> [!success]+ Last run
+> All five steps succeeded in 4 minutes.
+
+> [!todo]
+> Ask grace about retention.
+
+> [!bug] Upload times out on large batches
+> Seen on import-orders since Tuesday.
+
+> [!unknown] A marker no kind knows
+> stays a plain quote.`
+
+function TitledCallouts() {
+    return (
+        <div className="max-w-2xl p-6">
+            <Markdown content={TITLED_CALLOUTS} />
+        </div>
+    )
+}
+
+const PROPERTIES = `---
+owner: grace
+project: harbor
+steps: [fetch, transform, validate, upload, notify]
+---
+# Nightly export
+
+Runs at 02:00 UTC.`
+
+/** The same note with its properties left out, the default, and shown above it. */
+function Properties() {
+    return (
+        <Row gap="3xl" align="start" wrap className="p-6">
+            <Stack gap="sm" className="min-w-0 flex-1 basis-72">
+                <GroupLabel as="h2">Left out</GroupLabel>
+                <Markdown content={PROPERTIES} scale="document" />
+            </Stack>
+            <Stack gap="sm" className="min-w-0 flex-1 basis-72">
+                <GroupLabel as="h2">Shown</GroupLabel>
+                <Markdown content={PROPERTIES} scale="document" frontmatter="show" />
+            </Stack>
+        </Row>
+    )
+}
+
+const EMBEDS = `A note's section, drawn by the app:
+
+![[Retry a run#Steps]]
+
+A note with no \`embed\` to draw it, as a link in a frame:
+
+![[Nightly export]]
+
+An image at 240 wide: ![[harbor.svg|240]]
+
+A file links to itself: ![[export-2026-11-02.pdf]]`
+
+const RETRY =
+    '# Retry a run\n\nIntro.\n\n## Steps\n\n1. Find the step that failed.\n2. Start the run again from it.\n\n## After\n\nWatch validate.'
+
+function Embeds() {
+    const [followed, setFollowed] = useState('Nothing yet')
+    return (
+        <div className="max-w-2xl p-6">
+            <Markdown
+                content={EMBEDS}
+                links={{
+                    onOpen: (target) => setFollowed(`Note ${target}`),
+                    exists: (target) => NOTES.has(target),
+                    embed: (target, heading) =>
+                        target === 'Retry a run' && heading !== undefined ? (
+                            <PlainMarkdown content={markdownSection(RETRY, heading) ?? ''} />
+                        ) : null,
+                }}
+                resolveUrl={(url, use) => (use === 'image' && url === 'harbor.svg' ? HARBOR_DUSK : url)}
+            />
+            <p className="mt-6 text-sm text-muted-foreground">Followed: {followed}</p>
+        </div>
+    )
+}
+
 /** A note as a vault keeps it: frontmatter, a hidden comment, titled and folded callouts, embeds, a highlight and Rust. */
 const VAULT_NOTE = `---
 title: Nightly export
@@ -444,6 +533,12 @@ export default meta
 /** Each kind of callout a quote becomes from its first line, and a plain quote. */
 export const Callout: StoryObj = { name: 'Callouts', render: () => <Callouts /> }
 /**
+ * Callouts as linked notes write them: titled by the rest of the first line, folded closed by `-`
+ * and open by `+`, further markers (`todo`, `bug`) drawn as the nearest kind under their own word,
+ * and a marker no kind knows left a quote.
+ */
+export const Titled: StoryObj = { name: 'Titled callouts', render: () => <TitledCallouts /> }
+/**
  * `PlainMarkdown`: everything `Markdown` draws save math and diagrams, so a formula stays as written
  * and a mermaid fence shows as code, and an app that renders only this carries neither KaTeX nor
  * Mermaid in its build.
@@ -483,6 +578,10 @@ export const Links: StoryObj = { name: 'Linked notes', render: () => <LinkedNote
  * embed at a width with its address rewritten by `resolveUrl` to the app's own copy, a `==highlight==` and a Rust fence.
  */
 export const Vault: StoryObj = { name: 'Vault note', render: () => <VaultNote /> }
+/** `![[...]]` embeds: a note's section the app draws with `links.embed`, a note as a framed link, an image at a width, and a file. */
+export const Embedded: StoryObj = { name: 'Embeds', render: () => <Embeds /> }
+/** A note's frontmatter properties left out, the default, and shown above it with `frontmatter="show"`. */
+export const Frontmatter: StoryObj = { name: 'Properties', render: () => <Properties /> }
 
 /**
  * The lines that link to a note, each drawn as Markdown in the row that opens its note: strong

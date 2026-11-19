@@ -2,7 +2,7 @@ import { memo } from 'react'
 
 import { MarkdownView, type MarkdownProps } from './markdown-view'
 
-export { loadHtml, splitFrontmatter } from './markdown-view'
+export { loadHtml, markdownSection, splitFrontmatter } from './markdown-view'
 
 export type PlainMarkdownProps = Omit<MarkdownProps, 'math'>
 

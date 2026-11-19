@@ -4,7 +4,7 @@ import { EditPreview } from '@winterop-com/sokkel-ui/EditPreview'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { InlineEdit } from '@winterop-com/sokkel-ui/InlineEdit'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
-import { headingId, Markdown, type MarkdownLinks } from '@winterop-com/sokkel-ui/Markdown'
+import { headingId, Markdown, markdownSection, splitFrontmatter, type MarkdownLinks } from '@winterop-com/sokkel-ui/Markdown'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { useShortcuts } from '@winterop-com/sokkel-ui/hooks/use-shortcuts'
@@ -89,14 +89,24 @@ export function NotePage({ note }: { note: Note }) {
                 .map((one) => ({ label: one.title, detail: vault.path(one.folder) || 'Vault', kind: 'text' as const })),
         [vault, note.id],
     )
-    const links = useMemo<MarkdownLinks>(
-        () => ({
+    const links = useMemo<MarkdownLinks>(() => {
+        const plain: MarkdownLinks = {
             onOpen: (target, at) => follow(target, note, at),
             exists: (target) => vault.resolve(target) !== undefined,
             onTag: (tag) => go(`/tags/${encodeURIComponent(tag)}`),
-        }),
-        [vault, note, follow],
-    )
+        }
+        return {
+            ...plain,
+            // An embedded note is drawn one level deep: its own embeds stay links.
+            embed: (target, at) => {
+                const embedded = vault.resolve(target)
+                if (embedded === undefined) return null
+                const body = splitFrontmatter(drafts[embedded.id] ?? embedded.body).body
+                const shown = at === undefined ? body : markdownSection(body, at)
+                return shown === undefined ? null : <Markdown content={shown} scale="document" links={plain} />
+            },
+        }
+    }, [vault, note, follow, drafts])
     const others = vault.notes.filter((one) => one.id !== note.id).map((one) => one.title)
 
     return (
@@ -203,7 +213,13 @@ export function NotePage({ note }: { note: Note }) {
                 }
                 preview={
                     <div ref={preview}>
-                        <Markdown content={drafts[note.id] ?? note.body} scale="document" anchors links={links} />
+                        <Markdown
+                            content={drafts[note.id] ?? note.body}
+                            scale="document"
+                            anchors
+                            links={links}
+                            frontmatter={prefs.properties === true ? 'show' : 'hide'}
+                        />
                     </div>
                 }
             />
