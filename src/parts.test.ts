@@ -91,6 +91,7 @@ import { SECRET_FIELD_WORDS, SecretField, type SecretFieldProps } from '@wintero
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
 import { Problem, PROBLEM_WORDS } from '@winterop-com/sokkel-ui/Problem'
+import { MARKDOWN_WORDS, PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
 import { PERIOD_PICKER_WORDS, PeriodPicker, type PeriodPickerProps } from '@winterop-com/sokkel-ui/PeriodPicker'
 import { ProblemLine } from '@winterop-com/sokkel-ui/ProseText'
 import { PROMPT_DIALOG_WORDS } from '@winterop-com/sokkel-ui/PromptDialog'
@@ -8041,6 +8042,124 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
 const PENDING: Record<string, Record<string, string>> = {}
 
+// Markdown view
+
+const MARKDOWN_VIEW = source('components/markdown-view.tsx')
+/** A text with every piece the spec paints: a quote, a rule, a table, code, a link, a tag, highlights, embeds and the five callouts. */
+const MARKDOWN_TEXT = [
+    '# One',
+    '## Two',
+    '### Three',
+    '#### Four',
+    '',
+    'Words with `code`, a [link](https://example.org), ==marked== words, #harbor and ![[Nightly export]].',
+    '',
+    '![[Retry a run]]',
+    '',
+    '> A quote.',
+    '',
+    '---',
+    '',
+    '| Job | State |',
+    '| --- | --- |',
+    '| nightly-export | failed |',
+    '',
+    ...(['note', 'tip', 'important', 'warning', 'caution'] as const).flatMap((kind) => [`> [!${kind}]`, `> The ${kind}.`, '']),
+    '> [!tip]- Folded',
+    '> Out of sight.',
+].join('\n')
+const markdownView = once(() => ({
+    message: draw(PlainMarkdown, {
+        content: MARKDOWN_TEXT,
+        highlight: 'words',
+        links: { onOpen: () => undefined, onTag: () => undefined, embed: (target) => (target === 'Retry a run' ? 'drawn' : null) },
+    }),
+    document: draw(PlainMarkdown, { content: MARKDOWN_TEXT, scale: 'document' }),
+}))
+/** The root's own classes read through one of its descendant selectors, such as `[&_blockquote]`. */
+const markdownThrough = (scale: 'message' | 'document', selector: string): Where | undefined => {
+    const root = markdownView()[scale][0]
+    return root === undefined ? undefined : { layers: [classesOf(root)], on: [selector], around: [] }
+}
+const MARKDOWN_PIECES: Record<string, () => Where | undefined> = {
+    body: () => pieceWhere(markdownView().message[0]),
+    quote: () => markdownThrough('message', '[&_blockquote]'),
+    rule: () => markdownThrough('message', '[&_hr]'),
+    tableCell: () => markdownThrough('message', '[&_td]'),
+    tableHead: () => markdownThrough('message', '[&_th]'),
+    inlineCode: () => markdownThrough('message', '[&_:not(pre)>code]'),
+    link: () => markdownThrough('message', '[&_a]'),
+    mark: () => markdownThrough('message', '[&_mark[data-marked]]'),
+    tag: () => pieceWhere(markdownView().message.find((element) => element.attrs['data-tag'] !== undefined)),
+    searchMark: () =>
+        pieceWhere(markdownView().message.find((element) => element.tag === 'mark' && element.attrs['data-marked'] === undefined)),
+    embedFrame: () => pieceWhere(markdownView().message.find((element) => element.attrs['data-embed'] === 'Nightly export')),
+    embedRule: () => pieceWhere(markdownView().message.find((element) => element.attrs['data-embed'] === 'Retry a run')),
+    ...Object.fromEntries(
+        (['message', 'document'] as const).flatMap((scale) =>
+            [1, 2, 3, 4].map((level) => [`${scale}Heading${String(level)}`, () => markdownThrough(scale, `[&_h${String(level)}]`)]),
+        ),
+    ),
+}
+/** A callout's box and its title, by kind. */
+const calloutWhere = (kind: string): Where | undefined => {
+    const elements = markdownView().message
+    const frame = elements.find((element) => element.tag === 'div' && element.attrs['data-callout'] === kind)
+    const title = frame === undefined ? undefined : elements.find((element) => element.tag === 'p' && element.parent?.parent === frame)
+    return inside(frame, title)
+}
+
+const MARKDOWN_VIEW_ADAPTER: Adapter = {
+    wordObjects: { MARKDOWN_WORDS },
+    complete: [],
+    words: {
+        note: 'MARKDOWN_WORDS.note',
+        tip: 'MARKDOWN_WORDS.tip',
+        important: 'MARKDOWN_WORDS.important',
+        warning: 'MARKDOWN_WORDS.warning',
+        caution: 'MARKDOWN_WORDS.caution',
+    },
+    options: {
+        scale: propValues(MARKDOWN_VIEW, 'MarkdownProps', 'scale'),
+        inlineCode: [...(/export type MarkdownInlineCode = ([^\n]+)/.exec(MARKDOWN_VIEW)?.[1] ?? '').matchAll(/'([^']+)'/g)].map(
+            (match) => match[1],
+        ),
+        frontmatter: [...(/export type MarkdownFrontmatter = ([^\n]+)/.exec(MARKDOWN_VIEW)?.[1] ?? '').matchAll(/'([^']+)'/g)].map(
+            (match) => match[1],
+        ),
+    },
+    size: () => skip('the markdown view has no sizes'),
+    paint: (group, name, state) => {
+        if (state !== 'rest') return skip(`no state of its own on ${name}`)
+        if (group === 'variants') return calloutWhere(name)
+        return MARKDOWN_PIECES[name]?.()
+    },
+    effect: () => skip('the markdown view states no effects'),
+    keys: {
+        Tab: () => (focusable(markdownView().message.find((element) => element.tag === 'a')) ? true : 'no link takes focus'),
+        Enter: () =>
+            markdownView().message.some((element) => element.tag === 'a' && element.attrs.href !== undefined)
+                ? true
+                : 'no link has an address',
+        "Enter, Space (a folding callout's title has focus)": () =>
+            markdownView().message.some((element) => element.tag === 'summary') ? true : 'a folding callout has no summary',
+    },
+    more: () => {
+        const root = classesOf(markdownView().message[0])
+        const frame = classesOf(markdownView().message.find((element) => element.tag === 'div' && element.attrs['data-callout'] === 'note'))
+        return layoutChecks('markdown-view', {
+            blockGap: () => numberIn(root, /\[&_p\]:my-(\d+(?:\.\d+)?)/, 'step'),
+            listInset: () => numberIn(root, /\[&_ul\]:pl-(\d+(?:\.\d+)?)/, 'step'),
+            quoteInset: () => numberIn(root, /\[&_blockquote\]:pl-(\d+(?:\.\d+)?)/, 'step'),
+            cellPadX: () => numberIn(root, /\[&_td\]:px-(\d+(?:\.\d+)?)/, 'step'),
+            cellPadY: () => numberIn(root, /\[&_td\]:py-(\d+(?:\.\d+)?)/, 'step'),
+            calloutPadX: () => numberIn(frame, /(?:^|\s)px-(\d+(?:\.\d+)?)/, 'step'),
+            calloutPadY: () => numberIn(frame, /(?:^|\s)py-(\d+(?:\.\d+)?)/, 'step'),
+            calloutGap: () => numberIn(frame, /(?:^|\s)gap-(\d+(?:\.\d+)?)/, 'step'),
+        })
+    },
+}
+
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
     'text-field': TEXT_FIELD_ADAPTER,
@@ -8097,6 +8216,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'server-menu': SERVER_MENU_ADAPTER,
     'item-card': ITEM_CARD_ADAPTER,
     'sortable-grid': SORTABLE_GRID_ADAPTER,
+    'markdown-view': MARKDOWN_VIEW_ADAPTER,
 }
 
 // The checks, walked from each spec

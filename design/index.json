@@ -306,7 +306,8 @@
         {"id": "issue-count", "file": "parts/issue-count.json", "status": "stable"},
         {"id": "server-menu", "file": "parts/server-menu.json", "status": "stable"},
         {"id": "item-card", "file": "parts/item-card.json", "status": "stable"},
-        {"id": "sortable-grid", "file": "parts/sortable-grid.json", "status": "stable"}
+        {"id": "sortable-grid", "file": "parts/sortable-grid.json", "status": "stable"},
+        {"id": "markdown-view", "file": "parts/markdown-view.json", "status": "stable"}
     ],
     "patterns": [
         {"id": "shell", "file": "patterns/shell.json", "status": "stable"},
