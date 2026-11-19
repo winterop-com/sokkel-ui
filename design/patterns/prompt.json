@@ -7,10 +7,14 @@
         "sokkel-ui": {"state": "built", "as_of": "7f043d4"},
         "sokkel-egui": {
             "state": "missing",
-            "as_of": "1a87987",
-            "note": "No prompt yet; an app draws a dialog with a field itself."
+            "as_of": "fc9d27e",
+            "note": "No prompt yet; DialogShell, ConfirmDialog's busy and TextField exist."
         },
-        "sokkel-tui": {"state": "missing", "as_of": "64f4b19", "note": "No prompt yet."}
+        "sokkel-tui": {
+            "state": "partial",
+            "as_of": "ff8ae76",
+            "note": "Rest, empty, invalid, busy and failed as specified, with the five words and the keys, a box sized to its content at every width. A secret is masked but has no Show/Hide reveal yet (waits on secret-field)."
+        }
     },
     "summary": "A dialog that asks for one value: parts/dialog at sm, its title what is asked and an optional line under it, one field in its body (parts/text-field, or parts/secret-field for a secret), and Cancel and Submit. Enter in the field submits. Submit is shut while the field is empty, and while the app's check refuses the value, whose issue the field shows as fields show issues. While the app takes the value the dialog is busy as a dialog's confirm is; when taking it fails, the dialog stays open and says why in its status slot, a problem line, and the value stays to try again. Taken, the dialog closes.",
     "sources": {
@@ -158,7 +162,7 @@
             "renderer": "sokkel-egui",
             "what": "not built",
             "spec": "This spec.",
-            "today": "As of 1a87987, no prompt: an app draws a Dialog with a field in its body."
+            "today": "As of fc9d27e: no prompt. DialogShell with why, ConfirmDialog's busy and TextField exist; no SecretField, no status slot, no busy and failed flow."
         },
         {"renderer": "sokkel-tui", "what": "not built", "spec": "This spec.", "today": "As of 64f4b19, no prompt."}
     ]

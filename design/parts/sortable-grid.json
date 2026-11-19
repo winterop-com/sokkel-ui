@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "SortableGrid built before this spec (d163191): drag to reorder; not yet compared with it."
+            "as_of": "fc9d27e",
+            "note": "Drags to reorder; the lifted copy, moving aside, keys and words not yet."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -112,9 +112,9 @@
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not compared yet",
+            "what": "gaps",
             "spec": "This spec.",
-            "today": "As of 1a87987, SortableGrid was built (d163191) before this spec, dragging to reorder; not compared with this spec."
+            "today": "As of fc9d27e: The placeholder at 0.5 (spec 0.4); no lifted copy, and the others do not move aside (a bar marks where it lands); Escape does not put it back; no keys, no move and moved words, no handle, kind or disabled. The columns match."
         },
         {
             "renderer": "sokkel-tui",

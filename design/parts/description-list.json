@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "DescriptionList built before this spec, with columns 2 in the stacked layout (d163191); not yet compared with it."
+            "as_of": "fc9d27e",
+            "note": "Drawn stacked by default; side as the default, row, sm and the missing dash not yet."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -88,9 +88,9 @@
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not compared yet",
+            "what": "gaps",
             "spec": "This spec.",
-            "today": "As of 1a87987, DescriptionList was built (d163191) before this spec, with columns 2 in the stacked layout; not compared with this spec."
+            "today": "As of fc9d27e: Stacked by default (spec: side, terms 96 wide); no row layout, size sm, termWidth auto, numeric, wide or the missing value's dash; columns only when stacked and kept below md; side has no 12 gap and a long term runs over its value; the value's line is 22, not 20."
         },
         {
             "renderer": "sokkel-tui",

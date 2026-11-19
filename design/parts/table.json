@@ -9,7 +9,11 @@
             "as_of": "97f92d8",
             "note": "Counts in words are formatted for en-US, not the app's locale (drift)."
         },
-        "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "fc9d27e",
+            "note": "Drawn; trees, its own loading and failed states, cellFocus, the number editor, band heads and aggregates not yet."
+        },
         "sokkel-tui": {
             "state": "partial",
             "as_of": "555b9ae",
@@ -138,7 +142,7 @@
         "cellFocus": {
             "values": ["underline", "ring", "soft", "row"],
             "default": "underline",
-            "does": "How an editable table marks its active cell while it has the focus: underline, a line in the focus color under it; ring; soft; or row, which washes the cell's row."
+            "does": "How an editable table marks its active cell while the focus is anywhere in it (a press as well as a key): underline, a line 2 tall in ring along the cell's foot, inside it; ring, a ring 2 wide in ring inside the cell's edge; soft, the cell on hover with a ring 1 wide in border-strong inside its edge; row, a line 1 tall in border-strong along the cell's foot, inside it, and the cell's row on hover. A cell whose save was refused is on critical/8 with a line 2 tall in critical along its foot, whatever the value. The marks are inset box-shadows in sokkel-ui (CELL_FOCUS in table-editing): no paint key holds a line along one edge, so they are said here."
         },
         "resizable": {"type": "boolean", "default": true, "does": "Heads' end edges resize their columns."},
         "reorderable": {
@@ -353,7 +357,10 @@
             "selected": {"ground": "secondary"},
             "opened": {"ground": "secondary"},
             "selected+hover": {"ground": "secondary"},
-            "active+focus": {"ring": {"color": "ring", "width": 2, "inset": "start"}},
+            "active+focus": {
+                "ring": {"color": "ring", "width": 2, "inset": "start"},
+                "note": "Keyboard focus only (group-focus-visible); 2 is a literal in sokkel-ui (shadow-[inset_2px_0_0_var(--ring)]), not focus-ring-width, and stays 2 where a theme widens the focus ring."
+            },
             "toneCritical": {"ground": "mix-oklab(critical 8%, card)"},
             "toneWarning": {"ground": "mix-oklab(warning 10%, card)"},
             "muted": {"opacity": 0.6, "note": "The cells' content, not the ground."}
@@ -644,6 +651,12 @@
             "what": "the parts not built yet",
             "spec": "This spec.",
             "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-egui 1a87987). Has: rows at density.row, drawing only those in view, their height set or auto and a cell of two lines; heads in text.column-head and table-head-ink (68c156c) that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); stacked cards below its width (compact and labeled); row actions as a menu, inside the row's padding when the table fits its room (minWidth auto); a row's chevron and its detail row; grouping by a column (groupBy); paging with a page size; cell editing (text, date, select); row reorder by its grip; keyboard row navigation and the head row by keys; the toolbar line and the foot; words as fields. A grid of numbers by row and column (EntryGrid: bands over the columns, folding row groups with their count, rows stacked into named fields when narrow) is drawn as its own widget where the web draws a grouped, banded, editable DataTable. Not yet: trees, and its own loading and failed states (it is wrapped in PageState)."
+        },
+        {
+            "renderer": "sokkel-egui",
+            "what": "editing and cellFocus",
+            "spec": "options.editing, options.cellFocus, columns band and aggregate.",
+            "today": "As of fc9d27e: the active cell moves and edits (Enter, F2 or a character opens it, Tab saves, Escape drops), but there is no cellFocus (always a 2 ring plus a row wash), no number editor, and no band heads or aggregates. EntryGrid stays a widget of its own (inputs always open, a Tab stop per cell, a save per keystroke) until those land, then becomes this table."
         },
         {
             "renderer": "sokkel-ui",

@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "Stat built before this spec (d163191), with size lg and tiles of equal height; not yet compared with it."
+            "as_of": "fc9d27e",
+            "note": "The tile's paints drawn; the plain stat, change and the tile as a plain card not yet."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -48,7 +48,7 @@
         "emphasis": {
             "type": "boolean",
             "default": false,
-            "does": "Edges the tile in its dot's color at 55 percent: the count that asks for work."
+            "does": "Edges the tile in its dot's color at 55 percent alpha, <dot>/55 (status-failed/55 for a failed dot), as primary/80 is primary at 80: the count that asks for work. The dot is a color the app gives, so no paint resolves it; a renderer draws the dot's color at that alpha."
         },
         "size": {
             "values": ["md", "lg"],
@@ -115,15 +115,15 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "With href or onSelect a link or a button covers the tile, named by the label and the value; the pieces over it let the pointer through.",
-            "emphasis is a color-mix of the dot's color at 55 percent: the dot is a CSS color the app gives, so the edge is not a token."
+            "emphasis is border-[color-mix(in_oklab,var(--stat-tone)_55%,transparent)], --stat-tone being the dot."
         ]
     },
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not compared yet",
+            "what": "gaps",
             "spec": "This spec.",
-            "today": "As of 1a87987, Stat was built (d163191) before this spec, with size lg and tiles of equal height in a row; not compared with this spec."
+            "today": "As of fc9d27e: No public plain stat (only inside KpiRow), and that one has no dot or change and its value takes page-title tracking; the tile has no change and is always a control; the change sits 8 after the value, not 4 from its arrow; the accessible name is the label alone. The tile's paints match."
         },
         {
             "renderer": "sokkel-tui",

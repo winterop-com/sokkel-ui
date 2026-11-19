@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "ApiLink built before this spec (d163191), not yet compared with it."
+            "as_of": "fc9d27e",
+            "note": "Drawn; the method's weight, the cut path, href and the copy button not yet."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -116,9 +116,9 @@
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not compared yet",
+            "what": "gaps",
             "spec": "This spec.",
-            "today": "As of 1a87987, ApiLink was built (d163191) before this spec and has not been compared with it."
+            "today": "As of fc9d27e: The method at weight 400 (spec 500); the path is never cut and has no hover text; no href, open or opens; the copy button is a drawn 24 square, not button icon-xs. Ground, edge, radius, gaps and the verbs' inks match."
         },
         {
             "renderer": "sokkel-tui",
