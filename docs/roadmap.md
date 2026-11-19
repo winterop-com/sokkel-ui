@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.32.1** is the latest release (2026-11-18): a sortable content column keeps room for its sort
+- **0.32.2** is the latest release (2026-11-19): `PromptDialog`; the `candlestick` chart kind;
+  `CodeEditor`'s `yamlVersion`; an edge click in an editable graph takes the choice alone; the ajv
+  import loads in Node; contract 0.32.2.
+- **0.32.1** (2026-11-18): a sortable content column keeps room for its sort
   arrow, so sorting never wraps its head; contract 0.32.1.
 - **0.32.0** (2026-11-18): `themeSettings` is `useThemeSettings` (breaking);
   table heads wrap to two lines in a tight table; a moved graph view keeps the chosen box after a
