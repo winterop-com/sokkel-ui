@@ -123,6 +123,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'lib/katex': "`Markdown`'s math engine, loaded the first time a message holds math",
         'lib/markdown-html':
             'what `Markdown` and `PlainMarkdown` read raw HTML with under `allowHtml`, loaded the first time a text allows it; an app preloads it with `loadHtml`',
+        'lib/markdown-parse': 'how `Markdown` reads a text into its tree, without the YAML reader; `lib/markdown-tree` exports it with one',
         'lib/math': 'how `Markdown` reads math',
         'lib/overlay': 'the open overlays `useOverlay` keeps',
         'lib/popup': 'the look every popup wears: its ground, corners, edge and elevation',

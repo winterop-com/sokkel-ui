@@ -1,0 +1,40 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "A share of failures, "
+        },
+        {
+          "type": "inlineMath",
+          "value": "f = \\frac{n_\\text{failed}}{n}"
+        },
+        {
+          "type": "text",
+          "value": ", and "
+        },
+        {
+          "type": "inlineMath",
+          "value": "x^2"
+        },
+        {
+          "type": "text",
+          "value": " inline; \"costs $5 and $10\" stays prices."
+        }
+      ]
+    },
+    {
+      "type": "math",
+      "meta": null,
+      "value": "\\bar{t} = \\frac{1}{n} \\sum_{i=1}^{n} t_i"
+    },
+    {
+      "type": "math",
+      "meta": null,
+      "value": "\\sigma^2"
+    }
+  ]
+}

@@ -1408,6 +1408,10 @@
             "types": "./dist/lib/title-lines.d.ts",
             "import": "./dist/lib/title-lines.js"
         },
+        "./lib/markdown-tree": {
+            "types": "./dist/lib/markdown-tree.d.ts",
+            "import": "./dist/lib/markdown-tree.js"
+        },
         "./lib/wiki-links": {
             "types": "./dist/lib/wiki-links.d.ts",
             "import": "./dist/lib/wiki-links.js"
@@ -1470,9 +1474,12 @@
         "rehype-sanitize": "^6.0.0",
         "remark-gfm": "^4.0.1",
         "remark-math": "^6.0.0",
+        "remark-parse": "^11.0.0",
         "shiki": "^4.6.0",
         "sonner": "^2.0.8",
-        "tailwindcss": "^4.3.5"
+        "tailwindcss": "^4.3.5",
+        "unified": "^11.0.5",
+        "yaml": "^2.8.1"
     },
     "peerDependenciesMeta": {
         "@codemirror/autocomplete": {
@@ -1565,10 +1572,19 @@
         "remark-math": {
             "optional": true
         },
+        "remark-parse": {
+            "optional": true
+        },
         "shiki": {
             "optional": true
         },
         "sonner": {
+            "optional": true
+        },
+        "unified": {
+            "optional": true
+        },
+        "yaml": {
             "optional": true
         }
     }

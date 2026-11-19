@@ -2,7 +2,8 @@ import { memo } from 'react'
 
 import { MarkdownView, type MarkdownProps } from './markdown-view'
 
-export { loadHtml, MARKDOWN_WORDS, markdownSection, splitFrontmatter } from './markdown-view'
+export { loadHtml, MARKDOWN_WORDS, markdownHeadings, markdownSection, splitFrontmatter } from './markdown-view'
+export type { MarkdownNode, MarkdownTree } from './markdown-view'
 
 export type PlainMarkdownProps = Omit<MarkdownProps, 'math'>
 

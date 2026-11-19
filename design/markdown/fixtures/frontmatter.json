@@ -1,0 +1,46 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "yaml",
+      "value": "title: Nightly export\nowner: grace\nsteps: [fetch, transform, validate, upload, notify]\nretries: 3\npaused: false\nreviewed: 2026-11-02\n# a comment\nschedule:\n  cron: \"0 2 * * *\"\n  zone: UTC",
+      "properties": {
+        "title": "Nightly export",
+        "owner": "grace",
+        "steps": [
+          "fetch",
+          "transform",
+          "validate",
+          "upload",
+          "notify"
+        ],
+        "retries": 3,
+        "paused": false,
+        "reviewed": "2026-11-02",
+        "schedule": {
+          "cron": "0 2 * * *",
+          "zone": "UTC"
+        }
+      }
+    },
+    {
+      "type": "heading",
+      "depth": 1,
+      "children": [
+        {
+          "type": "text",
+          "value": "Nightly export"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "The properties are read, the block is not drawn."
+        }
+      ]
+    }
+  ]
+}

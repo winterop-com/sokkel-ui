@@ -19,10 +19,11 @@
             "note": "No markdown view yet."
         }
     },
-    "summary": "A markdown text drawn as prose: GitHub-flavored markdown (headings, emphasis, lists and tasks, quotes, rules, tables, footnotes, links, images, fenced code) with callouts, math, diagrams, the app's own parts, links between notes and tags, and notes as a vault writes them (frontmatter, comments, titled and folded callouts, highlights, embeds). Raw HTML is shown as typed unless the app allows it, and then it is sanitized. Text other people wrote is held to what the app allows: images off, the link schemes it lists, headings moved under the page's own. Every color and size is the theme's, so code, callouts and diagrams follow the theme and scheme around them.",
+    "summary": "A markdown text drawn as prose: GitHub-flavored markdown (headings, emphasis, lists and tasks, quotes, rules, tables, footnotes, links, images, fenced code) with callouts, math, diagrams, the app's own parts, links between notes and tags, and notes as a vault writes them (frontmatter, comments, titled and folded callouts, highlights, embeds). Raw HTML is shown as typed unless the app allows it, and then it is sanitized. Text other people wrote is held to what the app allows: images off, the link schemes it lists, headings moved under the page's own. Every color and size is the theme's, so code, callouts and diagrams follow the theme and scheme around them. A text is read once into its tree (markdown/README.md), and the tree is drawn: given a tree read elsewhere, such as on a server, the view draws it as it would the text.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/markdown-view.tsx (MarkdownView, MARKDOWN_WORDS, splitFrontmatter, markdownSection, markdownHeadings)",
+            "packages/core/src/lib/markdown-parse.ts (parseTree: the text read into its tree) and lib/markdown-tree.ts (parseMarkdown, frontmatterOf: the same, public, with the frontmatter's properties)",
             "packages/core/src/components/Markdown.tsx (Markdown: with math and diagrams)",
             "packages/core/src/components/PlainMarkdown.tsx (PlainMarkdown: without them)",
             "packages/core/src/components/MermaidDiagram.tsx (the diagram frame)",
@@ -60,7 +61,7 @@
         "embedFrame": "The frame round a note's link when the app draws no embed: a 1px border edge.",
         "embedRule": "The rule at the start of a note the app draws: 2 wide in border-strong.",
         "callout": "A quote whose first line is [!kind]: a box on the kind's wash with an edge in the kind, its icon at the start, its title in the kind's ink, then its body. The title is the rest of the marker's line, or the kind's word. A - after the marker folds it closed and + open, the title then a press that folds and unfolds it, with a chevron at its end.",
-        "frontmatter": "A YAML block at the top (--- on the first line, closed by --- or ..., every line reading as properties): left out (hide), shown above the text as YAML code (show), or read as markdown (markdown).",
+        "frontmatter": "A YAML block at the top (--- on the first line, closed by --- or ..., every line reading as properties): left out (hide), shown above the text as YAML code (show), or read as markdown (markdown). In the tree it is the yaml node, first in the root, its properties read.",
         "comment": "An HTML comment: never drawn, with or without allowHtml.",
         "mark": "==words==: a highlight on warning/25 in the text's own ink.",
         "searchMark": "With highlight: each place the words stand, in any case and outside code and math, on primary/15 in primary-ink.",
@@ -81,7 +82,11 @@
     "options": {
         "content": {
             "type": "text",
-            "does": "The markdown text."
+            "does": "The markdown text, read into its tree and drawn; or tree."
+        },
+        "tree": {
+            "type": "node",
+            "does": "The text already read into its tree (schema/markdown-tree.schema.json), drawn in place of content with nothing read again. What the app allows (links, images, linkSchemes, resolveUrl, live, allowHtml) is held as it is drawn, as for text. With a tree, frontmatter markdown is as hide."
         },
         "scale": {
             "values": [

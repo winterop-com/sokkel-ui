@@ -1,12 +1,14 @@
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
 import { PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
+import { frontmatterOf, parseMarkdown } from '@winterop-com/sokkel-ui/lib/markdown-tree'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { TableOfContents } from '@winterop-com/sokkel-ui/TableOfContents'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@winterop-com/sokkel-ui/primitives/item'
 import { CalendarDays, FilePlus, FileText, FileX, Link2 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { go } from 'tidevann-shared/router'
 import type { Note } from './model'
@@ -32,7 +34,13 @@ function NoteItem({ note, line, mark, action }: { note: Note; line: string; mark
     )
 }
 
-/** Beside a note: what links to it, where it is named without a link, what it links to, its tags and its outline. */
+/** A property's value as one line: a list joined by commas, anything else as JSON writes it. */
+function propertyValue(value: unknown): string {
+    if (Array.isArray(value)) return value.map(propertyValue).join(', ')
+    return typeof value === 'string' ? value : JSON.stringify(value)
+}
+
+/** Beside a note: what links to it, where it is named without a link, what it links to, its tags, its properties and its outline. */
 export function NotePanel({ note }: { note: Note }) {
     const { vault, rewrite, follow, drafts } = useVault()
     const [tab, setTab] = useState('links')
@@ -44,6 +52,7 @@ export function NotePanel({ note }: { note: Note }) {
     const targets = [...new Map(out.map((link) => [link.target.toLowerCase(), link.target])).values()]
     const tags = vault.tagsOf.get(note.id) ?? []
     const headings = markdownHeadings(body, [1, 2, 3, 4])
+    const properties = useMemo(() => Object.entries(frontmatterOf(parseMarkdown(body))?.properties ?? {}), [body])
 
     /** Turns the first place another note names this one into a link to it. */
     const link = (from: Note, at: { from: number; to: number }) => {
@@ -148,6 +157,19 @@ export function NotePanel({ note }: { note: Note }) {
         </>
     )
 
+    const props =
+        properties.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">No properties. Put key: value lines between two --- lines at the top.</p>
+        ) : (
+            <div className="p-4">
+                <DescriptionList
+                    size="sm"
+                    termWidth="auto"
+                    items={properties.map(([term, value]) => ({ term, value: propertyValue(value) }))}
+                />
+            </div>
+        )
+
     const outline =
         headings.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">No headings. Start a line with # to make one.</p>
@@ -167,6 +189,7 @@ export function NotePanel({ note }: { note: Note }) {
             onActiveChange={setTab}
             tabs={[
                 { id: 'links', label: 'Links', content: links },
+                { id: 'properties', label: 'Properties', content: props },
                 { id: 'outline', label: 'Outline', content: outline },
             ]}
         />

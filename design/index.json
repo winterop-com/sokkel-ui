@@ -316,5 +316,6 @@
     "principles": "principles.md",
     "glyphs": "glyphs.json",
     "specimens": "specimens.json",
+    "markdownTree": "markdown/README.md",
     "changelog": "CHANGELOG.md"
 }
