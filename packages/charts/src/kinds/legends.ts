@@ -43,6 +43,7 @@ export const LEGENDS: Record<ChartKind, [Load, string] | 'none'> = {
     range: [() => import('./legend-range'), 'rangeLegend'],
     fan: [() => import('./legend-fan'), 'fanLegend'],
     linked: [series, 'seriesLegend'],
+    candlestick: [() => import('./legend-candles'), 'candlestickLegend'],
 }
 
 const none: KindLegend = () => []

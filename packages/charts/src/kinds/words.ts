@@ -21,6 +21,12 @@ export interface ChartWords {
     all: string
     /** Between the ends of a range in a tooltip, `10 to 90`. */
     to: string
+    /** The figure a candlestick's category opens at. */
+    open: string
+    /** The figure a candlestick's category closes at. */
+    close: string
+    /** A moving average's name, before the categories it spans: `Average 5`. */
+    average: string
 }
 
 export const CHART_WORDS: ChartWords = {
@@ -40,6 +46,9 @@ export const CHART_WORDS: ChartWords = {
     observed: 'Observed',
     all: 'All',
     to: 'to',
+    open: 'Open',
+    close: 'Close',
+    average: 'Average',
 }
 
 /** Where a catalog holds the words a chart writes itself. */

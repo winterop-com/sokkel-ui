@@ -8,7 +8,8 @@ import { ringFigures } from './legend-rings'
 import { LEGENDS, loadedLegend, loadLegend } from './legends'
 import { loadKind, readsHidden } from './load'
 import { dialSplits } from './gauge'
-import { linkedLayout, SHARED_SCALE } from './linked'
+import { SHARED_SCALE } from './linked'
+import { panelLayout } from './panels'
 import { withStatuses } from './spec'
 import { KINDS, type ChartKind, type ChartSpec } from '.'
 
@@ -41,6 +42,14 @@ const ROWS = [
     { job: 'rebuild-index', state: 'succeeded', step: 'upload', duration: -30, runs: 1, failed: 0, target: 80 },
 ]
 
+/** The harbor's water level on four days, in meters: two rises and two falls, and the rain each day. */
+const LEVELS = [
+    { day: 'Sep 1', open: 1.2, high: 1.9, low: 1.0, close: 1.6, rain: 4 },
+    { day: 'Sep 2', open: 1.6, high: 1.8, low: 1.1, close: 1.3, rain: 0 },
+    { day: 'Sep 3', open: 1.3, high: 2.1, low: 1.2, close: 2.0, rain: 12 },
+    { day: 'Sep 4', open: 2.0, high: 2.2, low: 1.4, close: 1.5, rain: 2 },
+]
+
 const SPECS: Record<string, ChartSpec> = {
     histogram: { rows: ROWS, x: 'duration', series: 'state', bins: 4 },
     boxplot: { rows: ROWS, x: 'job', y: 'duration' },
@@ -53,6 +62,7 @@ const SPECS: Record<string, ChartSpec> = {
     dual: { rows: ROWS, x: 'job', y: ['runs', 'failed'], aggregate: ['sum', 'avg'], unit: ['', '%'] },
     rings: { rows: ROWS, y: 'failed', series: 'job', aggregate: 'avg' },
     linked: { rows: ROWS, x: 'job', y: ['duration', 'runs'], unit: [' s', ''], panels: { duration: { mark: 'bar', hang: true } } },
+    candlestick: { rows: LEVELS, x: 'day', ohlc: { open: 'open', high: 'high', low: 'low', close: 'close' } },
 }
 
 type Option = { series: { type: string; name?: string; data?: unknown[] }[] }
@@ -228,9 +238,118 @@ describe('the chart kinds', () => {
         expect(fields.series.some((entry) => entry.name === SHARED_SCALE)).toBe(false)
     })
 
+    it('draws candles that rise in good and fall in critical, from open, close, low and high', () => {
+        type Candles = { series: { type: string; name: string; data: unknown[]; itemStyle: { color: string; color0?: string } }[] }
+        const option = KINDS.candlestick.build(SPECS.candlestick, LOOK) as unknown as Candles
+        expect(option.series.map((series) => [series.type, series.name, series.itemStyle.color, series.itemStyle.color0])).toEqual([
+            ['candlestick', 'Rise', 'good', 'good'],
+            ['candlestick', 'Fall', 'critical', 'critical'],
+        ])
+        expect(option.series[0].data).toEqual([
+            [0, 1.2, 1.6, 1.0, 1.9],
+            [2, 1.3, 2.0, 1.2, 2.1],
+        ])
+        expect(option.series[1].data).toEqual([
+            [1, 1.6, 1.3, 1.1, 1.8],
+            [3, 2.0, 1.5, 1.4, 2.2],
+        ])
+        const colored = KINDS.candlestick.build({ ...SPECS.candlestick, colors: { Rise: 'chart-2' } }, LOOK) as unknown as Candles
+        expect(colored.series[0].itemStyle.color).toBe('chart-2')
+        const tenths = (values: readonly (number | null | undefined)[]) =>
+            values.map((value) => (value === null || value === undefined ? null : Math.round(value * 100) / 100))
+        expect(legendOf('candlestick', SPECS.candlestick).map((item) => [item.key, item.color, tenths(item.values ?? [])])).toEqual([
+            ['Rise', 'var(--good)', [0.4, 0.7]],
+            ['Fall', 'var(--critical)', [-0.3, -0.5]],
+        ])
+    })
+
+    it('draws OHLC bars in place of candles with the bars style', () => {
+        type Bars = { series: { type: string; renderItem?: unknown }[] }
+        const spec: ChartSpec = { ...SPECS.candlestick, ohlc: { open: 'open', high: 'high', low: 'low', close: 'close', style: 'bars' } }
+        const option = KINDS.candlestick.build(spec, LOOK) as unknown as Bars
+        expect(option.series.map((series) => [series.type, typeof series.renderItem])).toEqual([
+            ['custom', 'function'],
+            ['custom', 'function'],
+        ])
+    })
+
+    it("draws a candlestick's volume in a panel of its own on the same axis, its averages as lines, and zooms both", () => {
+        type Full = {
+            grid: unknown[]
+            xAxis: { gridIndex: number; axisLabel: { show: boolean } }[]
+            yAxis: { name?: string; scale?: boolean }[]
+            dataZoom: { type: string; xAxisIndex: number[]; start: number }[]
+            series: { type: string; name: string; xAxisIndex: number; data: unknown[] }[]
+            tooltip: { formatter: (points: { axisValueLabel: string; seriesName: string }[]) => string }
+        }
+        const spec: ChartSpec = {
+            ...SPECS.candlestick,
+            ohlc: { open: 'open', high: 'high', low: 'low', close: 'close', volume: 'rain' },
+            fieldNames: { rain: 'Rain' },
+            unit: [' m', ' mm'],
+            averages: [2],
+            zoom: [50, 100],
+        }
+        const option = KINDS.candlestick.build(spec, LOOK) as unknown as Full
+        expect(option.grid).toHaveLength(2)
+        expect(option.xAxis.map((axis) => [axis.gridIndex, axis.axisLabel.show])).toEqual([
+            [0, false],
+            [1, true],
+        ])
+        expect(option.yAxis.map((axis) => [axis.name, axis.scale])).toEqual([
+            [undefined, true],
+            ['Rain', undefined],
+        ])
+        expect(option.series.map((series) => [series.type, series.name, series.xAxisIndex])).toEqual([
+            ['candlestick', 'Rise', 0],
+            ['candlestick', 'Fall', 0],
+            ['line', 'Average 2', 0],
+            ['bar', 'Rain', 1],
+        ])
+        expect(
+            (option.series[2].data as (number | null)[]).map((value) => (value === null ? null : Math.round(value * 100) / 100)),
+        ).toEqual([null, 1.45, 1.65, 1.75])
+        expect(option.dataZoom.map((zoom) => [zoom.type, zoom.xAxisIndex, zoom.start])).toEqual([
+            ['inside', [0, 1], 50],
+            ['slider', [0, 1], 50],
+        ])
+        const said = option.tooltip.formatter(['Fall', 'Average 2', 'Rain'].map((seriesName) => ({ axisValueLabel: 'Sep 2', seriesName })))
+        for (const text of [
+            'Sep 2',
+            'Open',
+            '1.6 m',
+            'High',
+            '1.8 m',
+            'Low',
+            '1.1 m',
+            'Close',
+            '1.3 m',
+            'Average 2',
+            '1.45 m',
+            'Rain',
+            '0 mm',
+        ])
+            expect(said).toContain(text)
+        const hidden = option.tooltip.formatter([{ axisValueLabel: 'Sep 2', seriesName: 'Rain' }])
+        expect(hidden).not.toContain('Open')
+    })
+
+    it("writes a candlestick's words in the spec's words", () => {
+        type Built = {
+            series: { name: string }[]
+            tooltip: { formatter: (points: { axisValueLabel: string; seriesName: string }[]) => string }
+        }
+        const words = { rise: 'Stigning', fall: 'Fall', open: 'Åpning', close: 'Slutt', average: 'Snitt' }
+        const option = KINDS.candlestick.build({ ...SPECS.candlestick, averages: [3], words }, LOOK) as unknown as Built
+        expect(option.series.map((series) => series.name)).toEqual(['Stigning', 'Fall', 'Snitt 3'])
+        const said = option.tooltip.formatter([{ axisValueLabel: 'Sep 1', seriesName: 'Stigning' }])
+        expect(said).toContain('Åpning')
+        expect(said).toContain('Slutt')
+    })
+
     it('lays linked panels out by their weights between a fixed top and bottom', () => {
-        expect(linkedLayout([1])).toEqual([{ top: 22, bottom: 58 }])
-        expect(linkedLayout([1, 2])).toEqual([
+        expect(panelLayout([1])).toEqual([{ top: 22, bottom: 58 }])
+        expect(panelLayout([1, 2])).toEqual([
             { top: 22, bottom: '71.04%' },
             { top: '37.71%', bottom: 58 },
         ])

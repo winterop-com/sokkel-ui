@@ -1,57 +1,10 @@
-import { extent } from '../data'
-import { textWidth, tooltipMarkup, withAlpha, type ChartLook } from '../look'
-import { niceExtent } from '../scales'
+import { tooltipMarkup, type ChartLook } from '../look'
 import { farCorners, fading, tickWriter } from './axes'
 import { shaped } from './legend-series'
-import { written, categoryLabels, categoryText, colorOf, isFigure, unitAt, type ChartBuilder, type LinkedPanel } from './spec'
+import { panelLayout, panelZoom, PANEL_RIGHT, sharedLabels, widestTick } from './panels'
+import { written, categoryText, colorOf, isFigure, unitAt, type ChartBuilder, type LinkedPanel } from './spec'
 
-/** The height the fixed parts of a linked chart are laid out against, in pixels; a taller chart widens its gaps in proportion. */
-const NOMINAL = 320
-/** Above the first panel, for its name. */
-const TOP = 22
-/** Between two panels, for the lower one's name. */
-const GAP = 28
-/** Under the last panel, for the shared axis' labels and the zoom slider. */
-const BOTTOM = 58
-/** The zoom slider's height and its distance from the bottom. */
-const SLIDER = { height: 18, bottom: 6 }
-const RIGHT = 10
 const NO_STYLE: LinkedPanel = {}
-
-const percent = (value: number) => `${(Math.round(value * 100) / 100).toString()}%`
-
-/**
- * Where each panel's grid sits, by the panels' weights: the first a fixed distance from the top, the
- * last a fixed distance from the bottom, and the boundaries between them at shares of the height,
- * so every panel keeps its share as the chart grows.
- */
-export function linkedLayout(weights: readonly number[]): { top: number | string; bottom: number | string }[] {
-    const share = (pixels: number) => (pixels / NOMINAL) * 100
-    const gaps = share(GAP) * Math.max(0, weights.length - 1)
-    const room = Math.max(weights.length * 4, 100 - share(TOP) - share(BOTTOM) - gaps)
-    const total = weights.reduce((sum, weight) => sum + weight, 0) || 1
-    let start = share(TOP)
-    return weights.map((weight, index) => {
-        const end = start + (room * weight) / total
-        const box = {
-            top: index === 0 ? TOP : percent(start),
-            bottom: index === weights.length - 1 ? BOTTOM : percent(100 - end),
-        }
-        start = end + share(GAP)
-        return box
-    })
-}
-
-/** The widest tick label a value axis over these figures draws, in pixels, with three or so ticks from zero. */
-function widestTick(values: readonly (number | null)[], write: (value: number) => string, size: number): number {
-    const numbers = values.filter((value): value is number => value !== null)
-    const [low, high] = extent(numbers) ?? [0, 0]
-    const { min, max, interval } = niceExtent([Math.min(0, low), Math.max(0, high)], 3)
-    let widest = 0
-    // One step past the end too, as the axis may round up further when the zoom shows a part.
-    for (let tick = min; tick <= max + interval / 2; tick += interval) widest = Math.max(widest, textWidth(write(tick), size))
-    return widest
-}
 
 /**
  * Panels stacked on one shared `x` axis of categories or days, one panel per `y` field, or per
@@ -77,7 +30,7 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
     if (panels.length === 0) return { series: [] }
 
     const last = panels.length - 1
-    const layout = linkedLayout(panels.map((panel) => Math.max(0, panel.style.weight ?? 1)))
+    const layout = panelLayout(panels.map((panel) => Math.max(0, panel.style.weight ?? 1)))
     const ticks = (unit: number) => tickWriter(spec.format, unitAt(spec, unit), spec.locale)
     // One measure split into panels shares a scale, so their heights compare; separate fields keep their own.
     const shared = (spec.scales ?? (spec.series === undefined ? 'own' : 'shared')) === 'shared'
@@ -85,15 +38,7 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
     const left = 12 + Math.max(...panels.map((panel) => widestTick(shared ? figures : panel.values, ticks(panel.unit), look.size.label)))
     // Bars need room at the axis' ends, and every panel takes the same room so the categories line up.
     const boundaryGap = panels.some((panel) => panel.style.mark === 'bar')
-    const labels = {
-        show: true,
-        hideOverlap: true,
-        // The end labels stay inside the chart rather than half over its edge.
-        alignMinLabel: 'left',
-        alignMaxLabel: 'right',
-        ...(spec.labelEvery === undefined ? {} : { interval: spec.labelEvery - 1 }),
-        ...categoryLabels(spec),
-    }
+    const labels = sharedLabels(spec)
     const lastHangs = panels[last].style.hang === true
     const xAxis = [
         ...panels.map((panel, index) => ({
@@ -126,12 +71,6 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
     const shaded = panels[Math.max(0, shade)]
     const shadeColor = colorOf(spec, look, shaded.name, shaded.index)
     const unitOf = new Map(panels.map((panel) => [panel.name, panel.unit]))
-    const view =
-        spec.zoom === undefined
-            ? {}
-            : typeof spec.zoom[0] === 'number'
-              ? { start: spec.zoom[0], end: spec.zoom[1] }
-              : { startValue: spec.zoom[0], endValue: spec.zoom[1] }
 
     return {
         tooltip: {
@@ -150,40 +89,8 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
                 ),
         },
         axisPointer: { link: [{ xAxisIndex: 'all' }] },
-        dataZoom: [
-            {
-                type: 'inside',
-                xAxisIndex: linkedAxes,
-                zoomOnMouseWheel: 'ctrl',
-                moveOnMouseWheel: false,
-                moveOnMouseMove: true,
-                // A touch that drags across the chart still scrolls the page.
-                preventDefaultMouseMove: false,
-                ...view,
-            },
-            {
-                type: 'slider',
-                xAxisIndex: sliderAxes,
-                left,
-                right: RIGHT,
-                bottom: SLIDER.bottom,
-                height: SLIDER.height,
-                showDetail: false,
-                brushSelect: false,
-                borderColor: look.border,
-                borderRadius: look.corner,
-                backgroundColor: 'transparent',
-                fillerColor: withAlpha(shadeColor, 0.14),
-                dataBackground: { lineStyle: { color: look.faint, width: 1 }, areaStyle: { color: look.grid, opacity: 0.5 } },
-                selectedDataBackground: { lineStyle: { color: shadeColor, width: 1 }, areaStyle: { color: shadeColor, opacity: 0.25 } },
-                handleStyle: { color: look.card, borderColor: look.muted, borderWidth: 1 },
-                moveHandleStyle: { color: look.grid, opacity: 1 },
-                emphasis: { handleStyle: { borderColor: look.foreground }, moveHandleStyle: { color: look.muted } },
-                textStyle: { color: look.muted, fontFamily: look.font, fontSize: look.size.small },
-                ...view,
-            },
-        ],
-        grid: panels.map((_, index) => ({ left, right: RIGHT, ...layout[index], outerBoundsMode: 'none' })),
+        dataZoom: panelZoom(spec, look, { axes: linkedAxes, sliderAxes, left, shade: shadeColor }),
+        grid: panels.map((_, index) => ({ left, right: PANEL_RIGHT, ...layout[index], outerBoundsMode: 'none' })),
         xAxis,
         yAxis: panels.map((panel, index) => {
             const hang = panel.style.hang === true

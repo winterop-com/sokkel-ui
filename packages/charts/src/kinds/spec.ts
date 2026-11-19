@@ -184,6 +184,30 @@ export interface ChartSpec {
      * reference. The value axis reaches each, where it is above or below every figure.
      */
     targets?: readonly ChartTarget[]
+    /**
+     * The fields a candlestick chart reads each category's open, high, low and close from, and its
+     * volume, drawn as bars in a panel under the candles; `style` draws plain bars with ticks for
+     * open and close in place of candles.
+     */
+    ohlc?: ChartOhlc
+    /** Moving averages a candlestick chart draws over its closes, each a line over this many categories, such as `[5, 20]`. */
+    averages?: readonly number[]
+}
+
+/** Which fields a candlestick chart reads; see `ChartSpec.ohlc`. */
+export interface ChartOhlc {
+    /** The field of the figure a category opens at. */
+    open: string
+    /** The field of its highest figure. */
+    high: string
+    /** The field of its lowest figure. */
+    low: string
+    /** The field of the figure it closes at. */
+    close: string
+    /** The field of its volume, drawn as bars in a panel under the candles; none by default. */
+    volume?: string
+    /** Candles with a body from open to close (the default), or bars with a tick left at the open and right at the close. */
+    style?: 'candles' | 'bars'
 }
 
 /** One band of a fan; see `ChartSpec.bands`. */

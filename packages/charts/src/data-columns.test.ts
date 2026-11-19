@@ -107,6 +107,19 @@ describe('dataColumns', () => {
         expect(dataColumns('treemap', spec, 'time').map((column) => column.field)).toEqual(['time', 'host', 'job', 'runs'])
     })
 
+    it("shows a candlestick's open, high, low and close, then its volume in the second unit", () => {
+        const rows = [{ day: 'Sep 1', open: 1.2, high: 1.9, low: 1.1, close: 1.5, rain: 4 }]
+        const spec: ChartSpec = {
+            rows,
+            x: 'day',
+            ohlc: { open: 'open', high: 'high', low: 'low', close: 'close', volume: 'rain' },
+            unit: [' m', ' mm'],
+        }
+        const columns = dataColumns('candlestick', spec)
+        expect(columns.map((column) => column.field)).toEqual(['day', 'open', 'high', 'low', 'close', 'rain'])
+        expect(columns.map((column) => dataCell(column, rows[0], spec))).toEqual(['Sep 1', '1.2 m', '1.9 m', '1.1 m', '1.5 m', '4 mm'])
+    })
+
     it("takes a scatter's x as a figure", () => {
         expect(dataColumns('scatter', { rows: RUNS, x: 'seconds', y: 'runs' })[0].numeric).toBe(true)
     })

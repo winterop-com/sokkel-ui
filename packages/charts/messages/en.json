@@ -1,6 +1,8 @@
 {
     "chart.all": "All",
+    "chart.average": "Average",
     "chart.change": "Change",
+    "chart.close": "Close",
     "chart.count": "Count",
     "chart.fall": "Fall",
     "chart.high": "High",
@@ -9,6 +11,7 @@
     "chart.median": "Median",
     "chart.observed": "Observed",
     "chart.ofFirst": "of first",
+    "chart.open": "Open",
     "chart.outlier": "Outlier",
     "chart.rise": "Rise",
     "chart.target": "Target",

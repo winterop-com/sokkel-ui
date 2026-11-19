@@ -1,6 +1,7 @@
 import { boxplot } from './boxplot'
 import { bullet } from './bullet'
 import { calendar } from './calendar'
+import { candlestick } from './candlestick'
 import { area, bar, donut, heatmap, line, pie } from './categories'
 import { dual } from './dual'
 import { fan } from './fan'
@@ -53,6 +54,7 @@ export const KINDS = {
     range: { build: range },
     fan: { build: fan },
     linked: { build: linked },
+    candlestick: { build: candlestick },
 } satisfies Record<string, ChartKindDef>
 
 export type ChartKind = keyof typeof KINDS
@@ -65,6 +67,7 @@ export type {
     ChartKindDef,
     ChartLayer,
     ChartMark,
+    ChartOhlc,
     ChartTarget,
     ChartSpec,
     ChartStep,
