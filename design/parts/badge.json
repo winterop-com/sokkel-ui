@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "Badge built before this spec, kind as ChipTone::Kind (d163191); not yet compared with it."
+            "as_of": "fc9d27e",
+            "note": "The six variants and their sizes drawn; kind, hover, links and a trailing icon not yet."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -29,7 +29,7 @@
         },
         "kind": {
             "values": ["blue", "green", "jade", "pink", "teal", "violet"],
-            "does": "One of the kind colors, laid over the variant: the color's wash at 12 percent, its edge at 30, its ink. kindOf(name) picks one steadily from a name, so the same value always wears the same color."
+            "does": "One of the kind colors, laid over the variant: the color's wash at 12 percent, its edge at 30, its ink. kindOf(name) picks one steadily from a name, so the same value always wears the same color. The same paints as a Chip's kind hue (KIND_CHIP); Chip, with its tones, sizes, toggles and menu, is a part of its own in sokkel-ui, not yet in the contract, and a badge is not a chip."
         },
         "children": {"type": "node", "does": "The words, with an icon before or after them."}
     },
@@ -91,9 +91,9 @@
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not compared yet",
+            "what": "gaps",
             "spec": "This spec.",
-            "today": "As of 1a87987, Badge was built before this spec, its kind as ChipTone::Kind (d163191); not compared with this spec."
+            "today": "As of fc9d27e: No kind on the badge (its paints are on Chip as ChipTone::Kind); no ghost or link hover; never drawn as a link; no icon after the words. The six variants and their sizes match."
         },
         {
             "renderer": "sokkel-tui",

@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "Unfoldable built before this spec, with forced; not yet compared with it."
+            "as_of": "fc9d27e",
+            "note": "Drawn; its indents, summary, controlled open, static row and phone height not yet."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -75,7 +75,11 @@
     "states": {
         "rest": {"means": "Shut: the chevron points at the heading, the summary under it."},
         "hover": {"means": "The pointer is over a row that unfolds.", "reached": "pointer over"},
-        "focus": {"means": "Keyboard focus on the row: the focus ring inside it.", "reached": "Tab", "on": "keyboard"},
+        "focus": {
+            "means": "Keyboard focus on the row: the focus ring inside its edge.",
+            "reached": "Tab",
+            "on": "keyboard"
+        },
         "open": {
             "means": "Open: the chevron turned down, the content under the heading, no summary.",
             "reached": "a press, Enter or Space on the row; open or defaultOpen"
@@ -92,8 +96,8 @@
             },
             "hover": {"ground": "hover"},
             "focus": {
-                "ring": {"color": "ring", "width": "focus-ring-width"},
-                "note": "The ring drawn inside the row (ring-inset)."
+                "ring": {"color": "ring", "width": "focus-ring-width", "inset": "all"},
+                "note": "A ring focus-ring-width wide drawn inside the row's edge, flush with it (ring-focus ring-inset, a box-shadow): focus-ring-offset is not used."
             }
         },
         "chevron": {"rest": {"ink": "muted-foreground"}, "forced": {"ink": "faint"}},
@@ -120,9 +124,9 @@
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not compared yet",
+            "what": "gaps",
             "spec": "This spec.",
-            "today": "As of 1a87987, Unfoldable was built before this spec (with forced) and has not been compared with it."
+            "today": "As of fc9d27e: Its heading starts at 26 and its content at 22 (the row does not reach 4 past the column); no summary or wrapSummary, controlled open, static row or phoneMinHeight; the ink is foreground, not what it stands on. Forced, the chevron, hover and the 30 height match."
         },
         {
             "renderer": "sokkel-tui",

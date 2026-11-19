@@ -5198,6 +5198,8 @@ const CHART_THEME = chartSource('theme.ts')
 const CHART_AXES = chartSource('kinds/axes.ts')
 const CHART_CATEGORIES = chartSource('kinds/categories.ts')
 const TIME_SERIES_PANEL = chartSource('dashboard/TimeSeriesPanel.tsx')
+const CANDLESTICK = chartSource('kinds/candlestick.ts')
+const WATERFALL_TONES = chartSource('kinds/legend-waterfall.ts')
 
 /** The classes a panel's content takes while it loads long enough to dim (`LoadingOverlay`, after its delay). */
 const DIMMED = literalAfter(LOADERS, 'long &&')
@@ -5271,6 +5273,23 @@ const CHART_ON: Record<string, string[]> = {
 /** A literal number after a pattern in a source, as a string. */
 const literalIn = (text: string, pattern: RegExp) => pattern.exec(text)?.[1]
 
+/** The token a candlestick's rises or falls take: the waterfall's tone for the word, where the candlestick reads those tones. */
+const candleTone = (word: 'rise' | 'fall') =>
+    /const tone = tones\(spec\)/.test(CANDLESTICK)
+        ? new RegExp(`${word}: spec\\.colors\\?\\.\\[words\\.${word}\\] \\?\\? '([a-z0-9-]+)'`).exec(WATERFALL_TONES)?.[1]
+        : undefined
+/** A candle drawn in its tone, its body and its edge. */
+const candleDrawn = (word: 'rise' | 'fall') => {
+    const tone = candleTone(word)
+    return drawnAs(tone === undefined ? '' : `bg-${tone} border-${tone}`)
+}
+/** A volume bar in its candle's tone mixed into the card at the share the builder gives. */
+const volumeDrawn = (word: 'rise' | 'fall') => {
+    const tone = candleTone(word)
+    const share = literalIn(CANDLESTICK, /color: look\.mix\(toneOf\(candle\), (\d+)\)/)
+    return drawnAs(tone === undefined || share === undefined ? '' : `bg-[color-mix(in_oklab,var(--${tone})_${share}%,var(--card))]`)
+}
+
 const CHART_ADAPTER: Adapter = {
     wordObjects: { CHART_WORDS, CHART_LEGEND_WORDS },
     complete: ['CHART_WORDS', 'CHART_LEGEND_WORDS'],
@@ -5318,6 +5337,14 @@ const CHART_ADAPTER: Adapter = {
                 return pieceWhere(legendSwatchOf(state === 'hidden' ? hidden : shown, state === 'hidden' ? 'Failed' : 'Runs'))
             case 'legendFigure':
                 return pieceWhere(shown.find((element) => element.text === '3,526' && element.tag === 'span'))
+            case 'candleRise':
+                return candleDrawn('rise')
+            case 'candleFall':
+                return candleDrawn('fall')
+            case 'volumeRise':
+                return volumeDrawn('rise')
+            case 'volumeFall':
+                return volumeDrawn('fall')
             default:
                 return undefined
         }
@@ -5351,6 +5378,8 @@ const CHART_ADAPTER: Adapter = {
             markCorner: () => literalIn(CHART_LOOK, /corner: Math\.max\(0, pixels\('radius', [\d.]+\) \* ([\d.]+)\)/),
             chartLegendIcon: () => literalIn(CHART_THEME, /itemWidth: (\d+),/),
             sliceEdge: () => literalIn(CHART_THEME, /pie: \{\s*itemStyle: \{ borderColor: look\.card, borderWidth: (\d+) \}/),
+            candleWidth: () => literalIn(CANDLESTICK, /const WIDEST = (\d+)/),
+            averageWidth: () => literalIn(CANDLESTICK, /lineStyle: \{ color: averageColor\[index\], width: ([\d.]+) \}/),
         }),
 }
 
@@ -5947,6 +5976,7 @@ const CODE_EDITOR_ADAPTER: Adapter = {
         variant: propValues(CODE_EDITOR, 'CodeEditorProps', 'variant'),
         size: propValues(CODE_EDITOR, 'CodeEditorProps', 'size'),
         activeLine: withBoolean(CODE_EDITOR, 'CodeEditorProps', 'activeLine'),
+        yamlVersion: propValues(CODE_EDITOR, 'CodeEditorProps', 'yamlVersion'),
     },
     size: (size, key) => {
         const { field, line } = CODE_EDITORS()
@@ -8009,9 +8039,7 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {
-    chart: { 'options.kind': 'the candlestick kind, specified in the chart family next' },
-}
+const PENDING: Record<string, Record<string, string>> = {}
 
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,

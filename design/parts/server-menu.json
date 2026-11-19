@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "ServerMenu built before this spec (d163191): the dot, the name, the version, a menu of the state, facts, Check again and the app's items; no checks tooltip."
+            "as_of": "fc9d27e",
+            "note": "The face, dot, menu and facts drawn; most options not yet."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -169,9 +169,9 @@
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not compared yet",
+            "what": "gaps",
             "spec": "This spec.",
-            "today": "As of 1a87987, ServerMenu was built (d163191) before this spec: the dot, the name, the version, a menu of the state, the facts, Check again and the app's items. Not yet: the checks' tooltip; not compared with this spec."
+            "today": "As of fc9d27e: No environment, states, quiet, checks or checkedAt, recheck, onPress, defaultOpen or tooltip; the name is neither cut nor hidden below md; the version chip is not text.badge at 500 in the code face; the check icon does not turn while checking; no ArrowDown to open. The face, the dot, the menu and the facts match."
         },
         {
             "renderer": "sokkel-tui",

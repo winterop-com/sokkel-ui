@@ -184,6 +184,11 @@
             "type": "callback",
             "does": "Hears a JSON or YAML document read into a value 300 ms after each edit and once at the start; a YAML stream gives every document too."
         },
+        "yamlVersion": {
+            "values": ["1.2", "1.1"],
+            "default": "1.2",
+            "does": "The YAML version a YAML document's plain values are read by, for the schema check, its hover and completion and onDocument: 1.1 reads yes, no, on, off, y and n as booleans, 010 as octal, 0b101 as binary, 1_000 as a thousand and 1:30 as ninety, as a YAML 1.1 server does, and 0o10 as a string. A string the completion writes is quoted when either version would read it as something else."
+        },
         "invalid": {
             "type": "boolean",
             "default": false,

@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "ChoiceList built before this spec, with each theme's sample in the theme settings' list; not yet compared with it."
+            "as_of": "fc9d27e",
+            "note": "Drawn with its paints and sizes; its keys, the dark ground and the radio's place not yet."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -29,8 +29,7 @@
         "options": {"type": "rows", "does": "The choices, in order: { value, label, description? }."},
         "value": {"type": "text", "does": "The chosen value."},
         "onValueChange": {"type": "callback", "does": "Called with the value chosen."},
-        "label": {"type": "text", "does": "The list's accessible name, where no visible heading names it."},
-        "labelledBy": {"type": "text", "does": "The id of a visible heading that names the list."}
+        "label": {"type": "text", "does": "The list's accessible name, where no visible heading names it."}
     },
     "sizes": {
         "list": {"gap": 2},
@@ -90,15 +89,16 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "A radio group (Base UI's RadioGroup); each row is a label around its radio, so a press anywhere on it chooses.",
-            "Settings' theme list (useThemeSettings' themeList) is a ChoiceList whose labels are each theme's sample."
+            "Settings' theme list (useThemeSettings' themeList) is a ChoiceList whose labels are each theme's sample.",
+            "labelledBy names the list by the id of a visible heading (aria-labelledby), where label is not given."
         ]
     },
     "drift": [
         {
             "renderer": "sokkel-egui",
-            "what": "not compared yet",
+            "what": "gaps",
             "spec": "This spec.",
-            "today": "As of 1a87987, ChoiceList was built before this spec, with each theme's sample in the theme settings' list (theme_list), and has not been compared with it."
+            "today": "As of fc9d27e: Each row is a Tab stop of its own (no roving focus, no arrows) and Enter also chooses; no dark input/30 ground; the radio is centered on a wrapped label rather than level with its first line; not a radio group to assistive technology. Paints and sizes match."
         },
         {
             "renderer": "sokkel-tui",

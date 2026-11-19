@@ -12,7 +12,7 @@
             "note": "The look for the time series panel only; its glyphs (spark-levels, swatch) from glyphs.json."
         }
     },
-    "summary": "The look every chart kind shares, drawn from rows: a chart takes rows, a kind that says how to draw them and the fields to read, and draws in the theme it sits in. Quiet axes in border with their labels in muted-foreground, grid lines across the value axis a step lighter than the border, series in the theme's categorical order (or the colors a spec names, or each run state's status color with statuses), a line one and a half wide, bars at most 28 wide, a tooltip on the popover's look with a swatch, a label and a figure per series, dashed lines across at a scale's steps and down at marked categories, and a legend beside the chart whose entries hide or emphasize their series. A figure that is not there is the dash, and is left out of a tooltip. This spec is the look and the shared behavior; the kinds (bar, line, area, donut and the rest) are not specified one by one yet, and the frame around a chart (title, menu, export, expand, data view, loading, empty and failed) is parts/dashboard-panel's.",
+    "summary": "The look every chart kind shares, drawn from rows: a chart takes rows, a kind that says how to draw them and the fields to read, and draws in the theme it sits in. Quiet axes in border with their labels in muted-foreground, grid lines across the value axis a step lighter than the border, series in the theme's categorical order (or the colors a spec names, or each run state's status color with statuses), a line one and a half wide, bars at most 28 wide, a tooltip on the popover's look with a swatch, a label and a figure per series, dashed lines across at a scale's steps and down at marked categories, and a legend beside the chart whose entries hide or emphasize their series. A figure that is not there is the dash, and is left out of a tooltip. A candlestick draws open, high, low and close per category, rises in good and falls in critical, with an optional volume panel, moving averages and zoom. This spec is the look and the shared behavior; the kinds (bar, line, area, donut and the rest) are not specified one by one yet, and the frame around a chart (title, menu, export, expand, data view, loading, empty and failed) is parts/dashboard-panel's.",
     "sources": {
         "sokkel-ui": [
             "packages/charts/src/look.ts",
@@ -25,7 +25,9 @@
             "packages/charts/src/kinds/axes.ts",
             "packages/charts/src/kinds/index.ts",
             "packages/core/src/lib/status.ts",
-            "docs/charts.md"
+            "docs/charts.md",
+            "packages/charts/src/kinds/candlestick.ts",
+            "packages/charts/src/kinds/legend-candles.ts"
         ]
     },
     "anatomy": {
@@ -46,7 +48,13 @@
         "legendItem": "An entry: a button holding its swatch and label (and its figure with figures), 24 tall, padded 6 across, 6 between swatch and label, radius-md, text.xs in muted-foreground; a finger tall below md. A press, Enter or Space hides or shows its series; hover or focus emphasizes it.",
         "legendSwatch": "An entry's swatch, 10 square, rounded radius-mini, in its series' color; hollow (a 1 wide inset ring in the entry's ink) while its series is hidden.",
         "legendFigure": "An entry's figure after its label, in the code face with tabular figures, in foreground.",
-        "missing": "A figure that is not there: left out of a tooltip (a null, or ECharts' own '-'), and drawn as the dash, —, where a figure is written: the data view's cells, a gauge's figure, a dual axis' tooltip, a legend table's figures."
+        "missing": "A figure that is not there: left out of a tooltip (a null, or ECharts' own '-'), and drawn as the dash, —, where a figure is written: the data view's cells, a gauge's figure, a dual axis' tooltip, a legend table's figures.",
+        "candleRise": "The candlestick kind's mark per category: a body from the open to the close, 60 percent of the band and at most 14 wide, edged 1 wide in its own color, and a wick 1 wide from the low to the high. A category that closes at or above its open is a rise (candleRise), one below a fall (candleFall). The value axis fits the figures in view rather than starting at zero. A rise: closing at or above its open.",
+        "candleFall": "A candle that closes below its open, drawn as candleRise is, in the fall's color.",
+        "ohlcBar": "The candle drawn as a bar (ohlc style bars): a line 1.5 wide from the low to the high, a tick left at the open and one right at the close, each 30 percent of the band and at most 7 long, in the rise's or the fall's color.",
+        "volumeRise": "With ohlc volume: a bar per category in a panel under the candles, on the same category axis, a quarter of the height, named over its axis (fieldNames or the field); in its candle's color 45 percent into the card, its far corners rounded.",
+        "volumeFall": "A fall's volume bar, drawn as volumeRise is, in the fall's color 45 percent into the card.",
+        "average": "A moving average of the closes: a line 1.25 wide with no points, in its series color, missing until its span is full."
     },
     "standsOn": {
         "default": "card",
@@ -84,7 +92,8 @@
                 "step",
                 "range",
                 "fan",
-                "linked"
+                "linked",
+                "candlestick"
             ],
             "does": "How the rows are drawn. The same rows draw as any kind that reads their fields; a chart no kind draws becomes a new kind or an option on one, never a hand-built option.",
             "sokkel-ui": "ChartProps kind, the keys of KINDS (kinds/index.ts)"
@@ -124,6 +133,21 @@
         "targets": {
             "type": "rows",
             "does": "Lines across the chart at values, { value, label?, color? }: each dashed, 1 wide, in its color token (muted-foreground by default), its label and value written at its end above it; the value axis reaches each where the figures do not. ChartSpec targets, ChartTarget."
+        },
+        "ohlc": {
+            "type": "node",
+            "does": "The candlestick kind's fields, { open, high, low, close, volume?, style? }: each category's open, high, low and close; volume, bars in a panel under the candles on the same axis (volumeBar); style candles (the default) or bars (ohlcBar). Several rows of one category make one candle: the first open, the last close, the highest high, the lowest low and the summed volume.",
+            "sokkel-ui": "ChartSpec ohlc, ChartOhlc (kinds/spec.ts); candlesOf in kinds/legend-candles.ts"
+        },
+        "averages": {
+            "type": "rows",
+            "does": "The candlestick kind's moving averages of the closes, one line per span in categories ([5, 20]), each named by the average word and its span (Average 5) and colored as a series in the palette's order (average).",
+            "sokkel-ui": "ChartSpec averages; movingAverage in kinds/legend-candles.ts"
+        },
+        "zoom": {
+            "type": "rows",
+            "does": "The part of a linked or candlestick chart's shared axis in view at first, [from, to] in percent or the first and last category; it adds the zoom: a slider under the last panel, a drag across a panel, a pinch or Ctrl and the wheel, moving every panel together.",
+            "sokkel-ui": "ChartSpec zoom; panelZoom in kinds/panels.ts"
         },
         "format": {
             "type": "callback",
@@ -200,7 +224,12 @@
         "sliceEdge": {
             "value": 2,
             "note": "A pie or ring slice's edge in card (pie.itemStyle.borderWidth); a heatmap cell's is 1."
-        }
+        },
+        "candleWidth": {
+            "value": 14,
+            "note": "A candle, an OHLC bar or a volume bar at most this wide (WIDEST in kinds/candlestick.ts)."
+        },
+        "averageWidth": {"value": 1.25, "note": "A moving average line (kinds/candlestick.ts)."}
     },
     "cells": {
         "width": "Fills the box it is given.",
@@ -314,7 +343,33 @@
             "rest": {"radius": "radius-mini", "note": "In the series' color."},
             "hidden": {"ground": "none", "note": "Hollow: a 1 wide inset ring in the entry's ink."}
         },
-        "legendFigure": {"rest": {"ink": "foreground", "note": "The code face, tabular figures."}}
+        "legendFigure": {"rest": {"ink": "foreground", "note": "The code face, tabular figures."}},
+        "candleRise": {
+            "rest": {
+                "ground": "good",
+                "edge": "good",
+                "note": "A rise's body and wick: tones in kinds/legend-waterfall.ts, rise: good, as a waterfall's rises; colors names another for the Rise word."
+            }
+        },
+        "candleFall": {
+            "rest": {
+                "ground": "critical",
+                "edge": "critical",
+                "note": "A fall's body and wick: tones in kinds/legend-waterfall.ts, fall: critical; colors names another for the Fall word."
+            }
+        },
+        "volumeRise": {
+            "rest": {
+                "ground": "mix-oklab(good 45%, card)",
+                "note": "A rise's volume bar: look.mix(the rise's color, 45) in kinds/candlestick.ts."
+            }
+        },
+        "volumeFall": {
+            "rest": {
+                "ground": "mix-oklab(critical 45%, card)",
+                "note": "A fall's volume bar: look.mix(the fall's color, 45)."
+            }
+        }
     },
     "keyboard": [
         {"keys": ["Tab"], "does": "Moves between the legend's entries, each a button.", "when": "a legend is drawn"},
@@ -341,6 +396,9 @@
         "observed": "Observed",
         "all": "All",
         "to": "to",
+        "open": "Open",
+        "close": "Close",
+        "average": "Average",
         "legend.series": "Series",
         "legend.min": "Min",
         "legend.max": "Max",
@@ -364,6 +422,9 @@
         "observed": {"id": "chart.observed", "en": "Observed"},
         "all": {"id": "chart.all", "en": "All"},
         "to": {"id": "chart.to", "en": "to"},
+        "open": {"id": "chart.open", "en": "Open"},
+        "close": {"id": "chart.close", "en": "Close"},
+        "average": {"id": "chart.average", "en": "Average"},
         "legend.series": {"id": "chartLegend.series", "en": "Series"},
         "legend.min": {"id": "chartLegend.min", "en": "Min"},
         "legend.max": {"id": "chartLegend.max", "en": "Max"},
