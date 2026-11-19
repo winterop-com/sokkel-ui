@@ -18,6 +18,7 @@ release and empties it.
       `![[image.png|300]]` an image 300 wide, and `![[file.pdf]]` a link to the file. No `!` is left over.
     - `resolveUrl(url, use)` rewrites each image's and link's address before it is drawn.
 - Rust (`rust`, `rs`) is among the highlighter's built-in languages.
+- `MARKDOWN_WORDS` is exported from `Markdown` and `PlainMarkdown`, as other parts export their words.
 - `markdownSection(content, heading)` gives the text under one heading, for a `![[Note#Heading]]`
   embed; an embed drawn by `links.embed` is set off by a rule at its start.
 

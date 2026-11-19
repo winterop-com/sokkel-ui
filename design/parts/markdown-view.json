@@ -1,0 +1,470 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "markdown-view",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {
+            "state": "built",
+            "as_of": "a2afcc0"
+        },
+        "sokkel-egui": {
+            "state": "partial",
+            "as_of": "fc9d27e",
+            "note": "A markdown widget of its own, built before this spec: no tables, math, images, footnotes or frontmatter."
+        },
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "b99664f",
+            "note": "No markdown view yet."
+        }
+    },
+    "summary": "A markdown text drawn as prose: GitHub-flavored markdown (headings, emphasis, lists and tasks, quotes, rules, tables, footnotes, links, images, fenced code) with callouts, math, diagrams, the app's own parts, links between notes and tags, and notes as a vault writes them (frontmatter, comments, titled and folded callouts, highlights, embeds). Raw HTML is shown as typed unless the app allows it, and then it is sanitized. Text other people wrote is held to what the app allows: images off, the link schemes it lists, headings moved under the page's own. Every color and size is the theme's, so code, callouts and diagrams follow the theme and scheme around them.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/markdown-view.tsx (MarkdownView, MARKDOWN_WORDS, splitFrontmatter, markdownSection, markdownHeadings)",
+            "packages/core/src/components/Markdown.tsx (Markdown: with math and diagrams)",
+            "packages/core/src/components/PlainMarkdown.tsx (PlainMarkdown: without them)",
+            "packages/core/src/components/MermaidDiagram.tsx (the diagram frame)",
+            "packages/core/src/components/ui/code-block.tsx (a fence's frame and copy)",
+            "packages/core/src/lib/wiki-links.ts, lib/highlighter.tsx, lib/math.ts, lib/markdown-html.ts"
+        ]
+    },
+    "anatomy": {
+        "body": "The prose: text.sm on relaxed lines in foreground. A block's first child has no space above it and its last none below. With measure, paragraphs, lists, quotes and headings stop at reading-measure while tables, code, diagrams, math and parts take the full width.",
+        "heading": "h1 to h6, each in the text role its level takes at the view's scale (messageHeading1 to 4, documentHeading1 to 4); h5 and h6 in the body's text. With anchors each has the id its words make (lowercased, spaces as dashes, punctuation dropped), a repeated heading numbered -1, -2 after the first.",
+        "messageHeading1": "An h1 at the message scale, in text.detail-title; 20 above and 8 below.",
+        "messageHeading2": "An h2 at the message scale, in text.section-title at weight 600; 16 above and 8 below.",
+        "messageHeading3": "An h3 at the message scale, in text.section-title; 12 above and 6 below.",
+        "messageHeading4": "An h4 at the message scale, in text.head; 12 above and 4 below.",
+        "documentHeading1": "An h1 at the document scale, in text.page-title; 24 above and 12 below.",
+        "documentHeading2": "An h2 at the document scale, in text.detail-title; 20 above and 8 below.",
+        "documentHeading3": "An h3 at the document scale, in text.section-title; 16 above and 6 below.",
+        "documentHeading4": "An h4 at the document scale, in text.head; 12 above and 4 below.",
+        "paragraph": "A paragraph, 8 above and below. A single line break inside it is a space, as CommonMark has it.",
+        "list": "Bullets (disc) and numbers (decimal), 20 in, 8 above and below, each item 2 apart; a task item has a checkbox, read only.",
+        "quote": "A quote: a 2 wide border-strong rule at its start, 12 in, in muted-foreground.",
+        "rule": "A thematic break: a 1px border rule, 16 above and below.",
+        "table": "A table, scrolled sideways inside itself when wider than the view. Cells have a 1px border edge, 10 across and 4 down; the head row is on muted, its text as a table's column head (one step above the cells). A head row whose cells are all empty is left out.",
+        "tableCell": "A body cell: a 1px border edge, layout.cellPadX across and layout.cellPadY down.",
+        "tableHead": "A head cell: on muted with a 1px border edge, its text a table's column head.",
+        "inlineCode": "Code in a sentence in the code face: as a chip on muted (chip, the default), as the face alone (plain), or on a faint wash with no fill in a table (wash).",
+        "codeBlock": "A fence: the code block, highlighted in the code-* colors in the language the fence names, with a copy button (codeBlock.copy, then codeBlock.copied). Built in: bash, css, diff, html, javascript, jq, json, jsx, markdown, python, rust, sql, tsx, typescript, xml and yaml, and ansi output; others are added by the app.",
+        "diagram": "A mermaid fence: the diagram in the theme's colors, in a frame with a toggle between diagram and source (diagram, source), a copy (copy, copied) and an expand into a window (expand, close; in its place meanwhile, away). Source that does not parse shows its source and failed. While streaming, the source until the text completes.",
+        "math": "LaTeX: $...$ and \\(...\\) in a sentence, $$...$$, \\[...\\] and a math fence on their own lines, scrolled sideways inside itself when wide. A lone $ is math only as Pandoc reads it, so prices stay prices. A formula that does not parse is its source in the failed ink.",
+        "link": "A link in primary-ink, underlined 2 below. A link to a place in the page stays in it, one the app answers for (onLink) stays in the app, any other opens in a new tab. A link whose scheme is not allowed is drawn as its words.",
+        "wikiLink": "With links: [[Note]], [[Note|words]] and [[Note#Heading]] as links the app follows (onOpen), the heading after a chevron; a link to a note that does not exist drawn at 60 percent. Never read inside code.",
+        "tag": "With links and onTag: #tag as a chip on primary/12, no underline, that the app follows.",
+        "image": "An image at its own size, at most the view's width. With images off: its alt text and address as text, and nothing fetched.",
+        "embed": "With links, ![[...]]: a note drawn by the app (links.embed) set off by a 2 wide border-strong rule at its start and 12 in, or without it the note's link in a 1px border frame; an image file as an image, a number after its bar as its width (300) or width and height (300x200), other words as its alt text; any other file as a link to it. Never a stray !.",
+        "embedFrame": "The frame round a note's link when the app draws no embed: a 1px border edge.",
+        "embedRule": "The rule at the start of a note the app draws: 2 wide in border-strong.",
+        "callout": "A quote whose first line is [!kind]: a box on the kind's wash with an edge in the kind, its icon at the start, its title in the kind's ink, then its body. The title is the rest of the marker's line, or the kind's word. A - after the marker folds it closed and + open, the title then a press that folds and unfolds it, with a chevron at its end.",
+        "frontmatter": "A YAML block at the top (--- on the first line, closed by --- or ..., every line reading as properties): left out (hide), shown above the text as YAML code (show), or read as markdown (markdown).",
+        "comment": "An HTML comment: never drawn, with or without allowHtml.",
+        "mark": "==words==: a highlight on warning/25 in the text's own ink.",
+        "searchMark": "With highlight: each place the words stand, in any case and outside code and math, on primary/15 in primary-ink.",
+        "part": "<!-- part:ID -->: the app's own part for that ID, a block on a line of its own (12 above and below) and inline in a sentence; nothing where the app has none.",
+        "footnotes": "Footnote references as superscript links, and the notes listed at the end, each with a link back.",
+        "caret": "With caret while streaming: a 6 by 16 block in foreground after the last words, pulsing."
+    },
+    "standsOn": {
+        "default": "background"
+    },
+    "alsoStandsOn": {
+        "default": [
+            "card",
+            "popover",
+            "sidebar"
+        ]
+    },
+    "options": {
+        "content": {
+            "type": "text",
+            "does": "The markdown text."
+        },
+        "scale": {
+            "values": [
+                "message",
+                "document"
+            ],
+            "default": "message",
+            "does": "The headings' sizes: within a message (the largest a detail title) or a document's (from a page title down)."
+        },
+        "inlineCode": {
+            "values": [
+                "chip",
+                "plain",
+                "wash"
+            ],
+            "default": "chip",
+            "does": "How code in a sentence is drawn."
+        },
+        "frontmatter": {
+            "values": [
+                "hide",
+                "show",
+                "markdown"
+            ],
+            "default": "hide",
+            "does": "What becomes of a YAML frontmatter block at the top: left out, shown as YAML code above the text, or read as markdown (a rule and a heading)."
+        },
+        "streaming": {
+            "type": "boolean",
+            "default": false,
+            "does": "The text is still arriving: a diagram shows its source and an unclosed $$ block its source until they complete."
+        },
+        "caret": {
+            "type": "boolean",
+            "default": false,
+            "does": "While streaming, a caret after the last words."
+        },
+        "allowHtml": {
+            "type": "boolean",
+            "default": false,
+            "does": "Reads raw HTML and sanitizes it; off, it is shown as typed. Comments are never drawn either way."
+        },
+        "images": {
+            "type": "boolean",
+            "default": true,
+            "does": "Off, an image is its alt text and address, and nothing is fetched."
+        },
+        "linkSchemes": {
+            "type": "text",
+            "does": "The schemes a link may have to be live, relative standing for a path, a query or a fragment; any other link is its words. javascript:, vbscript: and data: links never are."
+        },
+        "resolveUrl": {
+            "type": "callback",
+            "does": "Rewrites each image's and link's address before it is drawn (a relative attachment path pointed at the app's server); a link's result is then held to linkSchemes, and an image's may be a blob: or data:image/ address only from here."
+        },
+        "inline": {
+            "type": "boolean",
+            "default": false,
+            "does": "Only the content of paragraphs, in the container's own type and color, for one line of help; a block is laid out as its text."
+        },
+        "headingOffset": {
+            "type": "number",
+            "default": 0,
+            "does": "Moves every heading down this many levels, to h6 at most."
+        },
+        "anchors": {
+            "type": "boolean",
+            "default": false,
+            "does": "Gives every heading an id made from its words."
+        },
+        "math": {
+            "type": "boolean",
+            "default": true,
+            "does": "Draws LaTeX math; off, every $ is a dollar."
+        },
+        "measure": {
+            "type": "boolean",
+            "default": false,
+            "does": "Holds paragraphs, lists, quotes and headings to reading-measure; tables, code, diagrams, math and parts keep the full width."
+        },
+        "parts": {
+            "type": "node",
+            "does": "The app's own parts by ID, drawn where the text has <!-- part:ID -->."
+        },
+        "partMarker": {
+            "type": "text",
+            "default": "part",
+            "does": "The word a part's marker starts with."
+        },
+        "links": {
+            "type": "callback",
+            "does": "Links between notes and tags: onOpen(target, heading), exists(target), onTag(tag), embed(target, heading)."
+        },
+        "live": {
+            "type": "boolean",
+            "default": true,
+            "does": "False draws every link as its words, a [[link]] as the words it shows, for a text set inside something pressed as a whole (a backlink's line in a row that opens its note)."
+        },
+        "highlight": {
+            "type": "text",
+            "does": "Marks each place these words stand, in any case and outside code and math, as a search's matches are marked."
+        },
+        "onLink": {
+            "type": "callback",
+            "does": "Called with a link's address on a plain press; answering true keeps the press in the page (a time in an episode's notes, an app route)."
+        },
+        "words": {
+            "type": "text",
+            "does": "The callouts' titles, and the code blocks' and diagrams' words."
+        }
+    },
+    "layout": {
+        "blockGap": {
+            "value": 8,
+            "note": "Above and below a paragraph, a list, a quote and a table."
+        },
+        "listInset": {
+            "value": 20,
+            "note": "A list's start inset."
+        },
+        "quoteInset": {
+            "value": 12,
+            "note": "A quote's text from its rule."
+        },
+        "cellPadX": {
+            "value": 10,
+            "note": "A table cell's inset across."
+        },
+        "cellPadY": {
+            "value": 4,
+            "note": "A table cell's inset down."
+        },
+        "calloutPadX": {
+            "value": 12,
+            "note": "A callout's inset across."
+        },
+        "calloutPadY": {
+            "value": 10,
+            "note": "A callout's inset down."
+        },
+        "calloutGap": {
+            "value": 10,
+            "note": "Between a callout's icon and its title and body."
+        }
+    },
+    "states": {
+        "rest": {
+            "means": "The text drawn."
+        },
+        "folded": {
+            "means": "A callout written with - after its marker, or folded by a press: its title alone.",
+            "reached": "[!kind]- or a press on an open folding callout's title"
+        }
+    },
+    "variants": {
+        "note": {
+            "rest": {
+                "ground": "info/8",
+                "edge": "info/45",
+                "ink": "info-ink",
+                "note": "The ink is the icon's and the title's; the body is in the prose's ink."
+            }
+        },
+        "tip": {
+            "rest": {
+                "ground": "good/8",
+                "edge": "good/45",
+                "ink": "good-ink"
+            }
+        },
+        "important": {
+            "rest": {
+                "ground": "kind-violet/8",
+                "edge": "kind-violet/45",
+                "ink": "kind-violet-ink"
+            }
+        },
+        "warning": {
+            "rest": {
+                "ground": "warning/8",
+                "edge": "warning/50",
+                "ink": "warning-ink"
+            }
+        },
+        "caution": {
+            "rest": {
+                "ground": "critical/8",
+                "edge": "critical/45",
+                "ink": "critical-ink"
+            }
+        }
+    },
+    "pieces": {
+        "body": {
+            "rest": {
+                "text": "text.sm",
+                "ink": "foreground"
+            }
+        },
+        "messageHeading1": {
+            "rest": {
+                "text": "text.detail-title"
+            }
+        },
+        "messageHeading2": {
+            "rest": {
+                "text": "text.section-title",
+                "weight": 600
+            }
+        },
+        "messageHeading3": {
+            "rest": {
+                "text": "text.section-title"
+            }
+        },
+        "messageHeading4": {
+            "rest": {
+                "text": "text.head"
+            }
+        },
+        "documentHeading1": {
+            "rest": {
+                "text": "text.page-title"
+            }
+        },
+        "documentHeading2": {
+            "rest": {
+                "text": "text.detail-title"
+            }
+        },
+        "documentHeading3": {
+            "rest": {
+                "text": "text.section-title"
+            }
+        },
+        "documentHeading4": {
+            "rest": {
+                "text": "text.head"
+            }
+        },
+        "quote": {
+            "rest": {
+                "edge": "border-strong",
+                "ink": "muted-foreground"
+            }
+        },
+        "rule": {
+            "rest": {
+                "edge": "border"
+            }
+        },
+        "tableCell": {
+            "rest": {
+                "edge": "border"
+            }
+        },
+        "tableHead": {
+            "rest": {
+                "ground": "muted",
+                "edge": "border"
+            }
+        },
+        "inlineCode": {
+            "rest": {
+                "ground": "muted",
+                "note": "chip; wash is on secondary with no fill in a table, plain has none."
+            }
+        },
+        "link": {
+            "rest": {
+                "ink": "primary-ink",
+                "underline": true
+            }
+        },
+        "tag": {
+            "rest": {
+                "ground": "primary/12",
+                "underline": false
+            }
+        },
+        "mark": {
+            "rest": {
+                "ground": "warning/25",
+                "note": "In the text's own ink."
+            }
+        },
+        "searchMark": {
+            "rest": {
+                "ground": "primary/15",
+                "ink": "primary-ink"
+            }
+        },
+        "embedFrame": {
+            "rest": {
+                "edge": "border",
+                "note": "A note's link with no embed drawn by the app."
+            }
+        },
+        "embedRule": {
+            "rest": {
+                "edge": "border-strong",
+                "note": "The rule at the start of a note the app draws."
+            }
+        }
+    },
+    "keyboard": [
+        {
+            "keys": [
+                "Tab"
+            ],
+            "does": "Reaches each link, each code block's copy and each diagram's controls, in the text's order."
+        },
+        {
+            "keys": [
+                "Enter"
+            ],
+            "does": "Follows the link with focus: a [[link]] or a #tag through the app, another as a link does."
+        },
+        {
+            "keys": [
+                "Enter",
+                "Space"
+            ],
+            "does": "Folds or unfolds the callout.",
+            "when": "a folding callout's title has focus"
+        }
+    ],
+    "words": {
+        "note": "Note",
+        "tip": "Tip",
+        "important": "Important",
+        "warning": "Warning",
+        "caution": "Caution"
+    },
+    "messages": {
+        "note": {
+            "id": "markdown.note",
+            "en": "Note"
+        },
+        "tip": {
+            "id": "markdown.tip",
+            "en": "Tip"
+        },
+        "important": {
+            "id": "markdown.important",
+            "en": "Important"
+        },
+        "warning": {
+            "id": "markdown.warning",
+            "en": "Warning"
+        },
+        "caution": {
+            "id": "markdown.caution",
+            "en": "Caution"
+        }
+    },
+    "appText": {
+        "content": "The text, as written.",
+        "title": "A callout's title written after its marker; a further marker with none (todo, bug) is titled with its own word, capitalized, as the text has it."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "react-markdown with remark-gfm; KaTeX for math and Mermaid for diagrams, loaded the first time a text needs them, and left out of PlainMarkdown so a build of it carries neither. rehype-raw and rehype-sanitize (GitHub's schema) under allowHtml, loaded then.",
+            "Shiki highlights code in one theme drawn in var(--code-*), so code follows the theme with no second pass.",
+            "A folding callout is a details element with the title as its summary.",
+            "The callout markers beyond GitHub's five: info, todo, abstract, summary, tldr, example, quote and cite draw as note; hint, success, check and done as tip; question, help and faq as important; attention as warning; danger, error, failure, fail, missing and bug as caution. Any other marker leaves a quote.",
+            "Not read, so shown as typed: %%comments%%, inline footnotes ^[...] and block ids ^id.",
+            "splitFrontmatter hands an app the frontmatter to read, markdownSection the text under a heading for a section embed, and markdownHeadings the headings and their ids for a table of contents.",
+            "While streaming the text drawn trails the text given when React is busy, so tokens that land faster than a parse are drawn together."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "gaps",
+            "spec": "This spec.",
+            "today": "As of fc9d27e a hand-written markdown widget with no tables, math, images, footnotes or frontmatter, built before this spec and not yet compared against it."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f there is no markdown view."
+        }
+    ]
+}
