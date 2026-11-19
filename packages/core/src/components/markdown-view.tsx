@@ -179,6 +179,34 @@ export function markdownHeadings(content: string, levels: readonly number[] = [2
     return out
 }
 
+/**
+ * The text under one heading of a markdown text, named by its words or by the id `anchors` gives it:
+ * the heading and what follows, up to the next heading at its level or above, outside fenced code.
+ * Undefined when no heading has that name. For a `![[Note#Heading]]` embed drawn by `links.embed`.
+ */
+export function markdownSection(content: string, heading: string): string | undefined {
+    const lines = content.split('\n')
+    const wanted = heading.trim().toLowerCase()
+    let fenced = false
+    let start = -1
+    let level = 0
+    for (const [index, line] of lines.entries()) {
+        if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
+        if (fenced) continue
+        const atx = atxHeading(line)
+        if (atx === null) continue
+        if (start >= 0 && atx.level <= level) return lines.slice(start, index).join('\n').trimEnd()
+        const label = linkWords(atx.text)
+            .replace(/[`*_~]/g, '')
+            .trim()
+        if (start < 0 && (label.toLowerCase() === wanted || headingId(label) === wanted)) {
+            start = index
+            level = atx.level
+        }
+    }
+    return start < 0 ? undefined : lines.slice(start).join('\n').trimEnd()
+}
+
 /** The kinds of callout a quote becomes when its first line is `[!NOTE]`, `[!TIP]` and so on. */
 export type CalloutKind = 'note' | 'tip' | 'important' | 'warning' | 'caution'
 
@@ -311,8 +339,9 @@ export interface MarkdownLinks {
     /** Follows a `#tag`, named without its `#`; without it a tag stays text. */
     onTag?: (tag: string) => void
     /**
-     * Draws a `![[Note]]` embed: the note it names and the heading after its `#`. Without it, or when
-     * it returns nothing, the embed is drawn as a link to the note in a frame of its own.
+     * Draws a `![[Note]]` embed: the note it names and the heading after its `#` (`markdownSection`
+     * gives the text under it), set off by a rule at its start. Without it, or when it returns
+     * nothing, the embed is drawn as a link to the note in a frame of its own.
      */
     embed?: (target: string, heading?: string) => ReactNode
 }
@@ -1057,7 +1086,7 @@ function Embed({
     const Tag = block ? 'div' : 'span'
     if (drawn !== undefined && drawn !== null && drawn !== false) {
         return (
-            <Tag data-embed={target} className={cn(block && 'my-3')}>
+            <Tag data-embed={target} className={cn(block && 'my-3 block border-l-2 border-border-strong pl-3 [&>*:first-child]:mt-0')}>
                 {drawn}
             </Tag>
         )

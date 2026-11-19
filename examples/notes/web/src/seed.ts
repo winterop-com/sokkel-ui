@@ -63,9 +63,16 @@ What to do, step by step, when something needs a person.
         'Retry a run',
         'runbooks',
         120,
-        `# Retry a run
+        `---
+owner: grace
+reviewed: 2026-11-02
+applies-to: [nightly-export, import-orders]
+---
+# Retry a run
 
-A failed run can start again from its failed step once the cause is fixed.
+<!-- Keep the steps in the order the run page shows them. -->
+
+A failed run can start again from its failed step ==once the cause is fixed==.
 
 ## Steps
 
@@ -74,8 +81,12 @@ A failed run can start again from its failed step once the cause is fixed.
 3. Press **Run again from the failed step**. The steps before it keep their output.
 4. Watch the validate step; it fails the same way if the fix did not hold.
 
-> [!WARNING]
+> [!warning] One retry at a time
 > Never retry nightly-export twice at once: the second run overwrites the first one's upload.
+
+> [!question]- Why not retry from the start?
+> The steps before the failed one keep their output, so a retry from the failed step reads
+> nothing twice and finishes sooner.
 
 Asked about in [[Weekly sync with grace]]. #runbook #on-call
 `,
@@ -93,7 +104,13 @@ The larkspur bucket keeps a week of exports. To bring one back:
 tidevann exports restore --project larkspur --day 2026-11-02
 \`\`\`
 
-How long exports are kept is open: see [[Export retention]]. #runbook
+How long exports are kept is open: see [[Export retention]].
+
+Once restored, run the export again from its failed step:
+
+![[Retry a run#Steps]]
+
+#runbook
 `,
     ],
     [

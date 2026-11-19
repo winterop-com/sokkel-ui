@@ -57,6 +57,8 @@ export interface Prefs {
     orphans: boolean
     /** How the vault orders each folder; a vault kept before there was a choice has none, and reads as `manual`. */
     order?: Order
+    /** Whether a note's page shows its frontmatter properties; prefs kept before there was a choice have none, and hide them. */
+    properties?: boolean
 }
 
 export const TEMPLATE = `# {{date}}
@@ -87,6 +89,7 @@ export const DEFAULT_PREFS: Prefs = {
     template: TEMPLATE,
     orphans: true,
     order: 'manual',
+    properties: false,
 }
 
 /** How many notes the recent list keeps. */

@@ -3,7 +3,7 @@ import { memo, useEffect, useState } from 'react'
 import { MarkdownView, type MarkdownProps, type MathEngine } from './markdown-view'
 import { MermaidDiagram } from './MermaidDiagram'
 
-export { headingId, loadHtml, markdownHeadings, splitFrontmatter } from './markdown-view'
+export { headingId, loadHtml, markdownHeadings, markdownSection, splitFrontmatter } from './markdown-view'
 export type {
     CalloutKind,
     MarkdownFrontmatter,

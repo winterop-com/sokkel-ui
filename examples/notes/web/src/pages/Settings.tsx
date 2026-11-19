@@ -109,6 +109,19 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                             ),
                         },
                         {
+                            id: 'properties',
+                            title: 'Show properties',
+                            description: 'The properties at the top of a note, between its two --- lines, shown above its page.',
+                            keywords: ['frontmatter', 'yaml', 'metadata'],
+                            control: (
+                                <Toggle
+                                    label="Show properties"
+                                    on={prefs.properties ?? false}
+                                    onChange={(properties) => void setPrefs({ properties })}
+                                />
+                            ),
+                        },
+                        {
                             id: 'default-view',
                             title: 'Open notes in',
                             description: 'What a note shows when it is opened: the editor, both side by side, or the page to read.',
@@ -278,6 +291,7 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                             wrap: DEFAULT_PREFS.wrap,
                             lineNumbers: DEFAULT_PREFS.lineNumbers,
                             defaultView: DEFAULT_PREFS.defaultView,
+                            properties: DEFAULT_PREFS.properties,
                         })
                     if (section === 'vault') void setPrefs({ order: DEFAULT_PREFS.order })
                     if (section === 'daily')

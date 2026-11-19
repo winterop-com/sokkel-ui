@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { Markdown } from './Markdown'
 import { linkAllowed, markdownHeadings } from './markdown-view'
-import { loadHtml, PlainMarkdown, splitFrontmatter } from './PlainMarkdown'
+import { loadHtml, markdownSection, PlainMarkdown, splitFrontmatter } from './PlainMarkdown'
 
 const draw = (content: string, props: Partial<Parameters<typeof PlainMarkdown>[0]> = {}) =>
     renderToStaticMarkup(<PlainMarkdown content={content} {...props} />)
@@ -331,5 +331,12 @@ describe('PlainMarkdown notes as vaults write them', () => {
         expect(html).toContain('^[an aside]')
         expect(html).toContain('^abc123\nnext line')
         expect(html).not.toContain('<br')
+    })
+
+    it('gives the text under a heading, up to the next at its level or above', () => {
+        const text = '# Retry\n\nIntro\n\n## Steps\n\n1. Fetch\n\n```\n# not a heading\n```\n\n### Detail\n\nMore\n\n## After\n\nDone'
+        expect(markdownSection(text, 'Steps')).toBe('## Steps\n\n1. Fetch\n\n```\n# not a heading\n```\n\n### Detail\n\nMore')
+        expect(markdownSection(text, 'after')).toBe('## After\n\nDone')
+        expect(markdownSection(text, 'Missing')).toBeUndefined()
     })
 })
