@@ -16,6 +16,11 @@ release and empties it.
   for OHLC bars; a `volume` field draws bars in a panel under the candles) and `averages` (moving
   averages of the closes, `[5, 20]`), and `zoom` as the linked chart has. New chart words `open`,
   `close` and `average` (ids `chart.open`, `chart.close`, `chart.average`). Story Charts/Candlestick.
+- `CodeEditor` takes `yamlVersion` (`'1.2'` by default, or `'1.1'`): with `1.1` the schema check, its
+  hover and completion and `onDocument` read a YAML document's plain values as a YAML 1.1 server
+  does, so yes, no, on, off, y and n are booleans, `010` is octal, `0o10` a string, `0b101` binary,
+  `1_000` a thousand and `1:30` ninety. A string the completion writes is quoted when either version
+  would read it as something else.
 
 ## Fixed
 
