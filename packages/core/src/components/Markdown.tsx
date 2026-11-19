@@ -3,14 +3,17 @@ import { memo, useEffect, useState } from 'react'
 import { MarkdownView, type MarkdownProps, type MathEngine } from './markdown-view'
 import { MermaidDiagram } from './MermaidDiagram'
 
-export { headingId, loadHtml, markdownHeadings } from './markdown-view'
+export { headingId, loadHtml, markdownHeadings, splitFrontmatter } from './markdown-view'
 export type {
     CalloutKind,
+    MarkdownFrontmatter,
     MarkdownInlineCode,
     MarkdownHeading,
     MarkdownLinks,
     MarkdownParts,
     MarkdownProps,
+    MarkdownUrlResolver,
+    MarkdownUrlUse,
     MarkdownWords,
 } from './markdown-view'
 
@@ -107,6 +110,19 @@ function useMathEngine(needed: boolean): MathEngine | undefined {
  * down, so `#` in a text set under the page's own headings is no second h1, and `inline` draws only
  * the content of paragraphs, for one line of help, laying out any block as its text. A table whose
  * header cells are all empty, as a key/value table written `| | |` has, is drawn without the header.
+ *
+ * Linked notes are read as their vaults write them. A YAML frontmatter block at the top is left out
+ * (`frontmatter="show"` draws it as YAML code above the text, and `splitFrontmatter` hands it to the
+ * app to read), and an HTML comment is never drawn, HTML allowed or not. A callout's marker may be
+ * followed by its title (`> [!warning] Before a rerun`) and by `-` or `+`, which folds it closed or
+ * open under its title; the further markers notes use (`info`, `todo`, `success`, `question`,
+ * `danger`, `bug` and the like) draw as the nearest of the five kinds, titled with the marker's own
+ * word, and any other marker leaves a quote. `==words==` is drawn highlighted. With `links`,
+ * `![[Note]]` embeds a note, drawn by `links.embed` or as a link in a frame, `![[chart.png|300]]`
+ * draws an image 300 wide, and `![[file.pdf]]` links to the file. `resolveUrl` rewrites each image's
+ * and link's address first, such as a relative path to the app's own server. Not read, and so shown
+ * as typed: `%%comments%%`, inline footnotes `^[...]` and block ids `^id`; a single line break stays
+ * a space, as CommonMark has it.
  *
  * `measure` holds the prose to a reading measure in a wide pane, tables and code keeping the full width.
  */

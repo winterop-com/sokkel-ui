@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CheckCircle2, CircleAlert, FileText } from 'lucide-react'
 import { useRef, useState } from 'react'
 
+import { HARBOR_DUSK } from '../fixtures/photos'
+
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
@@ -251,6 +253,64 @@ function LinkedNote() {
     )
 }
 
+/** A note as a vault keeps it: frontmatter, a hidden comment, titled and folded callouts, embeds, a highlight and Rust. */
+const VAULT_NOTE = `---
+title: Nightly export
+project: harbor
+tags: [export, nightly]
+---
+# Nightly export
+
+<!-- Reviewed by grace; the steps below are current. -->
+
+The export runs at 02:00 UTC and ==never writes back== to the api.
+
+> [!warning] Before a rerun
+> A rerun appends to the same file; move \`rejected/\` aside first.
+
+> [!todo]- Open questions
+> - Does the worker keep a week of files?
+> - Should validate fail on an empty batch?
+
+> [!success]+ Last run
+> All five steps succeeded in 4 minutes.
+
+![[Retry a run#Steps]]
+
+The harbor at dusk, 320 wide:\n\n![[harbor.svg|320]]
+
+The upload step, as the worker has it:
+
+\`\`\`rust
+fn upload(batch: &[Row]) -> Result<usize, Error> {
+    let sent = client.post("/import-orders").json(batch).send()?;
+    Ok(sent.count)
+}
+\`\`\`
+`
+
+/** The note embedded by Vault note, drawn by the app's own `embed`. */
+const RETRY_STEPS = '1. Find the step that failed.\n2. Start the run again from it.'
+
+function VaultNote() {
+    const [followed, setFollowed] = useState('Nothing yet')
+    return (
+        <div className="max-w-2xl p-6">
+            <Markdown
+                content={VAULT_NOTE}
+                scale="document"
+                links={{
+                    onOpen: (target, heading) => setFollowed(heading === undefined ? `Note ${target}` : `Note ${target}, at ${heading}`),
+                    exists: (target) => NOTES.has(target),
+                    embed: (target) => (target === 'Retry a run' ? <PlainMarkdown content={RETRY_STEPS} /> : null),
+                }}
+                resolveUrl={(url, use) => (use === 'image' && url === 'harbor.svg' ? HARBOR_DUSK : url)}
+            />
+            <p className="mt-6 text-sm text-muted-foreground">Followed: {followed}</p>
+        </div>
+    )
+}
+
 /** The notes that link to Nightly export, each with the line its link stands in and the words the link shows. */
 const BACKLINKS = [
     {
@@ -416,6 +476,13 @@ export const Measure: StoryObj = { name: 'Reading measure', render: () => <Measu
  * app follows, a link to a note that does not exist is drawn faint, and each `#tag` is a chip.
  */
 export const Links: StoryObj = { name: 'Linked notes', render: () => <LinkedNote /> }
+
+/**
+ * A note as a vault writes it: its frontmatter left out, a comment never drawn, a callout titled by
+ * its first line, one folded closed and one open, a note embedded through `links.embed`, an image
+ * embed at a width with its address rewritten by `resolveUrl` to the app's own copy, a `==highlight==` and a Rust fence.
+ */
+export const Vault: StoryObj = { name: 'Vault note', render: () => <VaultNote /> }
 
 /**
  * The lines that link to a note, each drawn as Markdown in the row that opens its note: strong

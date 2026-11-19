@@ -15,6 +15,7 @@ const languages: Record<string, LanguageInput> = {
     jsx: () => import('shiki/langs/jsx.mjs'),
     markdown: () => import('shiki/langs/markdown.mjs'),
     python: () => import('shiki/langs/python.mjs'),
+    rust: () => import('shiki/langs/rust.mjs'),
     sql: () => import('shiki/langs/sql.mjs'),
     tsx: () => import('shiki/langs/tsx.mjs'),
     typescript: () => import('shiki/langs/typescript.mjs'),
@@ -26,6 +27,7 @@ const aliases: Record<string, string> = {
     js: 'javascript',
     md: 'markdown',
     py: 'python',
+    rs: 'rust',
     sh: 'bash',
     shell: 'bash',
     shellscript: 'bash',
@@ -38,7 +40,7 @@ const aliases: Record<string, string> = {
 /**
  * Adds a language the highlighter colors in `Code`, `Markdown`'s fences and everything else that
  * highlights, under `name` and any `aliases`. `grammar` is a Shiki language (a TextMate grammar):
- * a function that imports it, such as `() => import('shiki/langs/rust.mjs')`, so it loads the
+ * a function that imports it, such as `() => import('shiki/langs/go.mjs')`, so it loads the
  * first time code in it is drawn, or the grammar itself. Its `name` must be `name` or one of its own
  * aliases. Registering a name again replaces it for code not yet drawn in it.
  */

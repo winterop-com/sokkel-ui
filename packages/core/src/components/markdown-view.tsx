@@ -1,5 +1,6 @@
-import { CircleAlert, Info, Lightbulb, MessageSquareWarning, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { ChevronRight, CircleAlert, Info, Lightbulb, MessageSquareWarning, TriangleAlert, type LucideIcon } from 'lucide-react'
 import {
+    Children,
     createContext,
     memo,
     useCallback,
@@ -19,7 +20,7 @@ import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { hasMath, normalizeMath } from '../lib/math'
 import { TABLE_HEAD_TEXT } from '../lib/table'
-import { tagMatches, wikiLinksIn } from '../lib/wiki-links'
+import { readWikiLink, tagMatches, wikiLinksIn } from '../lib/wiki-links'
 import { Code } from './Code'
 import { highlightMark } from './Highlight'
 import { Link } from './Link'
@@ -79,6 +80,36 @@ function uniqueIds(): (id: string) => string {
     }
 }
 
+/** A frontmatter block: `---` on the first line, then anything, closed by `---` or `...` on a line of its own. */
+const FRONTMATTER = /^---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/
+
+/**
+ * Whether a block reads as YAML properties: each line blank, a comment, indented under the line
+ * before, a list item, or a key without spaces and a colon. A text that opens with a rule and a
+ * sentence is no frontmatter.
+ */
+function propertiesLike(block: string): boolean {
+    const lines = block.split(/\r?\n/)
+    return (
+        lines.some((line) => line.trim() !== '') &&
+        lines.every((line) => line.trim() === '' || /^(\s|#|- |-$|[\w.-]+:(\s|$)|"[^"\n]*":(\s|$)|'[^'\n]*':(\s|$))/.test(line))
+    )
+}
+
+/**
+ * A markdown text parted into its frontmatter and the rest: the YAML between a `---` on the text's
+ * first line and the next line that is `---` or `...`, when every line of it reads as properties,
+ * and the text after it. Otherwise the frontmatter is undefined and the body is the whole text. The
+ * YAML is returned as written, for the app to read its properties with a YAML reader of its own.
+ */
+export function splitFrontmatter(content: string): { frontmatter: string | undefined; body: string } {
+    const match = FRONTMATTER.exec(content)
+    if (match === null) return { frontmatter: undefined, body: content }
+    const block = match[1] ?? ''
+    if (block.trim() !== '' && !propertiesLike(block)) return { frontmatter: undefined, body: content }
+    return { frontmatter: block, body: content.slice(match[0].length) }
+}
+
 /** A setext heading's underline: `===` under a level 1 heading, `---` under a level 2 one. */
 const SETEXT = /^ {0,3}(=+|-+)\s*$/
 
@@ -119,15 +150,15 @@ function linkWords(text: string): string {
 }
 
 /**
- * The headings of a markdown text at the given levels, outside fenced code, in order: those written
- * with `#` and those underlined with `===` or `---`. Their ids are those `anchors` gives, a repeated
- * heading numbered after the first.
+ * The headings of a markdown text at the given levels, outside fenced code and frontmatter, in order:
+ * those written with `#` and those underlined with `===` or `---`. Their ids are those `anchors`
+ * gives, a repeated heading numbered after the first.
  */
 export function markdownHeadings(content: string, levels: readonly number[] = [2, 3]): MarkdownHeading[] {
     const out: MarkdownHeading[] = []
     const unique = uniqueIds()
     let fenced = false
-    const lines = content.split('\n')
+    const lines = splitFrontmatter(content).body.split('\n')
     for (const [index, line] of lines.entries()) {
         if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
         if (fenced) continue
@@ -150,6 +181,40 @@ export function markdownHeadings(content: string, levels: readonly number[] = [2
 
 /** The kinds of callout a quote becomes when its first line is `[!NOTE]`, `[!TIP]` and so on. */
 export type CalloutKind = 'note' | 'tip' | 'important' | 'warning' | 'caution'
+
+/**
+ * The kind each callout marker draws: GitHub's five as themselves, and the further markers linked
+ * notes use, each as the one of the five nearest it. Any other marker leaves the quote a quote.
+ */
+const CALLOUT_MARKERS: Readonly<Record<string, CalloutKind>> = {
+    note: 'note',
+    info: 'note',
+    todo: 'note',
+    abstract: 'note',
+    summary: 'note',
+    tldr: 'note',
+    example: 'note',
+    quote: 'note',
+    cite: 'note',
+    tip: 'tip',
+    hint: 'tip',
+    success: 'tip',
+    check: 'tip',
+    done: 'tip',
+    important: 'important',
+    question: 'important',
+    help: 'important',
+    faq: 'important',
+    warning: 'warning',
+    attention: 'warning',
+    caution: 'caution',
+    danger: 'caution',
+    error: 'caution',
+    failure: 'caution',
+    fail: 'caution',
+    missing: 'caution',
+    bug: 'caution',
+}
 
 /** The words markdown says: each callout's title, and the words of its code blocks and diagrams. */
 export interface MarkdownWords extends Record<CalloutKind, string> {
@@ -198,6 +263,8 @@ function hastText(node: HastNode): string {
 interface MdastNode {
     type: string
     value?: string
+    url?: string
+    alt?: string
     data?: Record<string, unknown>
     children?: MdastNode[]
 }
@@ -243,16 +310,58 @@ export interface MarkdownLinks {
     exists?: (target: string) => boolean
     /** Follows a `#tag`, named without its `#`; without it a tag stays text. */
     onTag?: (tag: string) => void
+    /**
+     * Draws a `![[Note]]` embed: the note it names and the heading after its `#`. Without it, or when
+     * it returns nothing, the embed is drawn as a link to the note in a frame of its own.
+     */
+    embed?: (target: string, heading?: string) => ReactNode
+}
+
+/** The file endings a `![[file]]` embed draws as an image. */
+const IMAGE_FILE = /\.(apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i
+
+/** A file ending other than a note's: `![[file]]` with one is a link to the file. */
+const OTHER_FILE = /\.(?!md$)[a-z\d]{1,8}$/i
+
+/** The size after an image embed's `|`: a width, or a width and a height as `300x200`. */
+const IMAGE_SIZE = /^(\d+)(?:x(\d+))?$/
+
+/**
+ * What a `![[...]]` embed stands for: an image drawn at the size after its `|` (or with the words
+ * after it as its alt text), a link to any other file, or a note drawn by `embed` or as a link.
+ */
+function embedNode(inside: string, link: MdastNode): MdastNode {
+    const read = readWikiLink(inside)
+    if (IMAGE_FILE.test(read.target)) {
+        const size = IMAGE_SIZE.exec(read.label ?? '')
+        const properties: Record<string, unknown> = { dataEmbed: read.target }
+        if (size !== null) {
+            properties.width = Number(size[1])
+            if (size[2] !== undefined) properties.height = Number(size[2])
+        }
+        return {
+            type: 'image',
+            url: read.target,
+            alt: size === null ? (read.label ?? read.target) : read.target,
+            data: { hProperties: properties },
+        } as MdastNode
+    }
+    if (OTHER_FILE.test(read.target)) {
+        return { type: 'link', url: read.target, children: [{ type: 'text', value: read.label ?? read.target }] } as MdastNode
+    }
+    return {
+        type: 'wikiEmbed',
+        children: [link],
+        data: { hName: 'span', hProperties: { dataEmbed: read.target, dataHeading: read.heading } },
+    }
 }
 
 /** Turns each `[[link]]`, and each `#tag` when tags are followed, into a link element the renderer below draws. */
 function remarkWikiLinks(tags: boolean) {
     const split = (value: string): MdastNode[] => {
         const found = [
-            ...wikiLinksIn(value).map((link) => ({
-                from: link.from,
-                to: link.to,
-                node: {
+            ...wikiLinksIn(value).map((link) => {
+                const node: MdastNode = {
                     type: 'wikiLink',
                     children: [
                         {
@@ -261,8 +370,11 @@ function remarkWikiLinks(tags: boolean) {
                         },
                     ],
                     data: { hName: 'a', hProperties: { href: '#', dataWikiLink: link.target, dataHeading: link.heading } },
-                },
-            })),
+                }
+                // A `!` before the link makes it an embed, the `!` part of it.
+                if (value[link.from - 1] !== '!') return { from: link.from, to: link.to, node }
+                return { from: link.from - 1, to: link.to, node: embedNode(value.slice(link.from + 2, link.to - 2), node) }
+            }),
             ...(tags
                 ? tagMatches(value).map((match) => ({
                       from: match.from,
@@ -287,9 +399,66 @@ function remarkWikiLinks(tags: boolean) {
         if (at < value.length) out.push({ type: 'text', value: value.slice(at) })
         return out
     }
+    /** A paragraph holding one note embed and nothing else becomes the embed, as a block. */
+    const lift = (node: MdastNode): MdastNode => {
+        if (node.type !== 'paragraph') return node
+        const held = (node.children ?? []).filter((child) => !(child.type === 'text' && (child.value ?? '').trim() === ''))
+        const only = held.length === 1 ? held[0] : undefined
+        if (only?.type !== 'wikiEmbed') return node
+        return { ...only, data: { ...only.data, hName: 'div' } }
+    }
     return () => (tree: MdastNode) => {
         const visit = (node: MdastNode) => {
             if (node.children === undefined || node.type === 'link' || node.type === 'linkReference') return
+            node.children = node.children.flatMap((child) => {
+                if (child.type === 'text') return split(child.value ?? '')
+                visit(child)
+                return [lift(child)]
+            })
+        }
+        visit(tree)
+    }
+}
+
+/** An HTML comment and nothing else, which is never drawn. */
+const COMMENT = /^<!--(?:(?!-->)[\s\S])*-->$/
+
+/** Drops each HTML comment, so `<!-- ... -->` draws nothing whether or not HTML is allowed. */
+function remarkComments() {
+    return (tree: MdastNode) => {
+        const visit = (node: MdastNode) => {
+            if (node.children === undefined) return
+            node.children = node.children.filter((child) => !(child.type === 'html' && COMMENT.test((child.value ?? '').trim())))
+            for (const child of node.children) visit(child)
+        }
+        visit(tree)
+    }
+}
+
+/** `==words==`: a non-space after the opening `==`, a non-space before the closing one, on one line. */
+const MARKED = /==(?=[^\s=])([^\n]*?[^\s=])==/g
+
+/** Draws each `==words==` as a highlight, outside code and math. */
+function remarkMarked() {
+    const split = (value: string): MdastNode[] => {
+        const out: MdastNode[] = []
+        let at = 0
+        for (const match of value.matchAll(MARKED)) {
+            if (match.index > at) out.push({ type: 'text', value: value.slice(at, match.index) })
+            out.push({
+                type: 'marked',
+                children: [{ type: 'text', value: match[1] }],
+                data: { hName: 'mark', hProperties: { dataMarked: '' } },
+            })
+            at = match.index + match[0].length
+        }
+        if (out.length === 0) return [{ type: 'text', value }]
+        if (at < value.length) out.push({ type: 'text', value: value.slice(at) })
+        return out
+    }
+    return (tree: MdastNode) => {
+        const visit = (node: MdastNode) => {
+            if (node.children === undefined) return
             node.children = node.children.flatMap((child) => {
                 if (child.type === 'text') return split(child.value ?? '')
                 visit(child)
@@ -304,7 +473,38 @@ function partFor(parts: MarkdownParts | undefined, id: string): ReactNode {
     return typeof parts === 'function' ? parts(id) : parts?.[id]
 }
 
-/** Marks `[!KIND]` quotes as callouts with the marker removed, and gives headings ids when `anchors` is set, each once. */
+/** A callout's marker: `[!kind]`, `-` folded or `+` unfolded, and the space before its title. */
+const CALLOUT = /^\[!([a-z][\w-]*)\]([+-]?)[ \t]*/i
+
+/**
+ * Takes a callout's title off its first paragraph: the nodes before the first line's end, or before
+ * a hard break. The paragraph keeps the rest.
+ */
+function calloutTitle(first: HastNode): HastNode[] {
+    const title: HastNode[] = []
+    const rest: HastNode[] = []
+    let done = false
+    for (const child of first.children ?? []) {
+        if (done) rest.push(child)
+        else if (child.type === 'element' && child.tagName === 'br') done = true
+        else if (child.type === 'text' && (child.value ?? '').includes('\n')) {
+            const value = child.value ?? ''
+            const end = value.indexOf('\n')
+            if (end > 0) title.push({ type: 'text', value: value.slice(0, end) })
+            if (end + 1 < value.length) rest.push({ type: 'text', value: value.slice(end + 1) })
+            done = true
+        } else title.push(child)
+    }
+    first.children = rest
+    const last = title.at(-1)
+    if (last?.type === 'text') last.value = (last.value ?? '').trimEnd()
+    return title.filter((node) => !(node.type === 'text' && node.value === ''))
+}
+
+/**
+ * Marks `[!KIND]` quotes as callouts with the marker removed, the rest of its line as the title, and
+ * `-` or `+` after the marker as folded or unfolded; and gives headings ids when `anchors` is set, each once.
+ */
 function rehypeDocument(anchors: boolean) {
     return () => (tree: HastNode) => {
         const unique = uniqueIds()
@@ -315,13 +515,19 @@ function rehypeDocument(anchors: boolean) {
             if (node.tagName === 'blockquote') {
                 const first = node.children?.find((child) => child.type === 'element')
                 const text = first?.tagName === 'p' ? first.children?.[0] : undefined
-                const marker = text?.type === 'text' ? /^\[!(note|tip|important|warning|caution)\][ \t]*\n?/i.exec(text.value ?? '') : null
-                if (first !== undefined && text !== undefined && marker !== null) {
+                const marker = text?.type === 'text' ? CALLOUT.exec(text.value ?? '') : null
+                const named = marker === null ? undefined : marker[1].toLowerCase()
+                const kind = named === undefined ? undefined : CALLOUT_MARKERS[named]
+                if (first !== undefined && text !== undefined && marker !== null && named !== undefined && kind !== undefined) {
                     text.value = (text.value ?? '').slice(marker[0].length)
-                    if (text.value === '' && first.children?.length === 1) {
-                        node.children = node.children?.filter((child) => child !== first)
-                    }
-                    node.properties = { ...node.properties, dataCallout: marker[1].toLowerCase() }
+                    let title = calloutTitle(first)
+                    // A marker other than the kind's own is the title when none is written, as typed but capitalized.
+                    if (title.length === 0 && named !== kind) title = [{ type: 'text', value: named[0].toUpperCase() + named.slice(1) }]
+                    const empty = (first.children ?? []).every((child) => child.type === 'text' && (child.value ?? '').trim() === '')
+                    node.children = (node.children ?? []).filter((child) => !(child === first && empty))
+                    node.children.unshift({ type: 'element', tagName: 'div', properties: { dataCalloutTitle: kind }, children: title })
+                    const fold = marker[2] === '-' ? 'closed' : marker[2] === '+' ? 'open' : undefined
+                    node.properties = { ...node.properties, dataCallout: kind, dataFold: fold }
                 }
             }
             for (const child of node.children ?? []) visit(child)
@@ -416,7 +622,7 @@ function phrasing(nodes: HastNode[]): HastNode[] {
             out.push(node)
             continue
         }
-        if (node.tagName === 'div' && node.properties?.dataPart !== undefined) {
+        if (node.tagName === 'div' && (node.properties?.dataPart !== undefined || node.properties?.dataEmbed !== undefined)) {
             out.push({ ...node, tagName: 'span' })
             continue
         }
@@ -443,19 +649,24 @@ interface TextRules {
     headingOffset: number
     /** False: every link becomes its words. */
     live: boolean
+    resolveUrl: MarkdownUrlResolver | undefined
 }
 
 /**
- * Holds a text to what the app lets it draw: a link whose scheme is not allowed becomes its words,
+ * Holds a text to what the app lets it draw: each link's address goes through `resolveUrl` first,
+ * then a link whose scheme is not allowed becomes its words,
  * an image its alt text and address when images are off, headings move down by `headingOffset`, a
  * table's header row of empty cells is dropped, with `inline` every block is laid out as its text,
  * and without `live` every link becomes its words.
  */
-function rehypeText({ images, schemes, inline, headingOffset, live }: TextRules) {
+function rehypeText({ images, schemes, inline, headingOffset, live, resolveUrl }: TextRules) {
     const replace = (node: HastNode): HastNode[] => {
         if (node.type !== 'element') return [node]
         const tag = node.tagName ?? ''
         if (tag === 'a' && !live) return node.children ?? []
+        if (resolveUrl !== undefined && tag === 'a' && typeof node.properties?.href === 'string' && !ownLink(node.properties)) {
+            node.properties.href = resolveUrl(node.properties.href, 'link')
+        }
         if (tag === 'a' && !ownLink(node.properties) && !linkAllowed(String(node.properties?.href ?? ''), schemes)) {
             return node.children ?? []
         }
@@ -512,7 +723,9 @@ function rehypeHighlight(words: string) {
         return out
     }
     const skipped = (node: HastNode) =>
-        /^(code|pre|mark)$/.test(node.tagName ?? '') || String(node.properties?.className ?? '').includes('katex')
+        /^(code|pre)$/.test(node.tagName ?? '') ||
+        (node.tagName === 'mark' && node.properties?.dataMarked === undefined) ||
+        String(node.properties?.className ?? '').includes('katex')
     const visit = (node: HastNode) => {
         if (node.children === undefined || skipped(node)) return
         node.children = node.children.flatMap((child) => {
@@ -613,6 +826,7 @@ const PROSE = cn(
     '[&_.katex-display]:my-3 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:py-1',
     '[&_.katex-error]:font-mono',
     '[&_[id]]:scroll-mt-4',
+    '[&_mark[data-marked]]:rounded-mini [&_mark[data-marked]]:bg-warning/25 [&_mark[data-marked]]:box-decoration-clone [&_mark[data-marked]]:text-inherit',
 )
 
 /** How code inside a sentence is drawn. */
@@ -639,8 +853,32 @@ const INLINE_CODE: Record<MarkdownInlineCode, string> = {
 const CARET =
     '[:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:ml-0.5 [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:inline-block [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:h-4 [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:w-1.5 [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:translate-y-0.5 [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:animate-pulse [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:bg-foreground motion-reduce:[:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:animate-none'
 
+/** What an address in the text is for: an image's source, or a link's target. */
+export type MarkdownUrlUse = 'image' | 'link'
+
+/** Rewrites an address in the text before it is drawn, such as a relative path to the app's own server. */
+export type MarkdownUrlResolver = (url: string, use: MarkdownUrlUse) => string
+
+/** What becomes of a text's frontmatter: left out, shown as YAML above the text, or read as markdown. */
+export type MarkdownFrontmatter = 'hide' | 'show' | 'markdown'
+
 export interface MarkdownProps {
     content: string
+    /**
+     * What becomes of a YAML frontmatter block at the top of the text (`---` on the first line, closed
+     * by `---` or `...`, every line between reading as properties, so a text that opens with a rule
+     * and a sentence keeps them): left out (the default), shown as YAML code above the text, or read
+     * as markdown, as CommonMark reads it, a rule and a heading.
+     */
+    frontmatter?: MarkdownFrontmatter
+    /**
+     * Rewrites each image's and link's address before it is drawn, its use naming which: a relative
+     * path such as `attachments/pic.png` pointed at the app's own server. It gets the address as the
+     * text has it, percent-encoded; links between notes and tags never come here. A link's result is
+     * then held to `linkSchemes`; an image's may be a `blob:` or `data:image/` address, which the text
+     * itself can never give. Pass the same function each render, or each render parses again.
+     */
+    resolveUrl?: MarkdownUrlResolver
     streaming?: boolean
     /** Reads raw HTML in the text and sanitizes it; off, it is shown as typed. */
     allowHtml?: boolean
@@ -754,6 +992,19 @@ export interface MarkdownProps {
  * the content of paragraphs, for one line of help, laying out any block as its text. A table whose
  * header cells are all empty, as a key/value table written `| | |` has, is drawn without the header.
  *
+ * Linked notes are read as their vaults write them. A YAML frontmatter block at the top is left out
+ * (`frontmatter="show"` draws it as YAML code above the text, and `splitFrontmatter` hands it to the
+ * app to read), and an HTML comment is never drawn, HTML allowed or not. A callout's marker may be
+ * followed by its title (`> [!warning] Before a rerun`) and by `-` or `+`, which folds it closed or
+ * open under its title; the further markers notes use (`info`, `todo`, `success`, `question`,
+ * `danger`, `bug` and the like) draw as the nearest of the five kinds, titled with the marker's own
+ * word, and any other marker leaves a quote. `==words==` is drawn highlighted. With `links`,
+ * `![[Note]]` embeds a note, drawn by `links.embed` or as a link in a frame, `![[chart.png|300]]`
+ * draws an image 300 wide, and `![[file.pdf]]` links to the file. `resolveUrl` rewrites each image's
+ * and link's address first, such as a relative path to the app's own server. Not read, and so shown
+ * as typed: `%%comments%%`, inline footnotes `^[...]` and block ids `^id`; a single line break stays
+ * a space, as CommonMark has it.
+ *
  * `measure` holds the prose to a reading measure in a wide pane, tables and code keeping the full width.
  */
 export type MarkdownViewProps = MarkdownProps & {
@@ -786,34 +1037,93 @@ const View = createContext<ViewContext>({
 })
 
 /**
+ * A `![[Note]]` embed: what the app's `embed` draws for it, or its link in a frame of its own, as a
+ * block where it stands alone in a paragraph and inline where it sits in a sentence.
+ */
+function Embed({
+    target,
+    heading,
+    links,
+    block = false,
+    children,
+}: {
+    target: string
+    heading: string | undefined
+    links: MarkdownLinks | undefined
+    block?: boolean
+    children: ReactNode
+}) {
+    const drawn = links?.embed?.(target, heading)
+    const Tag = block ? 'div' : 'span'
+    if (drawn !== undefined && drawn !== null && drawn !== false) {
+        return (
+            <Tag data-embed={target} className={cn(block && 'my-3')}>
+                {drawn}
+            </Tag>
+        )
+    }
+    return (
+        <Tag data-embed={target} className={cn('rounded-sm border border-border px-1', block && 'my-2 inline-block')}>
+            {children}
+        </Tag>
+    )
+}
+
+/**
  * How each element is drawn. One map for every view: what changes between views and renders comes
  * through `View`, so a code block, a diagram or a part keeps its place in the tree as a reply
  * finishes streaming or the parent hands new `parts` or `links`.
  */
 export const MARKDOWN_COMPONENTS: Components = {
     blockquote: function Blockquote({ children, node: _node, ...props }) {
-        const { words } = useContext(View)
-        const kind = (props as Record<string, unknown>)['data-callout'] as CalloutKind | undefined
+        const record = props as Record<string, unknown>
+        const kind = record['data-callout'] as CalloutKind | undefined
+        const fold = record['data-fold'] as 'open' | 'closed' | undefined
         const callout = kind === undefined ? undefined : CALLOUTS[kind]
         if (kind === undefined || callout === undefined) return <blockquote {...props}>{children}</blockquote>
-        const label = words[kind]
         const Icon = callout.icon
-        return (
-            <div
-                data-callout={kind}
-                className={cn('my-3 flex gap-2.5 rounded-surface border px-3 py-2.5 [&_p]:my-1 [&>div>*:last-child]:mb-0', callout.frame)}
-            >
-                <Icon aria-hidden className={cn('mt-0.5 size-4 shrink-0', callout.ink)} />
-                <div className="min-w-0 flex-1">
-                    <p className={cn('!mt-0 font-medium', callout.ink)}>{label}</p>
-                    {children}
+        const icon = <Icon aria-hidden className={cn('mt-0.5 size-4 shrink-0', callout.ink)} />
+        const frame = cn('my-3 rounded-surface border px-3 py-2.5 [&_p]:my-1', callout.frame)
+        if (fold === undefined) {
+            return (
+                <div data-callout={kind} className={cn('flex gap-2.5 [&>div>*:last-child]:mb-0', frame)}>
+                    {icon}
+                    <div className="min-w-0 flex-1">{children}</div>
                 </div>
-            </div>
+            )
+        }
+        // The title, drawn first, is what a press folds and unfolds by.
+        const [title, ...body] = Children.toArray(children).filter((child) => typeof child !== 'string' || child.trim() !== '')
+        return (
+            <details data-callout={kind} open={fold === 'open'} className={cn('group', frame)}>
+                <summary className="flex cursor-pointer list-none gap-2.5 [&::-webkit-details-marker]:hidden">
+                    {icon}
+                    <span className="min-w-0 flex-1 [&>p]:!my-0">{title}</span>
+                    <ChevronRight
+                        aria-hidden
+                        className={cn('mt-0.5 size-4 shrink-0 transition-transform group-open:rotate-90', callout.ink)}
+                    />
+                </summary>
+                <div className="min-w-0 pl-6.5 [&>*:last-child]:mb-0">{body}</div>
+            </details>
         )
     },
     div: function Div({ children, node: _node, ...props }) {
-        const { parts } = useContext(View)
-        const part = (props as Record<string, unknown>)['data-part'] as string | undefined
+        const { parts, words, links } = useContext(View)
+        const record = props as Record<string, unknown>
+        const titled = record['data-callout-title'] as CalloutKind | undefined
+        if (titled !== undefined) {
+            const written = Children.count(children) > 0
+            return <p className={cn('!mt-0 font-medium', CALLOUTS[titled].ink)}>{written ? children : words[titled]}</p>
+        }
+        const embed = record['data-embed'] as string | undefined
+        if (embed !== undefined)
+            return (
+                <Embed target={embed} heading={record['data-heading'] as string | undefined} links={links} block>
+                    {children}
+                </Embed>
+            )
+        const part = record['data-part'] as string | undefined
         if (part === undefined) return <div {...props}>{children}</div>
         const drawn = partFor(parts, part)
         if (drawn === undefined || drawn === null) return null
@@ -824,8 +1134,16 @@ export const MARKDOWN_COMPONENTS: Components = {
         )
     },
     span: function Span({ children, node: _node, ...props }) {
-        const { parts } = useContext(View)
-        const part = (props as Record<string, unknown>)['data-part'] as string | undefined
+        const { parts, links } = useContext(View)
+        const record = props as Record<string, unknown>
+        const embed = record['data-embed'] as string | undefined
+        if (embed !== undefined)
+            return (
+                <Embed target={embed} heading={record['data-heading'] as string | undefined} links={links}>
+                    {children}
+                </Embed>
+            )
+        const part = record['data-part'] as string | undefined
         if (part === undefined) return <span {...props}>{children}</span>
         const drawn = partFor(parts, part)
         if (drawn === undefined || drawn === null) return null
@@ -918,6 +1236,8 @@ export const MarkdownView = memo(function MarkdownView({
     useMath,
     Diagram,
     content,
+    frontmatter = 'hide',
+    resolveUrl,
     streaming = false,
     allowHtml = false,
     images = true,
@@ -937,10 +1257,10 @@ export const MarkdownView = memo(function MarkdownView({
     highlight = '',
     onLink,
     className,
-    words: given,
+    words: givenWords,
 }: MarkdownViewProps) {
     // The words are held by their text, so an object made anew each render keeps the context.
-    const said = JSON.stringify(given ?? null)
+    const said = JSON.stringify(givenWords ?? null)
     const own = useWords(MARKDOWN_PART)
     const words = useMemo<MarkdownWords>(() => ({ ...own, ...(JSON.parse(said) as Partial<MarkdownWords> | null) }), [own, said])
     // The latest handler, read on a press, so a handler made anew each render keeps the context.
@@ -954,7 +1274,12 @@ export const MarkdownView = memo(function MarkdownView({
     // While streaming, the text drawn trails the text given when React is busy, so tokens that land
     // faster than a parse are drawn together rather than one parse each.
     const deferred = useDeferredValue(content)
-    const shown = streaming ? deferred : content
+    const given = streaming ? deferred : content
+    const split = useMemo(
+        () => (frontmatter === 'markdown' ? { frontmatter: undefined, body: given } : splitFrontmatter(given)),
+        [frontmatter, given],
+    )
+    const shown = split.body
     const needsMath = useMemo(() => math && useMath !== undefined && hasMath(shown), [math, useMath, shown])
     // The same hook every render of a view: `Markdown` always passes one, `PlainMarkdown` never does.
     const katex = useMath?.(needsMath)
@@ -966,8 +1291,11 @@ export const MarkdownView = memo(function MarkdownView({
     const linked = links !== undefined || !live
     const tagged = live && links?.onTag !== undefined
     const remark: Options['remarkPlugins'] = useMemo(() => {
-        const plugins: NonNullable<Options['remarkPlugins']> = [remarkGfm, remarkParts(word)]
+        // Parts first, so a part's marker is never dropped as a comment.
+        const plugins: NonNullable<Options['remarkPlugins']> = [remarkGfm, remarkParts(word), remarkComments]
         if (katex !== undefined && math) plugins.push(katex.remarkMath)
+        // After math, so `==` in a formula is never read as a highlight.
+        plugins.push(remarkMarked)
         // After math, so a formula's text is never read for links or tags.
         if (linked) plugins.push(remarkWikiLinks(tagged))
         return plugins
@@ -984,17 +1312,22 @@ export const MarkdownView = memo(function MarkdownView({
         }
         // After sanitizing, so KaTeX's own markup is kept.
         if (katex !== undefined && math) plugins.push([katex.rehypeKatex, { throwOnError: false, errorColor: 'var(--status-failed-ink)' }])
-        plugins.push(rehypeText({ images, schemes, inline, headingOffset: offset, live }))
+        plugins.push(rehypeText({ images, schemes, inline, headingOffset: offset, live, resolveUrl }))
         plugins.push(rehypeDocument(anchors))
         if (highlight.trim() !== '') plugins.push(rehypeHighlight(highlight))
         return plugins
-    }, [allowHtml, htmlEngine, anchors, katex, math, images, schemes, inline, offset, live, highlight])
+    }, [allowHtml, htmlEngine, anchors, katex, math, images, schemes, inline, offset, live, highlight, resolveUrl])
     const urlTransform = useCallback<UrlTransform>(
         (url, key, node) => {
+            if (key === 'src' && node.tagName === 'img' && resolveUrl !== undefined) {
+                const resolved = resolveUrl(url, 'image')
+                // An image the app itself points at a blob or a data image is drawn; the text alone never can.
+                return resolved !== url && /^(blob:|data:image\/)/i.test(resolved) ? resolved : defaultUrlTransform(resolved)
+            }
             if (key !== 'href' || node.tagName !== 'a') return defaultUrlTransform(url)
             return ownLink(node.properties) || linkAllowed(url, schemes) ? url : ''
         },
-        [schemes],
+        [schemes, resolveUrl],
     )
     const skipHtml = allowHtml && htmlEngine === undefined
     // Held while the text and its plugins stand, so a render for anything else (a deferred token, a
@@ -1028,6 +1361,9 @@ export const MarkdownView = memo(function MarkdownView({
                 className,
             )}
         >
+            {frontmatter === 'show' && !inline && split.frontmatter !== undefined ? (
+                <Code value={split.frontmatter} language="yaml" words={words.code} />
+            ) : null}
             <View.Provider value={view}>{drawn}</View.Provider>
         </Root>
     )
