@@ -1,0 +1,58 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "map-compass",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A compass among a map's buttons: its needle points north as the map is turned, and a press turns the map back to north. A map turns only when it is made with rotate; without it the needle stays up.",
+    "sources": {"sokkel-ui": ["packages/maps/src/MapCompass.tsx", "packages/maps/src/control.tsx"]},
+    "anatomy": {
+        "button": "One of the map's buttons (control-sm square, outline, card ground), in a corner, the top right under the map's own by default, its tooltip opening away from the corner.",
+        "needle": "An arrow filled and stroked in critical, turned against the map's bearing so it points north."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "corner": {
+            "type": "text",
+            "values": ["top-left", "top-right", "bottom-left", "bottom-right"],
+            "default": "top-right",
+            "does": "Where it stands."
+        }
+    },
+    "sizes": {"button": {"height": "density.control-sm", "width": "density.control-sm", "radius": "radius-control"}},
+    "states": {
+        "rest": {"means": "The bearing shown."},
+        "hover": {"means": "The pointer is over it.", "reached": "pointer over"}
+    },
+    "pieces": {
+        "button": {"rest": {"ground": "card", "edge": "border"}, "hover": {"ground": "hover"}},
+        "needle": {"rest": {"ink": "critical"}}
+    },
+    "keyboard": [{"keys": ["Enter", "Space"], "does": "Turns the map back to north.", "when": "the button has focus"}],
+    "words": {"resetNorth": "Reset to north (bearing {bearing})"},
+    "messages": {"resetNorth": {"id": "mapCompass.resetNorth", "en": "Reset to north (bearing {bearing})"}},
+    "samples": {
+        "resetNorth": [
+            {"with": {"bearing": "000°"}, "says": "Reset to north (bearing 000°)"},
+            {"with": {"bearing": "047°"}, "says": "Reset to north (bearing 047°)"}
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

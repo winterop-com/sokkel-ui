@@ -12,7 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { labelAnchor } from './basemap'
 import { resolveColors } from './color'
 import { ID_PROPERTY, useMapContext } from './context'
-import { boundsOf, isReadable, type Bounds } from './geometry'
+import { boundsOf, isReadable, type Bounds, type LngLat } from './geometry'
 
 /** Where a value is read from a feature: a property's name, or a function of the feature. */
 export type FeatureAccessor = string | ((feature: Feature) => unknown)
@@ -301,5 +301,83 @@ export function useRenderedPoints(
             map.off('render', measure)
         }
     }, [map, layer, enabled])
+    return points
+}
+
+/** A box on the map's canvas: left, top, right and bottom, in pixels. */
+export type PixelBox = [number, number, number, number]
+
+/**
+ * The points whose boxes cover none placed before them, the `first` key's placed first and always,
+ * then in the order given, so labels written in an overlay never sit on one another.
+ */
+export function placeClear(
+    points: readonly RenderedPoint[],
+    box: (point: RenderedPoint) => PixelBox,
+    first: string | null = null,
+): RenderedPoint[] {
+    const overlaps = (a: PixelBox, b: PixelBox) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
+    const ordered = [...points].sort((a, b) => Number(b.key === first) - Number(a.key === first))
+    const taken: PixelBox[] = []
+    const placed: RenderedPoint[] = []
+    for (const point of ordered) {
+        const own = box(point)
+        if (point.key !== first && taken.some((other) => overlaps(own, other))) continue
+        taken.push(own)
+        placed.push(point)
+    }
+    return placed
+}
+
+/** A place an overlay writes beside, by its position on the map. */
+export interface PlacedText {
+    key: string
+    at: LngLat
+    text: string
+}
+
+/**
+ * Places on the map where the canvas now shows them, measured again after every move, for an
+ * overlay to write at: a zone's name at its middle, a ring's distance, a link's measure. A place
+ * off the canvas, by more than `margin` pixels, is left out, so hundreds of places cost only the
+ * ones in view.
+ */
+export function useProjectedPoints(map: MapLibreMap, places: readonly PlacedText[], enabled: boolean, margin = 48): RenderedPoint[] {
+    const [points, setPoints] = useState<RenderedPoint[]>([])
+    const latest = useRef(places)
+    useEffect(() => {
+        latest.current = places
+    })
+    const key = places.map((place) => `${place.key}:${String(place.at[0])},${String(place.at[1])}:${place.text}`).join('\n')
+    useEffect(() => {
+        if (!enabled) {
+            setPoints((previous) => (previous.length === 0 ? previous : []))
+            return
+        }
+        let frame = 0
+        const measure = () => {
+            cancelAnimationFrame(frame)
+            frame = requestAnimationFrame(() => {
+                const canvas = map.getContainer()
+                const [width, height] = [canvas.clientWidth, canvas.clientHeight]
+                const next: RenderedPoint[] = []
+                for (const place of latest.current) {
+                    const point = map.project(place.at)
+                    const [x, y] = [Math.round(point.x), Math.round(point.y)]
+                    const inView = width === 0 || (x >= -margin && y >= -margin && x <= width + margin && y <= height + margin)
+                    if (inView) next.push({ key: place.key, x, y, text: place.text })
+                }
+                setPoints((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next))
+            })
+        }
+        measure()
+        map.on('move', measure)
+        map.on('resize', measure)
+        return () => {
+            cancelAnimationFrame(frame)
+            map.off('move', measure)
+            map.off('resize', measure)
+        }
+    }, [map, enabled, key])
     return points
 }

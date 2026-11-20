@@ -1,0 +1,98 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "map-coordinates",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Where the pointer is on a map, latitude first with each hemisphere's letter, or Offscreen while it is off the map, after a scale bar of a round length that follows the zoom. It stands in a corner, the bottom left by default.",
+    "sources": {"sokkel-ui": ["packages/maps/src/MapCoordinates.tsx", "packages/maps/src/geodesy.ts"]},
+    "anatomy": {
+        "container": "A chip in its corner: card at 95 percent, padded 8 across and 4 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent, its parts 12 apart, text.xs in tabular figures.",
+        "scale": "The round length (1, 2 or 5 times a power of ten) that fits in 96: its words in text.2xs in muted-foreground over a bar that wide, a 1 line in foreground at 70 percent with its two ends turned up 4.",
+        "position": "The pointer's position, `60.3913° N, 5.3221° E` to four places, or degrees, minutes and seconds; words.offscreen in muted-foreground while the pointer is off the map. At least 176 wide, so it does not jump as the figures change."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "corner": {
+            "type": "text",
+            "values": ["top-left", "top-right", "bottom-left", "bottom-right"],
+            "default": "bottom-left",
+            "does": "Where it stands."
+        },
+        "format": {
+            "type": "text",
+            "values": ["decimal", "dms"],
+            "default": "decimal",
+            "does": "Decimal degrees, or degrees, minutes and seconds."
+        },
+        "scale": {"type": "boolean", "default": true, "does": "Draws the scale bar."},
+        "unit": {
+            "type": "text",
+            "values": ["km", "mi", "nmi"],
+            "default": "km",
+            "does": "The scale bar's unit; meters below a kilometer."
+        }
+    },
+    "sizes": {"container": {"padX": 8, "padY": 4, "gap": 12, "text": "text.xs", "radius": "radius-control"}},
+    "layout": {
+        "scaleWidth": {"value": 96, "note": "The longest the scale bar is drawn."},
+        "positionMinWidth": {"value": 176, "note": "The least width of the position."}
+    },
+    "states": {
+        "rest": {"means": "The pointer is on the map: its position."},
+        "offscreen": {"means": "The pointer is off the map: words.offscreen.", "reached": "pointer leaves the map"}
+    },
+    "pieces": {
+        "container": {
+            "rest": {
+                "ground": "card/95",
+                "ink": "card-foreground",
+                "text": "text.xs",
+                "radius": "radius-control",
+                "ring": {"color": "foreground/10", "width": 1}
+            }
+        },
+        "scale": {"rest": {"ink": "muted-foreground", "rule": "foreground/70", "text": "text.2xs"}},
+        "position": {"rest": {"ink": "card-foreground"}, "offscreen": {"ink": "muted-foreground"}}
+    },
+    "keyboard": [],
+    "words": {
+        "label": "Cursor position",
+        "offscreen": "Offscreen",
+        "north": "N",
+        "south": "S",
+        "east": "E",
+        "west": "W"
+    },
+    "messages": {
+        "label": {"id": "mapCoordinates.label", "en": "Cursor position"},
+        "offscreen": {"id": "mapCoordinates.offscreen", "en": "Offscreen"},
+        "north": {"id": "mapCoordinates.north", "en": "N"},
+        "south": {"id": "mapCoordinates.south", "en": "S"},
+        "east": {"id": "mapCoordinates.east", "en": "E"},
+        "west": {"id": "mapCoordinates.west", "en": "W"}
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The scale is measured across 100 pixels at the map's middle, along the great circle, again on every move."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

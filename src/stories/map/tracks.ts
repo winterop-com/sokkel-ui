@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 
-import { bearing, destination, distance } from '@winterop-com/sokkel-ui-maps/geodesy'
+import type { RangeRings, SensorCone } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
+import { arc, bearing, destination, distance } from '@winterop-com/sokkel-ui-maps/geodesy'
 import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
+import type { MapLink } from '@winterop-com/sokkel-ui-maps/LinkLayer'
 import type { Track, TrackAffiliation, TrackKind } from '@winterop-com/sokkel-ui-maps/TrackLayer'
+import type { Zone } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
 
 /** Tidevann's harbor watch: three harbors on a coast, harbor, juniper and larkspur, and what moves between them. */
 export const HARBORS: Record<'harbor' | 'juniper' | 'larkspur', LngLat> = {
@@ -13,6 +16,9 @@ export const HARBORS: Record<'harbor' | 'juniper' | 'larkspur', LngLat> = {
 
 /** The camera the harbor watch opens on: all three harbors and the sea west of them. */
 export const WATCH_CAMERA = { center: [4.6, 60.85] as LngLat, zoom: 5.6 }
+
+/** The camera on the watch's areas, from the survey area to the patrol box. */
+export const AREAS_CAMERA = { center: [4.4, 61.2] as LngLat, zoom: 6.3 }
 
 /** The camera close in on harbor. */
 export const HARBOR_CAMERA = { center: [4.95, 60.42] as LngLat, zoom: 8.6 }
@@ -315,3 +321,112 @@ export function useWatchClock(running = true, step = 1): number {
     }, [running, step])
     return minute
 }
+
+/** The areas the watch keeps: an anchorage, a closed area round the hostile contact's waters, a patrol box, a survey area and the pilots' boarding ground. */
+export const ZONES: Zone[] = [
+    {
+        id: 'anchorage',
+        label: 'Anchorage',
+        tone: 'neutral',
+        area: [
+            [4.72, 60.3],
+            [4.9, 60.29],
+            [4.95, 60.42],
+            [4.82, 60.48],
+            [4.7, 60.4],
+        ],
+    },
+    {
+        id: 'closed-area',
+        label: 'Closed area',
+        tone: 'hostile',
+        fill: 'hatched',
+        edge: 'dashed',
+        area: [
+            [3.7, 60.95],
+            [4.35, 61.05],
+            [4.7, 60.7],
+            [4.45, 60.1],
+            [3.95, 60.15],
+        ],
+    },
+    {
+        id: 'patrol-box',
+        label: 'Patrol box',
+        tone: 'friend',
+        fill: 'none',
+        edge: 'dashed',
+        area: [
+            [4.75, 61.25],
+            [5.6, 61.25],
+            [5.6, 62.35],
+            [4.75, 62.35],
+        ],
+    },
+    {
+        id: 'survey-area',
+        label: 'Survey area',
+        tone: 'unknown',
+        fill: 'hatched',
+        area: [
+            [3.1, 61.3],
+            [3.9, 61.3],
+            [3.9, 62.0],
+            [3.1, 62.0],
+        ],
+    },
+    { id: 'boarding', label: 'Pilot boarding', tone: 'plain', area: arc([4.72, 60.1], 8_000, 0, 360, 48) },
+]
+
+/** What the three harbor radars cover: each a wedge out to sea. */
+export const RADAR_CONES: SensorCone[] = [
+    { id: 'radar-harbor', position: HARBORS.harbor, bearing: 270, width: 140, range: 90_000, tone: 'friend' },
+    { id: 'radar-juniper', position: HARBORS.juniper, bearing: 255, width: 120, range: 80_000, tone: 'friend' },
+    { id: 'radar-larkspur', position: HARBORS.larkspur, bearing: 290, width: 110, range: 100_000, tone: 'friend' },
+]
+
+/** Range rings round harbor, every 20 km out to 80, written on the sea side. */
+export const HARBOR_RINGS: RangeRings = {
+    id: 'harbor-rings',
+    position: HARBORS.harbor,
+    distances: [20_000, 40_000, 60_000, 80_000],
+    labelBearing: 250,
+}
+
+/** What a moving track keeps watch on with its own sensor: a narrow wedge ahead of it, turned with it. */
+export function trackCone(track: Track, width = 70, range = 30_000): SensorCone {
+    return { id: `${track.id}-sonar`, position: track.position, bearing: track.heading ?? 0, width, range, tone: 'friend' }
+}
+
+/** Who goes after whom: each pair a track and its objective. */
+const OBJECTIVES: [string, string][] = [
+    ['patrol-7', 'contact-14'],
+    ['survey-1', 'track-21'],
+    ['pilot-2', 'new-33'],
+]
+
+/** A line from each track to its objective, dashed, in the objective's tone, saying how far it is and which way. */
+export function objectiveLinks(tracks: readonly Track[], pairs: readonly [string, string][] = OBJECTIVES): MapLink[] {
+    const byId = new Map(tracks.map((track) => [track.id, track]))
+    return pairs.flatMap(([from, to]): MapLink[] => {
+        const [chaser, objective] = [byId.get(from), byId.get(to)]
+        if (chaser === undefined || objective === undefined) return []
+        return [
+            {
+                id: `${from}-${to}`,
+                from: chaser.position,
+                to: objective.position,
+                tone: objective.affiliation,
+                path: 'straight',
+                dashed: true,
+                measure: true,
+            },
+        ]
+    })
+}
+
+/** Harbor, the watch's home, linked along the great circle to the radars at juniper and larkspur it reads. */
+export const RADAR_LINKS: MapLink[] = [
+    { id: 'harbor-juniper', from: HARBORS.harbor, to: HARBORS.juniper, tone: 'friend', measure: true },
+    { id: 'harbor-larkspur', from: HARBORS.harbor, to: HARBORS.larkspur, tone: 'friend', measure: true },
+]

@@ -10,7 +10,11 @@ import {
     greatCircle,
     normalizeBearing,
     parseCoordinates,
+    rhumbBearing,
+    rhumbDistance,
+    rhumbMiddle,
     roundScale,
+    arc,
 } from './geodesy'
 import type { LngLat } from './geometry'
 
@@ -156,5 +160,51 @@ describe('a scale bar', () => {
 
     test('is empty with no room', () => {
         expect(roundScale(0).meters).toBe(0)
+    })
+})
+
+describe('the rhumb line', () => {
+    test('keeps its bearing along a meridian and a parallel', () => {
+        expect(rhumbBearing([5, 60], [5, 61])).toBeCloseTo(0, 6)
+        expect(rhumbBearing([5, 60], [6, 60])).toBeCloseTo(90, 6)
+        expect(rhumbBearing([6, 60], [5, 60])).toBeCloseTo(270, 6)
+    })
+
+    test('runs along a parallel as far as the parallel is long', () => {
+        expect(rhumbDistance([0, 60], [1, 60]) / 1000).toBeCloseTo(111.195 / 2, 1)
+        expect(rhumbDistance([0, 0], [0, 1]) / 1000).toBeCloseTo(111.195, 2)
+    })
+
+    test('is a little longer than the great circle', () => {
+        expect(rhumbDistance(HARBOR, [-70, 42])).toBeGreaterThan(distance(HARBOR, [-70, 42]))
+        expect(rhumbDistance(HARBOR, JUNIPER) / distance(HARBOR, JUNIPER)).toBeCloseTo(1, 3)
+    })
+
+    test('has its middle halfway along a straight stroke on a Mercator map', () => {
+        const [lng, lat] = rhumbMiddle([0, 0], [10, 60])
+        expect(lng).toBeCloseTo(5, 6)
+        // Halfway up the stretched scale lies north of the plain average, 30.
+        expect(lat).toBeGreaterThan(35)
+        expect(lat).toBeLessThan(36)
+    })
+
+    test('crosses the antimeridian the short way', () => {
+        expect(rhumbBearing([179, 0], [-179, 0])).toBeCloseTo(90, 6)
+        expect(Math.abs(rhumbMiddle([179, 10], [-179, 10])[0])).toBeCloseTo(180, 6)
+    })
+})
+
+describe('an arc', () => {
+    test('stands its distance from its middle all the way round', () => {
+        const circle = arc(HARBOR, 20_000, 0, 360, 36)
+        expect(circle).toHaveLength(37)
+        for (const at of circle) expect(distance(HARBOR, at)).toBeCloseTo(20_000, 0)
+        expect(circle[0][0]).toBeCloseTo(circle[36][0], 9)
+        expect(circle[0][1]).toBeCloseTo(circle[36][1], 9)
+    })
+
+    test('turns clockwise from one bearing to another', () => {
+        const turn = arc(HARBOR, 10_000, 80, 100, 2)
+        expect(turn.map((at) => Math.round(bearing(HARBOR, at)))).toEqual([80, 90, 100])
     })
 })

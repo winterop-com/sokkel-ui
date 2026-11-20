@@ -1,0 +1,79 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "map-follow",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Keeps a map centered on one moving thing, such as the selected track, while it is drawn: each new position is eased to and the camera is held, and a banner in a corner says what is followed, with a button that lets it go. Dragging the map lets it go too.",
+    "sources": {"sokkel-ui": ["packages/maps/src/MapFollow.tsx"]},
+    "anatomy": {
+        "banner": "A chip in its corner, the top left by default: card at 95 percent, padded 8 before and 2 after, 2 down, rounded by radius-control, with the surface's elevation and a 1 ring in map-selection; a crosshair icon 14 square in map-selection, then words.following with the name in text.xs at 500, cut with an ellipsis, then an icon button (words.release, a cross) control-xs square, 6 apart."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "position": {"type": "rows", "does": "Where the followed thing is now: longitude, latitude."},
+        "name": {"type": "text", "does": "What is followed, as the banner names it."},
+        "onRelease": {
+            "type": "callback",
+            "does": "Called when the reader lets it go, by the button or by dragging the map."
+        },
+        "zoom": {"type": "number", "does": "The zoom it goes to when it starts, unless the map is in closer already."},
+        "duration": {
+            "type": "number",
+            "default": 600,
+            "does": "How long each step after the followed thing takes, easing out, as a track layer's transition does."
+        },
+        "corner": {
+            "type": "text",
+            "values": ["top-left", "top-right", "bottom-left", "bottom-right"],
+            "default": "top-left",
+            "does": "Where the banner stands."
+        }
+    },
+    "sizes": {"banner": {"padX": 8, "padY": 2, "gap": 6, "icon": 14, "text": "text.xs", "radius": "radius-control"}},
+    "states": {"rest": {"means": "The map follows."}},
+    "pieces": {
+        "banner": {
+            "rest": {
+                "ground": "card/95",
+                "ink": "card-foreground",
+                "mark": "map-selection",
+                "text": "text.xs",
+                "weight": 500,
+                "radius": "radius-control",
+                "ring": {"color": "map-selection", "width": 1}
+            }
+        }
+    },
+    "keyboard": [],
+    "words": {"following": "Following {name}", "release": "Stop following"},
+    "messages": {
+        "following": {"id": "mapFollow.following", "en": "Following {name}"},
+        "release": {"id": "mapFollow.release", "en": "Stop following"}
+    },
+    "samples": {"following": [{"with": {"name": "Patrol 7"}, "says": "Following Patrol 7"}]},
+    "appText": {"name": "What is followed."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "It holds the camera through the map's context (holdCamera), so the map stops fitting its layers while it follows."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

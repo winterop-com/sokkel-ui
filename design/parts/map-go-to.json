@@ -1,0 +1,81 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "map-go-to",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A small field over a map that takes a position as latitude, longitude (decimal degrees, with or without hemisphere letters) and flies there on Enter, holding the camera from then on. What does not read as a position is marked and said under the field.",
+    "sources": {"sokkel-ui": ["packages/maps/src/MapGoTo.tsx", "packages/maps/src/geodesy.ts (parseCoordinates)"]},
+    "anatomy": {
+        "container": "A card in its corner, the top left by default: 224 wide at most, card at 95 percent, padded 4, rounded by radius-surface, with the surface's elevation and a 1 ring of foreground at 10 percent.",
+        "field": "A text field (parts/text-field's input) in tabular figures, words.placeholder while empty, beside a ghost icon button (words.go, a return arrow), 4 apart.",
+        "issue": "Under the field while what it holds is not a position: words.invalid in text.help in critical-ink, padded 4 across and 4 above; the field takes its invalid edge."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "corner": {
+            "type": "text",
+            "values": ["top-left", "top-right", "bottom-left", "bottom-right"],
+            "default": "top-left",
+            "does": "Where it stands."
+        },
+        "zoom": {"type": "number", "default": 10, "does": "The zoom it flies to, unless the map is in closer already."},
+        "onGo": {"type": "callback", "does": "Called with each position it goes to."}
+    },
+    "sizes": {"container": {"width": 224, "padX": 4, "padY": 4, "gap": 4, "radius": "radius-surface"}},
+    "states": {
+        "rest": {"means": "The field, empty or holding a position."},
+        "invalid": {
+            "means": "What it holds is not a position: marked and said.",
+            "reached": "Enter on what does not read as a position"
+        }
+    },
+    "pieces": {
+        "container": {
+            "rest": {"ground": "card/95", "radius": "radius-surface", "ring": {"color": "foreground/10", "width": 1}}
+        },
+        "issue": {"rest": {"ink": "critical-ink", "text": "text.help"}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Enter"],
+            "does": "Flies to the position, or marks the field when it is not one.",
+            "when": "the field has focus"
+        }
+    ],
+    "words": {
+        "label": "Go to coordinates",
+        "placeholder": "Lat, lon",
+        "go": "Go",
+        "invalid": "Write a position as latitude, longitude."
+    },
+    "messages": {
+        "label": {"id": "mapGoTo.label", "en": "Go to coordinates"},
+        "placeholder": {"id": "mapGoTo.placeholder", "en": "Lat, lon"},
+        "go": {"id": "mapGoTo.go", "en": "Go"},
+        "invalid": {"id": "mapGoTo.invalid", "en": "Write a position as latitude, longitude."}
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "It reads `60.39, 5.32`, `-33.9 18.4`, `60.39 N, 5.32 E` and `60.39° N; 5.32° E`; a latitude past 90 or a longitude past 180 is not a position."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

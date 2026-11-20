@@ -1,0 +1,149 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "track-layer",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Moving things on a map: each track a symbol for its kind turned to its heading, in its affiliation's color, ringed in the card color, its label beside it and its trail behind it fading into the past. The selected track is ringed in the selection color. New positions glide in from where each track was. Dense tracks may gather into counted clusters.",
+    "sources": {"sokkel-ui": ["packages/maps/src/TrackLayer.tsx", "packages/maps/src/layer.ts (useRenderedPoints)"]},
+    "anatomy": {
+        "symbol": "One per track, the size option square (24 by default), pointing north at a heading of 0 and turned clockwise by the heading with the map: a hull with a pointed bow for a vessel, a notched arrowhead for an aircraft, a box with a point on its front for a vehicle, a ring round a dot for a sensor (not turned), a triangle for any other. Filled in the affiliation's color with a 1.25 halo in card.",
+        "trail": "The track's past positions, oldest first, ending where it is now, as a 2 wide line in the affiliation's color, cut into one piece per step; each piece at 0.85 of full times its share of the way from the oldest to the newest raised to 1.5, so the oldest step all but vanishes.",
+        "label": "The track's label 0.75 of the size plus 4 right of its point, centered on it: text.2xs on card at 80 percent, padded 4 across, rounded by radius-mini. A label that would cover another label or another track's symbol is left out; the selected track's never is, and is placed first.",
+        "ring": "Under the symbol, a circle 0.75 of the size in radius: none at rest; a 1.25 line in foreground mixed 55 percent into card at 80 percent under the pointer; for the selected track a 2 line in map-selection over a fill of map-selection at 18 percent, and its label at 500 weight on card, ringed 1 in map-selection.",
+        "cluster": "With cluster on, nearby tracks gather into a circle of their count: foreground mixed 78 percent into card, 12 across the radius under 10 tracks, 15 to 50, 18 to 150, 22 beyond, ringed 2 in card, or 3 in track-hostile when it holds a hostile track; the count in text.2xs at 500 in card, in tabular figures. A press zooms to where it falls apart."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "tracks": {
+            "type": "rows",
+            "does": "Each track { id, position (lon, lat), heading?, affiliation, kind, label?, trail? }. The affiliation is friend, hostile, neutral, unknown or pending; the kind vessel, aircraft, vehicle, sensor or other."
+        },
+        "trails": {"type": "boolean", "default": true, "does": "Draws each track's trail."},
+        "labels": {"type": "boolean", "default": true, "does": "Writes each track's label beside it."},
+        "size": {"type": "number", "default": 24, "does": "The symbol's size, square."},
+        "colors": {"type": "rows", "does": "Colors for the affiliations in place of their tokens."},
+        "cluster": {
+            "type": "boolean",
+            "default": false,
+            "does": "Gathers nearby tracks into counted clusters; a radius (40) and the deepest zoom that clusters (10) may be given."
+        },
+        "transition": {
+            "type": "number",
+            "default": 600,
+            "does": "How long a track glides from where it was to where it is, in milliseconds, easing out; 0 moves it at once. A track turns the short way round."
+        },
+        "visible": {"type": "boolean", "default": true, "does": "Draws the layer."},
+        "interactive": {
+            "type": "boolean",
+            "default": true,
+            "does": "Tracks answer the pointer and presses; a press selects one as the map's selection."
+        }
+    },
+    "sizes": {
+        "symbol": {
+            "width": 24,
+            "height": 24,
+            "note": "The size option; the shapes are drawn in a 48 square at twice the pixel."
+        },
+        "label": {
+            "padX": 4,
+            "text": "text.2xs",
+            "radius": "radius-mini",
+            "note": "0.75 of the size plus 4 right of the track's point."
+        }
+    },
+    "layout": {
+        "trailWidth": {"value": 2, "note": "The trail's width."},
+        "haloWidth": {"value": 1.25, "note": "The symbol's halo in card."},
+        "clusterRadius": {"value": 40, "note": "How near tracks gather, in pixels."}
+    },
+    "states": {
+        "rest": {"means": "A track drawn."},
+        "hover": {"means": "The pointer is over the track: its ring shows.", "reached": "pointer over"},
+        "selected": {
+            "means": "The map's selected track: ringed and filled in the selection color, its label marked.",
+            "reached": "a press on it, or the map's selected"
+        }
+    },
+    "pieces": {
+        "symbol": {
+            "rest": {
+                "ground": "track-unknown",
+                "edge": "card",
+                "note": "The fill is the track's affiliation token: track-friend, track-hostile, track-neutral, track-unknown or track-pending."
+            }
+        },
+        "trail": {"rest": {"ink": "track-unknown", "note": "In the affiliation's token, as the symbol."}},
+        "label": {
+            "rest": {"ground": "card/80", "ink": "foreground", "text": "text.2xs", "radius": "radius-mini"},
+            "selected": {"ground": "card", "weight": 500, "ring": {"color": "map-selection", "width": 1}}
+        },
+        "ring": {
+            "rest": {"ground": "none", "edge": "none"},
+            "hover": {"edge": "mix-oklab(foreground 55%, card)"},
+            "selected": {"ground": "map-selection/18", "edge": "map-selection"}
+        },
+        "cluster": {
+            "rest": {
+                "ground": "mix-oklab(foreground 78%, card)",
+                "edge": "card",
+                "ink": "card",
+                "text": "text.2xs",
+                "weight": 500
+            }
+        }
+    },
+    "keyboard": [],
+    "words": {
+        "friend": "Friend",
+        "hostile": "Hostile",
+        "neutral": "Neutral",
+        "unknown": "Unknown",
+        "pending": "Pending",
+        "vessel": "Vessel",
+        "aircraft": "Aircraft",
+        "vehicle": "Vehicle",
+        "sensor": "Sensor",
+        "other": "Other"
+    },
+    "messages": {
+        "friend": {"id": "track.friend", "en": "Friend"},
+        "hostile": {"id": "track.hostile", "en": "Hostile"},
+        "neutral": {"id": "track.neutral", "en": "Neutral"},
+        "unknown": {"id": "track.unknown", "en": "Unknown"},
+        "pending": {"id": "track.pending", "en": "Pending"},
+        "vessel": {"id": "track.vessel", "en": "Vessel"},
+        "aircraft": {"id": "track.aircraft", "en": "Aircraft"},
+        "vehicle": {"id": "track.vehicle", "en": "Vehicle"},
+        "sensor": {"id": "track.sensor", "en": "Sensor"},
+        "other": {"id": "track.other", "en": "Other"}
+    },
+    "appText": {"label": "Each track's label."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Drawn on maplibre: the tracks as one GeoJSON source of points with a symbol layer whose images are signed distance fields made in code, colored by icon-color; the trails as a second source of line pieces.",
+            "Labels and cluster counts are written in the map's overlay, measured after each frame, since a basemap without fonts writes no text.",
+            "Selection and hover are feature state, so they stay on as the source's data is set frame by frame.",
+            "trackLegendEntries and trackCounts key the affiliations in a MapLegend."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

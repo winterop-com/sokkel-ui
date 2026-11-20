@@ -1,0 +1,116 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "map-ruler",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A ruler over a map: while it is on, a press sets its first point, the line follows the pointer to where a second press sets the other, and a chip at the line's middle says the distance along the great circle and the bearing from the first point. Its button stands among the map's own.",
+    "sources": {
+        "sokkel-ui": ["packages/maps/src/MapRuler.tsx", "packages/maps/src/control.tsx", "packages/maps/src/geodesy.ts"]
+    },
+    "anatomy": {
+        "button": "One of the map's buttons (control-sm square, outline, card ground, a ruler icon), in a corner, the top right under the map's own by default; pressed while the ruler is on: an accent ground and a primary edge. Its tooltip opens away from its corner.",
+        "line": "The great circle between the points, 48 steps, drawn 1.75 wide in foreground, dashed 3 on 2, over a 4 wide casing in card at 80 percent; each end a dot 3.5 in radius in foreground ringed 1.5 in card.",
+        "chip": "Over the line's middle, 8 above it: words.measured with the distance and the bearing, text.xs at 500 in tabular figures on card, padded 6 across and 2 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "active": {"type": "boolean", "does": "Whether the ruler is on, when the app holds it."},
+        "defaultActive": {"type": "boolean", "default": false, "does": "Whether it opens on."},
+        "defaultPoints": {"type": "rows", "does": "Two points it opens measuring between."},
+        "unit": {
+            "type": "text",
+            "values": ["km", "mi", "nmi"],
+            "default": "km",
+            "does": "The unit the distance is written in; whole meters under a kilometer."
+        },
+        "corner": {
+            "type": "text",
+            "values": ["top-left", "top-right", "bottom-left", "bottom-right"],
+            "default": "top-right",
+            "does": "Where its button stands."
+        },
+        "button": {
+            "type": "boolean",
+            "default": true,
+            "does": "Draws its button; off for an app that turns it on from its own toolbar."
+        },
+        "onMeasure": {
+            "type": "callback",
+            "does": "Called with each finished measurement, and with nothing when it is cleared."
+        }
+    },
+    "sizes": {
+        "button": {"height": "density.control-sm", "width": "density.control-sm", "radius": "radius-control"},
+        "chip": {"padX": 6, "padY": 2, "text": "text.xs", "radius": "radius-control"}
+    },
+    "layout": {"chipLift": {"value": 8, "note": "The chip's foot stands this far above the line's middle."}},
+    "states": {
+        "rest": {"means": "The ruler is off: only its button."},
+        "on": {
+            "means": "The ruler is on: presses on the map measure rather than select, and the pointer is a crosshair.",
+            "reached": "a press on its button, or active"
+        },
+        "hover": {"means": "The pointer is over the button.", "reached": "pointer over"}
+    },
+    "pieces": {
+        "button": {
+            "rest": {"ground": "card", "ink": "foreground", "edge": "border"},
+            "hover": {"ground": "hover"},
+            "on": {"ground": "accent", "ink": "accent-foreground", "edge": "primary"}
+        },
+        "line": {"rest": {"ink": "foreground", "edge": "card/80"}},
+        "chip": {
+            "rest": {
+                "ground": "card",
+                "ink": "foreground",
+                "text": "text.xs",
+                "weight": 500,
+                "radius": "radius-control",
+                "ring": {"color": "foreground/10", "width": 1}
+            }
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["Escape"],
+            "does": "Clears the measurement; with nothing measured, turns the ruler off.",
+            "when": "the ruler is on and the map has focus"
+        }
+    ],
+    "words": {"measure": "Measure a distance", "measured": "{distance} · {bearing}"},
+    "messages": {
+        "measure": {"id": "mapRuler.measure", "en": "Measure a distance"},
+        "measured": {"id": "mapRuler.measured", "en": "{distance} · {bearing}"}
+    },
+    "samples": {
+        "measured": [
+            {"with": {"distance": "57.7 km", "bearing": "308°"}, "says": "57.7 km · 308°"},
+            {"with": {"distance": "420 m", "bearing": "047°"}, "says": "420 m · 047°"}
+        ]
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Distances are on a sphere of the earth's mean radius (6,371,008.8 m); formatDistance writes three significant figures below 100 and whole above, formatBearing three whole digits and a degree sign.",
+            "The ruler takes the map's presses through its context's takeClicks while it is on."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

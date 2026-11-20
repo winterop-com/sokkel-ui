@@ -40,6 +40,10 @@
             "types": "./dist/CountryLayer.d.ts",
             "import": "./dist/CountryLayer.js"
         },
+        "./CoverageLayer": {
+            "types": "./dist/CoverageLayer.d.ts",
+            "import": "./dist/CoverageLayer.js"
+        },
         "./geodesy": {
             "types": "./dist/geodesy.d.ts",
             "import": "./dist/geodesy.js"
@@ -55,6 +59,10 @@
         "./GridLayer": {
             "types": "./dist/GridLayer.d.ts",
             "import": "./dist/GridLayer.js"
+        },
+        "./LinkLayer": {
+            "types": "./dist/LinkLayer.d.ts",
+            "import": "./dist/LinkLayer.js"
         },
         "./MapCompass": {
             "types": "./dist/MapCompass.d.ts",
@@ -104,6 +112,10 @@
             "types": "./dist/scale.d.ts",
             "import": "./dist/scale.js"
         },
+        "./tone": {
+            "types": "./dist/tone.d.ts",
+            "import": "./dist/tone.js"
+        },
         "./TrackLayer": {
             "types": "./dist/TrackLayer.d.ts",
             "import": "./dist/TrackLayer.js"
@@ -115,6 +127,10 @@
         "./world": {
             "types": "./dist/world.d.ts",
             "import": "./dist/world.js"
+        },
+        "./ZoneLayer": {
+            "types": "./dist/ZoneLayer.d.ts",
+            "import": "./dist/ZoneLayer.js"
         }
     },
     "publishConfig": {
