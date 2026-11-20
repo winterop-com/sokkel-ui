@@ -179,6 +179,9 @@ release and empties it.
   `messages/en.json`.
 - The tracking package's README lists, for each public source its modules read, whether a page can
   fetch it, its key, its limits and its license, and so which need a server of the app's own.
+- `/ais` (tracking) reads `VDM` and `VDO` sentences from any talker, so a coastal network's feed of
+  base station sentences (`!BSVDM`, each behind a tag block) decodes as a receiver's `!AIVDM` does.
+  `AisSentence.talker` is the talker and the sentence as sent.
 
 ## Changed
 
