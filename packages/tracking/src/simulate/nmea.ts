@@ -86,7 +86,8 @@ export function encodeAisPosition(report: AisPositionReport): string {
             [1, 1],
             [report.lon * 600000, 28],
             [report.lat * 600000, 27],
-            [Math.min(3599, ((report.course % 360) + 360) % 360) * 10, 12],
+            // In tenths of a degree, a course that rounds up to north written as north: 3600 says the course is not known.
+            [Math.round((((report.course % 360) + 360) % 360) * 10) % 3600, 12],
             [report.heading === undefined ? 511 : Math.round(((report.heading % 360) + 360) % 360) % 360, 9],
             [report.second % 60, 6],
             [0, 2],

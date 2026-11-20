@@ -37,65 +37,73 @@ export interface SimClock {
     setSpeed: (speed: number) => void
 }
 
+/** The most a timer may fire before its tick is wholly past and still count it, in real milliseconds. */
+const EARLY = 16
+
 /**
  * A clock at `start` that moves on every `tick` by the tick's length times `speed`. It follows the
  * real clock rather than counting its own timer, so a timer the browser slows in a hidden tab
- * leaves it no later: the next tick takes every tick missed with it.
+ * leaves it no later: the next tick takes every tick missed with it. Only ticks wholly past are
+ * counted, each at the speed it passed at.
  */
 export function createSimClock(options: SimClockOptions): SimClock {
     const now = options.now ?? (() => performance.now())
     const tick = Math.max(1, options.tick ?? 1000)
+    const early = Math.min(EARLY, tick / 10)
     const listeners = new Set<() => void>()
     let time = options.start
     let speed = options.speed ?? 1
     let playing = options.playing ?? true
-    /** The real moment `time` was reached at. */
+    /** The real moment `time` was reached at: the tick boundary every later tick is counted from. */
     let reached = now()
-    let timer: ReturnType<typeof setInterval> | undefined
+    let timer: ReturnType<typeof setTimeout> | undefined
 
     const tell = () => {
         // A copy, so a listener that stops itself does not skip the next one.
         for (const listener of Array.from(listeners)) listener()
     }
 
-    /** Moves `time` on by the whole ticks passed since it was reached, as `whole` counts them. */
-    const advance = (whole: (ticks: number) => number): boolean => {
+    /** Moves `time` on by the ticks wholly past since it was reached, a timer's own tick allowed to come `slack` early. */
+    const advance = (slack = 0): boolean => {
         if (!playing) return false
-        const ticks = whole((now() - reached) / tick)
+        const ticks = Math.floor((now() - reached + slack) / tick)
         if (!(ticks > 0)) return false
         time += ticks * tick * speed
         reached += ticks * tick
         return true
     }
 
-    /** The moment now: the timer keeps it while it runs, and it is worked out when read otherwise. */
-    const read = () => {
-        if (timer === undefined) advance(Math.floor)
-        return time
-    }
-
     const stop = () => {
-        if (timer !== undefined) clearInterval(timer)
+        if (timer !== undefined) clearTimeout(timer)
         timer = undefined
     }
 
-    /** Starts the timer when the clock plays and something listens; its first tick is a whole tick from now. */
+    /** Sets the timer for the next tick boundary when the clock plays and something listens. */
     const run = () => {
         stop()
         if (!playing || listeners.size === 0) return
-        advance(Math.floor)
-        reached = now()
-        // A timer fires a little early or late, so the ticks passed are rounded rather than cut.
-        timer = setInterval(() => {
-            if (advance(Math.round)) tell()
-        }, tick)
+        timer = setTimeout(
+            () => {
+                const moved = advance(early)
+                run()
+                if (moved) tell()
+            },
+            Math.max(1, reached + tick - now()),
+        )
     }
 
     return {
-        get: read,
+        // While the timer runs it alone moves the clock, so every listener is told of each moment a reader sees.
+        get() {
+            if (timer === undefined) advance()
+            return time
+        },
         subscribe(listener) {
             listeners.add(listener)
-            if (listeners.size === 1) run()
+            if (listeners.size === 1) {
+                advance()
+                run()
+            }
             return () => {
                 listeners.delete(listener)
                 if (listeners.size === 0) stop()
@@ -116,7 +124,7 @@ export function createSimClock(options: SimClockOptions): SimClock {
         },
         pause() {
             if (!playing) return
-            read()
+            advance()
             playing = false
             stop()
             tell()
@@ -128,8 +136,9 @@ export function createSimClock(options: SimClockOptions): SimClock {
             tell()
         },
         setSpeed(next) {
-            read()
+            advance()
             speed = next
+            run()
             tell()
         },
     }

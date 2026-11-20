@@ -124,6 +124,15 @@ describe('simulateCoast', () => {
         expect(lengths[3]).toBe(10)
     })
 
+    it('keeps an aircraft no more trail than a vessel, at a moment off the grid of the reports too', () => {
+        for (const offset of [MINUTE, 13 * MINUTE + 5000, 2 * MINUTE]) {
+            const picture = simulateCoast(SEED, COAST_EPOCH + offset)
+            expect(picture.tracks.find((track) => track.id === '4b8e12')?.trail).toHaveLength(10)
+            expect(picture.tracks.find((track) => track.id === '257100070')?.trail).toHaveLength(10)
+            for (const track of picture.tracks) expect(track.trail?.length ?? 0, track.id).toBeLessThanOrEqual(10)
+        }
+    })
+
     it('lays the judgments made by a moment over the classification, from the moment each was made', () => {
         const judgments = [
             { track: '257100020', affiliation: 'hostile' as const, at: COAST_EPOCH + 10 * MINUTE },
@@ -337,6 +346,16 @@ describe('encodeAisPosition and encodeAisStatic', () => {
         expect(message.status).toBe(5)
     })
 
+    it('write a course a hair short of north as north, never as a course not known', () => {
+        for (const course of [359.99, 359.96, 719.99, -0.01]) {
+            const sentence = parseAisSentence(encodeAisPosition({ mmsi: 1, lon: 5, lat: 60, speed: 10, course, second: 0 }))
+            const message = decodeAisPayload(sentence?.payload ?? '', sentence?.fill) as AisPosition
+            expect(message.course, String(course)).toBe(0)
+        }
+        const sentence = parseAisSentence(encodeAisPosition({ mmsi: 1, lon: 5, lat: 60, speed: 10, course: 359.94, second: 0 }))
+        expect((decodeAisPayload(sentence?.payload ?? '', sentence?.fill) as AisPosition).course).toBeCloseTo(359.9, 6)
+    })
+
     it('write static data the decoder puts back together', () => {
         const lines = encodeAisStatic(
             {
@@ -421,6 +440,13 @@ describe('coastEvents', () => {
         expect(events[0].kind).toBe('appeared')
         expect(events.at(-1)).toMatchObject({ kind: 'left', at: contact.end })
         expect(events.some((event) => event.kind === 'stale' || event.kind === 'lost')).toBe(false)
+    })
+
+    it('tells a contact leaving at the very start of the stretch asked for', () => {
+        const contact = passing((each) => each.silent === undefined)
+        const events = coastEvents(SEED, contact.end, contact.end + 1).filter((event) => event.track === contact.id)
+        expect(events.map((event) => [event.kind, event.at])).toEqual([['left', contact.end]])
+        expect(coastContacts(SEED, contact.end, contact.end + 1)).toContain(contact)
     })
 
     it('agrees with the picture on when a contact is classified', () => {

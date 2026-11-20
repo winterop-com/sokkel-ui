@@ -134,6 +134,61 @@ describe('createSimClock', () => {
         stop()
     })
 
+    it('counts the seconds a slowed timer has not ticked yet when it is paused', () => {
+        const world = real()
+        const clock = createSimClock({ start: START, speed: 10, now: world.now })
+        const stop = clock.subscribe(() => undefined)
+        // A hidden tab: five seconds pass and the timer has not fired.
+        world.sleep(5000)
+        clock.pause()
+        expect(clock.get()).toBe(START + 50_000)
+        stop()
+    })
+
+    it('counts the seconds a slowed timer has not ticked yet at the speed they passed at', () => {
+        const world = real()
+        const clock = createSimClock({ start: START, speed: 10, now: world.now })
+        const stop = clock.subscribe(() => undefined)
+        world.sleep(3000)
+        clock.setSpeed(1)
+        world.sleep(2000)
+        clock.pause()
+        expect(clock.get()).toBe(START + 30_000 + 2000)
+        stop()
+    })
+
+    it('never counts a tick that has not wholly passed', () => {
+        const world = real()
+        const clock = createSimClock({ start: START, speed: 30, now: world.now })
+        const seen: number[] = []
+        const stop = clock.subscribe(() => seen.push(clock.get()))
+        // The timer fires five and a half seconds on: five ticks have passed, not six.
+        world.sleep(4500)
+        world.pass(1000)
+        expect(seen).toEqual([START + 150_000])
+        stop()
+    })
+
+    it('keeps its pace however often something starts and stops listening', () => {
+        const world = real()
+        const clock = createSimClock({ start: START, speed: 30, now: world.now })
+        for (let turn = 0; turn < 5; turn += 1) {
+            world.sleep(300)
+            clock.subscribe(() => undefined)()
+            world.sleep(300)
+        }
+        expect(clock.get()).toBe(START + 90_000)
+        // A listener that comes six tenths into a tick hears it four tenths later.
+        world.sleep(600)
+        const seen: number[] = []
+        const stop = clock.subscribe(() => seen.push(clock.get()))
+        world.pass(300)
+        expect(seen).toEqual([])
+        world.pass(100)
+        expect(seen).toEqual([START + 120_000])
+        stop()
+    })
+
     it('holds while paused and plays on from where it stood', () => {
         const world = real()
         const clock = createSimClock({ start: START, speed: 30, now: world.now })

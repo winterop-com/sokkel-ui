@@ -455,7 +455,7 @@ export function coastContacts(seed: number, from: number, to: number): CoastCont
     const passing: CoastContact[] = []
     for (let index = first; index <= last; index += 1) {
         const contact = coastContact(seed, index)
-        if (contact.start <= to && contact.end > from) passing.push(contact)
+        if (contact.start <= to && contact.end >= from) passing.push(contact)
     }
     return [...REGULARS, ...passing]
 }
@@ -701,7 +701,11 @@ export function simulateCoast(seed: number, at: number, judgments: readonly Coas
     for (const time of [...answers.keys()].sort((a, b) => a - b)) {
         for (const track of parseFlights({ now: time, ac: answers.get(time) }, { classify })) {
             const was = flights.get(track.id)
-            flights.set(track.id, { track, trail: was === undefined ? [] : [...was.trail, [was.track.lon, was.track.lat]] })
+            // The last reports only, as many as a vessel keeps: a moment off the grid adds a report of its own.
+            flights.set(track.id, {
+                track,
+                trail: was === undefined ? [] : [...was.trail, [was.track.lon, was.track.lat] as LonLat].slice(-TRAIL),
+            })
         }
     }
 
