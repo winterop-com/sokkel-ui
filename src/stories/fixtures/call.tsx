@@ -119,7 +119,7 @@ function Tile({ name, image, muted, hand }: { name: string; image?: string; mute
     return (
         <div className="relative aspect-video overflow-hidden rounded-surface bg-terminal-foreground/10">
             <Center className="absolute inset-0">
-                <PersonAvatar name={name} image={image} size="xl" />
+                <PersonAvatar name={name} image={image} size="2xl" />
             </Center>
             <Row
                 as="span"

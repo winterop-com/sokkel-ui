@@ -1,5 +1,5 @@
 import { ChevronUp, Ellipsis, Hand, Mic, MicOff, PhoneOff, ScreenShare, SmilePlus, Video, VideoOff } from 'lucide-react'
-import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactElement, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactElement, type ReactNode } from 'react'
 
 import { useShortcuts, type KeyBinding } from '../hooks/use-shortcuts'
 import { cn } from '../lib/cn'
@@ -23,7 +23,6 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { Kbd } from './ui/kbd'
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 /** One input or output a call can use: a microphone, a camera, a speaker. */
@@ -175,6 +174,15 @@ const NARROW = 26
 /** A round control on the bar, finger-sized below `md`. */
 const ROUND = 'size-(--density-control-lg) rounded-full max-md:min-h-finger max-md:min-w-finger'
 
+/** The floating bar's corners while it holds the reactions: round with its round controls, half a control and the bar's pad. */
+const TRAY_CORNERS = 'rounded-[calc(var(--density-control-lg)/2+--spacing(1.5))]'
+
+/** The bar's menus stand clear of the bar, its pad and edge. */
+const MENU_OFFSET = 12
+
+/** The bar's menus round as the bar does, padded so a row's corners stay inside theirs. */
+const MENU_CORNERS = cn(TRAY_CORNERS, 'p-2')
+
 /** A control at rest, pressed, and off; off is the critical tone, as a chip in it is. */
 const REST = 'bg-muted text-foreground not-aria-disabled:hover:bg-hover'
 const PRESSED = 'aria-pressed:bg-primary/12 aria-pressed:text-primary-ink aria-pressed:ring-1 aria-pressed:ring-primary/60'
@@ -263,6 +271,9 @@ export function CallBar({
 }: CallBarProps) {
     const words = useWords(CALL_BAR_PART, given)
     const root = useRef<HTMLDivElement>(null)
+    const tray = useRef<HTMLDivElement>(null)
+    const reactionsToggle = useRef<HTMLButtonElement>(null)
+    const trayId = useId()
     const [room, setRoom] = useState<Room>('wide')
     const [ownMenu, setOwnMenu] = useState<CallBarMenu | null>(defaultOpenMenu)
     const menu = openMenu === undefined ? ownMenu : openMenu
@@ -291,6 +302,25 @@ export function CallBar({
         watch.observe(element)
         return () => watch.disconnect()
     }, [])
+
+    const reacting = onReact !== undefined && menu === 'reactions'
+    // The reactions open in the bar's own surface: focus goes to the first reaction, and a press outside the bar closes them.
+    useEffect(() => {
+        if (!reacting) return
+        tray.current?.querySelector<HTMLButtonElement>('[data-reaction]')?.focus()
+        const outside = (event: PointerEvent) => {
+            const target = event.target as Node | null
+            if (
+                target !== null &&
+                root.current?.contains(target) !== true &&
+                !(target instanceof Element && target.closest('[data-slot="popover-content"]') !== null)
+            )
+                setMenu(null)
+        }
+        document.addEventListener('pointerdown', outside)
+        return () => document.removeEventListener('pointerdown', outside)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [reacting])
 
     const keys = shortcuts === false ? undefined : { ...CALL_BAR_SHORTCUTS, ...(shortcuts === true ? {} : shortcuts) }
     const micKey = keys?.microphone === false ? undefined : keys?.microphone
@@ -393,7 +423,7 @@ export function CallBar({
                             }
                         />
                     </Tip>
-                    <DropdownMenuContent side="top" align="start">
+                    <DropdownMenuContent side="top" align="start" sideOffset={MENU_OFFSET} className={MENU_CORNERS}>
                         <DeviceGroups lists={lists} />
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -427,156 +457,173 @@ export function CallBar({
             )}
         >
             <div
-                role="toolbar"
-                aria-label={words.label}
-                onKeyDown={onKeyDown}
+                data-slot="call-bar-panel"
                 className={cn(
-                    'flex max-w-full min-w-0 flex-wrap items-center justify-center gap-2',
+                    'flex max-w-full min-w-0 flex-col items-center gap-1.5',
                     placement === 'floating' &&
-                        'rounded-full border border-border-strong bg-popover p-1.5 text-popover-foreground shadow-pop',
+                        cn(
+                            'border border-border-strong bg-popover p-1.5 text-popover-foreground shadow-pop',
+                            reacting ? TRAY_CORNERS : 'rounded-full',
+                        ),
                 )}
             >
-                {split(
-                    'microphone',
-                    muted,
-                    onMutedChange,
-                    microphones,
-                    <Mic aria-hidden />,
-                    <MicOff aria-hidden />,
-                    muted ? words.unmute : words.mute,
-                    words.microphoneDevices,
-                    micKey,
-                )}
-                {split(
-                    'camera',
-                    cameraOff,
-                    onCameraOffChange,
-                    cameras,
-                    <Video aria-hidden />,
-                    <VideoOff aria-hidden />,
-                    cameraOff ? words.cameraOn : words.cameraOff,
-                    words.cameraDevices,
-                    cameraKey,
-                )}
-                {inline && onSharingChange !== undefined && press(sharing, words.share, <ScreenShare aria-hidden />, onSharingChange)}
-                {onReact !== undefined && (
-                    <Popover open={menu === 'reactions'} onOpenChange={opener('reactions')}>
-                        <Tip label={words.reactions} icon={<SmilePlus aria-hidden />}>
-                            <PopoverTrigger
-                                render={
-                                    <Button
-                                        data-call-control
-                                        variant="ghost"
-                                        aria-label={words.reactions}
-                                        aria-pressed={menu === 'reactions'}
-                                        className={control()}
-                                    />
-                                }
-                            />
-                        </Tip>
-                        <PopoverContent
-                            side="top"
-                            collisionPadding={8}
-                            aria-label={words.reactionBar.label ?? words.reactions}
-                            className="w-auto max-w-[calc(100vw-1rem)] gap-0 p-1"
-                        >
-                            <ReactionBar
-                                onReact={onReact}
-                                reactions={reactions}
-                                picker={reactionPicker}
-                                framed={false}
-                                words={{ label: words.reactions, ...words.reactionBar }}
-                            />
-                        </PopoverContent>
-                    </Popover>
-                )}
-                {inline && onHandRaisedChange !== undefined && press(handRaised, words.raiseHand, <Hand aria-hidden />, onHandRaisedChange)}
-                {hasMore && (
-                    <DropdownMenu open={menu === 'more'} onOpenChange={opener('more')}>
-                        <Tip label={words.more} icon={<Ellipsis aria-hidden />}>
-                            <DropdownMenuTrigger
-                                render={<Button data-call-control variant="ghost" aria-label={words.more} className={control()} />}
-                            />
-                        </Tip>
-                        <DropdownMenuContent side="top" align="center">
-                            {moved.microphones && (
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        <Mic aria-hidden />
-                                        {words.microphone}
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent>
-                                        <DeviceGroups lists={microphones} />
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            )}
-                            {moved.cameras && (
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        <Video aria-hidden />
-                                        {words.camera}
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent>
-                                        <DeviceGroups lists={cameras} />
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            )}
-                            {moved.share && (
-                                <DropdownMenuCheckboxItem checked={sharing} onClick={() => onSharingChange?.(!sharing)}>
-                                    <ScreenShare aria-hidden />
-                                    {words.share}
-                                </DropdownMenuCheckboxItem>
-                            )}
-                            {moved.hand && (
-                                <DropdownMenuCheckboxItem checked={handRaised} onClick={() => onHandRaisedChange?.(!handRaised)}>
-                                    <Hand aria-hidden />
-                                    {words.raiseHand}
-                                </DropdownMenuCheckboxItem>
-                            )}
-                            {movedAny && more.length > 0 && <DropdownMenuSeparator />}
-                            {more.map((item) =>
-                                item.checked === undefined ? (
-                                    <DropdownMenuItem key={item.id} disabled={item.disabled} onClick={item.onSelect}>
-                                        {item.icon}
-                                        {item.label}
-                                    </DropdownMenuItem>
-                                ) : (
-                                    <DropdownMenuCheckboxItem
-                                        key={item.id}
-                                        checked={item.checked}
-                                        disabled={item.disabled}
-                                        onClick={item.onSelect}
-                                    >
-                                        {item.icon}
-                                        {item.label}
-                                    </DropdownMenuCheckboxItem>
-                                ),
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
-                {onLeave !== undefined && (
-                    <Tip
-                        label={words.leave}
-                        icon={
-                            <>
-                                <PhoneOff aria-hidden />
-                                {inline && <span>{words.leave}</span>}
-                            </>
-                        }
+                {reacting && (
+                    <div
+                        ref={tray}
+                        id={trayId}
+                        data-slot="call-bar-tray"
+                        onKeyDown={(event) => {
+                            if (event.key !== 'Escape' || event.defaultPrevented) return
+                            event.preventDefault()
+                            setMenu(null)
+                            reactionsToggle.current?.focus()
+                        }}
+                        className="flex max-w-full min-w-0 justify-center"
                     >
-                        <Button
-                            data-call-control
-                            aria-label={words.leave}
-                            onClick={onLeave}
-                            className={cn(
-                                ROUND,
-                                'bg-critical text-critical-foreground not-aria-disabled:hover:bg-critical/85',
-                                inline && 'w-auto px-4',
-                            )}
+                        <ReactionBar
+                            onReact={onReact}
+                            reactions={reactions}
+                            picker={reactionPicker}
+                            pickerPopup={{ sideOffset: MENU_OFFSET, className: TRAY_CORNERS }}
+                            framed={false}
+                            words={{ label: words.reactions, ...words.reactionBar }}
                         />
-                    </Tip>
+                    </div>
                 )}
+                <div
+                    role="toolbar"
+                    aria-label={words.label}
+                    onKeyDown={onKeyDown}
+                    className="flex max-w-full min-w-0 flex-wrap items-center justify-center gap-2"
+                >
+                    {split(
+                        'microphone',
+                        muted,
+                        onMutedChange,
+                        microphones,
+                        <Mic aria-hidden />,
+                        <MicOff aria-hidden />,
+                        muted ? words.unmute : words.mute,
+                        words.microphoneDevices,
+                        micKey,
+                    )}
+                    {split(
+                        'camera',
+                        cameraOff,
+                        onCameraOffChange,
+                        cameras,
+                        <Video aria-hidden />,
+                        <VideoOff aria-hidden />,
+                        cameraOff ? words.cameraOn : words.cameraOff,
+                        words.cameraDevices,
+                        cameraKey,
+                    )}
+                    {inline && onSharingChange !== undefined && press(sharing, words.share, <ScreenShare aria-hidden />, onSharingChange)}
+                    {onReact !== undefined && (
+                        <Tip label={words.reactions} icon={<SmilePlus aria-hidden />}>
+                            <Button
+                                ref={reactionsToggle}
+                                data-call-control
+                                variant="ghost"
+                                aria-label={words.reactions}
+                                aria-pressed={reacting}
+                                aria-expanded={reacting}
+                                aria-controls={reacting ? trayId : undefined}
+                                onClick={() => setMenu(reacting ? null : 'reactions')}
+                                className={control()}
+                            />
+                        </Tip>
+                    )}
+                    {inline &&
+                        onHandRaisedChange !== undefined &&
+                        press(handRaised, words.raiseHand, <Hand aria-hidden />, onHandRaisedChange)}
+                    {hasMore && (
+                        <DropdownMenu open={menu === 'more'} onOpenChange={opener('more')}>
+                            <Tip label={words.more} icon={<Ellipsis aria-hidden />}>
+                                <DropdownMenuTrigger
+                                    render={<Button data-call-control variant="ghost" aria-label={words.more} className={control()} />}
+                                />
+                            </Tip>
+                            <DropdownMenuContent side="top" align="center" sideOffset={MENU_OFFSET} className={MENU_CORNERS}>
+                                {moved.microphones && (
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>
+                                            <Mic aria-hidden />
+                                            {words.microphone}
+                                        </DropdownMenuSubTrigger>
+                                        <DropdownMenuSubContent>
+                                            <DeviceGroups lists={microphones} />
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuSub>
+                                )}
+                                {moved.cameras && (
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>
+                                            <Video aria-hidden />
+                                            {words.camera}
+                                        </DropdownMenuSubTrigger>
+                                        <DropdownMenuSubContent>
+                                            <DeviceGroups lists={cameras} />
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuSub>
+                                )}
+                                {moved.share && (
+                                    <DropdownMenuCheckboxItem checked={sharing} onClick={() => onSharingChange?.(!sharing)}>
+                                        <ScreenShare aria-hidden />
+                                        {words.share}
+                                    </DropdownMenuCheckboxItem>
+                                )}
+                                {moved.hand && (
+                                    <DropdownMenuCheckboxItem checked={handRaised} onClick={() => onHandRaisedChange?.(!handRaised)}>
+                                        <Hand aria-hidden />
+                                        {words.raiseHand}
+                                    </DropdownMenuCheckboxItem>
+                                )}
+                                {movedAny && more.length > 0 && <DropdownMenuSeparator />}
+                                {more.map((item) =>
+                                    item.checked === undefined ? (
+                                        <DropdownMenuItem key={item.id} disabled={item.disabled} onClick={item.onSelect}>
+                                            {item.icon}
+                                            {item.label}
+                                        </DropdownMenuItem>
+                                    ) : (
+                                        <DropdownMenuCheckboxItem
+                                            key={item.id}
+                                            checked={item.checked}
+                                            disabled={item.disabled}
+                                            onClick={item.onSelect}
+                                        >
+                                            {item.icon}
+                                            {item.label}
+                                        </DropdownMenuCheckboxItem>
+                                    ),
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                    {onLeave !== undefined && (
+                        <Tip
+                            label={words.leave}
+                            icon={
+                                <>
+                                    <PhoneOff aria-hidden />
+                                    {inline && <span>{words.leave}</span>}
+                                </>
+                            }
+                        >
+                            <Button
+                                data-call-control
+                                aria-label={words.leave}
+                                onClick={onLeave}
+                                className={cn(
+                                    ROUND,
+                                    'bg-critical text-critical-foreground not-aria-disabled:hover:bg-critical/85',
+                                    inline && 'w-auto px-4',
+                                )}
+                            />
+                        </Tip>
+                    )}
+                </div>
             </div>
         </div>
     )

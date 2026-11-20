@@ -5481,11 +5481,11 @@ const callOn = (state: string) => state.split('+').flatMap((one) => CALL_ON[one]
 /** The quoted members of a union a type alias names, read from its source. */
 const unionOf = (text: string, name: string) =>
     [...(new RegExp(`export type ${name} = ([^\\n]+)`).exec(text)?.[1] ?? '').matchAll(/'([\w-]+)'/g)].map((match) => match[1])
-/** The reactions' popover, which a server drawing leaves closed: its classes from the source. */
-const CALL_POPOVER = literalAfter(CALL_BAR, '<PopoverContent', 'className=')
 /** The bar's own words: the reaction bar's are parts/reaction-bar's, passed through `reactionBar`. */
 const { reactionBar: _callReactionWords, ...CALL_BAR_OWN } = CALL_BAR_WORDS
 const toolbarOf = (elements: El[]) => elements.find((element) => element.attrs.role === 'toolbar')
+/** The bar's surface, holding its tray over its toolbar. */
+const callPanelOf = (elements: El[]) => byData(elements, 'data-slot', 'call-bar-panel')
 
 const CALL_BAR_ADAPTER: Adapter = {
     wordObjects: { CALL_BAR_OWN },
@@ -5499,11 +5499,12 @@ const CALL_BAR_ADAPTER: Adapter = {
         const { plain, docked } = CALL_BARS()
         const read: Record<string, Where | undefined> = {
             frame: pieceWhere(byData(docked, 'data-slot', 'call-bar')),
-            bar: pieceWhere(toolbarOf(plain)),
+            // The pad is the surface's; the gap is the toolbar's, between its controls.
+            bar: pieceWhere(key === 'gap' ? toolbarOf(plain) : callPanelOf(plain)),
+            tray: pieceWhere(callPanelOf(plain)),
             control: pieceWhere(byLabel(plain, CALL_BAR_WORDS.share), key === 'icon' ? SIZE_ON.icon : []),
             devices: pieceWhere(byLabel(plain, CALL_BAR_WORDS.microphoneDevices), key === 'icon' ? SVG_ON : []),
             leave: pieceWhere(byLabel(plain, CALL_BAR_WORDS.leave), key === 'icon' ? SIZE_ON.icon : []),
-            reactionsPopover: { layers: [CALL_POPOVER], on: [] },
         }
         return read[size]
     },
@@ -5515,7 +5516,7 @@ const CALL_BAR_ADAPTER: Adapter = {
             case 'frame':
                 return pieceWhere(byData(docked, 'data-slot', 'call-bar'))
             case 'bar':
-                return pieceWhere(toolbarOf(plain))
+                return pieceWhere(callPanelOf(plain))
             case 'control':
                 if (turnedOff) return pieceWhere(byLabel(off, CALL_BAR_WORDS.unmute), on)
                 return pieceWhere(byLabel(state === 'pressed' ? off : plain, CALL_BAR_WORDS.share), on)
@@ -5545,16 +5546,23 @@ const CALL_BAR_ADAPTER: Adapter = {
             CALL_BAR_SHORTCUTS.camera !== false && CALL_BAR_SHORTCUTS.camera.key === 'e' && CALL_BAR_SHORTCUTS.camera.mod === true
                 ? true
                 : `the camera's key is ${JSON.stringify(CALL_BAR_SHORTCUTS.camera)}`,
-        'Escape (a menu or the reaction bar of the bar is open)': BASE_UI(
-            'Menu and Popover',
-            'close on Escape and put focus back on their trigger',
-        ),
+        'Escape (a menu or the tray of the bar is open)': () =>
+            live(createElement(TooltipProvider, {}, callBarOf({ defaultOpenMenu: 'reactions' })), (box) => {
+                const tray = box.querySelector<HTMLElement>('[data-slot="call-bar-tray"]')
+                if (tray === null) return 'the reactions do not open in the bar'
+                if (document.activeElement?.hasAttribute('data-reaction') !== true) return 'focus does not go to the first reaction'
+                press(tray.querySelector('[data-reaction]'), 'Escape')
+                const toggle = box.querySelector<HTMLElement>(`[aria-label="${CALL_BAR_WORDS.reactions}"]`)
+                return box.querySelector('[data-slot="call-bar-tray"]') === null && toggle !== null && document.activeElement === toggle
+                    ? true
+                    : 'Escape does not close the tray with focus back on the reactions toggle'
+            }),
     },
     more: () =>
         layoutChecks('call-bar', {
             midRoom: () => numberIn(CALL_BAR, /const MID = (\d+)\b/, 'rem'),
             narrowRoom: () => numberIn(CALL_BAR, /const NARROW = (\d+)\b/, 'rem'),
-            popoverEdge: () => numberIn(CALL_BAR, /collisionPadding=\{(\d+)\}/),
+            menuOffset: () => numberIn(CALL_BAR, /const MENU_OFFSET = (\d+)\b/),
         }),
 }
 

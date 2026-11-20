@@ -63,9 +63,9 @@ const inputGroupButtonVariants = cva('flex items-center gap-2 text-sm shadow-non
     variants: {
         size: {
             // Below md a finger-tall group's buttons take its height, so each is as easy to press.
-            xs: "h-(--density-control-xs) gap-1 rounded-[calc(var(--radius)-3px)] px-1.5 max-md:h-10 max-md:min-h-0! [&>svg:not([class*='size-'])]:size-3.5",
+            xs: "h-(--density-control-xs) gap-1 px-1.5 max-md:h-10 max-md:min-h-0! [&>svg:not([class*='size-'])]:size-3.5",
             sm: 'max-md:h-10 max-md:min-h-0!',
-            'icon-xs': 'size-(--density-control-xs) rounded-[calc(var(--radius)-3px)] p-0 has-[>svg]:p-0 max-md:size-10 max-md:min-h-0!',
+            'icon-xs': 'size-(--density-control-xs) p-0 has-[>svg]:p-0 max-md:size-10 max-md:min-h-0!',
             'icon-sm': 'size-(--density-control) p-0 has-[>svg]:p-0 max-md:size-10 max-md:min-h-0!',
         },
     },

@@ -8,7 +8,7 @@
         "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
         "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
-    "summary": "The controls of a video or audio call, as a round bar floating over the call's picture (placement floating) or a strip docked across its foot (docked): the microphone and the camera, each a toggle with a chevron beside it opening the app's lists of devices with the chosen one checked; sharing the screen; reactions, a toggle that stands the reaction bar (parts/reaction-bar) over the bar; raising a hand; more, the app's own rows; and Leave. A muted microphone and a camera turned off are drawn in the critical tone; sharing, a raised hand and open reactions are drawn pressed. Each control is offered only when its handler is given, and one of the bar's menus is open at a time. Every control is round, and a finger square below md. The bar measures its own room: under 576 the share and hand buttons move into more, and under 416 the device lists follow as submenus there, so the bar never widens the page.",
+    "summary": "The controls of a video or audio call, as a round bar floating over the call's picture (placement floating) or a strip docked across its foot (docked): the microphone and the camera, each a toggle with a chevron beside it opening the app's lists of devices with the chosen one checked; sharing the screen; reactions, a toggle that opens the reaction bar (parts/reaction-bar) in the bar's own surface, above its controls; raising a hand; more, the app's own rows; and Leave. A muted microphone and a camera turned off are drawn in the critical tone; sharing, a raised hand and open reactions are drawn pressed. Each control is offered only when its handler is given, and one of the bar's menus is open at a time. Every control is round, and a finger square below md. The bar measures its own room: under 576 the share and hand buttons move into more, and under 416 the device lists follow as submenus there, so the bar never widens the page.",
     "sources": {
         "sokkel-ui": [
             "packages/core/src/components/CallBar.tsx",
@@ -22,17 +22,18 @@
     },
     "anatomy": {
         "frame": "The bar's room, as wide as its container, centering the bar. Docked: a strip on the background ground with a 1px border rule along its top, padded 12 across and 8 down. Floating: no look of its own.",
-        "bar": "A toolbar named words.label, the controls in a row 8 apart, centered, wrapping only where even the narrow room cannot hold them, never wider than the frame. Floating: on the popup's look (parts/select's popup: popover ground and ink, a 1px border-strong edge, elevation-pop), fully round, padded 6. Docked: no look of its own.",
+        "bar": "The bar's surface, its tray over its toolbar 6 apart. The toolbar is named words.label, the controls in a row 8 apart, centered, wrapping only where even the narrow room cannot hold them, never wider than the frame. Floating: on the popup's look (parts/select's popup: popover ground and ink, a 1px border-strong edge, elevation-pop), padded 6, fully round; while the tray is open its corners are half a control and its pad (density.control-lg / 2 + 6), round with the round controls inside it. Docked: no look of its own.",
         "control": "One round control, density.control-lg square, a ghost button (parts/button) on the muted ground: the microphone, the camera, share, reactions, raise hand and more. Each is named by its word, which its tooltip says above it; a toggle that holds a state is aria-pressed.",
         "microphone": "With onMutedChange: the microphone's toggle, named words.mute, or words.unmute while muted, a microphone (a struck microphone while muted). With microphones, joined to its devices chevron as one round control, the two halves flat where they meet. Its tooltip shows its key with shortcuts.",
         "camera": "With onCameraOffChange: the camera's toggle, named words.cameraOff, or words.cameraOn while off, a video camera (struck while off), joined to its chevron as the microphone is.",
-        "devices": "With microphones or cameras, while the room holds them: the chevron after the microphone or the camera, named words.microphoneDevices or words.cameraDevices, 24 wide (32 below md) and as tall as a control, an up chevron 14; in the critical tone while its toggle is. Pressed, it opens a menu above it (parts/dropdown-menu) of each device list under its heading, the chosen device checked as a radio item, lists set apart by separators.",
+        "devices": "With microphones or cameras, while the room holds them: the chevron after the microphone or the camera, named words.microphoneDevices or words.cameraDevices, 24 wide (32 below md) and as tall as a control, an up chevron 14; in the critical tone while its toggle is. Pressed, it opens a menu above it, menuOffset clear of the bar and cornered as the open bar is, padded 8 (parts/dropdown-menu) of each device list under its heading, the chosen device checked as a radio item, lists set apart by separators.",
         "share": "With onSharingChange, in a wide room: words.share, a screen with an arrow, pressed while sharing.",
-        "reactions": "With onReact: words.reactions, a smile with a plus, pressed while the reaction bar is open. Pressed, it stands the reaction bar (parts/reaction-bar, unframed) in a popover above it, padded 4; a reaction given goes to onReact.",
+        "reactions": "With onReact: words.reactions, a smile with a plus, pressed and expanded while the tray is open, which it controls (aria-controls). Pressed, it opens or closes the tray; a reaction given goes to onReact.",
         "hand": "With onHandRaisedChange, in a wide room: words.raiseHand, a hand, pressed while raised.",
-        "more": "While there is something to hold: words.more, an ellipsis, opening a menu above it of the device lists moved there (words.microphone, words.camera, as submenus), share and raise hand as check items, a separator, then the app's rows (check items while they toggle, with their icons).",
+        "more": "While there is something to hold: words.more, an ellipsis, opening a menu above it (menuOffset clear of the bar, cornered as the open bar is, padded 8) of the device lists moved there (words.microphone, words.camera, as submenus), share and raise hand as check items, a separator, then the app's rows (check items while they toggle, with their icons).",
         "leave": "With onLeave: the bar's last control, words.leave, a phone hung up on the critical ground; in a wide room a pill holding the icon and words.leave, 16 in at the sides; otherwise round with the icon alone.",
-        "tooltip": "Each control's name above it in the library's tooltip (parts/tooltip), with its key caps after it for the microphone and the camera while shortcuts are bound."
+        "tooltip": "Each control's name above it in the library's tooltip (parts/tooltip), with its key caps after it for the microphone and the camera while shortcuts are bound.",
+        "tray": "While the reactions are open: the reaction bar (parts/reaction-bar, unframed) in the bar's own surface, over its controls and centered, so the bar grows upward rather than a popover standing over the call. Focus goes to its first reaction; Escape there closes it with focus back on the reactions toggle, and so does a press outside the bar. Its full list (parts/emoji-picker's popover) opens above it menuOffset clear of the bar, cornered as the open bar is."
     },
     "standsOn": {
         "default": "background",
@@ -113,7 +114,7 @@
             "padX": 6,
             "padY": 6,
             "gap": 8,
-            "note": "The pad only when floating; the gap at both placements. Fully round (rounded-full): no corner role, half its height."
+            "note": "The pad only when floating; the gap (between the controls) at both placements. Fully round (rounded-full) while the tray is closed; while it is open, corners of density.control-lg / 2 + 6."
         },
         "control": {
             "height": "density.control-lg",
@@ -140,11 +141,7 @@
             "note": "In a wide room a pill as wide as its icon and words.leave, 6 apart, padded 16; otherwise a circle density.control-lg square with the icon alone.",
             "gap": 6
         },
-        "reactionsPopover": {
-            "padX": 4,
-            "padY": 4,
-            "note": "The popover holding the reaction bar, as wide as the bar, never wider than the window less 16."
-        }
+        "tray": {"gap": 6, "note": "Between the tray and the controls, inside the bar's surface."}
     },
     "layout": {
         "midRoom": {
@@ -155,7 +152,10 @@
             "value": 416,
             "note": "Below this width (26rem), the device lists move into more as submenus too, and Leave is round with its icon alone, as below midRoom."
         },
-        "popoverEdge": {"value": 8, "note": "The reaction bar's popover keeps this far from the window's edges."}
+        "menuOffset": {
+            "value": 12,
+            "note": "The devices and more menus and the reactions' full list stand this far above the bar, clear of its pad and edge."
+        }
     },
     "states": {
         "rest": {
@@ -201,7 +201,7 @@
                 "ground": "popover",
                 "edge": "border-strong",
                 "ink": "popover-foreground",
-                "note": "Floating: the popup's look, fully round, elevation-pop under it. Docked, no ground, edge or shadow of its own."
+                "note": "Floating: the popup's look, elevation-pop under it, fully round, or cornered round with its controls while the tray is open. Docked, no ground, edge or shadow of its own."
             }
         },
         "control": {
@@ -231,12 +231,12 @@
     "keyboard": [
         {
             "keys": ["ArrowLeft", "ArrowRight"],
-            "does": "Moves to the bar's control before or after, each devices chevron included; it stops at the first and the last, as every list of choices does. A key from the reaction bar or a menu standing over the bar is theirs.",
+            "does": "Moves to the bar's control before or after, each devices chevron included; it stops at the first and the last, as every list of choices does. A key from the tray's reaction bar or a menu over the bar is theirs.",
             "when": "a control of the bar has focus"
         },
         {
             "keys": ["Enter", "Space"],
-            "does": "Presses the control: turns a toggle, opens a devices menu, the reaction bar or more, or leaves.",
+            "does": "Presses the control: turns a toggle, opens a devices menu, the tray or more, or leaves.",
             "when": "a control of the bar has focus"
         },
         {
@@ -251,8 +251,8 @@
         },
         {
             "keys": ["Escape"],
-            "does": "Closes the open menu or the reaction bar, focus back on the control that opened it.",
-            "when": "a menu or the reaction bar of the bar is open"
+            "does": "Closes the open menu or the reactions' tray, focus back on the control that opened it.",
+            "when": "a menu or the tray of the bar is open"
         }
     ],
     "words": {
@@ -302,7 +302,7 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "The room is measured with a ResizeObserver on the frame's own box, in rem of the root's font size; a box not laid out yet (0 wide) keeps the room it had, so a server drawing is the wide one.",
-            "The devices and more menus are Base UI's Menu (parts/dropdown-menu) and the reaction bar's popover Base UI's Popover, opening on top; they take Escape and a press outside and put focus back on the trigger.",
+            "The devices and more menus are Base UI's Menu (parts/dropdown-menu), opening on top; they take Escape and a press outside and put focus back on the trigger. The tray is the bar's own: a pointerdown outside the bar (and outside the full list's popover) closes it.",
             "The keys are bound through useShortcuts (inFields 'inputs'), so the shortcuts dialog lists them; Mod is Cmd on a Mac and Ctrl elsewhere, written as the device writes keys."
         ]
     },

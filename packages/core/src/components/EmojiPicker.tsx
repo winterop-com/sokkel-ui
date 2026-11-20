@@ -529,6 +529,8 @@ export interface EmojiPickerPopoverProps extends Omit<EmojiPickerProps, 'onClose
     onOpenChange?: (open: boolean) => void
     side?: PopoverContentProps['side']
     align?: PopoverContentProps['align']
+    /** How far the picker stands from what it opens beside. */
+    sideOffset?: PopoverContentProps['sideOffset']
     /** Closes the picker once an emoji is picked; off to pick several in a row. */
     closeOnPick?: boolean
     className?: string
@@ -547,6 +549,7 @@ export function EmojiPickerPopover({
     onOpenChange,
     side = 'top',
     align = 'start',
+    sideOffset,
     closeOnPick = true,
     onPick,
     className,
@@ -567,6 +570,7 @@ export function EmojiPickerPopover({
                 anchor={anchor}
                 side={side}
                 align={align}
+                sideOffset={sideOffset}
                 initialFocus={false}
                 collisionPadding={8}
                 aria-label={picker.words?.label ?? label}
