@@ -1,0 +1,42 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "An escaped ==marker== is two equals signs, as is ==this==, and ==this== too."
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "[!constructor] Not a callout\nA marker no kind names leaves the quote a quote."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "[!toString]\nNor this one."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

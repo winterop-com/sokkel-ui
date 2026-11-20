@@ -278,6 +278,53 @@ function spanHighlights(parent: MarkdownNode) {
     for (const child of kids) if (!OWN_WORDS.has(child.type)) spanHighlights(child)
 }
 
+/** What an escaped `=` stands as while highlights are read, so `\=\=` never opens or closes one. */
+const ESCAPED_EQUALS = '\uFDD0'
+
+/**
+ * Each `=` written escaped as `\=` in a text node, swapped for `ESCAPED_EQUALS`: the parse drops the
+ * backslash, so the written text is read beside the node's words. False when the text already holds
+ * the stand-in, and nothing is swapped.
+ */
+function markEscapes(tree: MarkdownNode, source: string): boolean {
+    if (!source.includes('\\=') || source.includes(ESCAPED_EQUALS)) return false
+    for (const { node } of nodesOf(tree)) {
+        if (node.type !== 'text' || node.value === undefined) continue
+        const at = node.position as { start?: { offset?: number }; end?: { offset?: number } } | undefined
+        const from = at?.start?.offset
+        const to = at?.end?.offset
+        if (from === undefined || to === undefined) continue
+        const written = source.slice(from, to)
+        if (!written.includes('\\=')) continue
+        const value = node.value
+        let out = ''
+        let k = 0
+        // The words and the written text side by side: an escape is a backslash before the word's
+        // character; any other written character not in the words (a quote's `>`, an indent) is passed.
+        for (let i = 0; i < written.length && k < value.length; i += 1) {
+            if (written[i] === '\\' && written[i + 1] === value[k] && /[!-/:-@[-`{-~]/.test(value[k])) {
+                out += value[k] === '=' ? ESCAPED_EQUALS : value[k]
+                i += 1
+                k += 1
+            } else if (written[i] === value[k]) {
+                out += value[k]
+                k += 1
+            }
+        }
+        node.value = out + value.slice(k)
+    }
+    return true
+}
+
+/** Each stand-in for an escaped `=` back as the `=` it is, in a node's words and in a link's fields. */
+function unmarkEscapes(tree: MarkdownNode) {
+    for (const { node } of nodesOf(tree)) {
+        for (const [key, field] of Object.entries(node)) {
+            if (typeof field === 'string' && field.includes(ESCAPED_EQUALS)) node[key] = field.replaceAll(ESCAPED_EQUALS, '=')
+        }
+    }
+}
+
 /** Each `==words==` as a highlight: within one text first, then through inline nodes. */
 function highlights(tree: MarkdownNode) {
     rewrite(tree, (child) => {
@@ -398,7 +445,8 @@ function callouts(tree: MarkdownNode) {
         const text = first?.type === 'paragraph' ? first.children?.[0] : undefined
         const marker = text?.type === 'text' ? CALLOUT.exec(text.value ?? '') : null
         const named = marker === null ? undefined : marker[1].toLowerCase()
-        const kind = named === undefined ? undefined : CALLOUT_MARKERS[named]
+        // Only the markers named, never a word every object has (`constructor`, `toString`).
+        const kind = named !== undefined && Object.hasOwn(CALLOUT_MARKERS, named) ? CALLOUT_MARKERS[named] : undefined
         if (first === undefined || text === undefined || marker === null || named === undefined || kind === undefined) return undefined
         text.value = (text.value ?? '').slice(marker[0].length)
         let title = takeTitle(first)
@@ -548,9 +596,12 @@ export function parseTree(content: string, rules: ParseRules): MarkdownTree {
     // Parts first, so a part's marker is never dropped as a comment; links before highlights, so a
     // link's own words are never read for `==` (a highlight may hold a link); callouts last, from
     // what the rest left of each quote.
+    // Escapes are read while each text still has its place in the text written.
+    const escaped = markEscapes(tree, text)
     partsAndComments(tree, rules.partMarker)
     if (rules.wikiLinks) linksAndTags(tree, rules.tags)
     highlights(tree)
+    if (escaped) unmarkEscapes(tree)
     callouts(tree)
     clean(tree, rules.positions)
     if (front !== undefined) {
