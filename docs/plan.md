@@ -235,7 +235,10 @@ links, focus, the chosen place), so its hovers and heads stay gray. Phosphor is 
 black screen in the code face, with square corners and heads in its own green, and dark green ink
 on a pale green paper by day; phosphor-bright turns it up to bright green on pure black, with
 stronger lines. Tray sets light cards on a gray tray with a forest green accent, its rail and top
-bar a pale blue by day and a deep blue strip by night.
+bar a pale blue by day and a deep blue strip by night. Darkroom is for a dark, red-lit room: red ink
+on near-black, low in glare, with nothing blue-bright, its running and track colors dimmed teals and
+greens that still tell the affiliations apart (a token test holds every theme's track colors apart),
+and deep red on a dim warm paper by day.
 
 Applying and keeping the look is the library's too, never an app's: `useAppearance` keeps the theme,
 scheme, density, corners, typeface and motion in `localStorage` and wears them on `<html>`,
@@ -1291,6 +1294,20 @@ fitting its layers) and `MapCompass` for a map made with `rotate`. Their arithme
 on a sphere of the earth's mean radius, which is within half a percent of the ellipsoid at the
 distances a console measures. What a tracking domain adds beyond drawing (symbol sets, grid
 references, feed formats) belongs in a domain add-on, never here.
+
+The panels around such a map need no engine, so they are the core's, for a fleet, an incident board
+or deliveries as much as a harbor watch. `TrackGlyph` draws a track as the map does, from the same
+outlines (`lib/tracks`) in the same tokens. `Freshness` says how long ago a reading came ("Live",
+"3 s ago"), quieter once stale and in the warning tone once lost, every mark on one shared clock
+(`useClock`, which `RelativeTime` reads too), so a list of a thousand runs one timer. `TrackCard` is
+one track densely, its affiliation a chip that is a menu where it can be changed. `TrackRoster` is
+not a list of its own: it is a `DataTable` list whose rows are unframed track cards, grouped under
+the affiliations with their counts, searched, filtered from a `FilterBar` and sorted from the bar's
+menu, which a table without column heads offers as its grid does; a track picked on the map comes
+into view through `reveal` without taking the focus. `TaskCard` is a task's state, elapsed time,
+the line between who does it and to what, and its actions. `PlaybackTimeline` looks back in time
+over an activity strip in plain SVG, on the same axis `RunTimeline` draws (`lib/time-axis` and its
+private ticks and lines), so there is one way to draw a time axis.
 
 ## Graphs
 

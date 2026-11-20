@@ -142,3 +142,37 @@ describe('the theme files', () => {
         expect(resolve('@winterop-com/sokkel-ui/themes.css')).toBe(join(styles, 'themes.css'))
     })
 })
+
+/** An oklch color as a point in OKLab, or null for a color written another way. */
+function oklab(value: string | undefined): [number, number, number] | null {
+    const match = value === undefined ? null : /^oklch\(([\d.]+) ([\d.]+) ([\d.]+)\)$/.exec(value)
+    if (match === null) return null
+    const [l, c, h] = [Number(match[1]), Number(match[2]), (Number(match[3]) * Math.PI) / 180]
+    return [l, c * Math.cos(h), c * Math.sin(h)]
+}
+
+/** The least two affiliations' colors may lie apart in OKLab for a reader to tell their tracks apart on a map. */
+const TRACKS_APART = 0.1
+
+describe('the track colors', () => {
+    const base = tokens.themes.tidevann
+    const affiliations = ['friend', 'hostile', 'neutral', 'unknown', 'pending']
+    for (const [theme, schemes] of Object.entries(tokens.themes)) {
+        for (const scheme of ['light', 'dark'] as const) {
+            it(`keep ${theme} ${scheme}'s affiliations apart`, () => {
+                const colors = { ...base[scheme], ...schemes[scheme] }
+                const close: string[] = []
+                for (const [index, one] of affiliations.entries()) {
+                    for (const other of affiliations.slice(index + 1)) {
+                        const a = oklab(colors[`track-${one}`])
+                        const b = oklab(colors[`track-${other}`])
+                        if (a === null || b === null) continue
+                        const apart = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+                        if (apart < TRACKS_APART) close.push(`${one} and ${other}: ${apart.toFixed(3)}`)
+                    }
+                }
+                expect(close).toEqual([])
+            })
+        }
+    }
+})

@@ -19,14 +19,16 @@ function Picker({
     full,
     list = false,
     cards = false,
+    start = START,
     words,
 }: {
     full: boolean
     list?: boolean
     cards?: boolean
+    start?: ThemeSettings
     words?: Partial<ThemePickerWords>
 }) {
-    const [settings, setSettings] = useState(START)
+    const [settings, setSettings] = useState(start)
     return (
         <div
             className={
@@ -63,6 +65,15 @@ export const ThemeList: StoryObj = { name: 'Theme list', render: () => <Picker f
 
 /** The themes as cards (`themeCards`), each a small page in its own theme's background, card, lines, text and brand. */
 export const ThemeCards: StoryObj = { name: 'Theme cards', render: () => <Picker full={false} cards /> }
+
+/**
+ * Darkroom chosen, for a console in a dark, red-lit room: red ink on near-black with nothing
+ * blue-bright, its card the first of the cards in its own look.
+ */
+export const Darkroom: StoryObj = {
+    render: () => <Picker full={false} cards start={{ ...START, theme: 'darkroom' }} />,
+    globals: { look: 'darkroom', theme: 'dark' },
+}
 
 /**
  * The choices as settings rows (`useThemeSettings`), as a settings dialog's appearance section lists

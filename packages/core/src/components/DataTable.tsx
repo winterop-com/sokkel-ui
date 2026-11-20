@@ -200,6 +200,8 @@ export type DataAction =
 export interface DataReveal {
     key: string
     open?: boolean
+    /** `false` scrolls to the row and makes it active without moving the focus, for a row picked elsewhere, such as on a map. */
+    focus?: boolean
 }
 
 export interface DataSort {
@@ -1330,7 +1332,7 @@ export interface DataTableProps<T> {
     /**
      * Brings a row into view, such as one arriving from a search result: the branches above it
      * open, its group unfolds, its page shows, and it is scrolled to and made the active row with
-     * the focus on the table. `open` opens the row itself too, its detail or its children. As
+     * the focus on the table (`focus: false` leaves the focus where it is). `open` opens the row itself too, its detail or its children. As
      * `CodeEditor`'s `reveal`, each new object reveals once, so hold it (in state, or a constant)
      * rather than writing it inline; a key no row has waits for the rows to bring it.
      */
@@ -1546,7 +1548,7 @@ export interface DataTableProps<T> {
     empty?: ReactNode
     /** Tints the row under the pointer. */
     hover?: boolean
-    /** Draws the column names over the rows; off for a listing whose rows say what they are. */
+    /** Draws the column names over the rows; off for a listing whose rows say what they are, which then sorts from a menu in its bar. */
     columnHeads?: boolean
     /** Gathers the top-level rows under group heads, by a field of the row or a key made from it. */
     groupBy?: (keyof T & string) | ((row: T) => string)
@@ -2549,7 +2551,8 @@ export function DataTable<T>({
     // The bar over the rows, with the selection, the search, the tools, the count and the menus of columns and sorts.
     const barShown = selection.size > 0 || (bar ?? (!list || searched || toolbar !== undefined))
     const columnMenu = barShown && !gridView && (hideable.length > 0 || reorder)
-    const sortMenu = barShown && gridView && sortable.length > 0
+    // Cards, and rows drawn without their heads, sort from a menu in the bar, having no heads to sort from.
+    const sortMenu = barShown && (gridView || !columnHeads) && sortable.length > 0
     // Base UI's checkbox and the menus' lists are fetched after the first paint, so they are here by the time a box is
     // pressed or a menu opens; until then a selection box is drawn the same without it.
     const later = useDeferred(selectable || columnMenu || sortMenu || !!reveal)
@@ -2559,6 +2562,7 @@ export function DataTable<T>({
     // to and made active. Each reveal is done once.
     const revealed = useRef<unknown>(undefined)
     const revealing = useRef<string>(undefined)
+    const revealFocus = useRef(true)
     useEffect(() => {
         const found = reveal && reveal !== revealed.current && later?.rowPath(rows, rowKey, treeKids, reveal.key)
         if (!found) return
@@ -2568,6 +2572,7 @@ export function DataTable<T>({
         const into = groupOf?.(found.top)
         if (into !== undefined && folded.has(into)) setFolded(new Set([...folded].filter((key) => key !== into)))
         revealing.current = reveal.key
+        revealFocus.current = reveal.focus !== false
         // oxlint-disable-next-line react-hooks/exhaustive-deps -- a reveal waits for its code and its row, then is done once
     }, [reveal, later, rows, treeKids])
     useEffect(() => {
@@ -2577,7 +2582,7 @@ export function DataTable<T>({
         const on = pageOfRow(all, at, pageSize, tree)
         if (paging === 'client' && on !== current) return setPage(on)
         revealing.current = undefined
-        gridBox.current?.focus({ preventScroll: true })
+        if (revealFocus.current) gridBox.current?.focus({ preventScroll: true })
         moveTo(flat.indexOf(all[at]))
     })
     // A list pins nothing and sets its columns apart with a gap; a table pins its first and last columns and pads its cells.
