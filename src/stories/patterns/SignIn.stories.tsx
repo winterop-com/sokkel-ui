@@ -221,8 +221,8 @@ export const PageScheme: StoryObj = {
 }
 
 /**
- * In a desktop window with its title bar hidden: the brand pane drags the window, outlined here,
- * and the window's buttons sit over its corner, clear of the mark; on a narrow window the bar
+ * In a desktop window with its title bar hidden: the brand pane drags the window (outlined with the
+ * toolbar's Drag regions on), and the window's buttons sit over its corner, clear of the mark; on a narrow window the bar
  * over the form leaves them room at its start.
  */
 export const Desktop: StoryObj = {

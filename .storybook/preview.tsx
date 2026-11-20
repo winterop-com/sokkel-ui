@@ -53,14 +53,14 @@ const withFrame: Decorator = (Story, context) => {
 
 /**
  * `desktopWindow: true` draws a story as a desktop window with its title bar hidden shows it: the
- * window's three buttons over the top-left corner, where macOS draws them, and every strip that
- * moves the window (`data-window-drag`) outlined, so the room left for the buttons and the drag
- * region can be seen. It changes nothing in the components.
+ * window's three buttons over the top-left corner, where macOS draws them. With the toolbar's Drag
+ * regions on, every strip that moves the window (`data-window-drag`) is outlined, so the drag region
+ * can be seen. It changes nothing in the components.
  */
 const withDesktopWindow: Decorator = (Story, context) => {
     if (context.parameters.desktopWindow !== true) return <Story />
     return (
-        <div data-desktop-window className="contents">
+        <div data-desktop-window data-show-drag={context.globals.dragRegions === 'on' ? '' : undefined} className="contents">
             <Story />
             <div aria-hidden className="desktop-window-buttons">
                 <span />
@@ -180,8 +180,28 @@ const preview: Preview = {
                 dynamicTitle: true,
             },
         },
+        dragRegions: {
+            description: 'Drag regions: outline what moves a desktop window, in the desktop window stories',
+            toolbar: {
+                title: 'Drag regions',
+                icon: 'outline',
+                items: [
+                    { value: 'off', title: 'Drag regions hidden' },
+                    { value: 'on', title: 'Drag regions outlined' },
+                ],
+                dynamicTitle: true,
+            },
+        },
     },
-    initialGlobals: { theme: 'dark', look: 'tidevann', density: 'regular', corners: 'theme', typeface: 'theme', motion: 'system' },
+    initialGlobals: {
+        theme: 'dark',
+        look: 'tidevann',
+        density: 'regular',
+        corners: 'theme',
+        typeface: 'theme',
+        motion: 'system',
+        dragRegions: 'off',
+    },
     decorators: [withDesktopWindow, withFrame, withLook],
 }
 
