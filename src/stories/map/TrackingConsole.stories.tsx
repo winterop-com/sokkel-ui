@@ -14,6 +14,7 @@ import { TrackCard } from '@winterop-com/sokkel-ui/TrackCard'
 import { TrackGlyph } from '@winterop-com/sokkel-ui/TrackGlyph'
 import { TrackRoster, type TrackAffiliation, type TrackRosterItem } from '@winterop-com/sokkel-ui/TrackRoster'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { DARK_BASEMAP } from '@winterop-com/sokkel-ui-maps/basemap'
 import { formatBearing, formatCoordinates } from '@winterop-com/sokkel-ui-maps/geodesy'
 import { MapCoordinates } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
 import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
@@ -206,11 +207,13 @@ function Console() {
                     second={
                         <MapView
                             label="Harbor watch"
-                            defaultBasemap={WORLD_BASEMAP}
-                            basemaps={[WORLD_BASEMAP]}
+                            defaultBasemap={DARK_BASEMAP}
+                            basemaps={[DARK_BASEMAP]}
+                            fallbackBasemap={WORLD_BASEMAP}
                             camera={WATCH_CAMERA}
                             selected={selected}
                             onSelectedChange={(id) => setSelected(id)}
+                            flyToSelected
                             className="h-full"
                         >
                             <TrackLayer id="tracks" tracks={shown} />
@@ -236,9 +239,10 @@ const meta: Meta = { title: 'Patterns/Tracking console', globals: { theme: 'dark
 export default meta
 
 /**
- * A tracking console from the library's parts: the harbor watch's tracks on the map, the roster
- * left (grouped by affiliation, sharing the map's selection), the picked track and the tasks in the
- * side panel, and the playback timeline at the foot, which takes the map, the roster and the cards
- * back in time and returns to live.
+ * A tracking console from the library's parts: the harbor watch's tracks on the dark street map, the
+ * roster left (grouped by affiliation, sharing the map's selection, which the map flies to when the
+ * track picked there is out of view), the picked track and the tasks in the side panel, and the
+ * playback timeline at the foot, which takes the map, the roster and the cards back in time and
+ * returns to live.
  */
 export const Watch: StoryObj = { name: 'Console', render: () => <Console /> }

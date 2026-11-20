@@ -1276,6 +1276,26 @@ or its style or every tile fails), so with `WORLD_BASEMAP` a map still shows the
 network. The `export` control, or `handle` for an app's own menu, saves the map as drawn as a PNG
 with the basemap's credits in its corner, as a chart frame exports.
 
+The camera moves the way a hand expects. A drag let go of glides on at the speed it had and slows to
+a stop (`momentum`). `flyToSelected` flies to the feature a selection made outside the map names,
+such as a row picked in a list beside it: a short way is eased, a long way flown, zooming out over
+the ground between, and a feature in view already is left where it is. `pitchWithZoom` leans the map
+toward the horizon close in, level from afar. The `projection` control rolls the flat map up into the
+globe and back out of it, the camera drawing back until the globe is seen whole and returning to the
+zoom it had; the globe glows round its rim, catches the sun on one side, and stands before stars
+that drift as it turns and fade as it grows. Under `prefers-reduced-motion` the camera jumps where it
+would fly and the map changes shape at once. What a layer writes in the overlay is measured in the
+frame the map drew, so names stay on their points through a flight, and a place on the far side of
+a globe is written nowhere. `PointLayer` with `glow` draws
+its points as lights, and with `label` names them beside them: as many names as fit, the largest
+first, the one under the cursor and the selected one always.
+
+The stories that watch a coast draw it on the dark street map, so its shores, roads and place names
+move under the tracks. The suites serve its style, tiles, fonts and sprites from `e2e/tiles`, which
+`e2e/record-tiles.ts` records by opening each story at every size the suites draw it at, and for the
+areas it names a step closer in; a story therefore opens on ground that is recorded, and frames what
+it shows so that it needs no more tiles than it must.
+
 ## Tracks on a map
 
 A map that watches moving things (vessels, aircraft, vehicles, sensors) draws them with `TrackLayer`:

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useMemo, useState, type ReactNode } from 'react'
 
+import { DARK_BASEMAP } from '@winterop-com/sokkel-ui-maps/basemap'
 import { CoverageLayer } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
 import { formatBearing, formatCoordinates, parseCoordinates } from '@winterop-com/sokkel-ui-maps/geodesy'
 import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
@@ -38,7 +39,7 @@ import {
     watchAt,
 } from './tracks'
 
-/** A dark map of the coast with no tile server: the countries drawn from the geometry the maps package carries. */
+/** The dark street map of the coast: its shores, roads and place names, and the countries from the geometry the maps package carries wherever its tiles cannot be had. */
 function Watch({
     title,
     description,
@@ -60,8 +61,9 @@ function Watch({
         <Page title={title} period={description}>
             <MapView
                 label={title}
-                defaultBasemap={WORLD_BASEMAP}
-                basemaps={[WORLD_BASEMAP]}
+                defaultBasemap={DARK_BASEMAP}
+                basemaps={[DARK_BASEMAP]}
+                fallbackBasemap={WORLD_BASEMAP}
                 camera={camera}
                 rotate={rotate}
                 selected={selected}
@@ -113,8 +115,11 @@ function Plain({ trails }: { trails: boolean }) {
     )
 }
 
-/** The camera on southern Norway and the North Sea, where the flights are. */
-const FLIGHTS_CAMERA: MapCamera = { center: [7.2, 59], zoom: 4.6 }
+/**
+ * The camera on southern Norway and the North Sea, where the flights are, framed on the tiles the
+ * harbor watch draws, so the flight stories need none recorded of their own.
+ */
+const FLIGHTS_CAMERA: MapCamera = { center: [7.2, 59.9], zoom: 5.3 }
 
 /** Each altitude band's color and name, from the ground up. */
 const BAND_COLORS: Record<AltitudeBand, string> = {
@@ -180,8 +185,9 @@ function InView() {
         >
             <MapView
                 label="Flight watch"
-                defaultBasemap={WORLD_BASEMAP}
-                basemaps={[WORLD_BASEMAP]}
+                defaultBasemap={DARK_BASEMAP}
+                basemaps={[DARK_BASEMAP]}
+                fallbackBasemap={WORLD_BASEMAP}
                 camera={FLIGHTS_CAMERA}
                 onViewChange={setView}
                 className="flex-1"
