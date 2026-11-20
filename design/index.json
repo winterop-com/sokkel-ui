@@ -276,6 +276,7 @@
         {"id": "composer", "file": "parts/composer.json", "status": "stable"},
         {"id": "message-composer", "file": "parts/message-composer.json", "status": "stable"},
         {"id": "call-bar", "file": "parts/call-bar.json", "status": "stable"},
+        {"id": "call-tile", "file": "parts/call-tile.json", "status": "stable"},
         {"id": "letter", "file": "parts/letter.json", "status": "stable"},
         {"id": "detail-pane", "file": "parts/detail-pane.json", "status": "stable"},
         {"id": "board-item-panel", "file": "parts/board-item-panel.json", "status": "stable"},

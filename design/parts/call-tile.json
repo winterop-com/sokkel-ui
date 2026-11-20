@@ -1,0 +1,80 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "call-tile",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b615777"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "One person on a call: a 16:9 tile on the call's dark ground, their video filling it or their picture centered and sized to the tile, their name at its foot on a dark chip, with a struck microphone while muted and a hand while raised. Tiles sit in a grid on the call's picture, the call bar (parts/call-bar) floating over its foot.",
+    "sources": {
+        "sokkel-ui": ["packages/core/src/components/CallTile.tsx", "packages/core/src/components/PersonAvatar.tsx"]
+    },
+    "anatomy": {
+        "container": "The tile: 16:9, rounded by radius-surface, its content clipped to it, on terminal-foreground at 10 percent.",
+        "picture": "Without video: the person's picture (or their initials on their color, as PersonAvatar draws them), round, centered, 16 percent of the tile's width (28 of its height), never under 64 nor over 160; the initials grow with it, from text.page to text.display.",
+        "video": "With video (children): it fills the tile, cropped to it, in place of the picture.",
+        "name": "At the tile's foot, 8 in from its start and its foot: the name on a dark chip, rounded by radius-control, padded 6 across, text.help, cut with an ellipsis before the tile's edge; a struck microphone (words.muted) while muted and a hand (words.handRaised) while raised before the name, 14 square, 4 apart."
+    },
+    "standsOn": {"default": "terminal"},
+    "options": {
+        "name": {"type": "text", "does": "The person's name, at the tile's foot and their picture's name."},
+        "image": {"type": "text", "does": "Their picture's address; without one, their initials on their color."},
+        "muted": {"type": "boolean", "default": false, "does": "A struck microphone before the name."},
+        "handRaised": {"type": "boolean", "default": false, "does": "A hand before the name."},
+        "children": {"type": "node", "does": "Their video, filling the tile in place of the picture."}
+    },
+    "sizes": {
+        "picture": {
+            "width": 64,
+            "height": 64,
+            "note": "The least: 16 percent of the tile's width, never under 64 nor over 160 (clamp(4rem, 16cqw, 10rem))."
+        },
+        "name": {
+            "padX": 6,
+            "gap": 4,
+            "icon": 14,
+            "text": "text.help",
+            "radius": "radius-control",
+            "note": "8 in from the tile's start and foot."
+        }
+    },
+    "layout": {
+        "pictureShare": {"value": 16, "note": "The picture's width in percent of the tile's width, between 64 and 160."},
+        "pictureMax": {"value": 160, "note": "The picture never grows past this."},
+        "nameInset": {"value": 8, "note": "The name chip's distance from the tile's start and foot."}
+    },
+    "states": {"rest": {"means": "The tile drawn."}},
+    "pieces": {
+        "container": {"rest": {"ground": "terminal-foreground/10"}},
+        "name": {"rest": {"ground": "terminal/70", "ink": "terminal-foreground", "text": "text.help"}}
+    },
+    "keyboard": [],
+    "words": {"muted": "Muted", "handRaised": "Hand raised"},
+    "messages": {
+        "muted": {"id": "callTile.muted", "en": "Muted"},
+        "handRaised": {"id": "callTile.handRaised", "en": "Hand raised"}
+    },
+    "appText": {"name": "The person's name."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The picture is sized by a container query on the tile (16cqw), so it follows the tile's own width, never the window's."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no call tile."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}
