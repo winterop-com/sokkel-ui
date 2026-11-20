@@ -128,6 +128,19 @@ release and empties it.
   GeoLite2 when `scripts/geolite.sh` has downloaded it (read in Node with `mmdb-lib`, the example's
   own dependency); this machine's own connections through `lsof` in its Electron shell. Story
   Apps/Network watch.
+- `@winterop-com/sokkel-ui-tracking/simulate`: simulated feeds for an example, a story or a test,
+  each worked out from a seed and a simulated moment and written in the shape its real feed has, so
+  it is read through the same readers and a moment played back is what it was live.
+  `simulateFlights` answers as readsb's v2 API does, from a timetable between real cities with each
+  flight's phases (`flightsAt`, `flightRoute`, `flightTrails`); `simulateCoast` gives the picture of
+  a coast whose contacts appear, are classified, go stale, are lost and leave, its vessels written
+  as AIS sentences (`simulateAis`, `encodeAisPosition`, `encodeAisStatic`) and decoded by
+  `createAisDecoder`, with `coastEvents`, `coastActivity` and the contacts themselves;
+  `createNetworkSimulation` moves a machine's connections on a second at a time as
+  `ConnectionRecord`s (`simulateNetwork`, `networkHosts`, `networkPlace`); and `createSimClock`
+  plays a simulated moment at a multiple of real time, pauses and seeks.
+- The harbor, flight and network watch examples read the tracking add-on's simulation in place of
+  their own, and the harbor watch's clock is its `createSimClock`.
 
 ## Changed
 

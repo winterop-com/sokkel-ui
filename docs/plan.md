@@ -1407,6 +1407,15 @@ functions and UTM and MGRS on WGS84, with the grid's exceptions over Norway and 
 `affiliation` the words an app translates, the order a list groups tracks in and the names of the
 color tokens a theme paints each affiliation with.
 
+Its `simulate` module gives a console something to read where there is no live feed: an example, a
+story, a test. Flights on a timetable between real cities, a coast whose vessels, aircraft and
+radars come and go, and a machine's network connections are each worked out from a seed and a
+simulated moment and written in the shape their real feed has (a readsb answer, AIS sentences,
+connection records), so they go through the same readers a live feed does, and a moment played back
+is the picture it was live. `createSimClock` is the clock they are read at: a moment that plays at a
+multiple of real time in whole ticks, pauses and seeks. The tracking examples read it in place of a
+simulation of their own.
+
 ## Terminals
 
 Their own package, `@winterop-com/sokkel-ui-terminal`, on xterm.js, so an app that shows no terminal

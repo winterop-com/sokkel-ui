@@ -1,6 +1,6 @@
 /**
- * The watch itself: it reads the source (the simulated machine every second, or this machine's own
- * connections through the Electron shell), gathers the records with the tracking package's flow
+ * The watch itself: it reads the source (the tracking add-on's simulated machine every second, or
+ * this machine's own connections through the Electron shell), gathers the records with its flow
  * tracker, keeps a snapshot of every reading for the last fifteen minutes so the pages can look
  * back, and hands each new snapshot to the alerts. The simulated machine starts with those fifteen
  * minutes already behind it, so the charts and the timeline open full.
@@ -16,13 +16,13 @@ import {
     type FlowTracker,
     type RemoteFlow,
 } from '@winterop-com/sokkel-ui-tracking/network'
+import { createNetworkSimulation, type NetworkSimulation } from '@winterop-com/sokkel-ui-tracking/simulate'
 
 import { forgetKnown, startAlerts, watchAlerts, type AlertWatch } from './alerts'
 import { known } from './collections'
 import { findGeo, networkBridge, type Geo } from './geo'
 import type { Prefs, SourceKind } from './model'
 import { builtinHosts, type Place } from './places'
-import { createSimulation, type Simulation } from './sim'
 
 /** What the pages read at one moment. */
 export interface Snapshot {
@@ -179,7 +179,7 @@ interface Running {
 }
 
 let geoFound: Promise<Geo> | undefined
-let simulation: { sim: Simulation; tracker: FlowTracker; places: Map<string, Place>; history: Snapshot[]; last: number } | undefined
+let simulation: { sim: NetworkSimulation; tracker: FlowTracker; places: Map<string, Place>; history: Snapshot[]; last: number } | undefined
 let running: Running | undefined
 let alertWatch: AlertWatch | undefined
 
@@ -196,7 +196,7 @@ async function simulated(geo: Geo) {
     if (simulation !== undefined) return simulation
     const hosts = await simulatedHosts(geo)
     const tracker = createFlowTracker({ window: 10 * SECOND, locate: (address) => hosts.places.get(address) })
-    const sim = createSimulation(hosts, NEWCOMER_AT)
+    const sim = createNetworkSimulation({ hosts, newcomerAt: NEWCOMER_AT })
     const history: Snapshot[] = []
     const now = Math.floor(Date.now() / SECOND) * SECOND
     alertWatch ??= await startAlerts()

@@ -1,9 +1,9 @@
 /**
  * AIS as a transponder sends it: the fields packed into bits, armored six to a character, and
- * wrapped in `!AIVDM` sentences with their NMEA checksums. The simulated feed writes its vessels
- * this way, so the page reads them through the tracking add-on's decoder as it would a real feed.
+ * wrapped in `!AIVDM` sentences with their NMEA checksums. The simulated coast writes its vessels
+ * this way, so they are read through `createAisDecoder` as a real feed is.
  */
-import { aisChecksum } from '@winterop-com/sokkel-ui-tracking/ais'
+import { aisChecksum } from '../ais'
 
 type Field = [value: number | string, width: number]
 
@@ -44,13 +44,11 @@ function armor(bits: string): { payload: string; fill: number } {
 /** The most payload characters one sentence carries. */
 const PER_SENTENCE = 60
 
-let sequence = 0
-
-/** A payload as one sentence, or as several fragments under one sequence id when it is long. */
-function sentences(payload: string, fill: number, channel = 'A'): string[] {
+/** A payload as one sentence, or as several fragments under the sequence id when it is long. */
+function sentences(payload: string, fill: number, sequence: number, channel = 'A'): string[] {
     const parts: string[] = []
     for (let at = 0; at < payload.length; at += PER_SENTENCE) parts.push(payload.slice(at, at + PER_SENTENCE))
-    const id = parts.length > 1 ? String((sequence = (sequence + 1) % 10)) : ''
+    const id = parts.length > 1 ? String(((sequence % 10) + 10) % 10) : ''
     return parts.map((part, index) => {
         const last = index === parts.length - 1
         const body = `AIVDM,${String(parts.length)},${String(index + 1)},${id},${channel},${part},${String(last ? fill : 0)}`
@@ -59,7 +57,7 @@ function sentences(payload: string, fill: number, channel = 'A'): string[] {
 }
 
 /** What a vessel reports of where it is and how it goes. */
-export interface AisReport {
+export interface AisPositionReport {
     mmsi: number
     lon: number
     lat: number
@@ -75,8 +73,8 @@ export interface AisReport {
     second: number
 }
 
-/** A class A position report (message type 1) as one sentence. */
-export function positionSentence(report: AisReport): string {
+/** A class A position report (message type 1) as one `!AIVDM` sentence. */
+export function encodeAisPosition(report: AisPositionReport): string {
     const { payload, fill } = armor(
         bitsOf([
             [1, 6],
@@ -97,7 +95,7 @@ export function positionSentence(report: AisReport): string {
             [0, 19],
         ]),
     )
-    return sentences(payload, fill)[0]
+    return sentences(payload, fill, 0)[0]
 }
 
 /** What a vessel says of itself: its name, callsign, type, size and where it is bound. */
@@ -116,8 +114,11 @@ export interface AisStaticReport {
     destination?: string
 }
 
-/** Static and voyage data (message type 5) as two sentences under one sequence id. */
-export function staticSentences(report: AisStaticReport): string[] {
+/**
+ * Static and voyage data (message type 5) as two `!AIVDM` sentences under one sequence id, 0 to 9,
+ * which tells a receiver the fragments of one message from another's sent at the same time.
+ */
+export function encodeAisStatic(report: AisStaticReport, sequence = 0): string[] {
     const bow = Math.round(report.length * 0.6)
     const port = Math.round(report.beam / 2)
     const { payload, fill } = armor(
@@ -145,5 +146,5 @@ export function staticSentences(report: AisStaticReport): string[] {
             [0, 1],
         ]),
     )
-    return sentences(payload, fill)
+    return sentences(payload, fill, sequence)
 }

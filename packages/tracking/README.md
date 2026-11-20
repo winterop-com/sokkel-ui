@@ -46,6 +46,7 @@ gives none, a track is `unknown`.
 | `/geo`         | `distance`, `bearing` and `destination` on a great circle; `toUtm`, `fromUtm`, `formatUtm`, `utmZone` and `latitudeBand`; `toMgrs` and `parseMgrs`                                                                                      |
 | `/network`     | `createFlowTracker`, which gathers connection records by remote host and by process, or lists each, with byte rates over a window; `flowTracks`, the located hosts as tracks and links from home; `addressScope` and the address checks |
 | `/affiliation` | `TRACKING_WORDS` and `TRACKING_PART`, `AFFILIATION_ORDER`, `compareAffiliation`, `sortByAffiliation`, `groupByAffiliation` and `AFFILIATION_TOKENS`                                                                                     |
+| `/simulate`    | Simulated feeds for an example, a story or a test, each from a seed and a moment: `simulateFlights`, `simulateAis` and `simulateCoast`, `createNetworkSimulation`, and `createSimClock`, the clock they are read at                     |
 
 ## Flights
 
@@ -90,6 +91,50 @@ its `metered` says whether its records carried byte counts at all, as a host rea
 `locate` is the app's own lookup of where an address is. Loopback, private, link-local, multicast
 and unspecified addresses are never located. Byte counts are each connection's running totals by
 default, or the bytes since its last record with `counters: 'delta'`.
+
+## Simulated feeds
+
+`/simulate` gives a console something to read where there is no live feed: an example, a story, a
+test or a demo. Each feed follows from a seed and a simulated moment and is written in the shape its
+real feed has, so it goes through the same readers, and a moment played back is the picture it was
+live.
+
+```ts
+import { parseReadsb } from '@winterop-com/sokkel-ui-tracking/adsb'
+import { createSimClock, simulateCoast, simulateFlights } from '@winterop-com/sokkel-ui-tracking/simulate'
+
+const clock = createSimClock({ start: Date.parse('2026-11-20T14:30:00Z'), speed: 30 })
+clock.subscribe(() => {
+    const aircraft = parseReadsb(simulateFlights(clock.get()))
+    const { tracks } = simulateCoast(1, clock.get())
+})
+```
+
+- **Flights.** `simulateFlights(at, { seed })` is a timetable between real cities round southern
+  Norway and the North Sea, as readsb's v2 API answers `/v2/point`: each flight rolls out, climbs,
+  cruises, descends and rolls in, and three light aircraft fly circuits. `flightsAt` gives the same
+  aircraft before the feed rounds them, with each one's cities and phase; `flightRoute(callsign)`
+  the cities a callsign flies between; and `flightTrails(at, { minutes })` where each was over the
+  minutes before.
+- **Vessels.** `simulateCoast(seed, at, judgments)` is the picture of a coast with three harbors:
+  the regular traffic going round its routes, and passing contacts that appear, are classified, fall
+  silent (stale, then lost) and go. The vessels are written as real AIS sentences
+  (`simulateAis(seed, at)`, or `encodeAisPosition` and `encodeAisStatic` for one report) and decoded
+  by `createAisDecoder`, the aircraft as a readsb answer, and the radars stand where they are.
+  `coastEvents` lists what happened over a stretch, `coastActivity` how busy it was, and
+  `coastContact`, `coastContacts` and `findCoastContact` give the contacts themselves.
+- **Network.** `createNetworkSimulation({ seed, hosts, newcomerAt })` is a machine of six processes
+  opening and closing connections; `tick(at)` moves it on a second and gives its connection table as
+  `ConnectionRecord`s with running byte totals, for `createFlowTracker`. `simulateNetwork` gives the
+  tables of a whole span at once. `networkHosts()` are the hosts it reaches, addresses on the
+  documentation networks only, and `networkPlace(address)` places each in a plain city.
+- **The clock.** `createSimClock({ start, speed })` stands at `start` and plays on at `speed` times
+  real time in whole ticks, a second apart unless `tick` says otherwise; `pause`, `play`, `seek` and
+  `setSpeed` hold it, move it and change its pace, and `get` and `subscribe` make it a store a
+  component reads.
+
+The flights and the coast are pure functions of the seed and the moment. The machine is moved on a
+second at a time, and one made from the same options does the same from its start.
 
 ## Grid references
 

@@ -43,6 +43,10 @@
         "./affiliation": {
             "types": "./dist/affiliation.d.ts",
             "import": "./dist/affiliation.js"
+        },
+        "./simulate": {
+            "types": "./dist/simulate.d.ts",
+            "import": "./dist/simulate.js"
         }
     },
     "publishConfig": {
