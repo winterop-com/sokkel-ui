@@ -4,7 +4,7 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -23,13 +23,23 @@
             "does": "Where it stands."
         }
     },
-    "sizes": {"button": {"height": "density.control-sm", "width": "density.control-sm", "radius": "radius-control"}},
+    "sizes": {
+        "button": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "radius": "radius-control",
+            "radiusMax": 12
+        }
+    },
     "states": {
         "rest": {"means": "The bearing shown."},
         "hover": {"means": "The pointer is over it.", "reached": "pointer over"}
     },
     "pieces": {
-        "button": {"rest": {"ground": "card", "edge": "border"}, "hover": {"ground": "hover"}},
+        "button": {
+            "rest": {"ground": "card", "edge": "border", "dark": {"edge": "input"}},
+            "hover": {"ground": "hover"}
+        },
         "needle": {"rest": {"ink": "critical"}}
     },
     "keyboard": [{"keys": ["Enter", "Space"], "does": "Turns the map back to north.", "when": "the button has focus"}],

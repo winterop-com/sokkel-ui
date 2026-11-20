@@ -18,10 +18,13 @@ import {
 } from './geodesy'
 import type { Bounds, LngLat } from './geometry'
 import {
+    LABEL_RANK,
     placeClear,
     state,
     useGeoJsonLayer,
+    useLabelBoxes,
     useProjectedPoints,
+    useTakenLabels,
     type PlacedText,
     type PixelBox,
     type PreparedData,
@@ -186,9 +189,9 @@ export interface LinkLayerProps {
  * Lines between two positions, each in its tone over a casing in the card color: straight on the
  * map, or along the great circle, solid or dashed, and with `measure` a chip midway saying the
  * distance and the bearing from where it starts, as the ruler's does, unless it would cover another
- * link's chip (the selected link's is placed first). All the links are one source
- * and three style layers however many there are, and a chip is written only while its middle is in
- * view, so hundreds of links stay cheap. The link under the pointer thickens; the selected one is
+ * link's chip, a track's label or a zone's label (the selected link's is placed first, and always).
+ * All the links are one source and three style layers however many there are, and a chip is written
+ * only while its middle is in view, so hundreds of links stay cheap. The link under the pointer thickens; the selected one is
  * drawn in the selection color.
  */
 export function LinkLayer({
@@ -254,9 +257,11 @@ export function LinkLayer({
     })
 
     const chips = useProjectedPoints(map, data.measures, visible)
-    if (!visible || chips.length === 0) return null
+    const placed = placeClear(chips, measureBox, selected, useTakenLabels(LABEL_RANK.link))
+    useLabelBoxes(`wui-${id}`, LABEL_RANK.link, visible ? placed.map(measureBox) : [])
+    if (!visible || placed.length === 0) return null
     return createPortal(
-        placeClear(chips, measureBox, selected).map((chip) => (
+        placed.map((chip) => (
             <span
                 key={`link-${chip.key}`}
                 className="absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+0.5rem)] rounded-control bg-card px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-foreground tabular-nums shadow-surface ring-1 ring-foreground/10"

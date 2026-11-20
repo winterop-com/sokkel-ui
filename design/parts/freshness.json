@@ -1,0 +1,103 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "freshness",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "How fresh a reading is, as a console says it of a track or a sensor: Live while it is just in, then 3 s ago, 2 min ago, quieter once stale and in the warning tone once lost, the time of the reading in its tooltip. Every mark reads one shared clock.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/Freshness.tsx", "packages/core/src/hooks/use-clock.ts"]},
+    "anatomy": {
+        "container": "One line, never wrapping, in tabular figures, text.help; a dot 6 square before the words, 6 apart, while live, stale or lost.",
+        "words": "Live under the live threshold; then the largest whole unit: seconds, minutes, hours, days, each with ago; No data with no reading.",
+        "dot": "Live: good, pulsing. Stale: hollow, edged in faint. Lost: warning. Recent: none.",
+        "tooltip": "Updated and the time of the reading, its date too once a day old."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "at": {"type": "text", "does": "When the last reading came; none for no reading."},
+        "now": {"type": "text", "does": "The moment to count from; without it, a clock shared by every mark."},
+        "thresholds": {
+            "type": "text",
+            "does": "live, stale and lost, in milliseconds of age: 5000, 60000 and 300000 by default."
+        },
+        "dot": {"type": "boolean", "default": true, "does": "The dot before the words."}
+    },
+    "layout": {
+        "clockLive": {
+            "value": 1000,
+            "note": "How often a mark under a minute old reads the shared clock, in ms; 5000 under an hour, 60000 after."
+        }
+    },
+    "states": {
+        "live": {"means": "Younger than the live threshold.", "reached": "age < live"},
+        "recent": {"means": "Heard from a while ago.", "reached": "live <= age < stale"},
+        "stale": {"means": "Getting old: quieter.", "reached": "stale <= age < lost"},
+        "lost": {
+            "means": "Too old to trust, or never heard from: the warning tone.",
+            "reached": "age >= lost, or no reading"
+        },
+        "rest": {"means": "The mark drawn, before its age is known to be live, recent, stale or lost."}
+    },
+    "pieces": {
+        "words": {
+            "rest": {"ink": "muted-foreground", "text": "text.help"},
+            "live": {"ink": "good-ink"},
+            "stale": {"ink": "faint"},
+            "lost": {"ink": "warning-ink"}
+        },
+        "dot": {
+            "rest": {"note": "None while recent."},
+            "live": {"ground": "good"},
+            "stale": {"edge": "faint"},
+            "lost": {"ground": "warning"}
+        }
+    },
+    "keyboard": [],
+    "words": {
+        "live": "Live",
+        "never": "No data",
+        "seconds": "{count} s ago",
+        "minutes": "{count} min ago",
+        "hours": "{count} h ago",
+        "days": "{count} d ago",
+        "updated": "Updated {time}"
+    },
+    "messages": {
+        "live": {"id": "freshness.live", "en": "Live"},
+        "never": {"id": "freshness.never", "en": "No data"},
+        "seconds": {"id": "freshness.seconds", "en": "{count, number} s ago"},
+        "minutes": {"id": "freshness.minutes", "en": "{count, number} min ago"},
+        "hours": {"id": "freshness.hours", "en": "{count, number} h ago"},
+        "days": {"id": "freshness.days", "en": "{count, number} d ago"},
+        "updated": {"id": "freshness.updated", "en": "Updated {time}"}
+    },
+    "appText": {"at": "The reading's time."},
+    "rendererSpecific": {
+        "sokkel-ui": ["One timer per period however many marks are drawn (useClock), stopped once none reads it."]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ],
+    "samples": {
+        "seconds": [{"with": {"count": 12}, "says": "12 s ago"}, {"with": {"count": 1}, "says": "1 s ago"}],
+        "minutes": [{"with": {"count": 2}, "says": "2 min ago"}, {"with": {"count": 45}, "says": "45 min ago"}],
+        "hours": [{"with": {"count": 3}, "says": "3 h ago"}, {"with": {"count": 1200}, "says": "1,200 h ago"}],
+        "days": [{"with": {"count": 2}, "says": "2 d ago"}],
+        "updated": [{"with": {"time": "12:44:11"}, "says": "Updated 12:44:11"}]
+    }
+}

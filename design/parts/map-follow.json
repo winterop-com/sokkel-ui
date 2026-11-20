@@ -4,7 +4,7 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -34,7 +34,7 @@
             "does": "Where the banner stands."
         }
     },
-    "sizes": {"banner": {"padX": 8, "padY": 2, "gap": 6, "icon": 14, "text": "text.xs", "radius": "radius-control"}},
+    "sizes": {"banner": {"padX": 8, "padY": 2, "gap": 6, "icon": 14, "text": "text.badge", "radius": "radius-control"}},
     "states": {"rest": {"means": "The map follows."}},
     "pieces": {
         "banner": {

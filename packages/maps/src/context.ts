@@ -3,6 +3,7 @@ import type { Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl'
 import { createContext, useContext } from 'react'
 
 import type { Bounds, LngLat } from './geometry'
+import type { LabelRegistry } from './layer'
 
 /** A corner of the map, where controls, legends and other overlays stack. */
 export type MapCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
@@ -48,6 +49,8 @@ export interface MapContextValue {
      * it, until it is called with null; the cursor is a crosshair meanwhile.
      */
     takeClicks: (handler: ((at: LngLat) => void) | null) => void
+    /** The boxes the layers' overlay labels take, so a layer's labels keep clear of those of the layers before it. */
+    labels: LabelRegistry
 }
 
 export const MapContext = createContext<MapContextValue | null>(null)

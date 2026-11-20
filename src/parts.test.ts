@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { CalendarClock, Folder, Play, Server, Workflow } from 'lucide-react'
-import { act, createElement, type ComponentType, type ReactElement, type ReactNode } from 'react'
+import { act, createElement, Fragment, type ComponentType, type ReactElement, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
@@ -112,6 +112,13 @@ import { SECRET_FIELD_WORDS, SecretField, type SecretFieldProps } from '@wintero
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
 import { Problem, PROBLEM_WORDS } from '@winterop-com/sokkel-ui/Problem'
+import { FRESHNESS_WORDS, Freshness, freshnessTick, type FreshnessProps } from '@winterop-com/sokkel-ui/Freshness'
+import { PLAYBACK_TIMELINE_WORDS, PlaybackTimeline, scrubTime, type PlaybackTimelineProps } from '@winterop-com/sokkel-ui/PlaybackTimeline'
+import { TASK_CARD_WORDS, TASK_STATES, TaskCard, taskStatuses, type TaskCardProps } from '@winterop-com/sokkel-ui/TaskCard'
+import { TRACK_CARD_WORDS, TrackCard, type TrackCardProps } from '@winterop-com/sokkel-ui/TrackCard'
+import { TrackGlyph, type TrackGlyphProps } from '@winterop-com/sokkel-ui/TrackGlyph'
+import { TRACK_ROSTER_WORDS, TrackRoster, type TrackRosterItem, type TrackRosterProps } from '@winterop-com/sokkel-ui/TrackRoster'
+import { TRACK_NAMES_WORDS } from '@winterop-com/sokkel-ui/lib/tracks'
 import { MARKDOWN_WORDS, PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
 import { PERIOD_PICKER_WORDS, PeriodPicker, type PeriodPickerProps } from '@winterop-com/sokkel-ui/PeriodPicker'
 import { ProblemLine } from '@winterop-com/sokkel-ui/ProseText'
@@ -131,7 +138,10 @@ import { YES_NO_FIELD_WORDS, YesNoField, type YesNoFieldProps } from '@winterop-
 import { Tree, type TreeNode, type TreeProps } from '@winterop-com/sokkel-ui/Tree'
 import { TREE_SELECT_WORDS, TreeSelect, type TreeSelectProps } from '@winterop-com/sokkel-ui/TreeSelect'
 import type { FeatureCollection } from 'geojson'
-import { UNIT_SYMBOLS } from '@winterop-com/sokkel-ui-maps/geodesy'
+import { CoverageLayer } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
+import { distance as geoDistance, UNIT_SYMBOLS } from '@winterop-com/sokkel-ui-maps/geodesy'
+import { LINK_WORDS, LinkLayer, linkLine, type LinkLayerProps, type MapLink } from '@winterop-com/sokkel-ui-maps/LinkLayer'
+import { ZoneLayer, type Zone, type ZoneLayerProps } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
 import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
 import { MAP_COMPASS_WORDS, MapCompass } from '@winterop-com/sokkel-ui-maps/MapCompass'
 import { MAP_COORDINATES_WORDS, MapCoordinates, scaleBar } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
@@ -140,6 +150,7 @@ import { MAP_GO_TO_WORDS, MapGoTo } from '@winterop-com/sokkel-ui-maps/MapGoTo'
 import { MAP_RULER_WORDS, MapRuler } from '@winterop-com/sokkel-ui-maps/MapRuler'
 import { TRACK_WORDS, TrackLayer, type Track, type TrackLayerProps } from '@winterop-com/sokkel-ui-maps/TrackLayer'
 import { MapContext, type MapContextValue } from '../packages/maps/src/context'
+import { labelRegistry } from '../packages/maps/src/layer'
 
 // A part's checks are made once, live probes and all, inside its first test; on a busy machine that
 // takes longer than the 5 seconds a test gets by default.
@@ -9330,17 +9341,15 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
 const PENDING: Record<string, Record<string, string>> = {
-    'map-ruler': {
-        'sizes.button.radiusMax': "the button is an icon-sm button, rounded at most 12 as the button spec's",
-        'sizes.chip.text': 'the chip is text.xs at 500, which is the text.badge role',
-        'pieces.button.rest.edge (dark)': "the outline button's edge in dark is input",
+    'track-card': {
+        'pieces.name.rest.text': 'the name is text-sm at 500, which is text.sm at weight 500: text.body is the size at 400',
     },
-    'map-compass': {
-        'sizes.button.radiusMax': "the button is an icon-sm button, rounded at most 12 as the button spec's",
-        'pieces.button.rest.edge (dark)': "the outline button's edge in dark is input",
+    'task-card': {
+        'pieces.title.rest.text': 'the title is text-sm at 500, which is text.sm at weight 500: text.body is the size at 400',
     },
-    'map-follow': {
-        'sizes.banner.text': "the banner's name is text.xs at 500, which is the text.badge role",
+    'track-roster': {
+        'keyboard.ArrowUp, ArrowDown': "the arrows move the active row, as the table's do: a group head is no stop of theirs",
+        'keyboard.Enter (the list has focus)': 'Enter picks the active track; a group folds by its head, which the arrows never reach',
     },
 }
 
@@ -9484,7 +9493,7 @@ interface FakeMap {
     fire: (type: string, event?: object) => void
     layers: Map<string, FakeLayer>
     sources: Map<string, { data: FeatureCollection; cluster?: boolean; clusterRadius?: number }>
-    images: Map<string, { pixelRatio?: number; sdf?: boolean }>
+    images: Map<string, { pixelRatio?: number; sdf?: boolean; width?: number }>
     calls: { method: string; options: Record<string, unknown> }[]
 }
 
@@ -9543,7 +9552,8 @@ function fakeMap(): FakeMap {
             if (layer !== undefined) layer.layout = { ...layer.layout, [key]: value }
         },
         hasImage: (name: string) => images.has(name),
-        addImage: (name: string, _image: unknown, options: { pixelRatio?: number; sdf?: boolean }) => images.set(name, options),
+        addImage: (name: string, image: { width?: number }, options: { pixelRatio?: number; sdf?: boolean }) =>
+            images.set(name, { ...options, width: image.width }),
         updateImage: () => undefined,
         setFeatureState: () => undefined,
         queryRenderedFeatures: ({ layers: wanted }: { layers: string[] }) =>
@@ -9605,6 +9615,7 @@ function liveMap<T>(part: ReactElement, look: (box: HTMLElement, fake: FakeMap) 
         register: () => () => undefined,
         holdCamera: () => undefined,
         takeClicks: () => undefined,
+        labels: labelRegistry(),
         ...context,
     }
     try {
@@ -9630,7 +9641,7 @@ const MAP_UNITS = Object.keys(UNIT_SYMBOLS)
 
 /**
  * What a maplibre expression gives for a feature in a feature state: the operators the map layers
- * paint with (case, match, step, get, has, feature-state and plain arithmetic).
+ * paint with (case, match, step, get, has, feature-state, concat and plain arithmetic).
  */
 function evaluate(expression: unknown, properties: Record<string, unknown>, state: Record<string, unknown> = {}): unknown {
     if (!Array.isArray(expression)) return expression
@@ -9672,6 +9683,10 @@ function evaluate(expression: unknown, properties: Record<string, unknown>, stat
             return at(args[0]) === at(args[1])
         case '*':
             return args.reduce<number>((product, value) => product * Number(at(value)), 1)
+        case '+':
+            return args.reduce<number>((sum, value) => sum + Number(at(value)), 0)
+        case 'concat':
+            return args.map((value) => String(at(value))).join('')
         case '^':
             return Number(at(args[0])) ** Number(at(args[1]))
         default:
@@ -10141,6 +10156,1090 @@ const MAP_COMPASS_ADAPTER: Adapter = {
     },
 }
 
+// Zone layer
+
+/** A square zone round a position, `half` degrees each way. */
+const square = ([lng, lat]: LngLat, half: number): LngLat[] => [
+    [lng - half, lat - half],
+    [lng + half, lat - half],
+    [lng + half, lat + half],
+    [lng - half, lat + half],
+]
+const ZONES: Zone[] = [
+    {
+        id: 'harbor',
+        area: square([5, 60], 0.2),
+        label: 'Harbor',
+        fill: 'hatched',
+    },
+    // Its middle is the harbor's, so the two labels cover one another.
+    {
+        id: 'anchorage',
+        area: square([5, 60], 0.1),
+        label: 'Anchorage',
+        edge: 'dashed',
+    },
+]
+/** A map layer drawn over a fake map: its style layers, sources and images, and what it writes in the overlay once measured. */
+function drawLayer(part: ReactElement, context: Partial<MapContextValue> = {}): { fake: FakeMap; elements: El[] } {
+    vi.useFakeTimers({
+        toFake: ['requestAnimationFrame', 'cancelAnimationFrame'],
+    })
+    try {
+        return liveMap(
+            part,
+            (box, fake) => {
+                // The overlay is measured a frame after the map draws.
+                act(() => vi.advanceTimersByTime(50))
+                return { fake: kept(fake), elements: parse(box.innerHTML) }
+            },
+            context,
+        )
+    } finally {
+        vi.useRealTimers()
+    }
+}
+const drawZones = (props: Partial<ZoneLayerProps> = {}, selected: string | null = null) =>
+    drawLayer(createElement(ZoneLayer, { id: 'areas', zones: ZONES, ...props }), {
+        selected,
+    })
+const ZONE_DRAWINGS = once(() => ({
+    plain: drawZones(),
+    selected: drawZones({}, 'anchorage'),
+}))
+/** A track, a zone and a link on one map, the zone's middle and the link's on the track's label. */
+const CROSSING = once(
+    () =>
+        drawLayer(
+            createElement(
+                Fragment,
+                null,
+                createElement(TrackLayer, {
+                    id: 'watch',
+                    tracks: [{ id: 'ferry', position: [5, 60], affiliation: 'friend', kind: 'vessel', label: 'Ferry Juniper' }],
+                    transition: 0,
+                }),
+                createElement(ZoneLayer, {
+                    id: 'areas',
+                    zones: [{ id: 'boarding', area: square([5.6, 60], 0.05), label: 'Pilot boarding' }],
+                }),
+                createElement(LinkLayer, { id: 'links', links: [{ id: 'relay', from: [5.3, 59.85], to: [5.9, 60.05], measure: true }] }),
+            ),
+        ).elements,
+)
+const overlayText = (elements: El[], text: string) => elements.find((element) => element.tag === 'span' && element.text === text)
+const styleLayer = (fake: FakeMap, id: string, suffix: string) => fake.layers.get(`wui-${id}${suffix}`)
+/** A style layer's paint property for a feature in a feature state. */
+const painted = (layer: FakeLayer | undefined, key: string, properties: Record<string, unknown>, state: Record<string, unknown> = {}) =>
+    evaluate(layer?.paint?.[key], properties, state)
+
+const ZONE_LAYER_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: {
+        fill: mapUnion('ZoneLayer.tsx', 'ZoneFill'),
+        edge: mapUnion('ZoneLayer.tsx', 'ZoneEdge'),
+    },
+    size: () => pieceWhere(overlayText(ZONE_DRAWINGS().plain.elements, 'Harbor')),
+    paint: (_, name, state) => {
+        if (name !== 'label') return skip(`maplibre paints the ${name} on its canvas: read from its style layers in more`)
+        return state === 'selected'
+            ? pieceWhere(overlayText(ZONE_DRAWINGS().selected.elements, 'Anchorage'))
+            : pieceWhere(overlayText(ZONE_DRAWINGS().plain.elements, 'Harbor'))
+    },
+    effect: () => skip('a zone layer states no effects'),
+    keys: {},
+    more: () => {
+        const { plain, selected } = ZONE_DRAWINGS()
+        const fill = styleLayer(plain.fake, 'areas', '-fill')
+        const hatch = styleLayer(plain.fake, 'areas', '-hatch')
+        const edge = styleLayer(plain.fake, 'areas', '-edge')
+        const dashed = styleLayer(plain.fake, 'areas', '-dashed')
+        const halo = styleLayer(plain.fake, 'areas', '-halo')
+        const tile = plain.fake.images.get('wui-areas-hatch-plain')
+        const zone = { tone: 'plain', fill: 'solid', edge: 'solid' }
+        const fillIn = (state: Record<string, unknown>) => ({
+            ground: mapColor(painted(fill, 'fill-color', zone, state), painted(fill, 'fill-opacity', zone, state)),
+        })
+        const widths = [{}, { hover: true }, { selected: true }].map((state) => String(painted(edge, 'line-width', zone, state)))
+        return [
+            ...mapPaintChecks('zone-layer', 'fill', 'rest', fillIn({})),
+            ...mapPaintChecks('zone-layer', 'fill', 'hover', fillIn({ hover: true })),
+            ...mapPaintChecks('zone-layer', 'fill', 'selected', fillIn({ selected: true })),
+            ...mapPaintChecks('zone-layer', 'edge', 'rest', {
+                edge: mapColor(painted(edge, 'line-color', zone)),
+            }),
+            ...mapPaintChecks('zone-layer', 'edge', 'selected', {
+                edge: mapColor(painted(edge, 'line-color', zone, { selected: true })),
+            }),
+            check(
+                'states.hover (the edge 1.5, then 2 under the pointer and 2.5 selected; a hatch 0.7, 0.95 and full)',
+                '1.5 2 2.5 0.7 0.95 1',
+                [
+                    ...widths,
+                    ...[{}, { hover: true }, { selected: true }].map((state) => String(painted(hatch, 'fill-opacity', zone, state))),
+                ].join(' '),
+            ),
+            check(
+                'states.rest (a dashed edge is dashed 3 on 2, and a hatch is the tone as a pattern)',
+                '[3,2] wui-areas-hatch-plain',
+                `${JSON.stringify(dashed?.paint?.['line-dasharray'])} ${String(painted(hatch, 'fill-pattern', zone))}`,
+            ),
+            check(
+                'states.selected (a label covering another zone is left out, but never the selected zone)',
+                'left out at rest, drawn when selected',
+                `${overlayText(plain.elements, 'Anchorage') === undefined ? 'left out' : 'drawn'} at rest, ${overlayText(selected.elements, 'Anchorage') === undefined ? 'left out' : 'drawn'} when selected`,
+            ),
+            check(
+                "states.rest (a zone's label yields to a track's, and a link's chip to both)",
+                'Ferry Juniper',
+                CROSSING()
+                    .filter((element) => element.tag === 'span' && element.parent?.tag === 'div')
+                    .map((element) => element.text)
+                    .join(', '),
+            ),
+            ...layoutChecks('zone-layer', {
+                edgeWidth: () => widths[0],
+                hatchSpacing: () => (tile?.width === undefined ? undefined : String(tile.width / Number(tile.pixelRatio ?? 1))),
+                haloWidth: () => {
+                    const rest = painted(halo, 'line-width', zone)
+                    return rest === 0 ? String(painted(halo, 'line-width', zone, { selected: true })) : `${String(rest)} at rest`
+                },
+            }),
+        ]
+    },
+}
+
+// Coverage layer
+
+const COVER = once(() =>
+    drawLayer(
+        createElement(CoverageLayer, {
+            id: 'cover',
+            cones: [
+                {
+                    id: 'radar',
+                    position: [5, 60],
+                    range: 40_000,
+                    bearing: 90,
+                    width: 120,
+                },
+            ],
+            rings: [{ id: 'watch', position: [5, 60], distances: [420, 20_000] }],
+        }),
+    ),
+)
+
+const COVERAGE_LAYER_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: { unit: MAP_UNITS },
+    size: () => pieceWhere(overlayText(COVER().elements, '20 km')),
+    paint: (_, name) => {
+        if (name !== 'distance') return skip(`maplibre paints the ${name} on its canvas: read from its style layers in more`)
+        return pieceWhere(overlayText(COVER().elements, '20 km'))
+    },
+    effect: () => skip('a coverage layer states no effects'),
+    keys: {},
+    more: () => {
+        const { fake, elements } = COVER()
+        const band = styleLayer(fake, 'cover', '-band')
+        const edge = styleLayer(fake, 'cover', '-edge')
+        const ring = styleLayer(fake, 'cover', '-ring')
+        const plain = { tone: 'plain' }
+        const near = Number(painted(band, 'fill-opacity', { ...plain, fade: 1 }))
+        const half = Number(painted(band, 'fill-opacity', { ...plain, fade: 0.5 }))
+        const bands = fake.sources.get('wui-cover')?.data.features.filter((feature) => feature.properties?.kind === 'band').length
+        return [
+            ...mapPaintChecks('coverage-layer', 'cone', 'rest', {
+                ground: mapColor(painted(band, 'fill-color', plain), near),
+            }),
+            ...mapPaintChecks('coverage-layer', 'edge', 'rest', {
+                edge: mapColor(painted(edge, 'line-color', plain), painted(edge, 'line-opacity', plain)),
+            }),
+            ...mapPaintChecks('coverage-layer', 'ring', 'rest', {
+                edge: mapColor(painted(ring, 'line-color', plain), painted(ring, 'line-opacity', plain)),
+            }),
+            check(
+                'states.rest (a cone cut into 6 bands; each ring dashed 2 on 2, written with its distance, whole meters under a kilometer)',
+                '6 [2,2] 420 m 20 km',
+                [
+                    String(bands),
+                    JSON.stringify(ring?.paint?.['line-dasharray']),
+                    overlayText(elements, '420 m')?.text,
+                    overlayText(elements, '20 km')?.text,
+                ].join(' '),
+            ),
+            check(
+                'states.rest (the layer answers no pointer)',
+                'none',
+                liveMap(
+                    createElement(CoverageLayer, {
+                        id: 'cover',
+                        cones: [{ id: 'radar', position: [5, 60], range: 40_000 }],
+                    }),
+                    () => 'none',
+                    {
+                        register: (_, entry) => {
+                            if (entry.hitLayers.length > 0) throw new Error(`the layer is hit on ${entry.hitLayers.join(', ')}`)
+                            return () => undefined
+                        },
+                    },
+                ),
+            ),
+            ...layoutChecks('coverage-layer', {
+                coneFill: () => String(near),
+                // Each band's share is its nearness raised to the fade: half as near is 2 to the minus fade as much.
+                coneFade: () => String(Math.round((Math.log(near / half) / Math.log(2)) * 1000) / 1000),
+                edgeWidth: () => {
+                    const [edgeWidth, ringWidth] = [edge?.paint?.['line-width'], ring?.paint?.['line-width']]
+                    return edgeWidth === ringWidth ? String(edgeWidth) : `edge ${String(edgeWidth)}, ring ${String(ringWidth)}`
+                },
+            }),
+        ]
+    },
+}
+
+// Link layer
+
+const LINKS: MapLink[] = [
+    { id: 'patrol', from: [5, 60], to: [6, 61], measure: true },
+    // Its middle is the patrol's, so the two chips cover one another.
+    { id: 'relay', from: [6, 60], to: [5, 61], measure: true, dashed: true },
+]
+const drawLinks = (props: Partial<LinkLayerProps> = {}, selected: string | null = null) =>
+    drawLayer(createElement(LinkLayer, { id: 'links', links: LINKS, ...props }), {
+        selected,
+    })
+const LINK_DRAWINGS = once(() => ({
+    plain: drawLinks(),
+    selected: drawLinks({}, 'relay'),
+}))
+const linkChips = (elements: El[]) => elements.filter((element) => element.tag === 'span' && element.text.includes(' · '))
+
+const LINK_LAYER_ADAPTER: Adapter = {
+    wordObjects: { LINK_WORDS },
+    complete: ['LINK_WORDS'],
+    words: {
+        measured: [
+            'LINK_WORDS.measured',
+            (said: (distance: string, bearing: string) => string, fill) => said(String(fill.distance), String(fill.bearing)),
+        ],
+    },
+    options: { path: mapUnion('LinkLayer.tsx', 'LinkPath'), unit: MAP_UNITS },
+    size: () => pieceWhere(linkChips(LINK_DRAWINGS().plain.elements)[0]),
+    paint: (_, name) => {
+        if (name === 'line') return skip('maplibre paints the line on its canvas: read from its style layers in more')
+        return pieceWhere(linkChips(LINK_DRAWINGS().plain.elements)[0])
+    },
+    effect: () => skip('a link layer states no effects'),
+    keys: {},
+    more: () => {
+        const { plain, selected } = LINK_DRAWINGS()
+        const casing = styleLayer(plain.fake, 'links', '-casing')
+        const line = styleLayer(plain.fake, 'links', '-line')
+        const dashed = styleLayer(plain.fake, 'links', '-dashed')
+        const link = { tone: 'plain', dashed: false }
+        const width = (state: Record<string, unknown>) => Number(painted(line, 'line-width', link, state))
+        const chip = linkChips(plain.elements)[0]
+        const lift = /-translate-y-\[calc\(100%\+([\d.]+)rem\)\]/.exec(classesOf(chip))?.[1]
+        // Along a meridian, the longest link drawn in one step, and how many positions a link half round the earth takes.
+        let [short, long] = [0, 2]
+        for (let round = 0; round < 40; round += 1) {
+            const middle = (short + long) / 2
+            if (linkLine([5, 60], [5, 60 + middle]).length === 2) short = middle
+            else long = middle
+        }
+        const longest = Math.round(geoDistance([5, 60], [5, 60 + short]) / 100) * 100
+        const farthest = linkLine([0, 0], [179, 0]).length
+        return [
+            ...mapPaintChecks('link-layer', 'line', 'rest', {
+                ink: mapColor(painted(line, 'line-color', link)),
+                edge: mapColor(painted(casing, 'line-color', link), casing?.paint?.['line-opacity']),
+            }),
+            ...mapPaintChecks('link-layer', 'line', 'selected', {
+                ink: mapColor(painted(line, 'line-color', link, { selected: true })),
+            }),
+            check(
+                'states.hover (the line 1.5, 0.75 more under the pointer and 1 more selected; dashed 3 on 2)',
+                '1.5 2.25 2.5 [3,2]',
+                [width({}), width({ hover: true }), width({ selected: true }), JSON.stringify(dashed?.paint?.['line-dasharray'])].join(' '),
+            ),
+            check('states.rest (the chip says the distance and the bearing from where the link starts)', '124 km · 026°', chip?.text),
+            check(
+                'states.selected (a chip covering another is left out, but never the selected link)',
+                'one at rest, the relay selected',
+                `${linkChips(plain.elements).length === 1 ? 'one' : String(linkChips(plain.elements).length)} at rest, ${
+                    linkChips(selected.elements).length === 1 && linkChips(selected.elements)[0].text !== chip?.text
+                        ? 'the relay'
+                        : 'another'
+                } selected`,
+            ),
+            ...layoutChecks('link-layer', {
+                chipLift: () => (lift === undefined ? undefined : String(Number(lift) * 16)),
+                casing: () => String(Number(painted(casing, 'line-width', link)) - width({})),
+                greatCircleStep: () => (farthest === 65 ? String(longest) : `${String(longest)}, ${String(farthest - 1)} steps at most`),
+            }),
+        ]
+    },
+}
+
+// What the tracking parts share: the values of a union a core module exports
+
+const unionIn = (text: string, name: string) =>
+    [...(new RegExp(`export type ${name} = ([^\\n]+)`).exec(text)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1])
+const TRACKS_SOURCE = source('lib/tracks.ts')
+const TRACK_KIND_VALUES = unionIn(TRACKS_SOURCE, 'TrackKind')
+const TRACK_AFFILIATION_VALUES = unionIn(TRACKS_SOURCE, 'TrackAffiliation')
+const bySlotIn = (elements: El[], slot: string) => elements.find((element) => element.attrs['data-slot'] === slot)
+/** A piece with the classes of the part around it laid under its own, for a text size the part sets and the piece keeps. */
+const withPart = (outer: El | undefined, element: El | undefined, on: string[] = []): Where | undefined =>
+    outer === undefined || element === undefined
+        ? undefined
+        : {
+              layers: [classesOf(outer), classesOf(element)],
+              on,
+              around: ancestors(element),
+          }
+
+// Track glyph
+
+const TRACK_GLYPH = source('components/TrackGlyph.tsx')
+const glyph = (props: Partial<TrackGlyphProps> = {}) => draw(TrackGlyph, { kind: 'vessel', ...props })
+/** The color a glyph is filled in: its svg's color, which its shape fills with. */
+const glyphFill = (elements: El[]) => {
+    const svg = elements.find((element) => element.tag === 'svg')
+    const shape = elements.find((element) => element.tag === 'polygon' || element.tag === 'circle')
+    const color = /color:\s*var\(--([a-z0-9-]+)\)/.exec(svg?.attrs.style ?? '')?.[1]
+    return shape?.attrs.fill === 'currentColor' ? (color ?? 'inherit') : `a fill of ${String(shape?.attrs.fill)}`
+}
+
+const TRACK_GLYPH_ADAPTER: Adapter = {
+    wordObjects: { TRACK_NAMES_WORDS },
+    complete: ['TRACK_NAMES_WORDS'],
+    words: Object.fromEntries(Object.keys(TRACK_NAMES_WORDS).map((key) => [key, `TRACK_NAMES_WORDS.${key}`])),
+    options: {
+        kind: TRACK_KIND_VALUES,
+        affiliation: TRACK_AFFILIATION_VALUES,
+        size: unionIn(TRACK_GLYPH, 'TrackGlyphSize'),
+    },
+    size: (size) => pieceWhere(glyph({ size: size as TrackGlyphProps['size'] })[0]),
+    paint: () => skip('the shape is filled in currentColor, the color a style sets on the svg: read in more'),
+    effect: () => skip('a glyph states no effects'),
+    keys: {},
+    more: () => {
+        const turned = (props: Partial<TrackGlyphProps>) => glyph(props).find((element) => element.tag === 'g')?.attrs.transform ?? 'none'
+        const named = (props: Partial<TrackGlyphProps>) => {
+            const svg = glyph(props)[0]
+            return svg.attrs['aria-hidden'] === 'true' ? 'hidden' : `${String(svg.attrs.role)} ${String(svg.attrs['aria-label'])}`
+        }
+        const sensor = glyph({ kind: 'sensor' }).filter((element) => element.tag === 'circle')
+        return [
+            check(
+                'pieces.shape.rest.ground',
+                'track-friend',
+                glyphFill(glyph({ affiliation: 'friend' })),
+                glyphFill(glyph({ affiliation: 'friend' })) === 'track-friend',
+            ),
+            check(
+                'pieces.shape.rest (each affiliation its token; the ink around it without one)',
+                [...TRACK_AFFILIATION_VALUES.map((one) => `track-${one}`), 'inherit'].join(' '),
+                [
+                    ...TRACK_AFFILIATION_VALUES.map((one) => glyphFill(glyph({ affiliation: one as TrackGlyphProps['affiliation'] }))),
+                    glyphFill(glyph({})),
+                ].join(' '),
+            ),
+            check(
+                'states.rest (turned clockwise about its middle to its heading; a sensor never turns)',
+                'rotate(90 24 24) none none',
+                [turned({ heading: 90 }), turned({ kind: 'sensor', heading: 90 }), turned({})].join(' '),
+            ),
+            check(
+                'states.rest (a sensor is a ring 5 wide of radius 14 round a dot of radius 4.5, in a 48 square)',
+                '0 0 48 48 14 5 4.5',
+                [glyph({ kind: 'sensor' })[0].attrs.viewBox, sensor[0]?.attrs.r, sensor[0]?.attrs['stroke-width'], sensor[1]?.attrs.r].join(
+                    ' ',
+                ),
+            ),
+            check(
+                'states.rest (true names it by its affiliation and kind; without a label it is decoration)',
+                'img Hostile vessel | img Patrol 7 | hidden',
+                [named({ affiliation: 'hostile', label: true }), named({ label: 'Patrol 7' }), named({})].join(' | '),
+            ),
+        ]
+    },
+}
+
+// Freshness
+
+const SECOND_MS = 1_000
+/** A freshness mark whose reading is `age` old, on a fixed clock; no reading for null. */
+const freshness = (age: number | null, props: Partial<FreshnessProps> = {}) =>
+    draw(Freshness, {
+        at: age === null ? null : NOON - age,
+        now: NOON,
+        timeZone: 'UTC',
+        ...props,
+    })
+const FRESHNESS_AGES: Record<string, number | null> = {
+    live: 2 * SECOND_MS,
+    recent: 12 * SECOND_MS,
+    rest: 12 * SECOND_MS,
+    stale: 2 * 60 * SECOND_MS,
+    lost: 10 * 60 * SECOND_MS,
+}
+const freshnessPieces = (elements: El[]) => {
+    const mark = bySlotIn(elements, 'freshness')
+    const dot = elements.find((element) => element.attrs['aria-hidden'] === 'true' && /\brounded-full\b/.test(classesOf(element)))
+    return { mark, dot }
+}
+/** A dot's paint, which a style sets: its ground, or its edge when it is hollow. */
+const dotPaint = (dot: El | undefined) => {
+    const style = dot?.attrs.style ?? ''
+    return {
+        ground: /background:\s*var\(--([a-z0-9-]+)\)/.exec(style)?.[1],
+        edge: /border-color:\s*var\(--([a-z0-9-]+)\)/.exec(style)?.[1],
+    }
+}
+
+const FRESHNESS_ADAPTER: Adapter = {
+    wordObjects: { FRESHNESS_WORDS },
+    complete: ['FRESHNESS_WORDS'],
+    words: {
+        live: 'FRESHNESS_WORDS.live',
+        never: 'FRESHNESS_WORDS.never',
+        ...Object.fromEntries(
+            (['seconds', 'minutes', 'hours', 'days'] as const).map((key) => [
+                key,
+                [
+                    `FRESHNESS_WORDS.${key}`,
+                    (said: (count: number) => string, fill: Record<string, string | number>) => said(Number(fill.count)),
+                ],
+            ]),
+        ),
+        updated: ['FRESHNESS_WORDS.updated', (said: (time: string) => string, fill) => said(String(fill.time))],
+    },
+    options: {},
+    size: () => skip('a freshness mark states no sizes'),
+    paint: (_, name, state) => {
+        const age = FRESHNESS_AGES[state]
+        if (age === undefined) return skip(`no age reaches ${state}`)
+        const { mark } = freshnessPieces(freshness(age))
+        if (name === 'dot') return skip('the dot is painted by a style its color sets: read in more')
+        return pieceWhere(mark)
+    },
+    effect: () => skip('a freshness mark states no effects'),
+    keys: {},
+    more: () => {
+        const said = (age: number | null) => {
+            const { mark } = freshnessPieces(freshness(age))
+            return `${String(mark?.attrs['data-state'])} ${String(mark?.text)}`
+        }
+        const dotOf = (state: string) => dotPaint(freshnessPieces(freshness(FRESHNESS_AGES[state] ?? null)).dot)
+        const title = freshnessPieces(freshness(12 * SECOND_MS)).mark?.attrs.title
+        const dayOld = freshnessPieces(freshness(2 * 24 * 3_600_000)).mark?.attrs.title
+        return [
+            ...(['live', 'stale', 'lost'] as const).flatMap((state) => {
+                const paint = SPECS.get('freshness')?.pieces?.dot?.[state]
+                const found = dotOf(state)
+                return (['ground', 'edge'] as const).flatMap((key) =>
+                    paint?.[key] === undefined ? [] : [check(`pieces.dot.${state}.${key}`, paint[key], found[key])],
+                )
+            }),
+            check(
+                'pieces.dot.rest (none while recent)',
+                'none',
+                freshnessPieces(freshness(FRESHNESS_AGES.recent)).dot === undefined ? 'none' : 'a dot',
+            ),
+            check(
+                'states.live (a pulsing dot)',
+                'pulsing',
+                /\banimate-live\b/.test(classesOf(freshnessPieces(freshness(FRESHNESS_AGES.live)).dot?.parent)) ? 'pulsing' : 'still',
+            ),
+            check(
+                'states.rest (Live, then the largest whole unit; No data with no reading, which is lost)',
+                'live Live | recent 12 s ago | stale 2 min ago | lost 3 h ago | lost 2 d ago | lost No data',
+                [2 * SECOND_MS, 12 * SECOND_MS, 2 * 60 * SECOND_MS, 3 * 3_600_000, 2 * 24 * 3_600_000, null].map(said).join(' | '),
+            ),
+            check(
+                'states.rest (the tooltip says Updated and the time of the reading, its date too once a day old)',
+                'Updated 11:59:48 AM | with its date',
+                `${String(title)} | ${dayOld !== undefined && /Nov/.test(dayOld) ? 'with its date' : String(dayOld)}`,
+            ),
+            check(
+                'layout.clockLive (5000 under an hour, 60000 after)',
+                '1000 5000 60000',
+                [freshnessTick(0), freshnessTick(30 * 60_000), freshnessTick(2 * 3_600_000)].join(' '),
+            ),
+            ...layoutChecks('freshness', {
+                clockLive: () => String(freshnessTick(0)),
+            }),
+        ]
+    },
+}
+
+// Track card
+
+const TRACK_CARD_PROPS: TrackCardProps = {
+    name: 'Ferry Juniper',
+    code: 'TV-204',
+    kind: 'vessel',
+    affiliation: 'friend',
+    heading: 45,
+    thumbnail: 'https://example.org/juniper.png',
+    states: ['Simulated', { label: 'Live', tone: 'good' }],
+    detail: '12 kn · 045°',
+    updatedAt: NOON - 3_000,
+    now: NOON,
+}
+const trackCard = (props: Partial<TrackCardProps> = {}) => draw(TrackCard, { ...TRACK_CARD_PROPS, ...props })
+const TRACK_CARDS = once(() => ({
+    full: trackCard({ onAffiliationChange: noop }),
+    pressable: trackCard({ onSelect: noop, onAffiliationChange: noop }),
+    selected: trackCard({ onSelect: noop, selected: true }),
+}))
+const trackCardPieces = (elements: El[]): Record<string, El | undefined> => {
+    const head = bySlotIn(elements, 'track-card-head')
+    const chips = bySlotIn(elements, 'track-card-chips')
+    return {
+        container: bySlotIn(elements, 'track-card'),
+        cover: bySlotIn(elements, 'track-card-cover'),
+        thumbnail: bySlotIn(elements, 'track-card-thumbnail'),
+        head,
+        name: elements.find((element) => element.parent === head && element.tag === 'span' && element.text === 'Ferry Juniper'),
+        code: elements.find((element) => element.parent === head && element.tag === 'span' && element.text === 'TV-204'),
+        detail: elements.find((element) => element.parent === chips && element.text === '12 kn · 045°'),
+    }
+}
+/** A track card drawn in the page, with the presses its cover hears. */
+const liveTrackCard = <T>(look: (box: HTMLElement, selected: () => number) => T) => {
+    let selected = 0
+    return live(
+        createElement(TrackCard, {
+            ...TRACK_CARD_PROPS,
+            onSelect: () => (selected += 1),
+            onAffiliationChange: noop,
+        }),
+        (box) => look(box, () => selected),
+    )
+}
+
+const TRACK_CARD_ADAPTER: Adapter = {
+    wordObjects: { TRACK_CARD_WORDS },
+    complete: ['TRACK_CARD_WORDS'],
+    words: {
+        changeAffiliation: [
+            'TRACK_CARD_WORDS.changeAffiliation',
+            (said: (affiliation: string) => string, fill) => said(String(fill.affiliation)),
+        ],
+    },
+    options: { kind: TRACK_KIND_VALUES, affiliation: TRACK_AFFILIATION_VALUES },
+    size: (size, key) => {
+        const pieces = trackCardPieces(TRACK_CARDS().full)
+        if (size === 'head' && key === 'text') return withPart(pieces.container, pieces.head)
+        return pieceWhere(pieces[size])
+    },
+    paint: (_, name, state) => {
+        const cards = TRACK_CARDS()
+        if (name === 'container') {
+            if (state === 'focus') return pieceWhere(trackCardPieces(cards.pressable).cover, ['focus-visible'])
+            if (state === 'selected') return pieceWhere(trackCardPieces(cards.selected).container)
+            return pieceWhere(trackCardPieces(cards.pressable).container, state === 'hover' ? ['hover'] : [])
+        }
+        const pieces = trackCardPieces(cards.full)
+        return withPart(pieces.container, pieces[name])
+    },
+    effect: () => skip('the track card states no effects'),
+    keys: {
+        Tab: () => {
+            const { cover } = trackCardPieces(TRACK_CARDS().pressable)
+            const menu = TRACK_CARDS().pressable.find((element) => element.attrs['data-slot'] === 'chip-select')
+            if (cover?.tag !== 'button' || !focusable(cover)) return 'the card is not a button in the tab order'
+            if (menu?.tag !== 'button' || !focusable(menu)) return "the affiliation chip's menu is not its own stop"
+            if (TRACK_CARDS().full.some((element) => element.attrs['data-slot'] === 'track-card-cover'))
+                return 'a card with no onSelect takes focus'
+            return TRACK_CARDS().pressable.indexOf(cover) < TRACK_CARDS().pressable.indexOf(menu)
+                ? true
+                : "the affiliation chip's menu comes before the card"
+        },
+        'Enter (the card has focus)': () =>
+            liveTrackCard((box, selected) => {
+                const cover = box.querySelector<HTMLElement>('[data-slot="track-card-cover"]')
+                // A native button: a browser presses it on Enter, and the press is a click.
+                if (cover?.tagName !== 'BUTTON') return 'the card is not a native button, which Enter presses'
+                act(() => cover.click())
+                const chip = box.querySelector<HTMLElement>('[data-slot="chip-select"]')
+                act(() => chip?.click())
+                return selected() === 1 ? true : `a press of the card and its chip call onSelect ${String(selected())} times`
+            }),
+    },
+    more: () => {
+        const { full } = TRACK_CARDS()
+        const unframed = trackCardPieces(trackCard({ framed: false })).container
+        const glyphOf = full.find((element) => element.tag === 'svg' && element.attrs['data-kind'] === 'vessel')
+        const chip = full.find((element) => element.attrs['data-slot'] === 'chip-select')
+        const fresh = bySlotIn(full, 'freshness')
+        return [
+            check(
+                'states.rest (the glyph md and named, the freshness at the head, the affiliation a menu)',
+                'size-4 Friend vessel | live Live | Affiliation: Friend. Change',
+                [
+                    `${String(/\bsize-\d+(?:\.\d+)?\b/.exec(classesOf(glyphOf))?.[0])} ${String(glyphOf?.attrs['aria-label'])}`,
+                    `${String(fresh?.attrs['data-state'])} ${String(fresh?.text)}`,
+                    chip?.attrs['aria-label'],
+                ].join(' | '),
+            ),
+            check(
+                'states.rest (framed false drops the edge, ground and padding)',
+                'none none none',
+                [READ.edge, READ.ground, READ.pad].map((read) => resolve([classesOf(unframed)], [], read) ?? 'none').join(' '),
+            ),
+            check(
+                'states.rest (a state chip is an outline chip, or in its tone)',
+                'outline good',
+                ['Simulated', 'Live']
+                    .map((label) => {
+                        const one = full.find((element) => element.attrs['data-slot'] === 'chip' && element.text === label)
+                        const tone = chipUnion('ChipTone').find(
+                            (each) => classesOf(chipPieces(drawChip({ tone: each as ChipProps['tone'] })).container) === classesOf(one),
+                        )
+                        return tone ?? 'another look'
+                    })
+                    .join(' '),
+            ),
+        ]
+    },
+}
+
+// Task card
+
+const TASK_CARD_PROPS: TaskCardProps = {
+    title: 'Follow',
+    code: 'T-17',
+    state: 'executing',
+    elapsed: 247_000,
+    from: {
+        name: 'Patrol 7',
+        glyph: createElement(TrackGlyph, { kind: 'vessel', affiliation: 'friend' }),
+    },
+    to: {
+        name: 'Contact 14',
+        glyph: createElement(TrackGlyph, {
+            kind: 'vessel',
+            affiliation: 'unknown',
+        }),
+    },
+    facts: [{ term: 'Priority', value: 'High' }],
+    actions: [
+        { label: 'Pause', onSelect: noop },
+        { label: 'Report', onSelect: noop, primary: true },
+        {
+            label: 'Cancel',
+            onSelect: noop,
+            destructive: true,
+            confirm: { question: 'Cancel Follow?' },
+        },
+    ],
+}
+const taskCard = (props: Partial<TaskCardProps> = {}) => draw(TaskCard, { ...TASK_CARD_PROPS, ...props })
+const TASK_CARDS = once(() => ({
+    full: taskCard(),
+    selected: taskCard({ selected: true }),
+}))
+const taskCardPieces = (elements: El[]): Record<string, El | undefined> => {
+    const container = bySlotIn(elements, 'task-card')
+    const line = bySlotIn(elements, 'task-card-line')
+    return {
+        container,
+        title: elements.find((element) => element.tag === 'h3'),
+        elapsed: bySlotIn(elements, 'task-card-elapsed'),
+        line,
+        arrow: elements.find((element) => element.tag === 'svg' && element.parent === line),
+        actions: bySlotIn(elements, 'task-card-actions'),
+    }
+}
+/** A task card drawn in the page: what its actions ran, and the confirm dialog's buttons once one asks. */
+function taskActs(press: (box: HTMLElement) => void): string {
+    const ran: string[] = []
+    const actions = (TASK_CARD_PROPS.actions ?? []).map((action) => ({
+        ...action,
+        onSelect: () => ran.push(action.label),
+    }))
+    return live(createElement(TaskCard, { ...TASK_CARD_PROPS, actions }), (box) => {
+        press(box)
+        const dialog = document.querySelector('[role="alertdialog"], [role="dialog"]')
+        const buttons = dialog === null ? [] : [...dialog.querySelectorAll('button')].map((button) => button.textContent.trim())
+        return `${ran.join(' ') || 'nothing'} | ${buttons.join(' ') || 'no dialog'}`
+    })
+}
+
+const TASK_CARD_ADAPTER: Adapter = {
+    wordObjects: { TASK_CARD_WORDS },
+    complete: ['TASK_CARD_WORDS'],
+    words: Object.fromEntries(Object.keys(TASK_CARD_WORDS).map((key) => [key, `TASK_CARD_WORDS.${key}`])),
+    options: { state: [...TASK_STATES] },
+    size: (size, key) => {
+        const pieces = taskCardPieces(TASK_CARDS().full)
+        if (size === 'line' && key === 'icon') return pieceWhere(pieces.arrow)
+        return pieceWhere(pieces[size])
+    },
+    paint: (_, name, state) => {
+        const pieces = taskCardPieces(state === 'selected' ? TASK_CARDS().selected : TASK_CARDS().full)
+        return name === 'container' ? pieceWhere(pieces.container) : withPart(pieces.container, pieces[name])
+    },
+    effect: () => skip('the task card states no effects'),
+    keys: {
+        Tab: () => {
+            const buttons = TASK_CARDS().full.filter((element) => element.tag === 'button')
+            return buttons.length === 3 && buttons.every(focusable) ? true : 'an action is not a button in the tab order'
+        },
+        'Enter, Space (an action has focus)': () => {
+            // A native button: a browser presses it on Enter and Space, and the press is a click.
+            const button = (label: string) => (box: HTMLElement) =>
+                act(() => [...box.querySelectorAll('button')].find((one) => one.textContent.trim() === label)?.click())
+            const plain = taskActs(button('Report'))
+            const asked = taskActs(button('Cancel'))
+            return plain === 'Report | no dialog' && asked === 'nothing | Keep Cancel'
+                ? true
+                : `a press runs ${plain}; a destructive one with confirm runs ${asked}`
+        },
+    },
+    more: () => {
+        const { full } = TASK_CARDS()
+        // Each action against the small button of each variant.
+        const looks = (['outline', 'default', 'destructive'] as const).map((variant) => [
+            variant,
+            classesOf(draw(Button, { variant, size: 'sm' }, 'Run')[0]),
+        ])
+        const variants = full
+            .filter((element) => element.tag === 'button')
+            .map((element) => looks.find(([, classes]) => classes === classesOf(element))?.[0] ?? 'another look')
+        const statuses = taskStatuses()
+        return [
+            check(
+                'states.pending (the chip in each state: its word and tone, executing pulsing)',
+                'pending pending | executing running live | paused warning | done good | failed critical',
+                TASK_STATES.map((state) => {
+                    const look = statuses[state]
+                    return `${look.label} ${String(look.color)}${look.live === true ? ' live' : ''}`
+                }).join(' | '),
+            ),
+            check(
+                'states.executing (the chip says the state)',
+                TASK_STATES.join(' '),
+                TASK_STATES.map((state) =>
+                    taskCard({ state })
+                        .find((element) => element.attrs['data-status'] === state)
+                        ?.text.trim(),
+                ).join(' '),
+            ),
+            check(
+                'states.rest (the elapsed time as a clock: 4:07 under an hour, 1:04:07 past one)',
+                'Elapsed 4:07 | Elapsed 1:04:07',
+                [247_000, 3_847_000].map((elapsed) => taskCardPieces(taskCard({ elapsed })).elapsed?.text).join(' | '),
+            ),
+            check(
+                'states.rest (actions outline, primary filled, destructive in its variant)',
+                'outline default destructive',
+                variants.join(' '),
+            ),
+            check('states.rest (the line reads from, to, and its end)', 'Patrol 7 to Contact 14', taskCardPieces(full).line?.text),
+        ]
+    },
+}
+
+// Track roster
+
+const ROSTER_TRACKS: TrackRosterItem[] = [
+    {
+        id: 'tv-311',
+        name: 'Survey Larkspur',
+        kind: 'aircraft',
+        affiliation: 'unknown',
+        updatedAt: NOON - 40_000,
+    },
+    {
+        id: 'tv-204',
+        name: 'Ferry Juniper',
+        kind: 'vessel',
+        affiliation: 'friend',
+        states: ['Simulated'],
+        updatedAt: NOON - 2_000,
+    },
+    {
+        id: 'tv-107',
+        name: 'Pilot 4',
+        kind: 'vessel',
+        affiliation: 'friend',
+        updatedAt: NOON - 400_000,
+    },
+    {
+        id: 'tv-099',
+        name: 'Contact 14',
+        kind: 'vessel',
+        affiliation: 'hostile',
+        updatedAt: NOON - 9_000,
+    },
+]
+const roster = (props: Partial<TrackRosterProps> = {}) => draw(TrackRoster, { tracks: ROSTER_TRACKS, now: NOON, ...props })
+/** The group heads and rows a roster draws, in order. */
+const rosterOrder = (elements: El[]) =>
+    elements
+        .filter((element) => element.attrs['data-group'] !== undefined || element.attrs['data-row'] !== undefined)
+        .map((element) => element.attrs['data-group'] ?? element.attrs['data-row'])
+        .join(' ')
+/** A roster drawn in the page, with the tracks it picked. */
+const liveRoster = <T>(look: (box: HTMLElement, picked: string[]) => T) => {
+    const picked: string[] = []
+    return live(
+        createElement(TrackRoster, {
+            tracks: ROSTER_TRACKS,
+            now: NOON,
+            onSelect: (id) => picked.push(id),
+        }),
+        (box) => look(box, picked),
+    )
+}
+
+const TRACK_ROSTER_ADAPTER: Adapter = {
+    wordObjects: { TRACK_ROSTER_WORDS },
+    complete: ['TRACK_ROSTER_WORDS'],
+    words: Object.fromEntries(Object.keys(TRACK_ROSTER_WORDS).map((key) => [key, `TRACK_ROSTER_WORDS.${key}`])),
+    options: {},
+    size: () => skip('the roster states no sizes: its rows are track cards and its frame the table'),
+    paint: () => skip("the roster states no paints: its rows are track cards and its frame the table's"),
+    effect: () => skip('the roster states no effects'),
+    keys: {
+        '/': () =>
+            liveWaiting(createElement(TrackRoster, { tracks: ROSTER_TRACKS, now: NOON }), async (box) => {
+                // The table's search arrives once its parts are fetched.
+                if (!(await until(() => box.querySelector('input') !== null))) return 'no search drawn'
+                press(document.body, '/')
+                return document.activeElement === box.querySelector('input') ? true : '/ does not focus the search'
+            }),
+        // Focus starts on the first track, and friend holds two: the second Down is on the hostile head, if heads are reached.
+        'ArrowUp, ArrowDown': () =>
+            liveRoster((box, picked) => {
+                const grid = box.querySelector<HTMLElement>('[role="grid"]')
+                act(() => grid?.focus())
+                for (const key of ['ArrowDown', 'ArrowDown', 'ArrowUp', 'ArrowDown', 'Enter']) press(grid, key)
+                return picked.length === 0
+                    ? true
+                    : `the arrows move between the rows only: Down, Down, Up, Down and Enter pick ${picked.join(' ')}`
+            }),
+        'Enter (the list has focus)': () =>
+            liveRoster((box, picked) => {
+                const grid = box.querySelector<HTMLElement>('[role="grid"]')
+                act(() => grid?.focus())
+                press(grid, 'Enter')
+                const first = picked.join(' ')
+                press(grid, 'ArrowDown')
+                press(grid, 'ArrowDown')
+                press(grid, 'Enter')
+                const folded = box.querySelector('[data-group="hostile"]')?.getAttribute('aria-expanded') === 'false'
+                if (first !== 'tv-204') return `Enter on the first track picks ${first || 'nothing'}`
+                return folded
+                    ? true
+                    : `Enter picks the active track, but no key reaches a group head to fold it: it picks ${picked.slice(1).join(' ')}`
+            }),
+    },
+    more: () => {
+        const plain = roster()
+        const picked = roster({ selected: 'tv-099' })
+        const empty = roster({ tracks: [] })
+        const chosen = picked.find((element) => element.attrs['data-row'] === 'tv-099')
+        return [
+            check(
+                'states.rest (under their affiliations, friend first, sorted by name)',
+                'friend tv-204 tv-107 hostile tv-099 unknown tv-311',
+                rosterOrder(plain),
+            ),
+            check('states.selected (the track picked drawn as the chosen row)', 'true', chosen?.attrs['aria-selected']),
+            check(
+                'states.empty (no tracks)',
+                'No tracks.',
+                empty.some((element) => element.text.trim() === TRACK_ROSTER_WORDS.empty) ? TRACK_ROSTER_WORDS.empty : 'not said',
+            ),
+            check(
+                'states.rest (the rows are unframed track cards, with no column heads)',
+                'unframed, no heads',
+                `${plain.some((element) => element.attrs['data-slot'] === 'track-card' && /\bborder\b/.test(classesOf(element))) ? 'framed' : 'unframed'}, ${
+                    plain.some((element) => element.attrs.role === 'columnheader') ? 'heads' : 'no heads'
+                }`,
+            ),
+        ]
+    },
+}
+
+// Playback timeline
+
+const PLAYBACK_PROPS: PlaybackTimelineProps = {
+    from: NOON - 2 * HOURS,
+    to: NOON,
+    value: NOON - HOURS,
+    onValueChange: noop,
+    activity: [4, 8, 2, 6],
+    timeZone: 'UTC',
+}
+const playback = (props: Partial<PlaybackTimelineProps> = {}) => draw(PlaybackTimeline, { ...PLAYBACK_PROPS, ...props })
+const PLAYBACKS = once(() => ({
+    back: playback(),
+    live: playback({ value: null }),
+}))
+const playbackPieces = (elements: El[]): Record<string, El | undefined> => {
+    const head = bySlotIn(elements, 'playback-head')
+    const rects = elements.filter((element) => element.tag === 'rect')
+    return {
+        container: bySlotIn(elements, 'playback-timeline'),
+        bar: bySlotIn(elements, 'playback-readout')?.parent,
+        readout: bySlotIn(elements, 'playback-readout'),
+        strip: bySlotIn(elements, 'playback-strip'),
+        head,
+        line: elements.find((element) => element.parent === head),
+        liveChip: bySlotIn(elements, 'time-mark'),
+        barPlayed: rects[0],
+        barAhead: rects.at(-1),
+    }
+}
+/** What a playback timeline hands out when `act` presses on it, drawn in the page from `props`. */
+function playbackHears(act_: (box: HTMLElement) => void, props: Partial<PlaybackTimelineProps> = {}): (number | null)[] {
+    const heard: (number | null)[] = []
+    live(
+        createElement(PlaybackTimeline, {
+            ...PLAYBACK_PROPS,
+            ...props,
+            onValueChange: (value) => heard.push(value),
+        }),
+        act_,
+    )
+    return heard
+}
+const headKeys = (keys: [string, KeyboardEventInit?][], props: Partial<PlaybackTimelineProps> = {}) =>
+    playbackHears((box) => {
+        const head = box.querySelector('[role="slider"]')
+        for (const [key, init] of keys) press(head, key, init)
+    }, props)
+/** A move from the time shown, in minutes, or live. */
+const minutes = (heard: (number | null)[], from = PLAYBACK_PROPS.value ?? NOON) =>
+    heard.map((value) => (value === null ? 'live' : String((value - from) / 60_000))).join(' ')
+/** How often playing moves the time on, in ms: what a second of playing hands out. */
+function playFrame(): string {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+    try {
+        const heard = playbackHears(() => act(() => vi.advanceTimersByTime(1_000)), { playing: true })
+        return heard.length === 0 ? 'never' : String(1_000 / heard.length)
+    } finally {
+        vi.useRealTimers()
+    }
+}
+
+const PLAYBACK_TIMELINE_ADAPTER: Adapter = {
+    wordObjects: { PLAYBACK_TIMELINE_WORDS },
+    complete: ['PLAYBACK_TIMELINE_WORDS'],
+    words: Object.fromEntries(Object.keys(PLAYBACK_TIMELINE_WORDS).map((key) => [key, `PLAYBACK_TIMELINE_WORDS.${key}`])),
+    options: {},
+    size: () => skip('the playback timeline states no sizes: its strip height is a layout length'),
+    paint: (_, name, state) => {
+        if (name === 'barPlayed' || name === 'barAhead') return skip('a bar is an svg rect filled at an opacity: read in more')
+        const pieces = playbackPieces(state === 'live' ? PLAYBACKS().live : PLAYBACKS().back)
+        if (name === 'playhead') return state === 'focus' ? pieceWhere(pieces.head, ['focus-visible']) : pieceWhere(pieces.line)
+        if (name === 'readout') return withPart(pieces.container, pieces.readout)
+        return pieceWhere(pieces[name])
+    },
+    effect: () => skip('the playback timeline states no effects'),
+    keys: {
+        'ArrowLeft, ArrowDown (the playhead has focus)': () => {
+            const tick = timelineTicks(NOON - 2 * HOURS, NOON, 640, 'UTC').step / 60_000
+            const heard = minutes(headKeys([['ArrowLeft'], ['ArrowDown'], ['ArrowLeft', { shiftKey: true }]]))
+            return heard === `-1 -1 ${String(-tick)}` ? true : `back a step, a step and a tick moves ${heard}`
+        },
+        'ArrowRight, ArrowUp (the playhead has focus)': () => {
+            const tick = timelineTicks(NOON - 2 * HOURS, NOON, 640, 'UTC').step / 60_000
+            const heard = minutes(headKeys([['ArrowRight'], ['ArrowUp'], ['ArrowRight', { shiftKey: true }]]))
+            const atEdge = minutes(headKeys([['ArrowRight']], { value: NOON - 30_000 }))
+            return heard === `1 1 ${String(tick)}` && atEdge === 'live'
+                ? true
+                : `on a step, a step and a tick moves ${heard}; at the edge ${atEdge}`
+        },
+        'PageDown, PageUp (the playhead has focus)': () => {
+            const heard = minutes(headKeys([['PageDown'], ['PageUp']]))
+            return heard === '-10 10' ? true : `ten steps back and on moves ${heard}`
+        },
+        'Home (the playhead has focus)': () => {
+            const heard = minutes(headKeys([['Home']]))
+            return heard === '-60' ? true : `Home moves ${heard}`
+        },
+        'End (the playhead has focus)': () => {
+            const heard = minutes(headKeys([['End']]))
+            return heard === 'live' ? true : `End moves ${heard}`
+        },
+    },
+    more: () => {
+        const { back, live: atLive } = PLAYBACKS()
+        const pieces = playbackPieces(back)
+        const bar = (rect: El | undefined) =>
+            `${String(resolve([classesOf(rect)], [], READ.ink))}/${String(Math.round(Number(rect?.attrs['fill-opacity']) * 100))}`
+        const shut = (elements: El[]) =>
+            elements
+                .filter((element) => element.tag === 'button' && 'disabled' in element.attrs)
+                .map((element) => element.attrs['aria-label'] ?? element.text)
+                .join(', ')
+        const height = (rect: El | undefined) => rect?.attrs.height
+        return [
+            ...(['barPlayed', 'barAhead'] as const).map((name) =>
+                check(`pieces.${name}.rest.ground`, String(SPECS.get('playback-timeline')?.pieces?.[name]?.rest.ground), bar(pieces[name])),
+            ),
+            check(
+                'states.live (the readout says Live; Play and Step forward are shut)',
+                'Live | Play, Step forward',
+                `${String(playbackPieces(atLive).readout?.text)} | ${shut(atLive)}`,
+            ),
+            check(
+                'states.back (the readout says the time shown; nothing shut)',
+                'Nov 17, 11:00:00 | ',
+                `${String(pieces.readout?.text)} | ${shut(back)}`,
+            ),
+            check(
+                'states.back (a bar as tall as its count of the tallest, 80 percent of its bin)',
+                '4 8 2 6 0.8',
+                [
+                    ...back.filter((element) => element.tag === 'rect').map(height),
+                    back.find((element) => element.tag === 'rect')?.attrs.width,
+                ].join(' '),
+            ),
+            check(
+                'states.playing (playing up to the live edge returns to live)',
+                'live',
+                (() => {
+                    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+                    try {
+                        return minutes(
+                            playbackHears(() => act(() => vi.advanceTimersByTime(250)), {
+                                playing: true,
+                                value: NOON - 10_000,
+                            }),
+                        )
+                    } finally {
+                        vi.useRealTimers()
+                    }
+                })(),
+            ),
+            ...layoutChecks('playback-timeline', {
+                liveSnap: () => {
+                    // The nearest a drag lets go and still plays back, on an axis 800 wide.
+                    let x = 800
+                    while (x > 0 && scrubTime(x, 800, NOON - 2 * HOURS, NOON, NOON) === null) x -= 1
+                    return String(800 - x - 1)
+                },
+                frame: playFrame,
+                stripHeight: () => lengthOn(pieces.strip, READ.height),
+            }),
+        ]
+    },
+}
+
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
     'text-field': TEXT_FIELD_ADAPTER,
@@ -10206,6 +11305,15 @@ const ADAPTERS: Record<string, Adapter> = {
     'map-go-to': MAP_GO_TO_ADAPTER,
     'map-follow': MAP_FOLLOW_ADAPTER,
     'map-compass': MAP_COMPASS_ADAPTER,
+    'zone-layer': ZONE_LAYER_ADAPTER,
+    'coverage-layer': COVERAGE_LAYER_ADAPTER,
+    'link-layer': LINK_LAYER_ADAPTER,
+    'track-glyph': TRACK_GLYPH_ADAPTER,
+    freshness: FRESHNESS_ADAPTER,
+    'track-card': TRACK_CARD_ADAPTER,
+    'track-roster': TRACK_ROSTER_ADAPTER,
+    'task-card': TASK_CARD_ADAPTER,
+    'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
 }
 
 // The checks, walked from each spec

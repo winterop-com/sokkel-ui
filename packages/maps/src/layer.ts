@@ -7,7 +7,7 @@ import type {
     Map as MapLibreMap,
     MapGeoJSONFeature,
 } from 'maplibre-gl'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
 import { labelAnchor } from './basemap'
 import { resolveColors } from './color'
@@ -307,26 +307,103 @@ export function useRenderedPoints(
 /** A box on the map's canvas: left, top, right and bottom, in pixels. */
 export type PixelBox = [number, number, number, number]
 
+/** Whether two boxes on the canvas cover one another. */
+export const overlaps = (a: PixelBox, b: PixelBox): boolean => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
+
 /**
- * The points whose boxes cover none placed before them, the `first` key's placed first and always,
- * then in the order given, so labels written in an overlay never sit on one another.
+ * The points whose boxes cover none placed before them, nor any box already `taken`, the `first`
+ * key's placed first and always, then in the order given, so labels written in an overlay never
+ * sit on one another, or on what another layer wrote first.
  */
 export function placeClear(
     points: readonly RenderedPoint[],
     box: (point: RenderedPoint) => PixelBox,
     first: string | null = null,
+    taken: readonly PixelBox[] = [],
 ): RenderedPoint[] {
-    const overlaps = (a: PixelBox, b: PixelBox) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
     const ordered = [...points].sort((a, b) => Number(b.key === first) - Number(a.key === first))
-    const taken: PixelBox[] = []
+    const held: PixelBox[] = [...taken]
     const placed: RenderedPoint[] = []
     for (const point of ordered) {
         const own = box(point)
-        if (point.key !== first && taken.some((other) => overlaps(own, other))) continue
-        taken.push(own)
+        if (point.key !== first && held.some((other) => overlaps(own, other))) continue
+        held.push(own)
         placed.push(point)
     }
     return placed
+}
+
+/**
+ * Which overlay labels yield to which: a layer's labels keep clear of those of every layer of a lower
+ * rank, so a zone's name gives way to a track's and a link's measure to both.
+ */
+export const LABEL_RANK = { track: 0, zone: 1, link: 2 } as const
+
+/**
+ * The boxes a map's layers have written their labels in, by layer and rank, so a layer of a later
+ * rank places its own labels clear of them without knowing which layers wrote them.
+ */
+export interface LabelRegistry {
+    /** Sets the boxes a layer's labels take now; an empty list takes them down. */
+    set: (key: string, rank: number, boxes: readonly PixelBox[]) => void
+    /** The boxes the labels of every layer of a lower rank take: the same list until one of them changes. */
+    before: (rank: number) => readonly PixelBox[]
+    subscribe: (listener: () => void) => () => void
+}
+
+const NO_BOXES: readonly PixelBox[] = []
+
+export function labelRegistry(): LabelRegistry {
+    const entries = new Map<string, { rank: number; boxes: readonly PixelBox[]; text: string }>()
+    const listeners = new Set<() => void>()
+    const cache = new Map<number, readonly PixelBox[]>()
+    return {
+        set: (key, rank, boxes) => {
+            const held = entries.get(key)
+            const text = JSON.stringify(boxes)
+            if (boxes.length === 0 ? held === undefined : held?.rank === rank && held.text === text) return
+            if (boxes.length === 0) entries.delete(key)
+            else entries.set(key, { rank, boxes, text })
+            cache.clear()
+            for (const listener of listeners) listener()
+        },
+        before: (rank) => {
+            let found = cache.get(rank)
+            if (found === undefined) {
+                const boxes = [...entries.values()].filter((entry) => entry.rank < rank).flatMap((entry) => entry.boxes)
+                found = boxes.length === 0 ? NO_BOXES : boxes
+                cache.set(rank, found)
+            }
+            return found
+        },
+        subscribe: (listener) => {
+            listeners.add(listener)
+            return () => {
+                listeners.delete(listener)
+            }
+        },
+    }
+}
+
+/**
+ * Overlay labels that keep clear of other layers': the boxes the labels of the map's layers of a
+ * lower rank take, followed as they change, and `useLabelBoxes` to write back the boxes this
+ * layer's own labels take, for the layers of a higher rank.
+ */
+export function useTakenLabels(rank: number): readonly PixelBox[] {
+    const { labels } = useMapContext()
+    const read = () => labels.before(rank)
+    return useSyncExternalStore(labels.subscribe, read, read)
+}
+
+/** Writes the boxes a layer's labels take to the map's registry, and takes them down when the layer goes. */
+export function useLabelBoxes(key: string, rank: number, boxes: readonly PixelBox[]): void {
+    const { labels } = useMapContext()
+    const text = JSON.stringify(boxes)
+    useEffect(() => {
+        labels.set(key, rank, JSON.parse(text) as PixelBox[])
+    }, [labels, key, rank, text])
+    useEffect(() => () => labels.set(key, rank, []), [labels, key, rank])
 }
 
 /** A place an overlay writes beside, by its position on the map. */

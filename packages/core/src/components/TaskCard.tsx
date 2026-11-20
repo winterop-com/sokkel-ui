@@ -201,7 +201,7 @@ export function TaskCard({
                     {from !== undefined && to !== undefined && (
                         <>
                             <ArrowRight aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
-                            <span className="sr-only">{words.to}</span>
+                            <span className="sr-only"> {words.to} </span>
                         </>
                     )}
                     {to !== undefined && <TaskEndName end={to} />}

@@ -88,3 +88,6 @@ release and empties it.
 
 - A `MapPopup` stands over whatever a layer writes in the map's overlay, such as cluster counts and
   track names.
+- The labels a map's layers write in its overlay keep clear of one another across layers: a
+  `ZoneLayer`'s names give way to a `TrackLayer`'s labels, and a `LinkLayer`'s measure chips to
+  both, the selected zone's or link's still placed first and always.

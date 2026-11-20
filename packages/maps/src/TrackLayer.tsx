@@ -8,7 +8,17 @@ import { useLocale, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { ID_PROPERTY, useMapContext } from './context'
 import { normalizeBearing } from './geodesy'
 import type { Bounds, LngLat } from './geometry'
-import { state, useGeoJsonLayer, useRenderedPoints, type PreparedData, type RenderedPoint } from './layer'
+import {
+    LABEL_RANK,
+    overlaps,
+    state,
+    useGeoJsonLayer,
+    useLabelBoxes,
+    useRenderedPoints,
+    type PixelBox,
+    type PreparedData,
+    type RenderedPoint,
+} from './layer'
 import type { MapLegendEntry } from './MapLegend'
 import { SELECTION_COLOR } from './scale'
 
@@ -319,24 +329,32 @@ function affiliationColor(colors: Record<TrackAffiliation, string>): ExpressionS
 /** How far right of its track's point a label starts, in pixels. */
 const labelOffset = (size: number) => Math.round(size * 0.75) + 4
 
+/** A track's symbol's box, centered on its point. */
+export const trackSymbolBox = (point: RenderedPoint, size: number): PixelBox => [
+    point.x - size / 2,
+    point.y - size / 2,
+    point.x + size / 2,
+    point.y + size / 2,
+]
+
+/** A track label's box beside its track: about six pixels a letter of the 2xs text, and its padding. */
+export const trackLabelBox = (point: RenderedPoint, size: number): PixelBox => {
+    const left = point.x + labelOffset(size)
+    return [left, point.y - 8, left + point.text.length * 6 + 8, point.y + 8]
+}
+
 /**
  * The labels that fit beside their tracks without covering another label or another track's
  * symbol: the selected track's first, then in the order given, each taken only where it is clear.
  * A label's box is reckoned from its length, at about six pixels a letter of the 2xs text.
  */
 export function placeLabels(points: readonly RenderedPoint[], selected: string | null, size: number): RenderedPoint[] {
-    type Box = [number, number, number, number]
-    const overlaps = (a: Box, b: Box) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
-    const symbols = points.map((point): [string, Box] => [
-        point.key,
-        [point.x - size / 2, point.y - size / 2, point.x + size / 2, point.y + size / 2],
-    ])
+    const symbols = points.map((point): [string, PixelBox] => [point.key, trackSymbolBox(point, size)])
     const ordered = [...points].sort((a, b) => Number(b.key === selected) - Number(a.key === selected))
-    const taken: Box[] = []
+    const taken: PixelBox[] = []
     const placed: RenderedPoint[] = []
     for (const point of ordered) {
-        const left = point.x + labelOffset(size)
-        const box: Box = [left, point.y - 8, left + point.text.length * 6 + 8, point.y + 8]
+        const box = trackLabelBox(point, size)
         const clear =
             point.key === selected ||
             (!taken.some((other) => overlaps(box, other)) && !symbols.some(([key, symbol]) => key !== point.key && overlaps(box, symbol)))
@@ -566,10 +584,13 @@ export function TrackLayer({
         return typeof key === 'string' && typeof label === 'string' && label !== '' ? { key, text: label } : null
     })
 
+    const placed = placeLabels(names, selected, size)
+    useLabelBoxes(`wui-${id}`, LABEL_RANK.track, visible ? placed.map((name) => trackLabelBox(name, size)) : [])
+
     if (!visible || (counts.length === 0 && names.length === 0)) return null
     return createPortal(
         <>
-            {placeLabels(names, selected, size).map((name) => (
+            {placed.map((name) => (
                 <span
                     key={`name-${name.key}`}
                     aria-hidden

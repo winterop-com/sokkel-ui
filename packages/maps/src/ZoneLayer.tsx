@@ -8,10 +8,13 @@ import { ID_PROPERTY, useMapContext } from './context'
 import type { Bounds, LngLat } from './geometry'
 import {
     hatchImage,
+    LABEL_RANK,
     placeClear,
     state,
     useGeoJsonLayer,
+    useLabelBoxes,
     useProjectedPoints,
+    useTakenLabels,
     type PlacedText,
     type PixelBox,
     type PreparedData,
@@ -193,9 +196,9 @@ const FILLED: Record<ZoneFill, ExpressionSpecification> = {
 /**
  * Areas on the map, each in its tone (a track affiliation's color, or plain): its inside a light
  * wash of the tone, diagonal lines in it (a pattern made in code) or nothing, inside a solid or a
- * dashed edge, and its label written at its middle, unless it would cover another zone's label (the selected
- * zone's is placed first). The zone under the pointer deepens; the
- * selected one (the map's `selected`, picked by a click) is edged in the selection color.
+ * dashed edge, and its label written at its middle, unless it would cover another zone's label or a
+ * track's label (the selected zone's is placed first, and always). The zone under the pointer
+ * deepens; the selected one (the map's `selected`, picked by a click) is edged in the selection color.
  */
 export function ZoneLayer({
     id,
@@ -287,9 +290,11 @@ export function ZoneLayer({
     })
 
     const names = useProjectedPoints(map, data.labels, labels && visible)
-    if (!visible || names.length === 0) return null
+    const placed = placeClear(names, zoneLabelBox, selected, useTakenLabels(LABEL_RANK.zone))
+    useLabelBoxes(`wui-${id}`, LABEL_RANK.zone, visible ? placed.map(zoneLabelBox) : [])
+    if (!visible || placed.length === 0) return null
     return createPortal(
-        placeClear(names, zoneLabelBox, selected).map((name) => (
+        placed.map((name) => (
             <span
                 key={`zone-${name.key}`}
                 aria-hidden

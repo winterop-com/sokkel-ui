@@ -1,0 +1,123 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "zone-layer",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Areas on a map, each in its tone: its inside a light wash of the tone, diagonal lines in it or nothing, inside a solid or a dashed edge, and its label written at its middle. The zone under the pointer deepens; the selected zone is edged in the selection color.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/maps/src/ZoneLayer.tsx",
+            "packages/maps/src/tone.ts",
+            "packages/maps/src/layer.ts (placeClear)"
+        ]
+    },
+    "anatomy": {
+        "fill": "solid: the tone at 0.18 of full, 0.24 under the pointer, 0.3 selected. hatched: diagonal lines in the tone, 1 wide every 6, rising to the right, on nothing, at 0.7 of full, 0.95 under the pointer, full selected. none: nothing, though the inside still answers the pointer.",
+        "edge": "Round the zone and its holes, 1.5 wide in the tone, 2 under the pointer, 2.5 selected in map-selection over a 5 wide halo in card; dashed 3 on 2 when the edge is dashed.",
+        "label": "The zone's label at the middle of its area (of its largest part's), centered on it: text.2xs at 500 on card at 80 percent, padded 4 across, rounded by radius-mini. A label that would cover another zone's is left out; the selected zone's never is, and is placed first, on card, ringed 1 in map-selection."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "zones": {
+            "type": "rows",
+            "does": "Each zone { id, area, tone?, fill?, edge?, label? }: the area an outline of positions (longitude, latitude) or a polygon or multipolygon, holes included. Plain unless given. The tone is friend, hostile, neutral, unknown or pending, drawn in that track affiliation's token (track-friend and the rest), or plain, drawn in muted-foreground."
+        },
+        "fill": {
+            "type": "text",
+            "values": ["solid", "hatched", "none"],
+            "default": "solid",
+            "does": "How each zone's inside is drawn unless the zone says."
+        },
+        "edge": {
+            "type": "text",
+            "values": ["solid", "dashed"],
+            "default": "solid",
+            "does": "How each zone's edge is drawn unless the zone says."
+        },
+        "labels": {"type": "boolean", "default": true, "does": "Writes each zone's label at its middle."},
+        "colors": {"type": "rows", "does": "Colors for the tones in place of their tokens."},
+        "opacity": {"type": "number", "default": 1, "does": "How opaque the whole layer is."},
+        "visible": {"type": "boolean", "default": true, "does": "Draws the layer."},
+        "interactive": {
+            "type": "boolean",
+            "default": true,
+            "does": "Zones answer the pointer and presses; a press selects one as the map's selection."
+        }
+    },
+    "sizes": {
+        "label": {
+            "padX": 4,
+            "radius": "radius-mini",
+            "note": "Centered on the zone's middle; text.2xs at 500, as its paint says."
+        }
+    },
+    "layout": {
+        "edgeWidth": {"value": 1.5, "note": "The edge at rest; 2 under the pointer, 2.5 selected."},
+        "hatchSpacing": {"value": 6, "note": "How far apart the hatch's lines are, along the edge of its tile."},
+        "haloWidth": {"value": 5, "note": "The selected zone's halo in card, under its edge."}
+    },
+    "states": {
+        "rest": {"means": "A zone drawn."},
+        "hover": {
+            "means": "The pointer is over the zone: its inside deepens and its edge thickens.",
+            "reached": "pointer over"
+        },
+        "selected": {
+            "means": "The map's selected zone: edged in the selection color over a halo, its label marked.",
+            "reached": "a press on it, or the map's selected"
+        }
+    },
+    "pieces": {
+        "fill": {
+            "rest": {
+                "ground": "muted-foreground/18",
+                "note": "In the zone's tone token; hatched and none as the anatomy says."
+            },
+            "hover": {"ground": "muted-foreground/24"},
+            "selected": {"ground": "muted-foreground/30"}
+        },
+        "edge": {
+            "rest": {"edge": "muted-foreground", "note": "In the zone's tone token."},
+            "selected": {"edge": "map-selection"}
+        },
+        "label": {
+            "rest": {
+                "ground": "card/80",
+                "ink": "foreground",
+                "text": "text.2xs",
+                "weight": 500,
+                "radius": "radius-mini"
+            },
+            "selected": {"ground": "card", "ring": {"color": "map-selection", "width": 1}}
+        }
+    },
+    "keyboard": [],
+    "words": {},
+    "appText": {"label": "Each zone's label."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Drawn on maplibre: the zones as one GeoJSON source with style layers for each fill, the halo and each edge; the hatch is a pattern image made in code for each tone, in its resolved color.",
+            "Labels are written in the map's overlay at each zone's middle, projected again after every move, and only those in view.",
+            "zoneLegendEntry keys a zone's tone and fill in a MapLegend."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

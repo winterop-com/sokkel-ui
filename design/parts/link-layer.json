@@ -1,0 +1,120 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "link-layer",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Lines between two positions, each in its tone over a casing in the card color: straight on the map or along the great circle, solid or dashed, and with measure a chip midway saying the distance and the bearing from where it starts, as the ruler's does. The link under the pointer thickens; the selected one is drawn in the selection color. Hundreds of links stay cheap.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/maps/src/LinkLayer.tsx",
+            "packages/maps/src/geodesy.ts (greatCircle, rhumbBearing, rhumbDistance, rhumbMiddle)",
+            "packages/maps/src/tone.ts"
+        ]
+    },
+    "anatomy": {
+        "line": "From one end to the other: along the great circle in steps of at most 50 km (64 at most), or straight on the map (the rhumb line); the width (1.5) in the tone, 0.75 more under the pointer and 1 more selected in map-selection, dashed 3 on 2 when dashed, round-capped, over a casing 2.5 wider in card at 80 percent.",
+        "chip": "Over the link's middle (along the great circle, or halfway along the straight line on the map), 8 above it: words.measured with the distance and the bearing, as the ruler's chip: text.xs at 500 in tabular figures on card, padded 6 across and 2 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent. A chip that would cover another is left out; the selected link's never is, and is placed first. Only chips whose middle is in view are written."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "links": {
+            "type": "rows",
+            "does": "Each link { id, from, to, tone?, path?, dashed?, measure? }. Plain unless given. The tone is friend, hostile, neutral, unknown or pending, drawn in that track affiliation's token (track-friend and the rest), or plain, drawn in muted-foreground."
+        },
+        "path": {
+            "type": "text",
+            "values": ["straight", "great-circle"],
+            "default": "great-circle",
+            "does": "How each link runs unless the link says."
+        },
+        "dashed": {"type": "boolean", "default": false, "does": "Dashes each link unless the link says."},
+        "measure": {
+            "type": "boolean",
+            "default": false,
+            "does": "Shows each link's distance and bearing midway unless the link says."
+        },
+        "unit": {
+            "type": "text",
+            "values": ["km", "mi", "nmi"],
+            "default": "km",
+            "does": "The unit a measure's distance is written in; whole meters under a kilometer."
+        },
+        "width": {"type": "number", "default": 1.5, "does": "The width of a link."},
+        "colors": {"type": "rows", "does": "Colors for the tones in place of their tokens."},
+        "opacity": {"type": "number", "default": 1, "does": "How opaque the whole layer is."},
+        "visible": {"type": "boolean", "default": true, "does": "Draws the layer."},
+        "interactive": {
+            "type": "boolean",
+            "default": true,
+            "does": "Links answer the pointer and presses; a press selects one as the map's selection."
+        }
+    },
+    "sizes": {"chip": {"padX": 6, "padY": 2, "text": "text.badge", "radius": "radius-control"}},
+    "layout": {
+        "chipLift": {"value": 8, "note": "The chip's foot stands this far above the link's middle."},
+        "casing": {"value": 2.5, "note": "How much wider the casing is than the line."},
+        "greatCircleStep": {
+            "value": 50000,
+            "note": "The longest step a great-circle link is drawn in, in meters; 64 steps at most."
+        }
+    },
+    "states": {
+        "rest": {"means": "A link drawn."},
+        "hover": {"means": "The pointer is over the link: it thickens.", "reached": "pointer over"},
+        "selected": {
+            "means": "The map's selected link: drawn in the selection color, its chip placed first.",
+            "reached": "a press on it, or the map's selected"
+        }
+    },
+    "pieces": {
+        "line": {
+            "rest": {"ink": "muted-foreground", "edge": "card/80", "note": "In the link's tone token, over its casing."},
+            "selected": {"ink": "map-selection"}
+        },
+        "chip": {
+            "rest": {
+                "ground": "card",
+                "ink": "foreground",
+                "text": "text.xs",
+                "weight": 500,
+                "radius": "radius-control",
+                "ring": {"color": "foreground/10", "width": 1}
+            }
+        }
+    },
+    "keyboard": [],
+    "words": {"measured": "{distance} · {bearing}"},
+    "messages": {"measured": {"id": "link.measured", "en": "{distance} · {bearing}"}},
+    "samples": {
+        "measured": [
+            {"with": {"distance": "235 km", "bearing": "010°"}, "says": "235 km · 010°"},
+            {"with": {"distance": "420 m", "bearing": "047°"}, "says": "420 m · 047°"}
+        ]
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "Drawn on maplibre: every link one feature of one GeoJSON source, with a casing and a solid and a dashed line layer, however many links there are.",
+            "A straight link's measure is along the rhumb line (rhumbDistance, rhumbBearing), its middle halfway up the Mercator scale (rhumbMiddle); a great-circle link's as the ruler's.",
+            "Chips are written in the map's overlay, projected again after every move, only those in view."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}
