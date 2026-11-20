@@ -1,0 +1,219 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "chip",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "a59a263"},
+        "sokkel-egui": {
+            "state": "missing",
+            "as_of": "3ffb400",
+            "note": "Not yet compared with this spec; a Chip widget with ChipTone::Kind exists."
+        },
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A short value as a chip: a tag on a job, a state that has no run color, a value that is absent. Its tone says how it reads: neutral, a semantic color's wash with its own ink, outline (a hairline edge) or absent (dashed, muted). hue gives it a category's color instead, from the chart palette or a kind color. It may be a button (onSelect, a toggle with selected), a link (href), a menu's trigger (menu), and may end in a remove button (onRemove). No press on it reaches a row or a card around it. A badge says how loud a value is; a chip is a value that can be pressed, chosen, removed or opened.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/Chip.tsx", "packages/core/src/lib/kind.ts (KIND_CHIP)"]},
+    "anatomy": {
+        "container": "The chip: rounded by radius-chip with a 1px edge (transparent but where a tone, hue or selection draws it), on one line, as wide as its words and never wider than its room, the words ending in an ellipsis.",
+        "face": "What the chip says: its icon, then its words, 4 apart, padded across; the press when the chip is a button, a link or a menu's trigger, reaching over the chip's edge so it is as tall as the chip.",
+        "icon": "Before the words, at the chip's icon size; an icon given its own size keeps it.",
+        "chevron": "After the words of a menu's trigger, at 70 percent.",
+        "externalMark": "After the words of an external link, an arrow up and right at 70 percent, with words for a screen reader saying it opens in a new tab.",
+        "remove": "A button at the chip's end, its own stop in the tab order: an X, padded 2 and 2 in from the chip's end, rounded by radius-mini, at 70 percent until hovered."
+    },
+    "standsOn": {"default": "background"},
+    "alsoStandsOn": {"default": ["card", "popover", "sidebar", "muted"]},
+    "options": {
+        "tone": {
+            "values": ["neutral", "good", "critical", "warning", "info", "outline", "absent"],
+            "default": "neutral",
+            "does": "How it reads: neutral on a faint wash; good, critical, warning and info on their color's wash at 15 percent with its ink; outline only edged; absent, dashed in border-strong around muted words, for a value that is not there."
+        },
+        "hue": {
+            "values": ["1", "2", "3", "4", "5", "blue", "green", "jade", "pink", "teal", "violet"],
+            "does": "A category's color, worn in place of the tone, for chips that tell kinds apart: one of the chart palette's five, set by a theme with the charts', or a kind color, the same paints as a badge's kind. Its wash at 12 percent, its edge at 30, its ink."
+        },
+        "size": {
+            "values": ["default", "control"],
+            "default": "default",
+            "does": "default sits in a line of text or a table cell; control stands alone as a control does, as tall as a field or a button, and a finger tall below md."
+        },
+        "mono": {"type": "boolean", "default": false, "does": "The words in the code face, for an id, a tag or a key."},
+        "icon": {"type": "node", "does": "Drawn before the words."},
+        "title": {
+            "type": "text",
+            "does": "Said on hover: the whole value when the chip cuts it short, or what it means."
+        },
+        "onSelect": {"type": "callback", "does": "Makes the face a button. Its press stops at the chip."},
+        "selectLabel": {
+            "type": "text",
+            "does": "The button's or the link's name and tooltip, when a press does more than the words say (\"Filter by harbor\"); the words by default."
+        },
+        "selected": {
+            "type": "boolean",
+            "does": "With onSelect, a toggle: the button says it is pressed, and the chip wears an edge in its own ink over a stronger wash."
+        },
+        "menu": {
+            "type": "rows",
+            "does": "Makes the face a menu's trigger, with a chevron after the words; a press opens the items (label, icon, onSelect, disabled, destructive) in parts/dropdown-menu's menu under the chip. It takes the place of onSelect and href."
+        },
+        "menuAlign": {
+            "values": ["start", "center", "end"],
+            "default": "start",
+            "does": "Where the menu lines up under the chip."
+        },
+        "href": {
+            "type": "text",
+            "does": "Makes the face a link to what the chip names, through the app's link provider. It takes the place of onSelect."
+        },
+        "external": {
+            "type": "boolean",
+            "default": false,
+            "does": "Opens href in a new tab, safely, with the external mark after the words."
+        },
+        "open": {
+            "type": "boolean",
+            "does": "The menu open, held by the app; left out, the chip holds it (defaultOpen, onOpenChange)."
+        },
+        "onRemove": {
+            "type": "callback",
+            "does": "Ends the chip in a remove button, named by words.remove. Its press stops at the chip."
+        },
+        "children": {"type": "node", "does": "The words."}
+    },
+    "sizes": {
+        "default": {
+            "height": 20,
+            "padX": 6,
+            "gap": 4,
+            "icon": 12,
+            "text": "text.badge",
+            "radius": "radius-chip",
+            "note": "padX is the face's; with a remove button the face keeps only its start pad."
+        },
+        "control": {
+            "height": "density.control",
+            "padX": 10,
+            "gap": 4,
+            "icon": 14,
+            "text": "text.xs",
+            "radius": "radius-chip",
+            "phoneMinHeight": "spacing-finger"
+        },
+        "remove": {
+            "padX": 2,
+            "padY": 2,
+            "radius": "radius-mini",
+            "note": "2 in from the chip's end on each side (mx 2)."
+        }
+    },
+    "states": {
+        "rest": {"means": "The chip drawn."},
+        "hover": {
+            "means": "The pointer is over a pressable face (its words underlined) or the remove button (washed, at full strength).",
+            "reached": "pointer over"
+        },
+        "focus": {
+            "means": "Keyboard focus on the face or the remove button: the focus outline, 1 out.",
+            "reached": "Tab",
+            "on": "keyboard",
+            "effect": {"piece": "face", "ring": {"color": "ring", "width": "focus-ring-width", "offset": 1}}
+        },
+        "selected": {
+            "means": "A toggle chip turned on: pressed, edged in its own ink over a stronger wash.",
+            "reached": "selected",
+            "sokkel-ui": "data-selected, aria-pressed"
+        }
+    },
+    "variants": {
+        "neutral": {
+            "rest": {"ground": "faint/15", "ink": "muted-foreground"},
+            "selected": {"ground": "faint/35", "ink": "foreground", "edge": "foreground"}
+        },
+        "good": {
+            "rest": {"ground": "good/15", "ink": "good-ink"},
+            "selected": {"ground": "good/30", "ink": "good-ink", "edge": "good-ink"}
+        },
+        "critical": {
+            "rest": {"ground": "critical/15", "ink": "critical-ink"},
+            "selected": {"ground": "critical/30", "ink": "critical-ink", "edge": "critical-ink"}
+        },
+        "warning": {
+            "rest": {"ground": "warning/15", "ink": "warning-ink"},
+            "selected": {"ground": "warning/30", "ink": "warning-ink", "edge": "warning-ink"}
+        },
+        "info": {
+            "rest": {"ground": "info/15", "ink": "info-ink"},
+            "selected": {"ground": "info/30", "ink": "info-ink", "edge": "info-ink"}
+        },
+        "outline": {
+            "rest": {"edge": "border", "ink": "foreground"},
+            "selected": {"ground": "faint/25", "ink": "foreground", "edge": "foreground"}
+        },
+        "absent": {"rest": {"edge": "border-strong", "ink": "muted-foreground", "note": "The edge is dashed."}},
+        "hue-1": {"rest": {"ground": "chart-1/12", "edge": "chart-1/30", "ink": "chart-1"}},
+        "hue-2": {"rest": {"ground": "chart-2/12", "edge": "chart-2/30", "ink": "chart-2"}},
+        "hue-3": {"rest": {"ground": "chart-3/12", "edge": "chart-3/30", "ink": "chart-3"}},
+        "hue-4": {"rest": {"ground": "chart-4/12", "edge": "chart-4/30", "ink": "chart-4"}},
+        "hue-5": {"rest": {"ground": "chart-5/12", "edge": "chart-5/30", "ink": "chart-5"}},
+        "hue-blue": {"rest": {"ground": "kind-blue/12", "edge": "kind-blue/30", "ink": "kind-blue-ink"}},
+        "hue-green": {"rest": {"ground": "kind-green/12", "edge": "kind-green/30", "ink": "kind-green-ink"}},
+        "hue-jade": {"rest": {"ground": "kind-jade/12", "edge": "kind-jade/30", "ink": "kind-jade-ink"}},
+        "hue-pink": {"rest": {"ground": "kind-pink/12", "edge": "kind-pink/30", "ink": "kind-pink-ink"}},
+        "hue-teal": {"rest": {"ground": "kind-teal/12", "edge": "kind-teal/30", "ink": "kind-teal-ink"}},
+        "hue-violet": {"rest": {"ground": "kind-violet/12", "edge": "kind-violet/30", "ink": "kind-violet-ink"}}
+    },
+    "pieces": {
+        "face": {"rest": {"underline": false}, "hover": {"underline": true}},
+        "remove": {"rest": {"opacity": 0.7}, "hover": {"ground": "hover", "opacity": 1}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the face when it is a button, a link or a menu's trigger, then the remove button; a plain chip takes no focus."
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Presses the face (selects, toggles, follows the link or opens the menu) without pressing a row or a card around the chip.",
+            "when": "the face has focus"
+        },
+        {
+            "keys": ["Enter", "Space"],
+            "does": "Removes the chip, without pressing a row or a card around it.",
+            "when": "the remove button has focus"
+        },
+        {
+            "keys": ["ArrowDown"],
+            "does": "Opens the menu, as parts/dropdown-menu's trigger does.",
+            "when": "the face is a menu's trigger"
+        }
+    ],
+    "words": {"remove": "Remove", "newTab": "opens in a new tab"},
+    "messages": {
+        "remove": {"id": "chip.remove", "en": "Remove"},
+        "newTab": {"id": "chip.newTab", "en": "opens in a new tab"}
+    },
+    "appText": {"children": "The value it says.", "selectLabel": "What a press does, when the words do not say it."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "words.remove may be a function of the chip's words (\"Remove harbor\").",
+            "Any other attribute of a span and ref go to the root, so a chip can be a tooltip or popover trigger's render target.",
+            "The menu is parts/dropdown-menu (Base UI's), loaded when first opened."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not compared yet",
+            "spec": "This spec.",
+            "today": "As of 3ffb400: a Chip widget exists (with ChipTone::Kind for kind paints); not yet read against this spec."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

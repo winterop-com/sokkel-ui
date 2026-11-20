@@ -300,6 +300,7 @@
         {"id": "unfoldable", "file": "parts/unfoldable.json", "status": "stable"},
         {"id": "choice-list", "file": "parts/choice-list.json", "status": "stable"},
         {"id": "badge", "file": "parts/badge.json", "status": "stable"},
+        {"id": "chip", "file": "parts/chip.json", "status": "stable"},
         {"id": "stat", "file": "parts/stat.json", "status": "stable"},
         {"id": "description-list", "file": "parts/description-list.json", "status": "stable"},
         {"id": "api-link", "file": "parts/api-link.json", "status": "stable"},

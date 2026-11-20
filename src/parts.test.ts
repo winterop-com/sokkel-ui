@@ -14,6 +14,7 @@ import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { ITEM_CARD_WORDS, ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
 import { Badge, type BadgeProps } from '@winterop-com/sokkel-ui/primitives/badge'
+import { CHIP_WORDS, Chip, type ChipProps } from '@winterop-com/sokkel-ui/Chip'
 import { SERVER_MENU_WORDS, ServerMenu } from '@winterop-com/sokkel-ui/ServerMenu'
 import { SORTABLE_WORDS, SortableGrid, sortableStep } from '@winterop-com/sokkel-ui/Sortable'
 import { Stat } from '@winterop-com/sokkel-ui/Stat'
@@ -524,7 +525,9 @@ function resolve(layers: readonly string[], on: readonly string[], read: Reader)
 /** A color class's value in the contract's grammar: `primary/80`, `mix(a, b 5%)`, `mix-oklab(a 8%, b)`, `none`. */
 function color(value: string): string | undefined {
     if (value === 'transparent') return 'none'
-    if (value === 'inherit' || value === 'current') return 'inherit'
+    if (value === 'inherit') return 'inherit'
+    // currentColor: the piece's own ink, read where the color is asked for.
+    if (value === 'current') return 'current'
     const oklch = /^\[color-mix\(in_oklch,var\(--([a-z0-9-]+)\),var\(--([a-z0-9-]+)\)_(\d+)%\)\]$/.exec(value)
     if (oklch !== null) return `mix(${oklch[1]}, ${oklch[2]} ${oklch[3]}%)`
     const oklab = /^\[color-mix\(in_oklab,var\(--([a-z0-9-]+)\)_(\d+)%,var\(--([a-z0-9-]+)\)\)\]$/.exec(value)
@@ -633,11 +636,12 @@ const READ = {
 
 /** The ink a piece wears: its own, else the nearest ink around it, else what the page gives (`inherit`). */
 function inkOf(where: Where, on: string[]): string {
+    // `text-current` passes the ink around it on, as no ink of its own does.
     const own = resolve(where.layers, on, READ.ink)
-    if (own !== undefined) return own
+    if (own !== undefined && own !== 'current') return own
     for (const classes of where.around ?? []) {
         const passed = resolve([classes], on.includes('dark') ? ['dark'] : [], READ.ink)
-        if (passed !== undefined) return passed
+        if (passed !== undefined && passed !== 'current') return passed
     }
     return 'inherit'
 }
@@ -698,10 +702,16 @@ const BORDER = /\*\s*\{\s*@apply border-([a-z-]+)\s/.exec(STYLES)?.[1]
 
 function colorFound(key: (typeof COLOR_KEYS)[number], where: Where, on: string[]): string | undefined {
     if (key === 'ink') return inkOf(where, on)
-    if (key === 'rule')
-        return resolve(where.layers, on, READ.rule) ?? (resolve(where.layers, on, READ.ruleWidth) === undefined ? undefined : BORDER)
-    if (key === 'placeholder') return resolve(where.layers, [...on, 'placeholder'], READ.ink)
-    return resolve(where.layers, on, READ[key])
+    const found =
+        key === 'rule'
+            ? (resolve(where.layers, on, READ.rule) ?? (resolve(where.layers, on, READ.ruleWidth) === undefined ? undefined : BORDER))
+            : key === 'placeholder'
+              ? resolve(where.layers, [...on, 'placeholder'], READ.ink)
+              : resolve(where.layers, on, READ[key])
+    // An edge, ground or rule in currentColor is the piece's own ink where it sets one, else the ink around it.
+    if (found !== 'current') return found
+    const own = resolve(where.layers, on, READ.ink)
+    return own === undefined || own === 'current' ? 'inherit' : own
 }
 
 function ringChecks(key: string, ring: Ring, where: Where): Check[] {
@@ -8702,6 +8712,106 @@ const BADGE_ADAPTER: Adapter = {
     },
 }
 
+// Chip
+
+const CHIP = source('components/Chip.tsx')
+/** The values of one of the chip's exported union types. */
+const chipUnion = (name: string) =>
+    [...(new RegExp(`export type ${name} = ([^\\n]+)`).exec(CHIP)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1])
+const drawChip = (props: Partial<ChipProps>) => draw(Chip, { children: 'harbor', ...props } as ChipProps)
+/** Each piece of a drawn chip, by its name in the spec. */
+const chipPieces = (elements: El[]) => {
+    const container = elements.find((element) => element.attrs['data-slot'] === 'chip')
+    const remove = elements.find((element) => element.attrs['data-slot'] === 'chip-remove')
+    const face = elements.find((element) => element.parent === container && element !== remove)
+    return { container, face, remove }
+}
+/** A chip drawn in the page inside a row that counts the presses and keys reaching it. */
+const liveChip = <T>(props: Partial<ChipProps>, look: (box: HTMLElement, reached: () => number) => T) => {
+    let reached = 0
+    const row = createElement(
+        'div',
+        { onClick: () => (reached += 1), onKeyDown: () => (reached += 1) },
+        createElement(Chip, { children: 'harbor', ...props } as ChipProps),
+    )
+    return live(row, (box) => look(box, () => reached))
+}
+
+const CHIP_ADAPTER: Adapter = {
+    wordObjects: { CHIP_WORDS },
+    complete: ['CHIP_WORDS'],
+    words: { remove: 'CHIP_WORDS.remove', newTab: 'CHIP_WORDS.newTab' },
+    options: {
+        tone: chipUnion('ChipTone'),
+        hue: [
+            ...(/export type ChipHue = ([^\n]+)/.exec(CHIP)?.[1] ?? '')
+                .split('|')
+                .flatMap((one) => (/^\s*(\d)\s*$/.exec(one) ?? []).slice(1)),
+            ...[...(/export type KindColor = ([^\n]+)/.exec(KIND_SOURCE)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1]),
+        ],
+        size: chipUnion('ChipSize'),
+        menuAlign: chipUnion('ChipMenuAlign'),
+    },
+    size: (size, key) => {
+        if (size === 'remove') return pieceWhere(chipPieces(drawChip({ onRemove: () => undefined })).remove)
+        const pieces = chipPieces(drawChip({ size: size as ChipProps['size'] }))
+        return pieceWhere(key === 'padX' || key === 'gap' ? pieces.face : pieces.container)
+    },
+    paint: (group, name, state) => {
+        const on = state === 'hover' ? ['hover'] : state === 'focus' ? ['focus-visible'] : state === 'selected' ? ['data-selected'] : []
+        if (group === 'pieces') {
+            const pieces = chipPieces(drawChip({ onSelect: () => undefined, onRemove: () => undefined }))
+            return pieceWhere(name === 'remove' ? pieces.remove : pieces.face, on)
+        }
+        const hue = /^hue-(\w+)$/.exec(name)?.[1]
+        const props: Partial<ChipProps> =
+            hue === undefined ? { tone: name as ChipProps['tone'] } : { hue: (/^\d$/.test(hue) ? Number(hue) : hue) as ChipProps['hue'] }
+        const selected = state === 'selected' ? { onSelect: () => undefined, selected: true } : {}
+        return pieceWhere(chipPieces(drawChip({ ...props, ...selected })).container, on)
+    },
+    effect: (state) =>
+        state === 'focus' ? pieceWhere(chipPieces(drawChip({ onSelect: () => undefined })).face, ['focus-visible']) : undefined,
+    keys: {
+        Tab: () => {
+            const pressable = chipPieces(drawChip({ onSelect: () => undefined, onRemove: () => undefined }))
+            const plain = drawChip({})
+            if (pressable.face?.tag !== 'button' || !focusable(pressable.face))
+                return 'the face of a chip with onSelect is not a button in the tab order'
+            if (pressable.remove?.tag !== 'button' || !focusable(pressable.remove)) return 'the remove button is not its own stop'
+            if (chipPieces(drawChip({ href: '#/projects/harbor' })).face?.tag !== 'a') return 'the face of a chip with href is not a link'
+            return plain.some((element) => element.tag === 'button' || element.tag === 'a') ? 'a plain chip takes focus' : true
+        },
+        'Enter, Space (the face has focus)': () => {
+            let selected = 0
+            return liveChip({ onSelect: () => (selected += 1) }, (box, reached) => {
+                const face = box.querySelector<HTMLElement>('[data-slot="chip-select"]')
+                if (face?.tagName !== 'BUTTON') return 'the face is not a native button, which Enter and Space press'
+                press(face, 'Enter')
+                press(face, ' ')
+                act(() => face.click())
+                return selected === 1 && reached() === 0 ? true : 'a press of the face reaches the row around the chip'
+            })
+        },
+        'Enter, Space (the remove button has focus)': () => {
+            let removed = 0
+            return liveChip({ onRemove: () => (removed += 1) }, (box, reached) => {
+                const button = box.querySelector<HTMLElement>('[data-slot="chip-remove"]')
+                if (button?.tagName !== 'BUTTON') return 'the remove button is not a native button'
+                press(button, 'Enter')
+                press(button, ' ')
+                act(() => button.click())
+                return removed === 1 && reached() === 0 ? true : 'a press of the remove button reaches the row around the chip'
+            })
+        },
+        "ArrowDown (the face is a menu's trigger)": () => {
+            const face = chipPieces(drawChip({ menu: [{ label: 'Filter', onSelect: () => undefined }] })).face
+            return face?.attrs['data-slot'] === 'chip-select' && standInOpens('ArrowDown', true)
+                ? true
+                : "the face is not parts/dropdown-menu's trigger"
+        },
+    },
+}
+
 // Stat
 
 const STAT = source('components/Stat.tsx')
@@ -9296,6 +9406,7 @@ const ADAPTERS: Record<string, Adapter> = {
     unfoldable: UNFOLDABLE_ADAPTER,
     'choice-list': CHOICE_LIST_ADAPTER,
     badge: BADGE_ADAPTER,
+    chip: CHIP_ADAPTER,
     stat: STAT_ADAPTER,
     'description-list': DESCRIPTION_LIST_ADAPTER,
     'api-link': API_LINK_ADAPTER,
