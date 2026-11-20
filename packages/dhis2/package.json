@@ -1,7 +1,7 @@
 {
     "name": "@winterop-com/sokkel-ui-dhis2",
     "version": "0.33.2",
-    "description": "DHIS2's expression languages, for indicators, validation rules, predictors, program rules and program indicators, for sokkel-ui's code editor.",
+    "description": "DHIS2's expression languages, for indicators, validation rules, predictors, program rules and program indicators, for sokkel-ui's code editor, and the health checks of a DHIS2 server as data.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
         "type": "git",
@@ -12,12 +12,14 @@
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
         "dist",
+        "messages",
         "src",
         "!src/**/*.test.*"
     ],
     "type": "module",
     "sideEffects": false,
     "exports": {
+        "./messages/*.json": "./messages/*.json",
         "./plugin": {
             "types": "./dist/plugin.d.ts",
             "import": "./dist/plugin.js"
@@ -33,6 +35,10 @@
         "./names": {
             "types": "./dist/names.d.ts",
             "import": "./dist/names.js"
+        },
+        "./checks": {
+            "types": "./dist/checks.d.ts",
+            "import": "./dist/checks.js"
         }
     },
     "publishConfig": {
