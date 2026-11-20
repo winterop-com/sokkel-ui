@@ -1,7 +1,7 @@
 import type { Feature, LineString, Polygon } from 'geojson'
 import { describe, expect, test } from 'vitest'
 
-import { coverageData, ringDistance, type RangeRings, type SensorCone } from './CoverageLayer'
+import { coverageData, ringDistance, sweepMesh, type RangeRings, type SensorCone } from './CoverageLayer'
 import { bearing, distance } from './geodesy'
 import type { LngLat } from './geometry'
 
@@ -88,6 +88,44 @@ describe('range rings', () => {
         expect(west).toBeLessThan(RADAR[0])
         expect(east).toBeGreaterThan(RADAR[0])
         expect(coverageData([], []).shapes.bounds).toBeNull()
+    })
+})
+
+describe('a sweep', () => {
+    /** Each vertex's attributes: position on the square, angle, share of the range, turn, wrap, tone and start. */
+    const vertexOf = (mesh: { vertices: Float32Array }, index: number) => Array.from(mesh.vertices.slice(index * 8, index * 8 + 8))
+
+    test('fans a sector in two-degree steps from one edge, its turn crossing the sector and the trail', () => {
+        const mesh = sweepMesh([WEST], 90)
+        // 90 degrees in 45 steps, each 7 positions from the sensor out.
+        expect(mesh.vertices.length / 8).toBe(46 * 7)
+        expect(mesh.indices.length).toBe(45 * 6 * 6)
+        const [, , angle, share, turn, wrap, tone] = vertexOf(mesh, 7 * 45 + 6)
+        expect([angle, share, turn, tone]).toEqual([90, 1, 180, 0])
+        expect(wrap).toBeGreaterThan(1000)
+    })
+
+    test('keeps a cone across the antimeridian whole, its far side running on past 180', () => {
+        const mesh = sweepMesh([{ id: 'east', position: [179.8, 0], range: 100_000, bearing: 90, width: 90 }])
+        const xs = Array.from({ length: mesh.vertices.length / 8 }, (_, index) => mesh.vertices[index * 8] + mesh.origin[0])
+        // 100 km is under a degree of longitude at the equator, a little over a 400th of the square.
+        expect(Math.max(...xs) - Math.min(...xs)).toBeLessThan(0.003)
+        expect(Math.max(...xs)).toBeGreaterThan(1)
+    })
+
+    test('turns a disc round from north, wrapping at a whole turn', () => {
+        const mesh = sweepMesh([ROUND])
+        const [, , angle, , turn, wrap, tone] = vertexOf(mesh, 7 * 180 + 6)
+        expect([angle, turn, wrap, tone]).toEqual([360, 360, 360, 5])
+    })
+
+    test('leaves out a cone it cannot read', () => {
+        expect(
+            sweepMesh([
+                { ...WEST, range: 0 },
+                { ...ROUND, position: [Number.NaN, 0] },
+            ]).indices,
+        ).toHaveLength(0)
     })
 })
 

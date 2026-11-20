@@ -196,6 +196,7 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         color: 'tokens resolved to colors maplibre can draw',
         context: "the map's context its layers, legends and controls share; `MapCorner` is exported by `MapView`",
         control: "the button the map's own controls and its tools stand in its corners as",
+        effects: "the WebGL layer and the frames the coverage sweep and the links' flow are drawn with",
         engine: 'maplibre, its stylesheet and its worker, loaded the first time a map is drawn; `loadMapEngine` in `MapView` fetches it ahead',
         globe: "the globe's sky",
         layer: 'what the layers share; `FeatureAccessor` is exported by each layer',

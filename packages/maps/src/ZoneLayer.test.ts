@@ -5,7 +5,7 @@ import { ID_PROPERTY } from './context'
 import type { LngLat } from './geometry'
 import { placeClear } from './layer'
 import { MAP_TONE_COLORS } from './tone'
-import { zoneCenter, zoneData, zoneGeometry, zoneLabelBox, zoneLegendEntry, type Zone } from './ZoneLayer'
+import { zoneCenter, zoneData, zoneGeometry, zoneLabelBox, zoneLegendEntry, zoneOutward, type Zone } from './ZoneLayer'
 
 const BOX: LngLat[] = [
     [4, 60],
@@ -85,8 +85,8 @@ describe('zone data', () => {
     test('draws each zone as one feature carrying its tone, fill and edge, the layer giving what it leaves out', () => {
         const { zones, labels } = zoneData([ANCHORAGE, { id: 'box', area: BOX, fill: 'hatched', edge: 'dashed' }], 'none', 'solid')
         expect(zones.collection.features.map((feature) => feature.properties)).toEqual([
-            { [ID_PROPERTY]: 'anchorage', tone: 'neutral', fill: 'none', edge: 'solid', label: 'Anchorage' },
-            { [ID_PROPERTY]: 'box', tone: 'plain', fill: 'hatched', edge: 'dashed', label: null },
+            { [ID_PROPERTY]: 'anchorage', tone: 'neutral', fill: 'none', edge: 'solid', label: 'Anchorage', outward: -1 },
+            { [ID_PROPERTY]: 'box', tone: 'plain', fill: 'hatched', edge: 'dashed', label: null, outward: -1 },
         ])
         expect([...zones.byId.keys()]).toEqual(['anchorage', 'box'])
         expect(labels).toEqual([{ key: 'anchorage', at: [4.5, 60.5], text: 'Anchorage' }])
@@ -136,5 +136,12 @@ describe('zone labels', () => {
 
     test("places the selected zone's label first, and always", () => {
         expect(placeClear(near, zoneLabelBox, 'boarding').map((label) => label.key)).toEqual(['boarding', 'patrol-box'])
+    })
+})
+
+describe('a zone glow', () => {
+    test('stands outside the edge whichever way the outline runs', () => {
+        expect(zoneOutward({ type: 'Polygon', coordinates: [[...BOX, BOX[0]]] })).toBe(-1)
+        expect(zoneOutward({ type: 'Polygon', coordinates: [[...BOX, BOX[0]].reverse()] })).toBe(1)
     })
 })
