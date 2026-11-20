@@ -3,6 +3,7 @@
     "class.above": "and above",
     "class.all": "All values",
     "class.below": "Below",
+    "link.measured": "{distance} · {bearing}",
     "map.basemap": "Basemap",
     "map.exitFullscreen": "Exit full screen",
     "map.export": "Export as PNG",

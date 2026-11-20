@@ -37,6 +37,17 @@ release and empties it.
   camera or take the map's clicks in place of the selection.
 - Stories Maps/Tracks: Tracks, Trails, Selected, Dense, Live, Ruler, Follow and Console, a harbor
   watch on the world basemap in the dark scheme.
+- Map overlays for watching an area, each in a tone (`MapTone`: a track affiliation, or `plain`;
+  `@winterop-com/sokkel-ui-maps/tone`): `ZoneLayer` (areas filled `solid`, `hatched` or `none`,
+  edged `solid` or `dashed`, named at their middles; `zoneLegendEntry` keys them in a `MapLegend`),
+  `CoverageLayer` (sensor cones fading out with distance, and labeled range rings) and `LinkLayer`
+  (lines between two positions, straight or along the great circle, optionally dashed, with the
+  distance and bearing midway as the ruler's chip says them; words `LINK_WORDS`, id `link.measured`).
+  Labels and chips that would cover one another are left out, the selected one's kept.
+- `geodesy` adds `rhumbBearing`, `rhumbDistance`, `rhumbMiddle` (the straight line on a Mercator
+  map) and `arc`.
+- Stories Maps/Tracks: Zones, Coverage, Range rings and Links, and Console with the areas, the
+  radars' cover, a patrol's own sensor and a line to the contact it goes after.
 
 ## Changed
 

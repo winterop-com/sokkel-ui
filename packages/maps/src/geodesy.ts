@@ -82,6 +82,47 @@ export function greatCircle(from: LngLat, to: LngLat, steps = 32): LngLat[] {
     return line
 }
 
+/** How far north a latitude stands on a Mercator map, in radians of the stretched scale. */
+const mercatorY = (lat: number) => Math.log(Math.tan(Math.PI / 4 + radians(lat) / 2))
+
+/** The longitude difference the short way round, in degrees, -180 to 180. */
+const lngDelta = (from: number, to: number) => wrapLongitude(to - from)
+
+/**
+ * The constant bearing from one position to another along the rhumb line, the line a straight
+ * stroke on a Mercator map is, in degrees from north, 0 to 360.
+ */
+export function rhumbBearing(from: LngLat, to: LngLat): number {
+    const dy = mercatorY(to[1]) - mercatorY(from[1])
+    return normalizeBearing(degrees(Math.atan2(radians(lngDelta(from[0], to[0])), dy)))
+}
+
+/** The distance along the rhumb line between two positions, in meters. */
+export function rhumbDistance(from: LngLat, to: LngLat): number {
+    const dLat = radians(to[1] - from[1])
+    const dy = mercatorY(to[1]) - mercatorY(from[1])
+    // Along a parallel the stretch is the cosine of the latitude itself.
+    const q = Math.abs(dy) > 1e-12 ? dLat / dy : Math.cos(radians(from[1]))
+    const dLng = radians(lngDelta(from[0], to[0]))
+    return Math.sqrt(dLat * dLat + q * q * dLng * dLng) * EARTH_RADIUS
+}
+
+/** The position halfway along the rhumb line between two positions: the middle of a straight stroke on a Mercator map. */
+export function rhumbMiddle(from: LngLat, to: LngLat): LngLat {
+    const lng = from[0] + lngDelta(from[0], to[0]) / 2
+    const y = (mercatorY(from[1]) + mercatorY(to[1])) / 2
+    return [wrapLongitude(lng), degrees(2 * Math.atan(Math.exp(y)) - Math.PI / 2)]
+}
+
+/**
+ * The arc of a circle a distance in meters round a position, from one bearing clockwise to another,
+ * as `steps` + 1 positions along it; from 0 to 360 it is the whole circle, closed.
+ */
+export function arc(center: LngLat, meters: number, from = 0, to = 360, steps = 64): LngLat[] {
+    const sweep = to - from
+    return Array.from({ length: steps + 1 }, (_, index) => destination(center, from + (sweep * index) / steps, meters))
+}
+
 /** A distance in meters in a unit. */
 export function inUnit(meters: number, unit: DistanceUnit): number {
     return meters / UNIT_METERS[unit]

@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useMemo, useState, type ReactNode } from 'react'
 
+import { CoverageLayer } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
 import { formatBearing, formatCoordinates } from '@winterop-com/sokkel-ui-maps/geodesy'
+import { LinkLayer } from '@winterop-com/sokkel-ui-maps/LinkLayer'
 import { MapCompass } from '@winterop-com/sokkel-ui-maps/MapCompass'
 import { MapCoordinates } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
 import { MapFollow } from '@winterop-com/sokkel-ui-maps/MapFollow'
@@ -12,8 +14,25 @@ import { MapRuler } from '@winterop-com/sokkel-ui-maps/MapRuler'
 import { MapOverlay, MapView, type MapCamera } from '@winterop-com/sokkel-ui-maps/MapView'
 import { TRACK_COLORS, TRACK_WORDS, TrackLayer, trackCounts, trackLegendEntries, type Track } from '@winterop-com/sokkel-ui-maps/TrackLayer'
 import { WORLD_BASEMAP } from '@winterop-com/sokkel-ui-maps/world'
+import { ZoneLayer, zoneLegendEntry } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
 import { Page } from './Page'
-import { APPROACH_CAMERA, HARBOR_CAMERA, HARBORS, WATCH_CAMERA, denseRoutes, speedOf, useWatchClock, watchAt } from './tracks'
+import {
+    APPROACH_CAMERA,
+    AREAS_CAMERA,
+    HARBOR_CAMERA,
+    HARBOR_RINGS,
+    HARBORS,
+    RADAR_CONES,
+    RADAR_LINKS,
+    WATCH_CAMERA,
+    ZONES,
+    denseRoutes,
+    objectiveLinks,
+    speedOf,
+    trackCone,
+    useWatchClock,
+    watchAt,
+} from './tracks'
 
 /** A dark map of the coast with no tile server: the countries drawn from the geometry the maps package carries. */
 function Watch({
@@ -152,6 +171,63 @@ function Follow() {
     )
 }
 
+/** The watch's areas keyed by how each is drawn. */
+const ZONE_ENTRIES = ZONES.map((zone) => zoneLegendEntry(zone.label ?? zone.id, zone.tone ?? 'plain', zone.fill))
+
+function Zones() {
+    const tracks = useMemo(() => watchAt(0, false), [])
+    const [selected, setSelected] = useState<string | null>('closed-area')
+    return (
+        <Watch
+            title="Harbor watch"
+            description="The areas the watch keeps"
+            camera={AREAS_CAMERA}
+            selected={selected}
+            onSelectedChange={setSelected}
+        >
+            <ZoneLayer id="zones" zones={ZONES} />
+            <TrackLayer id="tracks" tracks={tracks} labels={false} />
+            <MapOverlay corner="bottom-right">
+                <MapLegend title="Areas" entries={ZONE_ENTRIES} shape="area" className="w-40" />
+            </MapOverlay>
+        </Watch>
+    )
+}
+
+function Coverage() {
+    const tracks = useMemo(() => watchAt(0, false), [])
+    return (
+        <Watch title="Harbor watch" description="What the three radars cover">
+            <CoverageLayer id="radars" cones={RADAR_CONES} />
+            <TrackLayer id="tracks" tracks={tracks} />
+            <Legend tracks={tracks} />
+        </Watch>
+    )
+}
+
+function Rings() {
+    const tracks = useMemo(() => watchAt(0, false), [])
+    return (
+        <Watch title="Harbor watch" description="Every 20 km from harbor" camera={APPROACH_CAMERA}>
+            <CoverageLayer id="rings" rings={[HARBOR_RINGS]} />
+            <TrackLayer id="tracks" tracks={tracks} />
+            <MapCoordinates />
+        </Watch>
+    )
+}
+
+function Links() {
+    const tracks = useMemo(() => watchAt(0, false), [])
+    const links = useMemo(() => [...RADAR_LINKS, ...objectiveLinks(tracks)], [tracks])
+    return (
+        <Watch title="Harbor watch" description="Who goes after whom, and the radars harbor reads">
+            <LinkLayer id="links" links={links} />
+            <TrackLayer id="tracks" tracks={tracks} />
+            <Legend tracks={tracks} />
+        </Watch>
+    )
+}
+
 function Console() {
     const minute = useWatchClock()
     const tracks = useMemo(() => watchAt(minute), [minute])
@@ -159,6 +235,11 @@ function Console() {
     const [followed, setFollowed] = useState<string | null>(null)
     const track = tracks.find((each) => each.id === selected)
     const followedTrack = tracks.find((each) => each.id === followed)
+    const cones = useMemo(() => {
+        const patrol = tracks.find((each) => each.id === 'patrol-7')
+        return patrol === undefined ? RADAR_CONES : [...RADAR_CONES, trackCone(patrol)]
+    }, [tracks])
+    const links = useMemo(() => objectiveLinks(tracks, [['patrol-7', 'contact-14']]), [tracks])
     return (
         <Watch
             title="Harbor watch"
@@ -167,6 +248,9 @@ function Console() {
             onSelectedChange={setSelected}
             rotate
         >
+            <ZoneLayer id="zones" zones={ZONES} />
+            <CoverageLayer id="cover" cones={cones} />
+            <LinkLayer id="links" links={links} />
             <TrackLayer id="tracks" tracks={tracks} />
             <MapRuler />
             <MapCompass />
@@ -208,5 +292,13 @@ export const Moving: StoryObj = { name: 'Live', render: () => <Live /> }
 export const Measuring: StoryObj = { name: 'Ruler', render: () => <Ruler /> }
 /** The map keeping a patrol centered as it moves, with a banner that says so and lets it go. */
 export const Following: StoryObj = { name: 'Follow', render: () => <Follow /> }
-/** Everything together: live tracks, the ruler, a compass on a map that turns, go to coordinates, the cursor's position, the legend, and a picked contact's card, whose Follow keeps it centered. */
+/** The watch's areas: a wash, diagonal lines or only an edge, solid or dashed, each in its tone and named at its middle; the closed area picked. */
+export const Areas: StoryObj = { name: 'Zones', render: () => <Zones /> }
+/** What the three harbor radars cover: each a wedge out to sea in the friend tone, fading out with distance to its range. */
+export const Covered: StoryObj = { name: 'Coverage', render: () => <Coverage /> }
+/** Dashed rings every 20 km from harbor out to 80, each written with its distance on the sea side. */
+export const Ranges: StoryObj = { name: 'Range rings', render: () => <Rings /> }
+/** Lines from harbor along the great circle to the radars it reads, and dashed straight lines from tracks to their objectives, each saying how far and which way. */
+export const Linked: StoryObj = { name: 'Links', render: () => <Links /> }
+/** Everything together: live tracks over the watch's areas and the radars' cover, a patrol's own sensor turning with it and a line to the contact it goes after, the ruler, a compass on a map that turns, go to coordinates, the cursor's position, the legend, and a picked contact's card, whose Follow keeps it centered. */
 export const Full: StoryObj = { name: 'Console', render: () => <Console /> }
