@@ -39,7 +39,9 @@ function quick(read: (n: number) => unknown): void {
     expect(long / Math.max(short, 1)).toBeLessThan(24)
 }
 
-describe('text an app or a person gives is read in time in step with its length', () => {
+// A spike of load on a busy machine can slow one size and not the other; a reading that backtracks
+// fails every try, so a few tries tell the two apart.
+describe('text an app or a person gives is read in time in step with its length', { retry: 3 }, () => {
     it('reads numbers', () => {
         quick((n) => readNumber(`0${'0'.repeat(n)}x`))
         quick((n) => readScalar(`0${'0'.repeat(n)}x`, ['number']))
