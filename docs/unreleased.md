@@ -9,6 +9,8 @@ release and empties it.
   and `highlight` spans what was written for it (`[[...]]`, `![[...]]`, `#tag`, `==...==`), escapes and
   character references included, and a text cut from another (beside a link, in a callout's title)
   keeps its own words' place.
+- `standInOpens(key, nativeButton)` (from `primitives/dropdown-menu`): whether a key opens a menu from
+  its trigger before the menu has loaded, as the trigger reads it.
 
 ## Fixed
 
