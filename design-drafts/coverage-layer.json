@@ -165,7 +165,7 @@
         "sokkel-ui": [
             "Drawn on maplibre: the bands, edges and rings as one GeoJSON source with a fill and two line layers; a band round a hole winds the other way, so maplibre reads it as a hole.",
             "The distances are written in the map's overlay, projected again after every move, and only those in view.",
-            "The sweep is a maplibre custom layer: one mesh of every cone, a fan in steps of 2 degrees cut into 6 rings from the sensor out, uploaded once, drawn in one call by a small WebGL2 shader projected by maplibre's own projectTile (flat map and globe). A frame sets only uniforms: where the turn stands, the trail, the opacity, the scheme and the six tone colors. The map is repainted each animation frame only while the beam turns."
+            "The sweep is a maplibre custom layer: one mesh of every cone, a fan in steps of 2 degrees cut into 6 rings from the sensor out, uploaded once, drawn in one call by a small WebGL2 shader projected by maplibre's own projectTile (flat map and globe). A frame sets only uniforms: where the turn stands, the trail, the opacity, the scheme and the six tone colors. The map is repainted each animation frame only while the beam turns. Positions are stored as 32-bit offsets from the mesh's own origin, which the projection's matrices take in, worked in 64 bits, so a 50 m link keeps its ends apart at any zoom; longitudes run on past 180 rather than jump back, so a cone or arc across the antimeridian stays whole. The layer deletes what it held on the GPU before it is added again, as a style rebuilt in full re-adds it without removing it."
         ]
     },
     "drift": [

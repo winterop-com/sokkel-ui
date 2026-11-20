@@ -87,10 +87,55 @@ export interface GlProgram {
     attributes: readonly (readonly [name: string, size: number])[]
 }
 
-/** Triangles to draw: the attributes of each vertex one after another, and three vertex indices a triangle. */
+/**
+ * Triangles to draw: the attributes of each vertex one after another, and three vertex indices a
+ * triangle. Positions on the Mercator square are stored as offsets from `origin`, so 32-bit floats
+ * keep them apart at any zoom; the origin is added back in 64 bits, in the projection's matrices.
+ */
 export interface GlMesh {
     vertices: Float32Array
     indices: Uint32Array
+    origin: readonly [number, number]
+}
+
+/**
+ * A mesh from vertices given in full (64-bit) precision: the positions at `positions` (each the x of
+ * an x, y pair within a vertex of `stride` values) made offsets from the middle of their extent,
+ * which becomes the mesh's origin.
+ */
+export function relativeMesh(
+    vertices: readonly number[],
+    stride: number,
+    positions: readonly number[],
+    indices: readonly number[],
+): GlMesh {
+    let [west, north, east, south] = [Infinity, Infinity, -Infinity, -Infinity]
+    for (let start = 0; start < vertices.length; start += stride) {
+        for (const at of positions) {
+            west = Math.min(west, vertices[start + at])
+            east = Math.max(east, vertices[start + at])
+            north = Math.min(north, vertices[start + at + 1])
+            south = Math.max(south, vertices[start + at + 1])
+        }
+    }
+    const origin: [number, number] = vertices.length === 0 ? [0, 0] : [(west + east) / 2, (north + south) / 2]
+    const relative = Float32Array.from(vertices, (value, index) => {
+        const within = index % stride
+        if (positions.includes(within)) return value - origin[0]
+        if (positions.includes(within - 1)) return value - origin[1]
+        return value
+    })
+    return { vertices: relative, indices: Uint32Array.from(indices), origin }
+}
+
+/**
+ * A 4 by 4 column-major matrix moved to take positions relative to `origin`: the matrix times a
+ * translation by the origin, worked in 64-bit floats so the sum keeps its precision.
+ */
+export function fromOrigin(matrix: ArrayLike<number>, [x, y]: readonly [number, number]): Float64Array {
+    const moved = Float64Array.from(matrix)
+    for (let row = 0; row < 4; row += 1) moved[12 + row] = matrix[row] * x + matrix[4 + row] * y + matrix[12 + row]
+    return moved
 }
 
 /** Sets the layer's own uniforms before a draw, by name. */
@@ -127,7 +172,7 @@ export class GlLayer implements CustomLayerInterface {
     private vao: WebGLVertexArrayObject | null = null
     private vertexBuffer: WebGLBuffer | null = null
     private indexBuffer: WebGLBuffer | null = null
-    private mesh: GlMesh = { vertices: new Float32Array(0), indices: new Uint32Array(0) }
+    private mesh: GlMesh = { vertices: new Float32Array(0), indices: new Uint32Array(0), origin: [0, 0] }
     private uploaded = false
 
     constructor(
@@ -144,7 +189,9 @@ export class GlLayer implements CustomLayerInterface {
     }
 
     onAdd(_: MapLibreMap, context: WebGLRenderingContext | WebGL2RenderingContext): void {
-        if (typeof WebGL2RenderingContext === 'undefined' || !(context instanceof WebGL2RenderingContext)) return
+        // A style rebuilt in full drops the layer without `onRemove`, and the same layer is added again.
+        this.dispose()
+        if (!('createVertexArray' in context)) return
         const gl = context
         this.gl = gl
         this.vao = gl.createVertexArray()
@@ -164,15 +211,25 @@ export class GlLayer implements CustomLayerInterface {
         this.uploaded = false
     }
 
-    onRemove(_: MapLibreMap, context: WebGLRenderingContext | WebGL2RenderingContext): void {
+    onRemove(): void {
+        this.dispose()
+    }
+
+    /** Deletes what the layer holds on the GPU, if anything; safe to call again. */
+    private dispose(): void {
         const gl = this.gl
-        if (gl === null || gl !== context) return
-        for (const each of this.compiled.values()) if (each !== null) gl.deleteProgram(each.program)
+        if (gl !== null) {
+            for (const each of this.compiled.values()) if (each !== null) gl.deleteProgram(each.program)
+            if (this.vao !== null) gl.deleteVertexArray(this.vao)
+            if (this.vertexBuffer !== null) gl.deleteBuffer(this.vertexBuffer)
+            if (this.indexBuffer !== null) gl.deleteBuffer(this.indexBuffer)
+        }
         this.compiled.clear()
-        gl.deleteVertexArray(this.vao)
-        gl.deleteBuffer(this.vertexBuffer)
-        gl.deleteBuffer(this.indexBuffer)
+        this.vao = null
+        this.vertexBuffer = null
+        this.indexBuffer = null
         this.gl = null
+        this.uploaded = false
     }
 
     private program(shaderData: CustomRenderMethodInput['shaderData']): Compiled | null {
@@ -233,12 +290,17 @@ export class GlLayer implements CustomLayerInterface {
             if (!compiled.uniforms.has(name)) compiled.uniforms.set(name, gl.getUniformLocation(compiled.program, name))
             return compiled.uniforms.get(name) ?? null
         }
+        // Positions are offsets from the mesh's origin. A flat matrix takes the origin in; the globe adds it
+        // to the offset through the tile's corner on the Mercator square, as it does a tile's own corner.
         const projection = input.defaultProjectionData
-        gl.uniformMatrix4fv(at(PROJECTION_UNIFORMS[0]), false, projection.mainMatrix)
-        gl.uniform4f(at(PROJECTION_UNIFORMS[1]), ...projection.tileMercatorCoords)
+        const { origin } = this.mesh
+        const globe = input.shaderData.define.includes('GLOBE')
+        const [x, y, width, height] = projection.tileMercatorCoords
+        gl.uniformMatrix4fv(at(PROJECTION_UNIFORMS[0]), false, globe ? projection.mainMatrix : fromOrigin(projection.mainMatrix, origin))
+        gl.uniform4f(at(PROJECTION_UNIFORMS[1]), x + origin[0] * width, y + origin[1] * height, width, height)
         gl.uniform4f(at(PROJECTION_UNIFORMS[2]), ...projection.clippingPlane)
         gl.uniform1f(at(PROJECTION_UNIFORMS[3]), projection.projectionTransition)
-        gl.uniformMatrix4fv(at(PROJECTION_UNIFORMS[4]), false, projection.fallbackMatrix)
+        gl.uniformMatrix4fv(at(PROJECTION_UNIFORMS[4]), false, fromOrigin(projection.fallbackMatrix, origin))
         gl.uniform2f(at('u_viewport'), gl.drawingBufferWidth, gl.drawingBufferHeight)
         this.uniforms(gl, at, input)
         gl.drawElements(gl.TRIANGLES, this.mesh.indices.length, gl.UNSIGNED_INT, 0)

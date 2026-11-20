@@ -2,7 +2,8 @@ import type { Feature, LineString } from 'geojson'
 import { describe, expect, test } from 'vitest'
 
 import { ID_PROPERTY } from './context'
-import { distance, greatCircle } from './geodesy'
+import { mercator } from './effects'
+import { destination, distance, greatCircle } from './geodesy'
 import type { LngLat } from './geometry'
 import { placeClear } from './layer'
 import { arcLine, flowMesh, LINK_WORDS, linkData, linkLine, linkMeasure, measureBox, type MapLink } from './LinkLayer'
@@ -106,6 +107,13 @@ describe('an arc', () => {
         expect(arcLine([...east].reverse(), 0.2)[1][1]).toBeGreaterThan(1.9)
     })
 
+    test('crosses the antimeridian the short way on a straight link, its longitudes running on past 180', () => {
+        const { links } = linkData([{ id: 'dateline', from: [179, 0], to: [-179, 0] }], { path: 'straight', arc: 0.2 })
+        const longitudes = (links.collection.features[0].geometry as LineString).coordinates.map(([lng]) => lng)
+        expect(Math.min(...longitudes)).toBeCloseTo(179, 9)
+        expect(Math.max(...longitudes)).toBeCloseTo(181, 9)
+    })
+
     test('curves a short link smoothly, and puts its measure at the middle of the arc', () => {
         const { links, measures } = linkData([{ ...SUPPLY, measure: true }], { arc: 0.2 })
         const line = links.collection.features[0].geometry as LineString
@@ -125,6 +133,18 @@ describe('a flow', () => {
         const along = (index: number) => mesh.vertices[index * 10 + 6]
         expect([along(0), along(steps * 4 - 1)]).toEqual([0, 1])
         expect(mesh.vertices[7]).toBe(1)
+    })
+
+    test('keeps the ends of a 50 m link apart, its positions offsets from the mesh origin', () => {
+        const end = destination(HARBOR, 90, 50)
+        const { links } = linkData([{ id: 'short', from: HARBOR, to: end, path: 'straight' }])
+        const mesh = flowMesh(links.collection.features as Feature<LineString>[], new Map())
+        const [ax, ay, bx, by] = mesh.vertices.slice(0, 4)
+        const [want, got] = [mercator(end)[0] - mercator(HARBOR)[0], bx - ax]
+        expect(want).toBeGreaterThan(0)
+        expect(Math.abs(got - want) / want).toBeLessThan(0.01)
+        expect(Math.abs(by - ay)).toBeLessThan(want / 100)
+        expect(mesh.origin[0] + ax).toBeCloseTo(mercator(HARBOR)[0], 12)
     })
 })
 

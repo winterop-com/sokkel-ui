@@ -6,7 +6,17 @@ import { createPortal } from 'react-dom'
 import { useLocale } from '@winterop-com/sokkel-ui/lib/words'
 import { resolveColors } from './color'
 import { ID_PROPERTY, useMapContext } from './context'
-import { idPhase, mercator, toneIndex, toneTriples, useEffectFrames, useGlEffect, type GlMesh, type GlProgram } from './effects'
+import {
+    idPhase,
+    mercator,
+    relativeMesh,
+    toneIndex,
+    toneTriples,
+    useEffectFrames,
+    useGlEffect,
+    type GlMesh,
+    type GlProgram,
+} from './effects'
 import { arc, destination, inUnit, UNIT_SYMBOLS, type DistanceUnit } from './geodesy'
 import type { Bounds, LngLat } from './geometry'
 import { useGeoJsonLayer, useProjectedPoints, type PlacedText, type PreparedData } from './layer'
@@ -189,7 +199,7 @@ const NO_WRAP = 100_000
  * Each cone as a fan of triangles for the sweep, every vertex carrying where it stands, its angle
  * from where the beam starts, its share of the range, the degrees a turn covers and those it wraps
  * at (a disc wraps at 360; a sector's beam crosses it and its trail leaves before it starts again),
- * its tone and the cone's own start in the turn.
+ * its tone and the cone's own start in the turn; positions are offsets from the mesh's origin.
  */
 export function sweepMesh(cones: readonly SensorCone[], trail: number = SWEEP.trail): GlMesh {
     const vertices: number[] = []
@@ -208,7 +218,9 @@ export function sweepMesh(cones: readonly SensorCone[], trail: number = SWEEP.tr
             const angle = (width * step) / steps
             for (let ring = 0; ring <= SWEEP_RINGS; ring += 1) {
                 const at = ring === 0 ? cone.position : destination(cone.position, from + angle, (cone.range * ring) / SWEEP_RINGS)
-                vertices.push(...mercator(at), angle, ring / SWEEP_RINGS, cycle, wrap, tone, start)
+                // Longitudes run on past 180 from the sensor's rather than jump back, so a cone across the antimeridian stays whole.
+                const lng = cone.position[0] + (((((at[0] - cone.position[0]) % 360) + 540) % 360) - 180)
+                vertices.push(...mercator([lng, at[1]]), angle, ring / SWEEP_RINGS, cycle, wrap, tone, start)
             }
         }
         const row = SWEEP_RINGS + 1
@@ -219,7 +231,7 @@ export function sweepMesh(cones: readonly SensorCone[], trail: number = SWEEP.tr
             }
         }
     }
-    return { vertices: new Float32Array(vertices), indices: new Uint32Array(indices) }
+    return relativeMesh(vertices, 8, [0], indices)
 }
 
 /**

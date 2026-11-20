@@ -6,7 +6,17 @@ import { createPortal } from 'react-dom'
 import { useLocale, useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { resolveColors } from './color'
 import { ID_PROPERTY, useMapContext } from './context'
-import { idPhase, mercator, toneIndex, toneTriples, useEffectFrames, useGlEffect, type GlMesh, type GlProgram } from './effects'
+import {
+    idPhase,
+    mercator,
+    relativeMesh,
+    toneIndex,
+    toneTriples,
+    useEffectFrames,
+    useGlEffect,
+    type GlMesh,
+    type GlProgram,
+} from './effects'
 import {
     bearing,
     distance,
@@ -149,9 +159,11 @@ export function arcLine(line: readonly LngLat[], height: number = ARC_HEIGHT): L
 function arcBase(from: LngLat, to: LngLat, path: LinkPath): LngLat[] {
     if (path === 'great-circle') return greatCircle(from, to, Math.max(ARC_STEPS, linkLine(from, to).length - 1))
     const [y0, y1] = [stretched(from[1]), stretched(to[1])]
+    // The short way round, its longitudes running on past 180 rather than back through 0.
+    const across = ((((to[0] - from[0]) % 360) + 540) % 360) - 180
     return Array.from({ length: ARC_STEPS + 1 }, (_, index): LngLat => {
         const f = index / ARC_STEPS
-        return [from[0] + (to[0] - from[0]) * f, unstretched(y0 + (y1 - y0) * f)]
+        return [from[0] + across * f, unstretched(y0 + (y1 - y0) * f)]
     })
 }
 
@@ -231,7 +243,8 @@ const DEFAULT_RATE = 0.5
 /**
  * Each link as a strip of quads for the flow, one for each step of its line, every vertex carrying
  * the step's two ends on the Mercator square, which end and side of the strip it is, how far along
- * the link it stands (0 at `from`, 1 at `to`), the link's rate, its tone and its own start.
+ * the link it stands (0 at `from`, 1 at `to`), the link's rate, its tone and its own start; positions
+ * are offsets from the mesh's origin.
  */
 export function flowMesh(lines: readonly Feature<LineString>[], rates: ReadonlyMap<string, number>): GlMesh {
     const vertices: number[] = []
@@ -257,7 +270,7 @@ export function flowMesh(lines: readonly Feature<LineString>[], rates: ReadonlyM
             indices.push(first, first + 1, first + 2, first + 1, first + 3, first + 2)
         }
     }
-    return { vertices: new Float32Array(vertices), indices: new Uint32Array(indices) }
+    return relativeMesh(vertices, 10, [0, 2], indices)
 }
 
 /**

@@ -105,6 +105,14 @@ describe('a sweep', () => {
         expect(wrap).toBeGreaterThan(1000)
     })
 
+    test('keeps a cone across the antimeridian whole, its far side running on past 180', () => {
+        const mesh = sweepMesh([{ id: 'east', position: [179.8, 0], range: 100_000, bearing: 90, width: 90 }])
+        const xs = Array.from({ length: mesh.vertices.length / 8 }, (_, index) => mesh.vertices[index * 8] + mesh.origin[0])
+        // 100 km is under a degree of longitude at the equator, a little over a 400th of the square.
+        expect(Math.max(...xs) - Math.min(...xs)).toBeLessThan(0.003)
+        expect(Math.max(...xs)).toBeGreaterThan(1)
+    })
+
     test('turns a disc round from north, wrapping at a whole turn', () => {
         const mesh = sweepMesh([ROUND])
         const [, , angle, , turn, wrap, tone] = vertexOf(mesh, 7 * 180 + 6)
