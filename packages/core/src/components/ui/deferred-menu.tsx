@@ -179,13 +179,20 @@ function MenuTriggerStandIn({
                 },
                 onClick: press,
                 onKeyDown: (event: KeyboardEvent) => {
-                    const opens = event.key === 'ArrowDown' || event.key === 'ArrowUp'
-                    if (opens || (!nativeButton && (event.key === 'Enter' || event.key === ' '))) press()
+                    if (standInOpens(event.key, nativeButton)) press()
                 },
             },
             props,
         ),
     })
+}
+
+/**
+ * Whether a key pressed on a menu's stand-in trigger opens the menu: the arrows always, and Enter or
+ * Space when the trigger is not a native button, whose own click carries them otherwise.
+ */
+export function standInOpens(key: string, nativeButton: boolean): boolean {
+    return key === 'ArrowDown' || key === 'ArrowUp' || (!nativeButton && (key === 'Enter' || key === ' '))
 }
 
 /**

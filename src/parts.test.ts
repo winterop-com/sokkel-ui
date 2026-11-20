@@ -1,8 +1,10 @@
+// @vitest-environment happy-dom
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { CalendarClock, Folder, Play, Server, Workflow } from 'lucide-react'
-import { createElement, type ComponentType, type ReactNode } from 'react'
+import { act, createElement, type ComponentType, type ReactElement, type ReactNode } from 'react'
+import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -34,6 +36,7 @@ import {
     COMPOSER_WORDS,
     Composer,
     type ComposerAttachment,
+    type ComposerMentions,
     type ComposerProps,
 } from '@winterop-com/sokkel-ui/Composer'
 import {
@@ -54,7 +57,7 @@ import { COMPUTED_FIELD_WORDS, ComputedField, type ComputedFieldProps } from '@w
 import { DATE_FIELD_WORDS, DateField } from '@winterop-com/sokkel-ui/DateField'
 import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
 import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
-import { EMOJI_PICKER_WORDS, EmojiPicker } from '@winterop-com/sokkel-ui/EmojiPicker'
+import { EMOJI_PICKER_WORDS, EmojiPicker, type EmojiPickerProps } from '@winterop-com/sokkel-ui/EmojiPicker'
 import { Field, FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
@@ -66,7 +69,13 @@ import { PageHeader, PAGE_HEADER_WORDS, type PageHeaderProps } from '@winterop-c
 import { PageState, PAGE_STATE_WORDS, type PageStateProps } from '@winterop-com/sokkel-ui/PageState'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { DialogFooter, DialogHeader } from '@winterop-com/sokkel-ui/primitives/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    standInOpens,
+} from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
 import {
     Select,
@@ -86,7 +95,15 @@ import {
     type ReactionBarProps,
 } from '@winterop-com/sokkel-ui/ReactionBar'
 import { Rail, RAIL_SIZE, RAIL_WORDS, type RailGroup, type RailProps } from '@winterop-com/sokkel-ui/Rail'
-import { RUN_TIMELINE_WORDS, RunTimeline, type RunTimelineLane, type RunTimelineProps } from '@winterop-com/sokkel-ui/RunTimeline'
+import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
+import { ResizeHandle, type ResizeHandleProps } from '@winterop-com/sokkel-ui/ResizeHandle'
+import {
+    RUN_TIMELINE_WORDS,
+    RunTimeline,
+    timelineTicks,
+    type RunTimelineLane,
+    type RunTimelineProps,
+} from '@winterop-com/sokkel-ui/RunTimeline'
 import { SECRET_FIELD_WORDS, SecretField, type SecretFieldProps } from '@winterop-com/sokkel-ui/SecretField'
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
@@ -94,7 +111,7 @@ import { Problem, PROBLEM_WORDS } from '@winterop-com/sokkel-ui/Problem'
 import { MARKDOWN_WORDS, PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
 import { PERIOD_PICKER_WORDS, PeriodPicker, type PeriodPickerProps } from '@winterop-com/sokkel-ui/PeriodPicker'
 import { ProblemLine } from '@winterop-com/sokkel-ui/ProseText'
-import { PROMPT_DIALOG_WORDS } from '@winterop-com/sokkel-ui/PromptDialog'
+import { PROMPT_DIALOG_WORDS, PromptDialog, type PromptDialogProps } from '@winterop-com/sokkel-ui/PromptDialog'
 import { REPEATED_GROUP_WORDS, RepeatedGroup, type RepeatedGroupProps } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
 import { SETTINGS_DIALOG_WORDS } from '@winterop-com/sokkel-ui/SettingsDialog'
@@ -124,7 +141,8 @@ import { TREE_SELECT_WORDS, TreeSelect, type TreeSelectProps } from '@winterop-c
  *   sizes     each size's lengths are the tokens and steps its classes use (heights by density token)
  *   paints    each state's ground, edge, ink, rule, ring, radius, text and opacity are the classes the
  *             state's selector picks, with the cascade's own precedence, in light and in dark
- *   keys      each binding is handled where the source shows it
+ *   keys      each binding does what it says when its key is pressed on the part drawn in a page (happy-dom),
+ *             or, where a press cannot reach it, is handled where the source shows it
  *   layout    each length a part's layout gives that its classes or its source show
  *
  * Where the code and the spec differ, the spec's `drift` entries for sokkel-ui say so on purpose:
@@ -319,6 +337,55 @@ function parse(html: string): El[] {
 
 function draw<P extends object>(component: ComponentType<P>, props: P, ...children: ReactNode[]): El[] {
     return parse(renderToStaticMarkup(createElement(component, props, ...children)))
+}
+
+declare global {
+    var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
+}
+globalThis.IS_REACT_ACT_ENVIRONMENT = true
+
+/** Draws an element in the page (happy-dom), hands its box to `look`, and takes it down after. */
+function live<T>(element: ReactElement, look: (box: HTMLElement) => T): T {
+    const box = document.createElement('div')
+    document.body.append(box)
+    const root = createRoot(box)
+    try {
+        act(() => root.render(element))
+        return look(box)
+    } finally {
+        act(() => root.unmount())
+        box.remove()
+    }
+}
+
+/** Draws an element in the page as `live` does, for a look that waits on the page. */
+async function liveWaiting<T>(element: ReactElement, look: (box: HTMLElement) => Promise<T>): Promise<T> {
+    const box = document.createElement('div')
+    document.body.append(box)
+    const root = createRoot(box)
+    try {
+        await act(async () => root.render(element))
+        return await look(box)
+    } finally {
+        act(() => root.unmount())
+        box.remove()
+    }
+}
+
+/** Lets the page run its timers, effects and fetches until `found` holds, for about a second at most; whether it held. */
+async function until(found: () => boolean): Promise<boolean> {
+    for (let round = 0; round < 50 && !found(); round++) await act(() => new Promise((done) => setTimeout(done, 20)))
+    return found()
+}
+
+/** Presses a key on an element, as a browser sends it, and returns the event; nothing when there is no element. */
+function press(target: Element | null | undefined, key: string, init: KeyboardEventInit = {}): KeyboardEvent | undefined {
+    if (target === null || target === undefined) return undefined
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+    act(() => {
+        target.dispatchEvent(event)
+    })
+    return event
 }
 
 const classesOf = (element: El | undefined) => element?.attrs.class ?? ''
@@ -764,8 +831,11 @@ interface Adapter {
     paint: (group: 'variants' | 'pieces', name: string, state: string) => Where | Skip | undefined
     /** Where a state's effect is drawn. */
     effect: (state: string, piece: string | undefined) => Where | Skip | undefined
-    /** For each binding (its keys, then `when`), whether the source handles it: true, or what is found instead. */
-    keys: Record<string, (() => true | string) | Skip>
+    /**
+     * For each binding (its keys, then `when`), whether the part handles it: true, or what is found
+     * instead. A probe that waits on the page (a menu's parts loading, an effect) answers in a promise.
+     */
+    keys: Record<string, (() => true | string | Promise<true | string>) | Skip>
     /** Other checks a spec asks of this part, by key. */
     more?: () => Check[]
 }
@@ -902,6 +972,13 @@ const FIELD = source('components/Field.tsx')
 const TEXT_FIELD = source('components/TextField.tsx')
 const field = (props: Partial<Parameters<typeof TextField>[0]> = {}) => draw(TextField, { id: 'name', label: 'Name', ...props })
 const REFUSED = { error: 'Use letters and digits' }
+/** What a one-line text field with `onEnter` and `onEscape` hears when the key is pressed in its input. */
+const fieldHears = (key: string) => {
+    const said: string[] = []
+    const props = { id: 'name', label: 'Name', onEnter: () => said.push('enter'), onEscape: () => said.push('escape') }
+    live(createElement(TextField, props), (box) => press(box.querySelector('input'), key))
+    return said.join(' ')
+}
 const WARNED = {
     issues: [{ tone: 'warning' as const, text: 'Longer than most' }],
 }
@@ -1005,10 +1082,8 @@ const TEXT_FIELD_ADAPTER: Adapter = {
             const mark = elements.find((element) => element.attrs['aria-haspopup'] === 'dialog')
             return focusable(control) && focusable(mark) ? true : 'the control or the mark is out of the tab order'
         },
-        'Enter (a one-line input with onEnter)': () =>
-            /event\.key === 'Enter' && onEnter !== undefined\) onEnter\(\)/.test(TEXT_FIELD) ? true : 'no Enter handled for onEnter',
-        'Escape (a one-line input with onEscape)': () =>
-            /event\.key === 'Escape' && onEscape !== undefined\) onEscape\(\)/.test(TEXT_FIELD) ? true : 'no Escape handled for onEscape',
+        'Enter (a one-line input with onEnter)': () => (fieldHears('Enter') === 'enter' ? true : 'no Enter handled for onEnter'),
+        'Escape (a one-line input with onEscape)': () => (fieldHears('Escape') === 'escape' ? true : 'no Escape handled for onEscape'),
         'Enter, Space (the mark has focus)': () =>
             field(REFUSED).find((element) => element.attrs['aria-haspopup'] === 'dialog')?.tag === 'button'
                 ? true
@@ -1254,21 +1329,17 @@ const TABLE_ADAPTER: Adapter = {
         ArrowRight: () => moves(['ArrowRight']),
         ArrowLeft: () => moves(['ArrowLeft']),
         'Alt+ArrowUp, Alt+ArrowDown (onReorder, rows drawn as given)': () =>
-            /event\.altKey && \(event\.key === 'ArrowUp' \|\| event\.key === 'ArrowDown'\)/.test(DATA_TABLE)
-                ? true
-                : 'no Alt with the arrows',
+            tableReorders() === '0>1 1>0' ? true : 'no Alt with the arrows',
         'Shift+Click (selectable)': () =>
             /selectable && event\.shiftKey\) toggle\(entry, true\)/.test(DATA_TABLE) ? true : 'no range on Shift and a press',
         'Mod+Click (selectable)': () =>
             /selectable && \(event\.metaKey \|\| event\.ctrlKey\)\) toggle\(entry, false\)/.test(DATA_TABLE)
                 ? true
                 : 'no row on Ctrl or Cmd and a press',
-        'ArrowLeft, ArrowRight, Enter (a handle has focus)': () => {
-            const handle = source('components/ResizeHandle.tsx')
-            return /'ArrowRight'/.test(handle) && /'ArrowLeft'/.test(handle) && /event\.key === 'Enter'/.test(handle)
+        'ArrowLeft, ArrowRight, Enter (a handle has focus)': () =>
+            handleHears('ArrowRight') === '216' && handleHears('ArrowLeft') === '184' && handleHears('Enter') === 'reset'
                 ? true
-                : 'the handle misses a key'
-        },
+                : 'the handle misses a key',
         'ArrowUp (the table view, a sortable head drawn)': () =>
             headEntered(['name', 'state'], 'state') === 'state' &&
             headEntered(['name', 'state'], undefined) === 'name' &&
@@ -1302,6 +1373,28 @@ const TABLE_ADAPTER: Adapter = {
 }
 
 /** Whether the table's key map moves on each key. */
+/**
+ * The moves a table with `onReorder` asks for, each as `from>to`, when Down makes the first row
+ * active and Alt and Down are pressed, then Down makes the second active and Alt and Up are pressed.
+ */
+function tableReorders(): string {
+    const said: string[] = []
+    const props = {
+        columns: COLUMNS,
+        rows: JOBS,
+        rowKey: (job: Job) => job.id,
+        onReorder: (from: number, to: number) => said.push(`${from}>${to}`),
+    }
+    live(createElement(DataTable<Job>, props), (box) => {
+        const grid = box.querySelector('[role="grid"]')
+        press(grid, 'ArrowDown')
+        press(grid, 'ArrowDown', { altKey: true })
+        press(grid, 'ArrowDown')
+        press(grid, 'ArrowUp', { altKey: true })
+    })
+    return said.join(' ')
+}
+
 function moves(keys: string[]): true | string {
     const map = DATA_TABLE.slice(
         DATA_TABLE.indexOf('const moves: Record<string, () => void> = {'),
@@ -1388,7 +1481,34 @@ function once<T>(make: () => T): () => T {
 const railTip = () => (/function Tip\([\s\S]*?<TooltipContent side="right"/.test(RAIL) ? TOOLTIP_BOX : '')
 
 const RAIL = source('components/Rail.tsx')
-const RESIZE_HANDLE = source('components/ResizeHandle.tsx')
+/**
+ * What a resize handle sized 200 between 100 and 400 asks for when a key is pressed on it: the size
+ * it sends, `reset`, `expand` for a collapsed panel's edge (`onExpand`), or nothing.
+ */
+function handleHears(key: string, props: Partial<ResizeHandleProps> = {}): string {
+    const said: string[] = []
+    const handle: ResizeHandleProps = {
+        target: { current: null },
+        size: 200,
+        min: 100,
+        max: 400,
+        label: 'Width',
+        onSize: (size) => said.push(String(size)),
+        onReset: () => said.push('reset'),
+        ...props,
+    }
+    live(createElement(ResizeHandle, handle), (box) => press(box.querySelector('[role="separator"]'), key))
+    return said.join(' ')
+}
+/** The step an arrow moves a resize handle by, in pixels. */
+const handleStep = () => String(Number(handleHears('ArrowRight')) - 200)
+/** Whether the edge's keys hold: the arrows step it, Home and End send it to its limits, Enter puts it back. */
+const handleKeys = () =>
+    handleHears('ArrowRight') === '216' &&
+    handleHears('ArrowLeft') === '184' &&
+    handleHears('Home') === '100' &&
+    handleHears('End') === '400' &&
+    handleHears('Enter') === 'reset'
 
 const PLACES: RailGroup[] = [
     {
@@ -1496,6 +1616,33 @@ const rail = (props: Partial<RailProps> = {}) =>
         foot: 'ada',
         ...props,
     })
+/** A rail with the places drawn in the page, its box handed to `look`. */
+const liveRail = <T>(props: Partial<RailProps>, look: (box: HTMLElement) => T) =>
+    live(
+        createElement(Rail, { name: 'Tidevann', mark: 'T', markHref: '#/', groups: PLACES, onCollapsedChange: () => undefined, ...props }),
+        look,
+    )
+/** The expanded rail's Projects parent: the button that folds it. */
+const railParent = (box: HTMLElement) =>
+    [...box.querySelectorAll('button[aria-expanded]')].find((button) => button.textContent?.startsWith('Projects'))
+/**
+ * The moves a rail group with `onReorder`, inside `RailDrops`, asks for when Alt and Down are pressed
+ * on its first entry and Alt and Up on its second, each as `from>to`.
+ */
+function railReorders(): string {
+    const said: string[] = []
+    const groups = [{ ...PLACES[0], onReorder: (from: number, to: number) => said.push(`${from}>${to}`) }]
+    const entry = (box: HTMLElement, id: string) => box.querySelector(`[data-rail-entry="${id}"] a`)
+    live(
+        createElement(RailDrops, null, createElement(Rail, { name: 'Tidevann', mark: 'T', groups, onCollapsedChange: () => undefined })),
+        (box) => {
+            press(entry(box, 'runs'), 'ArrowDown', { altKey: true })
+            press(entry(box, 'runs'), 'ArrowDown')
+            press(entry(box, 'schedules'), 'ArrowUp', { altKey: true })
+        },
+    )
+    return said.join(' ')
+}
 /** The drawings most checks read, each made once. */
 const RAILS = once(() => ({
     expanded: rail(),
@@ -1673,31 +1820,44 @@ const RAIL_ADAPTER: Adapter = {
                 : 'an entry is not a link, or a parent not a button'
         },
         'ArrowRight (a folded parent in the expanded rail)': () =>
-            /event\.key === 'ArrowRight' && !inside && !open\) \{\s+event\.preventDefault\(\)\s+onOpen\(true\)/.test(RAIL)
+            liveRail({}, (box) => {
+                press(railParent(box), 'ArrowRight')
+                return railParent(box)?.getAttribute('aria-expanded') === 'true'
+            })
                 ? true
                 : 'no ArrowRight unfolds a parent',
         'ArrowLeft (an unfolded parent in the expanded rail, or one of its entries)': () =>
-            /event\.key === 'ArrowLeft' && \(open \|\| inside\)\) \{\s+event\.preventDefault\(\)\s+onOpen\(false\)\s+if \(inside\) control\.current\?\.focus\(\)/.test(
-                RAIL,
-            )
+            liveRail({ defaultExpanded: ['projects'] }, (box) => {
+                press(railParent(box), 'ArrowLeft')
+                const folded = railParent(box)?.getAttribute('aria-expanded') === 'false'
+                press(railParent(box), 'ArrowRight')
+                const entry = [...box.querySelectorAll('[data-rail-children] a')].find((link) => link.textContent === 'harbor')
+                press(entry, 'ArrowLeft')
+                return folded && railParent(box)?.getAttribute('aria-expanded') === 'false' && document.activeElement === railParent(box)
+            })
                 ? true
                 : 'no ArrowLeft folds a parent and goes back to its row',
-        'Enter, Space, ArrowRight (collapsed, with onCollapsedChange)': () =>
-            /event\.key !== 'Enter' && event\.key !== ' ' && event\.key !== forward/.test(RESIZE_HANDLE) &&
-            /onExpand=\{collapsed \? \(\) => setCollapsed\(false\) : undefined\}/.test(RAIL)
+        'Enter, Space, ArrowRight (collapsed, with onCollapsedChange)': () => {
+            const expands = (key: string) => {
+                const said: boolean[] = []
+                liveRail({ collapsed: true, onCollapsedChange: (next) => said.push(next) }, (box) =>
+                    press(box.querySelector('[role="separator"]'), key),
+                )
+                return said.join(' ') === 'false'
+            }
+            return expands('Enter') &&
+                expands(' ') &&
+                expands('ArrowRight') &&
+                handleHears('ArrowLeft', { onExpand: () => undefined }) === ''
                 ? true
-                : "the collapsed rail's edge does not expand on Enter, Space and the arrow",
+                : "the collapsed rail's edge does not expand on Enter, Space and the arrow"
+        },
         "ArrowLeft, ArrowRight, Home, End, Enter (the expanded rail's edge has focus)": () =>
-            /event\.key === forward\) step\(16\)\s+else if \(event\.key === back\) step\(-16\)/.test(RESIZE_HANDLE) &&
-            /event\.key === 'Home'\) onSize\(min\)/.test(RESIZE_HANDLE) &&
-            /event\.key === 'End'\) onSize\(max\)/.test(RESIZE_HANDLE) &&
-            /event\.key === 'Enter' && \(onReset !== undefined \|\| reset !== undefined\)\) restore\(\)/.test(RESIZE_HANDLE)
+            liveRail({}, (box) => box.querySelector('[role="separator"]') !== null) && handleKeys()
                 ? true
                 : "the rail's edge misses an arrow, Home, End or Enter",
         'Alt+ArrowUp, Alt+ArrowDown (a group with onReorder, inside RailDrops)': () =>
-            /!event\.altKey \|\| \(event\.key !== 'ArrowUp' && event\.key !== 'ArrowDown'\)/.test(source('components/RailDrops.tsx'))
-                ? true
-                : 'no Alt with the arrows moves an entry',
+            railReorders() === '0>1 1>0' ? true : 'no Alt with the arrows moves an entry',
         Escape: skip("a flyout is Base UI's popover and the drawer the shell's overlay, both closing on Escape in a browser"),
     },
     more: () => {
@@ -1772,7 +1932,7 @@ const RAIL_ADAPTER: Adapter = {
                         expanded.find((element) => element.attrs.role === 'img'),
                         READ.square,
                     ),
-                resizeStep: () => numberIn(RESIZE_HANDLE, /event\.key === forward\) step\((\d+)\)/),
+                resizeStep: handleStep,
                 edgeLine: () =>
                     lengthOn(
                         expanded.find((element) => element.parent?.attrs.role === 'separator'),
@@ -2676,7 +2836,6 @@ const TOOLTIP_ADAPTER: Adapter = {
 // Dropdown menu
 
 const DROPDOWN = source('components/ui/dropdown-menu.tsx')
-const DEFERRED_MENU = source('components/ui/deferred-menu.tsx')
 /** The menu opens in a portal, and its parts load after the page is drawn: its classes are read from the source. */
 const MENU = {
     popup: [POPUP_LOOK, literalAfter(DROPDOWN, 'data-slot="dropdown-menu-content"', 'className={cn(', 'POPUP,')],
@@ -2732,7 +2891,10 @@ const DROPDOWN_MENU_ADAPTER: Adapter = {
     keys: {
         Tab: () => (focusable(menuTrigger()) ? true : 'the trigger is out of the tab order'),
         'ArrowDown, ArrowUp, Enter, Space (the trigger has focus)': () =>
-            menuTrigger()?.tag === 'button' && /const opens = event\.key === 'ArrowDown' \|\| event\.key === 'ArrowUp'/.test(DEFERRED_MENU)
+            menuTrigger()?.tag === 'button' &&
+            standInOpens('ArrowDown', true) &&
+            standInOpens('ArrowUp', true) &&
+            !standInOpens('Enter', true)
                 ? true
                 : 'the trigger is not a native button, or the stand-in does not open on the arrows',
         'ArrowDown, ArrowUp (the menu is open)': () =>
@@ -3630,6 +3792,26 @@ const runTimeline = (props: Partial<RunTimelineProps> = {}) =>
         ...props,
     })
 const RUN_TIMELINES = once(() => runTimeline())
+/**
+ * The shifts, in ms, a timeline snapped to `snap` asks for when a key is pressed on its handle, with
+ * sync-inventory chosen and its next run 6 hours after now. Drawn in the page, where nothing is laid
+ * out, the axis takes the 640 pixels the timeline falls back on.
+ */
+function runShifts(key: string, snap: number, init: KeyboardEventInit = {}): string {
+    const said: number[] = []
+    const props: RunTimelineProps = {
+        lanes: RUN_LANES,
+        from: NOON - 12 * HOURS,
+        to: NOON + 12 * HOURS,
+        now: NOON,
+        timeZone: 'UTC',
+        selected: 'sync-inventory',
+        snap,
+        onShift: (shift) => said.push(shift.by),
+    }
+    live(createElement(RunTimeline, props), (box) => press(box.querySelector('[data-shift-handle]'), key, init))
+    return said.join(' ')
+}
 const laneOf = (elements: El[], id: string) => elements.find((element) => element.attrs['data-lane'] === id)
 const inLane = (elements: El[], id: string, find: (element: El) => boolean) => {
     const lane = laneOf(elements, id)
@@ -3752,12 +3934,19 @@ const RUN_TIMELINE_ADAPTER: Adapter = {
         "Enter, Space (a lane's name has focus)": () =>
             laneButton(RUN_TIMELINES(), 'nightly-export')?.attrs.type === 'button' ? true : 'the name is not a native button',
         'ArrowLeft, ArrowRight (the handle has focus)': () =>
-            /if \(event\.key !== 'ArrowLeft' && event\.key !== 'ArrowRight'\) return/.test(RUN_TIMELINE) &&
-            /shift\(lane, now !== undefined && first \+ amount <= now \? 0 : amount\)/.test(RUN_TIMELINE)
+            runShifts('ArrowRight', HOURS) === String(HOURS) &&
+            runShifts('ArrowLeft', HOURS) === String(-HOURS) &&
+            runShifts('ArrowLeft', 6 * HOURS) === ''
                 ? true
                 : 'the handle does not shift by the arrows, held to now',
-        'Shift+ArrowLeft, Shift+ArrowRight (the handle has focus)': () =>
-            /const amount = \(event\.shiftKey \? step : grain\)/.test(RUN_TIMELINE) ? true : 'Shift does not shift by a tick',
+        'Shift+ArrowLeft, Shift+ArrowRight (the handle has focus)': () => {
+            const tick = timelineTicks(NOON - 12 * HOURS, NOON + 12 * HOURS, 640, 'UTC').step
+            return tick !== HOURS &&
+                runShifts('ArrowRight', HOURS, { shiftKey: true }) === String(tick) &&
+                runShifts('ArrowLeft', HOURS, { shiftKey: true }) === String(-tick)
+                ? true
+                : 'Shift does not shift by a tick'
+        },
         'Escape (a pointer drags the handle)': () =>
             /onDragCancel=\{onCancel\}/.test(RUN_TIMELINE_DRAG) ? true : "the drag engine's cancel does not put the runs back",
     },
@@ -3839,6 +4028,31 @@ const clipTimeline = (props: Partial<ClipTimelineProps> = {}) =>
         ...props,
     })
 const CLIP_TIMELINES = once(() => clipTimeline())
+/**
+ * What a clip timeline at 25 frames a second, its playhead at 2 and harbor-wide chosen, says when a
+ * key is pressed on the juniper-pan clip, the focus inside the timeline: each callback it calls, as
+ * `playhead:<seconds>`, `chosen:<ids>`, `moved:<id>@<start>`, `split:<id>@<at>` or `deleted:<ids>`.
+ */
+function clipHears(key: string, init: KeyboardEventInit = {}, props: Partial<ClipTimelineProps> = {}): string {
+    const said: string[] = []
+    const at = (seconds: number) => String(Math.round(seconds * 1000) / 1000)
+    const all: ClipTimelineProps = {
+        tracks: CLIP_TRACKS,
+        clips: CLIPS,
+        duration: 12,
+        fps: 25,
+        playhead: 2,
+        selected: ['wide'],
+        onPlayheadChange: (seconds) => said.push(`playhead:${at(seconds)}`),
+        onSelectedChange: (ids) => said.push(`chosen:${ids.join(',')}`),
+        onClipsChange: (changes) => said.push(...changes.map((change) => `moved:${change.id}@${at(change.start ?? NaN)}`)),
+        onSplit: (id, seconds) => said.push(`split:${id}@${at(seconds)}`),
+        onDelete: (ids, ripple) => said.push(`deleted:${ids.join(',')}${ripple ? ' rippled' : ''}`),
+        ...props,
+    }
+    live(createElement(ClipTimeline, all), (box) => press(box.querySelector('[data-clip="pan"]'), key, init))
+    return said.join(' ')
+}
 /** A clip in each kind color, on the video track. */
 const CLIP_COLORS = once(() =>
     clipTimeline({
@@ -4030,30 +4244,35 @@ const CLIP_TIMELINE_ADAPTER: Adapter = {
             return reached ? true : `drawn in another order, or out of the tab order: ${places.join(', ')}`
         },
         'Enter, Space (a clip has focus)': () =>
-            /if \(event\.key !== 'Enter' && event\.key !== ' '\) return[\s\S]{0,80}onChoose\(clip\.id, event\.shiftKey \|\| event\.metaKey \|\| event\.ctrlKey\)/.test(
-                CLIP_TIMELINE,
-            )
+            clipHears('Enter') === 'chosen:pan' && clipHears(' ', { shiftKey: true }) === 'chosen:wide,pan'
                 ? true
                 : 'Enter and Space do not choose a clip',
         'ArrowLeft, ArrowRight (focus is inside the timeline)': () =>
-            /else seek\(playhead \+ sign \* \(event\.shiftKey \? 1 : frame\), true\)/.test(CLIP_TIMELINE)
+            clipHears('ArrowRight') === 'playhead:2.04' &&
+            clipHears('ArrowLeft') === 'playhead:1.96' &&
+            clipHears('ArrowRight', { shiftKey: true }) === 'playhead:3'
                 ? true
                 : 'the arrows do not move the playhead a frame, a second with Shift',
         'Home, End (focus is inside the timeline)': () =>
-            /seek\(event\.key === 'Home' \? 0 : total, true\)/.test(CLIP_TIMELINE) ? true : 'Home and End do not reach the ends',
+            clipHears('Home') === 'playhead:0' && clipHears('End') === 'playhead:12' ? true : 'Home and End do not reach the ends',
         'Alt+ArrowLeft, Alt+ArrowRight (focus is inside the timeline and onClipsChange is given)': () =>
-            /if \(event\.altKey\) nudge\(sign \* frame\)/.test(CLIP_TIMELINE) &&
-            /if \(onClipsChange === undefined\) return/.test(CLIP_TIMELINE)
+            clipHears('ArrowRight', { altKey: true }, { selected: ['pan'] }) === 'moved:pan@6.04' &&
+            clipHears('ArrowRight', { altKey: true }, { selected: ['pan'], onClipsChange: undefined }) === ''
                 ? true
                 : 'Alt and the arrows do not move the chosen clips a frame',
         'S (focus is inside the timeline and onSplit is given)': () =>
-            /\(event\.key === 's' \|\| event\.key === 'S'\) && !mod && !event\.altKey && onSplit !== undefined/.test(CLIP_TIMELINE)
+            clipHears('s') === 'split:wide@2' &&
+            clipHears('S') === 'split:wide@2' &&
+            clipHears('s', { ctrlKey: true }) === '' &&
+            clipHears('s', { altKey: true }) === '' &&
+            clipHears('s', {}, { onSplit: undefined }) === ''
                 ? true
                 : 'S does not split',
         'Delete, Backspace (focus is inside the timeline, onDelete is given and a clip is chosen)': () =>
-            /\(event\.key === 'Delete' \|\| event\.key === 'Backspace'\) && !mod && onDelete !== undefined && chosen\.length > 0/.test(
-                CLIP_TIMELINE,
-            ) && /remove\(event\.shiftKey\)/.test(CLIP_TIMELINE)
+            clipHears('Delete') === 'deleted:wide' &&
+            clipHears('Backspace') === 'deleted:wide' &&
+            clipHears('Delete', { shiftKey: true }) === 'deleted:wide rippled' &&
+            clipHears('Delete', {}, { selected: [] }) === ''
                 ? true
                 : 'Delete and Backspace do not delete, Shift rippling',
         'Escape (a pointer drags a clip or a grip)': () =>
@@ -4090,6 +4309,26 @@ const CLIP_TIMELINE_ADAPTER: Adapter = {
 const EMOJI_PICKER = source('components/EmojiPicker.tsx')
 /** Drawn on the server the list has not loaded: the grid's cells, headings and messages are read from the source. */
 const emojiPicker = once(() => draw(EmojiPicker, { onPick: noop, recent: ['\u{1F44D}'], autoFocus: false }))
+/** An emoji picker drawn in the page once its emoji have loaded and its whole grid is drawn, handed to `look`. */
+const livePicker = <T>(props: Partial<EmojiPickerProps>, look: (box: HTMLElement) => T | Promise<T>) =>
+    liveWaiting(createElement(EmojiPicker, { onPick: noop, recent: [], autoFocus: false, ...props }), async (box) => {
+        await until(() => box.querySelector('[data-index]') !== null)
+        // The rest of the grid is drawn a frame after the first.
+        await act(() => new Promise((done) => setTimeout(done, 50)))
+        return look(box)
+    })
+const emojiCell = (box: HTMLElement, index: number) => box.querySelector(`[data-index="${String(index)}"]`)
+/** Presses Escape on an element; whether the press went on past the part to the page, as it would to a popover or dialog around it. */
+function escapesPast(target: Element | null): boolean {
+    let past = false
+    const hear = () => {
+        past = true
+    }
+    document.addEventListener('keydown', hear)
+    press(target, 'Escape')
+    document.removeEventListener('keydown', hear)
+    return past
+}
 const TONE_CHOICE = literalAfter(EMOJI_PICKER, 'role="radiogroup"', 'className=')
 const TONE_HAND = literalAfter(EMOJI_PICKER, 'role="radio"', 'className={cn(')
 const TONE_CHOSEN = /tone === index && '([^']+)'/.exec(EMOJI_PICKER)?.[1] ?? ''
@@ -4201,27 +4440,42 @@ const EMOJI_PICKER_ADAPTER: Adapter = {
     effect: (state) => (state === 'disabled' ? pieceWhere(emojiTab(emojiPicker(), false), ['disabled']) : skip(`no effect of ${state}`)),
     keys: {
         'ArrowDown (the search has focus and the grid holds emoji)': () =>
-            /event\.key === 'ArrowDown' && cells\.length > 0\) \{\s+event\.preventDefault\(\)\s+moveTo\(focused\)/.test(EMOJI_PICKER)
-                ? true
-                : 'Down from the search does not enter the grid',
-        'Enter (the search has focus and holds a query that found any)': () =>
-            /event\.key === 'Enter' && searching && cells\.length > 0\) \{\s+event\.preventDefault\(\)\s+pick\(cells\[0\]\.emoji, cells\[0\]\.name\)/.test(
-                EMOJI_PICKER,
-            )
-                ? true
-                : 'Enter in the search does not pick the first found',
+            livePicker({}, (box) => {
+                press(box.querySelector('input'), 'ArrowDown')
+                return document.activeElement === emojiCell(box, 0)
+            }).then((entered) => (entered ? true : 'Down from the search does not enter the grid')),
+        'Enter (the search has focus and holds a query that found any)': () => {
+            const picked: string[] = []
+            return livePicker({ defaultQuery: 'thumbs', onPick: (_, name) => picked.push(name) }, (box) => {
+                press(box.querySelector('input'), 'Enter')
+                return picked.join() === 'thumbs up'
+            }).then((picks) => (picks ? true : 'Enter in the search does not pick the first found'))
+        },
         'ArrowLeft, ArrowRight (a cell has focus)': () =>
-            /ArrowLeft: \(\) => focused - 1,\s+ArrowRight: \(\) => focused \+ 1,/.test(EMOJI_PICKER) &&
-            /Math\.max\(0, Math\.min\(cells\.length - 1, index\)\)/.test(EMOJI_PICKER)
-                ? true
-                : 'the arrows do not move across the cells, stopping at the ends',
+            livePicker({}, (box) => {
+                press(emojiCell(box, 0), 'ArrowRight')
+                const right = document.activeElement === emojiCell(box, 1)
+                press(emojiCell(box, 1), 'ArrowLeft')
+                press(emojiCell(box, 0), 'ArrowLeft')
+                return right && document.activeElement === emojiCell(box, 0)
+            }).then((moves) => (moves ? true : 'the arrows do not move across the cells, stopping at the ends')),
         'ArrowUp, ArrowDown (a cell has focus)': () =>
-            /ArrowUp: \(\) => inRow\(row - 1\),\s+ArrowDown: \(\) => inRow\(row \+ 1\),/.test(EMOJI_PICKER) &&
-            /if \(event\.key === 'ArrowUp' && row === 0\) return search\.current\?\.focus\(\)/.test(EMOJI_PICKER)
-                ? true
-                : 'Up and Down do not move by rows, Up from the first back to the search',
+            livePicker({}, (box) => {
+                press(emojiCell(box, 0), 'ArrowDown')
+                const down = document.activeElement === emojiCell(box, 8)
+                press(emojiCell(box, 8), 'ArrowUp')
+                const up = document.activeElement === emojiCell(box, 0)
+                press(emojiCell(box, 0), 'ArrowUp')
+                return down && up && document.activeElement === box.querySelector('input')
+            }).then((moves) => (moves ? true : 'Up and Down do not move by rows, Up from the first back to the search')),
         'Home, End (a cell has focus)': () =>
-            /Home: \(\) => 0,\s+End: \(\) => cells\.length - 1,/.test(EMOJI_PICKER) ? true : 'Home and End do not reach the ends',
+            livePicker({}, (box) => {
+                const cells = box.querySelectorAll('[data-index]')
+                press(emojiCell(box, 0), 'End')
+                const end = document.activeElement === cells[cells.length - 1]
+                press(cells[cells.length - 1], 'Home')
+                return end && document.activeElement === emojiCell(box, 0)
+            }).then((moves) => (moves ? true : 'Home and End do not reach the ends')),
         'Enter, Space (a cell has focus)': () =>
             /type="button"\s+data-index=\{cell\.index\}/.test(EMOJI_PICKER) &&
             /onClick=\{\(\) => pick\(cell\.emoji, cell\.name\)\}/.test(EMOJI_PICKER)
@@ -4236,19 +4490,27 @@ const EMOJI_PICKER_ADAPTER: Adapter = {
             /const showGroup = \(group: EmojiSection\) => \{\s+setQuery\(''\)/.test(EMOJI_PICKER)
                 ? true
                 : 'a tab is not a native button that clears the search',
-        'Escape (focus is in the picker and the tone choice is not open)': () =>
-            /event\.key === 'Escape' && query !== ''\) \{[\s\S]{0,120}event\.stopPropagation\(\)/.test(EMOJI_PICKER) &&
-            /if \(event\.key !== 'Escape' \|\| onClose === undefined \|\| event\.defaultPrevented\) return\s+event\.preventDefault\(\)\s+onClose\(\)/.test(
-                EMOJI_PICKER,
-            )
-                ? true
-                : 'Escape does not clear the search, then call onClose',
-        'Escape (the tone choice is open)': () =>
-            /if \(event\.key === 'Escape'\) \{\s+event\.stopPropagation\(\)\s+setToneOpen\(false\)\s+requestAnimationFrame\(\(\) => toneButton\.current\?\.focus\(\)\)/.test(
-                EMOJI_PICKER,
-            )
-                ? true
-                : 'Escape does not close the tone choice, focus back on its button',
+        'Escape (focus is in the picker and the tone choice is not open)': () => {
+            let closed = 0
+            return livePicker({ defaultQuery: 'cat', onClose: () => closed++ }, (box) => {
+                const input = box.querySelector('input')
+                const first = escapesPast(input)
+                const cleared = closed === 0 && input?.value === ''
+                press(input, 'Escape')
+                return !first && cleared && closed === 1
+            }).then((holds) => (holds ? true : 'Escape does not clear the search, then call onClose'))
+        },
+        'Escape (the tone choice is open)': () => {
+            let closed = 0
+            return livePicker({ onClose: () => closed++ }, async (box) => {
+                const toneButton = () => box.querySelector(`button[aria-label="${EMOJI_PICKER_WORDS.skinTone}"][aria-expanded]`)
+                act(() => (toneButton() as HTMLButtonElement | null)?.click())
+                const opened = box.querySelector('[role="radiogroup"]') !== null
+                const past = escapesPast(box.querySelector('[role="radio"]'))
+                const shut = box.querySelector('[role="radiogroup"]') === null
+                return opened && !past && shut && closed === 0 && (await until(() => document.activeElement === toneButton()))
+            }).then((holds) => (holds ? true : 'Escape does not close the tone choice, focus back on its button'))
+        },
     },
     more: () => {
         const box = byData(emojiPicker(), 'data-slot', 'emoji-picker')
@@ -4395,6 +4657,43 @@ const MENTION_PROBES: Adapter['keys'] = {
     'Escape (the suggestion list is open)': () =>
         /if \(key === 'Escape'\) return 'close'/.test(MENTION_KEYS) ? true : 'Escape does not close the suggestions',
 }
+/** A composer that takes the text, the send and the change of text, and the props each draws with. */
+type TextComposer = ComponentType<{
+    value: string
+    onChange: (value: string) => void
+    onSend: () => void
+    mentions?: ComposerMentions
+}>
+/**
+ * What a composer drawn in the page (a desktop screen) does when a key is pressed in its text:
+ * `send`, `change:<text>` when it puts a suggestion in, `kept` when it keeps the key from the text
+ * without sending, or `line` when it leaves the key to the text.
+ */
+function composerHears(composer: TextComposer, props: object, key: string, init: KeyboardEventInit = {}): string {
+    const said: string[] = []
+    const all = {
+        value: 'Did nightly-export finish?',
+        onChange: (text: string) => said.push(`change:${text}`),
+        onSend: () => said.push('send'),
+        ...props,
+    }
+    live(createElement(composer, all), (box) => {
+        const event = press(box.querySelector('textarea'), key, init)
+        if (said.length === 0) said.push(event?.defaultPrevented === true ? 'kept' : 'line')
+    })
+    return said.join(' ')
+}
+/**
+ * Whether Enter sends a text that is ready, keeps an unready one (`unready`) without sending, puts
+ * the chosen suggestion in when the list is open, and leaves the key alone while an input method composes.
+ */
+const entersAsSend = (composer: TextComposer, props: object, unready: object) =>
+    composerHears(composer, props, 'Enter') === 'send' &&
+    composerHears(composer, { ...props, ...unready }, 'Enter') === 'kept' &&
+    composerHears(composer, { ...props, value: 'Ask @ad', mentions: MENTIONING }, 'Enter') === 'change:Ask @ada ' &&
+    composerHears(composer, props, 'Enter', { isComposing: true }) === 'line'
+/** People to mention, the list open on the mention the text ends with. */
+const MENTIONING: ComposerMentions = { people: [{ id: 'ada', name: 'ada' }], defaultOpen: true }
 const MENTION_WORD_SOURCES: Record<string, WordSource> = {
     'mentions.label': 'MENTION_WORDS.label',
     'mentions.empty': 'MENTION_WORDS.empty',
@@ -4503,22 +4802,33 @@ const COMPOSER_ADAPTER: Adapter = {
     },
     keys: {
         'Enter (the text has focus, no suggestion list is open, and the screen is not a touch screen)': () =>
-            /if \(mention\.onKeyDown\(event\)\) return\s+if \(event\.key !== 'Enter' \|\| event\.shiftKey \|\| touch \|\| composing\(event\)\) return\s+event\.preventDefault\(\)\s+if \(ready\) onSend\(\)/.test(
-                COMPOSER,
-            )
+            entersAsSend(Composer, { onAttach: noop }, { value: '', attachments: [] })
                 ? true
                 : 'Enter does not send when ready, past the suggestions, a touch screen and an input method',
         'Shift+Enter (the text has focus)': () =>
-            /event\.key !== 'Enter' \|\| event\.shiftKey/.test(COMPOSER) ? true : 'Shift+Enter does not leave the line break to the text',
+            composerHears(Composer, {}, 'Enter', { shiftKey: true }) === 'line'
+                ? true
+                : 'Shift+Enter does not leave the line break to the text',
         'Enter (the text has focus on a touch screen)': () =>
             TOUCH_READ_ONCE.test(COMPOSER) && touchScreen() ? true : 'a touch screen is not read once from a coarse pointer with no hover',
         ...MENTION_PROBES,
-        'Escape (a dictation hears, transcribes or has failed)': () =>
-            /if \(event\.key !== 'Escape' \|\| \(!hearing && dictation\.state !== 'error'\)\) return[\s\S]{0,160}dictation\.cancel\(\)/.test(
-                COMPOSER,
+        'Escape (a dictation hears, transcribes or has failed)': () => {
+            const cancels = (state: 'idle' | 'recording' | 'transcribing' | 'error') => {
+                const props = { value: '', onChange: noop, onSend: noop, dictation: { transcribe: async () => '', defaultState: state } }
+                return live(createElement(Composer, props), (box) => {
+                    const strip = () => box.querySelector(`[aria-label="${COMPOSER_DICTATION_WORDS.recording}"], [role="alert"]`)
+                    const shown = strip() !== null || box.textContent?.includes(COMPOSER_DICTATION_WORDS.transcribing) === true
+                    const past = escapesPast(box.querySelector('textarea'))
+                    return shown && !past && strip() === null && !box.textContent?.includes(COMPOSER_DICTATION_WORDS.transcribing)
+                })
+            }
+            const idlePasses = live(createElement(Composer, { value: '', onChange: noop, onSend: noop }), (box) =>
+                escapesPast(box.querySelector('textarea')),
             )
+            return cancels('recording') && cancels('transcribing') && cancels('error') && idlePasses
                 ? true
-                : 'Escape does not cancel the dictation',
+                : 'Escape does not cancel the dictation'
+        },
     },
     more: () => {
         const { full } = COMPOSERS()
@@ -4640,13 +4950,11 @@ const MESSAGE_COMPOSER_ADAPTER: Adapter = {
             : skip(`no effect of ${state}`),
     keys: {
         'Enter (the text has focus, no suggestion list is open, and the screen is not a touch screen)': () =>
-            /if \(mention\.onKeyDown\(event\)\) return\s+if \(event\.key === 'Enter' && !event\.shiftKey && !touch && !composing\(event\)\) \{\s+event\.preventDefault\(\)\s+if \(!empty\) send\(\)/.test(
-                MESSAGE_COMPOSER,
-            )
+            entersAsSend(MessageComposer, {}, { value: '  ' })
                 ? true
                 : 'Enter does not send a text that holds something, past the suggestions, a touch screen and an input method',
         'Shift+Enter (the text has focus)': () =>
-            /event\.key === 'Enter' && !event\.shiftKey/.test(MESSAGE_COMPOSER)
+            composerHears(MessageComposer, {}, 'Enter', { shiftKey: true }) === 'line'
                 ? true
                 : 'Shift+Enter does not leave the line break to the text',
         'Enter (the text has focus on a touch screen)': () =>
@@ -6048,6 +6356,19 @@ const DATE_FIELD = source('components/DateField.tsx')
 const PICKERS = source('components/pickers.tsx')
 const CALENDAR = source('components/ui/calendar.tsx')
 const DAY_PICK = source('components/day-pick.tsx')
+/**
+ * Whether a date or time field drawn in the page, held closed, asks to open its picker on Alt and
+ * Down in its input, and not on Down alone.
+ */
+function opensOnAltDown<P extends object>(field: ComponentType<P>, props: P): boolean {
+    const asked: boolean[] = []
+    const held = { ...props, open: false, onOpenChange: (open: boolean) => asked.push(open) }
+    live(createElement(field, held), (box) => {
+        press(box.querySelector('input'), 'ArrowDown')
+        press(box.querySelector('input'), 'ArrowDown', { altKey: true })
+    })
+    return asked.join() === 'true'
+}
 const dateField = (props: Partial<Parameters<typeof DateField>[0]> = {}) =>
     draw(DateField, {
         id: 'first-run',
@@ -6169,7 +6490,7 @@ const DATE_FIELD_ADAPTER: Adapter = {
                 : 'the input, the clear or the pick button is out of the tab order'
         },
         'Alt+ArrowDown (the input has focus and the field can be changed)': () =>
-            /if \(!event\.altKey \|\| event\.key !== 'ArrowDown'\) return/.test(DATE_FIELD) && /setOpened\(true\)/.test(DATE_FIELD)
+            opensOnAltDown(DateField, { id: 'first-run', label: 'First run', value: '2026-11-09', onValueChange: noop })
                 ? true
                 : 'Alt+ArrowDown does not open the calendar',
         'Enter, Space (the pick or the clear button has focus)': () => {
@@ -6274,10 +6595,8 @@ const SIDE_PANEL_ADAPTER: Adapter = {
         'Enter, Space (a tab has focus)': () => (sidePanelPieces().tab?.tag === 'button' ? true : 'a tab is not a native button'),
         'ArrowLeft, ArrowRight, Home, End, Enter (the edge has focus)': () =>
             /<ResizeHandle[\s\S]*?onReset=\{held\.reset\}[\s\S]*?grows=\{-1\}/.test(SIDE_PANEL) &&
-            /event\.key === forward\) step\(16\)\s+else if \(event\.key === back\) step\(-16\)/.test(RESIZE_HANDLE) &&
-            /event\.key === 'Home'\) onSize\(min\)/.test(RESIZE_HANDLE) &&
-            /event\.key === 'End'\) onSize\(max\)/.test(RESIZE_HANDLE) &&
-            /event\.key === 'Enter' && \(onReset !== undefined \|\| reset !== undefined\)\) restore\(\)/.test(RESIZE_HANDLE)
+            handleKeys() &&
+            handleHears('ArrowLeft', { grows: -1 }) === '216'
                 ? true
                 : "the panel's edge misses an arrow, Home, End or Enter, or does not grow toward the start",
     },
@@ -6287,7 +6606,7 @@ const SIDE_PANEL_ADAPTER: Adapter = {
             defaultSize: () => numberIn(SIDE_PANEL, /rest: defaultSize \?\? width \?\? (\d+)/),
             minSize: () => numberIn(SIDE_PANEL, /minSize = (\d+)/),
             maxSize: () => numberIn(SIDE_PANEL, /maxSize = (\d+)/),
-            resizeStep: () => numberIn(RESIZE_HANDLE, /event\.key === forward\) step\((\d+)\)/),
+            resizeStep: handleStep,
             edgeLine: () => lengthOn(pieces.line, READ.width),
             headStart: () => lengthOn(pieces.head, READ.padStart),
             headEnd: () => numberIn(SIDE_PANEL, /sheet \? 'pr-\d+' : 'pr-(\d+)'/, 'step'),
@@ -6516,13 +6835,24 @@ const SECRET_FIELD_ADAPTER: Adapter = {
             /moved\.current = 'input'\s*setReplacing\(true\)/.test(SECRET_FIELD)
                 ? true
                 : 'Replace does not open the input and move focus into it',
-        'Escape (the input of a sealed field that can be changed has focus)': () =>
-            /event\.key === 'Escape' && sealed && editable\) \{\s*event\.preventDefault\(\)\s*seal\(\)/.test(SECRET_FIELD) &&
-            /const seal = \(\) => \{\s*moved\.current = 'replace'\s*setReplacing\(false\)\s*setShown\(false\)\s*onChange\?\.\(undefined\)/.test(
-                SECRET_FIELD,
-            )
+        'Escape (the input of a sealed field that can be changed has focus)': () => {
+            // What Escape in the input does: the values the field hears, then `sealed` once Replace is back with the focus.
+            const escape = (props: Partial<SecretFieldProps>) => {
+                const said: string[] = []
+                const all = { id: 'token', label: 'API token', onChange: (value?: string) => said.push(String(value)), ...props }
+                return live(createElement(SecretField, all), (box) => {
+                    press(box.querySelector('input'), 'Escape')
+                    const replace = box.querySelector(`button[aria-label="${SECRET_REPLACE}"]`)
+                    if (box.querySelector('input') === null && document.activeElement === replace) said.push('sealed')
+                    return said.join(' ')
+                })
+            }
+            return escape({ sealed: true, defaultReplacing: true }) === 'undefined sealed' &&
+                escape({ value: 'harbor-key' }) === '' &&
+                escape({ sealed: true, defaultReplacing: true, readOnly: true }) === ''
                 ? true
-                : 'Escape does not seal the field again',
+                : 'Escape does not seal the field again'
+        },
         'Enter, Space (Cancel has focus)': () =>
             byText(SECRET_FIELDS().replacing, 'button', SECRET_FIELD_WORDS.cancel)?.tag === 'button' &&
             /onClick=\{seal\}/.test(SECRET_FIELD)
@@ -6756,7 +7086,7 @@ const TIME_FIELD_ADAPTER: Adapter = {
                 : 'the input, the clear or the pick button is out of the tab order'
         },
         'Alt+ArrowDown (the input has focus and the field can be changed)': () =>
-            /if \(!event\.altKey \|\| event\.key !== 'ArrowDown'\) return/.test(TIME_FIELD) && /setOpened\(true\)/.test(TIME_FIELD)
+            opensOnAltDown(TimeField, { id: 'starts', label: 'Starts', value: '14:30', onValueChange: noop })
                 ? true
                 : 'Alt+ArrowDown does not open the list',
         'Enter, Space (the pick or the clear button has focus)': () => {
@@ -7263,7 +7593,22 @@ const TREE_ON: Record<string, string[]> = {
     mixed: ['data-indeterminate'],
     shut: ['disabled'],
 }
-const treeKey = (pattern: RegExp, missing: string) => () => (pattern.test(TREE) ? true : missing)
+/** Sites for a tree drawn in the page: Europe holds Norway, which holds Bergen, and Asia stands after it. */
+const SITES: TreeNode[] = [
+    { id: 'europe', label: 'Europe', children: [{ id: 'norway', label: 'Norway', children: [{ id: 'bergen', label: 'Bergen' }] }] },
+    { id: 'asia', label: 'Asia' },
+]
+/** A tree of the sites drawn in the page, handed to `look` with a way to find a row by its node's id. */
+const liveTree = <T>(props: Partial<TreeProps>, look: (row: (id: string) => HTMLElement | null) => T) =>
+    live(createElement(Tree, { nodes: SITES, label: 'Sites', selection: 'single', ...props }), (box) =>
+        look((id) => box.querySelector<HTMLElement>(`[role="treeitem"][data-id="${id}"]`)),
+    )
+/** Whether a key on a tree's first row chooses it. */
+const treeChooses = (key: string) => {
+    const chosen: string[][] = []
+    liveTree({ onSelect: (ids) => chosen.push(ids) }, (row) => press(row('europe'), key))
+    return chosen.map((ids) => ids.join()).join(' ') === 'europe'
+}
 
 const TREE_SELECT_ADAPTER: Adapter = {
     wordObjects: { TREE_SELECT_WORDS },
@@ -7397,25 +7742,40 @@ const TREE_SELECT_ADAPTER: Adapter = {
         Tab: () => (focusable(treeTrigger(TREE_SELECTS().plain)) ? true : 'the trigger is out of the tab order'),
         'Enter, Space (the trigger has focus)': () =>
             treeTrigger(TREE_SELECTS().plain)?.tag === 'button' ? true : "the trigger is not Base UI's popover button",
-        'ArrowDown, ArrowUp (a row has focus)': treeKey(
-            /event\.key === 'ArrowDown'[\s\S]*event\.key === 'ArrowUp'/,
-            'the tree does not move by ArrowDown and ArrowUp',
-        ),
-        'Home, End (a row has focus)': treeKey(
-            /event\.key === 'Home'[\s\S]*event\.key === 'End'/,
-            'the tree does not move by Home and End',
-        ),
-        'ArrowRight (a row has focus)': treeKey(
-            /event\.key === 'ArrowRight' && branch && !expanded\) toggle/,
-            'ArrowRight does not open a branch',
-        ),
-        'ArrowLeft (a row has focus)': treeKey(
-            /event\.key === 'ArrowLeft' && branch && expanded && matches === null\) toggle/,
-            'ArrowLeft does not close a branch',
-        ),
+        'ArrowDown, ArrowUp (a row has focus)': () =>
+            liveTree({}, (row) => {
+                press(row('europe'), 'ArrowDown')
+                const down = document.activeElement === row('asia')
+                press(row('asia'), 'ArrowUp')
+                return down && document.activeElement === row('europe')
+            })
+                ? true
+                : 'the tree does not move by ArrowDown and ArrowUp',
+        'Home, End (a row has focus)': () =>
+            liveTree({}, (row) => {
+                press(row('europe'), 'End')
+                const end = document.activeElement === row('asia')
+                press(row('asia'), 'Home')
+                return end && document.activeElement === row('europe')
+            })
+                ? true
+                : 'the tree does not move by Home and End',
+        'ArrowRight (a row has focus)': () =>
+            liveTree({}, (row) => {
+                press(row('europe'), 'ArrowRight')
+                return row('europe')?.getAttribute('aria-expanded') === 'true' && row('norway') !== null
+            })
+                ? true
+                : 'ArrowRight does not open a branch',
+        'ArrowLeft (a row has focus)': () =>
+            liveTree({ defaultExpanded: ['europe'] }, (row) => {
+                press(row('europe'), 'ArrowLeft')
+                return row('europe')?.getAttribute('aria-expanded') === 'false' && row('norway') === null
+            })
+                ? true
+                : 'ArrowLeft does not close a branch',
         'Enter, Space (a row has focus)': () =>
-            /event\.key === 'Enter' \|\| event\.key === ' '\) choose\(current\)/.test(TREE) &&
-            /if \(!multiple\) \{\s*setOpen\(false\)/.test(TREE_SELECT)
+            treeChooses('Enter') && treeChooses(' ') && /if \(!multiple\) \{\s*setOpen\(false\)/.test(TREE_SELECT)
                 ? true
                 : 'a row is not chosen by Enter or Space, or a single choice does not close the popup',
         'Escape (the popup is open)': () => focusBack(POPOVER),
@@ -7433,6 +7793,20 @@ const TREE_SELECT_ADAPTER: Adapter = {
 // Prompt
 
 const PROMPT = source('components/PromptDialog.tsx')
+/** What an open prompt drawn in the page submits when Enter is pressed in its field: the text, or nothing. */
+function promptSubmits(props: Partial<PromptDialogProps>, init: KeyboardEventInit = {}): string {
+    const sent: string[] = []
+    const all: PromptDialogProps = {
+        open: true,
+        onOpenChange: noop,
+        title: 'New project',
+        label: 'Name',
+        onSubmit: (text) => void sent.push(text),
+        ...props,
+    }
+    live(createElement(PromptDialog, all), () => press(document.querySelector('[role="dialog"] input'), 'Enter', init))
+    return sent.join(' ')
+}
 
 /** The prompt is the dialog's frame with one field: its looks are parts/dialog's and the field's, so its words, width and keys are its own. */
 const PROMPT_ADAPTER: Adapter = {
@@ -7451,7 +7825,10 @@ const PROMPT_ADAPTER: Adapter = {
     effect: () => undefined,
     keys: {
         'Enter (the field has focus, and Submit is not shut or busy)': () =>
-            /event\.key !== 'Enter'/.test(PROMPT) && /if \(busy \|\| why !== undefined\) return/.test(PROMPT)
+            promptSubmits({ defaultValue: 'harbor' }) === 'harbor' &&
+            promptSubmits({}) === '' &&
+            promptSubmits({ defaultValue: 'harbor', busy: true }) === '' &&
+            promptSubmits({ defaultValue: 'harbor' }, { isComposing: true }) === ''
                 ? true
                 : 'Enter in the field does not submit, or submits while shut or busy',
         'Escape (not busy, or busy past busy-release)': () =>
@@ -7862,7 +8239,11 @@ const ISSUE_COUNT_ADAPTER: Adapter = {
 
 const SERVER_MENU = source('components/ServerMenu.tsx')
 const SERVER_MENUS = once(() => draw(ServerMenu, { name: 'api', version: 'v2.4.1', state: 'up' }))
-/** Each piece of a server menu, by its name in the spec; the menu opens only on a press, so its classes are read from the source. */
+/**
+ * Each piece of a server menu, by its name in the spec. The menu opens only once Base UI's menu has
+ * loaded, and loading it in this process turns every later server drawing of a menu into Base UI's
+ * own parts, which the server cannot draw: the menu's and its info's classes are read from the source.
+ */
 const serverMenuWhere = (name: string, on: string[] = []): Where | undefined => {
     const elements = SERVER_MENUS()
     const face = elements.find((element) => element.tag === 'button')
@@ -8414,18 +8795,23 @@ function effectChecksOf(spec: Spec, adapter: Adapter): Check[] {
     })
 }
 
-function keyChecks(spec: Spec, adapter: Adapter): Check[] {
-    return spec.keyboard.flatMap((binding) => {
+async function keyChecks(spec: Spec, adapter: Adapter): Promise<Check[]> {
+    const checks: Check[] = []
+    // One probe at a time: each draws in the same page.
+    for (const binding of spec.keyboard) {
         const name = keyName(binding)
         const probe = adapter.keys[name]
-        if (probe === undefined)
-            return [
+        if (probe === undefined) {
+            checks.push(
                 check(`keyboard.${name}`, binding.does, 'no probe in parts.test: say where sokkel-ui handles it, or why it cannot be read'),
-            ]
-        if (isSkip(probe)) return []
-        const found = probe()
-        return [check(`keyboard.${name}`, binding.does, found === true ? binding.does : found)]
-    })
+            )
+            continue
+        }
+        if (isSkip(probe)) continue
+        const found = await probe()
+        checks.push(check(`keyboard.${name}`, binding.does, found === true ? binding.does : found))
+    }
+    return checks
 }
 
 // Message ids: each word's id and its English in the catalogs every package writes (`bun run messages`)
@@ -8476,7 +8862,7 @@ function messageChecks(spec: Spec): Check[] {
 
 /** Every check of a part, made once. */
 const made = new Map<string, Check[]>()
-function checksOf(id: string): Check[] {
+async function checksOf(id: string): Promise<Check[]> {
     const known = made.get(id)
     if (known !== undefined) return known
     const spec = SPECS.get(id)
@@ -8489,7 +8875,7 @@ function checksOf(id: string): Check[] {
         ...sizeChecks(spec, adapter),
         ...paintMapChecks(spec, adapter),
         ...effectChecksOf(spec, adapter),
-        ...keyChecks(spec, adapter),
+        ...(await keyChecks(spec, adapter)),
         ...(adapter.more?.() ?? []),
     ]
     made.set(id, all)
@@ -8505,9 +8891,11 @@ function allowed(id: string): Set<string> {
 const said = (id: string, one: Check) => `${id} ${one.key}: the spec says ${one.spec}, sokkel-ui has ${one.found}`
 
 /** Fails on every check of the aspects that differs, unless the spec's drift or a pending spec change allows it. */
-function holds(id: string, ...aspects: string[]) {
+async function holds(id: string, ...aspects: string[]) {
     const allow = allowed(id)
-    const differing = checksOf(id).filter((one) => aspects.some((aspect) => one.key.startsWith(aspect)) && !one.same && !allow.has(one.key))
+    const differing = (await checksOf(id)).filter(
+        (one) => aspects.some((aspect) => one.key.startsWith(aspect)) && !one.same && !allow.has(one.key),
+    )
     expect(differing.map((one) => said(id, one))).toEqual([])
 }
 
@@ -8526,9 +8914,9 @@ for (const id of SPECS.keys()) {
         it('paints each state as the spec does', () => holds(id, 'variants.', 'pieces.', 'states.'))
         it('handles the keys the spec binds', () => holds(id, 'keyboard.'))
         it('meets the rest of the spec', () => holds(id, 'routes.', 'layout.'))
-        it("states its drift: each of sokkel-ui's drift entries still differs, and nothing else is allowed to", () => {
+        it("states its drift: each of sokkel-ui's drift entries still differs, and nothing else is allowed to", async () => {
             const spec = SPECS.get(id)
-            const checks = checksOf(id)
+            const checks = await checksOf(id)
             const problems: string[] = []
             for (const entry of spec?.drift ?? []) {
                 if (entry.renderer !== 'sokkel-ui') continue

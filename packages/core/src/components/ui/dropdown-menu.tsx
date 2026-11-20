@@ -7,7 +7,7 @@ import { cn } from '../../lib/utils'
 import { FINGER_HIT, takesFinger } from '../../lib/finger'
 import { returnFocusOnKeyboard } from '../../lib/focus'
 import { POPUP } from '../../lib/popup'
-import { menu as MenuPrimitive } from './deferred-menu'
+import { menu as MenuPrimitive, standInOpens } from './deferred-menu'
 import { ChevronRightIcon, CheckIcon } from 'lucide-react'
 
 export type DropdownMenuProps = BaseMenu.Root.Props
@@ -282,4 +282,5 @@ export {
     DropdownMenuSub,
     DropdownMenuSubTrigger,
     DropdownMenuSubContent,
+    standInOpens,
 }
