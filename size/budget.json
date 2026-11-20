@@ -3,7 +3,7 @@
         "engines": [],
         "start": 197.3,
         "lazy": 67.5,
-        "css": 52.9
+        "css": 53.0
     },
     "forms-lean": {
         "engines": [],
@@ -14,7 +14,7 @@
     "dashboard": {
         "engines": ["echarts", "dnd-kit"],
         "start": 213.9,
-        "lazy": 470.6,
+        "lazy": 470.7,
         "css": 53.1,
         "first": {
             "budget": 411.4,
