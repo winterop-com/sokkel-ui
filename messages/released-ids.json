@@ -152,6 +152,8 @@
     "callBar.shortcutGroup",
     "callBar.shortcutMicrophone",
     "callBar.unmute",
+    "callTile.handRaised",
+    "callTile.muted",
     "capabilityPicker.clear",
     "capabilityPicker.empty",
     "capabilityPicker.filters",
