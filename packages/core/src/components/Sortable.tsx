@@ -60,6 +60,16 @@ export const SORTABLE_MESSAGES: WordMessages<SortableWords> = {
 /** How items move aside as one is dragged: down a list, or across and down a grid. */
 export type SortableLayout = 'list' | 'grid'
 
+/**
+ * Where a key moves the focused item: back (-1) on ArrowUp, and on ArrowLeft in a grid; on (1) on
+ * ArrowDown, and on ArrowRight in a grid; nowhere (0) on any other key.
+ */
+export function sortableStep(key: string, layout: SortableLayout): -1 | 0 | 1 {
+    if (key === 'ArrowUp' || (layout === 'grid' && key === 'ArrowLeft')) return -1
+    if (key === 'ArrowDown' || (layout === 'grid' && key === 'ArrowRight')) return 1
+    return 0
+}
+
 interface Group {
     scope: string
     layout: SortableLayout
@@ -244,11 +254,10 @@ export function SortableItem({ id, as: Tag = 'div', handle: by = 'grip', ref, cl
                 event.target !== event.currentTarget
             )
                 return
-            const back = event.key === 'ArrowUp' || (group.layout === 'grid' && event.key === 'ArrowLeft')
-            const on = event.key === 'ArrowDown' || (group.layout === 'grid' && event.key === 'ArrowRight')
-            if (!back && !on) return
+            const step = sortableStep(event.key, group.layout)
+            if (step === 0) return
             event.preventDefault()
-            group.step(id, back ? -1 : 1, true)
+            group.step(id, step, true)
         },
     )
     const activator = useRef<HTMLElement | null>(null)

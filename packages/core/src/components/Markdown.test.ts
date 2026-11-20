@@ -21,9 +21,11 @@ describe('markdownHeadings', () => {
 
     it('lists headings underlined with === and ---', () => {
         const source = ['Overview', '========', '', 'Setup', '-----', '', '- a list item', '---', '', '| a | b |', '---'].join('\n')
+        // A row of one column over `---` is no table but a heading, as Markdown draws it; a list item is never one.
         expect(markdownHeadings(source, [1, 2])).toEqual([
             { id: 'overview', label: 'Overview', level: 1 },
             { id: 'setup', label: 'Setup', level: 2 },
+            { id: '-a-b-', label: '| a | b |', level: 2 },
         ])
     })
 

@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import { loadMath, Markdown } from '../components/Markdown'
-import { markdownHeadings, PlainMarkdown } from '../components/PlainMarkdown'
+import { loadHtml, markdownHeadings, markdownSection, PlainMarkdown } from '../components/PlainMarkdown'
 import { frontmatterOf, parseMarkdown, type MarkdownNode, type MarkdownTree } from './markdown-tree'
 
 const LINKS = { onOpen: () => undefined, onTag: () => undefined }
@@ -140,6 +140,33 @@ describe('parseMarkdown', () => {
         expect((placed.children[1].position as { start: { line: number } }).start.line).toBe(4)
     })
 
+    it('reads a highlight through inline nodes on one line, and none across a line or in code', () => {
+        const words = (text: string) => JSON.stringify(parseMarkdown(text).children[0])
+        expect(find(parseMarkdown('==a **b** c=='), 'highlight')).toEqual([
+            {
+                type: 'highlight',
+                children: [
+                    { type: 'text', value: 'a ' },
+                    { type: 'strong', children: [{ type: 'text', value: 'b' }] },
+                    { type: 'text', value: ' c' },
+                ],
+            },
+        ])
+        expect(find(parseMarkdown('==**bold**=='), 'highlight')).toHaveLength(1)
+        expect(find(parseMarkdown('a == b **c** d == e'), 'highlight')).toEqual([])
+        expect(find(parseMarkdown('==a **b**\nc=='), 'highlight')).toEqual([])
+        expect(find(parseMarkdown('==open **b** never'), 'highlight')).toEqual([])
+        expect(words('`==x==`')).not.toContain('highlight')
+    })
+
+    it('reads frontmatter written with CRLF line ends as LF', () => {
+        expect(parseMarkdown('---\r\na: 1\r\nb: 2\r\n---\r\n# T').children[0]).toEqual({
+            type: 'yaml',
+            value: 'a: 1\nb: 2',
+            properties: { a: 1, b: 2 },
+        })
+    })
+
     it('reads less when asked', () => {
         const plain = parseMarkdown('[[harbor]] #runbook $x$ ---', { wikiLinks: false, math: false })
         expect(find(plain, 'wikiLink')).toEqual([])
@@ -219,5 +246,182 @@ describe('the contract’s fixtures', () => {
         expect(renderToStaticMarkup(<Markdown tree={tree} links={LINKS} />)).toBe(
             renderToStaticMarkup(<Markdown content={text} links={LINKS} />),
         )
+    })
+})
+
+describe('what a review found', () => {
+    it('draws no element or property a given tree names through data', () => {
+        const hostile = {
+            type: 'root',
+            children: [
+                {
+                    type: 'paragraph',
+                    data: { hName: 'iframe', hProperties: { srcDoc: '<script>alert(1)</script>' } },
+                    children: [{ type: 'text', value: 'x' }],
+                },
+                {
+                    type: 'paragraph',
+                    data: { hName: 'div', hProperties: { dangerouslySetInnerHTML: { __html: '<img src=x onerror=alert(2)>' } } },
+                    children: [],
+                },
+                {
+                    type: 'callout',
+                    kind: 'evil',
+                    marker: 'evil',
+                    children: [{ type: 'paragraph', children: [{ type: 'text', value: 'y' }] }],
+                },
+            ],
+        } as unknown as MarkdownTree
+        const html = renderToStaticMarkup(<PlainMarkdown tree={hostile} />)
+        expect(html).not.toContain('<iframe')
+        expect(html).not.toContain('onerror')
+        expect(html).toContain('<blockquote>')
+    })
+
+    it('keeps callouts, highlights and embeds with HTML allowed', async () => {
+        await loadHtml()
+        const html = renderToStaticMarkup(
+            <PlainMarkdown
+                content={'> [!warning]- Title\n> body\n\n==marked== ![[harbor]]'}
+                allowHtml
+                links={{ ...LINKS, embed: () => 'drawn' }}
+            />,
+        )
+        expect(html).toMatch(/<details data-callout="warning"/)
+        expect(html).toContain('<mark data-marked="">marked</mark>')
+        expect(html).toContain('drawn')
+    })
+
+    it('draws a tree’s math as written where math is off', () => {
+        const html = renderToStaticMarkup(<PlainMarkdown tree={parseMarkdown('Area $x^2$.')} />)
+        expect(html).toContain('Area $x^2$.')
+        expect(html).toBe(renderToStaticMarkup(<PlainMarkdown content="Area $x^2$." />))
+    })
+
+    it('gives anchors the ids markdownHeadings lists, from text and from a tree', async () => {
+        await loadMath()
+        const text =
+            '## Note[^1]\n\n## Area $x^2$\n\n## [[Page|Shown]] #tag\n\n## a <b>x</b>\n\n## [[Note#Steps]]\n\n## Note\n\n[^1]: A note.'
+        const drawn = [...renderToStaticMarkup(<Markdown content={text} anchors links={LINKS} />).matchAll(/<h2 id="([^"]+)"/g)].map(
+            (match) => match[1],
+        )
+        expect(markdownHeadings(text).map((heading) => heading.id)).toEqual(drawn)
+        expect(markdownHeadings(parseMarkdown(text)).map((heading) => heading.id)).toEqual(drawn)
+        const fromTree = [
+            ...renderToStaticMarkup(<Markdown tree={parseMarkdown(text)} anchors links={LINKS} />).matchAll(/<h2 id="([^"]+)"/g),
+        ].map((match) => match[1])
+        expect(fromTree).toEqual(drawn)
+        expect(renderToStaticMarkup(<PlainMarkdown content="## Plain" />)).not.toContain('data-heading-text')
+    })
+
+    it('reads a long line of unclosed highlights in linear time', () => {
+        const started = performance.now()
+        parseMarkdown('==a '.repeat(40_000), { math: false })
+        expect(performance.now() - started).toBeLessThan(1500)
+        expect(find(parseMarkdown('==a b==c=='), 'highlight')).toHaveLength(1)
+    })
+
+    it('reads a highlight that runs past an inline node with no closing mark in the text after it', () => {
+        expect(find(parseMarkdown('==a **b** c *d* e=='), 'highlight')).toHaveLength(1)
+    })
+
+    it('keeps a link’s words whole, and highlights a link', () => {
+        expect(find(parseMarkdown('[[a==b==c]]'), 'wikiLink')).toEqual([
+            { type: 'wikiLink', target: 'a==b==c', children: [{ type: 'text', value: 'a==b==c' }] },
+        ])
+        const [marked] = find(parseMarkdown('==[[harbor]]=='), 'highlight')
+        expect(marked.children?.[0].type).toBe('wikiLink')
+    })
+
+    it('reads frontmatter keys in any script and of a few words, and keeps a key written twice', () => {
+        expect(frontmatterOf(parseMarkdown('---\nfødt: 1990\ncreated at: 2024\n---\nBody'))?.properties).toEqual({
+            født: 1990,
+            'created at': 2024,
+        })
+        expect(frontmatterOf(parseMarkdown('---\nowner: grace\nowner: ada\n---\nBody'))?.properties).toEqual({ owner: 'ada' })
+    })
+
+    it('finds a section past frontmatter, under a setext heading, and by a repeated heading’s id', () => {
+        expect(markdownSection('---\n# Steps\nstatus: x\n---\nIntro\n\n## Steps\n\nFetch.', 'Steps')).toBe('## Steps\n\nFetch.')
+        expect(markdownSection('Steps\n-----\n\nFetch.\n\nAfter\n-----\n\nDone.', 'Steps')).toBe('Steps\n-----\n\nFetch.')
+        expect(markdownSection('## A\n\nfirst\n\n## A\n\nsecond', 'a-1')).toBe('## A\n\nsecond')
+    })
+
+    it('draws no data image the text wrote, even when the app’s resolver rewrites its address', () => {
+        const html = renderToStaticMarkup(
+            <PlainMarkdown content="![x](DATA:image/png;base64,AAAA)" resolveUrl={(url) => url.replace(/^DATA:/, 'data:')} />,
+        )
+        expect(html).not.toContain('data:image')
+    })
+})
+
+describe('what a second review found', () => {
+    it('does not throw on raw HTML that names a callout kind it does not know', async () => {
+        await loadHtml()
+        for (const html of [
+            '<div data-callout-title="bogus">hi</div>',
+            '<blockquote data-callout="constructor">x</blockquote>',
+            '<blockquote data-callout="__proto__">x</blockquote>',
+        ]) {
+            expect(() => renderToStaticMarkup(<PlainMarkdown content={html} allowHtml />)).not.toThrow()
+        }
+    })
+
+    it('reads many highlights opened across inline nodes in linear time', () => {
+        const started = performance.now()
+        parseMarkdown('==a *b* '.repeat(4_000), { math: false })
+        parseMarkdown('==a [[b]] '.repeat(3_200), { math: false })
+        expect(performance.now() - started).toBeLessThan(1500)
+        expect(find(parseMarkdown('===a *b* c=='), 'highlight')).toHaveLength(1)
+    })
+
+    it('draws a malformed tree without throwing, and no style a tree writes', () => {
+        const trees: unknown[] = [
+            { type: 'root' },
+            { type: 'root', children: 5 },
+            { type: 'root', children: 'abc' },
+            { type: 'root', children: [null, 7, 'x'] },
+            {
+                type: 'root',
+                children: [{ type: 'paragraph', children: [{ type: 'link', url: 5, children: [{ type: 'text', value: 'a' }] }] }],
+            },
+            { type: 'root', children: [{ type: 'code', lang: 5, value: 'x' }] },
+            { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'wikiLink', target: { toString: 1 }, children: [] }] }] },
+            { type: 'root', children: [{ type: 'heading', depth: 99, children: [{ type: 'text', value: 'deep' }] }] },
+        ]
+        let deep: Record<string, unknown> = { type: 'text', value: 'bottom' }
+        for (let level = 0; level < 5_000; level += 1) deep = { type: 'emphasis', children: [deep] }
+        trees.push({ type: 'root', children: [{ type: 'paragraph', children: [deep] }] })
+        for (const tree of trees) {
+            expect(() => renderToStaticMarkup(<PlainMarkdown tree={tree as MarkdownTree} links={LINKS} />)).not.toThrow()
+        }
+        const table = {
+            type: 'root',
+            children: [
+                {
+                    type: 'table',
+                    align: ['left;position:fixed;inset:0', 'center'],
+                    children: [
+                        {
+                            type: 'tableRow',
+                            children: [
+                                { type: 'tableCell', children: [{ type: 'text', value: 'a' }] },
+                                { type: 'tableCell', children: [{ type: 'text', value: 'b' }] },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+        const html = renderToStaticMarkup(<PlainMarkdown tree={table as unknown as MarkdownTree} />)
+        expect(html).not.toContain('position:fixed')
+        expect(html).toContain('text-align:center')
+    })
+
+    it('lists no heading Markdown does not draw, and a setext heading’s words as drawn', () => {
+        expect(markdownHeadings('C #\n---', [2]).map((heading) => heading.id)).toEqual(
+            [...renderToStaticMarkup(<PlainMarkdown content={'C #\n---'} anchors />).matchAll(/id="([^"]+)"/g)].map((match) => match[1]),
+        )
+        expect(markdownHeadings('[a]: https://example.org\n---\n\n<!-- note -->\n---', [2])).toEqual([])
     })
 })

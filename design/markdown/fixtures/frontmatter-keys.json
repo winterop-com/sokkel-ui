@@ -1,0 +1,23 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "yaml",
+      "value": "født: 1990\ncreated at: 2024-11-02\nowner: grace\nowner: ada",
+      "properties": {
+        "født": 1990,
+        "created at": "2024-11-02",
+        "owner": "ada"
+      }
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "Keys in any script and of a few words are read; a key written twice keeps its last value."
+        }
+      ]
+    }
+  ]
+}

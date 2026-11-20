@@ -1,0 +1,251 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "heading",
+      "depth": 1,
+      "children": [
+        {
+          "type": "wikiLink",
+          "target": "nightly-export",
+          "children": [
+            {
+              "type": "text",
+              "value": "nightly-export"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " and "
+        },
+        {
+          "type": "tag",
+          "tag": "runbook"
+        },
+        {
+          "type": "text",
+          "value": " in a heading"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "start": null,
+      "spread": false,
+      "children": [
+        {
+          "type": "listItem",
+          "spread": false,
+          "checked": null,
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "A list item"
+                }
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "marker": "tip",
+              "children": [
+                {
+                  "type": "calloutTitle",
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "Inside the item"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "With "
+                    },
+                    {
+                      "type": "highlight",
+                      "children": [
+                        {
+                          "type": "text",
+                          "value": "a highlight"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "value": "."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "align": [
+        null,
+        null
+      ],
+      "children": [
+        {
+          "type": "tableRow",
+          "children": [
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Note"
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Shown"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "children": [
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "wikiLink",
+                  "target": "Retry a run",
+                  "label": "the steps",
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "the steps"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "embed",
+                  "kind": "image",
+                  "target": "chart.png",
+                  "alt": "chart.png",
+                  "width": 120
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "children": [
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "inlineCode",
+                  "value": "[[in code]]"
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "children": [
+                {
+                  "type": "tag",
+                  "tag": "harbor"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "note",
+      "marker": "note",
+      "children": [
+        {
+          "type": "calloutTitle",
+          "children": [
+            {
+              "type": "text",
+              "value": "Title with "
+            },
+            {
+              "type": "wikiLink",
+              "target": "harbor",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "harbor"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": " and "
+            },
+            {
+              "type": "highlight",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "marked"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": " words"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "Body with "
+            },
+            {
+              "type": "embed",
+              "kind": "note",
+              "target": "Retry a run",
+              "heading": "Steps",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "Retry a run › Steps"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": " inline."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

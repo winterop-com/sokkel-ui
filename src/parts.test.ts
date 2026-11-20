@@ -13,7 +13,7 @@ import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { ITEM_CARD_WORDS, ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
 import { Badge, type BadgeProps } from '@winterop-com/sokkel-ui/primitives/badge'
 import { SERVER_MENU_WORDS, ServerMenu } from '@winterop-com/sokkel-ui/ServerMenu'
-import { SORTABLE_WORDS, SortableGrid } from '@winterop-com/sokkel-ui/Sortable'
+import { SORTABLE_WORDS, SortableGrid, sortableStep } from '@winterop-com/sokkel-ui/Sortable'
 import { Stat } from '@winterop-com/sokkel-ui/Stat'
 import { Unfoldable } from '@winterop-com/sokkel-ui/Unfoldable'
 import { BOARD_CHECKLIST_WORDS, BOARD_ITEM_PANEL_WORDS, BoardChecklist, BoardItemPanel } from '@winterop-com/sokkel-ui/board/BoardItemPanel'
@@ -6981,7 +6981,7 @@ const REPEATED_GROUP_ADAPTER: Adapter = {
                 ? true
                 : 'Add or a Move is not a native button',
         'ArrowUp, ArrowDown (a grip has focus, inside a RepeatedDrag)': () =>
-            /<SortableGrip/.test(REPEATED_DRAG) && /event\.key === 'ArrowUp'/.test(SORTABLE) && /event\.key === 'ArrowDown'/.test(SORTABLE)
+            /<SortableGrip/.test(REPEATED_DRAG) && sortableStep('ArrowUp', 'list') === -1 && sortableStep('ArrowDown', 'list') === 1
                 ? true
                 : 'the grip does not move its row with the arrows',
         'Enter, Space (a grip has focus, inside a RepeatedDrag)': () =>
@@ -7934,18 +7934,21 @@ const ITEM_CARDS = once(() => ({
     plain: draw(ItemCard, { title: 'Harbor', onSelect: noop }),
 }))
 /** Each piece of an item card, by its name in the spec. */
-const itemCardPieces = (elements: El[]): Record<string, El | undefined> => ({
-    card: elements[0],
-    cover: elements.find((element) => element.tag === 'button' && /\binset-0\b/.test(classesOf(element))),
-    body: elements.find((element) => element.tag === 'div' && /\bp-4\b/.test(classesOf(element))),
-    head: byTag(elements, 'header'),
-    icon: elements.find((element) => element.tag === 'span' && /\bsize-8\b/.test(classesOf(element))),
-    check: elements.find((element) => element.tag === 'span' && /\bsize-5\b/.test(classesOf(element))),
-    menu: elements.find((element) => element.tag === 'button' && element.attrs['aria-label'] === ITEM_CARD_WORDS.menu),
-    status: elements.find((element) => element.tag === 'div' && /\btext-xs\b/.test(classesOf(element))),
-    description: byTag(elements, 'p'),
-    facts: byTag(elements, 'dl'),
-})
+const itemCardPieces = (elements: El[]): Record<string, El | undefined> => {
+    const slot = (name: string) => elements.find((element) => element.attrs['data-slot'] === `item-card-${name}`)
+    return {
+        card: elements.find((element) => element.attrs['data-slot'] === 'item-card'),
+        cover: slot('cover'),
+        body: slot('body'),
+        head: slot('head'),
+        icon: slot('icon'),
+        check: slot('check'),
+        menu: slot('menu'),
+        status: slot('status'),
+        description: slot('description'),
+        facts: slot('facts'),
+    }
+}
 
 const ITEM_CARD_ADAPTER: Adapter = {
     wordObjects: { ITEM_CARD_WORDS },
@@ -8011,13 +8014,11 @@ const SORTABLE_GRID_ADAPTER: Adapter = {
     keys: {
         Tab: () => (focusable(byTag(SORTABLE_GRIDS(), 'li')) ? true : 'a card is out of the tab order'),
         'ArrowUp, ArrowLeft (a card has focus)': () =>
-            /event\.key === 'ArrowUp' \|\| \(group\.layout === 'grid' && event\.key === 'ArrowLeft'\)/.test(SORTABLE)
+            sortableStep('ArrowUp', 'grid') === -1 && sortableStep('ArrowLeft', 'grid') === -1
                 ? true
                 : 'the arrows back do not move a card',
         'ArrowDown, ArrowRight (a card has focus)': () =>
-            /event\.key === 'ArrowDown' \|\| \(group\.layout === 'grid' && event\.key === 'ArrowRight'\)/.test(SORTABLE)
-                ? true
-                : 'the arrows on do not move a card',
+            sortableStep('ArrowDown', 'grid') === 1 && sortableStep('ArrowRight', 'grid') === 1 ? true : 'the arrows on do not move a card',
         'Space, Enter (a card has focus)': () =>
             /KeyboardSensor/.test(DRAG_DROP) ? true : "the drag engine's keyboard sensor is not used",
         'Escape (a card is being moved)': () => (/KeyboardSensor/.test(DRAG_DROP) ? true : "the drag engine's keyboard sensor is not used"),
