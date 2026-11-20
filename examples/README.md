@@ -74,6 +74,11 @@ examples/
                  titles written over the picture and sound mixed under it, split, delete and ripple
                  delete, an inspector for the chosen clip, undo and redo over every edit, saved as it
                  is made, and an export drawn and encoded to WebM in the page
+  flights/      a flight watch: aircraft over southern Norway and the North Sea from a simulated
+                 feed in readsb's shape (or, opt-in in the Electron app, live from adsb.lol), on a
+                 map painted by altitude or affiliation with trails, follow, the ruler, go to and
+                 the compass; a table searched by callsign or address and filtered by altitude and
+                 phase; and the last hour played back on a timeline
   harbor/        a harbor watch: vessels written as AIS sentences and decoded by the tracking
                  add-on, aircraft read from readsb-shaped answers, round harbor, juniper and
                  larkspur; the roster beside a map of zones, radar cover, task lines and tools
@@ -116,7 +121,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195, Cut on 4196, Harbor watch on 4197)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195, Cut on 4196, Harbor watch on 4197, Flight watch on 4198)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
@@ -176,6 +181,14 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
   enters or leaves full screen, which `useFrame` passes on as `desktop.fullscreen`, so the room for
   the buttons goes while macOS hides them.
 - **Assets:** the web build uses relative asset paths, so the shells load it from a file URL.
+- **The flight watch's live feed:** the one example that may reach a public source, as `AGENTS.md`
+  allows: adsb.lol's readsb v2 API (`/v2/point/{lat}/{lon}/{radius}`), off by default and chosen in
+  Settings › Source. adsb.lol answers without CORS headers, so no page in a browser (nor in Tauri's
+  webview) can read it; the Electron shell's main process fetches it (`tidevann:flights:point`, only
+  that endpoint, only for its own page, never twice in ten seconds) and its preload hands the page
+  the JSON. The web and Tauri builds offer the simulation alone and say why. While live is on the
+  foot strip and Settings carry adsb.lol's attribution under the ODbL; a read that fails leaves the
+  simulation running with a banner saying why.
 - **Maps in the dev server:** an example that draws maps adds `mapsVite()` from
   `@winterop-com/sokkel-ui-maps/vite` to the plugins in its `vite.config.ts`, as any app does, since
   the dev server's prebundling cannot load the maps package's `?worker&url` import of maplibre's

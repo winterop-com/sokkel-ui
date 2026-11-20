@@ -91,6 +91,19 @@ release and empties it.
   from readsb-shaped JSON round harbor, juniper and larkspur, with the roster, the map's zones, radar
   cover, links and tools, playback, tasks, zones, a log and the darkroom theme for night watch; and
   the Apps/Harbor watch stories.
+- `TrackLayer` takes `bands`, colors by band name, and a track takes `band`: a track whose band the
+  layer names is painted (symbol and trail) in that band's color in place of its affiliation's, as
+  an altitude-colored flight map needs. Story Maps/Tracks/Altitude.
+- `MapView` takes `onViewChange`, called with the center, zoom and bounds (`MapViewport`) once the
+  map is drawn and each time it comes to rest, for an app that reads what is in view. Story
+  Maps/Tracks/In view.
+- `/adsb` (tracking) adds `altitudeBand` (`ground`, `low` below 10,000 ft, `medium` to 25,000 ft,
+  `high`; `ALTITUDE_BANDS`, `ALTITUDE_BREAKS`) and `verticalTrend` (`climbing`, `level`,
+  `descending`, past `LEVEL_RATE`, about 300 ft a minute).
+- Apps/Flight watch: Map, Affiliation, Following, Flights and Filtered, Tidevann's flights over
+  southern Norway and the North Sea from a readsb answer.
+- Example `flights`, Tidevann's flight watch: a simulated feed in readsb's v2 shape read through
+  `/adsb`, and an opt-in live feed from adsb.lol through the Electron shell.
 
 ## Changed
 

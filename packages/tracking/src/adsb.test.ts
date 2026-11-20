@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseFlights, parseOpenSky, parseReadsb, type OpenSkyResponse, type ReadsbResponse } from './adsb'
+import { altitudeBand, parseFlights, parseOpenSky, parseReadsb, verticalTrend, type OpenSkyResponse, type ReadsbResponse } from './adsb'
 import { FOOT, KNOT } from './track'
 
 // Shaped as readsb's v2 APIs answer `/v2/point/{lat}/{lon}/{radius}`, with fictional identifiers.
@@ -223,5 +223,26 @@ describe('either shape', () => {
     it('tells the two shapes apart', () => {
         expect(parseFlights(STATES).map((track) => track.source)).toEqual(['opensky', 'opensky'])
         expect(parseFlights(POINT).map((track) => track.source)).toEqual(['adsb', 'adsb'])
+    })
+})
+
+describe('altitude bands and vertical trends', () => {
+    it('bands aircraft by altitude, the ground by what the feed says', () => {
+        expect(altitudeBand({ altitude: 36_000 * FOOT })).toBe('high')
+        expect(altitudeBand({ altitude: 25_000 * FOOT })).toBe('high')
+        expect(altitudeBand({ altitude: 12_000 * FOOT })).toBe('medium')
+        expect(altitudeBand({ altitude: 3_000 * FOOT })).toBe('low')
+        expect(altitudeBand({ altitude: 0 })).toBe('ground')
+        expect(altitudeBand({ altitude: 900, properties: { onGround: true } })).toBe('ground')
+        expect(altitudeBand({})).toBeUndefined()
+    })
+
+    it('tells a climb and a descent from holding level by the vertical rate', () => {
+        const [cruising] = parseReadsb(POINT)
+        expect(verticalTrend(cruising)).toBe('level')
+        expect(verticalTrend({ properties: { verticalRate: 8 } })).toBe('climbing')
+        expect(verticalTrend({ properties: { verticalRate: -6 } })).toBe('descending')
+        expect(verticalTrend({ properties: { verticalRate: 8, onGround: true } })).toBeUndefined()
+        expect(verticalTrend({})).toBeUndefined()
     })
 })

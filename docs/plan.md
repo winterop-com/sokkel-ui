@@ -1285,7 +1285,11 @@ the map's overlay, since a basemap without fonts writes no text, and a label tha
 or another track is left out, the selected track's never. New positions glide in: the layer sets its
 sources' data frame by frame from where each track was to where it is, so a feed that updates every
 second moves smoothly and the selection, kept as feature state, stays on. `cluster` uses maplibre's
-own clustering. Selection is the map's, as every layer's is.
+own clustering. Selection is the map's, as every layer's is. A track may carry a `band` (an altitude
+band, a speed band), and a layer given `bands` paints a track whose band it names in that band's
+color in place of its affiliation's, its trail too, as a flight map colored by altitude needs; the
+band colors are the app's, from tokens. A map's `onViewChange` tells where it looks (center, zoom and
+bounds) once drawn and each time it comes to rest, for an app that reads a feed for the area in view.
 
 The tools around such a map are parts in its corners, each taking only what it needs from the map's
 context: `MapRuler` (it takes the map's clicks while on, through `takeClicks`), `MapCoordinates` with
