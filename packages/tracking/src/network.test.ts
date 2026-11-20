@@ -210,12 +210,70 @@ describe('the flow tracker', () => {
         expect(byAddress['fe80::1'].scope).toBe('link-local')
     })
 
+    it('lists each connection with its latest state, its rates and its totals', () => {
+        const tracker = createFlowTracker({ window: 10_000, locate })
+        tracker.add([
+            record({ remoteAddress: '203.0.113.10', bytesIn: 1000, bytesOut: 100, state: 'SYN_SENT', at: 0 }),
+            record({ remoteAddress: '198.51.100.7', localPort: 50300, bytesIn: 10, at: 0 }),
+        ])
+        tracker.add([
+            record({ remoteAddress: '203.0.113.10', bytesIn: 6000, bytesOut: 600, at: 1000 }),
+            record({ remoteAddress: '198.51.100.7', localPort: 50300, bytesIn: 20, state: 'CLOSE_WAIT', at: 1000 }),
+        ])
+        const [busiest, quiet] = tracker.byConnection()
+        expect(busiest).toMatchObject({
+            process: 'worker',
+            pid: 4100,
+            protocol: 'tcp',
+            localAddress: '192.168.1.20',
+            localPort: 50100,
+            remoteAddress: '203.0.113.10',
+            remotePort: 443,
+            state: 'ESTABLISHED',
+            scope: 'public',
+            location: PLACES['203.0.113.10'],
+            bytesIn: 5000,
+            bytesOut: 500,
+            rateIn: 500,
+            rateOut: 50,
+            totalIn: 6000,
+            totalOut: 600,
+            metered: true,
+            firstSeen: 0,
+            lastSeen: 1000,
+        })
+        expect(quiet).toMatchObject({ remoteAddress: '198.51.100.7', state: 'CLOSE_WAIT', totalIn: 20, bytesIn: 10 })
+    })
+
+    it('sums deltas into a connection total, and says when no record counted bytes', () => {
+        const tracker = createFlowTracker({ counters: 'delta', window: 2_000 })
+        tracker.add([
+            record({ remoteAddress: '203.0.113.10', bytesIn: 400, at: 0 }),
+            record({ remoteAddress: '203.0.113.10', bytesIn: 600, at: 3000 }),
+            record({ remoteAddress: '198.51.100.7', localPort: 50400, at: 3000 }),
+        ])
+        const flows = tracker.byConnection()
+        expect(flows.map((flow) => [flow.remoteAddress, flow.bytesIn, flow.totalIn, flow.metered])).toEqual([
+            ['203.0.113.10', 600, 1000, true],
+            ['198.51.100.7', 0, 0, false],
+        ])
+    })
+
+    it('lists connections newest first when none moves bytes, and drops those not seen in the window', () => {
+        const tracker = createFlowTracker({ window: 5_000 })
+        tracker.add(record({ remoteAddress: '203.0.113.10', at: 0 }))
+        tracker.add(record({ remoteAddress: '198.51.100.7', localPort: 50500, at: 1000 }))
+        expect(tracker.byConnection(1000).map((flow) => flow.remoteAddress)).toEqual(['198.51.100.7', '203.0.113.10'])
+        expect(tracker.byConnection(5500).map((flow) => flow.remoteAddress)).toEqual(['198.51.100.7'])
+    })
+
     it('forgets everything when cleared', () => {
         const tracker = createFlowTracker()
         tracker.add(record({ remoteAddress: '203.0.113.10', at: 0 }))
         tracker.clear()
         expect(tracker.byRemote()).toEqual([])
         expect(tracker.byProcess()).toEqual([])
+        expect(tracker.byConnection()).toEqual([])
     })
 })
 

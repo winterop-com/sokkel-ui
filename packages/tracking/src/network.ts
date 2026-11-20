@@ -1,7 +1,7 @@
 /**
  * Network connections as flows and tracks: the records an app reads from its host (a process, its
- * local and remote ends, the bytes moved) gathered by remote host or by process, with byte rates over
- * a sliding window, and the located ones as tracks and links a map draws from home to each remote end.
+ * local and remote ends, the bytes moved) gathered by remote host or by process, or each on its own,
+ * with byte rates over a sliding window, and the located ones as tracks and links a map draws from home to each remote end.
  *
  * Where an address is comes from the app: `locate` is its lookup, and this package ships no database
  * and calls none. Loopback, private, link-local and other addresses that name no place on the
@@ -76,6 +76,43 @@ export interface RemoteFlow extends FlowGroup {
     location?: Location
 }
 
+/** One connection over the window, as its latest record has it, with the bytes it moved and their rates. */
+export interface ConnectionFlow {
+    /** What tells the connection apart: its process (or pid), protocol and both ends. */
+    key: string
+    process?: string
+    pid?: number
+    /** The protocol in lower case. */
+    protocol: string
+    localAddress: string
+    localPort: number
+    remoteAddress: string
+    remotePort: number
+    /** The socket's state as its latest record says it. */
+    state?: string
+    /** What kind of place the remote address names. */
+    scope: AddressScope
+    /** Where the remote address is, when it is public and the app's lookup knows it. */
+    location?: Location
+    /** Bytes received and sent within the window. */
+    bytesIn: number
+    bytesOut: number
+    /** Bytes per second received and sent, over the window. */
+    rateIn: number
+    rateOut: number
+    /** Bytes received and sent since its first record: the last running totals, or every delta summed. */
+    totalIn: number
+    totalOut: number
+    /**
+     * Whether its records carry byte counts. A host read without them (such as from `lsof`, which
+     * lists sockets and no traffic) gives connections whose bytes and rates read 0 and mean nothing.
+     */
+    metered: boolean
+    /** When its first and its latest records were read. */
+    firstSeen: number
+    lastSeen: number
+}
+
 /** A line a map draws from home to a remote host. */
 export interface FlowLink {
     /** The remote host's track's id. */
@@ -102,6 +139,8 @@ export interface FlowTracker {
     byRemote(now?: number): RemoteFlow[]
     /** The connections by process, the busiest first; connections without a process are gathered under `''`. */
     byProcess(now?: number): FlowGroup[]
+    /** Each connection on its own, the busiest first, then the newest. */
+    byConnection(now?: number): ConnectionFlow[]
     /** Forgets every record and every looked-up location. */
     clear(): void
 }
@@ -188,18 +227,26 @@ interface Sample {
 interface Connection {
     key: string
     process?: string
+    pid?: number
     protocol: string
+    localAddress: string
+    localPort: number
     remoteAddress: string
     remotePort: number
+    state?: string
+    firstSeen: number
     lastSeen: number
     /** The running totals of the last record, when the counts are running totals. */
     totals?: { bytesIn: number; bytesOut: number }
+    /** Every byte counted since its first record. */
+    total: { bytesIn: number; bytesOut: number }
+    metered: boolean
     samples: Sample[]
 }
 
 /**
  * A tracker that reads connection records as the app polls its host and gathers them by remote host
- * or by process, with the bytes moved and their rates over a sliding window.
+ * or by process, or lists each connection, with the bytes moved and their rates over a sliding window.
  */
 export function createFlowTracker(options: FlowTrackerOptions = {}): FlowTracker {
     const span = options.window ?? 10_000
@@ -216,10 +263,11 @@ export function createFlowTracker(options: FlowTrackerOptions = {}): FlowTracker
 
     const add = (record: ConnectionRecord) => {
         const remoteAddress = normalizeAddress(record.remoteAddress)
+        const localAddress = normalizeAddress(record.localAddress)
         const key = [
             record.pid ?? record.process ?? '',
             record.protocol.toLowerCase(),
-            normalizeAddress(record.localAddress),
+            localAddress,
             record.localPort,
             remoteAddress,
             record.remotePort,
@@ -229,31 +277,49 @@ export function createFlowTracker(options: FlowTrackerOptions = {}): FlowTracker
             connection = {
                 key,
                 process: record.process,
+                pid: record.pid,
                 protocol: record.protocol.toLowerCase(),
+                localAddress,
+                localPort: record.localPort,
                 remoteAddress,
                 remotePort: record.remotePort,
+                firstSeen: record.at,
                 lastSeen: record.at,
+                total: { bytesIn: 0, bytesOut: 0 },
+                metered: false,
                 samples: [],
             }
             connections.set(key, connection)
         }
+        // The latest record says the state; an older one arriving late does not undo it.
+        if (record.at >= connection.lastSeen && record.state !== undefined) connection.state = record.state
+        connection.firstSeen = Math.min(connection.firstSeen, record.at)
         connection.lastSeen = Math.max(connection.lastSeen, record.at)
         if (record.process !== undefined) connection.process = record.process
+        if (record.pid !== undefined) connection.pid = record.pid
         latest = Math.max(latest, record.at)
+        if (record.bytesIn !== undefined || record.bytesOut !== undefined) connection.metered = true
         const bytesIn = record.bytesIn ?? 0
         const bytesOut = record.bytesOut ?? 0
         if (cumulative) {
             const before = connection.totals
             connection.totals = { bytesIn, bytesOut }
             // A first record has nothing to count from, and a total that fell means the counter started again.
-            if (before === undefined) return
+            if (before === undefined) {
+                connection.total = { bytesIn, bytesOut }
+                return
+            }
             const sample = {
                 at: record.at,
                 bytesIn: bytesIn >= before.bytesIn ? bytesIn - before.bytesIn : bytesIn,
                 bytesOut: bytesOut >= before.bytesOut ? bytesOut - before.bytesOut : bytesOut,
             }
             connection.samples.push(sample)
-        } else connection.samples.push({ at: record.at, bytesIn, bytesOut })
+            connection.total = { bytesIn: connection.total.bytesIn + sample.bytesIn, bytesOut: connection.total.bytesOut + sample.bytesOut }
+        } else {
+            connection.samples.push({ at: record.at, bytesIn, bytesOut })
+            connection.total = { bytesIn: connection.total.bytesIn + bytesIn, bytesOut: connection.total.bytesOut + bytesOut }
+        }
     }
 
     /** Drops what fell out of the window, and connections not seen within it. */
@@ -336,6 +402,44 @@ export function createFlowTracker(options: FlowTrackerOptions = {}): FlowTracker
         },
         byProcess(now = latest) {
             return [...gather(now, (connection) => connection.process ?? '').values()].sort(busiest)
+        },
+        byConnection(now = latest) {
+            prune(now)
+            const seconds = span / 1000
+            return [...connections.values()]
+                .map((connection): ConnectionFlow => {
+                    let bytesIn = 0
+                    let bytesOut = 0
+                    for (const sample of connection.samples) {
+                        bytesIn += sample.bytesIn
+                        bytesOut += sample.bytesOut
+                    }
+                    const flow: ConnectionFlow = {
+                        key: connection.key,
+                        protocol: connection.protocol,
+                        localAddress: connection.localAddress,
+                        localPort: connection.localPort,
+                        remoteAddress: connection.remoteAddress,
+                        remotePort: connection.remotePort,
+                        scope: addressScope(connection.remoteAddress),
+                        bytesIn,
+                        bytesOut,
+                        rateIn: bytesIn / seconds,
+                        rateOut: bytesOut / seconds,
+                        totalIn: connection.total.bytesIn,
+                        totalOut: connection.total.bytesOut,
+                        metered: connection.metered,
+                        firstSeen: connection.firstSeen,
+                        lastSeen: connection.lastSeen,
+                    }
+                    if (connection.process !== undefined) flow.process = connection.process
+                    if (connection.pid !== undefined) flow.pid = connection.pid
+                    if (connection.state !== undefined) flow.state = connection.state
+                    const location = locate(connection.remoteAddress)
+                    if (location !== undefined) flow.location = location
+                    return flow
+                })
+                .sort((a, b) => b.rateIn + b.rateOut - (a.rateIn + a.rateOut) || b.firstSeen - a.firstSeen || a.key.localeCompare(b.key))
         },
         clear() {
             connections.clear()
