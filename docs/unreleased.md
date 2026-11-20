@@ -5,6 +5,14 @@ release and empties it.
 
 ## Added
 
+- `@winterop-com/sokkel-ui-tracking`, a new domain add-on for map tracking consoles, UI only: it never
+  calls a server and ships no database. `Track` (`/track`) is one plain shape for what a console
+  follows; `/adsb` reads readsb's and OpenSky's JSON into aircraft; `/ais` decodes AIS NMEA sentences
+  into vessels with `createAisDecoder`; `/network` gathers connection records by remote host and by
+  process with byte rates, and places hosts through the app's own `locate`; `/geo` gives great-circle
+  distance, bearing and destination, and UTM and MGRS; `/affiliation` gives `TRACKING_WORDS`
+  (message ids `tracking.affiliations.*` and `tracking.kinds.*`), the grouping order and the color
+  token names `track-friend`, `track-hostile`, `track-neutral`, `track-unknown` and `track-pending`.
 - `TrackLayer` (`@winterop-com/sokkel-ui-maps/TrackLayer`): moving things on a map, each a symbol
   for its kind (`vessel`, `aircraft`, `vehicle`, `sensor`, `other`) turned to its heading, in its
   affiliation's color (`friend`, `hostile`, `neutral`, `unknown`, `pending`), its label beside it and

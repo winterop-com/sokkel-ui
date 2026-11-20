@@ -26,7 +26,8 @@
             "@winterop-com/sokkel-ui-terminal/*": ["./packages/terminal/src/*"],
             "@winterop-com/sokkel-ui-media/*": ["./packages/media/src/*"],
             "@winterop-com/sokkel-ui-fhir/*": ["./packages/fhir/src/*"],
-            "@winterop-com/sokkel-ui-dhis2/*": ["./packages/dhis2/src/*"]
+            "@winterop-com/sokkel-ui-dhis2/*": ["./packages/dhis2/src/*"],
+            "@winterop-com/sokkel-ui-tracking/*": ["./packages/tracking/src/*"]
         }
     },
     "include": [
