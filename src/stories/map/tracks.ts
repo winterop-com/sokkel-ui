@@ -40,6 +40,7 @@ interface Route {
     start?: number
 }
 
+// The vessels keep to open water: their waypoints lie west of the outer islands of the coast.
 const ROUTES: Route[] = [
     {
         id: 'pilot-2',
@@ -48,10 +49,10 @@ const ROUTES: Route[] = [
         kind: 'vessel',
         speed: 14,
         loop: [
-            [5.05, 60.38],
-            [4.75, 60.33],
-            [4.7, 60.5],
-            [5.0, 60.52],
+            [4.6, 60.38],
+            [4.35, 60.33],
+            [4.3, 60.5],
+            [4.6, 60.52],
         ],
     },
     {
@@ -61,10 +62,10 @@ const ROUTES: Route[] = [
         kind: 'vessel',
         speed: 22,
         loop: [
-            [4.85, 60.45],
-            [5.1, 61.4],
-            [5.4, 62.3],
-            [5.1, 61.4],
+            [4.5, 60.45],
+            [4.3, 61.4],
+            [4.7, 62.3],
+            [4.3, 61.4],
         ],
         start: 0.1,
     },
@@ -117,7 +118,7 @@ const ROUTES: Route[] = [
             [5.15, 59.05],
             [4.8, 59.6],
             [4.8, 60.3],
-            [5.0, 60.4],
+            [4.85, 60.42],
             [4.8, 60.3],
             [4.8, 59.6],
         ],
@@ -183,7 +184,7 @@ const ROUTES: Route[] = [
         loop: [
             [4.4, 61.75],
             [4.7, 61.95],
-            [4.95, 61.7],
+            [4.55, 61.7],
         ],
     },
     {
