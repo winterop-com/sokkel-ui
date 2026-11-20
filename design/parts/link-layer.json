@@ -18,7 +18,7 @@
     },
     "anatomy": {
         "line": "From one end to the other: along the great circle in steps of at most 50 km (64 at most), or straight on the map (the rhumb line); the width (1.5) in the tone, 0.75 more under the pointer and 1 more selected in map-selection, dashed 3 on 2 when dashed, round-capped, over a casing 2.5 wider in card at 80 percent.",
-        "chip": "Over the link's middle (along the great circle, or halfway along the straight line on the map), 8 above it: words.measured with the distance and the bearing, as the ruler's chip: text.xs at 500 in tabular figures on card, padded 6 across and 2 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent. A chip that would cover another is left out; the selected link's never is, and is placed first. Only chips whose middle is in view are written."
+        "chip": "Over the link's middle (along the great circle, or halfway along the straight line on the map), 8 above it: words.measured with the distance and the bearing, as the ruler's chip: text.xs at 500 in tabular figures on card, padded 6 across and 2 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent. A chip that would cover another, or a track's label (parts/track-layer) or a zone's label (parts/zone-layer) on the same map, is left out; the selected link's never is, and is placed first. Only chips whose middle is in view are written."
     },
     "standsOn": {"default": "card"},
     "options": {

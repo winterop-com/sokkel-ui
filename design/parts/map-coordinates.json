@@ -35,6 +35,10 @@
             "values": ["km", "mi", "nmi"],
             "default": "km",
             "does": "The scale bar's unit; meters below a kilometer."
+        },
+        "formatPosition": {
+            "type": "callback",
+            "does": "Writes the cursor's position in place of format, for a reference system the map does not know, such as MGRS from the tracking add-on's toMgrs."
         }
     },
     "sizes": {"container": {"padX": 8, "padY": 4, "gap": 12, "text": "text.xs", "radius": "radius-control"}},

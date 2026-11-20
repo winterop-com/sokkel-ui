@@ -42,6 +42,10 @@
             "type": "boolean",
             "default": true,
             "does": "Tracks answer the pointer and presses; a press selects one as the map's selection."
+        },
+        "bands": {
+            "type": "rows",
+            "does": "Colors by band name. A track whose band the layer names is painted (symbol and trail) in that band's color in place of its affiliation's, as an altitude-colored flight map needs."
         }
     },
     "sizes": {
