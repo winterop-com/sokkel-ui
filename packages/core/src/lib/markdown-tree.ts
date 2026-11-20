@@ -29,7 +29,10 @@ export interface ParseMarkdownOptions {
     frontmatter?: boolean
     /** The word a part's marker starts with: `part` by default, for `<!-- part:ID -->`. */
     partMarker?: string
-    /** Keeps each node's place in the text (`position`), off by default. */
+    /**
+     * Keeps each node's place in the text (`position`), off by default: the nodes notes add too, a link,
+     * embed, tag or highlight on what was written for it. The words a link or embed shows have none.
+     */
     positions?: boolean
 }
 

@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "The tile's paints drawn; the plain stat, change and the tile as a plain card not yet."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "Drawn from the spec: the plain stat (dot, unit, change, note, trend) and the tile, a control only with href or selectable; a value is never cut."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -22,7 +22,7 @@
         "unit": "With unit: text.sm in muted-foreground.",
         "change": "With change: an arrow up and right (or down and right for a change written with a minus), 14, then the change, text.xs at 500 in tabular figures, 2 apart: muted-foreground when good is not given, good when good, critical when not.",
         "note": "With note: under the number; plain, text.xs in faint; in a tile, text.help in muted-foreground, wrapping evenly.",
-        "trend": "With trend: a small chart under the number, 4 down, such as a sparkline."
+        "trend": "With trend: a small chart under the number, such as a sparkline, 8 below it in all: the column's gap of 4 and 4 more."
     },
     "standsOn": {"default": "background", "tile": "card"},
     "alsoStandsOn": {"default": ["card"]},
@@ -119,12 +119,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: No public plain stat (only inside KpiRow), and that one has no dot or change and its value takes page-title tracking; the tile has no change and is always a control; the change sits 8 after the value, not 4 from its arrow; the accessible name is the label alone. The tile's paints match."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",

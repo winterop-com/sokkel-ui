@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "The six variants and their sizes drawn; kind, hover, links and a trailing icon not yet."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "Drawn from the spec: kind, the trailing icon, links with focus and hover wash, ghost and link hovers."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -89,12 +89,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: No kind on the badge (its paints are on Chip as ChipTone::Kind); no ghost or link hover; never drawn as a link; no icon after the words. The six variants and their sizes match."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",

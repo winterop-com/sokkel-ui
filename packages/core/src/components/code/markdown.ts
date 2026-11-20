@@ -86,6 +86,65 @@ function lineStart(stream: StringStream, state: MarkdownState): string | null | 
     return undefined
 }
 
+/** Where each kind of closing mark stands in one line, found once, so an opening mark finds its closer by search. */
+interface Closers {
+    line: string
+    /** Each `==` with no space or `=` before it. */
+    marked: number[]
+    /** Each `**` and each `__` with no space before it. */
+    stars: number[]
+    unders: number[]
+    /** Each `*` and each `_` with no space, `*` or `_` before it and no `*` or `_` after it. */
+    star: number[]
+    under: number[]
+    /** Each `~~` with no space before it. */
+    struck: number[]
+    /** Each `]`. */
+    bracket: number[]
+}
+
+let closersOf: Closers | undefined
+
+/** The closing marks of a line, read in one pass and kept while its tokens are read. */
+function closers(line: string): Closers {
+    if (closersOf?.line === line) return closersOf
+    const out: Closers = { line, marked: [], stars: [], unders: [], star: [], under: [], struck: [], bracket: [] }
+    const solid = (at: number) => at >= 0 && !/\s/.test(line[at])
+    for (let at = 0; at < line.length; at += 1) {
+        const char = line[at]
+        const next = line[at + 1]
+        if (char === '=' && next === '=' && solid(at - 1) && line[at - 1] !== '=') out.marked.push(at)
+        if (char === '*' && next === '*' && solid(at - 1)) out.stars.push(at)
+        if (char === '_' && next === '_' && solid(at - 1)) out.unders.push(at)
+        if ((char === '*' || char === '_') && solid(at - 1) && !/[*_]/.test(line[at - 1]) && !/[*_]/.test(next ?? '')) {
+            ;(char === '*' ? out.star : out.under).push(at)
+        }
+        if (char === '~' && next === '~' && solid(at - 1)) out.struck.push(at)
+        if (char === ']') out.bracket.push(at)
+    }
+    closersOf = out
+    return out
+}
+
+/** The first of the sorted places at or after `from`, or undefined. */
+function firstFrom(places: readonly number[], from: number): number | undefined {
+    let low = 0
+    let high = places.length
+    while (low < high) {
+        const middle = (low + high) >> 1
+        if (places[middle] < from) low = middle + 1
+        else high = middle
+    }
+    return places[low]
+}
+
+/** Moves the stream past a closing mark `length` long at `at`, if there is one; whether it did. */
+function closeAt(stream: StringStream, at: number | undefined, length: number): boolean {
+    if (at === undefined) return false
+    stream.pos = at + length
+    return true
+}
+
 /**
  * Markdown inside a line: links between notes and embeds, callout markers, highlights, comments, tags,
  * code, strong and emphasized words, links and addresses.
@@ -104,15 +163,44 @@ function inline(stream: StringStream, state: MarkdownState): string | null {
     // A callout's marker, right after the quote's `>`: `[!warning]`, folded with `-` or `+`.
     if (stream.peek() === '[' && /^ {0,3}(?:>\s?)+$/.test(stream.string.slice(0, stream.pos)) && stream.match(/^\[![a-z][\w-]*\][+-]?/i))
         return 'keyword'
-    if (stream.match(/^==(?=[^\s=])[^\n]*?[^\s=]==/)) return 'inserted'
+    // Each mark below closes at the first closer its kind has after it, found in the line's closers,
+    // so a line of marks that never close is read in time in step with its length.
+    const line = stream.string
+    const at = stream.pos
+    const char = line[at]
+    if (
+        char === '=' &&
+        line[at + 1] === '=' &&
+        /[^\s=]/.test(line[at + 2] ?? ' ') &&
+        closeAt(stream, firstFrom(closers(line).marked, at + 3), 2)
+    )
+        return 'inserted'
     if (stream.match('<!--', false)) return comment(stream, state)
     if (stream.match(/^(`+)[^`]+?\1/)) return 'monospace'
-    if (stream.match(/^(\*\*|__)(?=\S)[^\n]*?\S\1/)) return 'strong'
-    if (stream.match(/^([*_])(?=[^\s*_])[^\n]*?[^\s*_]\1(?![*_])/) || stream.match(/^([*_])[^\s*_]\1/)) return 'emphasis'
-    if (stream.match(/^~~(?=\S)[^\n]*?\S~~/)) return 'strikethrough'
-    if (stream.match(/^!?\[[^\]\n]*\](?=\()/)) {
-        state.address = true
-        return 'link'
+    if ((char === '*' || char === '_') && line[at + 1] === char && /\S/.test(line[at + 2] ?? ' ')) {
+        const table = char === '*' ? closers(line).stars : closers(line).unders
+        if (closeAt(stream, firstFrom(table, at + 3), 2)) return 'strong'
+    }
+    if ((char === '*' || char === '_') && /[^\s*_]/.test(line[at + 1] ?? ' ')) {
+        const table = char === '*' ? closers(line).star : closers(line).under
+        if (closeAt(stream, firstFrom(table, at + 2), 1)) return 'emphasis'
+    }
+    if (stream.match(/^([*_])[^\s*_]\1/)) return 'emphasis'
+    if (
+        char === '~' &&
+        line[at + 1] === '~' &&
+        /\S/.test(line[at + 2] ?? ' ') &&
+        closeAt(stream, firstFrom(closers(line).struck, at + 3), 2)
+    )
+        return 'strikethrough'
+    const opens = char === '[' ? at : char === '!' && line[at + 1] === '[' ? at + 1 : -1
+    if (opens >= 0) {
+        // The words run to the first `]`; a link only when `(` follows that one.
+        const end = firstFrom(closers(line).bracket, opens + 1)
+        if (end !== undefined && line[end + 1] === '(' && closeAt(stream, end, 1)) {
+            state.address = true
+            return 'link'
+        }
     }
     if (stream.match(/^<https?:\/\/[^>\s]+>/) || stream.match(/^https?:\/\/[^\s)<]+/)) return 'url'
     if ((before === '' || /[\s([{"'“‘]/u.test(before)) && stream.match(TAG)) return 'labelName'

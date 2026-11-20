@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "The face, dot, menu and facts drawn; most options not yet."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "Drawn from the spec: environment, the app's states, quiet, checks, recheck, the tooltip and the keys."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -167,12 +167,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: No environment, states, quiet, checks or checkedAt, recheck, onPress, defaultOpen or tooltip; the name is neither cut nor hidden below md; the version chip is not text.badge at 500 in the code face; the check icon does not turn while checking; no ArrowDown to open. The face, the dot, the menu and the facts match."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",

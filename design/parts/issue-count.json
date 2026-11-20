@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "Errors only, counted from the list; a count without a list, warnings, the keys and the list's sizes not yet."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "Drawn from the spec: counts without a list, the warning tone, the keys and the list's sizes."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -134,12 +134,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: no count without a list (the count is the list's length, with no critical or warning options), so a count with nothing to open cannot be shown; no warnings tone or rule; the accessible name is English in code and says no counts together; no focus ring; no keys (focus to the first issue, the arrows, Escape back); entries a fixed 40 tall and not cut; the list a fixed 352 wide, not layout.listWidth. The face's paints match."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",

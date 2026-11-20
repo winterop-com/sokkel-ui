@@ -448,3 +448,59 @@ describe('what the tree port found', () => {
         expect(find(parseMarkdown('[[a\\=\\=b]] ==c=='), 'wikiLink')[0].target).not.toContain('\uFDD0')
     })
 })
+
+describe('positions on the nodes notes add', () => {
+    type Point = { line: number; column: number; offset: number }
+    const at = (node: MarkdownNode) => node.position as { start: Point; end: Point } | undefined
+    const written = (text: string, node: MarkdownNode) => {
+        const place = at(node)
+        return place === undefined ? undefined : text.slice(place.start.offset, place.end.offset)
+    }
+    const TEXT = [
+        '---',
+        'status: draft',
+        '---',
+        'See [[Nightly export|the export]] and #harbor, ![[chart.png|300]].',
+        '',
+        '> [!warning] Before a ==rerun==',
+        '> Ask ada about ![[Runbook#Steps]] and ==a **bold** step==.',
+        '',
+        'An \\[escaped\\] ==mark &amp; [[link]]== #tag/deep',
+    ].join('\n')
+    const tree = parseMarkdown(TEXT, { positions: true })
+
+    it('places each link, embed, tag and highlight on what was written', () => {
+        expect(find(tree, 'wikiLink').map((node) => written(TEXT, node))).toEqual(['[[Nightly export|the export]]', '[[link]]'])
+        expect(find(tree, 'embed').map((node) => written(TEXT, node))).toEqual(['![[chart.png|300]]', '![[Runbook#Steps]]'])
+        expect(find(tree, 'tag').map((node) => written(TEXT, node))).toEqual(['#harbor', '#tag/deep'])
+        expect(find(tree, 'highlight').map((node) => written(TEXT, node))).toEqual([
+            '==rerun==',
+            '==a **bold** step==',
+            '==mark &amp; [[link]]==',
+        ])
+    })
+
+    it('gives lines and columns that agree with the offsets', () => {
+        const lines = TEXT.split('\n')
+        for (const node of nodes(tree)) {
+            const place = at(node)
+            if (place === undefined) continue
+            for (const point of [place.start, place.end]) {
+                const before = lines.slice(0, point.line - 1).reduce((sum, line) => sum + line.length + 1, 0)
+                expect(before + point.column - 1, node.type).toBe(point.offset)
+            }
+        }
+    })
+
+    it('keeps each text piece on its words', () => {
+        for (const node of find(tree, 'text')) {
+            const place = written(TEXT, node)
+            if (place === undefined || node.value?.includes('\n') || /[\\&]/.test(place)) continue
+            expect(place, JSON.stringify(node.value)).toBe(node.value)
+        }
+    })
+
+    it('adds no positions unless asked', () => {
+        expect(nodes(parseMarkdown(TEXT)).some((node) => node.position !== undefined)).toBe(false)
+    })
+})

@@ -11,8 +11,8 @@
         },
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "Drawn; trees, its own loading and failed states, cellFocus, the number editor, band heads and aggregates not yet."
+            "as_of": "cb26531",
+            "note": "cellFocus, refused cells, the number editor, band heads and aggregates drawn; EntryGrid and a band's text gap left (drift)."
         },
         "sokkel-tui": {
             "state": "partial",
@@ -656,7 +656,7 @@
             "renderer": "sokkel-egui",
             "what": "editing and cellFocus",
             "spec": "options.editing, options.cellFocus, columns band and aggregate.",
-            "today": "As of fc9d27e: the active cell moves and edits (Enter, F2 or a character opens it, Tab saves, Escape drops), but there is no cellFocus (always a 2 ring plus a row wash), no number editor, and no band heads or aggregates. EntryGrid stays a widget of its own (inputs always open, a Tab stop per cell, a save per keystroke) until those land, then becomes this table."
+            "today": "As of cb26531: cellFocus (underline, ring, soft, row) with its paints, the row washed only in row mode, refused cells, a number editor, band heads and column aggregates in group heads. Left: EntryGrid stays a widget of its own rather than the table with editing, and a band's text sits 6 from its rule, not 12."
         },
         {
             "renderer": "sokkel-ui",

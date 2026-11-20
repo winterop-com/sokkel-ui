@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "Drawn as a control always; the title cap, media, menu, href and the facts' fit not yet."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "Drawn from the spec: a control only with href or onSelect, the title cap, the menu, selected, status, description and the facts' fit."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -140,12 +140,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: Always a control; no titleLines cap or hover text; no media, icon tile, menu or href; selected is a 2px stroke with no check; the status one line and the description not capped; facts split the width equally rather than fitting columns of at least 80."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",

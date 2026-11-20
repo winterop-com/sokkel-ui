@@ -195,18 +195,118 @@ function partsAndComments(tree: MarkdownNode, word: string) {
     })
 }
 
-/** Text split at each match of a pattern, each match made a node by `make`. */
-function splitText(value: string, matches: { from: number; to: number; node: MarkdownNode }[]): MarkdownNode[] {
-    if (matches.length === 0) return [{ type: 'text', value }]
+/** Where each character of a text's words was written: its first offset in the text and the one after it. */
+interface Spans {
+    starts: number[]
+    ends: number[]
+}
+
+/** While a parse keeps positions: each text node's spans, and a point in the text for an offset. */
+let placing:
+    | { spans: WeakMap<MarkdownNode, Spans>; point: (offset: number) => { line: number; column: number; offset: number } }
+    | undefined
+
+/** An HTML character reference, as `&amp;` or `&#61;`. */
+const REFERENCE = /^&(?:#\d{1,7}|#x[\da-f]{1,6}|[a-z][a-z\d]{1,31});/i
+
+/**
+ * Each text node's spans, read beside the text it was written as: a character escaped with `\` spans
+ * two, a character reference its whole length, and what was written but is not in the words (a quote's
+ * `>`, an indent) is passed over.
+ */
+function placeTexts(tree: MarkdownNode, source: string) {
+    const starts: number[] = [0]
+    for (let at = source.indexOf('\n'); at >= 0; at = source.indexOf('\n', at + 1)) starts.push(at + 1)
+    const point = (offset: number) => {
+        let low = 0
+        let high = starts.length - 1
+        while (low < high) {
+            const middle = (low + high + 1) >> 1
+            if (starts[middle] <= offset) low = middle
+            else high = middle - 1
+        }
+        return { line: low + 1, column: offset - starts[low] + 1, offset }
+    }
+    const spans = new WeakMap<MarkdownNode, Spans>()
+    for (const { node } of nodesOf(tree)) {
+        if (node.type !== 'text' || node.value === undefined) continue
+        const at = node.position as { start?: { offset?: number }; end?: { offset?: number } } | undefined
+        const from = at?.start?.offset
+        const to = at?.end?.offset
+        if (from === undefined || to === undefined) continue
+        const value = node.value
+        const read: Spans = { starts: [], ends: [] }
+        let i = from
+        let k = 0
+        while (k < value.length && i < to) {
+            const reference = source[i] === '&' && value[k] !== '&' ? REFERENCE.exec(source.slice(i, i + 40)) : null
+            if (source[i] === '\\' && source[i + 1] === value[k] && /[!-/:-@[-`{-~]/.test(value[k])) {
+                read.starts.push(i)
+                read.ends.push(i + 2)
+                i += 2
+                k += 1
+            } else if (source[i] === value[k]) {
+                read.starts.push(i)
+                read.ends.push(i + 1)
+                i += 1
+                k += 1
+            } else if (reference !== null) {
+                // A reference stands for one character, or two halves of one.
+                const after = source[i + reference[0].length]
+                for (let held = 0; held < 2 && k < value.length && (held === 0 || value[k] !== after); held += 1) {
+                    read.starts.push(i)
+                    read.ends.push(i + reference[0].length)
+                    k += 1
+                }
+                i += reference[0].length
+            } else i += 1
+        }
+        for (; k < value.length; k += 1) {
+            read.starts.push(to)
+            read.ends.push(to)
+        }
+        spans.set(node, read)
+    }
+    placing = { spans, point }
+}
+
+/** The position of a text's words from `from` up to `to`, when the text's spans are known. */
+function placeOf(text: MarkdownNode, from: number, to: number, end: MarkdownNode = text): { start: unknown; end: unknown } | undefined {
+    const first = placing?.spans.get(text)
+    const last = placing?.spans.get(end)
+    if (placing === undefined || first === undefined || last === undefined || from >= first.starts.length || to < 1) return undefined
+    return { start: placing.point(first.starts[from]), end: placing.point(last.ends[Math.min(to, last.ends.length) - 1]) }
+}
+
+/** A piece of a text, `from` up to `to`, as a text node with its place when the whole's is known. */
+function pieceOf(whole: MarkdownNode | undefined, value: string, from: number, to: number): MarkdownNode {
+    const piece: MarkdownNode = { type: 'text', value: value.slice(from, to) }
+    const spans = whole === undefined ? undefined : placing?.spans.get(whole)
+    if (whole === undefined || spans === undefined || from >= to) return piece
+    piece.position = placeOf(whole, from, to)
+    placing?.spans.set(piece, { starts: spans.starts.slice(from, to), ends: spans.ends.slice(from, to) })
+    return piece
+}
+
+/**
+ * Text split at each match of a pattern, each match made a node. With the text node it came from, each
+ * piece and each match keeps its place in the text.
+ */
+function splitText(value: string, matches: { from: number; to: number; node: MarkdownNode }[], whole?: MarkdownNode): MarkdownNode[] {
+    if (matches.length === 0) return [whole ?? { type: 'text', value }]
     const out: MarkdownNode[] = []
     let at = 0
     for (const { from, to, node } of matches.sort((a, b) => a.from - b.from)) {
         if (from < at) continue
-        if (from > at) out.push({ type: 'text', value: value.slice(at, from) })
+        if (from > at) out.push(pieceOf(whole, value, at, from))
+        if (whole !== undefined) {
+            const place = placeOf(whole, from, to)
+            if (place !== undefined) node.position = place
+        }
         out.push(node)
         at = to
     }
-    if (at < value.length) out.push({ type: 'text', value: value.slice(at) })
+    if (at < value.length) out.push(pieceOf(whole, value, at, value.length))
     return out
 }
 
@@ -255,18 +355,21 @@ function spanHighlights(parent: MarkdownNode) {
                 if ((last.value ?? '').includes('\n')) break
                 continue
             }
+            const lastValue = last.value ?? ''
             const inner = [
-                ...(open + 2 < value.length ? [{ type: 'text', value: value.slice(open + 2) }] : []),
+                ...(open + 2 < value.length ? [pieceOf(first, value, open + 2, value.length)] : []),
                 ...kids.slice(i + 1, j),
-                ...(close > 0 ? [{ type: 'text', value: (last.value ?? '').slice(0, close) }] : []),
+                ...(close > 0 ? [pieceOf(last, lastValue, 0, close)] : []),
             ]
-            const after = (last.value ?? '').slice(close + 2)
+            const highlight: MarkdownNode = { type: 'highlight', children: inner }
+            const place = placeOf(first, open, close + 2, last)
+            if (place !== undefined) highlight.position = place
             kids.splice(
                 i,
                 j - i + 1,
-                ...(open > 0 ? [{ type: 'text', value: value.slice(0, open) }] : []),
-                { type: 'highlight', children: inner },
-                ...(after === '' ? [] : [{ type: 'text', value: after }]),
+                ...(open > 0 ? [pieceOf(first, value, 0, open)] : []),
+                highlight,
+                ...(close + 2 < lastValue.length ? [pieceOf(last, lastValue, close + 2, lastValue.length)] : []),
             )
             matched = true
             break
@@ -336,8 +439,9 @@ function highlights(tree: MarkdownNode) {
             markedRanges(value).map(({ from, to }) => ({
                 from,
                 to,
-                node: { type: 'highlight', children: [{ type: 'text', value: value.slice(from + 2, to - 2) }] },
+                node: { type: 'highlight', children: [pieceOf(child, value, from + 2, to - 2)] },
             })),
+            child,
         )
     })
     spanHighlights(tree)
@@ -370,29 +474,35 @@ function embedNode(inside: string): MarkdownNode {
 
 /** Each `[[link]]` and `![[embed]]` in text, and each `#tag` when tags are read; a note embed alone in a paragraph stands as a block. */
 function linksAndTags(tree: MarkdownNode, tags: boolean) {
-    const split = (value: string): MarkdownNode[] =>
-        splitText(value, [
-            ...wikiLinksIn(value).map((link) => {
-                // A `!` before the link makes it an embed, the `!` part of it.
-                if (value[link.from - 1] === '!') {
-                    return { from: link.from - 1, to: link.to, node: embedNode(value.slice(link.from + 2, link.to - 2)) }
-                }
-                const node: MarkdownNode = {
-                    type: 'wikiLink',
-                    target: link.target,
-                    ...(link.heading === undefined ? {} : { heading: link.heading }),
-                    ...(link.label === undefined ? {} : { label: link.label }),
-                    children: [
-                        {
-                            type: 'text',
-                            value: link.label ?? (link.heading === undefined ? link.target : `${link.target} › ${link.heading}`),
-                        },
-                    ],
-                }
-                return { from: link.from, to: link.to, node }
-            }),
-            ...(tags ? tagMatches(value).map((match) => ({ from: match.from, to: match.to, node: { type: 'tag', tag: match.tag } })) : []),
-        ])
+    const split = (whole: MarkdownNode, value: string): MarkdownNode[] =>
+        splitText(
+            value,
+            [
+                ...wikiLinksIn(value).map((link) => {
+                    // A `!` before the link makes it an embed, the `!` part of it.
+                    if (value[link.from - 1] === '!') {
+                        return { from: link.from - 1, to: link.to, node: embedNode(value.slice(link.from + 2, link.to - 2)) }
+                    }
+                    const node: MarkdownNode = {
+                        type: 'wikiLink',
+                        target: link.target,
+                        ...(link.heading === undefined ? {} : { heading: link.heading }),
+                        ...(link.label === undefined ? {} : { label: link.label }),
+                        children: [
+                            {
+                                type: 'text',
+                                value: link.label ?? (link.heading === undefined ? link.target : `${link.target} › ${link.heading}`),
+                            },
+                        ],
+                    }
+                    return { from: link.from, to: link.to, node }
+                }),
+                ...(tags
+                    ? tagMatches(value).map((match) => ({ from: match.from, to: match.to, node: { type: 'tag', tag: match.tag } }))
+                    : []),
+            ],
+            whole,
+        )
     const lift = (node: MarkdownNode): MarkdownNode => {
         if (node.type !== 'paragraph') return node
         const held = (node.children ?? []).filter((child) => !(child.type === 'text' && (child.value ?? '').trim() === ''))
@@ -401,7 +511,7 @@ function linksAndTags(tree: MarkdownNode, tags: boolean) {
     const visit = (node: MarkdownNode) => {
         if (node.children === undefined || node.type === 'link' || node.type === 'linkReference') return
         node.children = node.children.flatMap((child) => {
-            if (child.type === 'text') return split(child.value ?? '')
+            if (child.type === 'text') return split(child, child.value ?? '')
             visit(child)
             return [BLOCK_CONTAINERS.has(node.type) ? lift(child) : child]
         })
@@ -423,14 +533,14 @@ function takeTitle(first: MarkdownNode): MarkdownNode[] {
         else if (child.type === 'text' && (child.value ?? '').includes('\n')) {
             const value = child.value ?? ''
             const end = value.indexOf('\n')
-            if (end > 0) title.push({ type: 'text', value: value.slice(0, end) })
-            if (end + 1 < value.length) rest.push({ type: 'text', value: value.slice(end + 1) })
+            if (end > 0) title.push(pieceOf(child, value, 0, end))
+            if (end + 1 < value.length) rest.push(pieceOf(child, value, end + 1, value.length))
             done = true
         } else title.push(child)
     }
     first.children = rest
     const last = title.at(-1)
-    if (last?.type === 'text') last.value = (last.value ?? '').trimEnd()
+    if (last?.type === 'text') title[title.length - 1] = pieceOf(last, last.value ?? '', 0, (last.value ?? '').trimEnd().length)
     return title.filter((node) => !(node.type === 'text' && node.value === ''))
 }
 
@@ -448,7 +558,7 @@ function callouts(tree: MarkdownNode) {
         // Only the markers named, never a word every object has (`constructor`, `toString`).
         const kind = named !== undefined && Object.hasOwn(CALLOUT_MARKERS, named) ? CALLOUT_MARKERS[named] : undefined
         if (first === undefined || text === undefined || marker === null || named === undefined || kind === undefined) return undefined
-        text.value = (text.value ?? '').slice(marker[0].length)
+        if (first.children !== undefined) first.children[0] = pieceOf(text, text.value ?? '', marker[0].length, (text.value ?? '').length)
         let title = takeTitle(first)
         if (title.length === 0 && named !== kind) title = [{ type: 'text', value: named[0].toUpperCase() + named.slice(1) }]
         const empty = (first.children ?? []).every((node) => node.type === 'text' && (node.value ?? '').trim() === '')
@@ -585,6 +695,7 @@ export interface ParseRules {
  * after it still points into the text as given.
  */
 export function parseTree(content: string, rules: ParseRules): MarkdownTree {
+    placing = undefined
     const front = rules.frontmatter ? frontmatterIn(content) : undefined
     let text = front === undefined ? content : content.slice(0, front.length).replace(/[^\r\n]/g, ' ') + content.slice(front.length)
     if (rules.normalizeMath) text = normalizeMath(text, { streaming: rules.streaming ?? false })
@@ -596,13 +707,16 @@ export function parseTree(content: string, rules: ParseRules): MarkdownTree {
     // Parts first, so a part's marker is never dropped as a comment; links before highlights, so a
     // link's own words are never read for `==` (a highlight may hold a link); callouts last, from
     // what the rest left of each quote.
-    // Escapes are read while each text still has its place in the text written.
+    // Escapes, and each text's spans when positions are kept, are read while each text still has its
+    // place in the text written.
+    if (rules.positions) placeTexts(tree, text)
     const escaped = markEscapes(tree, text)
     partsAndComments(tree, rules.partMarker)
     if (rules.wikiLinks) linksAndTags(tree, rules.tags)
     highlights(tree)
     if (escaped) unmarkEscapes(tree)
     callouts(tree)
+    placing = undefined
     clean(tree, rules.positions)
     if (front !== undefined) {
         // The YAML with its line ends as `\n`, whatever the text was written with.

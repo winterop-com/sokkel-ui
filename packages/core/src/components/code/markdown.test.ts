@@ -94,6 +94,14 @@ describe('the markdown language', () => {
         expect(performance.now() - started).toBeLessThan(1000)
     })
 
+    it('reads a long line of marks that never close in time in step with its length', () => {
+        for (const mark of ['==a ', '**a ', '__a ', '*a ', '_a ', '~~a ', '[a ', '`a`` ', '#a ', '<!-- ', '\\', '(', 'https://a ']) {
+            const started = performance.now()
+            tokens(mark.repeat(Math.ceil(40_000 / mark.length)))
+            expect(performance.now() - started, mark).toBeLessThan(1000)
+        }
+    })
+
     it('keeps a fenced block open across lines until its mark closes it', () => {
         expect(tokens('```\n[[not a link]]\n```\n[[link]]')).toEqual([
             ['processingInstruction:```'],
