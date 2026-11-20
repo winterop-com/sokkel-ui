@@ -30,6 +30,7 @@
     "tracking.affiliations.unknown": "Unknown",
     "tracking.kinds.aircraft": "Aircraft",
     "tracking.kinds.other": "Other",
+    "tracking.kinds.satellite": "Satellite",
     "tracking.kinds.sensor": "Sensor",
     "tracking.kinds.vehicle": "Vehicle",
     "tracking.kinds.vessel": "Vessel"

@@ -181,6 +181,9 @@ release and empties it.
   the circle a satellite is in view from; `parseStationPosition` reads the space station's position
   from wheretheiss.at and Open Notify. The tracking package now depends on satellite.js (MIT, held at
   version 6), which only an app that imports `/orbits` bundles, about 10 kB gzipped.
+- `satellite` joins the tracking add-on's kinds of track (`TrackKind`, `TRACK_KINDS`), with its word,
+  `tracking.kinds.satellite`, so a satellite's track is a `Track` like any other and takes the same
+  `classify`.
 - `/events` (tracking): `Incident`, one plain shape for what happens at a place and a time, with a
   kind, a severity on CAP's scale (`minor`, `moderate`, `severe`, `extreme`, `unknown`) and, for one
   that lasts, when it ends. `parseUsgsQuakes` reads the USGS earthquake summary feeds, `parseGdacs`
