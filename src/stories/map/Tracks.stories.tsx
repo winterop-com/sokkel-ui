@@ -12,11 +12,13 @@ import { MapGoTo } from '@winterop-com/sokkel-ui-maps/MapGoTo'
 import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
 import { MapPopup } from '@winterop-com/sokkel-ui-maps/MapPopup'
 import { MapRuler } from '@winterop-com/sokkel-ui-maps/MapRuler'
-import { MapOverlay, MapView, type MapCamera } from '@winterop-com/sokkel-ui-maps/MapView'
+import { MapOverlay, MapView, type MapCamera, type MapViewport } from '@winterop-com/sokkel-ui-maps/MapView'
 import { TRACK_COLORS, TRACK_WORDS, TrackLayer, trackCounts, trackLegendEntries, type Track } from '@winterop-com/sokkel-ui-maps/TrackLayer'
 import { WORLD_BASEMAP } from '@winterop-com/sokkel-ui-maps/world'
 import { ZoneLayer, zoneLegendEntry } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
+import { ALTITUDE_BANDS, altitudeBand, parseReadsb, type AltitudeBand } from '@winterop-com/sokkel-ui-tracking/adsb'
 import { parseMgrs, toMgrs } from '@winterop-com/sokkel-ui-tracking/geo'
+import { FLIGHTS_POINT } from '../fixtures/flights'
 import { Page } from './Page'
 import {
     APPROACH_CAMERA,
@@ -108,6 +110,85 @@ function Plain({ trails }: { trails: boolean }) {
             <TrackLayer id="tracks" tracks={tracks} />
             <Legend tracks={tracks} />
         </Watch>
+    )
+}
+
+/** The camera on southern Norway and the North Sea, where the flights are. */
+const FLIGHTS_CAMERA: MapCamera = { center: [7.2, 59], zoom: 4.6 }
+
+/** Each altitude band's color and name, from the ground up. */
+const BAND_COLORS: Record<AltitudeBand, string> = {
+    ground: 'var(--muted-foreground)',
+    low: 'var(--chart-3)',
+    medium: 'var(--chart-2)',
+    high: 'var(--chart-4)',
+}
+const BAND_NAMES: Record<AltitudeBand, string> = {
+    ground: 'On the ground',
+    low: 'Below 10,000 ft',
+    medium: '10,000 to 25,000 ft',
+    high: 'Above 25,000 ft',
+}
+
+/** The flights read from a readsb answer, each placed in its altitude band. */
+function flightTracks(): Track[] {
+    return parseReadsb(FLIGHTS_POINT).map((flight) => ({
+        id: flight.id,
+        position: [flight.lon, flight.lat],
+        heading: flight.heading,
+        affiliation: flight.affiliation,
+        kind: flight.kind,
+        label: flight.label,
+        band: altitudeBand(flight),
+    }))
+}
+
+function Altitude() {
+    const tracks = useMemo(flightTracks, [])
+    return (
+        <Watch title="Flight watch" description="Aircraft colored by how high they fly" camera={FLIGHTS_CAMERA}>
+            <TrackLayer id="flights" tracks={tracks} bands={BAND_COLORS} />
+            <MapOverlay corner="bottom-right">
+                <MapLegend
+                    title="Altitude"
+                    entries={ALTITUDE_BANDS.map((band) => ({ label: BAND_NAMES[band], color: BAND_COLORS[band] }))}
+                    counts={ALTITUDE_BANDS.map((band) => tracks.filter((track) => track.band === band).length)}
+                    shape="point"
+                    className="w-48"
+                />
+            </MapOverlay>
+        </Watch>
+    )
+}
+
+/** Whether a position lies in a box of west, south, east and north. */
+const inside = ([lng, lat]: readonly [number, number], [west, south, east, north]: MapViewport['bounds']) =>
+    lng >= west && lng <= east && lat >= south && lat <= north
+
+function InView() {
+    const tracks = useMemo(flightTracks, [])
+    const [view, setView] = useState<MapViewport | null>(null)
+    const seen = view === null ? [] : tracks.filter((track) => inside(track.position, view.bounds))
+    return (
+        <Page
+            title="Flight watch"
+            period={
+                view === null
+                    ? 'Drawing the map'
+                    : `${String(seen.length)} of ${String(tracks.length)} aircraft in view, around ${view.center.map((value) => value.toFixed(2)).join(', ')} at zoom ${view.zoom.toFixed(1)}`
+            }
+        >
+            <MapView
+                label="Flight watch"
+                defaultBasemap={WORLD_BASEMAP}
+                basemaps={[WORLD_BASEMAP]}
+                camera={FLIGHTS_CAMERA}
+                onViewChange={setView}
+                className="flex-1"
+            >
+                <TrackLayer id="flights" tracks={tracks} />
+            </MapView>
+        </Page>
     )
 }
 
@@ -301,6 +382,8 @@ export default meta
 export const Tracks: StoryObj = { name: 'Tracks', render: () => <Plain trails={false} /> }
 /** The same tracks with their trails behind them, fading into the past. */
 export const Trails: StoryObj = { name: 'Trails', render: () => <Plain trails /> }
+/** Flights read from a readsb answer, each painted by its altitude band in place of its affiliation, with a legend counting each band. */
+export const Altitudes: StoryObj = { name: 'Altitude', render: () => <Altitude /> }
 /** One contact picked: ringed in the selection color, its name marked, and its card open over it. */
 export const Picked: StoryObj = { name: 'Selected', render: () => <Selected /> }
 /** Two hundred and forty tracks gathered into counted clusters, a cluster ringed when it holds a hostile track; a click zooms in. */
@@ -313,6 +396,8 @@ export const Measuring: StoryObj = { name: 'Ruler', render: () => <Ruler /> }
 export const GridReferences: StoryObj = { name: 'Grid references', render: () => <Grid /> }
 /** The map keeping a patrol centered as it moves, with a banner that says so and lets it go. */
 export const Following: StoryObj = { name: 'Follow', render: () => <Follow /> }
+/** The map telling where it looks each time it comes to rest, and the page counting the aircraft in view; a pan or a zoom counts again. */
+export const Viewed: StoryObj = { name: 'In view', render: () => <InView /> }
 /** The watch's areas: a wash, diagonal lines or only an edge, solid or dashed, each in its tone and named at its middle; the closed area picked. */
 export const Areas: StoryObj = { name: 'Zones', render: () => <Zones /> }
 /** What the three harbor radars cover: each a wedge out to sea in the friend tone, fading out with distance to its range. */

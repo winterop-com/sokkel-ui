@@ -126,6 +126,11 @@ export interface MapCamera {
     zoom: number
 }
 
+/** Where the map looks: its center and zoom, and the box it shows, west, south, east and north. */
+export interface MapViewport extends MapCamera {
+    bounds: Bounds
+}
+
 export interface MapViewProps {
     /** What the map is called, for a screen reader. */
     label: string
@@ -177,6 +182,11 @@ export interface MapViewProps {
     onSelectedChange?: (id: string | null, feature: Feature | null) => void
     /** Called with the position of every click on the map. */
     onMapClick?: (at: LngLat) => void
+    /**
+     * Called with where the map looks once it is drawn and each time it comes to rest after a move,
+     * a fit or a resize, as an app that fetches what is in view needs.
+     */
+    onViewChange?: (view: MapViewport) => void
     /** Which of the map's own controls are drawn: zoom, fit and full screen, none, or a choice. */
     controls?: boolean | MapControls
     /** Whether the map pans, zooms and answers clicks. */
@@ -409,6 +419,7 @@ export function MapView({
     defaultSelected = null,
     onSelectedChange,
     onMapClick,
+    onViewChange,
     controls = true,
     interactive = true,
     rotate = false,
@@ -475,6 +486,7 @@ export function MapView({
     )
     const selectNow = useRef(select)
     const clickNow = useRef(onMapClick)
+    const viewNow = useRef(onViewChange)
     // A tool's handler that takes every click in place of the selection, such as a ruler's.
     const clickTaker = useRef<((at: LngLat) => void) | null>(null)
     const takeClicks = useCallback((handler: ((at: LngLat) => void) | null) => {
@@ -487,6 +499,7 @@ export function MapView({
     useEffect(() => {
         selectNow.current = select
         clickNow.current = onMapClick
+        viewNow.current = onViewChange
     })
 
     const register = useCallback((key: string, entry: MapLayerEntry) => {
@@ -703,7 +716,21 @@ export function MapView({
         instance.on('idle', () => {
             if (armed.current && !pendingStyle.current) setIdle(true)
         })
-        instance.on('load', () => setReady(true))
+        const tellView = () => {
+            if (viewNow.current === undefined) return
+            const center = instance.getCenter()
+            const box = instance.getBounds()
+            viewNow.current({
+                center: [center.lng, center.lat],
+                zoom: instance.getZoom(),
+                bounds: [box.getWest(), box.getSouth(), box.getEast(), box.getNorth()],
+            })
+        }
+        instance.on('load', () => {
+            setReady(true)
+            tellView()
+        })
+        instance.on('moveend', tellView)
         // A basemap none of whose tiles load, as when its host cannot be reached, gives way to the fallback.
         const fromBasemap = (source: unknown) =>
             typeof source === 'string' &&

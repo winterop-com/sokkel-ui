@@ -57,6 +57,11 @@ export interface Track {
     label?: string
     /** Where it has been, oldest first, drawn as a line that fades into the past up to where it is now. */
     trail?: readonly LngLat[]
+    /**
+     * The band it falls in, such as an altitude band: with the layer's `bands` naming it, the track
+     * and its trail are painted in that band's color in place of the affiliation's.
+     */
+    band?: string
 }
 
 /** The names of the affiliations and the kinds, which a legend of the tracks says. */
@@ -136,6 +141,7 @@ export function trackData(tracks: readonly Track[]): TrackData {
                 kind: track.kind,
                 heading: Number.isFinite(track.heading) ? track.heading : 0,
                 label: track.label ?? null,
+                band: track.band ?? null,
             },
         }
         points.push(feature)
@@ -149,6 +155,7 @@ export function trackData(tracks: readonly Track[]): TrackData {
                 properties: {
                     [ID_PROPERTY]: `${track.id}#${String(index)}`,
                     affiliation: track.affiliation,
+                    band: track.band ?? null,
                     fade: index / (path.length - 1),
                 },
             })
@@ -326,6 +333,25 @@ function affiliationColor(colors: Record<TrackAffiliation, string>): ExpressionS
     ] as unknown as ExpressionSpecification
 }
 
+/** The key a band's color is held under among a layer's colors, apart from the affiliations'. */
+const bandKey = (band: string) => `band:${band}`
+
+/** A layer's band colors under their keys, to be resolved with the affiliations'. */
+function bandColors(bands: Readonly<Record<string, string>> | undefined): Record<string, string> {
+    return Object.fromEntries(Object.entries(bands ?? {}).map(([band, color]) => [bandKey(band), color]))
+}
+
+/** A track's color: its band's when the layer names that band, its affiliation's otherwise. */
+function trackColor(colors: Record<TrackAffiliation, string> & Record<string, string>, bands: readonly string[]): ExpressionSpecification {
+    if (bands.length === 0) return affiliationColor(colors)
+    return [
+        'match',
+        ['to-string', ['get', 'band']],
+        ...bands.flatMap((band) => [band, colors[bandKey(band)] ?? colors.unknown]),
+        affiliationColor(colors),
+    ] as unknown as ExpressionSpecification
+}
+
 /** How far right of its track's point a label starts, in pixels. */
 const labelOffset = (size: number) => Math.round(size * 0.75) + 4
 
@@ -389,6 +415,12 @@ export interface TrackLayerProps {
     /** The colors of the affiliations, in place of their tokens. */
     colors?: Partial<Record<TrackAffiliation, string>>
     /**
+     * Colors by band, such as altitude bands: a track whose `band` is named here is painted in its
+     * color in place of its affiliation's, and one with no band or a band not named here keeps its
+     * affiliation's. Any CSS color, a token included.
+     */
+    bands?: Readonly<Record<string, string>>
+    /**
      * Gathers nearby tracks into counted clusters, which zoom in when clicked; a cluster holding a
      * hostile track is ringed in its color. Read once.
      */
@@ -415,6 +447,7 @@ export function TrackLayer({
     labels = true,
     size = 24,
     colors,
+    bands,
     cluster = false,
     transition = 600,
     visible = true,
@@ -424,7 +457,8 @@ export function TrackLayer({
     const locale = useLocale()
     const data = useMemo(() => trackData(tracks), [tracks])
     const clusterOptions = cluster === false ? undefined : cluster === true ? {} : cluster
-    const palette = { ...TRACK_COLORS, ...colors }
+    const bandNames = Object.keys(bands ?? {})
+    const palette = { ...TRACK_COLORS, ...colors, ...bandColors(bands) }
     const layerColors = {
         ...palette,
         ring: 'var(--card)',
@@ -449,7 +483,7 @@ export function TrackLayer({
                 source,
                 layout: { 'line-cap': 'butt' },
                 paint: {
-                    'line-color': affiliationColor(resolved),
+                    'line-color': trackColor(resolved, bandNames),
                     'line-width': 2,
                     'line-opacity': ['*', 0.85, ['^', ['to-number', ['get', 'fade'], 1], 1.5]],
                 },
@@ -517,7 +551,7 @@ export function TrackLayer({
                         'icon-ignore-placement': true,
                     },
                     paint: {
-                        'icon-color': affiliationColor(resolved),
+                        'icon-color': trackColor(resolved, bandNames),
                         'icon-halo-color': resolved.ring,
                         'icon-halo-width': 1.25,
                     },

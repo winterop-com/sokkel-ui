@@ -27,6 +27,7 @@ describe('track data', () => {
             kind: 'vessel',
             heading: 90,
             label: 'Pilot 4',
+            band: null,
         })
         expect(tracks.collection.features[1].properties?.heading).toBe(0)
         expect(tracks.collection.features[1].properties?.label).toBeNull()
@@ -44,6 +45,12 @@ describe('track data', () => {
                 [5.2, 60.4],
             ],
         })
+    })
+
+    test("carries each track's band on its point and its trail, for the layer to paint by", () => {
+        const { tracks, trails } = trackData([{ ...HARBOR_PILOT, band: 'high' }])
+        expect(tracks.collection.features[0].properties?.band).toBe('high')
+        expect(trails.collection.features.map((piece) => piece.properties?.band)).toEqual(['high', 'high'])
     })
 
     test('frames the tracks and their trails', () => {

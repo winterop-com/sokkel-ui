@@ -207,3 +207,36 @@ export function parseFlights(response: ReadsbResponse | OpenSkyResponse, options
     if ('states' in response) return parseOpenSky(response as OpenSkyResponse, options)
     return parseReadsb(response as ReadsbResponse, options)
 }
+
+/** Where an aircraft flies by its altitude: on the ground, low (below 10,000 ft), medium (to 25,000 ft) or high. */
+export type AltitudeBand = 'ground' | 'low' | 'medium' | 'high'
+
+/** Every altitude band, from the ground up. */
+export const ALTITUDE_BANDS: readonly AltitudeBand[] = ['ground', 'low', 'medium', 'high']
+
+/** Where the medium and high bands start, in meters: 10,000 and 25,000 feet. */
+export const ALTITUDE_BREAKS: Readonly<Record<'medium' | 'high', number>> = { medium: 10_000 * FOOT, high: 25_000 * FOOT }
+
+/** The band an aircraft flies in: `ground` when a feed says it is on the ground; undefined when its altitude is not known. */
+export function altitudeBand(track: Pick<Track, 'altitude' | 'properties'>): AltitudeBand | undefined {
+    if (track.properties?.onGround === true) return 'ground'
+    const altitude = track.altitude
+    if (!finite(altitude)) return undefined
+    if (altitude <= 0) return 'ground'
+    if (altitude < ALTITUDE_BREAKS.medium) return 'low'
+    return altitude < ALTITUDE_BREAKS.high ? 'medium' : 'high'
+}
+
+/** Whether an aircraft climbs, holds its level or descends. */
+export type VerticalTrend = 'climbing' | 'level' | 'descending'
+
+/** The vertical rate, in meters per second, past which an aircraft climbs or descends: about 300 feet a minute. */
+export const LEVEL_RATE = (300 * FOOT) / 60
+
+/** Whether an aircraft climbs, holds its level or descends, by the `verticalRate` a reader keeps; undefined on the ground or without one. */
+export function verticalTrend(track: Pick<Track, 'properties'>): VerticalTrend | undefined {
+    const rate = track.properties?.verticalRate
+    if (track.properties?.onGround === true || !finite(rate)) return undefined
+    if (rate > LEVEL_RATE) return 'climbing'
+    return rate < -LEVEL_RATE ? 'descending' : 'level'
+}
