@@ -10,8 +10,8 @@
 
 @source '../src/stories';
 
-/* A story drawn as a desktop window (the `desktopWindow` parameter): its drag regions outlined, the window's buttons where macOS draws them. */
-[data-desktop-window] [data-window-drag] {
+/* A story drawn as a desktop window (the `desktopWindow` parameter): the window's buttons where macOS draws them, and its drag regions outlined when the toolbar's Drag regions is on. */
+[data-desktop-window][data-show-drag] [data-window-drag] {
     outline: 1px dashed var(--primary);
     outline-offset: -3px;
 }
