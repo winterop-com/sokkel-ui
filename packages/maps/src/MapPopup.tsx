@@ -133,7 +133,7 @@ export function MapPopup({
             aria-label={title}
             data-side={place?.side}
             className={cn(
-                'pointer-events-auto absolute w-64 max-w-[calc(100%-1rem)] rounded-surface bg-popover text-sm text-popover-foreground shadow-pop ring-1 ring-foreground/10',
+                'pointer-events-auto absolute z-20 w-64 max-w-[calc(100%-1rem)] rounded-surface bg-popover text-sm text-popover-foreground shadow-pop ring-1 ring-foreground/10',
                 (place === null || !place.visible) && 'invisible',
                 className,
             )}

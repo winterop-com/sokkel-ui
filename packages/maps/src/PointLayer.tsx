@@ -1,11 +1,20 @@
-import type { FeatureCollection, Point } from 'geojson'
+import type { FeatureCollection } from 'geojson'
 import type { ExpressionSpecification, GeoJSONSource, LayerSpecification } from 'maplibre-gl'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useLocale } from '@winterop-com/sokkel-ui/lib/words'
 import { useMapContext } from './context'
-import { CLASS_PROPERTY, classColor, prepareData, readValue, state, useGeoJsonLayer, type FeatureAccessor } from './layer'
+import {
+    CLASS_PROPERTY,
+    classColor,
+    prepareData,
+    readValue,
+    state,
+    useGeoJsonLayer,
+    useRenderedPoints,
+    type FeatureAccessor,
+} from './layer'
 import { HIGHLIGHT_COLOR, NO_DATA_POINT_COLOR, SELECTION_COLOR, classOf, scaleColors, type ColorScale } from './scale'
 
 export type { FeatureAccessor } from './layer'
@@ -46,13 +55,6 @@ export interface PointLayerProps {
     interactive?: boolean
     /** The ids of points drawn at the middle emphasis, such as the points under the selected area. */
     highlighted?: readonly string[]
-}
-
-interface ClusterLabel {
-    id: number
-    x: number
-    y: number
-    count: number
 }
 
 /**
@@ -209,47 +211,25 @@ export function PointLayer({
         },
     })
 
-    const [labels, setLabels] = useState<ClusterLabel[]>([])
     const clustered = clusterOptions !== undefined
-    useEffect(() => {
-        if (!clustered) return
-        const layer = `${source}-cluster`
-        let frame = 0
-        const measure = () => {
-            cancelAnimationFrame(frame)
-            frame = requestAnimationFrame(() => {
-                if (map.getLayer(layer) === undefined) return
-                const seen = new Map<number, ClusterLabel>()
-                for (const feature of map.queryRenderedFeatures({ layers: [layer] })) {
-                    const clusterId: unknown = feature.properties['cluster_id']
-                    const count: unknown = feature.properties['point_count']
-                    if (typeof clusterId !== 'number' || typeof count !== 'number' || seen.has(clusterId)) continue
-                    const [lng, lat] = (feature.geometry as Point).coordinates
-                    const point = map.project([lng, lat])
-                    seen.set(clusterId, { id: clusterId, x: Math.round(point.x), y: Math.round(point.y), count })
-                }
-                const next = [...seen.values()].sort((a, b) => a.id - b.id)
-                setLabels((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next))
-            })
-        }
-        measure()
-        map.on('render', measure)
-        return () => {
-            cancelAnimationFrame(frame)
-            map.off('render', measure)
-        }
-    }, [map, source, clustered])
+    const labels = useRenderedPoints(map, `${source}-cluster`, clustered, (properties) => {
+        const clusterId: unknown = properties['cluster_id']
+        const count: unknown = properties['point_count']
+        return typeof clusterId === 'number' && typeof count === 'number'
+            ? { key: String(clusterId), text: compact(locale).format(count) }
+            : null
+    })
 
     if (!clustered || !visible || labels.length === 0) return null
     return createPortal(
         labels.map((label) => (
             <span
-                key={label.id}
+                key={label.key}
                 aria-hidden
                 className="absolute -translate-x-1/2 -translate-y-1/2 text-2xs leading-none font-medium text-card tabular-nums"
                 style={{ left: label.x, top: label.y }}
             >
-                {compact(locale).format(label.count)}
+                {label.text}
             </span>
         )),
         overlay,

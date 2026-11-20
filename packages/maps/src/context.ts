@@ -2,7 +2,7 @@ import type { Feature } from 'geojson'
 import type { Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl'
 import { createContext, useContext } from 'react'
 
-import type { Bounds } from './geometry'
+import type { Bounds, LngLat } from './geometry'
 
 /** A corner of the map, where controls, legends and other overlays stack. */
 export type MapCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
@@ -41,6 +41,13 @@ export interface MapContextValue {
     selected: string | null
     select: (id: string | null) => void
     register: (key: string, entry: MapLayerEntry) => () => void
+    /** Marks the camera as held, as a move by the reader does, so the map no longer fits its layers on its own. */
+    holdCamera: () => void
+    /**
+     * Hands every click on the map to a tool, such as a ruler, in place of selecting what lies under
+     * it, until it is called with null; the cursor is a crosshair meanwhile.
+     */
+    takeClicks: (handler: ((at: LngLat) => void) | null) => void
 }
 
 export const MapContext = createContext<MapContextValue | null>(null)

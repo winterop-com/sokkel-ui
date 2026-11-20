@@ -40,17 +40,37 @@
             "types": "./dist/CountryLayer.d.ts",
             "import": "./dist/CountryLayer.js"
         },
-        "./geometry": {
-            "types": "./dist/geometry.d.ts",
-            "import": "./dist/geometry.js"
+        "./geodesy": {
+            "types": "./dist/geodesy.d.ts",
+            "import": "./dist/geodesy.js"
         },
         "./GeoJsonLayer": {
             "types": "./dist/GeoJsonLayer.d.ts",
             "import": "./dist/GeoJsonLayer.js"
         },
+        "./geometry": {
+            "types": "./dist/geometry.d.ts",
+            "import": "./dist/geometry.js"
+        },
         "./GridLayer": {
             "types": "./dist/GridLayer.d.ts",
             "import": "./dist/GridLayer.js"
+        },
+        "./MapCompass": {
+            "types": "./dist/MapCompass.d.ts",
+            "import": "./dist/MapCompass.js"
+        },
+        "./MapCoordinates": {
+            "types": "./dist/MapCoordinates.d.ts",
+            "import": "./dist/MapCoordinates.js"
+        },
+        "./MapFollow": {
+            "types": "./dist/MapFollow.d.ts",
+            "import": "./dist/MapFollow.js"
+        },
+        "./MapGoTo": {
+            "types": "./dist/MapGoTo.d.ts",
+            "import": "./dist/MapGoTo.js"
         },
         "./MapLayerList": {
             "types": "./dist/MapLayerList.d.ts",
@@ -63,6 +83,10 @@
         "./MapPopup": {
             "types": "./dist/MapPopup.d.ts",
             "import": "./dist/MapPopup.js"
+        },
+        "./MapRuler": {
+            "types": "./dist/MapRuler.d.ts",
+            "import": "./dist/MapRuler.js"
         },
         "./MapView": {
             "types": "./dist/MapView.d.ts",
@@ -79,6 +103,10 @@
         "./scale": {
             "types": "./dist/scale.d.ts",
             "import": "./dist/scale.js"
+        },
+        "./TrackLayer": {
+            "types": "./dist/TrackLayer.d.ts",
+            "import": "./dist/TrackLayer.js"
         },
         "./vite": {
             "types": "./dist/vite.d.ts",
