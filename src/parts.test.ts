@@ -526,8 +526,8 @@ function resolve(layers: readonly string[], on: readonly string[], read: Reader)
 function color(value: string): string | undefined {
     if (value === 'transparent') return 'none'
     if (value === 'inherit') return 'inherit'
-    // currentColor: the piece's own ink, read where the color is asked for.
-    if (value === 'current') return 'current'
+    // currentColor, at an alpha or not: the piece's own ink, read where the color is asked for.
+    if (/^current(\/\d+)?$/.test(value)) return value
     const oklch = /^\[color-mix\(in_oklch,var\(--([a-z0-9-]+)\),var\(--([a-z0-9-]+)\)_(\d+)%\)\]$/.exec(value)
     if (oklch !== null) return `mix(${oklch[1]}, ${oklch[2]} ${oklch[3]}%)`
     const oklab = /^\[color-mix\(in_oklab,var\(--([a-z0-9-]+)\)_(\d+)%,var\(--([a-z0-9-]+)\)\)\]$/.exec(value)
@@ -709,9 +709,10 @@ function colorFound(key: (typeof COLOR_KEYS)[number], where: Where, on: string[]
               ? resolve(where.layers, [...on, 'placeholder'], READ.ink)
               : resolve(where.layers, on, READ[key])
     // An edge, ground or rule in currentColor is the piece's own ink where it sets one, else the ink around it.
-    if (found !== 'current') return found
+    const current = found === undefined ? null : /^current(\/\d+)?$/.exec(found)
+    if (current === null) return found
     const own = resolve(where.layers, on, READ.ink)
-    return own === undefined || own === 'current' ? 'inherit' : own
+    return own === undefined || own === 'current' ? 'inherit' : `${own}${current[1] ?? ''}`
 }
 
 function ringChecks(key: string, ring: Ring, where: Where): Check[] {
