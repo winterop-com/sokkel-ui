@@ -83,6 +83,14 @@ release and empties it.
   colors stay apart, which a token test now checks for every theme.
 - Stories Patterns/Track card, Track roster, Freshness, Task card, Playback timeline and Tracking
   console (the harbor watch with every part around the map), and Themes/Theme picker/Darkroom.
+- `MapCoordinates` takes `formatPosition`, which writes the cursor's position in place of `format`,
+  and `MapGoTo` takes `parse`, which reads what is written in place of latitude, longitude: with the
+  tracking add-on's `toMgrs` and `parseMgrs` a console shows and takes MGRS references. Story
+  Maps/Tracks/Grid references.
+- The harbor watch example (`examples/harbor`): vessels decoded from AIS sentences and aircraft read
+  from readsb-shaped JSON round harbor, juniper and larkspur, with the roster, the map's zones, radar
+  cover, links and tools, playback, tasks, zones, a log and the darkroom theme for night watch; and
+  the Apps/Harbor watch stories.
 
 ## Changed
 

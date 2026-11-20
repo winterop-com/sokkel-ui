@@ -38,6 +38,12 @@ export interface MapGoToProps {
     zoom?: number
     /** Called with each position it goes to. */
     onGo?: (position: LngLat) => void
+    /**
+     * Reads what is written as a position, or null when it is not one, in place of latitude,
+     * longitude: an app that also takes MGRS references passes a reader that tries both, with
+     * words that say so.
+     */
+    parse?: (text: string) => LngLat | null
     className?: string
     words?: Partial<MapGoToWords>
 }
@@ -47,14 +53,14 @@ export interface MapGoToProps {
  * letters, `60.39 N, 5.32 E`) and flies there on Enter, holding the camera from then on. What does
  * not read as a position is marked and said under the field.
  */
-export function MapGoTo({ corner = 'top-left', zoom = 10, onGo, className, words }: MapGoToProps) {
+export function MapGoTo({ corner = 'top-left', zoom = 10, onGo, parse = parseCoordinates, className, words }: MapGoToProps) {
     const { map, corners, holdCamera } = useMapContext()
     const said = useWords(MAP_GO_TO_PART, words)
     const [text, setText] = useState('')
     const [invalid, setInvalid] = useState(false)
     const issue = useId()
     const go = () => {
-        const position = parseCoordinates(text)
+        const position = parse(text)
         if (position === null) {
             setInvalid(true)
             return
@@ -81,7 +87,7 @@ export function MapGoTo({ corner = 'top-left', zoom = 10, onGo, className, words
                     aria-invalid={invalid || undefined}
                     aria-describedby={invalid ? issue : undefined}
                     placeholder={said.placeholder}
-                    inputMode="decimal"
+                    inputMode={parse === parseCoordinates ? 'decimal' : 'text'}
                     autoComplete="off"
                     spellCheck={false}
                     className="tabular-nums"

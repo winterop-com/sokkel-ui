@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useMemo, useState, type ReactNode } from 'react'
 
 import { CoverageLayer } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
-import { formatBearing, formatCoordinates } from '@winterop-com/sokkel-ui-maps/geodesy'
+import { formatBearing, formatCoordinates, parseCoordinates } from '@winterop-com/sokkel-ui-maps/geodesy'
+import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
 import { LinkLayer } from '@winterop-com/sokkel-ui-maps/LinkLayer'
 import { MapCompass } from '@winterop-com/sokkel-ui-maps/MapCompass'
 import { MapCoordinates } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
@@ -15,6 +16,7 @@ import { MapOverlay, MapView, type MapCamera } from '@winterop-com/sokkel-ui-map
 import { TRACK_COLORS, TRACK_WORDS, TrackLayer, trackCounts, trackLegendEntries, type Track } from '@winterop-com/sokkel-ui-maps/TrackLayer'
 import { WORLD_BASEMAP } from '@winterop-com/sokkel-ui-maps/world'
 import { ZoneLayer, zoneLegendEntry } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
+import { parseMgrs, toMgrs } from '@winterop-com/sokkel-ui-tracking/geo'
 import { Page } from './Page'
 import {
     APPROACH_CAMERA,
@@ -156,6 +158,23 @@ function Ruler() {
     )
 }
 
+/** A position read as latitude, longitude or as an MGRS reference, whichever it is written as. */
+const readPosition = (text: string): LngLat | null => parseCoordinates(text) ?? parseMgrs(text, { center: true }) ?? null
+
+function Grid() {
+    const tracks = useMemo(() => watchAt(0), [])
+    return (
+        <Watch title="Harbor watch" description="Positions as MGRS references" camera={APPROACH_CAMERA}>
+            <TrackLayer id="tracks" tracks={tracks} />
+            <MapGoTo
+                parse={readPosition}
+                words={{ placeholder: 'Lat, lon or MGRS', invalid: 'Write a position as latitude, longitude or an MGRS reference.' }}
+            />
+            <MapCoordinates formatPosition={(position) => toMgrs(position) ?? formatCoordinates(position)} />
+        </Watch>
+    )
+}
+
 function Follow() {
     const minute = useWatchClock()
     const tracks = useMemo(() => watchAt(minute), [minute])
@@ -290,6 +309,8 @@ export const Clustered: StoryObj = { name: 'Dense', render: () => <Dense /> }
 export const Moving: StoryObj = { name: 'Live', render: () => <Live /> }
 /** The ruler on, measuring from harbor to a contact: the distance along the great circle and the bearing, with the cursor's position under the map. */
 export const Measuring: StoryObj = { name: 'Ruler', render: () => <Ruler /> }
+/** The cursor's position written as an MGRS reference from the tracking add-on's `toMgrs`, and go to taking either latitude, longitude or a reference such as `32V KN 69 20`. */
+export const GridReferences: StoryObj = { name: 'Grid references', render: () => <Grid /> }
 /** The map keeping a patrol centered as it moves, with a banner that says so and lets it go. */
 export const Following: StoryObj = { name: 'Follow', render: () => <Follow /> }
 /** The watch's areas: a wash, diagonal lines or only an edge, solid or dashed, each in its tone and named at its middle; the closed area picked. */
