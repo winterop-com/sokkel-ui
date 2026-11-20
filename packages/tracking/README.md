@@ -44,7 +44,7 @@ gives none, a track is `unknown`.
 | `/adsb`        | `parseReadsb` (readsb's JSON and the v2 APIs on it: `/v2/point`, `/v2/hex`), `parseOpenSky` (`/api/states/all`) and `parseFlights`, which tells them apart; `altitudeBand` and `verticalTrend`                          |
 | `/ais`         | `createAisDecoder`, which reads `!AIVDM` and `!AIVDO` lines into vessel tracks with a registry by MMSI; `parseAisSentence`, `decodeAisPayload` and `aisChecksum` underneath                                             |
 | `/geo`         | `distance`, `bearing` and `destination` on a great circle; `toUtm`, `fromUtm`, `formatUtm`, `utmZone` and `latitudeBand`; `toMgrs` and `parseMgrs`                                                                      |
-| `/network`     | `createFlowTracker`, which gathers connection records by remote host and by process with byte rates over a window; `flowTracks`, the located hosts as tracks and links from home; `addressScope` and the address checks |
+| `/network`     | `createFlowTracker`, which gathers connection records by remote host and by process, or lists each, with byte rates over a window; `flowTracks`, the located hosts as tracks and links from home; `addressScope` and the address checks |
 | `/affiliation` | `TRACKING_WORDS` and `TRACKING_PART`, `AFFILIATION_ORDER`, `compareAffiliation`, `sortByAffiliation`, `groupByAffiliation` and `AFFILIATION_TOKENS`                                                                     |
 
 ## Flights
@@ -81,6 +81,11 @@ const tracker = createFlowTracker({ window: 10_000, locate: (address) => lookup.
 tracker.add(records)
 const { tracks, links } = flowTracks(tracker.byRemote(), { home: [10.75, 59.91] })
 ```
+
+`byConnection` lists each connection on its own (process, pid, both ends, its latest state, the bytes
+it moved in the window and since its first record, and their rates), for a table of every connection;
+its `metered` says whether its records carried byte counts at all, as a host read through `lsof` or
+`netstat` gives none.
 
 `locate` is the app's own lookup of where an address is. Loopback, private, link-local, multicast
 and unspecified addresses are never located. Byte counts are each connection's running totals by
