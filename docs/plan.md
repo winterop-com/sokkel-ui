@@ -1414,7 +1414,8 @@ simulated moment and written in the shape their real feed has (a readsb answer, 
 connection records), so they go through the same readers a live feed does, and a moment played back
 is the picture it was live. `createSimClock` is the clock they are read at: a moment that plays at a
 multiple of real time in whole ticks, pauses and seeks. The tracking examples read it in place of a
-simulation of their own.
+simulation of their own, and their Apps stories read the same one, so a story moves as its example
+does and opens on the same frame every time.
 
 ## Terminals
 

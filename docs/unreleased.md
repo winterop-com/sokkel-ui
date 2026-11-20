@@ -141,6 +141,12 @@ release and empties it.
   plays a simulated moment at a multiple of real time, pauses and seeks.
 - The harbor, flight and network watch examples read the tracking add-on's simulation in place of
   their own, and the harbor watch's clock is its `createSimClock`.
+- The Apps/Harbor watch, Apps/Flight watch and Apps/Network watch stories run live on that
+  simulation, over the dark basemap: each starts at the same simulated moment every time and plays
+  on from it (the harbor a minute a second, the flights thirty times real time, the network at a
+  real machine's pace), so tracks move, trails grow, contacts and flights come and go, and
+  connections open and close. Pause in the top bar holds the clock, and the harbor watch's timeline
+  plays the last six hours back.
 
 ## Changed
 
