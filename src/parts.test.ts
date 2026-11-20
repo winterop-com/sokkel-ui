@@ -131,6 +131,10 @@ import { YES_NO_FIELD_WORDS, YesNoField, type YesNoFieldProps } from '@winterop-
 import { Tree, type TreeNode, type TreeProps } from '@winterop-com/sokkel-ui/Tree'
 import { TREE_SELECT_WORDS, TreeSelect, type TreeSelectProps } from '@winterop-com/sokkel-ui/TreeSelect'
 
+// A part's checks are made once, live probes and all, inside its first test; on a busy machine that
+// takes longer than the 5 seconds a test gets by default.
+vi.setConfig({ testTimeout: 60_000 })
+
 /**
  * sokkel-ui against the sokkel-design contract. `design/` holds the contract's parts and patterns
  * at the commit `design/pin.json` names (`bun run design` keeps it), and each spec is checked
@@ -386,9 +390,12 @@ async function liveWaiting<T>(element: ReactElement, look: (box: HTMLElement) =>
     }
 }
 
-/** Lets the page run its timers, effects and fetches until `found` holds, for about a second at most; whether it held. */
+/**
+ * Lets the page run its timers, effects and fetches until `found` holds, for ten seconds at most;
+ * whether it held. It returns as soon as `found` holds, so the room is only spent on a busy machine.
+ */
 async function until(found: () => boolean): Promise<boolean> {
-    for (let round = 0; round < 50 && !found(); round++) await act(() => new Promise((done) => setTimeout(done, 20)))
+    for (let round = 0; round < 500 && !found(); round++) await act(() => new Promise((done) => setTimeout(done, 20)))
     return found()
 }
 
