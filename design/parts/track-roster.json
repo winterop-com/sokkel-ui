@@ -41,12 +41,11 @@
     },
     "keyboard": [
         {"keys": ["/"], "does": "Focuses the search."},
-        {"keys": ["ArrowUp", "ArrowDown"], "does": "Moves between rows and group heads, as the table does."},
         {
-            "keys": ["Enter"],
-            "does": "Picks the active track (onSelect), or folds the active group.",
-            "when": "the list has focus"
-        }
+            "keys": ["ArrowUp", "ArrowDown"],
+            "does": "Moves the active row, as the table does; the group heads are no stops of theirs."
+        },
+        {"keys": ["Enter"], "does": "Picks the active track (onSelect).", "when": "the list has focus"}
     ],
     "words": {
         "search": "Search",

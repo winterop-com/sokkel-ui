@@ -9340,18 +9340,7 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {
-    'track-card': {
-        'pieces.name.rest.text': 'the name is text-sm at 500, which is text.sm at weight 500: text.body is the size at 400',
-    },
-    'task-card': {
-        'pieces.title.rest.text': 'the title is text-sm at 500, which is text.sm at weight 500: text.body is the size at 400',
-    },
-    'track-roster': {
-        'keyboard.ArrowUp, ArrowDown': "the arrows move the active row, as the table's do: a group head is no stop of theirs",
-        'keyboard.Enter (the list has focus)': 'Enter picks the active track; a group folds by its head, which the arrows never reach',
-    },
-}
+const PENDING: Record<string, Record<string, string>> = {}
 
 // Markdown view
 
@@ -11019,30 +11008,23 @@ const TRACK_ROSTER_ADAPTER: Adapter = {
                 press(document.body, '/')
                 return document.activeElement === box.querySelector('input') ? true : '/ does not focus the search'
             }),
-        // Focus starts on the first track, and friend holds two: the second Down is on the hostile head, if heads are reached.
+        // Focus starts on the first track: Down, Down, Up, Down moves the active row over the rows alone,
+        // past the group heads, to the third track, which Enter picks.
         'ArrowUp, ArrowDown': () =>
             liveRoster((box, picked) => {
                 const grid = box.querySelector<HTMLElement>('[role="grid"]')
                 act(() => grid?.focus())
                 for (const key of ['ArrowDown', 'ArrowDown', 'ArrowUp', 'ArrowDown', 'Enter']) press(grid, key)
-                return picked.length === 0
+                return picked.join(' ') === 'tv-099'
                     ? true
-                    : `the arrows move between the rows only: Down, Down, Up, Down and Enter pick ${picked.join(' ')}`
+                    : `Down, Down, Up, Down and Enter pick ${picked.join(' ') || 'nothing'}, not the third track`
             }),
         'Enter (the list has focus)': () =>
             liveRoster((box, picked) => {
                 const grid = box.querySelector<HTMLElement>('[role="grid"]')
                 act(() => grid?.focus())
                 press(grid, 'Enter')
-                const first = picked.join(' ')
-                press(grid, 'ArrowDown')
-                press(grid, 'ArrowDown')
-                press(grid, 'Enter')
-                const folded = box.querySelector('[data-group="hostile"]')?.getAttribute('aria-expanded') === 'false'
-                if (first !== 'tv-204') return `Enter on the first track picks ${first || 'nothing'}`
-                return folded
-                    ? true
-                    : `Enter picks the active track, but no key reaches a group head to fold it: it picks ${picked.slice(1).join(' ')}`
+                return picked.join(' ') === 'tv-204' ? true : `Enter on the first track picks ${picked.join(' ') || 'nothing'}`
             }),
     },
     more: () => {

@@ -24,7 +24,11 @@
             "does": "Where it stands."
         },
         "zoom": {"type": "number", "default": 10, "does": "The zoom it flies to, unless the map is in closer already."},
-        "onGo": {"type": "callback", "does": "Called with each position it goes to."}
+        "onGo": {"type": "callback", "does": "Called with each position it goes to."},
+        "parse": {
+            "type": "callback",
+            "does": "Reads what is written into a position in place of latitude, longitude, such as an MGRS reference through the tracking add-on's parseMgrs; nothing for text that is no position."
+        }
     },
     "sizes": {"container": {"width": 224, "padX": 4, "padY": 4, "gap": 4, "radius": "radius-surface"}},
     "states": {

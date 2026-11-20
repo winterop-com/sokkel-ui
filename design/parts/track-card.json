@@ -80,7 +80,7 @@
             "selected": {"edge": "primary", "ring": {"color": "primary", "width": 1}},
             "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
         },
-        "name": {"rest": {"weight": 500, "text": "text.body"}},
+        "name": {"rest": {"weight": 500, "text": "text.sm"}},
         "code": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face."}},
         "detail": {"rest": {"ink": "muted-foreground", "text": "text.help"}}
     },
