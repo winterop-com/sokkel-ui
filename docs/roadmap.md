@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.33.1** is the latest release (2026-11-20): `parseMarkdown` keeps positions on links, embeds,
+- **0.33.2** is the latest release (2026-11-20): `CallTile`; the call bar's reactions open in its own
+  surface, its menus clear of it and rounded; nothing in a call tile or a video player is selectable;
+  `PersonAvatar` size `2xl`; `cn` knows the corner names; contract 0.33.2.
+- **0.33.1** (2026-11-20): `parseMarkdown` keeps positions on links, embeds,
   tags and highlights; the code editor's markdown reads a long line of unclosed marks in linear time;
   `standInOpens`; the chip part in the contract; parts.test checks keys, clicks and states by behavior;
   contract 0.33.1.
