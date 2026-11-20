@@ -130,6 +130,16 @@ import { formatMessage } from '@winterop-com/sokkel-ui/lib/message-format'
 import { YES_NO_FIELD_WORDS, YesNoField, type YesNoFieldProps } from '@winterop-com/sokkel-ui/YesNoField'
 import { Tree, type TreeNode, type TreeProps } from '@winterop-com/sokkel-ui/Tree'
 import { TREE_SELECT_WORDS, TreeSelect, type TreeSelectProps } from '@winterop-com/sokkel-ui/TreeSelect'
+import type { FeatureCollection } from 'geojson'
+import { UNIT_SYMBOLS } from '@winterop-com/sokkel-ui-maps/geodesy'
+import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
+import { MAP_COMPASS_WORDS, MapCompass } from '@winterop-com/sokkel-ui-maps/MapCompass'
+import { MAP_COORDINATES_WORDS, MapCoordinates, scaleBar } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
+import { MAP_FOLLOW_WORDS, MapFollow } from '@winterop-com/sokkel-ui-maps/MapFollow'
+import { MAP_GO_TO_WORDS, MapGoTo } from '@winterop-com/sokkel-ui-maps/MapGoTo'
+import { MAP_RULER_WORDS, MapRuler } from '@winterop-com/sokkel-ui-maps/MapRuler'
+import { TRACK_WORDS, TrackLayer, type Track, type TrackLayerProps } from '@winterop-com/sokkel-ui-maps/TrackLayer'
+import { MapContext, type MapContextValue } from '../packages/maps/src/context'
 
 // A part's checks are made once, live probes and all, inside its first test; on a busy machine that
 // takes longer than the 5 seconds a test gets by default.
@@ -182,6 +192,12 @@ vi.mock('@winterop-com/sokkel-ui/primitives/command', async (original) => {
 // Base UI's menu, which a menu drawn in the page fetches after its first paint, never arrives here: once it has, an open
 // menu's parts would draw in the server drawings below with no root around them. Menus in the page stay stand-ins.
 vi.mock('../packages/core/src/components/ui/menu-engine', () => ({ Menu: undefined }))
+
+// No canvas paints in happy-dom, so the maps' colors cannot be resolved to rgb: each style layer keeps the CSS color it is given,
+// which names its tokens.
+vi.mock('../packages/maps/src/color', () => ({
+    resolveColors: <K extends string>(_scope: HTMLElement, colors: Record<K, string>) => ({ ...colors }),
+}))
 
 const ROOT = join(__dirname, '..')
 const CORE = join(ROOT, 'packages', 'core', 'src')
@@ -851,6 +867,9 @@ const FILL: Record<string, string | number> = {
     track: 'B-roll',
     item: 'juniper-pan',
     when: 'yesterday',
+    distance: '57.7 km',
+    bearing: '308°',
+    name: 'Patrol 7',
 }
 const filled = (template: string, values: Record<string, string | number>) =>
     template.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? FILL[name]))
@@ -9308,7 +9327,20 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {}
+const PENDING: Record<string, Record<string, string>> = {
+    'map-ruler': {
+        'sizes.button.radiusMax': "the button is an icon-sm button, rounded at most 12 as the button spec's",
+        'sizes.chip.text': 'the chip is text.xs at 500, which is the text.badge role',
+        'pieces.button.rest.edge (dark)': "the outline button's edge in dark is input",
+    },
+    'map-compass': {
+        'sizes.button.radiusMax': "the button is an icon-sm button, rounded at most 12 as the button spec's",
+        'pieces.button.rest.edge (dark)': "the outline button's edge in dark is input",
+    },
+    'map-follow': {
+        'sizes.banner.text': "the banner's name is text.xs at 500, which is the text.badge role",
+    },
+}
 
 // Markdown view
 
@@ -9428,6 +9460,685 @@ const MARKDOWN_VIEW_ADAPTER: Adapter = {
     },
 }
 
+// Map parts
+
+/**
+ * A map as far as the overlays and layers use one, without maplibre's WebGL, which happy-dom has
+ * none of: it keeps the sources, layers and images it is given, answers the camera with a plain
+ * projection (a degree is 100 pixels, north up) and hands out the events it is told to fire. A
+ * source made with `cluster` also holds one cluster of all its points, which is how a count is drawn.
+ */
+interface FakeLayer {
+    id: string
+    type: string
+    source?: string
+    filter?: unknown
+    layout?: Record<string, unknown>
+    paint?: Record<string, unknown>
+}
+
+interface FakeMap {
+    map: MapContextValue['map']
+    fire: (type: string, event?: object) => void
+    layers: Map<string, FakeLayer>
+    sources: Map<string, { data: FeatureCollection; cluster?: boolean; clusterRadius?: number }>
+    images: Map<string, { pixelRatio?: number; sdf?: boolean }>
+    calls: { method: string; options: Record<string, unknown> }[]
+}
+
+function fakeMap(): FakeMap {
+    const handlers = new Map<string, Set<(event: object) => void>>()
+    const layers: FakeMap['layers'] = new Map()
+    const sources: FakeMap['sources'] = new Map()
+    const images: FakeMap['images'] = new Map()
+    const calls: FakeMap['calls'] = []
+    const container = document.createElement('div')
+    let bearing = 0
+    const matches = (filter: unknown, properties: Record<string, unknown>): boolean => {
+        if (!Array.isArray(filter)) return true
+        if (filter[0] === '!') return !matches(filter[1], properties)
+        if (filter[0] === 'has') return properties[filter[1] as string] !== undefined
+        return true
+    }
+    const map = {
+        on: (type: string, handler: (event: object) => void) => {
+            const set = handlers.get(type) ?? new Set()
+            set.add(handler)
+            handlers.set(type, set)
+        },
+        off: (type: string, handler: (event: object) => void) => handlers.get(type)?.delete(handler),
+        getBearing: () => bearing,
+        getZoom: () => 6,
+        getContainer: () => container,
+        project: ([lng, lat]: [number, number]) => ({ x: lng * 100, y: -lat * 100 }),
+        unproject: ([x, y]: [number, number]) => ({ lng: x / 100, lat: -y / 100 }),
+        easeTo: (options: Record<string, unknown>) => {
+            calls.push({ method: 'easeTo', options })
+            if (typeof options.bearing === 'number') bearing = options.bearing
+        },
+        flyTo: (options: Record<string, unknown>) => calls.push({ method: 'flyTo', options }),
+        addSource: (id: string, spec: { data: FeatureCollection; cluster?: boolean; clusterRadius?: number }) =>
+            sources.set(id, { ...spec }),
+        getSource: (id: string) => {
+            const held = sources.get(id)
+            if (held === undefined) return undefined
+            return {
+                setData: (data: FeatureCollection) => (held.data = data),
+                getClusterExpansionZoom: () => Promise.resolve(8),
+            }
+        },
+        removeSource: (id: string) => sources.delete(id),
+        addLayer: (spec: FakeLayer) => layers.set(spec.id, structuredClone(spec)),
+        getLayer: (id: string) => layers.get(id),
+        removeLayer: (id: string) => layers.delete(id),
+        getLayersOrder: () => [...layers.keys()],
+        setPaintProperty: (id: string, key: string, value: unknown) => {
+            const layer = layers.get(id)
+            if (layer !== undefined) layer.paint = { ...layer.paint, [key]: value }
+        },
+        setLayoutProperty: (id: string, key: string, value: unknown) => {
+            const layer = layers.get(id)
+            if (layer !== undefined) layer.layout = { ...layer.layout, [key]: value }
+        },
+        hasImage: (name: string) => images.has(name),
+        addImage: (name: string, _image: unknown, options: { pixelRatio?: number; sdf?: boolean }) => images.set(name, options),
+        updateImage: () => undefined,
+        setFeatureState: () => undefined,
+        queryRenderedFeatures: ({ layers: wanted }: { layers: string[] }) =>
+            wanted.flatMap((id) => {
+                const layer = layers.get(id)
+                const held = layer?.source === undefined ? undefined : sources.get(layer.source)
+                if (layer === undefined || held === undefined) return []
+                const points = held.data.features.filter((feature) => feature.geometry.type === 'Point')
+                const gathered =
+                    held.cluster === true && points.length > 0
+                        ? [{ ...points[0], properties: { cluster_id: 1, point_count: points.length, hostile: 0 } }]
+                        : []
+                return [...points, ...gathered].filter((feature) => matches(layer.filter, feature.properties ?? {}))
+            }),
+    }
+    return {
+        map: map as unknown as MapContextValue['map'],
+        fire: (type, event = {}) =>
+            act(() => {
+                for (const handler of handlers.get(type) ?? []) handler(event)
+            }),
+        layers,
+        sources,
+        images,
+        calls,
+    }
+}
+
+/** What a fake map holds now, kept past the part's unmounting, which takes its layers down. */
+const kept = (fake: FakeMap): FakeMap => ({
+    ...fake,
+    layers: new Map(fake.layers),
+    sources: new Map(fake.sources),
+    images: new Map(fake.images),
+})
+
+/** A part drawn in the page inside a map's context over a fake map, with the map's corners and overlay in the box handed to `look`. */
+function liveMap<T>(part: ReactElement, look: (box: HTMLElement, fake: FakeMap) => T, context: Partial<MapContextValue> = {}): T {
+    const fake = fakeMap()
+    const corners: MapContextValue['corners'] = {
+        'top-left': document.createElement('div'),
+        'top-right': document.createElement('div'),
+        'bottom-left': document.createElement('div'),
+        'bottom-right': document.createElement('div'),
+    }
+    const overlay = document.createElement('div')
+    const scope = document.createElement('div')
+    scope.append(...Object.values(corners), overlay)
+    document.body.append(scope)
+    const value: MapContextValue = {
+        map: fake.map,
+        scope,
+        overlay,
+        corners,
+        dark: false,
+        reading: 0,
+        selected: null,
+        select: () => undefined,
+        register: () => () => undefined,
+        holdCamera: () => undefined,
+        takeClicks: () => undefined,
+        ...context,
+    }
+    try {
+        return live(createElement(TooltipProvider, null, createElement(MapContext.Provider, { value }, part)), () => look(scope, fake))
+    } finally {
+        scope.remove()
+    }
+}
+
+/** A part drawn over a fake map, its corners and overlay read as a server drawing is, after `then` has done what it does to the map. */
+const drawMap = (part: ReactElement, then?: (fake: FakeMap) => void) =>
+    liveMap(part, (box, fake) => {
+        then?.(fake)
+        return parse(box.innerHTML)
+    })
+
+const MAPS_SOURCE = (path: string) => readFileSync(join(ROOT, 'packages', 'maps', 'src', path), 'utf8')
+/** The values of a union type a map module exports. */
+const mapUnion = (path: string, name: string) =>
+    [...(new RegExp(`export type ${name} = ([^\\n]+)`).exec(MAPS_SOURCE(path))?.[1] ?? '').matchAll(/'([^']+)'/g)].map((match) => match[1])
+const MAP_CORNERS = mapUnion('context.ts', 'MapCorner')
+const MAP_UNITS = Object.keys(UNIT_SYMBOLS)
+
+/**
+ * What a maplibre expression gives for a feature in a feature state: the operators the map layers
+ * paint with (case, match, step, get, has, feature-state and plain arithmetic).
+ */
+function evaluate(expression: unknown, properties: Record<string, unknown>, state: Record<string, unknown> = {}): unknown {
+    if (!Array.isArray(expression)) return expression
+    const [op, ...args] = expression as [string, ...unknown[]]
+    const at = (value: unknown) => evaluate(value, properties, state)
+    switch (op) {
+        case 'case': {
+            for (let index = 0; index + 1 < args.length; index += 2) if (at(args[index]) === true) return at(args[index + 1])
+            return at(args.at(-1))
+        }
+        case 'match': {
+            const input = at(args[0])
+            for (let index = 1; index + 1 < args.length; index += 2) if (args[index] === input) return at(args[index + 1])
+            return at(args.at(-1))
+        }
+        case 'step': {
+            const input = Number(at(args[0]))
+            let value = at(args[1])
+            for (let index = 2; index + 1 < args.length; index += 2) if (input >= Number(args[index])) value = at(args[index + 1])
+            return value
+        }
+        case 'get':
+            return properties[args[0] as string]
+        case 'has':
+            return properties[args[0] as string] !== undefined
+        case 'feature-state':
+            return state[args[0] as string]
+        case 'boolean': {
+            const value = at(args[0])
+            return typeof value === 'boolean' ? value : at(args[1])
+        }
+        case 'to-number':
+            return Number(at(args[0]) ?? at(args[1]))
+        case '!':
+            return at(args[0]) !== true
+        case '>':
+            return Number(at(args[0])) > Number(at(args[1]))
+        case '==':
+            return at(args[0]) === at(args[1])
+        case '*':
+            return args.reduce<number>((product, value) => product * Number(at(value)), 1)
+        case '^':
+            return Number(at(args[0])) ** Number(at(args[1]))
+        default:
+            return undefined
+    }
+}
+
+/**
+ * A color a map layer paints, in the contract's grammar: `var(--card)` is card, a color-mix in
+ * oklab is `mix-oklab()`, an opacity of 0 is none and one below 1 is its alpha.
+ */
+function mapColor(value: unknown, opacity: unknown = 1): string {
+    if (Number(opacity) === 0) return 'none'
+    const text = String(value)
+    const token = /^var\(--([a-z0-9-]+)\)$/.exec(text)?.[1]
+    const mix = /^color-mix\(in oklab, var\(--([a-z0-9-]+)\) (\d+)%, var\(--([a-z0-9-]+)\)\)$/.exec(text)
+    const named = token ?? (mix === null ? text : `mix-oklab(${mix[1]} ${mix[2]}%, ${mix[3]})`)
+    return Number(opacity) < 1 ? `${named}/${String(Math.round(Number(opacity) * 100))}` : named
+}
+
+/** Checks of a piece the map paints on its canvas, against the spec's paint of it in a state. */
+function mapPaintChecks(id: string, piece: string, state: string, found: Record<string, string | undefined>): Check[] {
+    const paint = SPECS.get(id)?.pieces?.[piece]?.[state] as Record<string, unknown> | undefined
+    return Object.entries(found).flatMap(([key, value]) =>
+        paint?.[key] === undefined ? [] : [check(`pieces.${piece}.${state}.${key}`, String(paint[key]), value)],
+    )
+}
+
+/** The first button drawn among a map's: the ruler's or the compass's. */
+const mapButton = (elements: El[]) => elements.find((element) => element.tag === 'button')
+
+/** Puts a text in a field as typing does, so React hears it. */
+function type(input: HTMLInputElement, text: string) {
+    act(() => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, text)
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+}
+
+// Track layer
+
+const WATCH_TRACKS: Track[] = [
+    { id: 'pilot', position: [5, 60], heading: 90, affiliation: 'friend', kind: 'vessel', label: 'Pilot 4', trail: [[4.8, 60]] },
+    { id: 'survey', position: [5.2, 60], affiliation: 'unknown', kind: 'aircraft', label: 'Survey 2' },
+]
+/** The track layer over a fake map: its style layers and sources, and the labels and counts it writes in the overlay. */
+const drawTracks = (props: Partial<TrackLayerProps>, selected: string | null = null) =>
+    liveMap(
+        createElement(TrackLayer, { id: 'watch', tracks: WATCH_TRACKS, transition: 0, ...props }),
+        (box, fake) => {
+            // The labels are measured a frame after the map draws.
+            act(() => vi.advanceTimersByTime(50))
+            return { fake: kept(fake), elements: parse(box.innerHTML) }
+        },
+        { selected },
+    )
+const TRACKS = once(() => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })
+    try {
+        return { plain: drawTracks({}), selected: drawTracks({}, 'pilot'), clustered: drawTracks({ cluster: true }) }
+    } finally {
+        vi.useRealTimers()
+    }
+})
+const trackLabel = (elements: El[], text: string) => elements.find((element) => element.tag === 'span' && element.text === text)
+const trackCount = (elements: El[]) => elements.find((element) => element.tag === 'span' && /^\d+$/.test(element.text))
+const trackLayerOf = (fake: FakeMap, suffix: string) => fake.layers.get(`wui-watch${suffix}`)
+
+const TRACK_LAYER_ADAPTER: Adapter = {
+    wordObjects: { TRACK_WORDS },
+    complete: ['TRACK_WORDS'],
+    words: Object.fromEntries(Object.keys(TRACK_WORDS).map((key) => [key, `TRACK_WORDS.${key}`])),
+    options: {},
+    size: (size) => {
+        if (size === 'symbol') return skip("a maplibre icon, not a box: its size is read from the symbol layer's icon-size in more")
+        return pieceWhere(trackLabel(TRACKS().plain.elements, 'Survey 2'))
+    },
+    paint: (_, name, state) => {
+        if (name !== 'label') return skip(`maplibre paints the ${name} on its canvas: read from its style layer in more`)
+        return state === 'selected'
+            ? pieceWhere(trackLabel(TRACKS().selected.elements, 'Pilot 4'))
+            : pieceWhere(trackLabel(TRACKS().plain.elements, 'Survey 2'))
+    },
+    effect: () => skip('a track layer states no effects'),
+    keys: {},
+    more: () => {
+        const { plain, selected, clustered } = TRACKS()
+        const symbol = trackLayerOf(plain.fake, '-symbol')
+        const ring = trackLayerOf(plain.fake, '-ring')
+        const trail = trackLayerOf(plain.fake, '-trail-line')
+        const cluster = trackLayerOf(clustered.fake, '-cluster')
+        const unknown = { affiliation: 'unknown', kind: 'vessel' }
+        const image = plain.fake.images.get('wui-track-vessel')
+        const symbolSize =
+            symbol === undefined || image === undefined
+                ? undefined
+                : String((Number(symbol.layout?.['icon-size']) * 48) / Number(image.pixelRatio ?? 1))
+        const ringIn = (state: Record<string, unknown>) => ({
+            ground: mapColor(
+                evaluate(ring?.paint?.['circle-color'], unknown, state),
+                evaluate(ring?.paint?.['circle-opacity'], unknown, state),
+            ),
+            edge: mapColor(
+                evaluate(ring?.paint?.['circle-stroke-color'], unknown, state),
+                evaluate(ring?.paint?.['circle-stroke-opacity'], unknown, state),
+            ),
+        })
+        const label = trackLabel(plain.elements, 'Survey 2')
+        const left = /left:\s*([\d.]+)px/.exec(label?.attrs.style ?? '')?.[1]
+        const count = trackCount(clustered.elements)
+        const clusterPaint = SPECS.get('track-layer')?.pieces?.cluster?.rest
+        const hostile = { point_count: 3, hostile: 1 }
+        return [
+            check('sizes.symbol.width', '24', symbolSize),
+            check('sizes.symbol.height', '24', symbolSize),
+            check(
+                'sizes.label.offset (0.75 of the size plus 4 right of the track)',
+                String(Math.round(24 * 0.75) + 4),
+                left === undefined ? undefined : String(Number(left) - 520),
+            ),
+            check(
+                "states.selected (a label covering another track's symbol is left out, but never the selected track's)",
+                'left out at rest, drawn when selected',
+                `${trackLabel(plain.elements, 'Pilot 4') === undefined ? 'left out' : 'drawn'} at rest, ${trackLabel(selected.elements, 'Pilot 4') === undefined ? 'left out' : 'drawn'} when selected`,
+            ),
+            ...mapPaintChecks('track-layer', 'symbol', 'rest', {
+                ground: mapColor(evaluate(symbol?.paint?.['icon-color'], unknown)),
+                edge: mapColor(symbol?.paint?.['icon-halo-color']),
+            }),
+            ...mapPaintChecks('track-layer', 'trail', 'rest', { ink: mapColor(evaluate(trail?.paint?.['line-color'], unknown)) }),
+            ...mapPaintChecks('track-layer', 'ring', 'rest', ringIn({})),
+            ...mapPaintChecks('track-layer', 'ring', 'hover', { edge: ringIn({ hover: true }).edge.replace(/\/80$/, '') }),
+            ...mapPaintChecks('track-layer', 'ring', 'selected', ringIn({ selected: true })),
+            ...mapPaintChecks('track-layer', 'cluster', 'rest', {
+                ground: mapColor(evaluate(cluster?.paint?.['circle-color'], { point_count: 3, hostile: 0 })),
+                edge: mapColor(evaluate(cluster?.paint?.['circle-stroke-color'], { point_count: 3, hostile: 0 })),
+            }),
+            ...(count === undefined || clusterPaint === undefined
+                ? [check('pieces.cluster.rest.ink', 'a count drawn', 'none')]
+                : paintChecks(
+                      'pieces.cluster.rest',
+                      { ink: clusterPaint.ink, text: clusterPaint.text, weight: clusterPaint.weight },
+                      { layers: [classesOf(count)], on: [], around: ancestors(count) },
+                  )),
+            check(
+                'pieces.cluster.rest.edge (a cluster holding a hostile track: 3 in track-hostile)',
+                'track-hostile 3',
+                `${mapColor(evaluate(cluster?.paint?.['circle-stroke-color'], hostile))} ${String(evaluate(cluster?.paint?.['circle-stroke-width'], hostile))}`,
+            ),
+            ...layoutChecks('track-layer', {
+                trailWidth: () => (trail === undefined ? undefined : String(trail.paint?.['line-width'])),
+                haloWidth: () => (symbol === undefined ? undefined : String(symbol.paint?.['icon-halo-width'])),
+                clusterRadius: () => {
+                    const held = clustered.fake.sources.get('wui-watch')
+                    return held?.clusterRadius === undefined ? undefined : String(held.clusterRadius)
+                },
+            }),
+        ]
+    },
+}
+
+// Map ruler
+
+const RULER_POINTS: [LngLat, LngLat] = [
+    [5.32, 60.39],
+    [4.6, 60.7],
+]
+const RULERS = once(() => ({
+    rest: drawMap(createElement(MapRuler, {})),
+    on: drawMap(createElement(MapRuler, { defaultActive: true, defaultPoints: RULER_POINTS })),
+}))
+const rulerChip = (elements: El[]) => elements.find((element) => element.attrs.role === 'status')
+
+const MAP_RULER_ADAPTER: Adapter = {
+    wordObjects: { MAP_RULER_WORDS },
+    complete: ['MAP_RULER_WORDS'],
+    words: {
+        measure: 'MAP_RULER_WORDS.measure',
+        measured: [
+            'MAP_RULER_WORDS.measured',
+            (said: (distance: string, bearing: string) => string, fill) => said(String(fill.distance), String(fill.bearing)),
+        ],
+    },
+    options: { unit: MAP_UNITS, corner: MAP_CORNERS },
+    size: (size) => pieceWhere(size === 'button' ? mapButton(RULERS().rest) : rulerChip(RULERS().on)),
+    paint: (_, name, state) => {
+        if (name === 'line') return skip("maplibre paints the line on its canvas: read from the ruler's style layers in more")
+        if (name === 'chip') return pieceWhere(rulerChip(RULERS().on))
+        return pieceWhere(mapButton(state === 'on' ? RULERS().on : RULERS().rest), state === 'hover' ? ['hover'] : [])
+    },
+    effect: () => skip('a ruler states no effects'),
+    keys: {
+        'Escape (the ruler is on and the map has focus)': () => {
+            const measured: unknown[] = []
+            return liveMap(
+                createElement(MapRuler, { defaultActive: true, defaultPoints: RULER_POINTS, onMeasure: (one) => measured.push(one) }),
+                (box) => {
+                    const pressed = () => box.querySelector('button')?.getAttribute('aria-pressed')
+                    if (box.querySelector('[role="status"]') === null) return 'no measurement drawn to clear'
+                    press(box, 'Escape')
+                    if (box.querySelector('[role="status"]') !== null || measured.at(-1) !== null) return 'Escape leaves the measurement'
+                    if (pressed() !== 'true') return 'Escape with a measurement turns the ruler off'
+                    press(box, 'Escape')
+                    return pressed() === 'false' ? true : 'Escape with nothing measured leaves the ruler on'
+                },
+            )
+        },
+    },
+    more: () => {
+        const fake = liveMap(createElement(MapRuler, { defaultActive: true, defaultPoints: RULER_POINTS }), (_, made) => kept(made))
+        const find = (suffix: string) => [...fake.layers.values()].find((layer) => layer.id.endsWith(suffix))
+        const casing = find('-casing')
+        const ink = find('-line')
+        const ends = find('-ends')
+        const chip = rulerChip(RULERS().on)
+        const lift = /-translate-y-\[calc\(100%\+([\d.]+)rem\)\]/.exec(classesOf(chip))?.[1]
+        return [
+            ...mapPaintChecks('map-ruler', 'line', 'rest', {
+                ink: mapColor(ink?.paint?.['line-color']),
+                edge: mapColor(casing?.paint?.['line-color'], casing?.paint?.['line-opacity']),
+            }),
+            check(
+                'pieces.line.rest (1.75 wide, dashed 3 on 2, over a 4 wide casing; each end 3.5 ringed 1.5)',
+                '1.75 [3,2] 4 3.5 1.5',
+                [
+                    ink?.paint?.['line-width'],
+                    JSON.stringify(ink?.paint?.['line-dasharray']),
+                    casing?.paint?.['line-width'],
+                    ends?.paint?.['circle-radius'],
+                    ends?.paint?.['circle-stroke-width'],
+                ]
+                    .map(String)
+                    .join(' '),
+            ),
+            check('states.on (the chip says the distance and the bearing from the first point)', '52.3 km · 312°', chip?.text),
+            ...layoutChecks('map-ruler', { chipLift: () => (lift === undefined ? undefined : String(Number(lift) * 16)) }),
+        ]
+    },
+}
+
+// Map coordinates
+
+const COORDINATES = once(() => ({
+    offscreen: drawMap(createElement(MapCoordinates, {})),
+    rest: drawMap(createElement(MapCoordinates, {}), (fake) => fake.fire('mousemove', { lngLat: { lng: 5.3221, lat: 60.3913 } })),
+}))
+const coordinatePieces = (elements: El[]) => {
+    const bar = elements.find((element) => element.attrs['aria-hidden'] !== undefined && classesOf(element).includes('border-b'))
+    return {
+        container: elements.find((element) => element.attrs.role === 'group'),
+        position: elements.find((element) => element.tag === 'output'),
+        scale: bar?.parent,
+        bar,
+    }
+}
+
+const MAP_COORDINATES_ADAPTER: Adapter = {
+    wordObjects: { MAP_COORDINATES_WORDS },
+    complete: ['MAP_COORDINATES_WORDS'],
+    words: Object.fromEntries(Object.keys(MAP_COORDINATES_WORDS).map((key) => [key, `MAP_COORDINATES_WORDS.${key}`])),
+    options: { corner: MAP_CORNERS, format: mapUnion('geodesy.ts', 'CoordinateFormat'), unit: MAP_UNITS },
+    size: () => pieceWhere(coordinatePieces(COORDINATES().rest).container),
+    paint: (_, name, state) => {
+        const pieces = coordinatePieces(state === 'offscreen' ? COORDINATES().offscreen : COORDINATES().rest)
+        if (name === 'scale') {
+            const { scale, bar } = pieces
+            // The scale's words and the bar under them: the bar's edge is its rule.
+            return scale === undefined || bar === undefined
+                ? undefined
+                : { layers: [classesOf(scale), classesOf(bar)], on: [], around: ancestors(scale) }
+        }
+        return pieceWhere(name === 'position' ? pieces.position : pieces.container)
+    },
+    effect: () => skip('a coordinate readout states no effects'),
+    keys: {},
+    more: () => {
+        const { rest, offscreen } = COORDINATES()
+        const width = /\bmin-w-(\d+)\b/.exec(classesOf(coordinatePieces(rest).position))?.[1]
+        return [
+            check('states.rest (the pointer on the map: its position)', '60.3913° N, 5.3221° E', coordinatePieces(rest).position?.text),
+            check('states.offscreen (the pointer off the map)', 'Offscreen', coordinatePieces(offscreen).position?.text),
+            check('layout.scaleRound (a round length: 1, 2 or 5 times a power of ten)', '100 km', coordinatePieces(rest).scale?.text),
+            ...layoutChecks('map-coordinates', {
+                scaleWidth: () => {
+                    // The widest bar over a sweep of zooms: as wide as a bar is ever drawn.
+                    let widest = 0
+                    for (let step = 0; step <= 4000; step += 1)
+                        widest = Math.max(widest, scaleBar(10 ** (step / 400), 100, 'km')?.width ?? 0)
+                    return String(widest)
+                },
+                positionMinWidth: () => (width === undefined ? undefined : String(Number(width) * 4)),
+            }),
+        ]
+    },
+}
+
+// Map go-to
+
+/** A go-to field given a text and sent, as Enter in its field sends it. */
+const goToSent = (text: string) =>
+    liveMap(createElement(MapGoTo, {}), (box) => {
+        const input = box.querySelector('input')
+        if (input !== null) type(input, text)
+        act(() => box.querySelector('form')?.requestSubmit())
+        return parse(box.innerHTML)
+    })
+const GO_TOS = once(() => ({ rest: drawMap(createElement(MapGoTo, {})), invalid: goToSent('harbor') }))
+const goToPieces = (elements: El[]) => {
+    const container = elements.find((element) => element.tag === 'form')
+    return {
+        container,
+        row: elements.find((element) => element.parent === container && element.tag === 'div'),
+        issue: elements.find((element) => element.tag === 'p'),
+    }
+}
+
+/** What a go-to field does with a text and Enter pressed in it: the position it flies to and hands on, or what it says. */
+function goTo(text: string): string {
+    const went: LngLat[] = []
+    return liveMap(createElement(MapGoTo, { onGo: (position) => went.push(position) }), (box, fake) => {
+        const input = box.querySelector('input')
+        if (input === null) return 'no field'
+        type(input, text)
+        const event = press(input, 'Enter')
+        // A browser submits a field's form on Enter when the form has a submit button; happy-dom does not, so it is sent as a browser would.
+        if (event !== undefined && !event.defaultPrevented) {
+            if (input.form === null) return 'the field is in no form, so Enter sends nothing'
+            if (input.form.querySelector('button[type="submit"]') === null) return 'the form has no submit button, so Enter sends nothing'
+            act(() => input.form?.requestSubmit())
+        }
+        const flown = fake.calls.find((call) => call.method === 'flyTo')
+        if (flown !== undefined) return `${JSON.stringify(flown.options.center)} ${JSON.stringify(went[0])}`
+        return box.querySelector('p')?.textContent ?? 'nothing'
+    })
+}
+
+const MAP_GO_TO_ADAPTER: Adapter = {
+    wordObjects: { MAP_GO_TO_WORDS },
+    complete: ['MAP_GO_TO_WORDS'],
+    words: Object.fromEntries(Object.keys(MAP_GO_TO_WORDS).map((key) => [key, `MAP_GO_TO_WORDS.${key}`])),
+    options: { corner: MAP_CORNERS },
+    size: (_, key) => {
+        const pieces = goToPieces(GO_TOS().rest)
+        return pieceWhere(key === 'gap' ? pieces.row : pieces.container)
+    },
+    paint: (_, name) => pieceWhere(name === 'issue' ? goToPieces(GO_TOS().invalid).issue : goToPieces(GO_TOS().rest).container),
+    effect: () => skip('a go-to field states no effects'),
+    keys: {
+        'Enter (the field has focus)': () => {
+            const went = goTo('60.39, 5.32')
+            if (went !== '[5.32,60.39] [5.32,60.39]') return `Enter on a position does ${went}`
+            const refused = goTo('harbor')
+            return refused === MAP_GO_TO_WORDS.invalid ? true : `Enter on what is not a position says ${refused}`
+        },
+    },
+    more: () => [
+        check(
+            'states.invalid (the field takes its invalid edge)',
+            'true',
+            GO_TOS().invalid.find((element) => element.tag === 'input')?.attrs['aria-invalid'],
+        ),
+    ],
+}
+
+// Map follow
+
+const FOLLOWS = once(() => drawMap(createElement(MapFollow, { position: [5.32, 60.39], name: 'Patrol 7', onRelease: () => undefined })))
+const followPieces = (elements: El[]) => {
+    const banner = elements.find((element) => element.attrs.role === 'status')
+    return {
+        banner,
+        name: elements.find((element) => element.tag === 'span' && element.parent === banner),
+        icon: elements.find((element) => element.tag === 'svg' && element.parent === banner),
+    }
+}
+/** The banner with its name's classes laid over its own: the banner's text is the name it says. */
+const followText = () => {
+    const { banner, name, icon } = followPieces(FOLLOWS())
+    return banner === undefined || name === undefined
+        ? undefined
+        : { layers: [classesOf(banner), classesOf(name)], on: [], around: ancestors(banner), mark: classesOf(icon) }
+}
+
+const MAP_FOLLOW_ADAPTER: Adapter = {
+    wordObjects: { MAP_FOLLOW_WORDS },
+    complete: ['MAP_FOLLOW_WORDS'],
+    words: {
+        following: ['MAP_FOLLOW_WORDS.following', (said: (name: string) => string, fill) => said(String(fill.name))],
+        release: 'MAP_FOLLOW_WORDS.release',
+    },
+    options: { corner: MAP_CORNERS },
+    size: (_, key) => {
+        const { banner, icon } = followPieces(FOLLOWS())
+        if (key === 'padX') return skip('padded 8 before and 2 after, which one length cannot say: each end read in more')
+        if (key === 'icon') return pieceWhere(icon)
+        return key === 'text' ? followText() : pieceWhere(banner)
+    },
+    paint: () => followText(),
+    effect: () => skip('a follow banner states no effects'),
+    keys: {},
+    more: () => {
+        const { banner } = followPieces(FOLLOWS())
+        let released = 0
+        const eased = liveMap(
+            createElement(MapFollow, { position: [5.32, 60.39], name: 'Patrol 7', onRelease: () => (released += 1) }),
+            (box, fake) => {
+                fake.fire('dragstart')
+                act(() => box.querySelector('button')?.click())
+                return fake.calls.find((call) => call.method === 'easeTo')?.options.center
+            },
+        )
+        return [
+            check('sizes.banner.padX (before)', '8', banner === undefined ? undefined : resolve([classesOf(banner)], [], READ.padStart)),
+            check(
+                'sizes.banner.padX (after: anatomy.banner)',
+                '2',
+                banner === undefined ? undefined : resolve([classesOf(banner)], [], lengthOf('pe-')),
+            ),
+            check('states.rest (the map eases to the followed position)', '[5.32,60.39]', JSON.stringify(eased)),
+            check('states.rest (a drag and a press of the button each let it go)', '2', String(released)),
+        ]
+    },
+}
+
+// Map compass
+
+const COMPASS = once(() => drawMap(createElement(MapCompass, {})))
+const MAP_COMPASS_ADAPTER: Adapter = {
+    wordObjects: { MAP_COMPASS_WORDS },
+    complete: ['MAP_COMPASS_WORDS'],
+    words: { resetNorth: ['MAP_COMPASS_WORDS.resetNorth', (said: (bearing: string) => string, fill) => said(String(fill.bearing))] },
+    options: { corner: MAP_CORNERS },
+    size: () => pieceWhere(mapButton(COMPASS())),
+    paint: (_, name, state) => {
+        if (name === 'needle') return skip('an svg filled and stroked rather than inked: read in more')
+        return pieceWhere(mapButton(COMPASS()), state === 'hover' ? ['hover'] : [])
+    },
+    effect: () => skip('a compass states no effects'),
+    keys: {
+        'Enter, Space (the button has focus)': () =>
+            liveMap(createElement(MapCompass, {}), (box, fake) => {
+                const button = box.querySelector('button')
+                // A native button: a browser presses it on Enter and Space, and the press is a click.
+                if (button === null) return 'no native button, which Enter and Space press'
+                fake.map.easeTo({ bearing: 47 })
+                act(() => button.click())
+                return fake.calls.at(-1)?.options.bearing === 0 ? true : 'a press does not turn the map to north'
+            }),
+    },
+    more: () => {
+        const needle = COMPASS().find((element) => element.tag === 'svg')
+        const fill = resolve([classesOf(needle)], [], prefixed('fill-'))
+        const stroke = resolve([classesOf(needle)], [], prefixed('stroke-'))
+        const turned = liveMap(createElement(MapCompass, {}), (box, fake) => {
+            fake.map.easeTo({ bearing: 47 })
+            fake.fire('rotate')
+            return [box.querySelector('button')?.getAttribute('aria-label'), box.querySelector('svg')?.style.transform]
+        })
+        return [
+            check('pieces.needle.rest.ink', 'critical', fill === stroke ? fill : `fill ${String(fill)}, stroke ${String(stroke)}`),
+            check(
+                'states.rest (the needle turned against the bearing, and its name says the bearing)',
+                'Reset to north (bearing 047°) rotate(-47deg)',
+                turned.join(' '),
+            ),
+        ]
+    },
+}
+
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
     'text-field': TEXT_FIELD_ADAPTER,
@@ -9487,6 +10198,12 @@ const ADAPTERS: Record<string, Adapter> = {
     'item-card': ITEM_CARD_ADAPTER,
     'sortable-grid': SORTABLE_GRID_ADAPTER,
     'markdown-view': MARKDOWN_VIEW_ADAPTER,
+    'track-layer': TRACK_LAYER_ADAPTER,
+    'map-ruler': MAP_RULER_ADAPTER,
+    'map-coordinates': MAP_COORDINATES_ADAPTER,
+    'map-go-to': MAP_GO_TO_ADAPTER,
+    'map-follow': MAP_FOLLOW_ADAPTER,
+    'map-compass': MAP_COMPASS_ADAPTER,
 }
 
 // The checks, walked from each spec

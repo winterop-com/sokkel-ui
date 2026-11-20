@@ -31,7 +31,8 @@ export function ControlButton({ label, container, onClick, pressed, corner = 'to
                         aria-pressed={pressed}
                         className={cn(
                             'bg-card text-foreground shadow-surface hover:bg-hover dark:bg-card',
-                            pressed === true && 'border-primary bg-accent text-accent-foreground hover:bg-accent dark:bg-accent',
+                            pressed === true &&
+                                'border-primary bg-accent text-accent-foreground hover:bg-accent dark:border-primary dark:bg-accent',
                         )}
                         onClick={onClick}
                     />
