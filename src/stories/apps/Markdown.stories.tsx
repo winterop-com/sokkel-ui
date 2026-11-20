@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { BookOpen, Braces, FileText, ListTree, FolderTree, LayoutDashboard, Play, Settings } from 'lucide-react'
+import { BookOpen, Braces, FileText, ListTree, FolderTree, LayoutDashboard, MapPin, Play, Settings } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
@@ -57,6 +57,9 @@ const SAMPLES: Sample[] = [
 Words can be **strong**, *emphasized*, ~~struck~~, \`code\`, ==highlighted== or a
 [link to example.org](https://example.org/tides). A line break inside a paragraph stays a space,
 as CommonMark has it.
+
+A highlight runs through other marks, as ==the **validate** step==, and \\=\\=escaped\\=\\= signs
+stay as written.
 
 <!-- A comment like this one is never drawn. -->
 
@@ -277,12 +280,14 @@ A file links to itself: ![[export-2026-11-02.pdf]]
 title: Nightly export
 owner: grace
 project: harbor
+created at: 2026-11-02
+født: Bergen
 steps: [fetch, transform, validate, upload, notify]
 ---
 # Properties
 
 The block between the two \`---\` lines at the top is the note's properties. It is left out of the
-page, or shown above it with **Show properties**.
+page, or shown above it with **Show properties**. A key may be a few words, or in any script.
 
 A text that opens with a rule and a sentence is not read as properties.
 `,
@@ -333,10 +338,12 @@ function MarkdownApp({
     start = 'text',
     view: initialView = 'both',
     tree: initialTree = false,
+    positions: initialPositions = false,
 }: {
     start?: string
     view?: EditPreviewView
     tree?: boolean
+    positions?: boolean
 }) {
     const [collapsed, setCollapsed] = useState(false)
     const [chosen, setChosen] = useState(start)
@@ -344,11 +351,14 @@ function MarkdownApp({
     const [view, setView] = useState<EditPreviewView>(initialView)
     const [properties, setProperties] = useState(false)
     const [showTree, setShowTree] = useState(initialTree)
+    const [positions, setPositions] = useState(initialPositions)
     const [followed, setFollowed] = useState('Nothing followed yet')
     const sample = SAMPLES.find((one) => one.id === chosen) ?? SAMPLES[0]
     const text = texts[sample.id] ?? sample.text
     // Read once into its tree, as a server would; the preview draws the tree, and Show tree shows it.
     const tree = useMemo(() => parseMarkdown(text), [text])
+    // The tree as Show tree shows it: with each node's place in the text when Positions is on.
+    const shownTree = useMemo(() => (positions ? parseMarkdown(text, { positions: true }) : tree), [positions, text, tree])
 
     const links = useMemo<MarkdownLinks>(() => {
         const plain: MarkdownLinks = {
@@ -418,6 +428,12 @@ function MarkdownApp({
                                         <ListTree aria-hidden />
                                         Show tree
                                     </Toggle>
+                                    {showTree && (
+                                        <Toggle size="sm" pressed={positions} onPressedChange={setPositions}>
+                                            <MapPin aria-hidden />
+                                            Positions
+                                        </Toggle>
+                                    )}
                                     <Toggle size="sm" pressed={properties} onPressedChange={setProperties}>
                                         <Braces aria-hidden />
                                         Show properties
@@ -441,7 +457,7 @@ function MarkdownApp({
                             }
                             preview={
                                 showTree ? (
-                                    <JsonTree value={tree} open={3} />
+                                    <JsonTree value={shownTree} open={3} />
                                 ) : (
                                     <Markdown
                                         tree={tree}
@@ -476,3 +492,5 @@ export const Embeds: StoryObj = { render: () => <MarkdownApp start="embeds" view
 export const Code: StoryObj = { render: () => <MarkdownApp start="code" view="preview" /> }
 /** The properties page beside its tree: what `parseMarkdown` reads the text into, the frontmatter's properties first. */
 export const Parsed: StoryObj = { name: 'Tree', render: () => <MarkdownApp start="properties" tree /> }
+/** Linked notes beside their tree with positions: each link and tag holds where it was written. */
+export const Positions: StoryObj = { render: () => <MarkdownApp start="links" tree positions /> }
