@@ -29,7 +29,7 @@
         },
         "kind": {
             "values": ["blue", "green", "jade", "pink", "teal", "violet"],
-            "does": "One of the kind colors, laid over the variant: the color's wash at 12 percent, its edge at 30, its ink. kindOf(name) picks one steadily from a name, so the same value always wears the same color. The same paints as a Chip's kind hue (KIND_CHIP); Chip, with its tones, sizes, toggles and menu, is a part of its own in sokkel-ui, not yet in the contract, and a badge is not a chip."
+            "does": "One of the kind colors, laid over the variant: the color's wash at 12 percent, its edge at 30, its ink. kindOf(name) picks one steadily from a name, so the same value always wears the same color. The same paints as a chip's kind hue (KIND_CHIP, parts/chip); a badge is not a chip."
         },
         "children": {"type": "node", "does": "The words, with an icon before or after them."}
     },

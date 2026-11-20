@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "cb26531",
-            "note": "Drawn from the spec but for `numeric`, which has no effect yet (drift)."
+            "state": "built",
+            "as_of": "3ffb400",
+            "note": "Drawn from the spec, `numeric` through a tabular helper (IBM Plex Sans's figures are already one width)."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -86,12 +86,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of cb26531: `numeric` has no effect (no tabular figures). The rest matches."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",
