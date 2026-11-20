@@ -17,6 +17,26 @@ function nodes(node: MarkdownNode | MarkdownTree): MarkdownNode[] {
 
 const find = (tree: MarkdownTree, type: string) => nodes(tree).filter((node) => node.type === type)
 
+/**
+ * Fails when reading `n` repeats takes far more than eight times reading an eighth as many: in step
+ * with the length it is about eight, while a reading that backtracks takes sixty-four and more. The two
+ * are run in turn, five times each, and the fastest of each kept, so a busy machine slows both alike.
+ */
+function expectInStep(read: (n: number) => unknown, n: number): void {
+    let short = Number.POSITIVE_INFINITY
+    let long = Number.POSITIVE_INFINITY
+    for (let run = 0; run < 5; run += 1) {
+        let started = performance.now()
+        read(Math.round(n / 8))
+        short = Math.min(short, performance.now() - started)
+        started = performance.now()
+        read(n)
+        long = Math.min(long, performance.now() - started)
+    }
+    if (long < 200) return
+    expect(long / Math.max(short, 1)).toBeLessThan(24)
+}
+
 const NOTE = `---
 title: Nightly export
 owner: grace
@@ -315,9 +335,7 @@ describe('what a review found', () => {
     })
 
     it('reads a long line of unclosed highlights in linear time', () => {
-        const started = performance.now()
-        parseMarkdown('==a '.repeat(40_000), { math: false })
-        expect(performance.now() - started).toBeLessThan(1500)
+        expectInStep((n) => parseMarkdown('==a '.repeat(n), { math: false }), 40_000)
         expect(find(parseMarkdown('==a b==c=='), 'highlight')).toHaveLength(1)
     })
 
@@ -368,10 +386,8 @@ describe('what a second review found', () => {
     })
 
     it('reads many highlights opened across inline nodes in linear time', () => {
-        const started = performance.now()
-        parseMarkdown('==a *b* '.repeat(4_000), { math: false })
-        parseMarkdown('==a [[b]] '.repeat(3_200), { math: false })
-        expect(performance.now() - started).toBeLessThan(1500)
+        expectInStep((n) => parseMarkdown('==a *b* '.repeat(n), { math: false }), 4_000)
+        expectInStep((n) => parseMarkdown('==a [[b]] '.repeat(n), { math: false }), 3_200)
         expect(find(parseMarkdown('===a *b* c=='), 'highlight')).toHaveLength(1)
     })
 

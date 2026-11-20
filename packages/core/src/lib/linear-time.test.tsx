@@ -16,17 +16,33 @@ import { withoutCode } from './wiki-links'
 /** Long enough that a reading which backtracks over it takes seconds, not milliseconds. */
 const LONG = 100_000
 
-/** Runs `read` and fails when it takes longer than a reading in step with the text's length would. */
-function quick(read: () => unknown): void {
-    const started = performance.now()
-    read()
-    expect(performance.now() - started).toBeLessThan(500)
+/**
+ * Runs `read` over a text an eighth as long and as long as `LONG`, and fails when the longer takes far
+ * more than eight times the shorter: in step with the length it is about eight, while a reading that
+ * backtracks takes sixty-four and more. The two are run in turn, five times each, and the fastest of
+ * each kept, so a busy machine slows both alike: comparing them, not a fixed time, holds under load.
+ */
+function quick(read: (n: number) => unknown): void {
+    let short = Number.POSITIVE_INFINITY
+    let long = Number.POSITIVE_INFINITY
+    for (let run = 0; run < 5; run += 1) {
+        let started = performance.now()
+        read(LONG / 8)
+        short = Math.min(short, performance.now() - started)
+        started = performance.now()
+        read(LONG)
+        long = Math.min(long, performance.now() - started)
+    }
+    // Under a fifth of a second the growth is lost in the timer's and the collector's noise; a reading
+    // that backtracks takes seconds at this length.
+    if (long < 200) return
+    expect(long / Math.max(short, 1)).toBeLessThan(24)
 }
 
 describe('text an app or a person gives is read in time in step with its length', () => {
     it('reads numbers', () => {
-        quick(() => readNumber(`0${'0'.repeat(LONG)}x`))
-        quick(() => readScalar(`0${'0'.repeat(LONG)}x`, ['number']))
+        quick((n) => readNumber(`0${'0'.repeat(n)}x`))
+        quick((n) => readScalar(`0${'0'.repeat(n)}x`, ['number']))
         expect(readNumber('4.')).toBe(4)
         expect(readNumber('.5e2')).toBe(50)
         expect(readNumber('1.2.3')).toBeNull()
@@ -34,9 +50,9 @@ describe('text an app or a person gives is read in time in step with its length'
     })
 
     it('reads times and dates with times', () => {
-        quick(() => readTime('.'.repeat(LONG) + '1'))
-        quick(() => readDateTime(`! !${'!,!'.repeat(LONG / 3)}\n`))
-        quick(() => readDateTime(`${'1'.repeat(LONG)} ${' '.repeat(LONG)}x\n`))
+        quick((n) => readTime('.'.repeat(n) + '1'))
+        quick((n) => readDateTime(`! !${'!,!'.repeat(n / 3)}\n`))
+        quick((n) => readDateTime(`${'1'.repeat(n)} ${' '.repeat(n)}x\n`))
         expect(readTime('9:30 pm')).toBe('21:30')
         expect(readTime('930p.m.')).toBe('21:30')
         expect(readTime('9.')).toBeNull()
@@ -49,13 +65,13 @@ describe('text an app or a person gives is read in time in step with its length'
     })
 
     it('makes file names', () => {
-        quick(() => fileName(`a${'-'.repeat(LONG)}b`, 'csv'))
+        quick((n) => fileName(`a${'-'.repeat(n)}b`, 'csv'))
         expect(fileName('  Nightly export: runs!  ', '.csv')).toBe('nightly-export-runs.csv')
         expect(fileName('---', 'csv')).toBe('file.csv')
     })
 
     it('reads mentions', () => {
-        quick(() => mentionsIn(`@a${'-'.repeat(LONG)}b`, [{ id: 'u-ada', handle: 'ada' }]))
+        quick((n) => mentionsIn(`@a${'-'.repeat(n)}b`, [{ id: 'u-ada', handle: 'ada' }]))
         expect(
             mentionsIn('ask @ada-- and @grace._', [
                 { id: 'u-ada', handle: 'ada' },
@@ -65,8 +81,8 @@ describe('text an app or a person gives is read in time in step with its length'
     })
 
     it('blanks code spans', () => {
-        quick(() => withoutCode('`'.repeat(LONG) + 'a'))
-        quick(() => withoutCode('`a'.repeat(LONG / 2)))
+        quick((n) => withoutCode('`'.repeat(n) + 'a'))
+        quick((n) => withoutCode('`a'.repeat(n / 2)))
         expect(withoutCode('see `[[Note]]` and [[Plan]]')).toBe('see            and [[Plan]]')
         expect(withoutCode('``a`b` c')).toBe('`   b` c')
         expect(withoutCode('a ``x`` y ```')).toBe('a       y ```')
@@ -74,9 +90,9 @@ describe('text an app or a person gives is read in time in step with its length'
     })
 
     it('reads headings and their links', () => {
-        quick(() => markdownHeadings(`## a${' '.repeat(LONG)}x`))
-        quick(() => markdownHeadings(`## ${'[\\'.repeat(LONG / 2)}`))
-        quick(() => markdownHeadings(`## ${'[a]'.repeat(LONG / 3)}`))
+        quick((n) => markdownHeadings(`## a${' '.repeat(n)}x`))
+        quick((n) => markdownHeadings(`## ${'[\\'.repeat(n / 2)}`))
+        quick((n) => markdownHeadings(`## ${'[a]'.repeat(n / 3)}`))
         expect(
             markdownHeadings('## Runs ##\n### [Plan](plan.md) and [more]\n## #\n####### Too deep\n#nospace', [2, 3]).map(
                 (heading) => heading.label,
@@ -87,8 +103,8 @@ describe('text an app or a person gives is read in time in step with its length'
     })
 
     it('widens tracks', () => {
-        quick(() => widenTrack(`minmax(${' '.repeat(LONG)}`, '1rem'))
-        quick(() => widenTrack(`${'0'.repeat(LONG)}x`, '1rem'))
+        quick((n) => widenTrack(`minmax(${' '.repeat(n)}`, '1rem'))
+        quick((n) => widenTrack(`${'0'.repeat(n)}x`, '1rem'))
         expect(widenTrack('minmax(12rem , 1fr)', '1rem')).toBe('minmax(calc(12rem + 1rem), 1fr)')
         expect(widenTrack('8rem', '1rem')).toBe('calc(8rem + 1rem)')
         expect(widenTrack('.5ch', '1rem')).toBe('calc(.5ch + 1rem)')
@@ -98,8 +114,8 @@ describe('text an app or a person gives is read in time in step with its length'
     })
 
     it('reads addresses', () => {
-        quick(() => isAddress(`!@!.${'!.'.repeat(LONG / 2)}@`))
-        quick(() => parseAddresses(`a${' '.repeat(LONG)}`))
+        quick((n) => isAddress(`!@!.${'!.'.repeat(n / 2)}@`))
+        quick((n) => parseAddresses(`a${' '.repeat(n)}`))
         expect(isAddress('ada@example.org')).toBe(true)
         expect(isAddress('ada@.org')).toBe(false)
         expect(isAddress('ada@example.')).toBe(false)
@@ -112,14 +128,14 @@ describe('text an app or a person gives is read in time in step with its length'
     })
 
     it('joins a base and a path', () => {
-        quick(() => requestAddress(`https://api.example.org${'/'.repeat(LONG)}x`, { method: 'GET', path: '/jobs', params: [] }))
+        quick((n) => requestAddress(`https://api.example.org${'/'.repeat(n)}x`, { method: 'GET', path: '/jobs', params: [] }))
         expect(requestAddress('https://api.example.org///', { method: 'GET', path: '/jobs', params: [] })).toBe(
             'https://api.example.org/jobs',
         )
     })
 
     it('holds the external mark to the last word', () => {
-        quick(() => renderToStaticMarkup(<TextLink href="https://example.org" external>{`${'!'.repeat(LONG)} x`}</TextLink>))
+        quick((n) => renderToStaticMarkup(<TextLink href="https://example.org" external>{`${'!'.repeat(n)} x`}</TextLink>))
         const html = renderToStaticMarkup(
             <TextLink href="https://example.org" external>
                 {'nightly export runs  '}
