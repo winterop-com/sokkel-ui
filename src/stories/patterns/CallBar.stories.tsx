@@ -43,8 +43,8 @@ export const Off: StoryObj = {
 /** The microphone's chevron pressed: its microphones and speakers, the ones in use checked. */
 export const Devices: StoryObj = { name: 'Device menu', render: () => <Live open="microphone" room="pt-72" /> }
 
-/** The reactions toggle pressed: the reaction bar stands over the call bar, and a reaction given is said under it. */
-export const Reactions: StoryObj = { render: () => <Live open="reactions" room="pt-24" /> }
+/** The reactions toggle pressed: the reaction bar opens in the bar's own surface, above its controls, and a reaction given is said under it. */
+export const Reactions: StoryObj = { render: () => <Live open="reactions" /> }
 
 /** More pressed: the app's own rows, captions and the grid, each checked while on. */
 export const More: StoryObj = { name: 'More menu', render: () => <Live open="more" start={{ captions: true }} room="pt-80" /> }

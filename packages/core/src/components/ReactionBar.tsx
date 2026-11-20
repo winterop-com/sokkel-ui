@@ -4,7 +4,13 @@ import { useState, type KeyboardEvent, type ReactElement, type ReactNode } from 
 import { cn } from '../lib/cn'
 import { POPUP } from '../lib/popup'
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
-import { EmojiPickerPopover, loadEmojiData, type EmojiPickerProps, type EmojiPickerWords } from './EmojiPicker'
+import {
+    EmojiPickerPopover,
+    loadEmojiData,
+    type EmojiPickerPopoverProps,
+    type EmojiPickerProps,
+    type EmojiPickerWords,
+} from './EmojiPicker'
 import { Popover, PopoverContent, PopoverTrigger, type PopoverContentProps } from './ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { writeCount } from '../lib/numbers'
@@ -96,6 +102,8 @@ export interface ReactionBarProps {
     onMoreOpenChange?: (open: boolean) => void
     /** The full list's options: its recent emoji, skin tone and where it keeps them. */
     picker?: ReactionPickerOptions
+    /** The full list's popover: how far it stands from the bar and its corners, for a bar inside a surface of its own. */
+    pickerPopup?: Pick<EmojiPickerPopoverProps, 'sideOffset' | 'className'>
     /** `sm` for a bar in a message's hover bar or a tight toolbar. */
     size?: 'sm' | 'md'
     /** Draws the bar on a popup's ground, edge and shadow, to float over a video or a message; off inside a popover or a toolbar of its own. */
@@ -121,6 +129,7 @@ export function ReactionBar({
     defaultMoreOpen,
     onMoreOpenChange,
     picker,
+    pickerPopup,
     size = 'md',
     framed = true,
     className,
@@ -176,6 +185,7 @@ export function ReactionBar({
                     onOpenChange={onMoreOpenChange}
                     side="top"
                     align="end"
+                    {...pickerPopup}
                     words={words.picker}
                     onPick={onReact}
                     trigger={

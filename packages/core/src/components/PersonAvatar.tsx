@@ -16,6 +16,7 @@ const SIZE = {
     md: { box: 'size-8 text-sm', letters: 2, dot: 'size-2.5 -right-0.5 -bottom-0.5 border-2' },
     lg: { box: 'size-9 text-sm', letters: 2, dot: 'size-2.5 -right-0.5 -bottom-0.5 border-2' },
     xl: { box: 'size-16 text-page', letters: 2, dot: 'size-3.5 -right-1 -bottom-1 border-3' },
+    '2xl': { box: 'size-24 text-detail-title', letters: 2, dot: 'size-4 -right-1 -bottom-1 border-3' },
 } as const
 
 /** A filled dot while active; while away or offline a ring, its middle the ground it sits on. */
@@ -120,7 +121,7 @@ export function PersonAvatar({
     ]
         .slice(0, fit.letters)
         .join('')
-    const corner = shape === 'round' ? 'rounded-full' : size === 'xl' ? 'rounded-xl' : 'rounded-md'
+    const corner = shape === 'round' ? 'rounded-full' : size === 'xl' || size === '2xl' ? 'rounded-xl' : 'rounded-md'
     const badge = cn(
         'inline-flex shrink-0 items-center justify-center overflow-hidden font-medium select-none',
         fit.box,
