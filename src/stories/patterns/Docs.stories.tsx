@@ -4,10 +4,11 @@ import { useRef, useState } from 'react'
 
 import { HARBOR_DUSK } from '../fixtures/photos'
 
+import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
-import { parseMarkdown } from '@winterop-com/sokkel-ui/lib/markdown-tree'
+import { parseMarkdown, type MarkdownNode } from '@winterop-com/sokkel-ui/lib/markdown-tree'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { Markdown, markdownHeadings, markdownSection } from '@winterop-com/sokkel-ui/Markdown'
@@ -283,6 +284,22 @@ function TitledCallouts() {
     )
 }
 
+/** Highlights as notes write them: within words, through other marks and links, and where they are not. */
+const HIGHLIGHTS = `The export ==never writes back== to the api.
+
+A highlight runs through other marks: ==the **validate** step== and ==[[nightly-export]] at 02:00==.
+
+Where it is not one: \`==in code==\`, a sum written as a == b, and \\=\\=escaped\\=\\= signs.`
+
+/** Each kind of highlight, and the equals signs that stay as written. */
+function Highlights() {
+    return (
+        <div className="max-w-2xl p-6">
+            <Markdown content={HIGHLIGHTS} links={{ onOpen: () => undefined }} />
+        </div>
+    )
+}
+
 const PROPERTIES = `---
 owner: grace
 project: harbor
@@ -367,6 +384,66 @@ function FromTree() {
             <Stack gap="sm" className="min-w-0 flex-1 basis-80">
                 <GroupLabel as="h2">Tree</GroupLabel>
                 <JsonTree value={SERVED} open={3} />
+            </Stack>
+        </Row>
+    )
+}
+
+/** A note whose links, embeds, tags and highlights are each found again in its text. */
+const PLACED = `---
+owner: grace
+---
+# Nightly export
+
+Runs at 02:00 UTC, owned by [[grace|the data team]]. #harbor #on-call
+
+> [!warning] Before a ==rerun==
+> Read ![[Retry a run#Steps]] and move \`rejected/\` aside.
+
+An ==escaped \\[step\\] &amp; [[validate]]== stays whole.`
+
+interface Placed {
+    key: string
+    type: string
+    at: string
+    written: string
+}
+
+/** The nodes a note adds, each with where it starts and the text it was read from. */
+function placedNodes(text: string): Placed[] {
+    const out: Placed[] = []
+    const visit = (node: MarkdownNode) => {
+        const place = node.position as { start: { line: number; column: number; offset: number }; end: { offset: number } } | undefined
+        if (['wikiLink', 'embed', 'tag', 'highlight'].includes(node.type) && place !== undefined) {
+            out.push({
+                key: String(place.start.offset),
+                type: node.type,
+                at: `${place.start.line}:${place.start.column}`,
+                written: text.slice(place.start.offset, place.end.offset),
+            })
+        }
+        for (const child of node.children ?? []) visit(child)
+    }
+    for (const child of parseMarkdown(text, { positions: true }).children) visit(child)
+    return out
+}
+
+const PLACED_COLUMNS: DataColumn<Placed>[] = [
+    { id: 'type', header: 'Node', width: '8rem', cell: (row) => row.type },
+    { id: 'at', header: 'Line:column', width: '7rem', cell: (row) => row.at },
+    { id: 'written', header: 'Written', width: 'minmax(14rem,1fr)', cell: (row) => <span className="font-mono">{row.written}</span> },
+]
+
+function Positions() {
+    return (
+        <Row gap="3xl" align="start" wrap className="p-6">
+            <Stack gap="sm" className="min-w-0 flex-1 basis-80">
+                <GroupLabel as="h2">Note</GroupLabel>
+                <Markdown content={PLACED} links={{ onOpen: () => undefined, onTag: () => undefined }} />
+            </Stack>
+            <Stack gap="sm" className="min-w-0 flex-1 basis-96">
+                <GroupLabel as="h2">Where each was written</GroupLabel>
+                <DataTable variant="list" columns={PLACED_COLUMNS} rows={placedNodes(PLACED)} rowKey={(row) => row.key} />
             </Stack>
         </Row>
     )
@@ -569,6 +646,11 @@ export const Callout: StoryObj = { name: 'Callouts', render: () => <Callouts /> 
  */
 export const Titled: StoryObj = { name: 'Titled callouts', render: () => <TitledCallouts /> }
 /**
+ * `==words==` highlighted: within a text, through bold words and links, and never in code, in a
+ * sum written as `a == b`, or where the signs are escaped as `\=\=`.
+ */
+export const Highlighted: StoryObj = { name: 'Highlights', render: () => <Highlights /> }
+/**
  * `PlainMarkdown`: everything `Markdown` draws save math and diagrams, so a formula stays as written
  * and a mermaid fence shows as code, and an app that renders only this carries neither KaTeX nor
  * Mermaid in its build.
@@ -618,6 +700,12 @@ export const Frontmatter: StoryObj = { name: 'Properties', render: () => <Proper
  * own, and `Markdown`'s `tree` draws it as it would the text.
  */
 export const Tree: StoryObj = { name: 'From a tree', render: () => <FromTree /> }
+/**
+ * `parseMarkdown(text, { positions: true })` places the nodes a note adds: each link, embed, tag and
+ * highlight spans what was written for it, escapes and character references included, so an editor
+ * can find it again in the text.
+ */
+export const Placed_: StoryObj = { name: 'Positions', render: () => <Positions /> }
 
 /**
  * The lines that link to a note, each drawn as Markdown in the row that opens its note: strong
