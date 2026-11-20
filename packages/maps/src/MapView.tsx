@@ -13,7 +13,6 @@ import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
 import { Spinner } from '@winterop-com/sokkel-ui/primitives/spinner'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import {
     BASEMAPS,
     BLANK_BASEMAP,
@@ -36,6 +35,7 @@ import {
     type SchemeBasemaps,
 } from './basemap'
 import { BasemapSwitcher } from './BasemapSwitcher'
+import { ControlButton } from './control'
 import { resolveColors } from './color'
 import { ID_PROPERTY, MapContext, useMapContext, type MapContextValue, type MapCorner, type MapLayerEntry } from './context'
 import { unionBounds, type Bounds, type LngLat } from './geometry'
@@ -180,6 +180,12 @@ export interface MapViewProps {
     controls?: boolean | MapControls
     /** Whether the map pans, zooms and answers clicks. */
     interactive?: boolean
+    /**
+     * Whether the reader may turn the map from north, by dragging with the right button or with
+     * Control, by two fingers or by the keyboard; a `MapCompass` shows the bearing and turns it back.
+     * Read once, when the map is made.
+     */
+    rotate?: boolean
     /** Draws the map in its own bordered, rounded frame; off for a map filling a panel that frames it already. */
     framed?: boolean
     /**
@@ -363,40 +369,6 @@ function fitCamera(map: MapLibreMap, bounds: Bounds, boxes: ReturnType<typeof co
     return best
 }
 
-/** One of the map's own buttons, in the library's look, with its name as a tooltip. */
-function ControlButton({
-    label,
-    container,
-    onClick,
-    children,
-}: {
-    label: string
-    container: HTMLElement | null
-    onClick: () => void
-    children: ReactNode
-}) {
-    return (
-        <Tooltip>
-            <TooltipTrigger
-                render={
-                    <Button
-                        variant="outline"
-                        size="icon-sm"
-                        aria-label={label}
-                        className="bg-card text-foreground shadow-surface hover:bg-hover dark:bg-card"
-                        onClick={onClick}
-                    />
-                }
-            >
-                {children}
-            </TooltipTrigger>
-            <TooltipContent side="left" container={container}>
-                {label}
-            </TooltipContent>
-        </Tooltip>
-    )
-}
-
 /**
  * A maplibre map over a basemap, with its layers and overlays as children.
  *
@@ -438,6 +410,7 @@ export function MapView({
     onMapClick,
     controls = true,
     interactive = true,
+    rotate = false,
     framed = true,
     notes = [],
     words,
@@ -501,6 +474,14 @@ export function MapView({
     )
     const selectNow = useRef(select)
     const clickNow = useRef(onMapClick)
+    // A tool's handler that takes every click in place of the selection, such as a ruler's.
+    const clickTaker = useRef<((at: LngLat) => void) | null>(null)
+    const takeClicks = useCallback((handler: ((at: LngLat) => void) | null) => {
+        clickTaker.current = handler
+    }, [])
+    const holdCamera = useCallback(() => {
+        moved.current = true
+    }, [])
     useEffect(() => {
         selectNow.current = select
         clickNow.current = onMapClick
@@ -637,14 +618,16 @@ export function MapView({
             center: camera?.center ?? [0, 0],
             zoom: camera?.zoom ?? 1,
             attributionControl: false,
-            dragRotate: false,
+            dragRotate: rotate,
             pitchWithRotate: false,
             touchPitch: false,
             interactive,
             fadeDuration: 0,
         })
-        instance.touchZoomRotate.disableRotation()
-        instance.keyboard.disableRotation()
+        if (!rotate) {
+            instance.touchZoomRotate.disableRotation()
+            instance.keyboard.disableRotation()
+        }
         // An icon a basemap style names but its sprite lacks is drawn as nothing.
         instance.setMissingStyleImageResolver((id) => {
             if (!instance.hasImage(id)) instance.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) })
@@ -679,6 +662,10 @@ export function MapView({
         }
         instance.on('click', (event) => {
             clickNow.current?.([event.lngLat.lng, event.lngLat.lat])
+            if (clickTaker.current !== null) {
+                clickTaker.current([event.lngLat.lng, event.lngLat.lat])
+                return
+            }
             const hit = hitAt(event.point)
             if (hit === null) {
                 selectNow.current(null)
@@ -692,6 +679,11 @@ export function MapView({
             if (typeof id === 'string') selectNow.current(id)
         })
         instance.on('mousemove', (event) => {
+            if (clickTaker.current !== null) {
+                hover(null)
+                instance.getCanvas().style.cursor = 'crosshair'
+                return
+            }
             const hit = hitAt(event.point)
             const id: unknown = hit?.feature.properties[ID_PROPERTY]
             hover(hit !== null && typeof id === 'string' ? { source: hit.entry.source, id } : null)
@@ -856,8 +848,8 @@ export function MapView({
         () =>
             map === null || scope === null || overlay === null || corners === null
                 ? null
-                : { map, scope, overlay, corners, dark, reading, selected: current, select, register },
-        [map, scope, overlay, corners, dark, reading, current, select, register],
+                : { map, scope, overlay, corners, dark, reading, selected: current, select, register, holdCamera, takeClicks },
+        [map, scope, overlay, corners, dark, reading, current, select, register, holdCamera, takeClicks],
     )
 
     const offered = basemaps.length > 1

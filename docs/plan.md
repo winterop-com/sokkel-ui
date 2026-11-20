@@ -14,7 +14,8 @@ the core, the engine add-ons (and media), and the domain add-ons.
 - `@winterop-com/sokkel-ui-charts` (`packages/charts`): `Chart`, its kinds, the frame, legend and
   grid around it, and the dashboard panels drawn by ECharts, which it brings as a dependency.
 - `@winterop-com/sokkel-ui-maps` (`packages/maps`): `MapView` and its layers, legends, popups,
-  basemaps and period slider, on maplibre.
+  basemaps and period slider, its tracks and the tools around them (ruler, coordinates, go to,
+  follow, compass), on maplibre.
 - `@winterop-com/sokkel-ui-graph` (`packages/graph`): the graph canvas, views and editor, on React
   Flow, laid out by elk, and a network kept live by d3-force.
 - `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
@@ -1267,6 +1268,27 @@ no tile server. A map's `fallbackBasemap` is drawn while the chosen basemap cann
 or its style or every tile fails), so with `WORLD_BASEMAP` a map still shows the world without the
 network. The `export` control, or `handle` for an app's own menu, saves the map as drawn as a PNG
 with the basemap's credits in its corner, as a chart frame exports.
+
+## Tracks on a map
+
+A map that watches moving things (vessels, aircraft, vehicles, sensors) draws them with `TrackLayer`:
+one symbol per kind, drawn in code as a signed distance field so one image takes any color, turned
+to the track's heading and painted in its affiliation's token (`--track-friend`, `--track-hostile`,
+`--track-neutral`, `--track-unknown`, `--track-pending`), which a theme may change. A trail is cut
+into one piece per step, each fading further into the past; a label is written beside its track in
+the map's overlay, since a basemap without fonts writes no text, and a label that would cover another
+or another track is left out, the selected track's never. New positions glide in: the layer sets its
+sources' data frame by frame from where each track was to where it is, so a feed that updates every
+second moves smoothly and the selection, kept as feature state, stays on. `cluster` uses maplibre's
+own clustering. Selection is the map's, as every layer's is.
+
+The tools around such a map are parts in its corners, each taking only what it needs from the map's
+context: `MapRuler` (it takes the map's clicks while on, through `takeClicks`), `MapCoordinates` with
+its scale bar, `MapGoTo`, `MapFollow` (it holds the camera through `holdCamera`, so the map stops
+fitting its layers) and `MapCompass` for a map made with `rotate`. Their arithmetic is in `geodesy`,
+on a sphere of the earth's mean radius, which is within half a percent of the ellipsoid at the
+distances a console measures. What a tracking domain adds beyond drawing (symbol sets, grid
+references, feed formats) belongs in a domain add-on, never here.
 
 ## Graphs
 

@@ -7,7 +7,7 @@ import type {
     Map as MapLibreMap,
     MapGeoJSONFeature,
 } from 'maplibre-gl'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { labelAnchor } from './basemap'
 import { resolveColors } from './color'
@@ -100,6 +100,13 @@ interface LayerOptions<C extends string> {
     layers: (source: string, colors: Record<C, string>) => LayerSpecification[]
     /** Images the style layers use, drawn with the resolved colors. */
     images?: (colors: Record<C, string>) => Record<string, ImageData>
+    /** Whether the images are signed distance fields, which a layer colors with `icon-color`. */
+    sdf?: boolean
+    /**
+     * Whether the layer sets new data on its source itself, such as while it eases features from
+     * where they were to where they are; the source is filled from `data` only when it is added.
+     */
+    holdData?: boolean
     interactive: boolean
     visible: boolean
     /** The ids drawn at the middle emphasis, such as the features under the selected one. */
@@ -136,7 +143,7 @@ export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { s
         const { data, layers, images } = latest.current
         for (const [name, image] of Object.entries(images?.(latestColors.current) ?? {})) {
             if (map.hasImage(name)) map.updateImage(name, image)
-            else map.addImage(name, image, { pixelRatio: 2 })
+            else map.addImage(name, image, { pixelRatio: 2, sdf: latest.current.sdf === true })
         }
         map.addSource(source, { type: 'geojson', data: data.collection, promoteId: ID_PROPERTY, ...latest.current.source })
         added.current = data.collection
@@ -144,7 +151,7 @@ export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { s
         const below = labelAnchor(map)
         const restore = () => {
             for (const [name, image] of Object.entries(latest.current.images?.(latestColors.current) ?? {})) {
-                if (!map.hasImage(name)) map.addImage(name, image, { pixelRatio: 2 })
+                if (!map.hasImage(name)) map.addImage(name, image, { pixelRatio: 2, sdf: latest.current.sdf === true })
             }
         }
         map.on('styledata', restore)
@@ -158,11 +165,12 @@ export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { s
         }
     }, [map, source])
 
+    const { holdData } = options
     useEffect(() => {
-        if (added.current === options.data.collection) return
+        if (holdData === true || added.current === options.data.collection) return
         ;(map.getSource(source) as GeoJSONSource | undefined)?.setData(options.data.collection)
         added.current = options.data.collection
-    }, [map, source, options.data.collection])
+    }, [map, source, options.data.collection, holdData])
 
     const paintKey = JSON.stringify(options.layers(source, resolved).map((spec) => ('paint' in spec ? spec.paint : null)))
     useEffect(() => {
@@ -237,4 +245,61 @@ export function hatchImage(ground: string, line: string): ImageData {
     }
     context.stroke()
     return context.getImageData(0, 0, size, size)
+}
+
+/** A point a layer draws, where it stands on the map's canvas, with what is written beside it. */
+export interface RenderedPoint {
+    key: string
+    x: number
+    y: number
+    text: string
+}
+
+/**
+ * The points a style layer draws as the map now shows them, each read into a key and its text (or
+ * left out by `read` giving null), measured again after every frame the map draws and sorted by
+ * key, so a layer can write beside its points in the overlay: a cluster's count, a track's name.
+ */
+export function useRenderedPoints(
+    map: MapLibreMap,
+    layer: string,
+    enabled: boolean,
+    read: (properties: Record<string, unknown>) => { key: string; text: string } | null,
+): RenderedPoint[] {
+    const [points, setPoints] = useState<RenderedPoint[]>([])
+    const readNow = useRef(read)
+    useEffect(() => {
+        readNow.current = read
+    })
+    useEffect(() => {
+        if (!enabled) {
+            setPoints((previous) => (previous.length === 0 ? previous : []))
+            return
+        }
+        let frame = 0
+        const measure = () => {
+            cancelAnimationFrame(frame)
+            frame = requestAnimationFrame(() => {
+                if (map.getLayer(layer) === undefined) return
+                const seen = new Map<string, RenderedPoint>()
+                for (const feature of map.queryRenderedFeatures({ layers: [layer] })) {
+                    if (feature.geometry.type !== 'Point') continue
+                    const found = readNow.current(feature.properties)
+                    if (found === null || seen.has(found.key)) continue
+                    const [lng, lat] = feature.geometry.coordinates
+                    const point = map.project([lng, lat])
+                    seen.set(found.key, { ...found, x: Math.round(point.x), y: Math.round(point.y) })
+                }
+                const next = [...seen.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+                setPoints((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next))
+            })
+        }
+        measure()
+        map.on('render', measure)
+        return () => {
+            cancelAnimationFrame(frame)
+            map.off('render', measure)
+        }
+    }, [map, layer, enabled])
+    return points
 }
