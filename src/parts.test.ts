@@ -138,10 +138,20 @@ import { YES_NO_FIELD_WORDS, YesNoField, type YesNoFieldProps } from '@winterop-
 import { Tree, type TreeNode, type TreeProps } from '@winterop-com/sokkel-ui/Tree'
 import { TREE_SELECT_WORDS, TreeSelect, type TreeSelectProps } from '@winterop-com/sokkel-ui/TreeSelect'
 import type { FeatureCollection } from 'geojson'
-import { CoverageLayer } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
+import { CoverageLayer, SWEEP, SWEEP_EDGE } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
 import { distance as geoDistance, UNIT_SYMBOLS } from '@winterop-com/sokkel-ui-maps/geodesy'
-import { LINK_WORDS, LinkLayer, linkLine, type LinkLayerProps, type MapLink } from '@winterop-com/sokkel-ui-maps/LinkLayer'
-import { ZoneLayer, type Zone, type ZoneLayerProps } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
+import {
+    ARC_HEIGHT,
+    ARC_STEPS,
+    FLOW_LINE,
+    FLOW_WIDTH,
+    LINK_WORDS,
+    LinkLayer,
+    linkLine,
+    type LinkLayerProps,
+    type MapLink,
+} from '@winterop-com/sokkel-ui-maps/LinkLayer'
+import { ZONE_GLOW, ZoneLayer, type Zone, type ZoneLayerProps } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
 import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
 import { MAP_COMPASS_WORDS, MapCompass } from '@winterop-com/sokkel-ui-maps/MapCompass'
 import { MAP_COORDINATES_WORDS, MapCoordinates, scaleBar } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
@@ -10291,6 +10301,8 @@ const ZONE_LAYER_ADAPTER: Adapter = {
             ...layoutChecks('zone-layer', {
                 edgeWidth: () => widths[0],
                 hatchSpacing: () => (tile?.width === undefined ? undefined : String(tile.width / Number(tile.pixelRatio ?? 1))),
+                glowWidth: () => String(ZONE_GLOW.width),
+                glowBlur: () => String(ZONE_GLOW.blur),
                 haloWidth: () => {
                     const rest = painted(halo, 'line-width', zone)
                     return rest === 0 ? String(painted(halo, 'line-width', zone, { selected: true })) : `${String(rest)} at rest`
@@ -10386,6 +10398,10 @@ const COVERAGE_LAYER_ADAPTER: Adapter = {
                     const [edgeWidth, ringWidth] = [edge?.paint?.['line-width'], ring?.paint?.['line-width']]
                     return edgeWidth === ringWidth ? String(edgeWidth) : `edge ${String(edgeWidth)}, ring ${String(ringWidth)}`
                 },
+                // The sweep is drawn by a shader: its turn, trail and edge are the values it is given.
+                sweepPeriod: () => String(SWEEP.period),
+                sweepTrail: () => String(SWEEP.trail),
+                sweepEdge: () => String(SWEEP_EDGE),
             }),
         ]
     },
@@ -10421,6 +10437,7 @@ const LINK_LAYER_ADAPTER: Adapter = {
     size: () => pieceWhere(linkChips(LINK_DRAWINGS().plain.elements)[0]),
     paint: (_, name) => {
         if (name === 'line') return skip('maplibre paints the line on its canvas: read from its style layers in more')
+        if (name === 'flow') return skip("a WebGL shader draws the flow in its link's tone, which happy-dom cannot run")
         return pieceWhere(linkChips(LINK_DRAWINGS().plain.elements)[0])
     },
     effect: () => skip('a link layer states no effects'),
@@ -10470,6 +10487,11 @@ const LINK_LAYER_ADAPTER: Adapter = {
                 chipLift: () => (lift === undefined ? undefined : String(Number(lift) * 16)),
                 casing: () => String(Number(painted(casing, 'line-width', link)) - width({})),
                 greatCircleStep: () => (farthest === 65 ? String(longest) : `${String(longest)}, ${String(farthest - 1)} steps at most`),
+                // The arcs and the flow are drawn by a shader: these are the values it is given.
+                arcHeight: () => String(ARC_HEIGHT),
+                arcSteps: () => String(ARC_STEPS),
+                flowWidth: () => String(FLOW_WIDTH),
+                flowLine: () => String(FLOW_LINE),
             }),
         ]
     },

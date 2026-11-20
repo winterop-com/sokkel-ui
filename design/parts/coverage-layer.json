@@ -4,11 +4,11 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
+        "sokkel-ui": {"state": "built", "as_of": "0e3eea8"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
-    "summary": "What sensors cover, under the tracks: each cone a wedge from where its sensor stands, turned to its bearing and opened to its width (360 a whole disc), in its tone, fading out with distance to its range, inside a faint edge; and range rings, dashed circles at given distances round a position, each written with its distance. It answers no pointer.",
+    "summary": "What sensors cover, under the tracks: each cone a wedge from where its sensor stands, turned to its bearing and opened to its width (360 a whole disc), in its tone, fading out with distance to its range, inside a faint edge; and range rings, dashed circles at given distances round a position, each written with its distance. It answers no pointer. With sweep, a radar's beam turns round each cone: a bright leading edge with a phosphor glow fading behind it, once each period.",
     "sources": {
         "sokkel-ui": [
             "packages/maps/src/CoverageLayer.tsx",
@@ -20,7 +20,8 @@
         "cone": "Cut into bands (6) from the sensor out, each a wedge between two distances along the great circle, the nearest reaching the sensor; each band in the tone at 0.28 of full times its nearness raised to 1.6, nearness 1 for the nearest band and the share of the range the last begins at for the last, so the far end all but vanishes.",
         "edge": "Round the wedge from the sensor and back, or round the disc: 1 wide in the tone at 0.55 of full.",
         "ring": "A circle at each distance, 1 wide in the tone at 0.7 of full, dashed 2 on 2.",
-        "distance": "Each ring's distance, written where its label bearing (north unless given) meets it, centered: text.2xs in muted-foreground in tabular figures on card at 80 percent, padded 4 across, rounded by radius-mini; in the unit with no more figures than it has (20 km, 2.5 NM), whole meters under a kilometer."
+        "distance": "Each ring's distance, written where its label bearing (north unless given) meets it, centered: text.2xs in muted-foreground in tabular figures on card at 80 percent, padded 4 across, rounded by radius-mini; in the unit with no more figures than it has (20 km, 2.5 NM), whole meters under a kilometer.",
+        "sweep": "With sweep, over the cones: a beam standing on a line from the sensor to its range, turning clockwise once each period (4000 ms), round a disc from north, or across a sector from one edge to the other and on until its trail has left (the turn is the width and the trail), each cone starting at its own point of the turn, drawn from its id. A point is lit by how far it trails the beam: the leading edge, within 1.2 degrees, in the tone at 0.7 of full (mixed halfway toward white in the dark scheme), and a glow over the trail (90 degrees) at 0.6 of full times its nearness to the beam raised to 1.6; both dimmed toward the range, to 0.55 at the range. It holds still where motion is reduced (the look's motion setting, else the system's), and stops while the map is out of sight: the document hidden, or the map's element off the screen. Held still, the beam stands three tenths of the way round its turn."
     },
     "standsOn": {"default": "card"},
     "options": {
@@ -42,15 +43,33 @@
         "labels": {"type": "boolean", "default": true, "does": "Writes each ring's distance on it."},
         "colors": {"type": "rows", "does": "Colors for the tones in place of their tokens."},
         "opacity": {"type": "number", "default": 1, "does": "How opaque the whole layer is."},
-        "visible": {"type": "boolean", "default": true, "does": "Draws the layer."}
+        "visible": {"type": "boolean", "default": true, "does": "Draws the layer."},
+        "sweep": {
+            "type": "boolean",
+            "default": false,
+            "does": "A radar's beam turning round each cone: true, or { period?, trail? }, the period in milliseconds (4000) and the trail in degrees (90). Off unless given."
+        }
     },
     "sizes": {"distance": {"padX": 4, "text": "text.2xs", "radius": "radius-mini", "note": "Centered on the ring."}},
     "layout": {
         "coneFill": {"value": 0.28, "note": "The nearest band's share of the tone."},
         "coneFade": {"value": 1.6, "note": "The power each band's nearness is raised to."},
-        "edgeWidth": {"value": 1, "note": "The cone's edge and each ring."}
+        "edgeWidth": {"value": 1, "note": "The cone's edge and each ring."},
+        "sweepPeriod": {"value": 4000, "note": "How long a turn of the beam takes, in milliseconds, unless given."},
+        "sweepTrail": {"value": 90, "note": "How far behind the beam its glow reaches, in degrees, unless given."},
+        "sweepEdge": {"value": 1.2, "note": "How wide the beam's bright leading edge is, in degrees."}
     },
-    "states": {"rest": {"means": "The cones and rings drawn."}},
+    "states": {
+        "rest": {"means": "The cones and rings drawn."},
+        "sweeping": {
+            "means": "The beam turning round each cone.",
+            "reached": "sweep given, motion not reduced and the map in sight"
+        },
+        "still": {
+            "means": "The beam held three tenths of the way round its turn.",
+            "reached": "sweep given and motion reduced"
+        }
+    },
     "pieces": {
         "cone": {
             "rest": {
@@ -62,6 +81,12 @@
         "ring": {"rest": {"edge": "muted-foreground/70", "note": "In the tone token; plain unless given."}},
         "distance": {
             "rest": {"ground": "card/80", "ink": "muted-foreground", "text": "text.2xs", "radius": "radius-mini"}
+        },
+        "sweep": {
+            "rest": {
+                "ground": "muted-foreground/60",
+                "note": "The glow just behind the beam, in the cone's tone token; its leading edge at 70, toward white in the dark scheme."
+            }
         }
     },
     "keyboard": [],
@@ -69,7 +94,8 @@
     "rendererSpecific": {
         "sokkel-ui": [
             "Drawn on maplibre: the bands, edges and rings as one GeoJSON source with a fill and two line layers; a band round a hole winds the other way, so maplibre reads it as a hole.",
-            "The distances are written in the map's overlay, projected again after every move, and only those in view."
+            "The distances are written in the map's overlay, projected again after every move, and only those in view.",
+            "The sweep is a maplibre custom layer: one mesh of every cone, a fan in steps of 2 degrees cut into 6 rings from the sensor out, uploaded once, drawn in one call by a small WebGL2 shader projected by maplibre's own projectTile (flat map and globe). A frame sets only uniforms: where the turn stands, the trail, the opacity, the scheme and the six tone colors. The map is repainted each animation frame only while the beam turns. Positions are stored as 32-bit offsets from the mesh's own origin, which the projection's matrices take in, worked in 64 bits, so a 50 m link keeps its ends apart at any zoom; longitudes run on past 180 rather than jump back, so a cone or arc across the antimeridian stays whole. The layer deletes what it held on the GPU before it is added again, as a style rebuilt in full re-adds it without removing it."
         ]
     },
     "drift": [

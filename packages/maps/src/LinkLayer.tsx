@@ -123,7 +123,7 @@ export function linkLine(from: LngLat, to: LngLat, path: LinkPath = 'great-circl
 export const ARC_HEIGHT = 0.2
 
 /** The fewest steps an arc is drawn in, so it curves smoothly however short the link. */
-const ARC_STEPS = 32
+export const ARC_STEPS = 32
 
 const radians = (value: number) => (value * Math.PI) / 180
 const degrees = (value: number) => (value * 180) / Math.PI
@@ -335,6 +335,9 @@ void main() {
 }
 
 /** How much of the layer's opacity a line keeps under a flow, unless it is under the pointer or selected. */
+/** How much wider than its line a link's flow strip is, in pixels. */
+export const FLOW_WIDTH = 3
+
 export const FLOW_LINE = 0.3
 
 /** The moment the flow holds at where motion is reduced, in seconds. */
@@ -475,7 +478,7 @@ export function LinkLayer({
         const now = performance.now()
         started.current ??= now
         gl.uniform1f(at('u_time'), still ? STILL_TIME : (now - started.current) / 1000)
-        gl.uniform1f(at('u_width'), (width + 3) * map.getPixelRatio())
+        gl.uniform1f(at('u_width'), (width + FLOW_WIDTH) * map.getPixelRatio())
         gl.uniform1f(at('u_opacity'), opacity)
         gl.uniform1f(at('u_dark'), dark ? 1 : 0)
         if (triples !== null) gl.uniform3fv(at('u_colors'), triples)

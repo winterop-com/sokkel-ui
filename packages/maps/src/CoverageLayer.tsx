@@ -186,6 +186,9 @@ export interface CoverageSweep {
 }
 
 /** A sweep's turn and its trail unless given: a turn every four seconds, its glow a quarter turn behind. */
+/** How many degrees the sweep's bright leading edge spans. */
+export const SWEEP_EDGE = 1.2
+
 export const SWEEP: Required<CoverageSweep> = { period: 4000, trail: 90 }
 
 /** How many degrees each step of a swept cone turns, and how many rings it is cut into from the sensor out. */
@@ -271,7 +274,7 @@ void main() {
     float reached = fract(u_phase + v_start) * v_sweep.z;
     float behind = mod(reached - v_sweep.x, v_sweep.w);
     float glow = pow(clamp(1.0 - behind / u_trail, 0.0, 1.0), 1.6);
-    float edge = clamp(1.0 - behind / 1.2, 0.0, 1.0);
+    float edge = clamp(1.0 - behind / ${SWEEP_EDGE.toFixed(1)}, 0.0, 1.0);
     float alpha = min(1.0, (0.6 * glow + 0.7 * edge) * (1.0 - 0.45 * v_sweep.y) * u_opacity);
     vec3 color = mix(v_color, vec3(1.0), 0.5 * edge * u_dark);
     fragColor = vec4(color * alpha, alpha);
