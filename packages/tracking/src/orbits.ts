@@ -1,8 +1,8 @@
 /**
  * Satellites as tracks, worked out from their orbits. The app fetches the mean elements CelesTrak and
- * Space-Track publish as OMM in JSON (`gp.php?GROUP=stations&FORMAT=json`); this module reads them and
- * propagates each orbit with SGP4 (satellite.js) to where the satellite is at any time, so one fetch of
- * elements places a satellite for days and every reader of one clock agrees on where it is.
+ * Space-Track publish as OMM, in JSON or in CSV (`gp.php?GROUP=stations&FORMAT=csv`); this module reads
+ * them and propagates each orbit with SGP4 (satellite.js) to where the satellite is at any time, so one
+ * fetch of elements places a satellite for days and every reader of one clock agrees on where it is.
  *
  * A satellite's position is the point under it, with its height over the WGS84 ellipsoid as the
  * altitude. Its ground track is the path that point draws, before and after a time, as lines split
@@ -147,6 +147,46 @@ export function parseOmm(payload: OmmRecord[] | OmmRecord): Satellite[] {
         satellites.push(satellite)
     }
     return satellites
+}
+
+/** The fields of one CSV line: a field in quotes may hold commas, and a quote inside it is written twice. */
+function csvFields(line: string): string[] {
+    const fields: string[] = []
+    let field = ''
+    let quoted = false
+    for (let at = 0; at < line.length; at += 1) {
+        const char = line[at]
+        if (quoted) {
+            if (char !== '"') field += char
+            else if (line[at + 1] === '"') {
+                field += '"'
+                at += 1
+            } else quoted = false
+        } else if (char === '"') quoted = true
+        else if (char === ',') {
+            fields.push(field)
+            field = ''
+        } else field += char
+    }
+    fields.push(field)
+    return fields
+}
+
+/**
+ * The satellites of an OMM answer in CSV (`FORMAT=csv`): a line of field names, then a line for each
+ * satellite. It holds what the JSON holds at a third of the size, and is the form CelesTrak asks its
+ * readers to take. A line that `parseOmm` would skip as a record is skipped.
+ */
+export function parseOmmCsv(csv: string): Satellite[] {
+    const [head, ...lines] = csv.split(/\r?\n/).filter((line) => line.trim() !== '')
+    if (head === undefined) return []
+    const names = csvFields(head).map((name) => name.trim())
+    return parseOmm(
+        lines.map((line) => {
+            const fields = csvFields(line)
+            return Object.fromEntries(names.map((name, index) => [name, fields[index] ?? ''])) as OmmRecord
+        }),
+    )
 }
 
 /**

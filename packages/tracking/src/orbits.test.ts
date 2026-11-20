@@ -6,6 +6,7 @@ import {
     groundTrack,
     horizonRange,
     parseOmm,
+    parseOmmCsv,
     parseStationPosition,
     satellitePosition,
     satelliteTracks,
@@ -127,6 +128,60 @@ describe('elements', () => {
             'ISS',
         ]
         expect(parseOmm(rows as unknown as OmmRecord[])).toEqual([])
+    })
+})
+
+describe('elements in CSV', () => {
+    const FIELDS =
+        'OBJECT_NAME,OBJECT_ID,EPOCH,MEAN_MOTION,ECCENTRICITY,INCLINATION,RA_OF_ASC_NODE,ARG_OF_PERICENTER,MEAN_ANOMALY,EPHEMERIS_TYPE,CLASSIFICATION_TYPE,NORAD_CAT_ID,ELEMENT_SET_NO,REV_AT_EPOCH,BSTAR,MEAN_MOTION_DOT,MEAN_MOTION_DDOT'
+    // As CelesTrak answered `gp.php?CATNR=25544&FORMAT=csv` on 20 November 2026.
+    const CSV = `${FIELDS}\r\nISS (ZARYA),1998-067A,2026-11-20T04:08:12.769728,15.49502307,.00074261,51.6318,248.1735,45.4169,314.7424,0,U,25544,999,59593,.18678039E-3,.1004E-3,0\r\n`
+    // As it answered the same question with `FORMAT=json`.
+    const SAME: OmmRecord = {
+        OBJECT_NAME: 'ISS (ZARYA)',
+        OBJECT_ID: '1998-067A',
+        EPOCH: '2026-11-20T04:08:12.769728',
+        MEAN_MOTION: 15.49502307,
+        ECCENTRICITY: 0.00074261,
+        INCLINATION: 51.6318,
+        RA_OF_ASC_NODE: 248.1735,
+        ARG_OF_PERICENTER: 45.4169,
+        MEAN_ANOMALY: 314.7424,
+        EPHEMERIS_TYPE: 0,
+        CLASSIFICATION_TYPE: 'U',
+        NORAD_CAT_ID: 25544,
+        ELEMENT_SET_NO: 999,
+        REV_AT_EPOCH: 59593,
+        BSTAR: 0.00018678039,
+        MEAN_MOTION_DOT: 0.0001004,
+        MEAN_MOTION_DDOT: 0,
+    }
+
+    it('reads the same satellite from CSV as from JSON, and places it the same', () => {
+        const [fromCsv] = parseOmmCsv(CSV)
+        const [fromJson] = parseOmm([SAME])
+        // All but the elements as they were read: text from CSV, numbers from JSON.
+        expect({ ...fromCsv, omm: undefined }).toEqual({ ...fromJson, omm: undefined })
+        expect(fromCsv.omm.BSTAR).toBe('.18678039E-3')
+        expect(fromCsv.epoch).toBe(Date.UTC(2026, 10, 20, 4, 8, 12, 769))
+        const [a, b] = [satellitePosition(fromCsv, AT), satellitePosition(fromJson, AT)]
+        expect(a?.lon).toBeCloseTo(b?.lon ?? 0, 9)
+        expect(a?.lat).toBeCloseTo(b?.lat ?? 0, 9)
+        expect(a?.altitude).toBeCloseTo(b?.altitude ?? 0, 3)
+    })
+
+    it('reads a name in quotes, and skips a line that is short or empty', () => {
+        const values = CSV.split('\r\n')[1].split(',').slice(1).join(',')
+        const csv = [
+            FIELDS,
+            `"TIDEVANN, ""ONE""",${values.replace('25544', '99001')}`,
+            '',
+            'TIDEVANN 2,2026-003A,2026-11-20T00:00:00',
+            '',
+        ].join('\n')
+        expect(parseOmmCsv(csv).map(({ id, name }) => [id, name])).toEqual([['99001', 'TIDEVANN, "ONE"']])
+        expect(parseOmmCsv('')).toEqual([])
+        expect(parseOmmCsv(FIELDS)).toEqual([])
     })
 })
 

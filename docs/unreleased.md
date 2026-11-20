@@ -147,8 +147,9 @@ release and empties it.
   real machine's pace), so tracks move, trails grow, contacts and flights come and go, and
   connections open and close. Pause in the top bar holds the clock, and the harbor watch's timeline
   plays the last six hours back.
-- `/orbits` (tracking): satellites from the OMM elements CelesTrak and Space-Track publish as JSON,
-  placed at any time with SGP4. `parseOmm` reads them into plain `Satellite` records;
+- `/orbits` (tracking): satellites from the OMM elements CelesTrak and Space-Track publish, placed at
+  any time with SGP4. `parseOmm` reads them from JSON and `parseOmmCsv` from CSV, the form CelesTrak
+  asks for, into plain `Satellite` records;
   `satellitePosition` and `satelliteTracks` give where each is, as a track of kind `satellite` over
   the point under it (its height as the altitude, the point's heading and speed over the ground, the
   orbital speed as `properties.velocity`); `groundTrack` gives the path behind and ahead as lines

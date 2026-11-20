@@ -1412,7 +1412,7 @@ built on it, and OpenSky's state vectors; `ais` decodes AIS NMEA sentences, chec
 six-bit payloads, positions of class A and B and their static data, into a registry by MMSI; and
 `network` gathers connection records by remote host and by process with byte rates over a window,
 placing a public address only through the app's own `locate`. `orbits` reads satellites from OMM
-elements and places them at any time with SGP4, through satellite.js, the package's one dependency:
+elements, in JSON or CSV, and places them at any time with SGP4, through satellite.js, the package's one dependency:
 one fetch of elements serves for days, and every reader of one clock agrees on where a satellite is.
 It gives each as a track over the point under it, its ground track as lines split at the
 antimeridian and its footprint as a circle. `events` reads what happens into one `Incident` (an id,
