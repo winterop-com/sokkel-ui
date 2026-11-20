@@ -5602,6 +5602,11 @@ const CALL_TILE_ADAPTER: Adapter = {
         const picture = tilePicture()
         const name = classesOf(callTilePieces(CALL_TILES().plain).name)
         return [
+            check(
+                'layout.unselectable (anatomy.container: nothing in it is selectable)',
+                'select-none',
+                /\bselect-none\b/.test(classesOf(callTilePieces(CALL_TILES().plain).container)) ? 'select-none' : 'selectable',
+            ),
             check('sizes.picture.width', '64', picture === undefined ? undefined : String(picture.least)),
             check('sizes.picture.height', '64', picture === undefined ? undefined : String(picture.least)),
             ...layoutChecks('call-tile', {

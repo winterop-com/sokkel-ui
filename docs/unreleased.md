@@ -17,6 +17,9 @@ release and empties it.
 
 ## Changed
 
+- Nothing in a `CallTile` or a `VideoPlayer` is selectable, nor the times beside a media slider
+  (`MediaBar`, `AudioPlayer`, a video's controls): a press, a double press or a drag on them no longer
+  highlights a name or a time.
 - `CallBar`: the reactions open in the bar's own surface, a row over its controls, instead of a
   popover over the call; the floating bar grows upward, its corners round with its controls while
   open. Focus goes to the first reaction, and Escape or a press outside the bar closes it. The

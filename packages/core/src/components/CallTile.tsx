@@ -42,14 +42,18 @@ export interface CallTileProps {
  * One person on a call: a 16:9 tile on the call's dark ground, their video filling it (`children`)
  * or their picture centered, sized to the tile, and their name at its foot on a dark chip with a
  * struck microphone while muted and a hand while raised. Tiles sit in a grid (`Columns`) on the
- * call's picture, the call bar floating over its foot.
+ * call's picture, the call bar floating over its foot. Nothing in a tile is selectable, so a press, a
+ * double press or a drag on it never highlights the name.
  */
 export function CallTile({ name, image, muted = false, handRaised = false, children, className, words: given }: CallTileProps) {
     const words = useWords(CALL_TILE_PART, given)
     return (
         <div
             data-slot="call-tile"
-            className={cn('@container relative aspect-video overflow-hidden rounded-surface bg-terminal-foreground/10', className)}
+            className={cn(
+                '@container relative aspect-video overflow-hidden rounded-surface bg-terminal-foreground/10 select-none',
+                className,
+            )}
         >
             {children !== undefined ? (
                 <div data-slot="call-tile-video" className="absolute inset-0 *:size-full *:object-cover">

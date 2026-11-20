@@ -13,7 +13,7 @@
         "sokkel-ui": ["packages/core/src/components/CallTile.tsx", "packages/core/src/components/PersonAvatar.tsx"]
     },
     "anatomy": {
-        "container": "The tile: 16:9, rounded by radius-surface, its content clipped to it, on terminal-foreground at 10 percent.",
+        "container": "The tile: 16:9, rounded by radius-surface, its content clipped to it, on terminal-foreground at 10 percent. Nothing in it is selectable: a press, a double press or a drag on a tile never highlights its name.",
         "picture": "Without video: the person's picture (or their initials on their color, as PersonAvatar draws them), round, centered, 16 percent of the tile's width (28 of its height), never under 64 nor over 160; the initials grow with it, from text.page to text.display.",
         "video": "With video (children): it fills the tile, cropped to it, in place of the picture.",
         "name": "At the tile's foot, 8 in from its start and its foot: the name on a dark chip, rounded by radius-control, padded 6 across, text.help, cut with an ellipsis before the tile's edge; a struck microphone (words.muted) while muted and a hand (words.handRaised) while raised before the name, 14 square, 4 apart."
