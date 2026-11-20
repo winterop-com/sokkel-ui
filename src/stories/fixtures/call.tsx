@@ -1,12 +1,12 @@
 /** A call in Tidevann: its devices, its people, and the state a call bar toggles, held as a call app would. */
 
-import { Captions, Hand, LayoutGrid, MicOff } from 'lucide-react'
+import { Captions, LayoutGrid } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import type { CallBarItem, CallBarProps, CallDeviceList } from '@winterop-com/sokkel-ui/CallBar'
-import { Center, Columns, Row } from '@winterop-com/sokkel-ui/Layout'
+import { Columns } from '@winterop-com/sokkel-ui/Layout'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { CallTile } from '@winterop-com/sokkel-ui/CallTile'
 import { pictureOf } from './portraits'
 
 export const MICROPHONES = [
@@ -114,26 +114,6 @@ export function useCall(start: Partial<CallState> = {}) {
     return { call, set, bar }
 }
 
-/** One person's tile on the call's picture: their picture centered, their name and a muted mark at its foot. */
-function Tile({ name, image, muted, hand }: { name: string; image?: string; muted: boolean; hand?: boolean }) {
-    return (
-        <div className="relative aspect-video overflow-hidden rounded-surface bg-terminal-foreground/10">
-            <Center className="absolute inset-0">
-                <PersonAvatar name={name} image={image} size="2xl" />
-            </Center>
-            <Row
-                as="span"
-                gap="2xs"
-                className="absolute bottom-2 left-2 rounded-control bg-terminal/70 px-1.5 text-help text-terminal-foreground"
-            >
-                {muted && <MicOff className="size-3.5" aria-label="Muted" />}
-                {hand === true && <Hand className="size-3.5" aria-label="Hand raised" />}
-                {name}
-            </Row>
-        </div>
-    )
-}
-
 /**
  * The call's picture: a tile for each person on the call on a dark ground, the person calling first
  * as You, the last reaction given over it, captions at its foot when on, and the call bar (`bar`)
@@ -146,9 +126,14 @@ export function CallStage({ call, bar, fill = false }: { call: CallState; bar: R
         <div className={cn('relative overflow-hidden bg-terminal', fill ? 'h-svh' : 'rounded-surface')}>
             <div className={cn('p-3 pb-20', fill && 'absolute inset-0 overflow-y-auto')}>
                 <Columns count={2} min="sm" gap="sm">
-                    <Tile name="You" image={call.cameraOff ? undefined : ON_CALL[0].image} muted={call.muted} hand={call.handRaised} />
+                    <CallTile
+                        name="You"
+                        image={call.cameraOff ? undefined : ON_CALL[0].image}
+                        muted={call.muted}
+                        handRaised={call.handRaised}
+                    />
                     {people.map((person) => (
-                        <Tile key={person.handle} name={person.name} image={person.image} muted={person.muted} />
+                        <CallTile key={person.handle} name={person.name} image={person.image} muted={person.muted} />
                     ))}
                 </Columns>
             </div>

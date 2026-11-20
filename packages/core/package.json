@@ -108,6 +108,10 @@
             "types": "./dist/components/CallBar.d.ts",
             "import": "./dist/components/CallBar.js"
         },
+        "./CallTile": {
+            "types": "./dist/components/CallTile.d.ts",
+            "import": "./dist/components/CallTile.js"
+        },
         "./Callout": {
             "types": "./dist/components/Callout.d.ts",
             "import": "./dist/components/Callout.js"

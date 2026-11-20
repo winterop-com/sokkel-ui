@@ -141,6 +141,8 @@
     "callBar.shortcutGroup": "Call",
     "callBar.shortcutMicrophone": "Mute or unmute",
     "callBar.unmute": "Unmute",
+    "callTile.handRaised": "Hand raised",
+    "callTile.muted": "Muted",
     "capabilityPicker.clear": "Clear the filters",
     "capabilityPicker.empty": "Nothing matches.",
     "capabilityPicker.filters": "Filter by what it can do",
