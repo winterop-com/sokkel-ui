@@ -334,7 +334,8 @@ describe('what a review found', () => {
         expect(renderToStaticMarkup(<PlainMarkdown content="## Plain" />)).not.toContain('data-heading-text')
     })
 
-    it('reads a long line of unclosed highlights in linear time', () => {
+    // Tried again on a spike of load: a reading that backtracks fails every try.
+    it('reads a long line of unclosed highlights in linear time', { retry: 3 }, () => {
         expectInStep((n) => parseMarkdown('==a '.repeat(n), { math: false }), 40_000)
         expect(find(parseMarkdown('==a b==c=='), 'highlight')).toHaveLength(1)
     })
@@ -385,7 +386,8 @@ describe('what a second review found', () => {
         }
     })
 
-    it('reads many highlights opened across inline nodes in linear time', () => {
+    // Tried again on a spike of load: a reading that backtracks fails every try.
+    it('reads many highlights opened across inline nodes in linear time', { retry: 3 }, () => {
         expectInStep((n) => parseMarkdown('==a *b* '.repeat(n), { math: false }), 4_000)
         expectInStep((n) => parseMarkdown('==a [[b]] '.repeat(n), { math: false }), 3_200)
         expect(find(parseMarkdown('===a *b* c=='), 'highlight')).toHaveLength(1)
