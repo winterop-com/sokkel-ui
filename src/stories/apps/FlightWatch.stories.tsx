@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Crosshair, History, List, Map as MapIcon, Pause, Plane, Settings } from 'lucide-react'
+import { Crosshair, History, List, Map as MapIcon, Pause, Plane, Play, Settings } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
@@ -20,7 +20,9 @@ import { TrackGlyph } from '@winterop-com/sokkel-ui/TrackGlyph'
 import { TrackRoster, type TrackRosterItem } from '@winterop-com/sokkel-ui/TrackRoster'
 import { filterRows } from '@winterop-com/sokkel-ui/lib/filters'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { DARK_BASEMAP } from '@winterop-com/sokkel-ui-maps/basemap'
 import { formatCoordinates } from '@winterop-com/sokkel-ui-maps/geodesy'
 import { MapCompass } from '@winterop-com/sokkel-ui-maps/MapCompass'
 import { MapCoordinates } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
@@ -39,8 +41,10 @@ import {
     type AltitudeBand,
     type VerticalTrend,
 } from '@winterop-com/sokkel-ui-tracking/adsb'
+import { flightRoute, flightTrails, simulateFlights } from '@winterop-com/sokkel-ui-tracking/simulate'
 import { FOOT, KNOT, type Track as Flight, type TrackAffiliation } from '@winterop-com/sokkel-ui-tracking/track'
-import { FLIGHTS_NOW, FLIGHTS_POINT } from '../fixtures/flights'
+import { FLIGHTS_NOW } from '../fixtures/flights'
+import { clockTime, useSimClock, type StoryClock } from '../fixtures/simulation'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 const BAND_COLORS: Record<AltitudeBand, string> = {
@@ -64,10 +68,37 @@ const PHASE_NAMES: Record<VerticalTrend | 'ground', string> = {
 const SIDES: readonly TrackAffiliation[] = ['friend', 'unknown']
 const SIDE_WORDS = { friend: 'Tidevann', unknown: 'No callsign' }
 
-/** The flights of the readsb answer: Tidevann's own are friends, one giving no callsign is unknown. */
-const FLIGHTS: readonly Flight[] = parseReadsb(FLIGHTS_POINT, {
-    classify: (track) => (typeof track.properties?.callsign === 'string' ? 'friend' : 'unknown'),
-})
+/** How fast the watch's clock plays: half a simulated minute each second. */
+const SPEED = 30
+
+/** How many minutes of trail each aircraft draws behind it. */
+const TRAIL = 10
+
+/** The flight picked as the watch opens: Edinburgh to Stockholm, climbing out, with the longest way left to fly. */
+const PICKED = 'f3abc5'
+
+/** The watch as its pages read it: the simulated clock, and the aircraft at its moment with their trails. */
+interface Watch extends StoryClock {
+    flights: readonly Flight[]
+}
+
+/**
+ * The flight watch, live: the tracking add-on's simulated flights read at the story's clock, each
+ * moment a readsb answer read through `parseReadsb`. Tidevann's own are friends, one giving no
+ * callsign is unknown. The clock starts at the same moment every time, so the first frame is the
+ * same picture, and plays on from it.
+ */
+function useWatch(): Watch {
+    const clock = useSimClock(FLIGHTS_NOW, SPEED)
+    const flights = useMemo(() => {
+        const trails = flightTrails(clock.now, { minutes: TRAIL })
+        return parseReadsb(simulateFlights(clock.now), {
+            classify: (track) => (typeof track.properties?.callsign === 'string' ? 'friend' : 'unknown'),
+            source: 'simulated',
+        }).map((flight) => ({ ...flight, trail: trails.get(flight.id) }))
+    }, [clock.now])
+    return { ...clock, flights }
+}
 
 const nameOf = (flight: Flight) => (typeof flight.properties?.callsign === 'string' ? flight.properties.callsign : flight.id.toUpperCase())
 const phaseOf = (flight: Flight) => (altitudeBand(flight) === 'ground' ? 'ground' : verticalTrend(flight))
@@ -92,23 +123,24 @@ function rosterItem(flight: Flight): TrackRosterItem {
     }
 }
 
-const GROUPS = (active: string): RailGroup[] =>
+const GROUPS = (active: string, count: number): RailGroup[] =>
     [
         {
             id: 'watch',
             entries: [
                 { id: 'map', label: 'Map', icon: MapIcon, href: '#', description: 'Aircraft in the area' },
-                { id: 'flights', label: 'Flights', icon: Plane, href: '#', description: 'Searched and filtered', count: 14 },
+                { id: 'flights', label: 'Flights', icon: Plane, href: '#', description: 'Searched and filtered', count },
                 { id: 'history', label: 'History', icon: History, href: '#', description: 'The last hour played back' },
             ],
         },
         { id: 'system', entries: [{ id: 'settings', label: 'Settings', icon: Settings, href: '#', description: 'Source, map, units' }] },
     ].map((group) => ({ ...group, entries: group.entries.map((entry) => ({ ...entry, active: entry.id === active })) }))
 
-/** The details of one flight: its card, then what the feed says of it. */
-function Details({ flight }: { flight: Flight }) {
+/** The details of one flight: its card, then what the feed says of it and where the timetable sends it. */
+function Details({ flight, now }: { flight: Flight; now: number }) {
     const item = rosterItem(flight)
     const band = altitudeBand(flight)
+    const route = flightRoute(item.name)
     return (
         <>
             <TrackCard
@@ -120,11 +152,12 @@ function Details({ flight }: { flight: Flight }) {
                 states={['Simulated', ...(item.states ?? [])]}
                 detail={item.detail}
                 updatedAt={item.updatedAt}
-                now={FLIGHTS_NOW}
+                now={now}
             />
             <DescriptionList
                 size="sm"
                 items={[
+                    { term: 'Route', value: route === undefined ? undefined : `${route.from} to ${route.to}` },
                     { term: 'Altitude', value: feet(flight), numeric: true },
                     { term: 'Band', value: band === undefined ? undefined : BAND_NAMES[band] },
                     { term: 'Speed', value: knots(flight), numeric: true },
@@ -139,9 +172,21 @@ function Details({ flight }: { flight: Flight }) {
     )
 }
 
-/** The frame every page of the watch stands in: the rail, the top bar with Pause, and the foot strip counting the aircraft. */
-function Frame({ active, trail, panel, children }: { active: string; trail: string; panel?: ReactNode; children: ReactNode }) {
-    const airborne = FLIGHTS.filter((flight) => altitudeBand(flight) !== 'ground').length
+/** The frame every page of the watch stands in: the rail, the top bar with Pause, and the foot strip with the clock and the aircraft counted. */
+function Frame({
+    watch,
+    active,
+    trail,
+    panel,
+    children,
+}: {
+    watch: Watch
+    active: string
+    trail: string
+    panel?: ReactNode
+    children: ReactNode
+}) {
+    const airborne = watch.flights.filter((flight) => altitudeBand(flight) !== 'ground').length
     return (
         <TooltipProvider>
             <Shell
@@ -150,7 +195,7 @@ function Frame({ active, trail, panel, children }: { active: string; trail: stri
                         mark={<TidevannMark />}
                         markHref="#"
                         name="Flight watch"
-                        groups={GROUPS(active)}
+                        groups={GROUPS(active, watch.flights.length)}
                         foot={<AccountMenu name="margaret" where="tidevann.example.org" />}
                     />
                 }
@@ -158,18 +203,19 @@ function Frame({ active, trail, panel, children }: { active: string; trail: stri
                     <TopBar
                         trail={[{ label: 'Flight watch', href: '#' }, { label: trail }]}
                         actions={
-                            <Button variant="ghost" size="sm">
-                                <Pause aria-hidden />
-                                Pause
+                            <Button variant="ghost" size="sm" onClick={watch.toggle}>
+                                {watch.running ? <Pause aria-hidden /> : <Play aria-hidden />}
+                                {watch.running ? 'Pause' : 'Resume'}
                             </Button>
                         }
                     />
                 }
                 panel={panel}
                 foot={
-                    <StatusLine live tone="live" note="Simulated, 14:30:00 UTC">
+                    <StatusLine live={watch.running} tone={watch.running ? 'live' : 'quiet'} note={`Simulated, ${clockTime(watch.now)}`}>
                         <StatusItem label="airborne">{airborne}</StatusItem>
-                        <StatusItem label="on the ground">{FLIGHTS.length - airborne}</StatusItem>
+                        <StatusItem label="on the ground">{watch.flights.length - airborne}</StatusItem>
+                        <StatusItem label="speed">{`${String(SPEED)}×`}</StatusItem>
                     </StatusLine>
                 }
             >
@@ -180,24 +226,27 @@ function Frame({ active, trail, panel, children }: { active: string; trail: stri
 }
 
 function MapPage({ colorBy, follow = false }: { colorBy: 'altitude' | 'affiliation'; follow?: boolean }) {
-    const [selected, setSelected] = useState<string | null>('f07a01')
-    const [followed, setFollowed] = useState<string | null>(follow ? 'f07a01' : null)
+    const watch = useWatch()
+    const { flights, now } = watch
+    const [selected, setSelected] = useState<string | null>(PICKED)
+    const [followed, setFollowed] = useState<string | null>(follow ? PICKED : null)
     const [tab, setTab] = useState('flight')
     const tracks: Track[] = useMemo(
         () =>
-            FLIGHTS.map((flight) => ({
+            flights.map((flight) => ({
                 id: flight.id,
                 position: [flight.lon, flight.lat],
                 heading: flight.heading,
                 affiliation: flight.affiliation,
                 kind: flight.kind,
                 label: nameOf(flight),
+                trail: flight.trail,
                 band: colorBy === 'altitude' ? altitudeBand(flight) : undefined,
             })),
-        [colorBy],
+        [flights, colorBy],
     )
-    const picked = FLIGHTS.find((flight) => flight.id === selected)
-    const following = FLIGHTS.find((flight) => flight.id === followed)
+    const picked = flights.find((flight) => flight.id === selected)
+    const following = flights.find((flight) => flight.id === followed)
     const panel = (
         <SidePanel
             active={tab}
@@ -208,7 +257,14 @@ function MapPage({ colorBy, follow = false }: { colorBy: 'altitude' | 'affiliati
                     label: 'Flight',
                     icon: Plane,
                     content:
-                        picked === undefined ? null : (
+                        picked === undefined ? (
+                            <Empty>
+                                <EmptyHeader>
+                                    <EmptyTitle>No flight picked</EmptyTitle>
+                                    <EmptyDescription>Pick one on the map or in the list.</EmptyDescription>
+                                </EmptyHeader>
+                            </Empty>
+                        ) : (
                             <PanelSection
                                 title={nameOf(picked)}
                                 actions={
@@ -222,20 +278,20 @@ function MapPage({ colorBy, follow = false }: { colorBy: 'altitude' | 'affiliati
                                     </Button>
                                 }
                             >
-                                <Details flight={picked} />
+                                <Details flight={picked} now={now} />
                             </PanelSection>
                         ),
                 },
                 {
                     id: 'in-view',
-                    label: `In view (${String(FLIGHTS.length)})`,
+                    label: `In view (${String(flights.length)})`,
                     icon: List,
                     content: (
                         <TrackRoster
                             framed={false}
                             className="h-full"
-                            tracks={FLIGHTS.map(rosterItem)}
-                            now={FLIGHTS_NOW}
+                            tracks={flights.map(rosterItem)}
+                            now={now}
                             selected={selected}
                             onSelect={(id) => {
                                 setSelected(id)
@@ -248,11 +304,12 @@ function MapPage({ colorBy, follow = false }: { colorBy: 'altitude' | 'affiliati
         />
     )
     return (
-        <Frame active="map" trail={picked === undefined ? 'Map' : nameOf(picked)} panel={panel}>
+        <Frame watch={watch} active="map" trail={picked === undefined ? 'Map' : nameOf(picked)} panel={panel}>
             <MapView
                 label="Flight watch"
-                defaultBasemap={WORLD_BASEMAP}
-                basemaps={[WORLD_BASEMAP]}
+                defaultBasemap={DARK_BASEMAP}
+                basemaps={[DARK_BASEMAP]}
+                fallbackBasemap={WORLD_BASEMAP}
                 camera={{ center: [6.8, 58.9], zoom: 4.8 }}
                 selected={selected}
                 onSelectedChange={(id) => setSelected(id)}
@@ -320,7 +377,7 @@ const FIELDS: FilterField<Flight>[] = [
     },
 ]
 
-const COLUMNS: DataColumn<Flight>[] = [
+const columns = (now: number): DataColumn<Flight>[] => [
     {
         id: 'flight',
         header: 'Flight',
@@ -353,23 +410,26 @@ const COLUMNS: DataColumn<Flight>[] = [
         id: 'seen',
         header: 'Seen',
         width: '7rem',
-        cell: (flight) => <Freshness at={flight.updatedAt ?? null} now={FLIGHTS_NOW} />,
+        cell: (flight) => <Freshness at={flight.updatedAt ?? null} now={now} />,
         stack: 'secondary',
     },
 ]
 
 function FlightsPage({ query: initial = '', filters: initialFilters = [] }: { query?: string; filters?: Filter[] }) {
+    const watch = useWatch()
+    const { flights, now } = watch
     const [query, setQuery] = useState(initial)
     const [filters, setFilters] = useState<readonly Filter[]>(initialFilters)
     const wanted = query.trim().toLowerCase()
-    const shown = filterRows(FLIGHTS, filters, FIELDS).filter((flight) => `${nameOf(flight)} ${flight.id}`.toLowerCase().includes(wanted))
+    const shown = filterRows(flights, filters, FIELDS).filter((flight) => `${nameOf(flight)} ${flight.id}`.toLowerCase().includes(wanted))
+    const cells = useMemo(() => columns(now), [now])
     return (
-        <Frame active="flights" trail="Flights">
+        <Frame watch={watch} active="flights" trail="Flights">
             <Page className="h-full">
-                <PageHeader title="Flights" count={`${String(FLIGHTS.length)} aircraft`} />
+                <PageHeader title="Flights" count={`${String(flights.length)} aircraft`} />
                 <DataTable
                     className="min-h-0 flex-1"
-                    columns={COLUMNS}
+                    columns={cells}
                     rows={shown}
                     rowKey={(flight) => flight.id}
                     search={<SearchField value={query} onChange={setQuery} label="Search by callsign or address" />}
@@ -389,19 +449,24 @@ const meta: Meta = { title: 'Apps/Flight watch', parameters: { layout: 'fullscre
 export default meta
 
 /**
- * Tidevann's flight watch over southern Norway and the North Sea: the aircraft of a readsb answer
- * read through the tracking package, each painted by its altitude band, with the ruler, go to, the
- * compass and the cursor's position in the map's corners. A flight is picked, its card and values
- * in the side panel, whose In view tab lists every aircraft as a roster.
+ * Tidevann's flight watch over southern Norway and the North Sea, live: the tracking package's
+ * simulated flights, each moment a readsb answer read through its parser, played from the same
+ * moment every time at thirty times real time, so the aircraft move, their trails grow, and flights
+ * take off and land. Each is painted by its altitude band, with the ruler, go to, the compass and
+ * the cursor's position in the map's corners. A flight is picked, its card, route and values in the
+ * side panel, whose In view tab lists every aircraft as a roster; Pause in the top bar holds the clock.
  */
 export const MapStory: StoryObj = { name: 'Map', render: () => <MapPage colorBy="altitude" /> }
 /** The same map painted by whose each aircraft is, Tidevann's own or one giving no callsign. */
 export const Affiliation: StoryObj = { name: 'Affiliation', render: () => <MapPage colorBy="affiliation" /> }
-/** The picked flight followed: the map keeps it in the middle, and a banner says so and lets it go. */
+/** The picked flight followed as it flies: the map keeps it in the middle, and a banner says so and lets it go. */
 export const Following: StoryObj = { name: 'Following', render: () => <MapPage colorBy="altitude" follow /> }
-/** Every aircraft as a table, searched by callsign or address and filtered by altitude band and by whether it is on the ground. */
+/**
+ * Every aircraft as a table, searched by callsign or address and filtered by altitude band and by
+ * whether it is on the ground, its values changing as the clock plays.
+ */
 export const Flights: StoryObj = { name: 'Flights', render: () => <FlightsPage /> }
-/** The table filtered to the aircraft above 25,000 feet. */
+/** The table filtered to the aircraft above 25,000 feet, which flights join and leave as they climb and descend. */
 export const Filtered: StoryObj = {
     name: 'Filtered',
     render: () => <FlightsPage filters={[{ field: 'band', operator: 'oneOf', values: ['high'] }]} />,

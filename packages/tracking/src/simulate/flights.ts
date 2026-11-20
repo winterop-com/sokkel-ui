@@ -1,19 +1,18 @@
 /**
- * The simulated feed: Tidevann's flights between real cities around southern Norway and the North
- * Sea, on a timetable that repeats every day, and a few light aircraft flying circuits. Where every
- * aircraft is follows from the time alone, so any moment of the last hour can be drawn again. Each
- * moment is written as the readsb v2 API answers `/v2/point`, and read back through the tracking
- * package's parser, as a live answer is.
+ * Simulated flights: a timetable between real cities round southern Norway and the North Sea that
+ * repeats every day, and a few light aircraft flying circuits. Where every aircraft is follows from
+ * the moment and the seed alone, so any moment can be drawn again and a moment played back is what
+ * it was live. Each moment is written as the readsb v2 API answers `/v2/point`, for `parseReadsb`.
  */
-import type { ReadsbAircraft, ReadsbResponse } from '@winterop-com/sokkel-ui-tracking/adsb'
-import type { LonLat } from '@winterop-com/sokkel-ui-tracking/track'
-import { bearing, destination, distance } from '@winterop-com/sokkel-ui-tracking/geo'
+import type { ReadsbAircraft, ReadsbResponse } from '../adsb'
+import { bearing, destination, distance } from '../geo'
+import type { LonLat } from '../track'
 
 const MINUTE = 60_000
 const NM = 1852
 
 /** The cities flown between, at their airports. */
-export const CITIES = {
+export const FLIGHT_CITIES = {
     oslo: { name: 'Oslo', at: [11.1004, 60.1939] },
     bergen: { name: 'Bergen', at: [5.2181, 60.2934] },
     stavanger: { name: 'Stavanger', at: [5.6378, 58.8767] },
@@ -31,7 +30,43 @@ export const CITIES = {
     stockholm: { name: 'Stockholm', at: [17.9186, 59.6519] },
 } satisfies Record<string, { name: string; at: LonLat }>
 
-export type City = keyof typeof CITIES
+export type FlightCity = keyof typeof FLIGHT_CITIES
+
+/** What a simulated aircraft is doing: rolling out, climbing, cruising, descending, rolling in, or flying a circuit. */
+export type FlightPhase = 'taxi-out' | 'climb' | 'cruise' | 'descent' | 'taxi-in' | 'circuit'
+
+export interface FlightSimOptions {
+    /** What the flights are drawn from: which fly, their addresses and squawks. The same seed, the same sky. 0 by default. */
+    seed?: number
+}
+
+/** One simulated aircraft at a moment, as the timetable has it, before a feed rounds it. */
+export interface SimFlight {
+    /** Its 24-bit address in hex, in the block no state is given. */
+    hex: string
+    /** Its callsign; a light aircraft flying a circuit gives none. */
+    callsign?: string
+    /** Its type designator, such as `B738`. */
+    aircraftType: string
+    /** Its emitter category, such as `A3`. */
+    category: string
+    /** The cities it flies between; none for a circuit. */
+    from?: FlightCity
+    to?: FlightCity
+    phase: FlightPhase
+    /** When it left the stand, in milliseconds since the epoch; none for a circuit. */
+    departed?: number
+    lon: number
+    lat: number
+    /** Feet, or `ground`. */
+    altitude: number | 'ground'
+    /** Knots over the ground. */
+    speed: number
+    /** Degrees true over the ground. */
+    track: number
+    /** Feet a minute, up or down. */
+    rate: number
+}
 
 /** What flies a route: its type designator, emitter category, and speeds in knots. */
 interface Airframe {
@@ -51,8 +86,8 @@ const PROP: Omit<Airframe, 'type'> = { category: 'A2', cruise: 290, slow: 120, c
 
 /** One route of the timetable, flown both ways. */
 interface Route {
-    from: City
-    to: City
+    from: FlightCity
+    to: FlightCity
     airframe: Airframe
     /** The cruising altitude, in feet; a short route tops out lower. */
     level: number
@@ -95,9 +130,9 @@ const ROUTES: readonly Route[] = [
 const TAXI_OUT = 7
 const TAXI_IN = 5
 
-/** A number from 0 to 1 that is the same every time for the same key. */
-function hash(key: string): number {
-    let value = 2166136261
+/** A number from 0 to 1 that is the same every time for the same key and seed. */
+function hash(key: string, seed: number): number {
+    let value = (2166136261 ^ seed) >>> 0
     for (let index = 0; index < key.length; index += 1) {
         value ^= key.charCodeAt(index)
         value = Math.imul(value, 16777619)
@@ -106,14 +141,14 @@ function hash(key: string): number {
 }
 
 /** A 24-bit address in the block no state is given, so no real aircraft has it. */
-const addressOf = (key: string) =>
-    `f${Math.floor(hash(key) * 0xfffff)
+const addressOf = (key: string, seed: number) =>
+    `f${Math.floor(hash(key, seed) * 0xfffff)
         .toString(16)
         .padStart(5, '0')}`
 
 /** A squawk code: four octal digits, never one of the emergency codes. */
-function squawkOf(key: string): string {
-    const code = Math.floor(hash(`squawk ${key}`) * 4096)
+function squawkOf(key: string, seed: number): string {
+    const code = Math.floor(hash(`squawk ${key}`, seed) * 4096)
     const digits = code.toString(8).padStart(4, '0')
     return ['7500', '7600', '7700'].includes(digits) ? '2000' : digits
 }
@@ -138,9 +173,9 @@ interface Leg {
 
 const knotsToMetersPerMinute = (knots: number) => (knots * NM) / 60
 
-function legOf(route: Route, from: City, to: City): Leg {
-    const start = CITIES[from].at
-    const end = CITIES[to].at
+function legOf(route: Route, from: FlightCity, to: FlightCity): Leg {
+    const start = FLIGHT_CITIES[from].at
+    const end = FLIGHT_CITIES[to].at
     const length = distance(start, end)
     const { airframe } = route
     const average = knotsToMetersPerMinute((airframe.cruise + airframe.slow) / 2)
@@ -169,13 +204,38 @@ function legOf(route: Route, from: City, to: City): Leg {
     }
 }
 
-/** Every leg of the timetable, both ways, with the numbers its flights take. */
-const LEGS = ROUTES.flatMap((route, index) => [
-    { route, index, way: 0, leg: legOf(route, route.from, route.to), number: route.number, offset: route.offset },
+/** One way along a route: its leg, the cities at its ends and the numbers its flights take. */
+interface Way {
+    route: Route
+    /** The route's place in the timetable. */
+    index: number
+    /** 0 out, 1 back. */
+    way: number
+    from: FlightCity
+    to: FlightCity
+    leg: Leg
+    number: number
+    offset: number
+}
+
+/** Every leg of the timetable, both ways. */
+const WAYS: readonly Way[] = ROUTES.flatMap((route, index) => [
+    {
+        route,
+        index,
+        way: 0,
+        from: route.from,
+        to: route.to,
+        leg: legOf(route, route.from, route.to),
+        number: route.number,
+        offset: route.offset,
+    },
     {
         route,
         index,
         way: 1,
+        from: route.to,
+        to: route.from,
         leg: legOf(route, route.to, route.from),
         number: route.number + 1,
         offset: (route.offset + route.every / 2) % route.every,
@@ -185,8 +245,18 @@ const LEGS = ROUTES.flatMap((route, index) => [
 /** Minutes from leaving the stand to reaching the other one. */
 const blockOf = (leg: Leg) => TAXI_OUT + leg.climb + leg.cruise + leg.descent + TAXI_IN
 
+/** Where an aircraft is and how it goes, in the units a feed says them: feet, knots, degrees and feet a minute. */
+interface Flown {
+    at: LonLat
+    feet: number | 'ground'
+    knots: number
+    track: number
+    rate: number
+    phase: FlightPhase
+}
+
 /** Where an aircraft on a leg is, `minutes` after it left the stand; undefined once it has arrived. */
-function flown(leg: Leg, minutes: number) {
+function flown(leg: Leg, minutes: number): Flown | undefined {
     const { airframe } = leg
     const fast = knotsToMetersPerMinute(airframe.cruise)
     const slow = knotsToMetersPerMinute(airframe.slow)
@@ -198,10 +268,11 @@ function flown(leg: Leg, minutes: number) {
         const rolled = Math.max(0, minutes - 1) * knotsToMetersPerMinute(14)
         return {
             at: destination(leg.from, leg.course + 90, Math.min(rolled, 1500)),
-            feet: 'ground' as const,
+            feet: 'ground',
             knots: minutes < 1 ? 0 : 14,
             track: leg.course + 90,
             rate: 0,
+            phase: 'taxi-out',
         }
     }
     if (airborne > flying) {
@@ -210,27 +281,31 @@ function flown(leg: Leg, minutes: number) {
         const back = bearing(leg.to, leg.from)
         return {
             at: destination(leg.to, back + 120, Math.min(rolled, 1800)),
-            feet: 'ground' as const,
+            feet: 'ground',
             knots: rolled >= 1800 ? 0 : 16,
             track: back + 120,
             rate: 0,
+            phase: 'taxi-in',
         }
     }
     let along: number
     let feet: number
     let speed: number
     let rate: number
+    let phase: FlightPhase
     if (airborne < leg.climb) {
         const share = airborne / leg.climb
         along = slow * airborne + ((fast - slow) * airborne * share) / 2
         feet = leg.level * share
         speed = airframe.slow + (airframe.cruise - airframe.slow) * share
         rate = leg.level / leg.climb
+        phase = 'climb'
     } else if (airborne < leg.climb + leg.cruise) {
         along = leg.climbLength + fast * (airborne - leg.climb)
         feet = leg.level
         speed = airframe.cruise
         rate = 0
+        phase = 'cruise'
     } else {
         const into = airborne - leg.climb - leg.cruise
         const share = into / leg.descent
@@ -238,10 +313,11 @@ function flown(leg: Leg, minutes: number) {
         feet = leg.level * (1 - share)
         speed = airframe.cruise - (airframe.cruise - airframe.slow) * share
         rate = -leg.level / leg.descent
+        phase = 'descent'
     }
     const at = destination(leg.from, leg.course, Math.min(along, leg.length))
     const track = along >= leg.length - 50 ? bearing(leg.from, leg.to) : bearing(at, leg.to)
-    return { at, feet: Math.max(0, Math.round(feet / 25) * 25), knots: speed, track, rate }
+    return { at, feet: Math.max(0, Math.round(feet / 25) * 25), knots: speed, track, rate, phase }
 }
 
 /** A light aircraft flying a circuit round a field all day, with no callsign. */
@@ -261,7 +337,7 @@ const CIRCUITS: readonly Circuit[] = [
     { key: 'circuit-kristiansand', type: 'C172', center: [8.25, 58.3], radius: 8_000, feet: 3_000, knots: 100 },
 ]
 
-function circling(circuit: Circuit, at: number) {
+function circling(circuit: Circuit, at: number): Flown {
     const lap = (2 * Math.PI * circuit.radius) / knotsToMetersPerMinute(circuit.knots)
     const angle = ((at / MINUTE / lap) % 1) * 360
     return {
@@ -270,54 +346,123 @@ function circling(circuit: Circuit, at: number) {
         knots: circuit.knots,
         track: (angle + 90) % 360,
         rate: Math.round(Math.cos((angle * Math.PI) / 90) * 200),
+        phase: 'circuit',
     }
+}
+
+/** One flight of the timetable in the air or on the ground at a moment, with what its feed's values are drawn from. */
+interface Flying {
+    /** What its address, squawk and the rest are drawn from: its route, way and departure. */
+    key: string
+    way: Way
+    callsign: string
+    /** Minutes since it left the stand. */
+    into: number
+    /** The departure's count since the epoch, along its way. */
+    departure: number
+    where: Flown
+}
+
+/** Every flight of the timetable that is out at a moment, in the timetable's order. */
+function flying(at: number, seed: number): Flying[] {
+    const found: Flying[] = []
+    const minutes = at / MINUTE
+    for (const way of WAYS) {
+        const { route, leg } = way
+        const block = blockOf(leg)
+        const first = Math.floor((minutes - block - way.offset) / route.every)
+        const last = Math.floor((minutes - way.offset) / route.every)
+        for (let departure = first; departure <= last; departure += 1) {
+            const into = minutes - (departure * route.every + way.offset)
+            const where = flown(leg, into)
+            if (where === undefined) continue
+            const key = `${String(way.index)}-${String(way.way)}-${String(departure)}`
+            // About one departure in five does not fly that day, so the sky is busier at some times than others.
+            if (hash(`cancelled ${key}`, seed) < 0.2) continue
+            // Flights of the same leg share their number by the day's departure, a digit for each.
+            const callsign = `TDV${String(way.number * 10 + (((departure % 10) + 10) % 10)).padStart(4, '0')}`
+            found.push({ key, way, callsign, into, departure, where })
+        }
+    }
+    return found
+}
+
+const turned = (degrees: number) => ((degrees % 360) + 360) % 360
+
+/** The simulated aircraft at a moment, in milliseconds since the epoch: the timetable's flights, then the circuits. */
+export function flightsAt(at: number, options: FlightSimOptions = {}): SimFlight[] {
+    const seed = options.seed ?? 0
+    return [
+        ...flying(at, seed).map(({ key, way, callsign, departure, where }): SimFlight => ({
+            hex: addressOf(key, seed),
+            callsign,
+            aircraftType: way.route.airframe.type,
+            category: way.route.airframe.category,
+            from: way.from,
+            to: way.to,
+            phase: where.phase,
+            departed: (departure * way.route.every + way.offset) * MINUTE,
+            lon: where.at[0],
+            lat: where.at[1],
+            altitude: where.feet,
+            speed: where.knots,
+            track: turned(where.track),
+            rate: where.rate,
+        })),
+        ...CIRCUITS.map((circuit): SimFlight => {
+            const where = circling(circuit, at)
+            return {
+                hex: addressOf(circuit.key, seed),
+                aircraftType: circuit.type,
+                category: 'A1',
+                phase: 'circuit',
+                lon: where.at[0],
+                lat: where.at[1],
+                altitude: where.feet,
+                speed: where.knots,
+                track: where.track,
+                rate: where.rate,
+            }
+        }),
+    ]
 }
 
 const round = (value: number, places: number) => Math.round(value * 10 ** places) / 10 ** places
 
-/** The simulated feed at a moment, in milliseconds since the epoch, as readsb's v2 API answers. */
-export function simulate(at: number): ReadsbResponse {
+/**
+ * The simulated sky at a moment, in milliseconds since the epoch, as readsb's v2 API answers
+ * `/v2/point`: knots, feet and feet a minute, positions to six places, and how long ago each was
+ * heard. `parseReadsb` reads it as it reads a live answer.
+ */
+export function simulateFlights(at: number, options: FlightSimOptions = {}): ReadsbResponse {
+    const seed = options.seed ?? 0
     const ac: ReadsbAircraft[] = []
-    const minutes = at / MINUTE
-    for (const { route, index, way, leg, number, offset } of LEGS) {
-        const block = blockOf(leg)
-        const first = Math.floor((minutes - block - offset) / route.every)
-        const last = Math.floor((minutes - offset) / route.every)
-        for (let departure = first; departure <= last; departure += 1) {
-            const into = minutes - (departure * route.every + offset)
-            const where = flown(leg, into)
-            if (where === undefined) continue
-            const key = `${String(index)}-${String(way)}-${String(departure)}`
-            // About one departure in five does not fly that day, so the sky is busier at some times than others.
-            if (hash(`cancelled ${key}`) < 0.2) continue
-            // Flights of the same leg share their number by the day's departure, a digit for each.
-            const callsign = `TDV${String(number * 10 + (((departure % 10) + 10) % 10)).padStart(4, '0')}`
-            const seen = round(hash(`seen ${key} ${String(Math.floor(at / 2000))}`) * 1.6, 1)
-            ac.push({
-                hex: addressOf(key),
-                type: 'adsb_icao',
-                flight: callsign.padEnd(8, ' '),
-                t: route.airframe.type,
-                category: route.airframe.category,
-                alt_baro: where.feet,
-                gs: round(where.knots + (where.knots === 0 ? 0 : hash(`gs ${key}`) * 6 - 3), 1),
-                track: round(((where.track % 360) + 360) % 360, 2),
-                baro_rate: Math.round(where.rate / 64) * 64,
-                squawk: squawkOf(key),
-                emergency: 'none',
-                lat: round(where.at[1], 6),
-                lon: round(where.at[0], 6),
-                seen_pos: seen,
-                seen: round(seen / 2, 1),
-                messages: Math.floor(hash(`messages ${key}`) * 4000) + Math.floor(into * 120),
-                rssi: round(-30 + hash(`rssi ${key}`) * 18, 1),
-            })
-        }
+    for (const { key, way, callsign, into, where } of flying(at, seed)) {
+        const seen = round(hash(`seen ${key} ${String(Math.floor(at / 2000))}`, seed) * 1.6, 1)
+        ac.push({
+            hex: addressOf(key, seed),
+            type: 'adsb_icao',
+            flight: callsign.padEnd(8, ' '),
+            t: way.route.airframe.type,
+            category: way.route.airframe.category,
+            alt_baro: where.feet,
+            gs: round(where.knots + (where.knots === 0 ? 0 : hash(`gs ${key}`, seed) * 6 - 3), 1),
+            track: round(turned(where.track), 2),
+            baro_rate: Math.round(where.rate / 64) * 64,
+            squawk: squawkOf(key, seed),
+            emergency: 'none',
+            lat: round(where.at[1], 6),
+            lon: round(where.at[0], 6),
+            seen_pos: seen,
+            seen: round(seen / 2, 1),
+            messages: Math.floor(hash(`messages ${key}`, seed) * 4000) + Math.floor(into * 120),
+            rssi: round(-30 + hash(`rssi ${key}`, seed) * 18, 1),
+        })
     }
     for (const circuit of CIRCUITS) {
         const where = circling(circuit, at)
         ac.push({
-            hex: addressOf(circuit.key),
+            hex: addressOf(circuit.key, seed),
             type: 'adsb_icao',
             t: circuit.type,
             category: 'A1',
@@ -337,13 +482,39 @@ export function simulate(at: number): ReadsbResponse {
     return { now: at, msg: 'No error', total: ac.length, ctime: at, ptime: 1, ac }
 }
 
-/** Where every simulated flight goes, by callsign, which no ADS-B message says: the timetable knows it. */
-export function routeOf(callsign: string | undefined): { from: string; to: string } | undefined {
+export interface FlightTrailOptions extends FlightSimOptions {
+    /** How far back the trails reach, in minutes. */
+    minutes: number
+    /** How far apart two points of a trail are, in milliseconds. 15 seconds by default. */
+    step?: number
+}
+
+/**
+ * Where each simulated aircraft was over the minutes before a moment, by its address, oldest first
+ * and without where it is now: the trail a watch that had followed the feed would hold, worked out
+ * from the moments before, so a moment played back draws the trails it had live.
+ */
+export function flightTrails(at: number, options: FlightTrailOptions): Map<string, LonLat[]> {
+    const step = Math.max(1, options.step ?? 15_000)
+    const steps = Math.round((options.minutes * MINUTE) / step)
+    const trails = new Map<string, LonLat[]>()
+    for (let back = steps; back >= 1; back -= 1) {
+        for (const aircraft of simulateFlights(at - back * step, options).ac ?? []) {
+            if (aircraft.lon === undefined || aircraft.lat === undefined) continue
+            const trail = trails.get(aircraft.hex)
+            if (trail === undefined) trails.set(aircraft.hex, [[aircraft.lon, aircraft.lat]])
+            else trail.push([aircraft.lon, aircraft.lat])
+        }
+    }
+    return trails
+}
+
+/** Where a simulated flight goes, by its callsign, which no ADS-B message says: the timetable knows it. */
+export function flightRoute(callsign: string | undefined): { from: string; to: string } | undefined {
     const match = /^TDV(\d{3})\d$/.exec(callsign ?? '')
     if (match === null) return undefined
     const number = Number(match[1])
-    const found = LEGS.find((leg) => leg.number === number)
+    const found = WAYS.find((way) => way.number === number)
     if (found === undefined) return undefined
-    const [from, to] = found.way === 0 ? [found.route.from, found.route.to] : [found.route.to, found.route.from]
-    return { from: CITIES[from].name, to: CITIES[to].name }
+    return { from: FLIGHT_CITIES[found.from].name, to: FLIGHT_CITIES[found.to].name }
 }

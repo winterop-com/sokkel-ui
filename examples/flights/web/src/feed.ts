@@ -1,18 +1,19 @@
 /**
  * The watch's feed: the aircraft now, each with the trail the watch has kept of it, read every few
- * seconds from the simulation or, when chosen and offered, every half minute or so from adsb.lol
- * for the area the map shows. A live read that fails leaves the simulation running and says why.
+ * seconds from the tracking add-on's simulated flights or, when chosen and offered, every half
+ * minute or so from adsb.lol for the area the map shows. A live read that fails leaves the
+ * simulation running and says why.
  */
 import { createStore, useStore } from '@winterop-com/sokkel-ui/hooks/use-store'
 import type { MapViewport } from '@winterop-com/sokkel-ui-maps/MapView'
 import type { ReadsbResponse } from '@winterop-com/sokkel-ui-tracking/adsb'
 import { distance } from '@winterop-com/sokkel-ui-tracking/geo'
+import { flightTrails, simulateFlights } from '@winterop-com/sokkel-ui-tracking/simulate'
 import type { LonLat } from '@winterop-com/sokkel-ui-tracking/track'
 
 import { readFlights, type Flight } from './flights'
 import { fetchPoint, LIVE_UNAVAILABLE, liveAvailable, MAX_RADIUS } from './live'
 import { DEFAULT_SETTINGS, settings, type Settings } from './settings'
-import { simulate } from './sim'
 
 const SECOND = 1000
 const MINUTE = 60 * SECOND
@@ -91,8 +92,11 @@ export function trailFor(flight: Flight, at: number, minutes: number): LonLat[] 
     return kept.points.filter((_, index) => at - (kept.times[index] ?? at) <= minutes * MINUTE).slice(0, -1)
 }
 
-/** The simulated aircraft at a moment, read through the readsb parser as a live answer is. */
-export const simulatedAt = (at: number): Flight[] => readFlights(simulate(at), 'simulated')
+/**
+ * The simulated aircraft at a moment, from the tracking add-on's timetable of flights, read through
+ * the readsb parser as a live answer is.
+ */
+export const simulatedAt = (at: number): Flight[] => readFlights(simulateFlights(at), 'simulated')
 
 /**
  * The simulated aircraft at a moment with their trails, worked out from the moments before it: what
@@ -101,15 +105,8 @@ export const simulatedAt = (at: number): Flight[] => readFlights(simulate(at), '
 export function replayAt(at: number, minutes: number): Flight[] {
     const now = simulatedAt(at)
     if (minutes === 0) return now
-    const steps = Math.round((minutes * MINUTE) / TRAIL_STEP)
-    const past = Array.from({ length: steps }, (_, index) => {
-        const then = simulatedAt(at - (steps - index) * TRAIL_STEP)
-        return new Map(then.map((flight) => [flight.id, [flight.lon, flight.lat] as LonLat]))
-    })
-    return now.map((flight) => ({
-        ...flight,
-        trail: past.map((moment) => moment.get(flight.id)).filter((point): point is LonLat => point !== undefined),
-    }))
+    const trails = flightTrails(at, { minutes, step: TRAIL_STEP })
+    return now.map((flight) => ({ ...flight, trail: trails.get(flight.id) ?? [] }))
 }
 
 function readSimulation(fallback?: string): void {

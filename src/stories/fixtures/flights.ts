@@ -1,6 +1,9 @@
 import type { ReadsbAircraft, ReadsbResponse } from '@winterop-com/sokkel-ui-tracking/adsb'
 
-/** The moment Tidevann's flight watch is drawn at, so every freshness is the same each time. */
+/**
+ * The moment Tidevann's flight watch opens at, the same each time: the live watch's clock starts
+ * here, and the still answer below is of this moment, so every freshness is the same each time.
+ */
 export const FLIGHTS_NOW = Date.parse('2026-11-20T14:30:00Z')
 
 /** One aircraft as readsb's v2 API writes it, from the few values that differ between them. */

@@ -5,6 +5,7 @@
 import type { TrackRosterItem, TrackState } from '@winterop-com/sokkel-ui/TrackRoster'
 import { createStore, useStore } from '@winterop-com/sokkel-ui/hooks/use-store'
 import type { Track as MapTrack } from '@winterop-com/sokkel-ui-maps/TrackLayer'
+import { createSimClock } from '@winterop-com/sokkel-ui-tracking/simulate'
 import type { Track, TrackAffiliation } from '@winterop-com/sokkel-ui-tracking/track'
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
 import { useCollection } from 'tidevann-shared/backend'
@@ -18,13 +19,29 @@ import { DEFAULT_SETTINGS, settings, type Settings } from './settings'
 /** The simulated moment the watch stands at, kept so a visit goes on where the last left off. */
 export const clock = createStore<number>(EPOCH, { key: 'clock', check: (value) => typeof value === 'number' && Number.isFinite(value) })
 
-/** Moves the simulated clock on each second by the feed's speed, unless the feed is paused. */
+/**
+ * Moves the simulated clock on each second by the feed's speed, unless the feed is paused: the
+ * tracking add-on's clock plays from the kept moment, follows the settings' speed and pause, and
+ * goes to any moment the clock is set to from outside, as the settings' reset does.
+ */
 export function startClock(): () => void {
-    const timer = window.setInterval(() => {
-        const options = { ...DEFAULT_SETTINGS, ...settings.get() }
-        if (!options.paused) clock.set(clock.get() + options.speed * 1000)
-    }, 1000)
-    return () => window.clearInterval(timer)
+    const options = () => ({ ...DEFAULT_SETTINGS, ...settings.get() })
+    const played = createSimClock({ start: clock.get(), speed: options().speed, playing: !options().paused })
+    const stops = [
+        played.subscribe(() => clock.set(played.get())),
+        settings.subscribe(() => {
+            const { speed, paused } = options()
+            if (speed !== played.speed) played.setSpeed(speed)
+            if (paused) played.pause()
+            else played.play()
+        }),
+        clock.subscribe(() => {
+            if (clock.get() !== played.get()) played.seek(clock.get())
+        }),
+    ]
+    return () => {
+        for (const stop of stops) stop()
+    }
 }
 
 /** The picked track, shared by the roster, the map, the card and the log. */

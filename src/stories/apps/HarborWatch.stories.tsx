@@ -20,10 +20,18 @@ import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { TrackCard } from '@winterop-com/sokkel-ui/TrackCard'
 import { TrackGlyph } from '@winterop-com/sokkel-ui/TrackGlyph'
-import { TrackRoster, type TrackAffiliation, type TrackKind } from '@winterop-com/sokkel-ui/TrackRoster'
+import {
+    TrackRoster,
+    type TrackAffiliation,
+    type TrackKind,
+    type TrackRosterItem,
+    type TrackState,
+} from '@winterop-com/sokkel-ui/TrackRoster'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { DARK_BASEMAP } from '@winterop-com/sokkel-ui-maps/basemap'
 import { CoverageLayer } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
 import { formatBearing, formatCoordinates, parseCoordinates } from '@winterop-com/sokkel-ui-maps/geodesy'
 import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
@@ -35,16 +43,57 @@ import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
 import { MapRuler } from '@winterop-com/sokkel-ui-maps/MapRuler'
 import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
 import { MAP_TONE_COLORS } from '@winterop-com/sokkel-ui-maps/tone'
-import { TrackLayer, trackCounts, trackLegendEntries } from '@winterop-com/sokkel-ui-maps/TrackLayer'
+import { TrackLayer, trackCounts, trackLegendEntries, type Track } from '@winterop-com/sokkel-ui-maps/TrackLayer'
 import { WORLD_BASEMAP } from '@winterop-com/sokkel-ui-maps/world'
 import { ZoneLayer, type Zone } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
 import { parseMgrs, toMgrs } from '@winterop-com/sokkel-ui-tracking/geo'
+import {
+    COAST_EPOCH,
+    coastActivity,
+    coastEvents,
+    simulateCoast,
+    type CoastEvent,
+    type CoastJudgment,
+} from '@winterop-com/sokkel-ui-tracking/simulate'
+import { KNOT, type Track as Contact } from '@winterop-com/sokkel-ui-tracking/track'
+import { clockTime, useSimClock, type StoryClock } from '../fixtures/simulation'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { WATCH_ACTIVITY, WATCH_NOW, WATCH_TASKS, watchRoster, type WatchTask } from '../fixtures/watch'
-import { HARBOR_RINGS, objectiveLinks, RADAR_CONES, WATCH_CAMERA, watchAt, ZONES } from '../map/tracks'
+import { motionOf, type WatchTask } from '../fixtures/watch'
+import { HARBOR_RINGS, objectiveLinks, RADAR_CONES, WATCH_CAMERA, ZONES } from '../map/tracks'
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
+
+/** The seed the watch's waters are drawn from: the same seed, the same contacts. */
+const SEED = 1
+
+/** How fast the watch's clock plays: a simulated minute each second. */
+const SPEED = 60
+
+/** The moment the watch opens at, an evening in November, the same every time. */
+const START = COAST_EPOCH
+
+/** How far back the timeline and the log reach. */
+const BACK = 6 * HOUR
+
+/** The watch's own and the regular traffic, by the ids their feeds give them: always in the picture. */
+const PILOT = '257100020'
+const PATROL = '257100070'
+const TUG = '257100031'
+const FERRY = '257200410'
+const CARGO = '257300512'
+const SURVEY = '47a1c3'
+const FLIGHT = '4b8e12'
+const RADAR = 'radar-harbor'
+
+/** The watch's tasks, between the tracks that are always there, each started some minutes before the watch opens. */
+const TASKS: readonly WatchTask[] = [
+    { id: 'task-41', title: 'Follow', state: 'executing', from: PATROL, to: FERRY, started: 18, priority: 'High', by: 'ada' },
+    { id: 'task-42', title: 'Investigate', state: 'pending', from: SURVEY, to: FLIGHT, priority: 'Normal', by: 'grace' },
+    { id: 'task-39', title: 'Report', state: 'paused', from: RADAR, to: CARGO, started: 42, priority: 'Normal', by: 'linus' },
+    { id: 'task-36', title: 'Investigate', state: 'done', from: PILOT, to: FERRY, started: 95, ran: 34, priority: 'Low', by: 'margaret' },
+    { id: 'task-35', title: 'Follow', state: 'failed', from: TUG, to: CARGO, started: 130, ran: 12, priority: 'Normal', by: 'ada' },
+]
 
 type Place = 'watch' | 'tasks' | 'zones' | 'log'
 
@@ -66,20 +115,84 @@ const LABELS: Record<Place, string> = { watch: 'Watch', tasks: 'Tasks', zones: '
 /** A position read as latitude, longitude or as an MGRS reference. */
 const readPosition = (text: string): LngLat | null => parseCoordinates(text) ?? parseMgrs(text, { center: true }) ?? null
 
+/** The watch as its pages read it: the simulated clock, the moment shown, and the picture read from the feeds at it. */
+interface Watch extends StoryClock {
+    /** The moment played back to, or null while the watch is live. */
+    shownAt: number | null
+    setShownAt: (at: number | null) => void
+    /** The moment the picture is of: the one played back to, or the clock's. */
+    at: number
+    /** The vessels, aircraft and radars heard at the moment, as the tracking add-on's readers give them. */
+    contacts: readonly Contact[]
+    /** Sets a track's affiliation by hand, from the moment shown on. */
+    judge: (id: string, affiliation: TrackAffiliation) => void
+}
+
+/**
+ * The harbor watch, live: the tracking add-on's simulated coast read at the story's clock, its
+ * vessels decoded from AIS sentences and its aircraft read from a readsb-shaped answer. The clock
+ * starts at the same moment every time, so the first frame is the same picture, and plays on from it;
+ * a moment played back is read the same way, so it is what it was live.
+ */
+function useWatch(): Watch {
+    const clock = useSimClock(START, SPEED)
+    const [judgments, setJudgments] = useState<readonly CoastJudgment[]>([])
+    const [shownAt, setShownAt] = useState<number | null>(null)
+    const at = shownAt ?? clock.now
+    const contacts = useMemo(() => simulateCoast(SEED, at, judgments).tracks, [at, judgments])
+    const judge = (id: string, affiliation: TrackAffiliation) => setJudgments((was) => [...was, { track: id, affiliation, at }])
+    return { ...clock, shownAt, setShownAt, at, contacts, judge }
+}
+
+/** A track a task is on. */
+const TASKED: TrackState = { label: 'Tasked', tone: 'info' }
+
+const isOpen = (state: TaskState) => state === 'pending' || state === 'executing' || state === 'paused'
+
+/** A contact as the roster lists it: its name, its MMSI or address after it, how it moves and when it was last heard. */
+function rosterItem(contact: Contact, tasked: ReadonlySet<string>): TrackRosterItem {
+    const label = contact.label ?? contact.id
+    return {
+        id: contact.id,
+        name: label,
+        code: label === contact.id || contact.kind === 'sensor' ? undefined : contact.id,
+        kind: contact.kind,
+        affiliation: contact.affiliation,
+        heading: contact.heading,
+        states: tasked.has(contact.id) ? [TASKED] : undefined,
+        detail: motionOf(contact.speed === undefined ? undefined : contact.speed / KNOT, contact.heading),
+        updatedAt: contact.updatedAt ?? null,
+    }
+}
+
+/** A contact as the map layer draws it. */
+const mapTrack = (contact: Contact, trails = true): Track => ({
+    id: contact.id,
+    position: [contact.lon, contact.lat],
+    heading: contact.heading,
+    affiliation: contact.affiliation,
+    kind: contact.kind,
+    label: contact.label,
+    trail: trails ? contact.trail : undefined,
+})
+
 /** The harbor watch's frame: the rail, the trail, the feed's state at the foot, and the page. */
 function Frame({
+    watch,
     place,
     open,
     panel,
     bottom,
     children,
 }: {
+    watch: Watch
     place: Place
     open: number
     panel?: ReactNode
     bottom?: ReactNode
     children: ReactNode
 }) {
+    const live = watch.running && watch.shownAt === null
     return (
         <TooltipProvider>
             <Shell
@@ -95,9 +208,14 @@ function Frame({
                     <TopBar
                         trail={[{ label: 'Harbor watch', href: '#' }, { label: LABELS[place] }]}
                         actions={
-                            <Button variant="ghost" size="sm" aria-label="Pause the feed">
-                                <Pause aria-hidden />
-                                Live
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={watch.toggle}
+                                aria-label={watch.running ? 'Pause the feed' : 'Resume the feed'}
+                            >
+                                {watch.running ? <Pause aria-hidden /> : <Play aria-hidden />}
+                                {watch.running ? 'Live' : 'Paused'}
                             </Button>
                         }
                     />
@@ -105,10 +223,17 @@ function Frame({
                 panel={panel}
                 bottom={bottom}
                 foot={
-                    <StatusLine live tone="live" note="Live 14:30:00 UTC">
-                        <StatusItem label="tracks">{watchAt(0).length}</StatusItem>
-                        <StatusItem label="hostile">1</StatusItem>
+                    <StatusLine
+                        live={live}
+                        tone={live ? 'live' : 'quiet'}
+                        note={`${watch.shownAt !== null ? 'Playback' : watch.running ? 'Live' : 'Paused'} ${clockTime(watch.at)}`}
+                    >
+                        <StatusItem label="tracks">{watch.contacts.length}</StatusItem>
+                        <StatusItem label="hostile">
+                            {watch.contacts.filter((contact) => contact.affiliation === 'hostile').length}
+                        </StatusItem>
                         <StatusItem label="open tasks">{open}</StatusItem>
+                        <StatusItem label="speed">{`${String(SPEED)}×`}</StatusItem>
                     </StatusLine>
                 }
             >
@@ -118,14 +243,13 @@ function Frame({
     )
 }
 
-const glyphOf = (id: string, affiliations: Readonly<Record<string, TrackAffiliation>> = {}) => {
-    const track = watchRoster(WATCH_NOW, affiliations).find((each) => each.id === id)
+/** One end of a task: the track's name and its glyph as the picture has it now. */
+const glyphOf = (id: string, roster: readonly TrackRosterItem[]) => {
+    const track = roster.find((each) => each.id === id)
     return track === undefined
         ? { name: id }
         : { name: track.name, glyph: <TrackGlyph kind={track.kind} affiliation={track.affiliation} heading={track.heading} /> }
 }
-
-const isOpen = (state: TaskState) => state === 'pending' || state === 'executing' || state === 'paused'
 
 /** A task's actions as its state allows, moving it through the states held by the story. */
 function actionsOf(task: WatchTask, state: TaskState, setState: (state: TaskState) => void): TaskAction[] {
@@ -153,10 +277,14 @@ function Tasks({
     tasks,
     states,
     setState,
+    roster,
+    now,
 }: {
     tasks: readonly WatchTask[]
     states: Record<string, TaskState>
     setState: (id: string, state: TaskState) => void
+    roster: readonly TrackRosterItem[]
+    now: number
 }) {
     return tasks.map((task) => {
         const state = states[task.id] ?? task.state
@@ -166,11 +294,11 @@ function Tasks({
                 title={task.title}
                 code={task.id}
                 state={state}
-                startedAt={task.started === undefined ? undefined : WATCH_NOW - task.started * MINUTE}
-                endedAt={task.started === undefined || task.ran === undefined ? undefined : WATCH_NOW - (task.started - task.ran) * MINUTE}
-                now={WATCH_NOW}
-                from={glyphOf(task.from)}
-                to={glyphOf(task.to)}
+                startedAt={task.started === undefined ? undefined : START - task.started * MINUTE}
+                endedAt={task.started === undefined || task.ran === undefined ? undefined : START - (task.started - task.ran) * MINUTE}
+                now={now}
+                from={glyphOf(task.from, roster)}
+                to={glyphOf(task.to, roster)}
                 facts={[
                     { term: 'Priority', value: task.priority },
                     { term: 'Set by', value: task.by },
@@ -184,24 +312,36 @@ function Tasks({
 function useTaskStates() {
     const [states, setStates] = useState<Record<string, TaskState>>({})
     const setState = (id: string, state: TaskState) => setStates((was) => ({ ...was, [id]: state }))
-    const open = WATCH_TASKS.filter((task) => isOpen(states[task.id] ?? task.state)).length
-    return { states, setState, open }
+    const stateOf = (task: WatchTask) => states[task.id] ?? task.state
+    const open = TASKS.filter((task) => isOpen(stateOf(task))).length
+    return { states, setState, stateOf, open }
 }
 
+/** The ids of the tracks an open task is about or done by. */
+const taskedIds = (stateOf: (task: WatchTask) => TaskState) =>
+    new Set(TASKS.filter((task) => isOpen(stateOf(task))).flatMap((task) => [task.from, task.to]))
+
+const SOURCES: Record<string, string> = { ais: 'AIS', adsb: 'ADS-B', radar: 'Radar' }
+
 function WatchPage() {
-    const tracks = useMemo(() => watchAt(0), [])
-    const [judged, setJudged] = useState<Record<string, TrackAffiliation>>({})
-    const [selected, setSelected] = useState<string | null>('contact-14')
+    const watch = useWatch()
+    const { at, contacts } = watch
+    const [selected, setSelected] = useState<string | null>(FERRY)
     const [mgrs, setMgrs] = useState(true)
-    const { states, setState, open } = useTaskStates()
-    const shown = tracks.map((track) => ({ ...track, affiliation: judged[track.id] ?? track.affiliation }))
-    const roster = watchRoster(WATCH_NOW, judged)
+    const { states, setState, stateOf, open } = useTaskStates()
+    const shown = useMemo(() => contacts.map((contact) => mapTrack(contact)), [contacts])
+    const tasked = taskedIds(stateOf)
+    const roster = contacts.map((contact) => rosterItem(contact, tasked))
     const picked = roster.find((track) => track.id === selected)
-    const pickedTrack = shown.find((track) => track.id === selected)
-    const links = useMemo(() => objectiveLinks(shown, [['patrol-7', 'contact-14']]), [shown])
-    const judge = (id: string, affiliation: TrackAffiliation) => setJudged((was) => ({ ...was, [id]: affiliation }))
+    const pickedContact = contacts.find((contact) => contact.id === selected)
+    // A line from each running task's unit to its target.
+    const pairs = TASKS.filter((task) => stateOf(task) === 'executing').map((task): [string, string] => [task.from, task.to])
+    const links = objectiveLinks(shown, pairs)
     const writePosition = (position: LngLat) => (mgrs ? (toMgrs(position) ?? formatCoordinates(position)) : formatCoordinates(position))
-    const about = WATCH_TASKS.filter((task) => task.from === selected || task.to === selected)
+    const about = TASKS.filter((task) => task.from === selected || task.to === selected)
+    // The strip is counted again each ten minutes of the clock, not each tick.
+    const stretch = Math.floor(watch.now / (10 * MINUTE)) * 10 * MINUTE
+    const activity = useMemo(() => coastActivity(SEED, stretch - BACK, stretch, 36), [stretch])
     const panel = (
         <SidePanel
             tabs={[
@@ -226,31 +366,44 @@ function WatchPage() {
                                     />
                                 }
                             >
-                                {picked !== undefined && pickedTrack !== undefined && (
+                                {picked === undefined || pickedContact === undefined ? (
+                                    <Empty>
+                                        <EmptyHeader>
+                                            <EmptyTitle>No track picked</EmptyTitle>
+                                            <EmptyDescription>Pick one in the list or on the map.</EmptyDescription>
+                                        </EmptyHeader>
+                                    </Empty>
+                                ) : (
                                     <Stack gap="md">
                                         <TrackCard
                                             name={picked.name}
-                                            code={picked.id}
+                                            code={picked.code}
                                             kind={picked.kind}
                                             affiliation={picked.affiliation}
                                             heading={picked.heading}
                                             states={picked.states}
                                             detail={picked.detail}
                                             updatedAt={picked.updatedAt}
-                                            now={WATCH_NOW}
-                                            onAffiliationChange={(affiliation) => judge(picked.id, affiliation)}
+                                            now={at}
+                                            onAffiliationChange={(affiliation) => watch.judge(picked.id, affiliation)}
                                         />
                                         <DescriptionList
                                             size="sm"
                                             items={[
-                                                { term: 'Position', value: writePosition(pickedTrack.position), code: true },
+                                                {
+                                                    term: 'Position',
+                                                    value: writePosition([pickedContact.lon, pickedContact.lat]),
+                                                    code: true,
+                                                },
                                                 {
                                                     term: 'Heading',
                                                     value:
-                                                        pickedTrack.heading === undefined ? undefined : formatBearing(pickedTrack.heading),
+                                                        pickedContact.heading === undefined
+                                                            ? undefined
+                                                            : formatBearing(pickedContact.heading),
                                                     numeric: true,
                                                 },
-                                                { term: 'Source', value: picked.kind === 'aircraft' ? 'ADS-B' : 'AIS' },
+                                                { term: 'Source', value: SOURCES[pickedContact.source ?? ''] ?? pickedContact.source },
                                             ]}
                                         />
                                     </Stack>
@@ -258,7 +411,7 @@ function WatchPage() {
                             </PanelSection>
                             {about.length > 0 && (
                                 <PanelSection title="Tasks">
-                                    <Tasks tasks={about} states={states} setState={setState} />
+                                    <Tasks tasks={about} states={states} setState={setState} roster={roster} now={watch.now} />
                                 </PanelSection>
                             )}
                         </>
@@ -269,17 +422,19 @@ function WatchPage() {
     )
     return (
         <Frame
+            watch={watch}
             place="watch"
             open={open}
             panel={panel}
             bottom={
                 <PlaybackTimeline
                     label="Harbor watch"
-                    from={WATCH_NOW - 6 * HOUR}
-                    to={WATCH_NOW}
-                    value={null}
-                    onValueChange={() => undefined}
-                    activity={WATCH_ACTIVITY}
+                    from={watch.now - BACK}
+                    to={watch.now}
+                    value={watch.shownAt === null ? null : Math.max(watch.now - BACK, watch.shownAt)}
+                    onValueChange={watch.setShownAt}
+                    activity={activity}
+                    rate={SPEED * 4}
                     timeZone="UTC"
                 />
             }
@@ -295,17 +450,18 @@ function WatchPage() {
                         framed={false}
                         className="h-full"
                         tracks={roster}
-                        now={WATCH_NOW}
+                        now={at}
                         selected={selected}
                         onSelect={setSelected}
-                        onAffiliationChange={judge}
+                        onAffiliationChange={watch.judge}
                     />
                 }
                 second={
                     <MapView
                         label="Harbor watch"
-                        defaultBasemap={WORLD_BASEMAP}
-                        basemaps={[WORLD_BASEMAP]}
+                        defaultBasemap={DARK_BASEMAP}
+                        basemaps={[DARK_BASEMAP]}
+                        fallbackBasemap={WORLD_BASEMAP}
                         camera={WATCH_CAMERA}
                         selected={selected}
                         onSelectedChange={(id) => setSelected(id)}
@@ -343,11 +499,14 @@ function WatchPage() {
 }
 
 function TasksPage() {
-    const { states, setState, open } = useTaskStates()
+    const watch = useWatch()
+    const { states, setState, stateOf, open } = useTaskStates()
     const [shown, setShown] = useState<'open' | 'closed' | 'all'>('open')
-    const listed = WATCH_TASKS.filter((task) => shown === 'all' || (shown === 'open') === isOpen(states[task.id] ?? task.state))
+    const listed = TASKS.filter((task) => shown === 'all' || (shown === 'open') === isOpen(stateOf(task)))
+    const tasked = taskedIds(stateOf)
+    const roster = watch.contacts.map((contact) => rosterItem(contact, tasked))
     return (
-        <Frame place="tasks" open={open}>
+        <Frame watch={watch} place="tasks" open={open}>
             <Stack gap="section">
                 <PageHeader
                     title="Tasks"
@@ -366,13 +525,13 @@ function TasksPage() {
                         onValueChange={setShown}
                         options={[
                             { value: 'open', label: 'Open', count: open },
-                            { value: 'closed', label: 'Closed', count: WATCH_TASKS.length - open },
-                            { value: 'all', label: 'All', count: WATCH_TASKS.length },
+                            { value: 'closed', label: 'Closed', count: TASKS.length - open },
+                            { value: 'all', label: 'All', count: TASKS.length },
                         ]}
                     />
                 </Toolbar>
                 <Columns count={3} min="md" gap="lg" align="start">
-                    <Tasks tasks={listed} states={states} setState={setState} />
+                    <Tasks tasks={listed} states={states} setState={setState} roster={roster} now={watch.now} />
                 </Columns>
             </Stack>
         </Frame>
@@ -391,9 +550,11 @@ const TONE_WORDS: Record<string, string> = {
 const FILL_WORDS: Record<string, string> = { solid: 'Wash', hatched: 'Lines', none: 'Edge only' }
 
 function ZonesPage() {
+    const watch = useWatch()
+    const { open } = useTaskStates()
     const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set(['boarding']))
     const [selected, setSelected] = useState<string | null>('closed-area')
-    const tracks = useMemo(() => watchAt(0, false), [])
+    const tracks = useMemo(() => watch.contacts.map((contact) => mapTrack(contact, false)), [watch.contacts])
     const toggle = (id: string) =>
         setHidden((was) => {
             const next = new Set(was)
@@ -435,7 +596,7 @@ function ZonesPage() {
         },
     ]
     return (
-        <Frame place="zones" open={3}>
+        <Frame watch={watch} place="zones" open={open}>
             <Stack gap="section" className="h-full">
                 <PageHeader title="Zones" count={`${String(ZONES.length - hidden.size)} of ${String(ZONES.length)} shown`} />
                 <SplitPane
@@ -465,8 +626,9 @@ function ZonesPage() {
                     second={
                         <MapView
                             label="Zones"
-                            defaultBasemap={WORLD_BASEMAP}
-                            basemaps={[WORLD_BASEMAP]}
+                            defaultBasemap={DARK_BASEMAP}
+                            basemaps={[DARK_BASEMAP]}
+                            fallbackBasemap={WORLD_BASEMAP}
                             camera={WATCH_CAMERA}
                             selected={selected}
                             onSelectedChange={(id) => setSelected(id)}
@@ -485,8 +647,7 @@ function ZonesPage() {
 /** One line of the watch's log. */
 interface Line {
     id: string
-    /** Minutes before the watch's now. */
-    ago: number
+    at: number
     event: string
     track: string
     kind: TrackKind
@@ -495,108 +656,57 @@ interface Line {
     by: string
 }
 
-const LOG: Line[] = [
+/** What people on watch did in the hours before it opened. */
+const BY_HAND: readonly Line[] = [
     {
-        id: 'l1',
-        ago: 2,
-        event: 'Affiliation',
-        track: 'Contact 14',
-        kind: 'vessel',
-        affiliation: 'hostile',
-        detail: 'Unknown to Hostile, set by hand',
-        by: 'ada',
-    },
-    {
-        id: 'l2',
-        ago: 6,
-        event: 'New contact',
-        track: 'New 33',
-        kind: 'vessel',
-        affiliation: 'pending',
-        detail: 'First heard, by AIS',
-        by: 'feed',
-    },
-    {
-        id: 'l3',
-        ago: 9,
-        event: 'Lost',
-        track: 'Contact 9',
-        kind: 'vessel',
-        affiliation: 'unknown',
-        detail: 'Silent for five minutes',
-        by: 'feed',
-    },
-    {
-        id: 'l4',
-        ago: 13,
-        event: 'Stale',
-        track: 'Contact 9',
-        kind: 'vessel',
-        affiliation: 'unknown',
-        detail: 'Silent for a minute',
-        by: 'feed',
-    },
-    {
-        id: 'l5',
-        ago: 18,
+        id: 'task-41-started',
+        at: START - 18 * MINUTE,
         event: 'Task',
-        track: 'Contact 14',
-        kind: 'vessel',
-        affiliation: 'hostile',
-        detail: 'Started follow task-41, by Patrol 7',
-        by: 'ada',
-    },
-    {
-        id: 'l6',
-        ago: 24,
-        event: 'Affiliation',
-        track: 'Track 21',
-        kind: 'aircraft',
-        affiliation: 'unknown',
-        detail: 'Pending to Unknown',
-        by: 'feed',
-    },
-    {
-        id: 'l7',
-        ago: 31,
-        event: 'Named',
-        track: 'Ferry Juniper',
+        track: 'FERRY JUNIPER',
         kind: 'vessel',
         affiliation: 'neutral',
-        detail: 'Sent its name, MMSI 257200410',
-        by: 'feed',
+        detail: 'Started follow task-41, by PATROL 7',
+        by: 'ada',
     },
     {
-        id: 'l8',
-        ago: 42,
+        id: 'task-39-started',
+        at: START - 42 * MINUTE,
         event: 'Task',
-        track: 'New 33',
+        track: 'CARGO LARKSPUR',
         kind: 'vessel',
-        affiliation: 'pending',
+        affiliation: 'neutral',
         detail: 'Started report task-39, by Harbor radar',
         by: 'linus',
     },
     {
-        id: 'l9',
-        ago: 61,
+        id: 'task-36-done',
+        at: START - 61 * MINUTE,
         event: 'Task',
-        track: 'Contact 9',
+        track: 'FERRY JUNIPER',
         kind: 'vessel',
-        affiliation: 'unknown',
-        detail: 'Completed investigate task-36, by Pilot 2',
+        affiliation: 'neutral',
+        detail: 'Completed investigate task-36, by PILOT 2',
         by: 'margaret',
     },
-    {
-        id: 'l10',
-        ago: 74,
-        event: 'Left the area',
-        track: 'Flight 208',
-        kind: 'aircraft',
-        affiliation: 'neutral',
-        detail: 'Out of the watch area',
-        by: 'feed',
-    },
 ]
+
+const SAID: Record<CoastEvent['kind'], string> = {
+    appeared: 'New contact',
+    named: 'Named',
+    affiliation: 'Affiliation',
+    stale: 'Stale',
+    lost: 'Lost',
+    left: 'Left the area',
+}
+
+/** What the log says of one thing the feed saw. */
+function detailOf(event: CoastEvent): string {
+    if (event.kind === 'affiliation') return `${TONE_WORDS[event.was ?? 'pending']} to ${TONE_WORDS[event.affiliation]}`
+    if (event.kind === 'appeared') return `First heard, ${event.trackKind === 'aircraft' ? 'by ADS-B' : 'by AIS'}`
+    if (event.kind === 'named') return `Sent its name, MMSI ${event.track}`
+    if (event.kind === 'stale') return 'Silent for a minute'
+    return event.kind === 'lost' ? 'Silent for five minutes' : 'Out of the watch area'
+}
 
 const STAMP = new Intl.DateTimeFormat('en-US', {
     timeZone: 'UTC',
@@ -612,8 +722,8 @@ const LOG_COLUMNS: DataColumn<Line>[] = [
         id: 'at',
         header: 'Time (UTC)',
         width: '9rem',
-        cell: (line) => STAMP.format(WATCH_NOW - line.ago * MINUTE),
-        sortValue: (line) => -line.ago,
+        cell: (line) => STAMP.format(line.at),
+        sortValue: (line) => line.at,
     },
     { id: 'event', header: 'Event', width: '8.5rem', cell: (line) => line.event, sortValue: (line) => line.event },
     {
@@ -633,11 +743,28 @@ const LOG_COLUMNS: DataColumn<Line>[] = [
 ]
 
 function LogPage() {
+    const watch = useWatch()
+    const { open } = useTaskStates()
+    // The feed's events are found again each minute of the clock, not each tick.
+    const minute = Math.floor(watch.now / MINUTE) * MINUTE
+    const lines = useMemo((): Line[] => {
+        const seen = coastEvents(SEED, minute - BACK, minute).map((event): Line => ({
+            id: event.id,
+            at: event.at,
+            event: SAID[event.kind],
+            track: event.name,
+            kind: event.trackKind,
+            affiliation: event.affiliation,
+            detail: detailOf(event),
+            by: 'feed',
+        }))
+        return [...seen, ...BY_HAND.filter((line) => line.at >= minute - BACK)].sort((a, b) => b.at - a.at)
+    }, [minute])
     return (
-        <Frame place="log" open={3}>
+        <Frame watch={watch} place="log" open={open}>
             <Stack gap="section" className="h-full">
                 <PageHeader title="Log" count="the last 6 hours" />
-                <DataTable className="min-h-0 flex-1" columns={LOG_COLUMNS} rows={LOG} rowKey={(line) => line.id} />
+                <DataTable className="min-h-0 flex-1" columns={LOG_COLUMNS} rows={lines} rowKey={(line) => line.id} />
             </Stack>
         </Frame>
     )
@@ -647,15 +774,25 @@ const meta: Meta = { title: 'Apps/Harbor watch', parameters: { layout: 'fullscre
 export default meta
 
 /**
- * The watch: the roster of tracks beside the map, sharing the picked contact, with the areas, the
- * radars' cover and rings, the line from the patrol to the contact it follows, and the ruler,
- * compass, go to (latitude, longitude or MGRS) and the cursor's position as an MGRS reference.
- * The side panel holds the picked track's card, facts and tasks; the playback timeline is at the foot.
+ * The watch, live: the tracking package's simulated coast, its vessels decoded from AIS sentences
+ * and its aircraft read from a readsb-shaped answer, played from the same evening every time at a
+ * simulated minute a second, so the tracks move and their trails grow, and contacts come, are
+ * classified, fall silent and go. The roster of tracks stands beside the map, sharing the picked
+ * contact, with the areas, the radars' cover and rings, the line from the patrol to the ferry it
+ * follows, and the ruler, compass, go to (latitude, longitude or MGRS) and the cursor's position as
+ * an MGRS reference. The side panel holds the picked track's card, facts and tasks; the playback
+ * timeline at the foot looks back over six hours, and Live in the top bar holds the clock.
  */
 export const Watch: StoryObj = { name: 'Watch', render: () => <WatchPage /> }
-/** The tasks as cards, open ones first: start, pause, resume, complete, cancel (asked first) and reopen move them through their states. */
+/**
+ * The tasks as cards, open ones first, their elapsed times running with the watch's clock: start,
+ * pause, resume, complete, cancel (asked first) and reopen move them through their states.
+ */
 export const TasksStory: StoryObj = { name: 'Tasks', render: () => <TasksPage /> }
-/** The watch's zones in a table beside a map of them, each shown or hidden by its switch or its menu, the picked one ringed on the map. */
+/**
+ * The watch's zones in a table beside a map of them with the tracks moving through, each zone shown
+ * or hidden by its switch or its menu, the picked one ringed on the map.
+ */
 export const Zones: StoryObj = { name: 'Zones', render: () => <ZonesPage /> }
-/** The log of what the feed saw and what people on watch did, the newest first. */
+/** The log of what the feed saw and what people on watch did, the newest first, a line added as each thing happens. */
 export const Log: StoryObj = { name: 'Log', render: () => <LogPage /> }

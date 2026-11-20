@@ -5,6 +5,7 @@ import { TrackCard } from '@winterop-com/sokkel-ui/TrackCard'
 import { TrackRoster, type TrackRosterItem } from '@winterop-com/sokkel-ui/TrackRoster'
 import { formatCoordinates } from '@winterop-com/sokkel-ui-maps/geodesy'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { flightRoute } from '@winterop-com/sokkel-ui-tracking/simulate'
 import { Crosshair, List, Plane } from 'lucide-react'
 import { useState } from 'react'
 
@@ -23,7 +24,6 @@ import {
     type Flight,
 } from '../flights'
 import type { Settings } from '../settings'
-import { routeOf } from '../sim'
 
 /** A flight as a roster lists it. */
 export function rosterItem(flight: Flight, units: Settings['units']): TrackRosterItem {
@@ -44,7 +44,7 @@ export function rosterItem(flight: Flight, units: Settings['units']): TrackRoste
 /** What is known of one flight: its card, then its values in the chosen units. */
 function Details({ flight, at, options }: { flight: Flight; at: number; options: Settings }) {
     const band = altitudeBand(flight)
-    const route = flight.source === 'simulated' ? routeOf(callsignOf(flight)) : undefined
+    const route = flight.source === 'simulated' ? flightRoute(callsignOf(flight)) : undefined
     const type = flight.properties?.aircraftType
     const squawk = flight.properties?.squawk
     const items: Description[] = [

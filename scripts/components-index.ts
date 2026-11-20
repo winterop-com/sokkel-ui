@@ -225,6 +225,13 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
     dhis2: {
         tokens: 'the tokens both expression languages share; `ExpressionState` is exported by `expression` and `rule`',
     },
+    tracking: {
+        'simulate/clock': 'the simulated clock, exported by `simulate`',
+        'simulate/coast': 'the simulated coast, its contacts, events and picture, exported by `simulate`',
+        'simulate/flights': 'the simulated flights and their timetable, exported by `simulate`',
+        'simulate/network': "the simulated machine's connections and hosts, exported by `simulate`",
+        'simulate/nmea': 'the AIS sentences the simulated coast writes its vessels as, exported by `simulate`',
+    },
 }
 
 /** Every module a package builds, by its path under the package's `src` without the extension. */

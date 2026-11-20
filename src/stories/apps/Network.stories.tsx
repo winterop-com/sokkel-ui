@@ -20,6 +20,7 @@ import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { TimeSeriesPanel } from '@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel'
+import { DARK_BASEMAP } from '@winterop-com/sokkel-ui-maps/basemap'
 import { LinkLayer, type MapLink } from '@winterop-com/sokkel-ui-maps/LinkLayer'
 import { MapCoordinates } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
 import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
@@ -28,11 +29,30 @@ import type { MapTone } from '@winterop-com/sokkel-ui-maps/tone'
 import { TrackLayer, type Track, type TrackAffiliation } from '@winterop-com/sokkel-ui-maps/TrackLayer'
 import { WORLD_BASEMAP } from '@winterop-com/sokkel-ui-maps/world'
 import { flowTracks, type ConnectionFlow, type FlowGroup } from '@winterop-com/sokkel-ui-tracking/network'
+import { networkPlace } from '@winterop-com/sokkel-ui-tracking/simulate'
+import { NETWORK_HOME, NETWORK_NOW, networkHistory, type NetworkSnapshot } from '../fixtures/network'
+import { useSimClock, type StoryClock } from '../fixtures/simulation'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { NETWORK_HOME, NETWORK_NOW, NETWORK_PLACES, networkHistory, type NetworkSnapshot } from '../fixtures/network'
 
-const HISTORY = networkHistory()
-const LATEST = HISTORY[HISTORY.length - 1]
+/** The host the Host story opens on: the one the shell's session out is to, which stays connected. */
+const PICKED_HOST = '203.0.113.37'
+
+/** The watch as its pages read it: the clock, the readings kept at its moment, oldest first, and the last of them. */
+interface Watch extends StoryClock {
+    history: readonly NetworkSnapshot[]
+    latest: NetworkSnapshot
+}
+
+/**
+ * The network watch, live: the tracking add-on's simulated machine read at the story's clock, a
+ * reading a second, gathered by its flow tracker. The clock starts at the same moment every time,
+ * so the first frame is the same watch, and plays on from it at the pace of a real machine.
+ */
+function useWatch(): Watch {
+    const played = useSimClock(NETWORK_NOW, 1)
+    const history = useMemo(() => networkHistory(played.now), [played.now])
+    return { ...played, history, latest: history[history.length - 1] }
+}
 
 type PageId = 'map' | 'connections' | 'traffic'
 
@@ -115,7 +135,7 @@ const CONNECTION_COLUMNS: DataColumn<ConnectionFlow>[] = [
         id: 'place',
         header: 'Place',
         width: 'minmax(9rem,1fr)',
-        cell: (row) => NETWORK_PLACES[row.remoteAddress]?.label ?? `${row.scope[0].toUpperCase()}${row.scope.slice(1)}`,
+        cell: (row) => networkPlace(row.remoteAddress)?.label ?? `${row.scope[0].toUpperCase()}${row.scope.slice(1)}`,
     },
     {
         id: 'state',
@@ -154,7 +174,20 @@ const CONNECTION_COLUMNS: DataColumn<ConnectionFlow>[] = [
 ]
 
 /** The watch's frame: the rail, the top bar's trail, the foot's figures, and the page. */
-function Watch({ page, panel, bottom, children }: { page: PageId; panel?: ReactNode; bottom?: ReactNode; children: ReactNode }) {
+function Frame({
+    watch,
+    page,
+    panel,
+    bottom,
+    children,
+}: {
+    watch: Watch
+    page: PageId
+    panel?: ReactNode
+    bottom?: ReactNode
+    children: ReactNode
+}) {
+    const { latest } = watch
     return (
         <TooltipProvider>
             <Shell
@@ -170,11 +203,11 @@ function Watch({ page, panel, bottom, children }: { page: PageId; panel?: ReactN
                 panel={panel}
                 bottom={bottom}
                 foot={
-                    <StatusLine note={`Read at ${clock(NETWORK_NOW)}`}>
-                        <StatusItem label="connections">{LATEST.connections.length}</StatusItem>
-                        <StatusItem label="hosts">{LATEST.remotes.length}</StatusItem>
-                        <StatusItem label="in">{rate(LATEST.rateIn)}</StatusItem>
-                        <StatusItem label="out">{rate(LATEST.rateOut)}</StatusItem>
+                    <StatusLine live tone="live" note={`Read at ${clock(latest.at)}`}>
+                        <StatusItem label="connections">{latest.connections.length}</StatusItem>
+                        <StatusItem label="hosts">{latest.remotes.length}</StatusItem>
+                        <StatusItem label="in">{rate(latest.rateIn)}</StatusItem>
+                        <StatusItem label="out">{rate(latest.rateOut)}</StatusItem>
                     </StatusLine>
                 }
             >
@@ -185,20 +218,22 @@ function Watch({ page, panel, bottom, children }: { page: PageId; panel?: ReactN
 }
 
 function ConnectionsPage() {
+    const watch = useWatch()
+    const { latest } = watch
     const [group, setGroup] = useState<'none' | 'process' | 'remote'>('process')
     return (
-        <Watch page="connections">
+        <Frame watch={watch} page="connections">
             <Stack gap="section" className="h-full">
                 <PageHeader
                     title="Connections"
-                    count={`${String(LATEST.connections.length)} open to ${String(LATEST.remotes.length)} hosts`}
+                    count={`${String(latest.connections.length)} open to ${String(latest.remotes.length)} hosts`}
                 />
                 <DataTable
                     className="min-h-0 flex-1"
                     columns={CONNECTION_COLUMNS}
-                    rows={LATEST.connections}
+                    rows={latest.connections}
                     rowKey={(row) => row.key}
-                    searchBy={(row) => [row.process, row.remoteAddress, row.state, NETWORK_PLACES[row.remoteAddress]?.label].join(' ')}
+                    searchBy={(row) => [row.process, row.remoteAddress, row.state, networkPlace(row.remoteAddress)?.label].join(' ')}
                     toolbar={
                         <Segmented
                             label="Group by"
@@ -222,103 +257,107 @@ function ConnectionsPage() {
                     defaultSort={{ column: 'rate', direction: 'desc' }}
                 />
             </Stack>
-        </Watch>
+        </Frame>
     )
 }
 
 /** Each process's bytes a second over the history, the busiest four named. */
-function perProcess(figure: (group: FlowGroup) => number) {
+function perProcess(history: readonly NetworkSnapshot[], figure: (group: FlowGroup) => number) {
     const totals = new Map<string, number>()
-    for (const snapshot of HISTORY)
+    for (const snapshot of history)
         for (const group of snapshot.processes) totals.set(group.key, (totals.get(group.key) ?? 0) + figure(group))
     return [...totals]
-        .sort((a, b) => b[1] - a[1])
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
         .slice(0, 4)
         .map(([name], index) => ({
             name,
             color: `chart-${String(index + 1)}`,
             stack: 'processes',
-            values: HISTORY.map((snapshot) => {
+            values: history.map((snapshot) => {
                 const found = snapshot.processes.find((group) => group.key === name)
                 return found === undefined ? 0 : figure(found)
             }),
         }))
 }
 
-const X = HISTORY.map((snapshot) => clock(snapshot.at))
-const TOTALS = [
-    { name: 'In', color: 'chart-1', values: HISTORY.map((snapshot) => snapshot.rateIn) },
-    { name: 'Out', color: 'chart-2', values: HISTORY.map((snapshot) => snapshot.rateOut) },
-]
-const IN_BY_PROCESS = perProcess((group) => group.rateIn)
-const OUT_BY_PROCESS = perProcess((group) => group.rateOut)
-
 function TrafficPage() {
+    const watch = useWatch()
+    const { history, latest } = watch
+    const x = useMemo(() => history.map((snapshot) => clock(snapshot.at)), [history])
+    const totals = useMemo(
+        () => [
+            { name: 'In', color: 'chart-1', values: history.map((snapshot) => snapshot.rateIn) },
+            { name: 'Out', color: 'chart-2', values: history.map((snapshot) => snapshot.rateOut) },
+        ],
+        [history],
+    )
+    const inByProcess = useMemo(() => perProcess(history, (group) => group.rateIn), [history])
+    const outByProcess = useMemo(() => perProcess(history, (group) => group.rateOut), [history])
     return (
-        <Watch page="traffic">
+        <Frame watch={watch} page="traffic">
             <Stack gap="section">
                 <PageHeader title="Traffic" count="The last 5 min" />
                 <DashboardGrid>
                     <StatPanel
                         title="In now"
-                        value={LATEST.rateIn}
+                        value={latest.rateIn}
                         format={rate}
                         color="chart-1"
-                        sparkline={TOTALS[0].values}
+                        sparkline={totals[0].values}
                         span="quarter"
                     />
                     <StatPanel
                         title="Out now"
-                        value={LATEST.rateOut}
+                        value={latest.rateOut}
                         format={rate}
                         color="chart-2"
-                        sparkline={TOTALS[1].values}
+                        sparkline={totals[1].values}
                         span="quarter"
                     />
-                    <StatPanel title="Peak in" value={Math.max(...TOTALS[0].values)} format={rate} color="chart-3" span="quarter" />
-                    <StatPanel title="Peak out" value={Math.max(...TOTALS[1].values)} format={rate} color="chart-4" span="quarter" />
+                    <StatPanel title="Peak in" value={Math.max(...totals[0].values)} format={rate} color="chart-3" span="quarter" />
+                    <StatPanel title="Peak out" value={Math.max(...totals[1].values)} format={rate} color="chart-4" span="quarter" />
                     <TimeSeriesPanel
                         title="Whole machine"
                         subtitle="bytes a second, in and out"
                         span="full"
-                        x={X}
-                        series={TOTALS}
+                        x={x}
+                        series={totals}
                         format={rate}
-                        labelEvery={10}
+                        labelEvery={30}
                         bodyClassName="h-56"
                     />
                     <TimeSeriesPanel
                         title="In by process"
                         subtitle="bytes a second received"
                         span="half"
-                        x={X}
-                        series={IN_BY_PROCESS}
+                        x={x}
+                        series={inByProcess}
                         stacked
                         format={rate}
-                        labelEvery={15}
+                        labelEvery={60}
                         bodyClassName="h-56"
                     />
                     <TimeSeriesPanel
                         title="Out by process"
                         subtitle="bytes a second sent"
                         span="half"
-                        x={X}
-                        series={OUT_BY_PROCESS}
+                        x={x}
+                        series={outByProcess}
                         stacked
                         format={rate}
-                        labelEvery={15}
+                        labelEvery={60}
                         bodyClassName="h-56"
                     />
                 </DashboardGrid>
             </Stack>
-        </Watch>
+        </Frame>
     )
 }
 
 /** The snapshot at a time, or the latest. */
-function snapshotAt(time: number | null): NetworkSnapshot {
-    if (time === null) return LATEST
-    return [...HISTORY].reverse().find((snapshot) => snapshot.at <= time) ?? HISTORY[0]
+function snapshotAt(watch: Watch, time: number | null): NetworkSnapshot {
+    if (time === null) return watch.latest
+    return watch.history.findLast((snapshot) => snapshot.at <= time) ?? watch.history[0]
 }
 
 function HostFacts({ snapshot, address, now }: { snapshot: NetworkSnapshot; address: string; now: number }) {
@@ -331,7 +370,7 @@ function HostFacts({ snapshot, address, now }: { snapshot: NetworkSnapshot; addr
                     size="sm"
                     items={[
                         { term: 'Address', value: address, code: true },
-                        { term: 'Place', value: NETWORK_PLACES[address]?.label ?? 'Not placed' },
+                        { term: 'Place', value: networkPlace(address)?.label ?? 'Not placed' },
                         { term: 'Processes', value: host?.processes.join(', ') ?? 'None now' },
                         { term: 'In', value: host === undefined ? 'None' : rate(host.rateIn), numeric: true },
                         { term: 'Out', value: host === undefined ? 'None' : rate(host.rateOut), numeric: true },
@@ -366,10 +405,11 @@ function HostFacts({ snapshot, address, now }: { snapshot: NetworkSnapshot; addr
 }
 
 function MapPage({ initial }: { initial: string | null }) {
+    const watch = useWatch()
     const [selected, setSelected] = useState<string | null>(initial)
     const [shownAt, setShownAt] = useState<number | null>(null)
-    const snapshot = snapshotAt(shownAt)
-    const now = shownAt ?? NETWORK_NOW
+    const snapshot = snapshotAt(watch, shownAt)
+    const now = shownAt ?? watch.latest.at
     const { hosts, links } = useMemo(() => {
         const byHost = new Map<string, ConnectionFlow[]>()
         for (const connection of snapshot.connections)
@@ -429,19 +469,20 @@ function MapPage({ initial }: { initial: string | null }) {
         />
     )
     return (
-        <Watch
+        <Frame
+            watch={watch}
             page="map"
             panel={panel}
             bottom={
                 <PlaybackTimeline
                     label="Network watch"
-                    from={HISTORY[0].at}
-                    to={NETWORK_NOW}
-                    value={shownAt}
+                    from={watch.history[0].at}
+                    to={watch.latest.at}
+                    value={shownAt === null ? null : Math.max(watch.history[0].at, shownAt)}
                     onValueChange={setShownAt}
                     rate={10}
                     step={5_000}
-                    activity={HISTORY.map((each) => each.connections.length)}
+                    activity={watch.history.map((each) => each.connections.length)}
                     timeZone="UTC"
                 />
             }
@@ -450,8 +491,9 @@ function MapPage({ initial }: { initial: string | null }) {
                 <PageHeader title="Map" count={`${String(hosts.length)} of ${String(snapshot.remotes.length)} hosts placed`} />
                 <MapView
                     label="Remote hosts this machine talks to"
-                    defaultBasemap={WORLD_BASEMAP}
-                    basemaps={[WORLD_BASEMAP]}
+                    defaultBasemap={DARK_BASEMAP}
+                    basemaps={[DARK_BASEMAP]}
+                    fallbackBasemap={WORLD_BASEMAP}
                     camera={{ center: [-10, 28], zoom: 1 }}
                     selected={selected}
                     onSelectedChange={(id) => setSelected(id !== null && id.startsWith('flow:') ? id : null)}
@@ -480,28 +522,34 @@ function MapPage({ initial }: { initial: string | null }) {
                     </MapOverlay>
                 </MapView>
             </Stack>
-        </Watch>
+        </Frame>
     )
 }
 
-const meta: Meta = { title: 'Apps/Network watch', parameters: { layout: 'fullscreen' } }
+const meta: Meta = { title: 'Apps/Network watch', parameters: { layout: 'fullscreen' }, globals: { theme: 'dark' } }
 export default meta
 
 /**
- * Every connection of a machine at one moment, from the tracking package's flow tracker: process,
- * pid, protocol, both ends, place, state, bytes in and out and rate, searchable and gathered by
- * process or by remote host.
+ * Every connection of a machine, live: the tracking package's simulated machine read every second
+ * from the same moment every time and gathered by its flow tracker, so connections open, establish
+ * and close and their bytes and rates count up. Process, pid, protocol, both ends, place, state,
+ * bytes in and out and rate, searchable and gathered by process or by remote host.
  */
 export const Connections: StoryObj = { name: 'Connections', render: () => <ConnectionsPage /> }
 
-/** Bytes a second in and out over five minutes, for the whole machine and stacked by process, with the updater's and the backup's bursts. */
+/**
+ * Bytes a second in and out over the last five minutes, for the whole machine and stacked by
+ * process, moving on a second at a time, with the updater's and the backup's bursts: the next
+ * update downloads twenty seconds after the story opens.
+ */
 export const Traffic: StoryObj = { name: 'Traffic', render: () => <TrafficPage /> }
 
 /**
  * The map: this machine at home, a link to each located remote host colored by the state of its
- * connections, the busiest hosts in the side panel, and the playback timeline to look back.
+ * connections, coming and going as connections open and close, the busiest hosts in the side panel,
+ * and the playback timeline to look back over the readings kept.
  */
 export const WorldMap: StoryObj = { name: 'Map', render: () => <MapPage initial={null} /> }
 
-/** A host picked on the map: where it is, what talks to it and each of its connections, in the side panel. */
-export const Host: StoryObj = { name: 'Host', render: () => <MapPage initial="flow:203.0.113.10" /> }
+/** A host picked on the map: where it is, what talks to it and each of its connections, in the side panel, its rates read each second. */
+export const Host: StoryObj = { name: 'Host', render: () => <MapPage initial={`flow:${PICKED_HOST}`} /> }
