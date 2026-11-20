@@ -52,14 +52,15 @@ import { DataTable, DATA_TABLE_WORDS, headEntered, headStep, type DataColumn, ty
 import { DASHBOARD_PANEL_WORDS, DashboardPanel, SPAN, type DashboardPanelProps } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { STAT_PANEL_WORDS, StatPanel, type StatPanelProps } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import { THRESHOLD_LEGEND_WORDS, ThresholdLegend } from '@winterop-com/sokkel-ui/dashboard/ThresholdLegend'
-import { CodeEditor, FOLD_KEYS, SCHEMA_WORDS, sayIssue, type CodeEditorProps } from '@winterop-com/sokkel-ui/CodeEditor'
+import { CodeEditor, SCHEMA_WORDS, sayIssue, type CodeEditorProps } from '@winterop-com/sokkel-ui/CodeEditor'
 import { COMPUTED_FIELD_WORDS, ComputedField, type ComputedFieldProps } from '@winterop-com/sokkel-ui/ComputedField'
 import { DATE_FIELD_WORDS, DateField } from '@winterop-com/sokkel-ui/DateField'
 import { DetailPane } from '@winterop-com/sokkel-ui/DetailPane'
-import { DIALOG_SHELL_WORDS } from '@winterop-com/sokkel-ui/DialogShell'
+import { DIALOG_SHELL_WORDS, DialogShell, type DialogShellProps } from '@winterop-com/sokkel-ui/DialogShell'
 import { EMOJI_PICKER_WORDS, EmojiPicker, type EmojiPickerProps } from '@winterop-com/sokkel-ui/EmojiPicker'
 import { Field, FIELD_WORDS } from '@winterop-com/sokkel-ui/Field'
 import { useOverlayRoute } from '@winterop-com/sokkel-ui/hooks/use-overlay-route'
+import { usePaletteShortcut } from '@winterop-com/sokkel-ui/hooks/use-palette-shortcut'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { ISSUE_COUNT_WORDS, ISSUE_WORDS, IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
 import { JSON_TREE_WORDS, JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
@@ -104,6 +105,7 @@ import {
     type RunTimelineLane,
     type RunTimelineProps,
 } from '@winterop-com/sokkel-ui/RunTimeline'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { SECRET_FIELD_WORDS, SecretField, type SecretFieldProps } from '@winterop-com/sokkel-ui/SecretField'
 import { Section, type SectionProps } from '@winterop-com/sokkel-ui/Section'
 import { SelectField, type SelectFieldProps } from '@winterop-com/sokkel-ui/SelectField'
@@ -114,7 +116,7 @@ import { ProblemLine } from '@winterop-com/sokkel-ui/ProseText'
 import { PROMPT_DIALOG_WORDS, PromptDialog, type PromptDialogProps } from '@winterop-com/sokkel-ui/PromptDialog'
 import { REPEATED_GROUP_WORDS, RepeatedGroup, type RepeatedGroupProps } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
-import { SETTINGS_DIALOG_WORDS } from '@winterop-com/sokkel-ui/SettingsDialog'
+import { SETTINGS_DIALOG_WORDS, SettingsDialog } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { Shell, SHELL_WORDS, type ShellProps } from '@winterop-com/sokkel-ui/Shell'
 import { PanelSection, SIDE_PANEL_WORDS, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusItem, StatusLine, type StatusLineProps } from '@winterop-com/sokkel-ui/StatusLine'
@@ -152,16 +154,28 @@ import { TREE_SELECT_WORDS, TreeSelect, type TreeSelectProps } from '@winterop-c
  * browser is said beside each part, with the reason, rather than passed in silence.
  */
 
-// The palette's dialog opens in a portal, which a server drawing leaves out: its box is drawn in place, with the classes the palette gives it.
+// The palette's dialog opens in a portal, which a server drawing leaves out: there its box is drawn in place, with the
+// classes the palette gives it. Drawn in the page, it is the dialog itself.
 vi.mock('@winterop-com/sokkel-ui/primitives/command', async (original) => {
     const module = await original<typeof import('@winterop-com/sokkel-ui/primitives/command')>()
     const react = await import('react')
+    const never = () => () => undefined
     return {
         ...module,
-        CommandDialog: ({ children, className }: { children: ReactNode; className?: string }) =>
-            react.createElement('div', { 'data-slot': 'dialog-content', className }, children),
+        CommandDialog: (props: Parameters<typeof module.CommandDialog>[0]) =>
+            react.useSyncExternalStore(
+                never,
+                () => true,
+                () => false,
+            )
+                ? react.createElement(module.CommandDialog, props)
+                : react.createElement('div', { 'data-slot': 'dialog-content', className: props.className }, props.children),
     }
 })
+
+// Base UI's menu, which a menu drawn in the page fetches after its first paint, never arrives here: once it has, an open
+// menu's parts would draw in the server drawings below with no root around them. Menus in the page stay stand-ins.
+vi.mock('../packages/core/src/components/ui/menu-engine', () => ({ Menu: undefined }))
 
 const ROOT = join(__dirname, '..')
 const CORE = join(ROOT, 'packages', 'core', 'src')
@@ -190,8 +204,6 @@ const waitToken = (token: string, constant: string, uses: boolean) =>
     new RegExp(`duration\\('${token}'\\)`).test(readFileSync(join(ROOT, 'scripts', 'build-tokens.ts'), 'utf8'))
         ? token
         : undefined
-/** Whether a part closes only as `letsGo` (or `closing`, which reads it) says while busy, after `useBusyRelease`'s wait. */
-const releasedBy = (text: string) => /useBusyRelease\(/.test(text) && /(letsGo|closing)\(/.test(text)
 
 /** The elevation a part's classes put under it, by its token: `shadow-pop` is elevation-pop, `shadow-dialog` elevation-dialog. */
 const elevationOf = (layers: readonly string[], on: readonly string[] = []) =>
@@ -384,6 +396,21 @@ function press(target: Element | null | undefined, key: string, init: KeyboardEv
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
     act(() => {
         target.dispatchEvent(event)
+    })
+    return event
+}
+
+/** Presses a key as `press` does, and lets the page finish what the press queued, such as a focus moved a microtask later. */
+async function pressWaiting(
+    target: Element | null | undefined,
+    key: string,
+    init: KeyboardEventInit = {},
+): Promise<KeyboardEvent | undefined> {
+    if (target === null || target === undefined) return undefined
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+    await act(async () => {
+        target.dispatchEvent(event)
+        await Promise.resolve()
     })
     return event
 }
@@ -837,7 +864,7 @@ interface Adapter {
      */
     keys: Record<string, (() => true | string | Promise<true | string>) | Skip>
     /** Other checks a spec asks of this part, by key. */
-    more?: () => Check[]
+    more?: () => Check[] | Promise<Check[]>
 }
 
 const keyName = (binding: Spec['keyboard'][number]) => `${binding.keys.join(', ')}${binding.when === undefined ? '' : ` (${binding.when})`}`
@@ -968,7 +995,6 @@ const BUTTON_ADAPTER: Adapter = {
 
 // Text field
 
-const FIELD = source('components/Field.tsx')
 const TEXT_FIELD = source('components/TextField.tsx')
 const field = (props: Partial<Parameters<typeof TextField>[0]> = {}) => draw(TextField, { id: 'name', label: 'Name', ...props })
 const REFUSED = { error: 'Use letters and digits' }
@@ -979,6 +1005,15 @@ const fieldHears = (key: string) => {
     live(createElement(TextField, props), (box) => press(box.querySelector('input'), key))
     return said.join(' ')
 }
+/** Whether a press on a field's label focuses a control a label cannot name natively, such as a picker's face. */
+const labelFocuses = () =>
+    live(
+        createElement(Field, { id: 'when', label: 'When', children: createElement('div', { id: 'when', role: 'combobox', tabIndex: 0 }) }),
+        (box) => {
+            act(() => box.querySelector('label')?.click())
+            return document.activeElement === box.querySelector('#when')
+        },
+    )
 const WARNED = {
     issues: [{ tone: 'warning' as const, text: 'Longer than most' }],
 }
@@ -1089,8 +1124,7 @@ const TEXT_FIELD_ADAPTER: Adapter = {
                 ? true
                 : 'the mark is not a native button',
         'Escape (the popover is open)': skip("Base UI's popover closes on Escape in a browser; the server draws it closed"),
-        'Click label': () =>
-            /<Label[^>]*onClick=\{\(\) => focusUnlabelable\(id\)\}/.test(FIELD) ? true : 'no press on the label focuses the control',
+        'Click label': () => (labelFocuses() ? true : 'no press on the label focuses the control'),
     },
 }
 
@@ -1331,9 +1365,11 @@ const TABLE_ADAPTER: Adapter = {
         'Alt+ArrowUp, Alt+ArrowDown (onReorder, rows drawn as given)': () =>
             tableReorders() === '0>1 1>0' ? true : 'no Alt with the arrows',
         'Shift+Click (selectable)': () =>
-            /selectable && event\.shiftKey\) toggle\(entry, true\)/.test(DATA_TABLE) ? true : 'no range on Shift and a press',
+            tableChooses({ metaKey: true }, { shiftKey: true }) === 'nightly-export | nightly-export sync-inventory rebuild-index'
+                ? true
+                : 'no range on Shift and a press',
         'Mod+Click (selectable)': () =>
-            /selectable && \(event\.metaKey \|\| event\.ctrlKey\)\) toggle\(entry, false\)/.test(DATA_TABLE)
+            tableChooses({ metaKey: true }, { ctrlKey: true }) === 'nightly-export | nightly-export rebuild-index'
                 ? true
                 : 'no row on Ctrl or Cmd and a press',
         'ArrowLeft, ArrowRight, Enter (a handle has focus)': () =>
@@ -1343,7 +1379,8 @@ const TABLE_ADAPTER: Adapter = {
         'ArrowUp (the table view, a sortable head drawn)': () =>
             headEntered(['name', 'state'], 'state') === 'state' &&
             headEntered(['name', 'state'], undefined) === 'name' &&
-            /ArrowUp: \(\) => \{[\s\S]*?activeIndex <= 0 && showHeads \? headEntered\(sortHeads, sort\?\.column\)/.test(DATA_TABLE)
+            inHeads(undefined, ['ArrowUp']).focus === 'name' &&
+            inHeads('state', ['ArrowUp']).focus === 'state'
                 ? true
                 : 'Up from the first row does not enter the head row on the sorted head, else the first',
         'ArrowLeft, ArrowRight (in the head row)': () => {
@@ -1356,12 +1393,14 @@ const TABLE_ADAPTER: Adapter = {
         'Enter, Space (in the head row)': () =>
             JSON.stringify(['Enter', ' '].map((key) => headStep(['name', 'state'], 'state', key))) ===
                 JSON.stringify([{ sort: 'state' }, { sort: 'state' }]) &&
-            /if \(keyHead !== undefined\) \{[\s\S]*?nextSort\(column\)/.test(DATA_TABLE)
+            inHeads(undefined, ['ArrowUp', 'ArrowRight', 'Enter']).sorted === 'state asc' &&
+            inHeads('state', ['ArrowUp', ' ']).sorted === 'state desc'
                 ? true
                 : "Enter or Space in the head row does not turn the head's order",
         'ArrowDown (in the head row)': () =>
             headStep(['name', 'state'], 'state', 'ArrowDown') === 'rows' &&
-            /step === 'rows'\) \{\s+setHeadAt\(undefined\)\s+moveTo\(0\)/.test(DATA_TABLE)
+            JSON.stringify(inHeads(undefined, ['ArrowDown', 'ArrowDown', 'ArrowUp', 'ArrowUp', 'ArrowDown'])) ===
+                JSON.stringify({ focus: 'grid', active: 'nightly-export' })
                 ? true
                 : 'Down in the head row does not go back to the first row',
         'Enter, F2, a character (editing)': () => {
@@ -1370,6 +1409,65 @@ const TABLE_ADAPTER: Adapter = {
             return /\bF2: /.test(editing) && /Enter/.test(editing) ? true : 'the editor misses Enter or F2'
         },
     },
+}
+
+/**
+ * The selections a selectable table hands out when its first row is pressed with `first` held,
+ * then its last with `last` held, each as the keys it holds.
+ */
+function tableChooses(first: MouseEventInit, last: MouseEventInit): string {
+    const said: string[] = []
+    const props = {
+        columns: COLUMNS,
+        rows: JOBS,
+        rowKey: (job: Job) => job.id,
+        selectable: true,
+        onSelectionChange: (chosen: ReadonlySet<string>) => said.push([...chosen].join(' ')),
+    }
+    live(createElement(DataTable<Job>, props), (box) => {
+        const pressRow = (key: string, init: MouseEventInit) =>
+            act(() => {
+                box.querySelector(`[data-row="${key}"]`)?.dispatchEvent(new MouseEvent('click', { bubbles: true, ...init }))
+            })
+        pressRow(JOBS[0].id, first)
+        pressRow(JOBS[2].id, last)
+    })
+    return said.join(' | ')
+}
+
+/** Columns that both sort, for the head row's keys. */
+const SORTING: DataColumn<Job>[] = [COLUMNS[0], { ...COLUMNS[1], sortValue: (job) => job.state }]
+
+/**
+ * Where the keys are after pressing each key in a table whose heads both sort, sorted at first by
+ * `by`: the head whose button has the focus, or the grid and its active row; and the last order
+ * the table handed out.
+ */
+function inHeads(by: string | undefined, keys: string[]): { focus?: string; active?: string; sorted?: string } {
+    let sorted: string | undefined
+    const props = {
+        columns: SORTING,
+        rows: JOBS,
+        rowKey: (job: Job) => job.id,
+        defaultSort: by === undefined ? null : { column: by, direction: 'asc' as const },
+        onSortChange: (next: { column: string; direction: string } | null) => {
+            sorted = next === null ? 'none' : `${next.column} ${next.direction}`
+        },
+    }
+    return live(createElement(DataTable<Job>, props), (box) => {
+        const grid = box.querySelector<HTMLElement>('[role="grid"]')
+        grid?.focus()
+        for (const key of keys) press(document.activeElement, key)
+        const focused = document.activeElement
+        const head = focused?.closest('[role="columnheader"]')?.getAttribute('data-track') ?? undefined
+        const active = box.querySelector('[data-active]')?.getAttribute('data-row') ?? undefined
+        const focus = head ?? (focused === grid ? 'grid' : undefined)
+        return {
+            ...(focus === undefined ? {} : { focus }),
+            ...(active === undefined ? {} : { active }),
+            ...(sorted === undefined ? {} : { sorted }),
+        }
+    })
 }
 
 /** Whether the table's key map moves on each key. */
@@ -2085,7 +2183,12 @@ const TOP_BAR_ADAPTER: Adapter = {
                 : `drawn in another order: ${order.join(', ')}`
         },
         '/ (a search field that binds it, focus outside a field)': () =>
-            /key: '\/'/.test(source('components/SearchField.tsx')) ? true : 'the search field is not focused by /',
+            live(createElement(SearchField, { value: '', onChange: noop }), (box) => {
+                press(document.body, '/')
+                return document.activeElement === box.querySelector('input')
+            })
+                ? true
+                : 'the search field is not focused by /',
         "Enter, Space (the palette's button has focus)": () =>
             paletteButton(topBar(), TOP_BAR_WORDS.search)?.attrs.type === 'button' ? true : "the palette's button is not a native button",
     },
@@ -2986,11 +3089,59 @@ const cornerClose = () => {
         on: [] as string[],
     }
 }
+const SHUT_REASON = 'The name is unchanged.'
 /** The confirm a dialog draws with a reason or busy, as the dialog hands them to its button. */
 const confirmWhere = (state: 'shut' | 'busy') => {
-    const handed = state === 'shut' ? /reason=\{confirm\.why\}/.test(DIALOG_SHELL) : /busy=\{busy\}/.test(DIALOG_SHELL)
+    const confirm = {
+        label: 'Save',
+        onConfirm: noop,
+        ...(state === 'shut' ? { why: SHUT_REASON } : { busy: true }),
+    }
+    const handed = live(
+        createElement(DialogShell, {
+            open: true,
+            onOpenChange: noop,
+            title: 'Rename',
+            confirm,
+        }),
+        () => {
+            const verb = [...document.querySelectorAll('[role="dialog"] button')].find((one) => one.textContent === 'Save')
+            if (state === 'busy') return verb?.getAttribute('aria-busy') === 'true'
+            const said = verb?.getAttribute('aria-describedby')?.split(' ') ?? []
+            return said.some((id) => document.getElementById(id)?.textContent === SHUT_REASON)
+        },
+    )
     if (!handed) return undefined
-    return buttonWhere(button(state === 'shut' ? { reason: 'The name is unchanged.' } : { busy: true }), 'disabled')
+    return buttonWhere(button(state === 'shut' ? { reason: SHUT_REASON } : { busy: true }), 'disabled')
+}
+
+/** The release a busy dialog is drawn with here, in ms: short, so the wait runs out within a probe. */
+const RELEASE_HERE = 60
+
+/**
+ * What Escape does to an open dialog with the props: `closes`, `held`, or for one still held once
+ * it has waited past its busy release, `held, then closes`.
+ */
+async function dialogEscapes(props: Partial<DialogShellProps>): Promise<string> {
+    let closed = false
+    const all = {
+        open: true,
+        onOpenChange: (next: boolean) => {
+            closed ||= !next
+        },
+        title: 'Rename',
+        busyRelease: RELEASE_HERE,
+        ...props,
+    }
+    return liveWaiting(createElement(DialogShell, all), async () => {
+        const escape = () => press(document.activeElement ?? document.body, 'Escape')
+        escape()
+        if (closed) return 'closes'
+        if (props.confirm?.busy !== true) return 'held'
+        await act(() => new Promise((done) => setTimeout(done, RELEASE_HERE * 2)))
+        escape()
+        return closed ? 'held, then closes' : 'held'
+    })
 }
 
 const DIALOG_ADAPTER: Adapter = {
@@ -3055,15 +3206,26 @@ const DIALOG_ADAPTER: Adapter = {
     },
     keys: {
         Tab: BASE_UI('dialog', 'holds focus inside'),
-        'Escape (dismissible, and not busy or busy past busy-release)': () =>
-            /const asked = closing\(busy, released, details\.reason\)/.test(DIALOG_SHELL) &&
-            /if \(!next && \(!dismissible \|\| asked === 'held'\)\) return/.test(DIALOG_SHELL) &&
-            /const released = useBusyRelease\(busy, busyRelease\)/.test(DIALOG_SHELL) &&
-            releasedBy(DIALOG_SHELL)
+        'Escape (dismissible, and not busy or busy past busy-release)': async () =>
+            (await dialogEscapes({})) === 'closes' &&
+            (await dialogEscapes({ dismissible: false })) === 'held' &&
+            (await dialogEscapes({
+                confirm: { label: 'Save', onConfirm: noop, busy: true },
+            })) === 'held, then closes'
                 ? true
                 : 'Escape is not held while the dialog cannot be dismissed, or while busy before the wait',
-        'Enter (the confirm has focus (initialFocus confirm opens on it), not shut or busy)': () =>
-            firstButton(button())?.tag === 'button' && /initialFocus === 'confirm' \? verb/.test(DIALOG_SHELL)
+        'Enter (the confirm has focus (initialFocus confirm opens on it), not shut or busy)': async () =>
+            firstButton(button())?.tag === 'button' &&
+            (await liveWaiting(
+                createElement(DialogShell, {
+                    open: true,
+                    onOpenChange: noop,
+                    title: 'Rename',
+                    initialFocus: 'confirm',
+                    confirm: { label: 'Save', onConfirm: noop },
+                }),
+                () => until(() => document.activeElement?.textContent === 'Save'),
+            ))
                 ? true
                 : 'the confirm is not a native button, or initialFocus confirm does not focus it',
     },
@@ -3181,6 +3343,46 @@ const SETTING = once(() => {
     }
 })
 
+/**
+ * Draws an open settings dialog in the page on a section that resets and one that does not, with
+ * `active` shown, and hands `look` what it has said (`active <id>`, `reset <id>`) and a way to find
+ * a button in the page by its words.
+ */
+const liveSettings = <T>(active: string, look: (said: string[], button: (words: string) => HTMLButtonElement | undefined) => T) => {
+    const said: string[] = []
+    const groups = [
+        {
+            id: 'workspace',
+            sections: [
+                {
+                    id: 'appearance',
+                    label: 'Appearance',
+                    settings: [{ id: 'density', title: 'Density', control: 'Compact' }],
+                },
+                {
+                    id: 'notifications',
+                    label: 'Notifications',
+                    reset: false,
+                    settings: [{ id: 'digest', title: 'Digest', control: 'Daily' }],
+                },
+            ],
+        },
+    ]
+    const props = {
+        open: true,
+        onOpenChange: noop,
+        groups,
+        active,
+        onActiveChange: (id: string) => said.push(`active ${id}`),
+        search: '',
+        onSearchChange: noop,
+        onReset: (id?: string) => said.push(`reset ${String(id)}`),
+    }
+    return live(createElement(SettingsDialog, props), () =>
+        look(said, (words) => [...document.querySelectorAll('button')].find((one) => one.textContent === words)),
+    )
+}
+
 const SETTINGS_DIALOG_ADAPTER: Adapter = {
     wordObjects: { SETTINGS_DIALOG_WORDS },
     complete: ['SETTINGS_DIALOG_WORDS'],
@@ -3276,8 +3478,11 @@ const SETTINGS_DIALOG_ADAPTER: Adapter = {
     keys: {
         Tab: BASE_UI('dialog', 'holds focus inside'),
         'Enter, Space (an entry has focus)': () =>
-            /<button\s+key=\{section\.id\}\s+type="button"/.test(SETTINGS_PARTS) &&
-            /onClick=\{\(\) => onChoose\(section\.id\)\}/.test(SETTINGS_PARTS)
+            liveSettings('appearance', (said, button) => {
+                const entry = button('Notifications')
+                act(() => entry?.click())
+                return entry?.tagName === 'BUTTON' && entry.type === 'button' && said.join(' ') === 'active notifications'
+            })
                 ? true
                 : 'an entry is not a native button that chooses its section',
         'Escape (no layer is open over it)': BASE_UI('dialog', 'closes on Escape'),
@@ -3302,14 +3507,22 @@ const SETTINGS_DIALOG_ADAPTER: Adapter = {
             check(
                 'states.noReset',
                 'no Reset to defaults for a section with reset false',
-                /if \(!all && \(section === undefined \|\| section\.reset === false\)\) return null/.test(SETTINGS_PARTS)
+                liveSettings('appearance', (_, button) => button(SETTINGS_DIALOG_WORDS.reset) !== undefined) &&
+                    liveSettings('notifications', (_, button) => button(SETTINGS_DIALOG_WORDS.reset) === undefined)
                     ? 'no Reset to defaults for a section with reset false'
                     : undefined,
             ),
             check(
                 'states.confirming',
                 'a ConfirmDialog with a destructive resetConfirm',
-                /<ConfirmDialog[\s\S]*?label: say\.resetConfirm,\s+destructive: true/.test(SETTINGS_PARTS)
+                liveSettings('appearance', (said, button) => {
+                    act(() => button(SETTINGS_DIALOG_WORDS.reset)?.click())
+                    const asked = said.length === 0 && document.querySelectorAll('[role="dialog"]').length === 2
+                    const confirm = button(SETTINGS_DIALOG_WORDS.resetConfirm)
+                    const destructive = confirm?.className.includes('text-destructive') === true
+                    act(() => confirm?.click())
+                    return asked && destructive && said.join(' ') === 'reset appearance'
+                })
                     ? 'a ConfirmDialog with a destructive resetConfirm'
                     : undefined,
             ),
@@ -3384,6 +3597,118 @@ const paletteWith = (command: Omit<PaletteCommand, 'id' | 'onSelect'>) =>
     palette({
         groups: [{ title: 'Jobs', commands: [{ id: 'job', onSelect, ...command }] }],
     })
+/** An open palette drawn in the page, and what the probes do to it. */
+interface PalettePage {
+    /** What the palette said, in order: `run <command>` and `open false`. */
+    said: string[]
+    /** Presses a key in the search. */
+    key: (key: string, init?: KeyboardEventInit) => void
+    /** The label of the active row. */
+    active: () => string | null | undefined
+    /** A row by its label. */
+    row: (label: string) => Element | undefined
+    /** Settles the running nightly-export, fulfilled. */
+    settle: () => Promise<void>
+    /** Lets the page run for `ms`. */
+    wait: (ms: number) => Promise<void>
+}
+
+/**
+ * Draws an open palette in the page on two commands, nightly-export, whose run waits until the
+ * probe settles it, and sync-inventory, refused with `refusal` (an Error's words, or none), with a
+ * busy release of `RELEASE_HERE`, and hands `look` the page.
+ */
+function livePalette<T>(look: (page: PalettePage) => T | Promise<T>, refusal?: string): Promise<T> {
+    const said: string[] = []
+    let settle: () => void = noop
+    const groups = [
+        {
+            title: 'Jobs',
+            commands: [
+                {
+                    id: 'nightly-export',
+                    label: 'nightly-export',
+                    onSelect: () => {
+                        said.push('run nightly-export')
+                        return new Promise<void>((done) => (settle = done))
+                    },
+                },
+                {
+                    id: 'sync-inventory',
+                    label: 'sync-inventory',
+                    onSelect: () => {
+                        said.push('run sync-inventory')
+                        return Promise.reject(refusal === undefined ? undefined : new Error(refusal))
+                    },
+                },
+            ],
+        },
+    ]
+    const props = {
+        open: true,
+        onOpenChange: (next: boolean) => said.push(`open ${String(next)}`),
+        busyRelease: RELEASE_HERE,
+        groups,
+    }
+    const rows = () => [...document.querySelectorAll('[cmdk-item]')]
+    const wait = (ms: number) => act(() => new Promise<void>((done) => setTimeout(done, ms)))
+    return liveWaiting(createElement(CommandPalette, props), async () =>
+        look({
+            said,
+            key: (key, init) => void press(document.querySelector('[cmdk-input]'), key, init),
+            active: () => rows().find((row) => row.getAttribute('data-selected') === 'true')?.textContent,
+            row: (name) => rows().find((row) => row.textContent === name),
+            settle: () =>
+                act(async () => {
+                    settle()
+                    await Promise.resolve()
+                }),
+            wait,
+        }),
+    )
+}
+
+/** Whether a component that binds `usePaletteShortcut` opens its palette on `init`'s K pressed in a field. */
+const shortcutOpensPalette = (init: KeyboardEventInit) => {
+    let opened = false
+    const Opener = () => {
+        usePaletteShortcut(() => {
+            opened = true
+        })
+        return createElement('input', { 'aria-label': 'Name' })
+    }
+    return live(createElement(Opener), (box) => {
+        press(box.querySelector('input'), 'k', init)
+        return opened
+    })
+}
+
+/** Whether a running command's row is busy with the palette held open until it settles, and whether a refusal is said under the rows. */
+async function paletteStates(): Promise<{ busy: boolean; refused: boolean }> {
+    const busy = await livePalette(async (page) => {
+        page.key('Enter')
+        const running = page.row('nightly-export')?.getAttribute('aria-busy') === 'true' && page.said.join(' ') === 'run nightly-export'
+        await page.settle()
+        return running && page.said.join(' ') === 'run nightly-export open false'
+    })
+    const refusedAs = (refusal: string | undefined) =>
+        livePalette(async (page) => {
+            page.key('ArrowDown')
+            page.key('Enter')
+            await page.wait(0)
+            const list = document.querySelector('[cmdk-list]')
+            const words = refusal ?? COMMAND_PALETTE_WORDS.refused
+            const said = [...document.querySelectorAll('[role="dialog"] *')].find(
+                (one) => one.children.length === 0 && one.textContent === words,
+            )
+            const under =
+                list !== null && said !== undefined && (list.compareDocumentPosition(said) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+            return under && page.said.join(' ') === 'run sync-inventory'
+        }, refusal)
+    const refused = (await refusedAs('The worker is offline.')) && (await refusedAs(undefined))
+    return { busy, refused }
+}
+
 const PALETTES = once(() => ({
     full: palette({ description: 'Choose a run', foot: { name: 'Tidevann' } }),
     empty: palette({ groups: [] }),
@@ -3583,39 +3908,71 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
         return row === undefined ? undefined : { layers: [classesOf(row)], on: PALETTE_ON.disabled }
     },
     keys: {
-        'Mod+K': () => {
-            const opens = /key, mod: true, alsoCtrl: true, inFields: true/.test(source('hooks/use-palette-shortcut.ts'))
+        'Mod+K': async () => {
+            const opens =
+                shortcutOpensPalette({ ctrlKey: true }) &&
+                onApple(() => shortcutOpensPalette({ metaKey: true }) && shortcutOpensPalette({ ctrlKey: true }))
             // An open palette closes itself on the same keys, in a Shell or not, held while a command runs.
             const closes =
-                /id: 'palette-close',\s+key: 'k',\s+mod: true,\s+alsoCtrl: true,\s+inFields: true,\s+inDialogs: true,\s+disabled: !open,\s+run: \(\) => close\(false\)/.test(
-                    PALETTE,
-                )
+                (await livePalette((page) => {
+                    page.key('k', { ctrlKey: true })
+                    return page.said.join(' ') === 'open false'
+                })) &&
+                (await livePalette((page) => {
+                    page.key('Enter')
+                    page.key('k', { ctrlKey: true })
+                    return page.said.join(' ') === 'run nightly-export'
+                }))
             return opens && closes ? true : `usePaletteShortcut opens ${String(opens)}, the open palette closes ${String(closes)}`
         },
         'a character (the palette is open)': () =>
             bySlot(PALETTES().full, 'command-input')?.tag === 'input' ? true : "the search is not cmdk's input",
-        'ArrowDown, ArrowUp (the palette is open)': () => {
-            if (/\bloop\b/.test(PALETTE) || /\bloop\b/.test(COMMAND)) return 'the palette loops at its ends'
-            // cmdk's Ctrl+N, Ctrl+J, Ctrl+P and Ctrl+K are off, so Ctrl+K is the palette's key alone.
-            return /function Command\(\{ className, vimBindings = false,/.test(COMMAND) && /vimBindings=\{vimBindings\}/.test(COMMAND)
-                ? true
-                : "cmdk's own Ctrl keys move the active row"
-        },
+        'ArrowDown, ArrowUp (the palette is open)': () =>
+            livePalette((page) => {
+                const steps = ['ArrowUp', 'ArrowDown', 'ArrowDown'].map((key) => {
+                    page.key(key)
+                    return page.active()
+                })
+                if (steps.join(' ') !== 'nightly-export sync-inventory sync-inventory') return 'the palette loops at its ends'
+                // cmdk's Ctrl+N, Ctrl+J, Ctrl+P and Ctrl+K are off, so Ctrl+K is the palette's key alone.
+                const vim = ['p', 'k', 'n', 'j'].map((key) => {
+                    page.key(key, { ctrlKey: true })
+                    return page.active()
+                })
+                return vim.every((one) => one === 'sync-inventory') ? true : "cmdk's own Ctrl keys move the active row"
+            }),
         'Home, End (the palette is open)': skip('cmdk moves the active row to the ends in a browser; the server draws none active'),
-        'Enter (a row is active and no command is running, or Stop waiting is active)': () =>
-            /if \(busy !== undefined\) return/.test(PALETTE) && /value="stop-waiting" forceMount onSelect=\{stopWaiting\}/.test(PALETTE)
+        'Enter (a row is active and no command is running, or Stop waiting is active)': async () =>
+            (await livePalette(async (page) => {
+                page.key('Enter')
+                page.key('ArrowDown')
+                page.key('Enter')
+                await page.wait(RELEASE_HERE * 2)
+                for (const key of ['ArrowUp', 'ArrowUp', 'Enter']) page.key(key)
+                return page.said.join(' ')
+            })) === 'run nightly-export open false'
                 ? true
                 : 'a choice made while a command runs is not ignored, or Stop waiting does not close',
-        'Escape (the palette is open, and no command is running or it has run busy-release)': () =>
-            /if \(!next && !letsGo\(busy !== undefined, released, details\?\.reason\)\) return/.test(PALETTE) &&
-            /onOpenChange=\{close\}/.test(PALETTE) &&
-            releasedBy(PALETTE)
+        'Escape (the palette is open, and no command is running or it has run busy-release)': async () =>
+            (await livePalette((page) => {
+                page.key('Escape')
+                return page.said.join(' ')
+            })) === 'open false' &&
+            (await livePalette(async (page) => {
+                page.key('Enter')
+                page.key('Escape')
+                const held = page.said.join(' ')
+                await page.wait(RELEASE_HERE * 2)
+                page.key('Escape')
+                return `${held} | ${page.said.join(' ')}`
+            })) === 'run nightly-export | run nightly-export open false'
                 ? true
                 : 'a running command does not hold the palette open until the wait',
     },
-    more: () => {
+    more: async () => {
         const { full } = PALETTES()
         const meta = spanOf(full, '4m 12s')
+        const states = await paletteStates()
         return [
             check('sizes.box.width', '384', widthFrom(classesOf(bySlot(full, 'dialog-content')))),
             // The palette's box is a boxed dialog's: elevation-dialog under it.
@@ -3629,17 +3986,12 @@ const COMMAND_PALETTE_ADAPTER: Adapter = {
             check(
                 'states.busy',
                 'the palette open, the row busy, until the promise settles',
-                /busy: \(pending\) => setBusy\(pending \? rowValue\(command\) : undefined\)/.test(PALETTE) &&
-                    /aria-busy=\{running \|\| undefined\}/.test(PALETTE)
-                    ? 'the palette open, the row busy, until the promise settles'
-                    : undefined,
+                states.busy ? 'the palette open, the row busy, until the promise settles' : undefined,
             ),
             check(
                 'states.refused',
                 "the rejection's words, else words.refused, under the rows",
-                /refused: \(reason\) => setRefusal\(reason \?\? words\.refused\)/.test(PALETTE)
-                    ? "the rejection's words, else words.refused, under the rows"
-                    : undefined,
+                states.refused ? "the rejection's words, else words.refused, under the rows" : undefined,
             ),
             ...layoutChecks('command-palette', {
                 listMaxHeight: () => numberIn(classesOf(bySlot(full, 'command-list')), /max-h-\[min\((\d+)rem,/, 'rem'),
@@ -3677,6 +4029,33 @@ const withPanel = (open: boolean) => {
     }
 }
 
+/** What a shell with a palette and shortcuts, both held shut from outside, asks to open when the key is pressed on the page. */
+/** What `run` gives on an Apple device, where Mod is ⌘. */
+function onApple<T>(run: () => T): T {
+    const platform = vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel')
+    try {
+        return run()
+    } finally {
+        platform.mockRestore()
+    }
+}
+
+const shellHears = (key: string, init: KeyboardEventInit) => {
+    const said: string[] = []
+    const props = {
+        rail: null,
+        children: 'Run 1842',
+        palette: [],
+        paletteOpen: false,
+        onPaletteOpenChange: (open: boolean) => said.push(open ? 'palette' : 'palette shut'),
+        shortcuts: [],
+        shortcutsOpen: false,
+        onShortcutsOpenChange: (open: boolean) => said.push(open ? 'shortcuts' : 'shortcuts shut'),
+    }
+    live(createElement(Shell, props), () => press(document.body, key, init))
+    return said.join(' ')
+}
+
 const SHELL_ADAPTER: Adapter = {
     wordObjects: { SHELL_WORDS },
     complete: ['SHELL_WORDS'],
@@ -3708,8 +4087,11 @@ const SHELL_ADAPTER: Adapter = {
     effect: () => skip('the shell states no effects'),
     keys: {
         "Mod+K (nothing but the top bar's search results stands over the page)": () =>
-            /key: 'k',\s+mod: true,\s+alsoCtrl: true/.test(SHELL) ? true : 'the palette is not bound to Mod+K and Ctrl+K',
-        '?': () => (/key: '\?'/.test(SHELL) ? true : 'the shortcuts dialog is not bound to ?'),
+            shellHears('k', { ctrlKey: true }) === 'palette' &&
+            onApple(() => shellHears('k', { metaKey: true }) === 'palette' && shellHears('k', { ctrlKey: true }) === 'palette')
+                ? true
+                : 'the palette is not bound to Mod+K and Ctrl+K',
+        '?': () => (shellHears('?', { shiftKey: true }) === 'shortcuts' ? true : 'the shortcuts dialog is not bound to ?'),
         Escape: skip("each layer is Base UI's (dialog, popover, menu, drawer), which closes on Escape in a browser"),
         'G then a letter': () => {
             const shortcuts = source('lib/shortcuts.ts')
@@ -3738,8 +4120,22 @@ const DRAG_FROM = () => numberIn(DRAG_DROP, /const DISTANCE = (\d+)\b/)
 /** The icon a class sizes through its children (`[&_svg]:size-4`). */
 const SVG_ON = ['[&_svg]']
 const noop = () => undefined
-/** A row of buttons the arrows move along, stopping at its first and last as every list of choices does. */
-const STOPS_AT_ENDS = /buttons\[Math\.min\(Math\.max\(at \+ step, 0\), buttons\.length - 1\)\]\?\.focus\(\)/
+/** Whether the arrows move the focus along a row of buttons, stopping at its first and last as every list of choices does. */
+function stopsAtEnds(buttons: readonly HTMLElement[]): boolean {
+    const first = buttons[0]
+    const last = buttons.at(-1)
+    if (buttons.length < 3 || first === undefined || last === undefined) return false
+    act(() => first.focus())
+    press(first, 'ArrowLeft')
+    const heldFirst = document.activeElement === first
+    press(first, 'ArrowRight')
+    const stepped = document.activeElement === buttons[1]
+    press(buttons[1], 'ArrowLeft')
+    const back = document.activeElement === first
+    act(() => last.focus())
+    press(last, 'ArrowRight')
+    return heldFirst && stepped && back && document.activeElement === last
+}
 
 // Run timeline
 
@@ -4476,20 +4872,30 @@ const EMOJI_PICKER_ADAPTER: Adapter = {
                 press(cells[cells.length - 1], 'Home')
                 return end && document.activeElement === emojiCell(box, 0)
             }).then((moves) => (moves ? true : 'Home and End do not reach the ends')),
-        'Enter, Space (a cell has focus)': () =>
-            /type="button"\s+data-index=\{cell\.index\}/.test(EMOJI_PICKER) &&
-            /onClick=\{\(\) => pick\(cell\.emoji, cell\.name\)\}/.test(EMOJI_PICKER)
-                ? true
-                : 'a cell is not a native button that picks',
+        'Enter, Space (a cell has focus)': () => {
+            const picked: string[] = []
+            return livePicker({ onPick: (emoji, name) => picked.push(`${emoji} ${name}`) }, (box) => {
+                const cell = emojiCell(box, 3)
+                act(() => (cell as HTMLButtonElement | null)?.click())
+                return (
+                    cell instanceof HTMLButtonElement &&
+                    cell.type === 'button' &&
+                    picked.length === 1 &&
+                    picked[0].startsWith(cell.textContent)
+                )
+            }).then((picks) => (picks ? true : 'a cell is not a native button that picks'))
+        },
         'ArrowLeft, ArrowRight (a tab has focus)': () =>
-            STOPS_AT_ENDS.test(EMOJI_PICKER) && /onKeyDown=\{onTabsKey\}/.test(EMOJI_PICKER)
-                ? true
-                : 'the arrows do not move between the tabs, stopping at the ends',
+            livePicker({}, (box) => stopsAtEnds([...box.querySelectorAll<HTMLElement>('[role="toolbar"] button')])).then((stops) =>
+                stops ? true : 'the arrows do not move between the tabs, stopping at the ends',
+            ),
         'Enter, Space (a tab has focus)': () =>
-            emojiTab(emojiPicker(), false)?.attrs.type === 'button' &&
-            /const showGroup = \(group: EmojiSection\) => \{\s+setQuery\(''\)/.test(EMOJI_PICKER)
-                ? true
-                : 'a tab is not a native button that clears the search',
+            livePicker({ defaultQuery: 'cat' }, (box) => {
+                const tab = box.querySelectorAll<HTMLButtonElement>('[role="toolbar"] button')[2]
+                const searched = box.querySelector('input')?.value === 'cat'
+                act(() => tab.click())
+                return emojiTab(emojiPicker(), false)?.attrs.type === 'button' && searched && box.querySelector('input')?.value === ''
+            }).then((clears) => (clears ? true : 'a tab is not a native button that clears the search')),
         'Escape (focus is in the picker and the tone choice is not open)': () => {
             let closed = 0
             return livePicker({ defaultQuery: 'cat', onClose: () => closed++ }, (box) => {
@@ -4613,9 +5019,9 @@ const REACTION_BAR_ADAPTER: Adapter = {
     effect: () => skip('the reaction bar states no effects'),
     keys: {
         'ArrowLeft, ArrowRight (a button of the bar has focus)': () =>
-            /querySelectorAll<HTMLButtonElement>\('\[data-reaction\]'\)/.test(REACTION_BAR) &&
-            STOPS_AT_ENDS.test(REACTION_BAR) &&
-            byLabel(REACTION_BARS().md, REACTION_BAR_WORDS.more)?.attrs['data-reaction'] !== undefined
+            live(createElement(ReactionBar, { onReact: noop, selected: ['❤️'] }), (box) =>
+                stopsAtEnds([...box.querySelectorAll<HTMLElement>('button')]),
+            ) && byLabel(REACTION_BARS().md, REACTION_BAR_WORDS.more)?.attrs['data-reaction'] !== undefined
                 ? true
                 : "the arrows do not move between the bar's buttons, the more button included, stopping at the ends",
         'Enter, Space (a button of the bar has focus)': () =>
@@ -4640,22 +5046,52 @@ const MENTION_WORDS = Object.fromEntries(
         match[2],
     ]),
 )
-const MENTION_KEYS = source('lib/mentions.ts')
 const TOUCH_READ_ONCE = /const \[touch\] = useState\(touchTyping\)/
 const touchScreen = () => /'\(pointer: coarse\) and \(hover: none\)'/.test(source('lib/keys.ts'))
+/** The people the suggestions list for a bare `@`. */
+const MENTION_PEOPLE = [
+    { id: 'ada', name: 'ada' },
+    { id: 'grace', name: 'grace' },
+    { id: 'linus', name: 'linus' },
+]
+/**
+ * What a composer whose text ends with a bare `@`, its suggestions open on `people`, does with each
+ * key pressed in turn in its text: `change:<text>` when it puts a person in, `kept` when it keeps the
+ * key from the text, `line` when it leaves the key to the text; then `open` or `shut` for the list.
+ */
+function mentionsHear(keys: string[], people: ComposerMentions['people'] = MENTION_PEOPLE): string {
+    const said: string[] = []
+    const props = {
+        value: 'Ask @',
+        onChange: (text: string) => said.push(`change:${text}`),
+        onSend: () => said.push('send'),
+        mentions: { people, defaultOpen: true },
+    }
+    return live(createElement(Composer, props), (box) => {
+        for (const key of keys) {
+            const before = said.length
+            const event = press(box.querySelector('textarea'), key)
+            if (said.length === before) said.push(event?.defaultPrevented === true ? 'kept' : 'line')
+        }
+        said.push(box.querySelector('[role="listbox"]') === null ? 'shut' : 'open')
+        return said.join(' ')
+    })
+}
 const MENTION_PROBES: Adapter['keys'] = {
     'ArrowDown, ArrowUp (the suggestion list is open)': () =>
-        /setActive\(\(current\) => Math\.min\(current \+ 1, found\.length - 1\)\)/.test(MENTIONS) &&
-        /setActive\(\(current\) => Math\.max\(current - 1, 0\)\)/.test(MENTIONS)
+        mentionsHear(['ArrowUp', 'Enter']) === 'kept change:Ask @ada  shut' &&
+        mentionsHear(['ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter']) === 'kept kept kept change:Ask @linus  shut' &&
+        mentionsHear(['ArrowDown', 'ArrowDown', 'ArrowUp', 'Enter']) === 'kept kept kept change:Ask @grace  shut'
             ? true
             : 'the arrows do not move through the people, stopping at the ends',
     'Enter, Tab (the suggestion list is open)': () =>
-        /const choose = key === 'Enter' \|\| key === 'Tab'/.test(MENTION_KEYS) &&
-        /if \(choose && searching\) return 'hold'/.test(MENTION_KEYS)
+        mentionsHear(['Enter']) === 'change:Ask @ada  shut' &&
+        mentionsHear(['ArrowDown', 'Tab']) === 'kept change:Ask @grace  shut' &&
+        mentionsHear(['Enter', 'Tab'], () => new Promise(() => undefined)) === 'kept kept open'
             ? true
             : 'Enter and Tab do not put the person in, waiting on a search',
     'Escape (the suggestion list is open)': () =>
-        /if \(key === 'Escape'\) return 'close'/.test(MENTION_KEYS) ? true : 'Escape does not close the suggestions',
+        mentionsHear(['Escape']) === 'kept shut' ? true : 'Escape does not close the suggestions',
 }
 /** A composer that takes the text, the send and the change of text, and the props each draws with. */
 type TextComposer = ComponentType<{
@@ -5002,23 +5438,23 @@ const DEVICES = [
         onSelect: noop,
     },
 ]
-const callBar = (props: Partial<CallBarProps> = {}) =>
-    draw(
-        TooltipProvider,
-        {},
-        createElement(CallBar, {
-            onMutedChange: noop,
-            microphones: DEVICES,
-            onCameraOffChange: noop,
-            cameras: DEVICES,
-            onSharingChange: noop,
-            onReact: noop,
-            onHandRaisedChange: noop,
-            more: [{ id: 'captions', label: 'Captions', onSelect: noop, checked: false }],
-            onLeave: noop,
-            ...props,
-        }),
-    )
+const callBar = (props: Partial<CallBarProps> = {}) => draw(TooltipProvider, {}, callBarOf(props))
+/** A call bar drawn in the page, handed to `look`. */
+const liveCallBar = <T>(look: (box: HTMLElement) => T) => live(createElement(TooltipProvider, {}, callBarOf({})), look)
+/** A call bar with every control, its devices' menus and its more menu. */
+const callBarOf = (props: Partial<CallBarProps>) =>
+    createElement(CallBar, {
+        onMutedChange: noop,
+        microphones: DEVICES,
+        onCameraOffChange: noop,
+        cameras: DEVICES,
+        onSharingChange: noop,
+        onReact: noop,
+        onHandRaisedChange: noop,
+        more: [{ id: 'captions', label: 'Captions', onSelect: noop, checked: false }],
+        onLeave: noop,
+        ...props,
+    })
 const CALL_BARS = once(() => ({
     plain: callBar(),
     off: callBar({ muted: true, sharing: true }),
@@ -5083,7 +5519,7 @@ const CALL_BAR_ADAPTER: Adapter = {
     effect: (state) => (state === 'focus' ? pieceWhere(byLabel(CALL_BARS().plain, CALL_BAR_WORDS.share), ['focus-visible']) : undefined),
     keys: {
         'ArrowLeft, ArrowRight (a control of the bar has focus)': () =>
-            /querySelectorAll<HTMLButtonElement>\('\[data-call-control\]'\)/.test(CALL_BAR) && STOPS_AT_ENDS.test(CALL_BAR)
+            liveCallBar((box) => stopsAtEnds([...box.querySelectorAll<HTMLElement>('[data-call-control]')]))
                 ? true
                 : "the arrows do not move between the bar's controls, stopping at the ends",
         'Enter, Space (a control of the bar has focus)': () =>
@@ -6172,20 +6608,88 @@ function editorPiece(name: string, state: string): Where | Skip | undefined {
     }
 }
 
+/**
+ * A code editor drawn in the page with the props, its document `job: nightly-export` unless given, and
+ * the keys pressed in turn in its text (each a key and what is held with it), handed to `look` with
+ * what it said (`change:<document>`, `run:<document>`) and the editor's box.
+ */
+function editorHears<T>(
+    props: Partial<CodeEditorProps>,
+    keys: [string, KeyboardEventInit?][],
+    look: (said: string[], box: HTMLElement, events: (KeyboardEvent | undefined)[]) => T,
+): T {
+    const said: string[] = []
+    const all = {
+        label: 'Definition',
+        value: EDITED,
+        onChange: (value: string) => said.push(`change:${value}`),
+        ...props,
+    }
+    return live(createElement(CodeEditor, all), (box) => {
+        const events = keys.map(([key, init]) => press(box.querySelector('.cm-content'), key, init))
+        return look(said, box, events)
+    })
+}
+
+/**
+ * What an empty editor offering three jobs, which it lists in alphabetical order, says as Ctrl+Space
+ * opens its completion list and each key is pressed in turn after: the list `open` on its chosen
+ * row, then that row or `shut` after each press, then what it changed.
+ */
+function completes(keys: [string, KeyboardEventInit?][]): Promise<string> {
+    const said: string[] = []
+    const props = {
+        label: 'Definition',
+        value: '',
+        onChange: (value: string) => said.push(`change:${value}`),
+        completions: [{ label: 'nightly-export' }, { label: 'sync-inventory' }, { label: 'send-digest' }],
+    }
+    return liveWaiting(createElement(CodeEditor, props), async (box) => {
+        const content = box.querySelector('.cm-content')
+        const chosen = () => document.querySelector('.cm-tooltip-autocomplete [aria-selected="true"]')?.textContent ?? undefined
+        const seen: string[] = []
+        press(content, ' ', { ctrlKey: true })
+        if (!(await until(() => chosen() !== undefined))) return 'never opened'
+        seen.push(`open ${String(chosen())}`)
+        // CodeMirror takes no key that moves or puts in until the list has been open its interaction delay.
+        await act(() => new Promise((done) => setTimeout(done, 100)))
+        for (const [key, init] of keys) {
+            press(content, key, init)
+            // The list is drawn again on the next frame.
+            await act(() => new Promise((done) => setTimeout(done, 20)))
+            const now = chosen()
+            seen.push(now === undefined ? 'shut' : now)
+        }
+        return [...seen, ...said].join(' ')
+    })
+}
+
+/** The document `editorHears` draws unless given one. */
+const EDITED = 'job: nightly-export'
+
 /** A key the editor binds through a CodeMirror keymap it installs: the keymap's name in its source. */
 const installs = (keymapName: string, when: RegExp) => () =>
     new RegExp(`keymap\\.of\\(\\[?[^\\n]*\\b${keymapName}\\b`).test(CODE_EDITOR) && when.test(CODE_EDITOR)
         ? true
         : `${keymapName} is not installed as the spec says`
 
-/** Keys folding binds: each in the editor's fold keymap, which it installs with the fold gutter. */
+/**
+ * Whether folding binds each pair of keys, a key that folds and one that unfolds: in a JSON editor
+ * with folding, the first folds its object at the caret and the second opens it again.
+ */
 const foldsOn =
-    (...keys: string[]) =>
+    (...pairs: [string, KeyboardEventInit][][]) =>
     (): true | string => {
-        const bound = new Set(FOLD_KEYS.map((binding) => binding.key))
-        const missing = keys.filter((key) => !bound.has(key))
-        if (!/keymap\.of\(FOLD_KEYS\)/.test(CODE_EDITOR) || !/codeFolding\(\)/.test(CODE_EDITOR))
-            return 'the fold keymap is not installed with folding'
+        const missing = pairs.flatMap(([fold, unfold]) =>
+            editorHears({ language: 'json', folding: true, value: '{\n  "job": "nightly-export"\n}' }, [], (_, box) => {
+                const folds = () => box.querySelectorAll('.cm-foldPlaceholder').length
+                const content = box.querySelector('.cm-content')
+                press(content, ...fold)
+                const shut = folds()
+                press(content, ...unfold)
+                return shut === 1 && folds() === 0 ? [] : [`${fold[0]} ${unfold[0]}`]
+            }),
+        )
         return missing.length === 0 ? true : `folding does not bind ${missing.join(', ')}`
     }
 
@@ -6312,18 +6816,61 @@ const CODE_EDITOR_ADAPTER: Adapter = {
     paint: (_, name, state) => editorPiece(name, state),
     effect: () => skip('the code editor states no effects'),
     keys: {
-        'Mod+Enter (onRun)': () =>
-            /\.\.\.\(onRun === undefined \? \[\] : \['Mod-Enter'\]\)/.test(CODE_EDITOR) ? true : 'Mod-Enter is not bound with onRun',
-        'Enter (variant line, with onRun)': () =>
-            /\.\.\.\(oneLine \? \['Enter'\] : \[\]\)/.test(CODE_EDITOR) && /key === 'Enter' && oneLine/.test(CODE_EDITOR)
+        'Mod+Enter (onRun)': () => {
+            const ran: string[] = []
+            const onRun = (value: string) => void ran.push(`run:${value}`)
+            // CodeMirror reads Mod (Ctrl here, not a Mac) when it loads; without onRun the key is its own, a new line.
+            const kept = editorHears({ onRun }, [['Enter', { ctrlKey: true }]], (said) => said.length === 0)
+            const free = editorHears({}, [['Enter', { ctrlKey: true }]], (said) => said.length === 1)
+            return kept && free && ran.join(' ') === 'run:job: nightly-export' ? true : 'Mod-Enter is not bound with onRun'
+        },
+        'Enter (variant line, with onRun)': () => {
+            const ran: string[] = []
+            const onRun = (value: string) => void ran.push(`run:${value}`)
+            // A line runs on Enter and never breaks; a field breaks its line and runs nothing.
+            const line = editorHears({ variant: 'line', onRun }, [['Enter']], (said) => said.join(' '))
+            const held = editorHears(
+                { variant: 'line' },
+                [['Enter']],
+                (said, _, [event]) => event?.defaultPrevented === true && said.length === 0,
+            )
+            const field = editorHears({ onRun }, [['Enter']], (said) => said.length)
+            return line === '' && held && field === 1 && ran.join(' ') === 'run:job: nightly-export'
                 ? true
-                : 'Enter does not run in the line variant',
-        'Tab, Shift+Tab (the editor has focus and is not read only)': installs('indentWithTab', /indentWithTab/),
-        'Mod+Z, Mod+Y, Mod+Shift+Z (the editor has focus)': installs('historyKeymap', /history\(\)/),
-        'Ctrl+Space (the editor has focus)': installs('completionKeymap', /autocompletion\(/),
-        'ArrowDown, ArrowUp, PageDown, PageUp (the completion list is open)': installs('completionKeymap', /autocompletion\(/),
-        'Enter (the completion list is open)': installs('completionKeymap', /autocompletion\(/),
-        'Escape (the completion list is open)': installs('completionKeymap', /autocompletion\(/),
+                : 'Enter does not run in the line variant'
+        },
+        'Tab, Shift+Tab (the editor has focus and is not read only)': () => {
+            const indents = editorHears({}, [['Tab'], ['Tab', { shiftKey: true }]], (said) => said)
+            const readOnly = editorHears(
+                { readOnly: true },
+                [['Tab']],
+                (said, _, [event]) => said.length === 0 && event?.defaultPrevented !== true,
+            )
+            return indents.length === 2 && indents[0] !== `change:${EDITED}` && indents[1] === `change:${EDITED}` && readOnly
+                ? true
+                : 'indentWithTab is not installed as the spec says'
+        },
+        'Mod+Z, Mod+Y, Mod+Shift+Z (the editor has focus)': () => {
+            const undo: [string, KeyboardEventInit] = ['z', { ctrlKey: true }]
+            // CodeMirror binds Mod+Shift+Z on a Mac and on Linux only, by the platform it reads when it loads, which here is neither.
+            const steps = editorHears({}, [['Tab'], undo, ['y', { ctrlKey: true }], undo], (said) =>
+                said.map((one) => (one === `change:${EDITED}` ? 'back' : 'on')).join(' '),
+            )
+            return steps === 'on back on back' ? true : 'historyKeymap is not installed as the spec says'
+        },
+        'Ctrl+Space (the editor has focus)': async () =>
+            (await completes([])) === 'open nightly-export' ? true : 'completionKeymap is not installed as the spec says',
+        'ArrowDown, ArrowUp, PageDown, PageUp (the completion list is open)': async () =>
+            // A page is as many rows as the list's height holds, which happy-dom does not lay out: the arrows are pressed.
+            (await completes([['ArrowDown'], ['ArrowDown'], ['ArrowUp']])) === 'open nightly-export send-digest sync-inventory send-digest'
+                ? true
+                : 'completionKeymap is not installed as the spec says',
+        'Enter (the completion list is open)': async () =>
+            (await completes([['ArrowDown'], ['Enter']])) === 'open nightly-export send-digest shut change:send-digest'
+                ? true
+                : 'completionKeymap is not installed as the spec says',
+        'Escape (the completion list is open)': async () =>
+            (await completes([['Escape']])) === 'open nightly-export shut' ? true : 'completionKeymap is not installed as the spec says',
         "Tab, Shift+Tab (a snippet's fields are active)": () =>
             /import \{[^}]*\bsnippet\b[^}]*\} from '@codemirror\/autocomplete'/.test(source('components/code/schema.ts'))
                 ? true
@@ -6332,12 +6879,33 @@ const CODE_EDITOR_ADAPTER: Adapter = {
         'F3, Mod+G, Shift+F3, Mod+Shift+G (search)': installs('searchKeymap', /searchPanel\(/),
         'Escape (the find bar has focus)': installs('searchKeymap', /searchPanel\(/),
         'Mod+D, Mod+Shift+L, Mod+Alt+G (search)': installs('searchKeymap', /searchPanel\(/),
-        'Ctrl+Shift+[, Ctrl+Shift+] (folding)': foldsOn('Ctrl-Shift-[', 'Ctrl-Shift-]'),
-        'Ctrl+Alt+[, Ctrl+Alt+] (folding)': foldsOn('Ctrl-Alt-[', 'Ctrl-Alt-]'),
-        'Mod+., Mod+Shift+. (folding)': foldsOn('Mod-.', 'Mod-Shift-.'),
-        'Mod+Alt+., Mod+Alt+Shift+. (folding)': foldsOn('Mod-Alt-.', 'Mod-Alt-Shift-.'),
+        'Ctrl+Shift+[, Ctrl+Shift+] (folding)': foldsOn([
+            ['{', { ctrlKey: true, shiftKey: true, keyCode: 219 }],
+            ['}', { ctrlKey: true, shiftKey: true, keyCode: 221 }],
+        ]),
+        'Ctrl+Alt+[, Ctrl+Alt+] (folding)': foldsOn([
+            ['[', { ctrlKey: true, altKey: true, keyCode: 219 }],
+            [']', { ctrlKey: true, altKey: true, keyCode: 221 }],
+        ]),
+        'Mod+., Mod+Shift+. (folding)': foldsOn([
+            ['.', { ctrlKey: true }],
+            ['>', { ctrlKey: true, shiftKey: true, keyCode: 190 }],
+        ]),
+        'Mod+Alt+., Mod+Alt+Shift+. (folding)': foldsOn([
+            ['.', { ctrlKey: true, altKey: true, keyCode: 190 }],
+            ['>', { ctrlKey: true, altKey: true, shiftKey: true, keyCode: 190 }],
+        ]),
         'Mod+Click (markdown with onFollowLink)': () =>
-            /classList\.toggle\('cm-follow-held', held\)/.test(CODE_EDITOR) && /followLinks\(/.test(CODE_EDITOR)
+            editorHears({ language: 'markdown', value: 'See [[harbor]]', onFollowLink: noop }, [], (_, box) => {
+                const editor = box.querySelector('.cm-editor')
+                const held = () => editor?.classList.contains('cm-follow-held') === true
+                press(box.querySelector('.cm-content'), 'Control', { ctrlKey: true })
+                const down = held()
+                act(() => {
+                    box.querySelector('.cm-content')?.dispatchEvent(new KeyboardEvent('keyup', { key: 'Control', bubbles: true }))
+                })
+                return down && !held()
+            })
                 ? true
                 : 'no link followed on Mod and a click',
     },
@@ -6368,6 +6936,28 @@ function opensOnAltDown<P extends object>(field: ComponentType<P>, props: P): bo
         press(box.querySelector('input'), 'ArrowDown', { altKey: true })
     })
     return asked.join() === 'true'
+}
+/**
+ * What a field held open from outside says when the button `option` finds in its popup is pressed,
+ * once the popup has drawn it: `value <value>` and `open <open>`, in order.
+ */
+function pickedFrom<P extends object>(
+    field: ComponentType<P>,
+    props: Partial<P>,
+    option: () => HTMLElement | null | undefined,
+): Promise<string> {
+    const said: string[] = []
+    const held = {
+        ...props,
+        open: true,
+        onOpenChange: (open: boolean) => said.push(`open ${String(open)}`),
+        onValueChange: (value: string | null) => said.push(`value ${String(value)}`),
+    } as unknown as P
+    return liveWaiting(createElement(field, held), async () => {
+        if (!(await until(() => option() != null))) return 'nothing to pick'
+        act(() => option()?.click())
+        return said.join(' ')
+    })
 }
 const dateField = (props: Partial<Parameters<typeof DateField>[0]> = {}) =>
     draw(DateField, {
@@ -6504,8 +7094,10 @@ const DATE_FIELD_ADAPTER: Adapter = {
         ),
         'PageUp, PageDown (the calendar is open)': skip("react-day-picker's grid moves by these keys in a browser"),
         'Home, End (the calendar is open)': skip("react-day-picker's grid moves by these keys in a browser"),
-        'Enter, Space (the calendar is open)': () =>
-            /onPick=\{\(day\) => \{\s*entry\.set\(day\)\s*setOpened\(false\)/.test(DATE_FIELD)
+        'Enter, Space (the calendar is open)': async () =>
+            (await pickedFrom(DateField, { id: 'first-run', label: 'First run', value: '2026-11-09', today: '2026-11-09' }, () =>
+                document.querySelector<HTMLElement>('button[data-day][aria-label*="November 12th"]'),
+            )) === 'value 2026-11-12 open false'
                 ? true
                 : 'picking a day does not close the calendar',
         'Escape (the calendar is open)': BASE_UI('Popover', 'closes on Escape and puts focus back on its trigger'),
@@ -6547,6 +7139,23 @@ const SIDE_PANELS = once(() => ({
 }))
 /** The ink the shell's frame sets around its panel, which sets none of its own. */
 const SHELL_INK = /className="group\/shell relative flex [^"]*\b(text-foreground)\b/.exec(SHELL)?.[1] ?? ''
+/**
+ * The tab that has the focus after each key is pressed in turn on the focused tab of a side panel
+ * showing its first tab, and the tab shown after them all.
+ */
+const tabsReached = (keys: string[]) =>
+    liveWaiting(createElement(SidePanel, { tabs: PANEL_TABS, defaultActive: 'details' }), async (box) => {
+        const tabs = () => [...box.querySelectorAll<HTMLElement>('[role="tab"]')]
+        act(() => tabs()[0]?.focus())
+        const reached: string[] = []
+        for (const key of keys) {
+            // Base UI moves the focus a microtask after the key.
+            await pressWaiting(document.activeElement, key)
+            reached.push(document.activeElement?.getAttribute('role') === 'tab' ? String(document.activeElement.textContent) : 'away')
+        }
+        const shown = tabs().find((tab) => tab.getAttribute('aria-selected') === 'true')?.textContent
+        return `${reached.join(' ')}, ${String(shown)} shown`
+    })
 const panelTab = (elements: El[], label: string) => elements.find((element) => element.attrs.role === 'tab' && element.text === label)
 /** Each piece of a side panel, by its name in the spec. */
 const sidePanelPieces = (): Record<string, El | undefined> => {
@@ -6588,8 +7197,9 @@ const SIDE_PANEL_ADAPTER: Adapter = {
     },
     effect: () => skip('the side panel states no effects'),
     keys: {
-        'ArrowLeft, ArrowRight, Home, End (a tab has focus)': () =>
-            /<TabsPrimitive\.List\b/.test(SIDE_PANEL) && !/activateOnFocus|loopFocus=\{false\}/.test(SIDE_PANEL)
+        'ArrowLeft, ArrowRight, Home, End (a tab has focus)': async () =>
+            (await tabsReached(['ArrowRight', 'End', 'ArrowRight', 'ArrowLeft', 'Home', 'ArrowRight'])) ===
+            'Log Outputs Details Outputs Details Log, Details shown'
                 ? true
                 : "the tabs are not Base UI's tablist, which moves focus without showing a tab and wraps",
         'Enter, Space (a tab has focus)': () => (sidePanelPieces().tab?.tag === 'button' ? true : 'a tab is not a native button'),
@@ -6824,15 +7434,27 @@ const SECRET_FIELD_ADAPTER: Adapter = {
         },
         'Enter, Space (the reveal has focus)': () => {
             const reveal = byLabel(SECRET_FIELDS().open, SECRET_FIELD_WORDS.show)
-            return reveal?.tag === 'button' &&
-                reveal.attrs['aria-pressed'] === 'false' &&
-                /onClick=\{\(\) => setShown\(!shown\)\}/.test(SECRET_FIELD)
+            const toggles = liveSecret({ value: 'harbor-key' }, (box) => {
+                const kinds = () =>
+                    `${String(box.querySelector('input')?.type)}:${String(box.querySelector('[aria-pressed]')?.getAttribute('aria-pressed'))}`
+                const toggle = () => act(() => box.querySelector<HTMLButtonElement>('[aria-pressed]')?.click())
+                const before = kinds()
+                toggle()
+                const shown = kinds()
+                toggle()
+                return [before, shown, kinds()].join(' ') === 'password:false text:true password:false'
+            })
+            return reveal?.tag === 'button' && reveal.attrs['aria-pressed'] === 'false' && toggles
                 ? true
                 : 'the reveal is not a native toggle button'
         },
         'Enter, Space (Replace has focus)': () =>
             byLabel(SECRET_FIELDS().sealed, SECRET_REPLACE)?.tag === 'button' &&
-            /moved\.current = 'input'\s*setReplacing\(true\)/.test(SECRET_FIELD)
+            liveSecret({ sealed: true }, (box) => {
+                act(() => box.querySelector<HTMLButtonElement>(`button[aria-label="${SECRET_REPLACE}"]`)?.click())
+                const input = box.querySelector('input')
+                return input !== null && document.activeElement === input
+            })
                 ? true
                 : 'Replace does not open the input and move focus into it',
         'Escape (the input of a sealed field that can be changed has focus)': () => {
@@ -6855,10 +7477,22 @@ const SECRET_FIELD_ADAPTER: Adapter = {
         },
         'Enter, Space (Cancel has focus)': () =>
             byText(SECRET_FIELDS().replacing, 'button', SECRET_FIELD_WORDS.cancel)?.tag === 'button' &&
-            /onClick=\{seal\}/.test(SECRET_FIELD)
+            liveSecret({ sealed: true, defaultReplacing: true }, (box, said) => {
+                const cancel = [...box.querySelectorAll('button')].find((one) => one.textContent === SECRET_FIELD_WORDS.cancel)
+                act(() => cancel?.click())
+                const replace = box.querySelector(`button[aria-label="${SECRET_REPLACE}"]`)
+                return box.querySelector('input') === null && document.activeElement === replace && said.join(' ') === 'undefined'
+            })
                 ? true
                 : 'Cancel does not seal the field again',
     },
+}
+
+/** A secret field drawn in the page with the props, handed to `look` with the values it has heard. */
+const liveSecret = <T>(props: Partial<SecretFieldProps>, look: (box: HTMLElement, said: string[]) => T) => {
+    const said: string[] = []
+    const all = { id: 'token', label: 'API token', onChange: (value?: string) => said.push(String(value)), ...props }
+    return live(createElement(SecretField, all), (box) => look(box, said))
 }
 
 // Yes-no field
@@ -6884,6 +7518,15 @@ const YES_NO_FIELDS = once(() => ({
 const choiceOf = (elements: El[]) => elements.find((element) => element.attrs.role === 'group')
 const optionOf = (elements: El[], label: string) =>
     elements.find((element) => element.tag === 'button' && element.attrs['aria-pressed'] !== undefined && element.text === label)
+/** What a yes-no field answering `value`, drawn in the page, hands out when its button with the words is pressed. */
+const answers = (value: boolean | null, words: string) => {
+    const said: string[] = []
+    const props = { id: 'notify', label: 'Notify on failure', value, onValueChange: (next: boolean | null) => said.push(String(next)) }
+    return live(createElement(YesNoField, props), (box) => {
+        act(() => [...box.querySelectorAll('button')].find((one) => one.textContent === words)?.click())
+        return said.join(' ')
+    })
+}
 const YES_NO_ON: Record<string, string[]> = {
     hover: ['hover'],
     keyFocus: ['focus-visible'],
@@ -6960,12 +7603,15 @@ const YES_NO_FIELD_ADAPTER: Adapter = {
         },
         'Enter, Space (an option has focus)': () =>
             optionOf(YES_NO_FIELDS().unanswered, YES_NO_FIELD_WORDS.yes)?.tag === 'button' &&
-            /onValueChange=\{\(next\) => onValueChange\(next === 'yes'\)\}/.test(YES_NO_FIELD)
+            answers(null, YES_NO_FIELD_WORDS.yes) === 'true' &&
+            answers(null, YES_NO_FIELD_WORDS.no) === 'false' &&
+            answers(true, YES_NO_FIELD_WORDS.no) === 'false'
                 ? true
                 : 'an option is not a native button that answers with it',
         'Enter, Space (Clear has focus)': () =>
             byText(YES_NO_FIELDS().answered, 'button', YES_NO_FIELD_WORDS.clear)?.tag === 'button' &&
-            /onClick=\{\(\) => onValueChange\(null\)\}/.test(YES_NO_FIELD)
+            answers(true, YES_NO_FIELD_WORDS.clear) === 'null' &&
+            answers(false, YES_NO_FIELD_WORDS.clear) === 'null'
                 ? true
                 : 'Clear does not take the answer back',
     },
@@ -6998,6 +7644,19 @@ const TIME_FIELDS = once(() => ({
 const TIME_ROW = literalAfter(PICKERS, 'role="option"', 'className={cn(')
 const TIME_CHOSEN = literalAfter(PICKERS, 'time === chosen && ')
 const TIME_LIST = [literalAfter(PICKERS, 'role="listbox"', 'className={cn('), literalAfter(TIME_FIELD, '<TimeList', 'className=')]
+
+/** A time field whose list offers four times, 09:00 to 10:30. */
+const TIMES_OFFERED = { id: 'starts', label: 'Starts', value: '09:30', min: '09:00', max: '10:30' }
+/** The time that has the focus in an open list of `TIMES_OFFERED` after each key is pressed in turn, from the chosen time. */
+const timesReached = (keys: string[]) =>
+    live(createElement(TimeField, { ...TIMES_OFFERED, onValueChange: noop, open: true, onOpenChange: noop }), () =>
+        keys
+            .map((key) => {
+                press(document.activeElement, key)
+                return document.activeElement?.getAttribute('role') === 'option' ? document.activeElement.textContent : 'away'
+            })
+            .join(' '),
+    )
 
 const TIME_FIELD_ADAPTER: Adapter = {
     wordObjects: { TIME_FIELD_WORDS },
@@ -7096,13 +7755,18 @@ const TIME_FIELD_ADAPTER: Adapter = {
                 : 'the clear or the pick button is not a native button'
         },
         'ArrowUp, ArrowDown (the list is open)': () =>
-            /ArrowDown: at \+ 1, ArrowUp: at - 1/.test(PICKERS) && /Math\.max\(0, Math\.min\(buttons\.length - 1, to\)\)/.test(PICKERS)
+            timesReached(['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown']) ===
+            '09:00 09:00 09:30 10:00 10:30 10:30'
                 ? true
                 : 'the arrows do not move between the times, stopping at the ends',
         'Home, End (the list is open)': () =>
-            /Home: 0, End: buttons\.length - 1/.test(PICKERS) ? true : 'Home and End do not go to the first and the last time',
-        'Enter, Space (the list is open)': () =>
-            /onPick=\{\(time\) => \{\s*entry\.set\(seconds \? `\$\{time\}:00` : time\)\s*setOpened\(false\)/.test(TIME_FIELD)
+            timesReached(['End', 'Home']) === '10:30 09:00' ? true : 'Home and End do not go to the first and the last time',
+        'Enter, Space (the list is open)': async () =>
+            (await pickedFrom(TimeField, TIMES_OFFERED, () => [...document.querySelectorAll<HTMLElement>('[role="option"]')][2])) ===
+                'value 10:00 open false' &&
+            (await pickedFrom(TimeField, { ...TIMES_OFFERED, value: '09:30:00', seconds: true }, () =>
+                [...document.querySelectorAll<HTMLElement>('[role="option"]')].at(-1),
+            )) === 'value 10:30:00 open false'
                 ? true
                 : 'picking a time does not close the list',
         'Escape (the list is open)': BASE_UI('Popover', 'closes on Escape and puts focus back on its trigger'),
@@ -7339,6 +8003,27 @@ const periodPicker = (props: Partial<PeriodPickerProps> = {}) =>
         today: '2026-11-08',
         ...props,
     })
+/** Whether choosing Other in a period picker drawn in the page, opened by a press on its trigger, opens the typed input. */
+const otherOpensTyping = () =>
+    liveWaiting(
+        createElement(PeriodPicker, { type: 'monthly', value: '202610', onValueChange: noop, today: '2026-11-08' }),
+        async (box) => {
+            const trigger = box.querySelector<HTMLElement>('[role="combobox"]')
+            const other = () =>
+                [...document.querySelectorAll<HTMLElement>('[role="option"]')].find((one) => one.textContent === PERIOD_PICKER_WORDS.other)
+            const closed = box.querySelector(`input[aria-label="${PERIOD_PICKER_WORDS.typed}"]`) === null
+            await act(async () => {
+                trigger?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse', button: 0 }))
+                trigger?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
+                trigger?.click()
+            })
+            if (!(await until(() => other() !== undefined))) return false
+            await act(async () => {
+                other()?.click()
+            })
+            return closed && (await until(() => box.querySelector(`input[aria-label="${PERIOD_PICKER_WORDS.typed}"]`) !== null))
+        },
+    )
 const PERIOD_PICKERS = once(() => ({
     plain: periodPicker(),
     empty: periodPicker({ value: null }),
@@ -7491,8 +8176,8 @@ const PERIOD_PICKER_ADAPTER: Adapter = {
             return trigger?.tag === 'button' && trigger.attrs.role === 'combobox' ? true : "the trigger is not Base UI's combobox button"
         },
         'ArrowDown, ArrowUp (the list is open)': BASE_UI('select', 'moves the highlight'),
-        'Enter, Space (a row is highlighted)': () =>
-            /if \(next === OTHER\) \{\s*setTyping\(true\)/.test(PERIOD_PICKER) ? true : 'Other period does not open the typed input',
+        'Enter, Space (a row is highlighted)': async () =>
+            (await otherOpensTyping()) ? true : 'Other period does not open the typed input',
         'Escape (the list is open)': () => focusBack(SELECT),
     },
     more: () =>
@@ -7608,6 +8293,23 @@ const treeChooses = (key: string) => {
     const chosen: string[][] = []
     liveTree({ onSelect: (ids) => chosen.push(ids) }, (row) => press(row('europe'), key))
     return chosen.map((ids) => ids.join()).join(' ') === 'europe'
+}
+
+/** What an open tree select, one choice or `multiple`, says when Enter chooses its first row: `value <ids>` and `open <open>`. */
+const treeSelectChooses = (multiple: boolean) => {
+    const said: string[] = []
+    const props = {
+        nodes: REGIONS,
+        value: [],
+        multiple,
+        onValueChange: (ids: string[]) => said.push(`value ${ids.join()}`),
+        defaultOpen: true,
+        onOpenChange: (open: boolean) => said.push(`open ${String(open)}`),
+    }
+    return live(createElement(TreeSelect, props), () => {
+        press(document.querySelector('[role="treeitem"][data-id="europe"]'), 'Enter')
+        return said.join(', ')
+    })
 }
 
 const TREE_SELECT_ADAPTER: Adapter = {
@@ -7775,7 +8477,10 @@ const TREE_SELECT_ADAPTER: Adapter = {
                 ? true
                 : 'ArrowLeft does not close a branch',
         'Enter, Space (a row has focus)': () =>
-            treeChooses('Enter') && treeChooses(' ') && /if \(!multiple\) \{\s*setOpen\(false\)/.test(TREE_SELECT)
+            treeChooses('Enter') &&
+            treeChooses(' ') &&
+            treeSelectChooses(false) === 'value europe, open false' &&
+            treeSelectChooses(true) === 'value europe'
                 ? true
                 : 'a row is not chosen by Enter or Space, or a single choice does not close the popup',
         'Escape (the popup is open)': () => focusBack(POPOVER),
@@ -8876,7 +9581,7 @@ async function checksOf(id: string): Promise<Check[]> {
         ...paintMapChecks(spec, adapter),
         ...effectChecksOf(spec, adapter),
         ...(await keyChecks(spec, adapter)),
-        ...(adapter.more?.() ?? []),
+        ...((await adapter.more?.()) ?? []),
     ]
     made.set(id, all)
     return all
