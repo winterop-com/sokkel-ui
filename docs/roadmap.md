@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.33.0** is the latest release (2026-11-20): `Markdown` reads notes as vaults write them
+- **0.33.1** is the latest release (2026-11-20): `parseMarkdown` keeps positions on links, embeds,
+  tags and highlights; the code editor's markdown reads a long line of unclosed marks in linear time;
+  `standInOpens`; the chip part in the contract; parts.test checks keys, clicks and states by behavior;
+  contract 0.33.1.
+- **0.33.0** (2026-11-20): `Markdown` reads notes as vaults write them
   (frontmatter, callout titles and folding, `==highlights==`, embeds, `resolveUrl`); the markdown
   tree (`tree`, `parseMarkdown`, `frontmatterOf`) with its contract and fixtures; Rust in the
   highlighter; the code editor colors vault syntax; apps list `unified` and `remark-parse` (breaking);

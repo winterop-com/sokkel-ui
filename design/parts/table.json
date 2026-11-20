@@ -11,8 +11,8 @@
         },
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "3ffb400",
-            "note": "Editing is the table's own (EntryGrid gone) with cellFocus, the number editor, band heads 12 from their rule and aggregates; trees and its own loading and failed states not yet (drift)."
+            "as_of": "84556df",
+            "note": "Trees (children on demand, mixed branch selection), its own loading and failed states, editing, band heads and aggregates drawn; Shift-range and Mod-press selection, and a tree's indent and refusal line in the stacked and card views not yet (drift)."
         },
         "sokkel-tui": {
             "state": "partial",
@@ -650,7 +650,7 @@
             "renderer": "sokkel-egui",
             "what": "the parts not built yet",
             "spec": "This spec.",
-            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-egui 1a87987). Has: rows at density.row, drawing only those in view, their height set or auto and a cell of two lines; heads in text.column-head and table-head-ink (68c156c) that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); stacked cards below its width (compact and labeled); row actions as a menu, inside the row's padding when the table fits its room (minWidth auto); a row's chevron and its detail row; grouping by a column (groupBy); paging with a page size; cell editing (text, date, select); row reorder by its grip; keyboard row navigation and the head row by keys; the toolbar line and the foot; words as fields. Editing, band heads (12 from their rule), group sums and stacked fields are the table's own as of 3ffb400; EntryGrid is gone. Not yet: trees, and its own loading and failed states (it is wrapped in PageState)."
+            "today": "Built in crates/core/src/widgets/table.rs (as of sokkel-egui 1a87987). Has: rows at density.row, drawing only those in view, their height set or auto and a cell of two lines; heads in text.column-head and table-head-ink (68c156c) that sort (ascending, descending, as given) and resize by their edge with a 64 minimum; selection with a head checkbox and a \"{count} selected\" bar with Clear; an opened row on secondary; zebra from table-zebra; Table and List variants (the list head at density.panel-head); stacked cards below its width (compact and labeled); row actions as a menu, inside the row's padding when the table fits its room (minWidth auto); a row's chevron and its detail row; grouping by a column (groupBy); paging with a page size; cell editing (text, date, select); row reorder by its grip; keyboard row navigation and the head row by keys; the toolbar line and the foot; words as fields. Editing, band heads (12 from their rule), group sums and stacked fields are the table's own as of 3ffb400; EntryGrid is gone. As of 84556df: trees (indent 20 a level, the chevron, Right and Left, children on demand with loadingChildren and a refused line with Try again, a branch's selection taking every row under it and mixed while some are chosen, pages counting top-level rows) and its own loading (placeholder rows, also over a failure while it reads again) and failed states (by status, in place of the rows). Not yet: a range chosen with Shift and a press, a row toggled with Cmd or Ctrl and a press; and a tree's indent and refusal line in the stacked and card views."
         },
         {
             "renderer": "sokkel-ui",
