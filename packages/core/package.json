@@ -748,9 +748,33 @@
             "types": "./dist/components/ClipTimeline.d.ts",
             "import": "./dist/components/ClipTimeline.js"
         },
+        "./Freshness": {
+            "types": "./dist/components/Freshness.d.ts",
+            "import": "./dist/components/Freshness.js"
+        },
+        "./PlaybackTimeline": {
+            "types": "./dist/components/PlaybackTimeline.d.ts",
+            "import": "./dist/components/PlaybackTimeline.js"
+        },
         "./RunTimeline": {
             "types": "./dist/components/RunTimeline.d.ts",
             "import": "./dist/components/RunTimeline.js"
+        },
+        "./TaskCard": {
+            "types": "./dist/components/TaskCard.d.ts",
+            "import": "./dist/components/TaskCard.js"
+        },
+        "./TrackCard": {
+            "types": "./dist/components/TrackCard.d.ts",
+            "import": "./dist/components/TrackCard.js"
+        },
+        "./TrackGlyph": {
+            "types": "./dist/components/TrackGlyph.d.ts",
+            "import": "./dist/components/TrackGlyph.js"
+        },
+        "./TrackRoster": {
+            "types": "./dist/components/TrackRoster.d.ts",
+            "import": "./dist/components/TrackRoster.js"
         },
         "./UptimeBar": {
             "types": "./dist/components/UptimeBar.d.ts",
@@ -1224,6 +1248,10 @@
             "types": "./dist/hooks/use-clamped.d.ts",
             "import": "./dist/hooks/use-clamped.js"
         },
+        "./hooks/use-clock": {
+            "types": "./dist/hooks/use-clock.d.ts",
+            "import": "./dist/hooks/use-clock.js"
+        },
         "./hooks/use-commands": {
             "types": "./dist/hooks/use-commands.d.ts",
             "import": "./dist/hooks/use-commands.js"
@@ -1415,6 +1443,14 @@
         "./lib/markdown-tree": {
             "types": "./dist/lib/markdown-tree.d.ts",
             "import": "./dist/lib/markdown-tree.js"
+        },
+        "./lib/time-axis": {
+            "types": "./dist/lib/time-axis.d.ts",
+            "import": "./dist/lib/time-axis.js"
+        },
+        "./lib/tracks": {
+            "types": "./dist/lib/tracks.d.ts",
+            "import": "./dist/lib/tracks.js"
         },
         "./lib/wiki-links": {
             "types": "./dist/lib/wiki-links.d.ts",

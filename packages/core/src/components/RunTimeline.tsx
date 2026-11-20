@@ -4,11 +4,15 @@ import { GripVertical } from 'lucide-react'
 
 import { useLocale, useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
+import { axisShare as share, tickLabeler, timelineMs, timelineTicks, type TimelineTime } from '../lib/time-axis'
+import { TimeGrid, TimeTicks } from './time-axis'
 import { Dot } from './Dot'
 import { useStatus } from './StatusProvider'
 
 /** A time: an ISO 8601 text or milliseconds since the epoch. */
-export type RunTimelineTime = string | number
+export type RunTimelineTime = TimelineTime
+
+export { timelineMs, timelineTicks } from '../lib/time-axis'
 
 /** One run of a lane. */
 export interface RunTimelineRun {
@@ -110,52 +114,10 @@ export interface RunTimelineProps {
 }
 
 const MINUTE = 60_000
-const HOUR = 60 * MINUTE
-const DAY = 24 * HOUR
 
-/** The steps ticks are placed at, from the finest. */
-const STEPS = [15 * MINUTE, 30 * MINUTE, HOUR, 2 * HOUR, 3 * HOUR, 6 * HOUR, 12 * HOUR, DAY, 2 * DAY, 3 * DAY, 7 * DAY, 14 * DAY]
-
-/** How far a tick's label stays from the current time's, in pixels, so the two never overlap. */
-const NOW_ROOM = 40
-
-/** The least room a tick's label takes, in pixels. */
-const TICK_ROOM = 64
-
-/** A time in milliseconds. */
-export function timelineMs(time: RunTimelineTime): number {
-    return typeof time === 'number' ? time : Date.parse(time)
-}
-
-/** How far a zone's clock is ahead of UTC at a moment, in milliseconds. */
-function zoneOffset(ms: number, timeZone: string | undefined): number {
-    if (timeZone === undefined) return -new Date(ms).getTimezoneOffset() * MINUTE
-    const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone,
-        hourCycle: 'h23',
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-    }).formatToParts(ms)
-    const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((entry) => entry.type === type)?.value ?? 0)
-    const wall = Date.UTC(part('year'), part('month') - 1, part('day'), part('hour'), part('minute'))
-    return wall - (ms - (ms % MINUTE))
-}
-
-/** The ticks along an axis from `from` to `to` that fit `width` pixels: the step and each tick's time, on the zone's clock. */
-export function timelineTicks(from: number, to: number, width: number, timeZone?: string): { step: number; ticks: number[] } {
-    const span = Math.max(to - from, 1)
-    const most = Math.max(Math.floor(width / TICK_ROOM), 2)
-    const step = STEPS.find((candidate) => span / candidate <= most) ?? STEPS[STEPS.length - 1]
-    const offset = zoneOffset(from, timeZone)
-    const ticks: number[] = []
-    for (let at = Math.ceil((from + offset) / step) * step - offset; at <= to; at += step) {
-        // A step of a day or more lands on the zone's midnight even across a change of its clock.
-        ticks.push(step >= DAY ? at + offset - zoneOffset(at, timeZone) : at)
-    }
-    return { step, ticks }
+/** The share of the axis a time stands at, as a CSS length. */
+function percent(value: number): string {
+    return `${String(value * 100)}%`
 }
 
 /** A shift written short and signed: `+2h`, `-1d 6h`, `+45m`. */
@@ -172,15 +134,6 @@ export function formatShift(ms: number): string {
         minutes > 0 ? `${String(minutes)}m` : '',
     ].filter(Boolean)
     return `${sign}${parts.length === 0 ? '0m' : parts.join(' ')}`
-}
-
-/** The share of the axis a time stands at, from 0 to 1, held to it. */
-function share(at: number, from: number, to: number): number {
-    return Math.min(Math.max((at - from) / Math.max(to - from, 1), 0), 1)
-}
-
-function percent(value: number): string {
-    return `${String(value * 100)}%`
 }
 
 type DragLayer = typeof import('./run-timeline-drag')
@@ -255,12 +208,7 @@ export function RunTimeline({
     }, [axis])
     const { step, ticks } = useMemo(() => timelineTicks(from, to, width || 640, timeZone), [from, to, width, timeZone])
     const grain = snap ?? step / 4
-    const tickWords = useMemo(() => {
-        const day = new Intl.DateTimeFormat(shownLocale, { month: 'short', day: 'numeric', timeZone })
-        const time = new Intl.DateTimeFormat(shownLocale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone })
-        // A tick at the zone's midnight names its day; the others their time.
-        return (at: number) => (step >= DAY || (at + zoneOffset(at, timeZone)) % DAY === 0 ? day.format(at) : time.format(at))
-    }, [shownLocale, timeZone, step])
+    const tickWords = useMemo(() => tickLabeler(shownLocale, timeZone, step), [shownLocale, timeZone, step])
     const runWords = useMemo(
         () =>
             new Intl.DateTimeFormat(shownLocale, {
@@ -312,17 +260,7 @@ export function RunTimeline({
     }, [legend, lanes, now])
     const anyUpcoming = now !== undefined && lanes.some((lane) => lane.runs.some((run) => timelineMs(run.at) > now))
 
-    const nowAt = now === undefined || now < from || now > to ? undefined : share(now, from, to)
-    const grid = (
-        <>
-            {ticks.map((at) => (
-                <span key={at} aria-hidden className="absolute inset-y-0 w-px bg-border" style={{ left: percent(share(at, from, to)) }} />
-            ))}
-            {nowAt !== undefined && (
-                <span aria-hidden className="absolute inset-y-0 z-1 w-px bg-primary" style={{ left: percent(nowAt) }} />
-            )}
-        </>
-    )
+    const grid = <TimeGrid from={from} to={to} ticks={ticks} mark={now} />
 
     const body = (
         <div className={cn('flex min-w-0 flex-col overflow-hidden rounded-surface border border-border bg-card text-sm', className)}>
@@ -342,30 +280,15 @@ export function RunTimeline({
             )}
             <div className="flex border-b border-border">
                 <div className="w-28 shrink-0 sm:w-48" />
-                <div ref={setAxis} className="relative h-8 min-w-0 flex-1">
-                    {ticks.map((at) => {
-                        const left = share(at, from, to)
-                        return (
-                            <span
-                                key={at}
-                                className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-2xs whitespace-nowrap text-muted-foreground"
-                                style={{ left: percent(left) }}
-                            >
-                                {left > 0.02 && left < 0.98 && (nowAt === undefined || Math.abs(left - nowAt) * width > NOW_ROOM)
-                                    ? tickWords(at)
-                                    : null}
-                            </span>
-                        )
-                    })}
-                    {nowAt !== undefined && (
-                        <span
-                            className="absolute top-1/2 z-1 -translate-x-1/2 -translate-y-1/2 rounded-mini bg-primary px-1 font-mono text-2xs leading-4 font-semibold text-primary-foreground uppercase"
-                            style={{ left: percent(nowAt) }}
-                        >
-                            {words.now}
-                        </span>
-                    )}
-                </div>
+                <TimeTicks
+                    ref={setAxis}
+                    from={from}
+                    to={to}
+                    ticks={ticks}
+                    width={width}
+                    label={tickWords}
+                    mark={now === undefined ? undefined : { at: now, label: words.now }}
+                />
             </div>
             {lanes.map((lane) => {
                 const chosenLane = lane.id === chosen?.id

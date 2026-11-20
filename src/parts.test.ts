@@ -4178,6 +4178,8 @@ function stopsAtEnds(buttons: readonly HTMLElement[]): boolean {
 // Run timeline
 
 const RUN_TIMELINE = source('components/RunTimeline.tsx')
+const TIME_AXIS = source('lib/time-axis.ts')
+const TIME_TICKS = source('components/time-axis.tsx')
 const RUN_TIMELINE_DRAG = source('components/run-timeline-drag.tsx')
 const NOON = Date.UTC(2026, 10, 17, 12)
 const HOURS = 3_600_000
@@ -4407,8 +4409,8 @@ const RUN_TIMELINE_ADAPTER: Adapter = {
                         inLane(drawn, 'nightly-export', (element) => element.attrs['data-lane-track'] !== undefined),
                         READ.minHeight,
                     ),
-                tickRoom: () => numberIn(RUN_TIMELINE, /const TICK_ROOM = (\d+)\b/),
-                nowRoom: () => numberIn(RUN_TIMELINE, /const NOW_ROOM = (\d+)\b/),
+                tickRoom: () => numberIn(TIME_AXIS, /const TICK_ROOM = (\d+)\b/),
+                nowRoom: () => numberIn(TIME_TICKS, /const MARK_ROOM = (\d+)\b/),
                 handleInset: () => lengthOn(shiftHandle(drawn), lengthOf('inset-y-')),
                 handlePast: () => numberIn(RUN_TIMELINE, /\+ var\(--spacing\) \* (\d+)\)/, 'step'),
                 cardOffset: CARD_OFFSET,

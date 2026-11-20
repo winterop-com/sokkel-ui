@@ -48,6 +48,41 @@ release and empties it.
   map) and `arc`.
 - Stories Maps/Tracks: Zones, Coverage, Range rings and Links, and Console with the areas, the
   radars' cover, a patrol's own sensor and a line to the contact it goes after.
+- Tracking parts in the core, for any console that watches moving things (a fleet, an incident
+  board, deliveries), each engine-free:
+    - `TrackGlyph` (`@winterop-com/sokkel-ui/TrackGlyph`): a track's kind drawn as the map draws it,
+      in its affiliation's token and turned to its heading. `lib/tracks` holds the affiliations, kinds,
+      colors and outlines, and `TRACK_NAMES_WORDS` (ids `trackNames.<affiliation>`, `trackNames.<kind>`).
+    - `Freshness` (`@winterop-com/sokkel-ui/Freshness`): "Live", "3 s ago", "2 min ago", quieter once
+      stale and in the warning tone once lost (`thresholds`), every mark reading one shared clock;
+      `now` holds it still. `freshnessOf`, `freshnessText`. Words `FRESHNESS_WORDS`, ids `freshness.*`.
+    - `TrackCard` (`@winterop-com/sokkel-ui/TrackCard`): a dense card of one track: glyph, name, id,
+      freshness, the affiliation as a chip (a menu with `onAffiliationChange`), state chips, a detail
+      line and an optional thumbnail; `framed={false}` for a list row. Words `TRACK_CARD_WORDS`, id
+      `trackCard.changeAffiliation`.
+    - `TrackRoster` (`@winterop-com/sokkel-ui/TrackRoster`): the tracks as a `DataTable` list of
+      `TrackCard` rows grouped under their affiliations with counts, folding, with a search, a
+      `FilterBar` (`trackFilterFields`) and a sort menu; `selected` and `onSelect` share the pick
+      with a map. Words `TRACK_ROSTER_WORDS`, ids `trackRoster.*`.
+    - `TaskCard` (`@winterop-com/sokkel-ui/TaskCard`): a task's state (pending, executing, paused,
+      done, failed; `taskStatuses`) as a chip, its elapsed time (`formatElapsed`), a line between two
+      named things with their glyphs, facts, and actions, a destructive one confirmed first. Words
+      `TASK_CARD_WORDS`, ids `taskCard.*`.
+    - `PlaybackTimeline` (`@winterop-com/sokkel-ui/PlaybackTimeline`): a time axis with day and hour
+      ticks, the live edge, play, pause and step, scrubbing, the keys, and an activity strip in plain
+      SVG; it returns to live at the edge. Words `PLAYBACK_TIMELINE_WORDS`, ids `playbackTimeline.*`.
+- `useClock` (`@winterop-com/sokkel-ui/hooks/use-clock`): the shared clock `RelativeTime` reads, one
+  timer per period however many parts read it.
+- `lib/time-axis` (`timelineTicks`, `tickLabeler`, `axisShare`, `zoneOffset`): the axis `RunTimeline`
+  and `PlaybackTimeline` both draw, its ticks and lines one private part (`components/time-axis`).
+  `RunTimeline` still exports `timelineMs` and `timelineTicks`.
+- `DataTable`: with `columnHeads={false}` the bar offers the sort menu, as the grid does, and a
+  `reveal` with `focus: false` scrolls to the row without moving the focus.
+- Theme `darkroom` (`@winterop-com/sokkel-ui/themes/darkroom.css`): red ink on near-black for a dark,
+  red-lit room, low in glare and nothing blue-bright; deep red on a dim warm paper by day. Its track
+  colors stay apart, which a token test now checks for every theme.
+- Stories Patterns/Track card, Track roster, Freshness, Task card, Playback timeline and Tracking
+  console (the harbor watch with every part around the map), and Themes/Theme picker/Darkroom.
 
 ## Changed
 

@@ -18,4 +18,5 @@ export const THEME_LIST: readonly { value: string; label: string; description?: 
     { value: 'phosphor', label: 'Phosphor', description: 'A green glow on black in the code face; dark green on pale paper by day.' },
     { value: 'phosphor-bright', label: 'Phosphor bright', description: 'Phosphor turned up: bright green on pure black.' },
     { value: 'tray', label: 'Tray', description: 'Light cards on a gray tray under a deep blue strip, with a forest green accent.' },
+    { value: 'darkroom', label: 'Darkroom', description: 'Red ink on near-black for a dark room, nothing blue-bright; deep red by day.' },
 ]
