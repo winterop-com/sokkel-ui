@@ -1,10 +1,12 @@
 import type { Feature, LineString, Polygon } from 'geojson'
 import type { LayerSpecification } from 'maplibre-gl'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useLocale } from '@winterop-com/sokkel-ui/lib/words'
+import { resolveColors } from './color'
 import { ID_PROPERTY, useMapContext } from './context'
+import { idPhase, mercator, toneIndex, toneTriples, useEffectFrames, useGlEffect, type GlMesh, type GlProgram } from './effects'
 import { arc, destination, inUnit, UNIT_SYMBOLS, type DistanceUnit } from './geodesy'
 import type { Bounds, LngLat } from './geometry'
 import { useGeoJsonLayer, useProjectedPoints, type PlacedText, type PreparedData } from './layer'
@@ -165,6 +167,108 @@ export function coverageData(
     return { shapes: { collection: { type: 'FeatureCollection', features }, byId: new Map(), bounds, unreadable }, labels }
 }
 
+/** A radar's beam turning round each cone: how long a turn takes, and how far behind it its glow fades. */
+export interface CoverageSweep {
+    /** How long one turn takes, in milliseconds. */
+    period?: number
+    /** How wide the fading glow behind the beam's edge is, in degrees. */
+    trail?: number
+}
+
+/** A sweep's turn and its trail unless given: a turn every four seconds, its glow a quarter turn behind. */
+export const SWEEP: Required<CoverageSweep> = { period: 4000, trail: 90 }
+
+/** How many degrees each step of a swept cone turns, and how many rings it is cut into from the sensor out. */
+const SWEEP_STEP = 2
+const SWEEP_RINGS = 6
+
+/** A sector's beam turns this far past the far edge before it starts again, in place of a whole circle; enough that it never wraps. */
+const NO_WRAP = 100_000
+
+/**
+ * Each cone as a fan of triangles for the sweep, every vertex carrying where it stands, its angle
+ * from where the beam starts, its share of the range, the degrees a turn covers and those it wraps
+ * at (a disc wraps at 360; a sector's beam crosses it and its trail leaves before it starts again),
+ * its tone and the cone's own start in the turn.
+ */
+export function sweepMesh(cones: readonly SensorCone[], trail: number = SWEEP.trail): GlMesh {
+    const vertices: number[] = []
+    const indices: number[] = []
+    for (const cone of cones) {
+        if (!readable(cone.position) || !(cone.range > 0)) continue
+        const width = Math.min(360, Math.max(0, cone.width ?? 360))
+        if (width === 0) continue
+        const disc = width >= 360
+        const from = disc ? 0 : (cone.bearing ?? 0) - width / 2
+        const steps = Math.max(FEWEST, Math.ceil(width / SWEEP_STEP))
+        const [cycle, wrap] = disc ? [360, 360] : [width + trail, NO_WRAP]
+        const [tone, start] = [toneIndex(toneOf(cone.tone)), idPhase(cone.id)]
+        const first = vertices.length / 8
+        for (let step = 0; step <= steps; step += 1) {
+            const angle = (width * step) / steps
+            for (let ring = 0; ring <= SWEEP_RINGS; ring += 1) {
+                const at = ring === 0 ? cone.position : destination(cone.position, from + angle, (cone.range * ring) / SWEEP_RINGS)
+                vertices.push(...mercator(at), angle, ring / SWEEP_RINGS, cycle, wrap, tone, start)
+            }
+        }
+        const row = SWEEP_RINGS + 1
+        for (let step = 0; step < steps; step += 1) {
+            for (let ring = 0; ring < SWEEP_RINGS; ring += 1) {
+                const [a, b] = [first + step * row + ring, first + (step + 1) * row + ring]
+                indices.push(a, b, b + 1, a, b + 1, a + 1)
+            }
+        }
+    }
+    return { vertices: new Float32Array(vertices), indices: new Uint32Array(indices) }
+}
+
+/**
+ * The sweep's shaders: the beam stands where the turn has reached; a point is lit by how little it
+ * trails the beam, brightest on the leading edge and fading as its share of the trail to the power 1.6,
+ * and dimmer toward the range. Colors are premultiplied, as maplibre blends.
+ */
+const SWEEP_PROGRAM: GlProgram = {
+    attributes: [
+        ['a_pos', 2],
+        ['a_sweep', 4],
+        ['a_look', 2],
+    ],
+    vertex: `
+in vec2 a_pos;
+in vec4 a_sweep;
+in vec2 a_look;
+uniform vec3 u_colors[6];
+out vec4 v_sweep;
+out vec3 v_color;
+out float v_start;
+void main() {
+    gl_Position = projectTile(a_pos);
+    v_sweep = a_sweep;
+    v_color = u_colors[int(a_look.x + 0.5)];
+    v_start = a_look.y;
+}`,
+    fragment: `
+in vec4 v_sweep;
+in vec3 v_color;
+in float v_start;
+uniform float u_phase;
+uniform float u_trail;
+uniform float u_opacity;
+uniform float u_dark;
+void main() {
+    float reached = fract(u_phase + v_start) * v_sweep.z;
+    float behind = mod(reached - v_sweep.x, v_sweep.w);
+    float glow = pow(clamp(1.0 - behind / u_trail, 0.0, 1.0), 1.6);
+    float edge = clamp(1.0 - behind / 1.2, 0.0, 1.0);
+    float alpha = min(1.0, (0.6 * glow + 0.7 * edge) * (1.0 - 0.45 * v_sweep.y) * u_opacity);
+    vec3 color = mix(v_color, vec3(1.0), 0.5 * edge * u_dark);
+    fragColor = vec4(color * alpha, alpha);
+}`,
+}
+
+/** Where the beam holds when motion is reduced, as a share of its turn. */
+const STILL_PHASE = 0.3
+
 export interface CoverageLayerProps {
     /** Unique among the map's layers. */
     id: string
@@ -183,14 +287,21 @@ export interface CoverageLayerProps {
     /** How opaque the whole layer is, from 0 to 1. */
     opacity?: number
     visible?: boolean
+    /**
+     * A radar's beam turning round each cone, a bright edge with a glow fading behind it, once each
+     * `period`; a sector's beam crosses it from one side to the other. It holds still where motion is
+     * reduced, and stops while the map is out of sight.
+     */
+    sweep?: boolean | CoverageSweep
 }
 
 /**
  * What sensors cover, under the tracks: each cone a wedge from where its sensor stands, turned to
  * its bearing and opened to its width (360 is a whole disc), in its tone, fading out with distance
  * to its range, inside a faint edge; and range rings, dashed circles at given distances round a
- * position, each written with its distance. The layer answers no pointer, so what lies under it
- * stays pickable.
+ * position, each written with its distance. With `sweep`, a beam turns round each cone, drawn by a
+ * small shader over one mesh, so a frame sets only where the beam stands. The layer answers no
+ * pointer, so what lies under it stays pickable.
  */
 export function CoverageLayer({
     id,
@@ -202,11 +313,23 @@ export function CoverageLayer({
     colors,
     opacity = 1,
     visible = true,
+    sweep = false,
 }: CoverageLayerProps) {
-    const { map, overlay } = useMapContext()
+    const { map, overlay, scope, reading, dark } = useMapContext()
     const locale = useLocale()
     const data = useMemo(() => coverageData(cones, rings, { bands, unit, locale }), [cones, rings, bands, unit, locale])
     const palette = { ...MAP_TONE_COLORS, ...colors }
+
+    const turning = sweep !== false && visible
+    const { period, trail } = { ...SWEEP, ...(typeof sweep === 'object' ? sweep : {}) }
+    const { still } = useEffectFrames(map, turning)
+    const mesh = useMemo(() => (turning ? sweepMesh(cones, trail) : null), [turning, cones, trail])
+    const paletteKey = JSON.stringify(palette)
+    const triples = useMemo(
+        () => (turning ? toneTriples(resolveColors(scope, palette)) : null),
+        // `reading` advances when the theme changes, which is when the same CSS colors resolve anew.
+        [turning, scope, paletteKey, reading],
+    )
 
     useGeoJsonLayer({
         id,
@@ -247,6 +370,18 @@ export function CoverageLayer({
                 },
             ]
         },
+    })
+
+    const started = useRef<number | null>(null)
+    useGlEffect(map, turning ? `wui-${id}-sweep` : null, SWEEP_PROGRAM, mesh, (gl, at) => {
+        const now = performance.now()
+        started.current ??= now
+        const turn = Math.max(1, period)
+        gl.uniform1f(at('u_phase'), still ? STILL_PHASE : ((now - started.current) % turn) / turn)
+        gl.uniform1f(at('u_trail'), Math.max(1, trail))
+        gl.uniform1f(at('u_opacity'), opacity)
+        gl.uniform1f(at('u_dark'), dark ? 1 : 0)
+        if (triples !== null) gl.uniform3fv(at('u_colors'), triples)
     })
 
     const distances = useProjectedPoints(map, data.labels, labels && visible)

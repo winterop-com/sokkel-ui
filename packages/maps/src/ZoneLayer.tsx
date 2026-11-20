@@ -102,6 +102,18 @@ function ringCentroid(ring: readonly LngLat[]): { area: number; center: LngLat }
     return { area: Math.abs(twice / 2), center: [x / (3 * twice), y / (3 * twice)] }
 }
 
+/**
+ * The sign of a `line-offset` that moves a line off a zone's edge to its outside: -1 when its
+ * outline runs counterclockwise on the map, 1 when clockwise.
+ */
+export function zoneOutward(geometry: Polygon | MultiPolygon): 1 | -1 {
+    const ring = (geometry.type === 'Polygon' ? geometry.coordinates[0] : geometry.coordinates[0][0]) as LngLat[]
+    let twice = 0
+    for (let index = 0; index + 1 < ring.length; index += 1)
+        twice += ring[index][0] * ring[index + 1][1] - ring[index + 1][0] * ring[index][1]
+    return twice >= 0 ? -1 : 1
+}
+
 /** Where a zone's label stands: the middle of its outline's area, or of its largest part's. */
 export function zoneCenter(geometry: Polygon | MultiPolygon): LngLat {
     const outers = (geometry.type === 'Polygon' ? [geometry.coordinates[0]] : geometry.coordinates.map((rings) => rings[0])) as LngLat[][]
@@ -135,6 +147,7 @@ export function zoneData(zones: readonly Zone[], fill: ZoneFill = 'solid', edge:
                 fill: zone.fill ?? fill,
                 edge: zone.edge ?? edge,
                 label: zone.label ?? null,
+                outward: zoneOutward(geometry),
             },
         }
         features.push(feature)
@@ -185,7 +198,12 @@ export interface ZoneLayerProps {
     visible?: boolean
     /** Whether zones answer hover and clicks; a click selects one as the map's selection. */
     interactive?: boolean
+    /** A soft glow in each zone's tone just outside its edge. */
+    glow?: boolean
 }
+
+/** A zone's glow: how wide, how soft and how strong it is, standing just outside the edge. */
+export const ZONE_GLOW = { width: 10, blur: 8, opacity: 0.55 } as const
 
 const FILLED: Record<ZoneFill, ExpressionSpecification> = {
     solid: ['==', ['get', 'fill'], 'solid'],
@@ -199,6 +217,8 @@ const FILLED: Record<ZoneFill, ExpressionSpecification> = {
  * dashed edge, and its label written at its middle, unless it would cover another zone's label or a
  * track's label (the selected zone's is placed first, and always). The zone under the pointer
  * deepens; the selected one (the map's `selected`, picked by a click) is edged in the selection color.
+ * With `glow`, a soft blurred line in the zone's tone stands just outside its edge, one more line
+ * layer and no animation.
  */
 export function ZoneLayer({
     id,
@@ -210,6 +230,7 @@ export function ZoneLayer({
     opacity = 1,
     visible = true,
     interactive = true,
+    glow = false,
 }: ZoneLayerProps) {
     const { map, overlay, selected } = useMapContext()
     const data = useMemo(() => zoneData(zones, fill, edge), [zones, fill, edge])
@@ -261,6 +282,20 @@ export function ZoneLayer({
                     source,
                     filter: FILLED.none,
                     paint: { 'fill-color': tone, 'fill-opacity': 0 },
+                },
+                {
+                    // A line at no opacity is not drawn at all, so a layer without the glow pays nothing for it.
+                    id: `${source}-glow`,
+                    type: 'line',
+                    source,
+                    layout: { 'line-join': 'round', 'line-cap': 'round' },
+                    paint: {
+                        'line-color': tone,
+                        'line-width': ZONE_GLOW.width,
+                        'line-blur': ZONE_GLOW.blur,
+                        'line-offset': ['*', ['to-number', ['get', 'outward'], 1], ZONE_GLOW.width / 2],
+                        'line-opacity': glow ? ZONE_GLOW.opacity * opacity : 0,
+                    },
                 },
                 {
                     id: `${source}-halo`,

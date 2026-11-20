@@ -1,10 +1,11 @@
+import type { Feature, LineString } from 'geojson'
 import { describe, expect, test } from 'vitest'
 
 import { ID_PROPERTY } from './context'
 import { distance, greatCircle } from './geodesy'
 import type { LngLat } from './geometry'
 import { placeClear } from './layer'
-import { LINK_WORDS, linkData, linkLine, linkMeasure, measureBox, type MapLink } from './LinkLayer'
+import { arcLine, flowMesh, LINK_WORDS, linkData, linkLine, linkMeasure, measureBox, type MapLink } from './LinkLayer'
 
 const HARBOR: LngLat = [5.27, 60.4]
 const LARKSPUR: LngLat = [6.05, 62.48]
@@ -87,6 +88,43 @@ describe('link data', () => {
         const { links } = linkData(many)
         expect(links.collection.features).toHaveLength(400)
         expect(links.collection.features.every((feature) => feature.geometry.type === 'LineString')).toBe(true)
+    })
+})
+
+describe('an arc', () => {
+    test('rises off the line between its ends by its height at the middle, to the north, its ends in place', () => {
+        const east: LngLat[] = [
+            [0, 0],
+            [5, 0],
+            [10, 0],
+        ]
+        const lifted = arcLine(east, 0.2)
+        expect(lifted[0]).toEqual([0, 0])
+        expect(lifted[2][0]).toBeCloseTo(10, 9)
+        expect(lifted[2][1]).toBeCloseTo(0, 9)
+        expect(lifted[1][1]).toBeCloseTo(2, 1)
+        expect(arcLine([...east].reverse(), 0.2)[1][1]).toBeGreaterThan(1.9)
+    })
+
+    test('curves a short link smoothly, and puts its measure at the middle of the arc', () => {
+        const { links, measures } = linkData([{ ...SUPPLY, measure: true }], { arc: 0.2 })
+        const line = links.collection.features[0].geometry as LineString
+        expect(line.coordinates.length).toBeGreaterThanOrEqual(33)
+        expect(measures[0].at).toEqual(line.coordinates[Math.round((line.coordinates.length - 1) / 2)])
+    })
+})
+
+describe('a flow', () => {
+    test('is a strip of quads along each link, running from 0 at one end to 1 at the other, at the link’s rate', () => {
+        const { links } = linkData([SUPPLY, { id: 'still', from: HARBOR, to: HARBOR }])
+        const features = links.collection.features as Feature<LineString>[]
+        const mesh = flowMesh(features, new Map([['supply', 2]]))
+        const steps = features[0].geometry.coordinates.length - 1
+        expect(mesh.vertices.length / 10).toBe(steps * 4)
+        expect(mesh.indices.length).toBe(steps * 6)
+        const along = (index: number) => mesh.vertices[index * 10 + 6]
+        expect([along(0), along(steps * 4 - 1)]).toEqual([0, 1])
+        expect(mesh.vertices[7]).toBe(1)
     })
 })
 

@@ -104,6 +104,19 @@ release and empties it.
   southern Norway and the North Sea from a readsb answer.
 - Example `flights`, Tidevann's flight watch: a simulated feed in readsb's v2 shape read through
   `/adsb`, and an opt-in live feed from adsb.lol through the Electron shell.
+- Map effects, each drawn on maplibre (a small WebGL2 custom layer for the moving ones, a frame
+  setting only uniforms), holding still where motion is reduced and stopping while the map is out of
+  sight:
+    - `CoverageLayer` takes `sweep` (`true` or `{ period, trail }`, `CoverageSweep`, defaults
+      `SWEEP`: 4000 ms and 90 degrees): a radar's beam turning round each cone, a bright edge with a
+      phosphor glow fading behind it; a sector's beam crosses it from edge to edge. `sweepMesh`.
+    - `LinkLayer` takes `arc` (`true`, `ARC_HEIGHT` of a link's length, or a share), lifting each link
+      into an arc (`arcLine`), and `flow`, comets running from `from` to `to`, more, faster and
+      brighter by each link's new `rate` (0 to 1); under a flow the lines step back to `FLOW_LINE`.
+      `flowMesh`.
+    - `ZoneLayer` takes `glow`, a soft line in each zone's tone just outside its edge (`ZONE_GLOW`,
+      `zoneOutward`); a zone's feature carries `outward`.
+- Stories Maps/Effects: Glowing zones, Radar sweep and Flowing links.
 
 - The flow tracker (`@winterop-com/sokkel-ui-tracking/network`) lists each connection on its own
   with `byConnection()`: a `ConnectionFlow` carries the process, pid, both ends, the latest state, the
