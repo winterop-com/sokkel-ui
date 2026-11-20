@@ -85,6 +85,12 @@ examples/
                  (ruler, go to, MGRS, follow, compass), the picked track's card and facts, playback
                  over six hours; tasks to investigate, follow and report, zones shown, hidden and
                  edited, a log of contacts heard, stale, lost and judged, and darkroom for night watch
+  network/       a network watch: every connection in and out of a machine, mapped from home to each
+                 remote host and colored by state or by process, a live table grouped by process or
+                 host, rates in and out over time with a timeline to look back, and alerts (a new
+                 country, a new process talking out, a rate spike) to acknowledge; simulated by
+                 default, placed by GeoLite2 when the file is downloaded, and this machine's own
+                 connections through lsof in the Electron shell (its README says how)
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -121,7 +127,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195, Cut on 4196, Harbor watch on 4197, Flight watch on 4198)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195, Cut on 4196, Harbor watch on 4197, Flight watch on 4198, Network watch on 4199)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri

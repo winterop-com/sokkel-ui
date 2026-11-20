@@ -105,6 +105,17 @@ release and empties it.
 - Example `flights`, Tidevann's flight watch: a simulated feed in readsb's v2 shape read through
   `/adsb`, and an opt-in live feed from adsb.lol through the Electron shell.
 
+- The flow tracker (`@winterop-com/sokkel-ui-tracking/network`) lists each connection on its own
+  with `byConnection()`: a `ConnectionFlow` carries the process, pid, both ends, the latest state, the
+  scope and location, the bytes and rates over the window, the totals since its first record, and
+  `metered`, false when no record counted bytes (a host read through `lsof` or `netstat`).
+- Example `examples/network`, a Tidevann network watch: every connection in and out of a machine on a
+  map (`LinkLayer` and `TrackLayer` from home), in a live `DataTable`, charted over time with the
+  `PlaybackTimeline` to look back, and alerts to acknowledge. Simulated by default; placed by
+  GeoLite2 when `scripts/geolite.sh` has downloaded it (read in Node with `mmdb-lib`, the example's
+  own dependency); this machine's own connections through `lsof` in its Electron shell. Story
+  Apps/Network watch.
+
 ## Changed
 
 - A `MapPopup` stands over whatever a layer writes in the map's overlay, such as cluster counts and
