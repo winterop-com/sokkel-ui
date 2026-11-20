@@ -5,6 +5,11 @@ release and empties it.
 
 ## Added
 
+- `CallTile` (`@winterop-com/sokkel-ui/CallTile`): one person on a call, a 16:9 tile with their video
+  filling it or their picture centered and sized to the tile (16 percent of its width, 64 to 160),
+  their name at its foot with a struck microphone while muted and a hand while raised. Its words are
+  `CALL_TILE_WORDS`, ids `callTile.muted` and `callTile.handRaised`. Stories Patterns/Call tile; the
+  call app's tiles are it.
 - `PersonAvatar` takes `size="2xl"`, 96 square, for a person standing alone in a large room such as
   a call's tile.
 - `ReactionBar` takes `pickerPopup` (`sideOffset`, `className`) for the full list's popover, and

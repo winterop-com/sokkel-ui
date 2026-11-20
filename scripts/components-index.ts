@@ -425,6 +425,7 @@ const CORE_AREAS: Record<string, string> = {
     EmojiPicker: 'Chat and messaging',
     ReactionBar: 'Chat and messaging',
     CallBar: 'Chat and messaging',
+    CallTile: 'Chat and messaging',
     MessageRow: 'Chat and messaging',
     Letter: 'Chat and messaging',
     ToolCall: 'Chat and messaging',
