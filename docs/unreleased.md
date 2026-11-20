@@ -38,6 +38,8 @@ release and empties it.
   `-body`, `-head`, `-icon`, `-check`, `-menu`, `-status`, `-description`, `-facts`).
 - A highlight's words may run through inline nodes, as `==a **b** c==` and `==**bold**==`, on one
   line; the frontmatter's `yaml` value has `\n` line ends, whatever the text was written with.
+- An escaped `=` (`\=\=`) neither opens nor closes a highlight, and a quote whose marker is a word
+  every object has (`[!constructor]`, `[!toString]`) stays a quote.
 - Markdown, from a review of the tree: a given tree's `data` is never drawn (it could name any
   element and property); with `allowHtml`, callouts, highlights and note embeds keep the attributes
   they are drawn by (sanitizing dropped them); `anchors` ids and `markdownHeadings` agree, from text or

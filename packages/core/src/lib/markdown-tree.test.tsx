@@ -425,3 +425,26 @@ describe('what a second review found', () => {
         expect(markdownHeadings('[a]: https://example.org\n---\n\n<!-- note -->\n---', [2])).toEqual([])
     })
 })
+
+describe('what the tree port found', () => {
+    it('leaves a quote a quote when its marker is a word every object has', () => {
+        for (const word of ['constructor', 'toString', 'hasOwnProperty', '__proto__']) {
+            const tree = parseMarkdown(`> [!${word}] x\n> body`)
+            expect(tree.children[0].type).toBe('blockquote')
+        }
+    })
+
+    it('never highlights an escaped `==`, and keeps the `=` it is', () => {
+        for (const text of ['x \\=\\=y\\=\\= z', 'x \\==y== z', 'x ==y\\== z', '> a \\=\\=y\\=\\=\n> b', '- [[n]] \\=\\=y\\=\\=']) {
+            const tree = parseMarkdown(text)
+            expect(find(tree, 'highlight'), text).toHaveLength(0)
+            expect(
+                nodes(tree).some((node) => node.value?.includes('\uFDD0')),
+                text,
+            ).toBe(false)
+        }
+        expect(find(parseMarkdown('x \\=\\=y\\=\\= z'), 'text')[0].value).toBe('x ==y== z')
+        expect(find(parseMarkdown('a \\= ==b== \\=c'), 'highlight')).toHaveLength(1)
+        expect(find(parseMarkdown('[[a\\=\\=b]] ==c=='), 'wikiLink')[0].target).not.toContain('\uFDD0')
+    })
+})
