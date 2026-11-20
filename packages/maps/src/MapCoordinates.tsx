@@ -59,6 +59,11 @@ export interface MapCoordinatesProps {
     corner?: MapCorner
     /** How the position is written: decimal degrees, or degrees, minutes and seconds. */
     format?: CoordinateFormat
+    /**
+     * Writes the position in place of `format`, for a reference the maps package does not know,
+     * such as an MGRS grid reference from the tracking add-on's `toMgrs`.
+     */
+    formatPosition?: (position: LngLat) => string
     /** Draws a scale bar before the position. */
     scale?: boolean
     /** The unit the scale bar is written in. */
@@ -75,6 +80,7 @@ export interface MapCoordinatesProps {
 export function MapCoordinates({
     corner = 'bottom-left',
     format = 'decimal',
+    formatPosition,
     scale = true,
     unit = 'km',
     className,
@@ -117,7 +123,12 @@ export function MapCoordinates({
         }
     }, [map, scale, unit, locale])
 
-    const text = cursor === null ? said.offscreen : formatCoordinates(cursor, format, said, locale)
+    const text =
+        cursor === null
+            ? said.offscreen
+            : formatPosition === undefined
+              ? formatCoordinates(cursor, format, said, locale)
+              : formatPosition(cursor)
     return createPortal(
         <div
             role="group"
