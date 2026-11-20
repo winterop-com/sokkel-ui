@@ -29,6 +29,8 @@ the core, the engine add-ons (and media), and the domain add-ons.
   standards' languages, FHIRPath and CQL, for `CodeEditor`, as the plugin `fhir`.
 - `@winterop-com/sokkel-ui-dhis2` (`packages/dhis2`), a domain add-on for the DHIS2 platform: its
   expression languages for `CodeEditor`, as the plugin `dhis2`.
+- `@winterop-com/sokkel-ui-tracking` (`packages/tracking`), a domain add-on for map tracking
+  consoles: tracks read from flight, AIS and network connection data, with geodesy and MGRS.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -1369,6 +1371,20 @@ changes between versions, so the names are data the languages take, the latest s
 than an error, so an older or newer server never breaks the editor. The grammars follow the
 platform's ANTLR expression grammar and its manual, and the tests read real expressions a demo
 server holds.
+
+The third, `@winterop-com/sokkel-ui-tracking`, serves map tracking consoles: things that move
+(vessels, aircraft, vehicles) and network flows. It is data only and UI only: it draws nothing,
+contributes nothing to a core part and so has no plugin, never calls a server and ships no
+database. Everything it reads becomes one plain, serializable `Track` (an id, a position, heading,
+speed and altitude in SI units, an affiliation, a kind, a label, a trail and plain properties), so
+a map layer, a list and a filter take any feed alike. `adsb` reads the JSON of readsb and the APIs
+built on it, and OpenSky's state vectors; `ais` decodes AIS NMEA sentences, checksums, fragments and
+six-bit payloads, positions of class A and B and their static data, into a registry by MMSI; and
+`network` gathers connection records by remote host and by process with byte rates over a window,
+placing a public address only through the app's own `locate`. `geo` holds the great-circle
+functions and UTM and MGRS on WGS84, with the grid's exceptions over Norway and Svalbard;
+`affiliation` the words an app translates, the order a list groups tracks in and the names of the
+color tokens a theme paints each affiliation with.
 
 ## Terminals
 

@@ -26,7 +26,8 @@ and ask before acting.
     - the app Tidevann, with the projects harbor, juniper and larkspur;
     - services api, worker and scheduler;
     - places by plain geography: continents, countries, cities, regions, sites;
-    - hosts on example.org.
+    - hosts on example.org;
+    - in tracking examples, tracks, vessels, aircraft, sensors, zones and network connections.
 - Themes are named for how they look (paper, contrast, steel), never for where they came from,
   except `tidevann`, the base theme, named for the examples app that wears it.
 - Before committing, search the change for app and product names and remove every hit.
@@ -35,7 +36,7 @@ and ask before acting.
 
 - Apps install these packages and never copy from them. A component an app needs to differ gets an
   option here, never a local edit in the app.
-- Eight packages in `packages/`: `core` (`@winterop-com/sokkel-ui`, everything without an engine
+- Nine packages in `packages/`: `core` (`@winterop-com/sokkel-ui`, everything without an engine
   of its own, the tokens and the themes) and two kinds of add-on on it.
     - Engine add-ons, one per engine: `charts` (ECharts: `Chart`, its kinds and the dashboard's
       chart panels), `maps` (maplibre), `graph` (React Flow and elk) and `terminal` (xterm.js:
@@ -43,9 +44,12 @@ and ask before acting.
       fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession`).
     - Domain add-ons, one per domain, each holding that domain's parts: `fhir`
       (`@winterop-com/sokkel-ui-fhir`), the health-data standards' languages, FHIRPath and CQL, for
-      the code editor; and `dhis2` (`@winterop-com/sokkel-ui-dhis2`), DHIS2's expression languages
+      the code editor; `dhis2` (`@winterop-com/sokkel-ui-dhis2`), DHIS2's expression languages
       for the code editor, UI only: it never calls a server, and takes what a server version offers
-      (its function and variable names) as data from the app. A domain add-on plugs into the core as a plugin an app installs once with
+      (its function and variable names) as data from the app; and `tracking`
+      (`@winterop-com/sokkel-ui-tracking`), tracks for map tracking consoles (flights, AIS and network
+      connections) with their geodesy and grid references, UI only: it never calls a server, and the
+      app supplies the data and the geolocation lookup. A domain add-on plugs into the core as a plugin an app installs once with
       `registerPlugins` from `@winterop-com/sokkel-ui/lib/plugins`; a new kind of contribution goes
       into that module when a domain needs one, never before.
       The same lines hold for both kinds: an add-on imports the core by its name

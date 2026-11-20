@@ -1,0 +1,58 @@
+{
+    "name": "@winterop-com/sokkel-ui-tracking",
+    "version": "0.33.2",
+    "description": "Tracks for map tracking consoles, read from flight, AIS and network connection data, with the geodesy and the grid references they need, for sokkel-ui.",
+    "license": "SEE LICENSE IN LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/winterop-com/sokkel-ui.git",
+        "directory": "packages/tracking"
+    },
+    "files": [
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        "dist",
+        "messages",
+        "src",
+        "!src/**/*.test.*"
+    ],
+    "type": "module",
+    "sideEffects": false,
+    "exports": {
+        "./messages/*.json": "./messages/*.json",
+        "./track": {
+            "types": "./dist/track.d.ts",
+            "import": "./dist/track.js"
+        },
+        "./adsb": {
+            "types": "./dist/adsb.d.ts",
+            "import": "./dist/adsb.js"
+        },
+        "./ais": {
+            "types": "./dist/ais.d.ts",
+            "import": "./dist/ais.js"
+        },
+        "./geo": {
+            "types": "./dist/geo.d.ts",
+            "import": "./dist/geo.js"
+        },
+        "./network": {
+            "types": "./dist/network.d.ts",
+            "import": "./dist/network.js"
+        },
+        "./affiliation": {
+            "types": "./dist/affiliation.d.ts",
+            "import": "./dist/affiliation.js"
+        }
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "prepack": "cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ."
+    },
+    "peerDependencies": {
+        "@winterop-com/sokkel-ui": "workspace:*"
+    }
+}

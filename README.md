@@ -81,7 +81,7 @@ stays (`make screenshots-ci`, `scripts/baselines.sh`) for when it returns near 1
 
 ## Using it
 
-The library is eight packages on GitHub Packages, released together at one version: the core, the
+The library is nine packages on GitHub Packages, released together at one version: the core, the
 engine add-ons (and media), and the domain add-ons, each holding one domain's parts.
 
 | Package                            | Holds                                                                                      |
@@ -94,6 +94,7 @@ engine add-ons (and media), and the domain add-ons, each holding one domain's pa
 | `@winterop-com/sokkel-ui-media`    | `MediaBar` and its fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession` |
 | `@winterop-com/sokkel-ui-fhir`     | a domain add-on: FHIRPath and CQL, the health-data standards' languages, for `CodeEditor`  |
 | `@winterop-com/sokkel-ui-dhis2`    | a domain add-on: DHIS2's expression languages, for `CodeEditor`                            |
+| `@winterop-com/sokkel-ui-tracking` | a domain add-on: tracks from flight, AIS and network data, with geodesy and MGRS           |
 
 Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that
 package too, which brings its engine with it, and a music or video app adds the media package (the
@@ -116,11 +117,12 @@ bun add @winterop-com/sokkel-ui-terminal@0.22.2 # only for terminals
 bun add @winterop-com/sokkel-ui-media@0.22.2    # only for the music and video parts
 bun add @winterop-com/sokkel-ui-fhir@0.22.2     # only for FHIRPath and CQL in the code editor
 bun add @winterop-com/sokkel-ui-dhis2@0.22.2    # only for DHIS2's expression languages in the code editor
+bun add @winterop-com/sokkel-ui-tracking@0.22.2 # only for tracks on a map tracking console
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
 installs it itself; the packages do not bring it. Every package that draws components has a
-`styles.css` of Tailwind source, not finished CSS; the domain add-ons (`fhir`, `dhis2`) draw none
+`styles.css` of Tailwind source, not finished CSS; the domain add-ons (`fhir`, `dhis2`, `tracking`) draw none
 and have none. The core's carries Tailwind, the fonts, the tokens and base styles, with Tailwind
 pointed at the core's components; an add-on's points Tailwind at its own components only. So the
 app's CSS carries the classes of the packages it imports and no others (the stories are not in any
@@ -485,6 +487,24 @@ registerPlugins([dhis2Plugin({ functions: DHIS2_FUNCTIONS.filter((name) => name 
 <CodeEditor label="Condition" language={languageForMediaType('text/x-dhis2-rule')} value={condition} onChange={setCondition} />
 ```
 
+The tracking one needs no plugin: it is data only, for a map tracking console. It reads what the
+app fetched into tracks, one plain shape (`Track` in `@winterop-com/sokkel-ui-tracking/track`):
+aircraft from readsb's and OpenSky's JSON (`adsb`), vessels from AIS sentences (`ais`) and remote
+hosts from network connection records (`network`), where the app supplies where an address is.
+It never calls a server and ships no database. `geo` gives great-circle distance and bearing, and
+UTM and MGRS references; `affiliation` the words, the order and the color token names:
+
+```ts
+import { parseFlights } from '@winterop-com/sokkel-ui-tracking/adsb'
+import { createAisDecoder } from '@winterop-com/sokkel-ui-tracking/ais'
+import { toMgrs } from '@winterop-com/sokkel-ui-tracking/geo'
+
+const aircraft = parseFlights(await (await fetch(url)).json())
+const decoder = createAisDecoder()
+socket.onmessage = (event) => update(decoder.push(event.data))
+toMgrs([10.7522, 59.9139]) // '32V NM 97979 43118'
+```
+
 The core's own dependencies are what every app's frame draws with: Base UI, lucide, the class helpers and the IBM Plex fonts, and dnd-kit, the drag
 and drop engine, which only the parts that drag load. The English emoji list `EmojiPicker` loads the
 first time a picker opens ships inside the core package, in a chunk of its own. Every other library is an
@@ -527,7 +547,7 @@ value passes the check. A development build says so once per page, as a warning 
 ## Working on it
 
 The repository is a Bun workspace: the packages are in `packages/core`, `packages/charts`,
-`packages/maps`, `packages/graph`, `packages/terminal`, `packages/media`, `packages/fhir` and `packages/dhis2`, and
+`packages/maps`, `packages/graph`, `packages/terminal`, `packages/media`, `packages/fhir`, `packages/dhis2` and `packages/tracking`, and
 the stories in `src/stories/` import them by their names, as an app does. `bun run build` builds them all,
 `bun run test` runs every package's tests and the library rules, and `bun run size` holds the apps
 in `size/` to their budgets.

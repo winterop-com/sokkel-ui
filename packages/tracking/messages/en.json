@@ -1,0 +1,12 @@
+{
+    "tracking.affiliations.friend": "Friend",
+    "tracking.affiliations.hostile": "Hostile",
+    "tracking.affiliations.neutral": "Neutral",
+    "tracking.affiliations.pending": "Pending",
+    "tracking.affiliations.unknown": "Unknown",
+    "tracking.kinds.aircraft": "Aircraft",
+    "tracking.kinds.other": "Other",
+    "tracking.kinds.sensor": "Sensor",
+    "tracking.kinds.vehicle": "Vehicle",
+    "tracking.kinds.vessel": "Vessel"
+}
