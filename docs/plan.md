@@ -1282,7 +1282,8 @@ such as a row picked in a list beside it: a short way is eased, a long way flown
 the ground between, and a feature in view already is left where it is. `pitchWithZoom` leans the map
 toward the horizon close in, level from afar. The `projection` control rolls the flat map up into the
 globe and back out of it, the camera drawing back until the globe is seen whole and returning to the
-zoom it had; the globe glows round its rim, catches the sun on one side, and stands before stars
+zoom it had, also when the roll is turned round half way, and a move by the reader ends the roll at
+once; what the layers write over the map is hidden while it rolls. The globe glows round its rim, catches the sun on one side, and stands before stars
 that drift as it turns and fade as it grows. Under `prefers-reduced-motion` the camera jumps where it
 would fly and the map changes shape at once. What a layer writes in the overlay is measured in the
 frame the map drew, so names stay on their points through a flight, and a place on the far side of

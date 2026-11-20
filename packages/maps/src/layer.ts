@@ -261,12 +261,51 @@ const facing = (back: { lng: number; lat: number }, lng: number, lat: number): b
     Math.abs(back.lat - lat) < 1 && Math.abs(((((back.lng - lng) % 360) + 540) % 360) - 180) < 1
 
 /**
+ * Keeps what an overlay writes measured against the map, and gives back what stops it. Each frame
+ * the map draws is measured as it is drawn and written out at once, before the frame is shown, so
+ * what is written stays on its place through a flight or a glide: a measure put off to the next
+ * frame runs after the map has drawn that one too, and lands every other frame. The first measure,
+ * and one a `later` event asks for outside a frame, runs on the next frame.
+ */
+function watchMap(
+    map: MapLibreMap,
+    later: readonly ('move' | 'resize')[],
+    measure: () => RenderedPoint[] | null,
+    write: (update: (previous: RenderedPoint[]) => RenderedPoint[]) => void,
+): () => void {
+    let frame = 0
+    const keep = (next: RenderedPoint[]) => (previous: RenderedPoint[]) =>
+        JSON.stringify(previous) === JSON.stringify(next) ? previous : next
+    const drawn = () => {
+        cancelAnimationFrame(frame)
+        frame = 0
+        const next = measure()
+        if (next !== null) flushSync(() => write(keep(next)))
+    }
+    const soon = () => {
+        if (frame !== 0) return
+        frame = requestAnimationFrame(() => {
+            frame = 0
+            const next = measure()
+            if (next !== null) write(keep(next))
+        })
+    }
+    soon()
+    map.on('render', drawn)
+    for (const event of later) map.on(event, soon)
+    return () => {
+        cancelAnimationFrame(frame)
+        map.off('render', drawn)
+        for (const event of later) map.off(event, soon)
+    }
+}
+
+/**
  * The points a style layer draws as the map now shows them, each read into a key and its text (or
  * left out by `read` giving null), measured again after every frame the map draws and sorted by
  * key, so a layer can write beside its points in the overlay: a cluster's count, a track's name.
- * The measure runs in the frame the map drew and is written out before that frame is shown, so what
- * the overlay writes stays on its points while the map flies or glides. A point on the far side of
- * a globe is left out.
+ * Each frame is measured as the map draws it, so what the overlay writes stays on its points while
+ * the map flies or glides. A point on the far side of a globe is left out.
  */
 export function useRenderedPoints(
     map: MapLibreMap,
@@ -284,37 +323,37 @@ export function useRenderedPoints(
             setPoints((previous) => (previous.length === 0 ? previous : []))
             return
         }
-        let frame = 0
-        // One measure a frame: the map asks while it draws, ahead of the measure it asked for the frame before.
         const measure = () => {
-            if (frame !== 0) return
-            frame = requestAnimationFrame(() => {
-                frame = 0
-                if (map.getLayer(layer) === undefined) return
-                const seen = new Map<string, RenderedPoint>()
-                for (const feature of map.queryRenderedFeatures({ layers: [layer] })) {
-                    if (feature.geometry.type !== 'Point') continue
-                    const found = readNow.current(feature.properties)
-                    if (found === null || seen.has(found.key)) continue
-                    const [lng, lat] = feature.geometry.coordinates
-                    const point = map.project([lng, lat])
-                    // On a globe a point on the far side is found too, and lands on the near side's ground.
-                    if (!facing(map.unproject([point.x, point.y]), lng, lat)) continue
-                    seen.set(found.key, { ...found, x: Math.round(point.x), y: Math.round(point.y) })
-                }
-                const next = [...seen.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
-                flushSync(() => setPoints((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next)))
-            })
+            if (map.getLayer(layer) === undefined) return null
+            const seen = new Map<string, RenderedPoint>()
+            for (const feature of map.queryRenderedFeatures({ layers: [layer] })) {
+                if (feature.geometry.type !== 'Point') continue
+                const found = readNow.current(feature.properties)
+                if (found === null || seen.has(found.key)) continue
+                const [lng, lat] = feature.geometry.coordinates
+                const point = map.project([lng, lat])
+                // On a globe a point on the far side is found too, and lands on the near side's ground.
+                if (!facing(map.unproject([point.x, point.y]), lng, lat)) continue
+                seen.set(found.key, { ...found, x: Math.round(point.x), y: Math.round(point.y) })
+            }
+            return [...seen.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
         }
-        measure()
-        map.on('render', measure)
-        return () => {
-            cancelAnimationFrame(frame)
-            map.off('render', measure)
-        }
+        return watchMap(map, [], measure, setPoints)
     }, [map, layer, enabled])
     return points
 }
+
+/**
+ * Whether a place on the canvas lies over the ground: the position read there is drawn back at it.
+ * Past the rim of a globe it is not, so a name whose box ends there would hang over space.
+ */
+export const groundAt =
+    (map: MapLibreMap) =>
+    (x: number, y: number): boolean => {
+        const there = map.unproject([x, y])
+        const back = map.project([there.lng, there.lat])
+        return Math.abs(back.x - x) < 2 && Math.abs(back.y - y) < 2
+    }
 
 /** A box on the map's canvas: left, top, right and bottom, in pixels. */
 export type PixelBox = [number, number, number, number]
@@ -426,8 +465,8 @@ export interface PlacedText {
 }
 
 /**
- * Places on the map where the canvas now shows them, measured again after every move, in the frame
- * the map drew it, for an overlay to write at: a zone's name at its middle, a ring's distance, a
+ * Places on the map where the canvas now shows them, measured again as the map draws each frame
+ * and after every move, for an overlay to write at: a zone's name at its middle, a ring's distance, a
  * link's measure. A place off the canvas, by more than `margin` pixels, is left out, so hundreds of
  * places cost only the ones in view, and so is a place on the far side of a globe.
  */
@@ -443,32 +482,20 @@ export function useProjectedPoints(map: MapLibreMap, places: readonly PlacedText
             setPoints((previous) => (previous.length === 0 ? previous : []))
             return
         }
-        let frame = 0
         const measure = () => {
-            if (frame !== 0) return
-            frame = requestAnimationFrame(() => {
-                frame = 0
-                const canvas = map.getContainer()
-                const [width, height] = [canvas.clientWidth, canvas.clientHeight]
-                const next: RenderedPoint[] = []
-                for (const place of latest.current) {
-                    const point = map.project(place.at)
-                    const [x, y] = [Math.round(point.x), Math.round(point.y)]
-                    const inView = width === 0 || (x >= -margin && y >= -margin && x <= width + margin && y <= height + margin)
-                    if (inView && facing(map.unproject([point.x, point.y]), place.at[0], place.at[1]))
-                        next.push({ key: place.key, x, y, text: place.text })
-                }
-                flushSync(() => setPoints((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next)))
-            })
+            const canvas = map.getContainer()
+            const [width, height] = [canvas.clientWidth, canvas.clientHeight]
+            const next: RenderedPoint[] = []
+            for (const place of latest.current) {
+                const point = map.project(place.at)
+                const [x, y] = [Math.round(point.x), Math.round(point.y)]
+                const inView = width === 0 || (x >= -margin && y >= -margin && x <= width + margin && y <= height + margin)
+                if (inView && facing(map.unproject([point.x, point.y]), place.at[0], place.at[1]))
+                    next.push({ key: place.key, x, y, text: place.text })
+            }
+            return next
         }
-        measure()
-        map.on('move', measure)
-        map.on('resize', measure)
-        return () => {
-            cancelAnimationFrame(frame)
-            map.off('move', measure)
-            map.off('resize', measure)
-        }
+        return watchMap(map, ['move', 'resize'], measure, setPoints)
     }, [map, enabled, key])
     return points
 }

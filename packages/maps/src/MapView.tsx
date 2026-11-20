@@ -50,9 +50,11 @@ import {
     globeSky,
     globeZoom,
     haloShadow,
+    roll,
     starfieldPosition,
     starfieldStyle,
     starlight,
+    zoomedByHand,
 } from './globe'
 import { labelRegistry } from './layer'
 
@@ -591,8 +593,10 @@ export function MapView({
     // Whether the style wears the projection that bends, and whether the map has taken its first shape, which it takes at once.
     const morphed = useRef(false)
     const shaped = useRef(false)
-    // The zoom the map had before it was brought to where the globe is seen whole, and the radius the globe was given.
-    const whole = useRef<{ zoom: number; radius: number } | null>(null)
+    // The zoom the map had before it was brought to where the globe is seen whole; null when it was not brought there, or the reader has zoomed since.
+    const whole = useRef<number | null>(null)
+    // Calls off the roll under way, if any.
+    const cancelRoll = useRef<() => void>(() => undefined)
     // What the selection was when the camera last looked at it, and the feature a click on the map last picked, with when.
     const flownTo = useRef<string | null | undefined>(undefined)
     const pickedOnMap = useRef<{ id: string; at: number } | null>(null)
@@ -849,6 +853,9 @@ export function MapView({
             hover(null)
             instance.getCanvas().style.cursor = ''
         })
+        instance.on('zoomstart', (event) => {
+            if ('originalEvent' in event && zoomedByHand(event.originalEvent as Event | undefined)) whole.current = null
+        })
         instance.on('movestart', (event) => {
             if ('originalEvent' in event && event.originalEvent !== undefined) moved.current = true
             setIdle(false)
@@ -895,6 +902,7 @@ export function MapView({
         resize.observe(stage)
         setMap(instance)
         return () => {
+            cancelRoll.current()
             resize.disconnect()
             armed.current = false
             pendingStyle.current = true
@@ -1034,21 +1042,17 @@ export function MapView({
             paintGlobeNow.current()
         }
         // The atmosphere belongs to the whole globe: it comes once the map has rolled up, and goes
-        // before it rolls out. A roll moves everything on the map as a move of the camera does, so
-        // it is told as one: what stands over the map follows it, and the app hears where it looks now.
-        const settle = (rolled: boolean) => {
+        // before it rolls out.
+        const settle = () => {
             bend(target)
             if (target === 0) {
                 if (morphed.current) map.setProjection({ type: 'mercator' })
                 morphed.current = false
+                whole.current = null
                 setSpace(false)
             } else {
                 const palette = mapPalette(scope)
                 map.setSky(globeSky(palette.horizon, palette.ground))
-            }
-            if (rolled) {
-                map.fire('move')
-                map.fire('moveend')
             }
             map.triggerRepaint()
         }
@@ -1064,51 +1068,43 @@ export function MapView({
         const from = shape.current
         if (!shaped.current || from === target) {
             shaped.current = true
-            settle(false)
+            settle()
             return
         }
-        // Rolled up, the camera goes to where the globe is seen whole; rolled out again, back to the
-        // zoom it had, unless the reader has zoomed the globe since.
+        // Rolled up, the camera goes to where the globe is seen whole, and the zoom it left is kept;
+        // rolled out again, it goes back to that zoom, also when the roll is turned round half
+        // way. The kept zoom is let go of only when the reader zooms, or the map lies flat again.
         const canvas = map.getContainer()
         const latitude = map.getCenter().lat
-        const radius = globeRadius(map.getZoom(), latitude, canvas.clientHeight)
         let zoom: number | null = null
         if (target === 1) {
             const wanted = WHOLE_GLOBE * Math.min(canvas.clientWidth, canvas.clientHeight)
-            if (whole.current === null && Math.abs(Math.log2(radius / wanted)) > 0.4) {
-                whole.current = { zoom: map.getZoom(), radius: wanted }
-                zoom = globeZoom(wanted, latitude, canvas.clientHeight)
-            }
+            const off = Math.abs(Math.log2(globeRadius(map.getZoom(), latitude, canvas.clientHeight) / wanted)) > 0.4
+            if (whole.current === null && off) whole.current = map.getZoom()
+            if (whole.current !== null) zoom = globeZoom(wanted, latitude, canvas.clientHeight)
         } else {
-            const before = whole.current
-            whole.current = null
-            if (before !== null && Math.abs(Math.log2(radius / before.radius)) < 0.1) zoom = before.zoom
+            zoom = whole.current
         }
         // A long way out or in takes longer, so the ground is not rushed past.
         const far = zoom === null ? 1 : Math.min(2.5, Math.max(1, Math.abs(zoom - map.getZoom()) / 3))
         const length = calm() ? 0 : MORPH_MS * Math.abs(target - from) * far
-        if (zoom !== null) {
-            moved.current = true
-            map.easeTo({ zoom, duration: length, easing: easeInOut })
-        }
-        if (length === 0) {
-            settle(true)
-            return
-        }
+        if (zoom !== null) moved.current = true
         setIdle(false)
-        const started = performance.now()
-        let frame = requestAnimationFrame(function step(now) {
-            const share = Math.min(1, Math.max(0, (now - started) / length))
-            if (share >= 1) {
-                settle(true)
-                return
-            }
-            bend(from + (target - from) * easeInOut(share))
-            map.fire('move')
-            frame = requestAnimationFrame(step)
+        const cancel = roll(map, {
+            from,
+            to: target,
+            length,
+            zoom,
+            easing: easeInOut,
+            bend,
+            settle,
+            veil: (hidden) => {
+                if (overlay !== null) overlay.style.opacity = hidden ? '0' : ''
+            },
         })
-        return () => cancelAnimationFrame(frame)
-    }, [map, scope, ready, shownProjection, reading])
+        cancelRoll.current = cancel
+        return cancel
+    }, [map, scope, overlay, ready, shownProjection, reading])
 
     // The lean: every move of the camera takes the pitch its zoom has, and a change of the option eases to it.
     useEffect(() => {
@@ -1233,7 +1229,7 @@ export function MapView({
                 )}
                 {/* Positioned inline: maplibre's own stylesheet sets the element relative, outside any layer. */}
                 <div ref={setCanvasHost} style={{ position: 'absolute', inset: 0 }} />
-                <div ref={setOverlay} className="pointer-events-none absolute inset-0 overflow-hidden" />
+                <div ref={setOverlay} className="pointer-events-none absolute inset-0 overflow-hidden transition-opacity" />
                 {CORNERS.map((corner) => (
                     <div
                         key={corner}
@@ -1255,6 +1251,7 @@ export function MapView({
                                                     container={scope}
                                                     onClick={() => {
                                                         moved.current = true
+                                                        whole.current = null
                                                         map?.zoomIn()
                                                     }}
                                                 >
@@ -1265,6 +1262,7 @@ export function MapView({
                                                     container={scope}
                                                     onClick={() => {
                                                         moved.current = true
+                                                        whole.current = null
                                                         map?.zoomOut()
                                                     }}
                                                 >

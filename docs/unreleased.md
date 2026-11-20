@@ -219,5 +219,12 @@ release and empties it.
 - What a map's layers write in its overlay (track, zone and point names, cluster counts, measure
   chips) stays on its place while the map flies or glides, where it waited for the map to rest, and
   is left out for a place on the far side of a globe, where it was written over the near side.
-- A map's change of projection is told as a move: what stands over the map follows it, and
-  `onViewChange` is called with where the map looks once it has changed.
+- A map's change of projection is told as a move, and `onViewChange` is called with where the map
+  looks once it has changed. What the layers write over the map is hidden while it rolls and shown
+  again at rest, since the engine places a name on the globe before the ground under it has got
+  there. A roll turned round half way goes back to the zoom it left, and a move by the reader ends
+  it at once.
+- A `TrackLayer`'s label is left out where it would hang past the rim of a globe, as a point's name
+  is; the selected track's is always written.
+- A `PointLayer` with both `scale` and `glow` shows the selected and the highlighted points in the
+  selection and highlight colors.

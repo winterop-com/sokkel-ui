@@ -145,3 +145,97 @@ export function starfieldPosition([lng, lat]: LngLat): string {
     const shift = (degrees: number, layer: StarLayer) => `${((degrees * layer.tileSize) / 360).toFixed(1)}px`
     return STAR_LAYERS.map((layer) => `${shift(-lng, layer)} ${shift(lat, layer)}`).join(', ')
 }
+
+/** What a roll asks of the map: to ease its zoom, to stop, to say whether it moves, and to tell of moves. */
+export interface RollMap {
+    easeTo: (options: { zoom: number; duration: number; easing: (share: number) => number }) => unknown
+    stop: () => unknown
+    isMoving: () => boolean
+    fire: (type: 'move' | 'moveend') => unknown
+    on: (type: 'movestart' | 'moveend', handler: (event: object) => void) => unknown
+    off: (type: 'movestart' | 'moveend', handler: (event: object) => void) => unknown
+}
+
+/** One roll of the map between flat and globe. */
+export interface Roll {
+    /** How far the map is a globe as the roll starts and as it ends, from 0 to 1. */
+    from: number
+    to: number
+    /** Milliseconds it takes; 0 is done on the next frame. */
+    length: number
+    /** The zoom the camera eases to along the way, or null to leave the zoom alone. */
+    zoom: number | null
+    easing: (share: number) => number
+    /** Draws the map as far a globe as the share says. */
+    bend: (share: number) => void
+    /** Puts the map in its final shape. */
+    settle: () => void
+    /** Hides what stands over the map while it rolls, and shows it again at rest. */
+    veil: (hidden: boolean) => void
+}
+
+/**
+ * Rolls the map from one shape to the other, frame by frame, easing the zoom with it, and gives
+ * back what calls the roll off. The zoom's easing is the roll's own: calling the roll off stops
+ * it, so a roll turned round does not go on zooming the old way. A move the reader starts ends the
+ * roll at once, in its final shape. Each frame is told as a move; the end is told as the end of one
+ * only when nothing else is moving the map, since a movement still under way tells its own end.
+ */
+export function roll(map: RollMap, { from, to, length, zoom, easing, bend, settle, veil }: Roll): () => void {
+    let frame = 0
+    let over = false
+    let easingZoom = false
+    const eased = () => {
+        easingZoom = false
+    }
+    const end = () => {
+        over = true
+        cancelAnimationFrame(frame)
+        map.off('movestart', taken)
+        map.off('moveend', eased)
+        settle()
+        map.fire('move')
+        if (!map.isMoving()) map.fire('moveend')
+        veil(false)
+    }
+    // The reader's own move has stopped the zoom's easing already.
+    function taken(event: object) {
+        if (over || !('originalEvent' in event) || event.originalEvent === undefined) return
+        easingZoom = false
+        end()
+    }
+    veil(true)
+    if (zoom !== null) {
+        map.easeTo({ zoom, duration: length, easing })
+        easingZoom = length > 0
+    }
+    map.on('movestart', taken)
+    map.on('moveend', eased)
+    const started = performance.now()
+    const step = () => {
+        const share = length <= 0 ? 1 : Math.min(1, Math.max(0, (performance.now() - started) / length))
+        if (share >= 1) {
+            end()
+            return
+        }
+        bend(from + (to - from) * easing(share))
+        map.fire('move')
+        frame = requestAnimationFrame(step)
+    }
+    frame = requestAnimationFrame(step)
+    return () => {
+        if (over) return
+        over = true
+        cancelAnimationFrame(frame)
+        map.off('movestart', taken)
+        map.off('moveend', eased)
+        if (easingZoom) map.stop()
+    }
+}
+
+/** Whether an event the map was zoomed by came from the reader zooming it: the wheel, a double press, two fingers or a key. */
+export function zoomedByHand(event: { type?: string; touches?: { length: number } } | undefined): boolean {
+    if (event === undefined) return false
+    if (event.type === 'wheel' || event.type === 'dblclick' || event.type === 'keydown') return true
+    return event.type !== undefined && event.type.startsWith('touch') && (event.touches?.length ?? 0) > 1
+}

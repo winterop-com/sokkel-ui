@@ -1,7 +1,8 @@
+import type { ExpressionSpecification } from 'maplibre-gl'
 import { describe, expect, test } from 'vitest'
 
 import type { PixelBox, RenderedPoint } from './layer'
-import { placeNames, pointLabelBox, pointRadius, radiusOf } from './PointLayer'
+import { placeNames, pointFill, pointLabelBox, pointRadius, radiusOf } from './PointLayer'
 
 /** The stops of an interpolation, input then output. */
 const stopsOf = (expression: unknown) => (Array.isArray(expression) ? expression.slice(3) : [])
@@ -31,6 +32,25 @@ describe('sizing points', () => {
         expect(radiusOf(size, 5, 'many')).toBe(3)
         expect(radiusOf({ value: 'count', domain: [100, 0], range: [2, 20] }, 5, 100)).toBe(2)
         expect(radiusOf({ value: 'count', domain: [5, 5] }, 5, 5)).toBe(14)
+    })
+})
+
+describe('coloring points', () => {
+    const selected = ['boolean', ['feature-state', 'selected'], false]
+    const highlighted = ['boolean', ['feature-state', 'highlighted'], false]
+
+    const classes: ExpressionSpecification = ['match', ['get', '__class'], 0, 'pale', 1, 'deep', 'gray']
+
+    test('fills a layer of one color in the selection and highlight colors where a point is either', () => {
+        expect(pointFill('blue', 'amber', 'cyan', true)).toEqual(['case', selected, 'amber', highlighted, 'cyan', 'blue'])
+    })
+
+    test("keeps a scale's class colors where the ring carries the emphasis", () => {
+        expect(pointFill(classes, 'amber', 'cyan', false)).toEqual(classes)
+    })
+
+    test('lays the selection and the highlight over the class colors of lights, which have no ring', () => {
+        expect(pointFill(classes, 'amber', 'cyan', true)).toEqual(['case', selected, 'amber', highlighted, 'cyan', classes])
     })
 })
 

@@ -11,6 +11,7 @@ import {
     CLASS_PROPERTY,
     LABEL_RANK,
     classColor,
+    groundAt,
     overlaps,
     prepareData,
     readValue,
@@ -100,6 +101,19 @@ export function pointRadius(size: PointSize | undefined, radius: number): Expres
                   [low, near],
               ]
     return ['interpolate', ['linear'], ['sqrt', ['max', ['to-number', ['get', SIZE_PROPERTY], 0], 0]], from[0], from[1], to[0], to[1]]
+}
+
+/**
+ * The color points are filled in: a point's `own` color, and with `emphasis` the selection color
+ * for the selected point and the highlight color for the highlighted ones in its place.
+ */
+export function pointFill(
+    own: ExpressionSpecification | string,
+    selection: string,
+    highlight: string,
+    emphasis: boolean,
+): ExpressionSpecification | string {
+    return emphasis ? ['case', state('selected'), selection, state('highlighted'), highlight, own] : own
 }
 
 /** A point's radius in pixels for its size value, as `pointRadius` has the map draw it. */
@@ -293,15 +307,11 @@ export function PointLayer({
         },
         layers: (source, resolved): LayerSpecification[] => {
             const fills = classes.map((_, index) => resolved[`class${index}` as keyof typeof resolved])
-            const fill: ExpressionSpecification | string = plain
-                ? ['case', state('selected'), resolved.selection, state('highlighted'), resolved.highlight, fills[0]]
-                : classColor(fills, resolved.noData)
+            // A light has no ring to mark it by, so its halo and its core carry the selection and the highlight themselves.
+            const colored = (colors: string[]) => (plain ? colors[0] : classColor(colors, resolved.noData))
+            const fill = pointFill(colored(fills), resolved.selection, resolved.highlight, plain || glow)
             const cores = classes.map((_, index) => resolved[`core${index}` as keyof typeof resolved])
-            const core: ExpressionSpecification | string = !glow
-                ? fill
-                : plain
-                  ? ['case', state('selected'), resolved.selectionCore, state('highlighted'), resolved.highlightCore, cores[0]]
-                  : classColor(cores, resolved.noData)
+            const core = glow ? pointFill(colored(cores), resolved.selectionCore, resolved.highlightCore, true) : fill
             const grown: ExpressionSpecification = ['+', base, ['case', state('selected'), 2.5, state('hover'), 1.5, 0]]
             const layers: LayerSpecification[] = []
             if (glow) {
@@ -403,12 +413,7 @@ export function PointLayer({
     const taken = useTakenLabels(LABEL_RANK.point)
     const box = (point: RenderedPoint) => pointLabelBox(point, names.get(point.key)?.offset ?? 0)
     const inLine = [...points].sort((a, b) => (names.get(a.key)?.order ?? 0) - (names.get(b.key)?.order ?? 0))
-    // A place on the screen is over the ground when the position read there is drawn back at it; past a globe's rim it is not.
-    const onGround = (x: number, y: number) => {
-        const back = map.project(map.unproject([x, y]))
-        return Math.abs(back.x - x) < 2 && Math.abs(back.y - y) < 2
-    }
-    const placed = named ? placeNames(inLine, box, selected, taken, onGround) : []
+    const placed = named ? placeNames(inLine, box, selected, taken, groundAt(map)) : []
     useLabelBoxes(source, LABEL_RANK.point, placed.map(box))
     const pointed =
         hovered === null || placed.some((point) => point.key === hovered) ? undefined : points.find((point) => point.key === hovered)
