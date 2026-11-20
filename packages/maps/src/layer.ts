@@ -8,6 +8,7 @@ import type {
     MapGeoJSONFeature,
 } from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { flushSync } from 'react-dom'
 
 import { labelAnchor } from './basemap'
 import { resolveColors } from './color'
@@ -255,10 +256,17 @@ export interface RenderedPoint {
     text: string
 }
 
+/** Whether the position read back from where a place is drawn is that place: on a globe, one on the far side reads back as the ground in front of it. */
+const facing = (back: { lng: number; lat: number }, lng: number, lat: number): boolean =>
+    Math.abs(back.lat - lat) < 1 && Math.abs(((((back.lng - lng) % 360) + 540) % 360) - 180) < 1
+
 /**
  * The points a style layer draws as the map now shows them, each read into a key and its text (or
  * left out by `read` giving null), measured again after every frame the map draws and sorted by
  * key, so a layer can write beside its points in the overlay: a cluster's count, a track's name.
+ * The measure runs in the frame the map drew and is written out before that frame is shown, so what
+ * the overlay writes stays on its points while the map flies or glides. A point on the far side of
+ * a globe is left out.
  */
 export function useRenderedPoints(
     map: MapLibreMap,
@@ -277,9 +285,11 @@ export function useRenderedPoints(
             return
         }
         let frame = 0
+        // One measure a frame: the map asks while it draws, ahead of the measure it asked for the frame before.
         const measure = () => {
-            cancelAnimationFrame(frame)
+            if (frame !== 0) return
             frame = requestAnimationFrame(() => {
+                frame = 0
                 if (map.getLayer(layer) === undefined) return
                 const seen = new Map<string, RenderedPoint>()
                 for (const feature of map.queryRenderedFeatures({ layers: [layer] })) {
@@ -288,10 +298,12 @@ export function useRenderedPoints(
                     if (found === null || seen.has(found.key)) continue
                     const [lng, lat] = feature.geometry.coordinates
                     const point = map.project([lng, lat])
+                    // On a globe a point on the far side is found too, and lands on the near side's ground.
+                    if (!facing(map.unproject([point.x, point.y]), lng, lat)) continue
                     seen.set(found.key, { ...found, x: Math.round(point.x), y: Math.round(point.y) })
                 }
                 const next = [...seen.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
-                setPoints((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next))
+                flushSync(() => setPoints((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next)))
             })
         }
         measure()
@@ -335,9 +347,9 @@ export function placeClear(
 
 /**
  * Which overlay labels yield to which: a layer's labels keep clear of those of every layer of a lower
- * rank, so a zone's name gives way to a track's and a link's measure to both.
+ * rank, so a zone's name gives way to a track's, a link's measure to both and a point's name to all three.
  */
-export const LABEL_RANK = { track: 0, zone: 1, link: 2 } as const
+export const LABEL_RANK = { track: 0, zone: 1, link: 2, point: 3 } as const
 
 /**
  * The boxes a map's layers have written their labels in, by layer and rank, so a layer of a later
@@ -414,10 +426,10 @@ export interface PlacedText {
 }
 
 /**
- * Places on the map where the canvas now shows them, measured again after every move, for an
- * overlay to write at: a zone's name at its middle, a ring's distance, a link's measure. A place
- * off the canvas, by more than `margin` pixels, is left out, so hundreds of places cost only the
- * ones in view.
+ * Places on the map where the canvas now shows them, measured again after every move, in the frame
+ * the map drew it, for an overlay to write at: a zone's name at its middle, a ring's distance, a
+ * link's measure. A place off the canvas, by more than `margin` pixels, is left out, so hundreds of
+ * places cost only the ones in view, and so is a place on the far side of a globe.
  */
 export function useProjectedPoints(map: MapLibreMap, places: readonly PlacedText[], enabled: boolean, margin = 48): RenderedPoint[] {
     const [points, setPoints] = useState<RenderedPoint[]>([])
@@ -433,8 +445,9 @@ export function useProjectedPoints(map: MapLibreMap, places: readonly PlacedText
         }
         let frame = 0
         const measure = () => {
-            cancelAnimationFrame(frame)
+            if (frame !== 0) return
             frame = requestAnimationFrame(() => {
+                frame = 0
                 const canvas = map.getContainer()
                 const [width, height] = [canvas.clientWidth, canvas.clientHeight]
                 const next: RenderedPoint[] = []
@@ -442,9 +455,10 @@ export function useProjectedPoints(map: MapLibreMap, places: readonly PlacedText
                     const point = map.project(place.at)
                     const [x, y] = [Math.round(point.x), Math.round(point.y)]
                     const inView = width === 0 || (x >= -margin && y >= -margin && x <= width + margin && y <= height + margin)
-                    if (inView) next.push({ key: place.key, x, y, text: place.text })
+                    if (inView && facing(map.unproject([point.x, point.y]), place.at[0], place.at[1]))
+                        next.push({ key: place.key, x, y, text: place.text })
                 }
-                setPoints((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next))
+                flushSync(() => setPoints((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next)))
             })
         }
         measure()
