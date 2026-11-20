@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "a59a263"},
         "sokkel-egui": {
-            "state": "missing",
-            "as_of": "3ffb400",
-            "note": "Not yet compared with this spec; a Chip widget with ChipTone::Kind exists."
+            "state": "built",
+            "as_of": "abba973",
+            "note": "Drawn from the resolved chip paints: tones, hues, both sizes, the faces, the remove button and the keys. Its dash is 3 on 3, and words.remove a string (a function of the words is sokkel-ui's)."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -152,17 +152,50 @@
             "selected": {"ground": "faint/25", "ink": "foreground", "edge": "foreground"}
         },
         "absent": {"rest": {"edge": "border-strong", "ink": "muted-foreground", "note": "The edge is dashed."}},
-        "hue-1": {"rest": {"ground": "chart-1/12", "edge": "chart-1/30", "ink": "chart-1"}},
-        "hue-2": {"rest": {"ground": "chart-2/12", "edge": "chart-2/30", "ink": "chart-2"}},
-        "hue-3": {"rest": {"ground": "chart-3/12", "edge": "chart-3/30", "ink": "chart-3"}},
-        "hue-4": {"rest": {"ground": "chart-4/12", "edge": "chart-4/30", "ink": "chart-4"}},
-        "hue-5": {"rest": {"ground": "chart-5/12", "edge": "chart-5/30", "ink": "chart-5"}},
-        "hue-blue": {"rest": {"ground": "kind-blue/12", "edge": "kind-blue/30", "ink": "kind-blue-ink"}},
-        "hue-green": {"rest": {"ground": "kind-green/12", "edge": "kind-green/30", "ink": "kind-green-ink"}},
-        "hue-jade": {"rest": {"ground": "kind-jade/12", "edge": "kind-jade/30", "ink": "kind-jade-ink"}},
-        "hue-pink": {"rest": {"ground": "kind-pink/12", "edge": "kind-pink/30", "ink": "kind-pink-ink"}},
-        "hue-teal": {"rest": {"ground": "kind-teal/12", "edge": "kind-teal/30", "ink": "kind-teal-ink"}},
-        "hue-violet": {"rest": {"ground": "kind-violet/12", "edge": "kind-violet/30", "ink": "kind-violet-ink"}}
+        "hue-1": {
+            "rest": {"ground": "chart-1/12", "edge": "chart-1/30", "ink": "chart-1"},
+            "selected": {"ground": "chart-1/20", "edge": "chart-1", "ink": "chart-1"}
+        },
+        "hue-2": {
+            "rest": {"ground": "chart-2/12", "edge": "chart-2/30", "ink": "chart-2"},
+            "selected": {"ground": "chart-2/20", "edge": "chart-2", "ink": "chart-2"}
+        },
+        "hue-3": {
+            "rest": {"ground": "chart-3/12", "edge": "chart-3/30", "ink": "chart-3"},
+            "selected": {"ground": "chart-3/20", "edge": "chart-3", "ink": "chart-3"}
+        },
+        "hue-4": {
+            "rest": {"ground": "chart-4/12", "edge": "chart-4/30", "ink": "chart-4"},
+            "selected": {"ground": "chart-4/20", "edge": "chart-4", "ink": "chart-4"}
+        },
+        "hue-5": {
+            "rest": {"ground": "chart-5/12", "edge": "chart-5/30", "ink": "chart-5"},
+            "selected": {"ground": "chart-5/20", "edge": "chart-5", "ink": "chart-5"}
+        },
+        "hue-blue": {
+            "rest": {"ground": "kind-blue/12", "edge": "kind-blue/30", "ink": "kind-blue-ink"},
+            "selected": {"ground": "kind-blue-ink/20", "edge": "kind-blue-ink", "ink": "kind-blue-ink"}
+        },
+        "hue-green": {
+            "rest": {"ground": "kind-green/12", "edge": "kind-green/30", "ink": "kind-green-ink"},
+            "selected": {"ground": "kind-green-ink/20", "edge": "kind-green-ink", "ink": "kind-green-ink"}
+        },
+        "hue-jade": {
+            "rest": {"ground": "kind-jade/12", "edge": "kind-jade/30", "ink": "kind-jade-ink"},
+            "selected": {"ground": "kind-jade-ink/20", "edge": "kind-jade-ink", "ink": "kind-jade-ink"}
+        },
+        "hue-pink": {
+            "rest": {"ground": "kind-pink/12", "edge": "kind-pink/30", "ink": "kind-pink-ink"},
+            "selected": {"ground": "kind-pink-ink/20", "edge": "kind-pink-ink", "ink": "kind-pink-ink"}
+        },
+        "hue-teal": {
+            "rest": {"ground": "kind-teal/12", "edge": "kind-teal/30", "ink": "kind-teal-ink"},
+            "selected": {"ground": "kind-teal-ink/20", "edge": "kind-teal-ink", "ink": "kind-teal-ink"}
+        },
+        "hue-violet": {
+            "rest": {"ground": "kind-violet/12", "edge": "kind-violet/30", "ink": "kind-violet-ink"},
+            "selected": {"ground": "kind-violet-ink/20", "edge": "kind-violet-ink", "ink": "kind-violet-ink"}
+        }
     },
     "pieces": {
         "face": {"rest": {"underline": false}, "hover": {"underline": true}},
@@ -203,12 +236,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "not compared yet",
-            "spec": "This spec.",
-            "today": "As of 3ffb400: a Chip widget exists (with ChipTone::Kind for kind paints); not yet read against this spec."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",
