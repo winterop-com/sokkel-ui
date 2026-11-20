@@ -83,16 +83,19 @@ export const CALLOUT_MARKERS: Readonly<Record<string, CalloutKind>> = {
 const FRONTMATTER = /^---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/
 
 /**
+ * A YAML properties line: blank, a comment, indented, a list item, or a key and a colon. A key is
+ * up to four words of letters, digits, `_`, `.` and `-` in any script, or quoted.
+ */
+export const PROPERTY_LINE = /^(\s|#|- |-$|[\p{L}\p{N}_.-]+(?: [\p{L}\p{N}_.-]+){0,3}:(\s|$)|"[^"\n]*":(\s|$)|'[^'\n]*':(\s|$))/u
+
+/**
  * Whether a block reads as YAML properties: each line blank, a comment, indented under the line
  * before, a list item, or a key without spaces and a colon. A text that opens with a rule and a
  * sentence is no frontmatter.
  */
 function propertiesLike(block: string): boolean {
     const lines = block.split(/\r?\n/)
-    return (
-        lines.some((line) => line.trim() !== '') &&
-        lines.every((line) => line.trim() === '' || /^(\s|#|- |-$|[\w.-]+:(\s|$)|"[^"\n]*":(\s|$)|'[^'\n]*':(\s|$))/.test(line))
-    )
+    return lines.some((line) => line.trim() !== '') && lines.every((line) => line.trim() === '' || PROPERTY_LINE.test(line))
 }
 
 /** Where a text's frontmatter stands: its YAML, and how long the block is with its `---` lines. */
@@ -123,8 +126,36 @@ function partMarker(word: string): RegExp {
 /** An HTML comment and nothing else, which is never drawn. */
 const COMMENT = /^<!--(?:(?!-->)[\s\S])*-->$/
 
-/** `==words==`: a non-space after the opening `==`, a non-space before the closing one, on one line. */
-const MARKED = /==(?=[^\s=])([^\n]*?[^\s=])==/g
+/**
+ * Each `==words==` in a text, read in one pass: an opening `==` with a non-space, non-`=` after it,
+ * closed by the first `==` after it on its line with a non-space, non-`=` before it.
+ */
+function markedRanges(value: string): { from: number; to: number }[] {
+    const out: { from: number; to: number }[] = []
+    let open = -1
+    let lineEnd = -1
+    for (let at = value.indexOf('=='); at >= 0;) {
+        if (open >= 0 && lineEnd >= 0 && at > lineEnd) open = -1
+        if (open < 0) {
+            const next = value[at + 2] as string | undefined
+            if (next !== undefined && !/[\s=]/.test(next)) {
+                open = at
+                lineEnd = value.indexOf('\n', at)
+                at = value.indexOf('==', at + 2)
+            } else at = value.indexOf('==', at + 1)
+            continue
+        }
+        if (at >= open + 3 && /[^\s=]/.test(value[at - 1])) {
+            out.push({ from: open, to: at + 2 })
+            open = -1
+            at = value.indexOf('==', at + 2)
+        } else at = value.indexOf('==', at + 1)
+    }
+    return out
+}
+
+/** Nodes whose words are a link's own, never read for highlights. */
+const OWN_WORDS = new Set(['wikiLink', 'embed', 'tag', 'inlineCode', 'code', 'inlineMath', 'math', 'html'])
 
 /** The file endings a `![[file]]` embed draws as an image. */
 const IMAGE_FILE = /\.(apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i
@@ -179,20 +210,90 @@ function splitText(value: string, matches: { from: number; to: number; node: Mar
     return out
 }
 
-/** Each `==words==` in text as a highlight. */
+/** Whether a node, or anything in it, runs over a line's end. */
+const breaksLine = (node: MarkdownNode): boolean =>
+    node.type === 'break' || (node.value ?? '').includes('\n') || (node.children ?? []).some(breaksLine)
+
+/**
+ * The first `==` in a text that closes a highlight: a non-space, non-`=` before it (or, at the text's
+ * start, the inline node that ends just before it). Undefined past a line's end.
+ */
+function closerIn(value: string): number | undefined {
+    const lineEnd = value.indexOf('\n')
+    for (let at = value.indexOf('=='); at >= 0; at = value.indexOf('==', at + 1)) {
+        if (lineEnd >= 0 && at > lineEnd) return undefined
+        if (at === 0 || /[^\s=]/.test(value[at - 1])) return at
+    }
+    return undefined
+}
+
+/**
+ * A highlight whose words run through inline nodes, as `==a **b** c==`: its opening `==` in one text,
+ * its closing one in a later text of the same parent, on one line.
+ */
+function spanHighlights(parent: MarkdownNode) {
+    const kids = parent.children
+    if (kids === undefined) return
+    for (let i = 0; i < kids.length; i += 1) {
+        const first = kids[i]
+        if (first.type !== 'text') continue
+        const value = first.value ?? ''
+        // Only the first opening `==` on the text's last line can open one; a later one would close where it does.
+        let open = value.indexOf('==', value.lastIndexOf('\n') + 1)
+        while (open >= 0 && /[\s=]/.test(value[open + 2] ?? 'x')) open = value.indexOf('==', open + 1)
+        if (open < 0) continue
+        let matched = false
+        let j = i + 1
+        for (; j < kids.length; j += 1) {
+            const last = kids[j]
+            if (last.type !== 'text') {
+                if (breaksLine(last)) break
+                continue
+            }
+            const close = closerIn(last.value ?? '')
+            if (close === undefined) {
+                if ((last.value ?? '').includes('\n')) break
+                continue
+            }
+            const inner = [
+                ...(open + 2 < value.length ? [{ type: 'text', value: value.slice(open + 2) }] : []),
+                ...kids.slice(i + 1, j),
+                ...(close > 0 ? [{ type: 'text', value: (last.value ?? '').slice(0, close) }] : []),
+            ]
+            const after = (last.value ?? '').slice(close + 2)
+            kids.splice(
+                i,
+                j - i + 1,
+                ...(open > 0 ? [{ type: 'text', value: value.slice(0, open) }] : []),
+                { type: 'highlight', children: inner },
+                ...(after === '' ? [] : [{ type: 'text', value: after }]),
+            )
+            matched = true
+            break
+        }
+        // No closing `==` before `j`: an opening one in the texts up to it would find none either, so
+        // the next opening one is looked for from `j` on, and each node is scanned once.
+        if (!matched) i = j - 1
+    }
+    for (const child of kids) if (!OWN_WORDS.has(child.type)) spanHighlights(child)
+}
+
+/** Each `==words==` as a highlight: within one text first, then through inline nodes. */
 function highlights(tree: MarkdownNode) {
     rewrite(tree, (child) => {
+        if (OWN_WORDS.has(child.type)) return [child]
         if (child.type !== 'text') return undefined
         const value = child.value ?? ''
         return splitText(
             value,
-            [...value.matchAll(MARKED)].map((match) => ({
-                from: match.index,
-                to: match.index + match[0].length,
-                node: { type: 'highlight', children: [{ type: 'text', value: match[1] }] },
+            markedRanges(value).map(({ from, to }) => ({
+                from,
+                to,
+                node: { type: 'highlight', children: [{ type: 'text', value: value.slice(from + 2, to - 2) }] },
             })),
         )
     })
+    spanHighlights(tree)
 }
 
 /** What a `![[...]]` embed stands for: an image, a file, or a note. */
@@ -307,6 +408,7 @@ function callouts(tree: MarkdownNode) {
             type: 'callout',
             kind,
             marker: named,
+            ...(child.position === undefined ? {} : { position: child.position }),
             ...(marker[2] === '-' ? { fold: 'closed' } : marker[2] === '+' ? { fold: 'open' } : {}),
             children: [
                 ...(title.length === 0 ? [] : [{ type: 'calloutTitle', children: title }]),
@@ -342,6 +444,74 @@ function clean(node: MarkdownNode, positions: boolean) {
     node.children = joined
 }
 
+/** The fields of a node a tree may give as words, as numbers and as yes or no; any other is left out. */
+const WORD_FIELDS = [
+    'value',
+    'url',
+    'title',
+    'alt',
+    'lang',
+    'meta',
+    'identifier',
+    'label',
+    'referenceType',
+    'target',
+    'heading',
+    'tag',
+    'id',
+    'kind',
+    'marker',
+    'fold',
+]
+const NUMBER_FIELDS = ['depth', 'start', 'width', 'height']
+const FLAG_FIELDS = ['ordered', 'spread', 'checked']
+
+/** The alignments a table column may have. */
+const ALIGNS: ReadonlySet<unknown> = new Set(['left', 'right', 'center'])
+
+/** How deep a given tree is drawn; anything deeper is left out. */
+const DEEPEST = 64
+
+/** One node of a given tree, rebuilt from the fields a node may have, each of its kind; undefined for what is no node. */
+function safeNode(given: unknown, depth: number): MarkdownNode | undefined {
+    if (given === null || typeof given !== 'object' || Array.isArray(given)) return undefined
+    const raw = given as Record<string, unknown>
+    if (typeof raw.type !== 'string') return undefined
+    const node: MarkdownNode = { type: raw.type }
+    for (const key of WORD_FIELDS) {
+        const value = Object.hasOwn(raw, key) ? raw[key] : undefined
+        if (typeof value === 'string') node[key] = value
+        else if (typeof value === 'number' && Number.isFinite(value)) node[key] = String(value)
+    }
+    for (const key of NUMBER_FIELDS) {
+        const value = Object.hasOwn(raw, key) ? raw[key] : undefined
+        if (typeof value === 'number' && Number.isFinite(value)) node[key] = value
+    }
+    for (const key of FLAG_FIELDS) {
+        const value = Object.hasOwn(raw, key) ? raw[key] : undefined
+        if (typeof value === 'boolean') node[key] = value
+    }
+    if (Array.isArray(raw.align)) node.align = raw.align.map((align) => (ALIGNS.has(align) ? align : null))
+    if (Array.isArray(raw.children)) {
+        node.children = depth >= DEEPEST ? [] : raw.children.flatMap((child) => safeNode(child, depth + 1) ?? [])
+    } else if (raw.type !== 'text' && !WORD_FIELDS.some((key) => key in node)) node.children = []
+    return node
+}
+
+/**
+ * A tree given from elsewhere, made safe to draw: rebuilt from the fields each node may have, each
+ * of its kind (words as text, numbers as numbers, a table's alignments from `left`, `right` and
+ * `center`), and no more: no `data`, which in mdast can name any element and property to draw, so
+ * only text read here may say what is drawn. What is no node is left out, and so is anything deeper
+ * than 64 levels.
+ */
+export function cleanTree(tree: MarkdownTree): MarkdownTree {
+    const root = safeNode(tree, 0)
+    const safe: MarkdownNode = { type: 'root', children: root?.type === 'root' ? (root.children ?? []) : [] }
+    clean(safe, false)
+    return safe as unknown as MarkdownTree
+}
+
 /** What `parseTree` reads a text by. */
 export interface ParseRules {
     /** The math reader (remark-math); without it, math stays text. */
@@ -375,15 +545,17 @@ export function parseTree(content: string, rules: ParseRules): MarkdownTree {
         .use(remarkGfm)
         .use(rules.math === undefined ? [] : [rules.math])
     const tree = processor.runSync(processor.parse(text)) as unknown as MarkdownNode
-    // Parts first, so a part's marker is never dropped as a comment; highlights before links, so a
-    // link's words are never read for `==`; callouts last, from what the rest left of each quote.
+    // Parts first, so a part's marker is never dropped as a comment; links before highlights, so a
+    // link's own words are never read for `==` (a highlight may hold a link); callouts last, from
+    // what the rest left of each quote.
     partsAndComments(tree, rules.partMarker)
-    highlights(tree)
     if (rules.wikiLinks) linksAndTags(tree, rules.tags)
+    highlights(tree)
     callouts(tree)
     clean(tree, rules.positions)
     if (front !== undefined) {
-        const yaml: MarkdownNode = { type: 'yaml', value: front.yaml }
+        // The YAML with its line ends as `\n`, whatever the text was written with.
+        const yaml: MarkdownNode = { type: 'yaml', value: front.yaml.replace(/\r\n?/g, '\n') }
         if (rules.positions) {
             const block = content.slice(0, front.length).replace(/\r?\n$/, '')
             const lines = block.split('\n')

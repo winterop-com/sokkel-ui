@@ -19,6 +19,7 @@ import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import {
     BLOCK_CONTAINERS,
+    cleanTree,
     nodesOf,
     parseTree,
     splitFrontmatter,
@@ -130,15 +131,97 @@ function linkWords(text: string): string {
     return out + text.slice(at)
 }
 
+/** How the words of headings are read: as `Markdown` with `links` reads them, math left as written. */
+const HEADING_RULES = {
+    normalizeMath: false,
+    frontmatter: false,
+    wikiLinks: true,
+    tags: true,
+    partMarker: 'part',
+    positions: false,
+} as const
+
+/** Longer heading words than this are read by hand rather than parsed, so a heading takes time in step with its length. */
+const HEADING_WORDS = 1000
+
+/** A heading found by the line scan: the line it starts on, its level, and its words as written. */
+interface ScannedHeading {
+    line: number
+    level: number
+    words: string
+    /** Underlined rather than written with `#`. */
+    setext: boolean
+}
+
 /**
- * The headings of a markdown text, or of its tree, at the given levels, outside fenced code and
- * frontmatter, in order: those written with `#` and those underlined with `===` or `---`. Their ids
- * are those `anchors` gives, a repeated heading numbered after the first.
+ * The headings of a text by its lines, outside fenced code and frontmatter: those written with `#`
+ * and those underlined with `===` or `---`. Read by hand, so the time is in step with the text's length.
+ */
+function scanHeadings(content: string): { lines: string[]; headings: ScannedHeading[]; definitions: string[] } {
+    const lines = content.split('\n')
+    // The lines the frontmatter takes, its fences with it.
+    const taken = content.length - splitFrontmatter(content).body.length
+    const skip = content.slice(0, taken).split('\n').length - 1
+    const headings: ScannedHeading[] = []
+    // The footnote and link definitions a heading's words may name, each line held to its first thousand characters.
+    const definitions: string[] = []
+    let fenced = false
+    for (let index = skip; index < lines.length; index += 1) {
+        const line = lines[index]
+        if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
+        if (fenced) continue
+        if (/^ {0,3}\[[^\]\n]+\]:/.test(line.slice(0, HEADING_WORDS))) definitions.push(line.slice(0, HEADING_WORDS))
+        const atx = atxHeading(line)
+        const under = SETEXT.exec(lines[index + 1] ?? '')
+        const before = index === skip ? '' : lines[index - 1]
+        // A setext heading is one line of text after a blank one, never a list item or a quote.
+        const setext =
+            atx === null &&
+            under !== null &&
+            line.trim() !== '' &&
+            before.trim() === '' &&
+            !/^\s*([-*+>]|\d+[.)])(\s|$)/.test(line) &&
+            !/^ {0,3}(<|\[[^\]\n]+\]:)/.test(line)
+        if (atx === null && !setext) continue
+        headings.push({
+            line: index,
+            level: atx === null ? (under?.[1].startsWith('=') === true ? 1 : 2) : atx.level,
+            words: atx === null ? line.trim() : atx.text,
+            setext: atx === null,
+        })
+    }
+    return { lines, headings, definitions }
+}
+
+/**
+ * The words each heading shows, as `Markdown` draws them: all read in one parse with the text's
+ * footnote and link definitions, each heading's
+ * words held to `HEADING_WORDS` (a longer one read by hand: its links as their words, marks left out).
+ */
+function headingWords(headings: readonly ScannedHeading[], definitions: readonly string[]): string[] {
+    const short = headings.map((heading) => heading.words.length <= HEADING_WORDS)
+    const written = (heading: ScannedHeading) => (heading.setext ? `${heading.words}\n---` : `# ${heading.words}`)
+    const text = [...headings.map((heading, index) => (short[index] ? written(heading) : '# x')), ...definitions].join('\n\n')
+    const read = parseTree(text, HEADING_RULES).children.filter((node) => node.type === 'heading')
+    return headings.map((heading, index) =>
+        short[index] && read[index] !== undefined
+            ? treeText(read[index]).trim()
+            : linkWords(heading.words)
+                  .replace(/[`*_~]/g, '')
+                  .trim(),
+    )
+}
+
+/**
+ * The headings of a markdown text, or of its tree, at the given levels, in order, outside code and
+ * frontmatter: written with `#` or underlined with `===` or `---`. Each has the words it shows and the
+ * id `anchors` gives it, a repeated heading numbered after the first. A text is read as `Markdown` reads
+ * it with `links`, so a `[[link]]` in a heading is the words it shows.
  */
 export function markdownHeadings(content: string | MarkdownTree, levels: readonly number[] = [2, 3]): MarkdownHeading[] {
-    const out: MarkdownHeading[] = []
     const unique = uniqueIds()
     if (typeof content !== 'string') {
+        const out: MarkdownHeading[] = []
         for (const { node } of nodesOf(content as unknown as MarkdownNode)) {
             if (node.type !== 'heading') continue
             const label = treeText(node).trim()
@@ -148,54 +231,34 @@ export function markdownHeadings(content: string | MarkdownTree, levels: readonl
         }
         return out
     }
-    let fenced = false
-    const lines = splitFrontmatter(content).body.split('\n')
-    for (const [index, line] of lines.entries()) {
-        if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
-        if (fenced) continue
-        const atx = atxHeading(line)
-        const under = SETEXT.exec(lines[index + 1] ?? '')
-        const before = lines[index - 1] ?? ''
-        // A setext heading is one line of text after a blank one, never a list item, a quote or a table row.
-        const setext =
-            atx === null && under !== null && line.trim() !== '' && before.trim() === '' && !/^\s*([-*+>|]|\d+[.)])(\s|$)/.test(line)
-        if (atx === null && !setext) continue
-        const level = atx === null ? (under?.[1].startsWith('=') === true ? 1 : 2) : atx.level
-        const label = linkWords(atx === null ? line : atx.text)
-            .replace(/[`*_~]/g, '')
-            .trim()
-        const id = unique(headingId(label))
-        if (levels.includes(level)) out.push({ id, label, level })
-    }
-    return out
+    const { headings, definitions } = scanHeadings(content)
+    const words = headingWords(headings, definitions)
+    return headings.flatMap((heading, index) => {
+        const id = unique(headingId(words[index]))
+        return levels.includes(heading.level) ? [{ id, label: words[index], level: heading.level }] : []
+    })
 }
 
 /**
- * The text under one heading of a markdown text, named by its words or by the id `anchors` gives it:
- * the heading and what follows, up to the next heading at its level or above, outside fenced code.
- * Undefined when no heading has that name. For a `![[Note#Heading]]` embed drawn by `links.embed`.
+ * The text under one heading of a markdown text, named by its words or by the id `anchors` gives it
+ * (`-1` and on for a repeated one): the heading and what follows, up to the next heading at its level
+ * or above, outside code and frontmatter. Undefined when no heading has that name. For a
+ * `![[Note#Heading]]` embed drawn by `links.embed`.
  */
 export function markdownSection(content: string, heading: string): string | undefined {
-    const lines = content.split('\n')
+    const { lines, headings, definitions } = scanHeadings(content)
+    const words = headingWords(headings, definitions)
+    const unique = uniqueIds()
+    const ids = words.map((one) => unique(headingId(one)))
     const wanted = heading.trim().toLowerCase()
-    let fenced = false
-    let start = -1
-    let level = 0
-    for (const [index, line] of lines.entries()) {
-        if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
-        if (fenced) continue
-        const atx = atxHeading(line)
-        if (atx === null) continue
-        if (start >= 0 && atx.level <= level) return lines.slice(start, index).join('\n').trimEnd()
-        const label = linkWords(atx.text)
-            .replace(/[`*_~]/g, '')
-            .trim()
-        if (start < 0 && (label.toLowerCase() === wanted || headingId(label) === wanted)) {
-            start = index
-            level = atx.level
-        }
-    }
-    return start < 0 ? undefined : lines.slice(start).join('\n').trimEnd()
+    const start = headings.findIndex((_, index) => words[index].toLowerCase() === wanted || ids[index] === wanted)
+    if (start < 0) return undefined
+    const level = headings[start].level
+    const next = headings.find((one, index) => index > start && one.level <= level)
+    return lines
+        .slice(headings[start].line, next === undefined ? lines.length : next.line)
+        .join('\n')
+        .trimEnd()
 }
 
 /** The words markdown says: each callout's title, and the words of its code blocks and diagrams. */
@@ -287,11 +350,16 @@ const element = (tagName: string, properties: Record<string, unknown>, children:
 /** Whether a node stands as a block: its parent holds blocks. */
 const standsAlone = (parent: MarkdownNode | undefined) => parent !== undefined && BLOCK_CONTAINERS.has(parent.type)
 
+/** The callout kinds a tree may name; any other is drawn as a quote. */
+const KINDS: ReadonlySet<string> = new Set(['note', 'tip', 'important', 'warning', 'caution'])
+
 /**
  * How the nodes linked notes add to mdast are drawn as HTML, by what the view follows: `[[links]]`
- * as links with `linked` (else their words), `#tags` as links with `tagged` (else their text).
+ * as links with `linked` (else their words), `#tags` as links with `tagged` (else their text), and
+ * math for KaTeX with `math` (else as written, with its dollars). Each heading carries the words its
+ * id is made of, which `rehypeDocument` reads and takes off.
  */
-function treeHandlers(linked: boolean, tagged: boolean): Record<string, TreeHandler> {
+function treeHandlers(linked: boolean, tagged: boolean, math: boolean): Record<string, TreeHandler> {
     const noteLink = (state: ToHast, node: MarkdownNode) =>
         element('a', { href: '#', dataWikiLink: node.target, dataHeading: node.heading }, state.all(node))
     return {
@@ -320,16 +388,29 @@ function treeHandlers(linked: boolean, tagged: boolean): Record<string, TreeHand
                 linked ? [noteLink(state, node)] : state.all(node),
             )
         },
+        heading: (state, node) => {
+            const depth = Math.min(6, Math.max(1, Number(node.depth) || 1))
+            return element(`h${String(depth)}`, { dataHeadingText: treeText(node).trim() }, state.all(node))
+        },
         callout: (state, node) => {
+            if (!KINDS.has(String(node.kind))) return element('blockquote', {}, state.wrap(state.all(node), true))
             const [first, ...rest] = node.children ?? []
             const titled = first?.type === 'calloutTitle'
             const title = element('div', { dataCalloutTitle: node.kind }, titled ? state.all(first) : [])
             const body = state.all({ ...node, children: titled ? rest : (node.children ?? []) })
-            return element('blockquote', { dataCallout: node.kind, dataFold: node.fold }, [title, ...state.wrap(body, true)])
+            const fold = node.fold === 'open' || node.fold === 'closed' ? node.fold : undefined
+            return element('blockquote', { dataCallout: node.kind, dataFold: fold }, [title, ...state.wrap(body, true)])
         },
-        inlineMath: (_, node) => element('code', { className: ['language-math', 'math-inline'] }, [{ type: 'text', value: node.value }]),
+        inlineMath: (_, node) =>
+            math
+                ? element('code', { className: ['language-math', 'math-inline'] }, [{ type: 'text', value: node.value }])
+                : { type: 'text', value: `$${node.value ?? ''}$` },
         math: (_, node) =>
-            element('pre', {}, [element('code', { className: ['language-math', 'math-display'] }, [{ type: 'text', value: node.value }])]),
+            math
+                ? element('pre', {}, [
+                      element('code', { className: ['language-math', 'math-display'] }, [{ type: 'text', value: node.value }]),
+                  ])
+                : element('p', {}, [{ type: 'text', value: `$$\n${node.value ?? ''}\n$$` }]),
     }
 }
 
@@ -339,14 +420,17 @@ function treeHasMath(tree: MarkdownTree): boolean {
     return false
 }
 
-/** Gives headings ids when `anchors` is set, each once. */
+/**
+ * Gives headings ids when `anchors` is set, each once, from the words the tree's heading shows (as
+ * `markdownHeadings` reads them), and takes those words off every heading.
+ */
 function rehypeDocument(anchors: boolean) {
     return () => (tree: HastNode) => {
-        if (!anchors) return
         const unique = uniqueIds()
         const visit = (node: HastNode) => {
             if (node.tagName !== undefined && /^h[1-6]$/.test(node.tagName)) {
-                node.properties = { ...node.properties, id: unique(headingId(hastText(node))) }
+                const { dataHeadingText: words, ...rest } = node.properties ?? {}
+                node.properties = anchors ? { ...rest, id: unique(headingId(typeof words === 'string' ? words : hastText(node))) } : rest
             }
             for (const child of node.children ?? []) visit(child)
         }
@@ -687,7 +771,11 @@ export interface MarkdownProps {
      * The text already read into its tree, as `parseMarkdown` from `lib/markdown-tree` reads it (on a
      * server, once for every renderer): drawn in place of `content`, with nothing read again. The tree
      * holds what the text says; what the app allows (`links`, `images`, `linkSchemes`, `resolveUrl`,
-     * `live`, `allowHtml`) is held as it is drawn, as for text.
+     * `live`, `allowHtml`) is held as it is drawn, as for text. It draws as its text does with `links`
+     * (and `onTag`) given; without them a `[[link]]` is its words and a `#tag` its text, and an image
+     * embed still an image (`images={false}` holds it to text). Its math is drawn as written where
+     * `math` is off. `frontmatter="markdown"` and `partMarker` are the reader's, so a tree keeps what it
+     * was read with. No node's `data` is drawn: only text read here may name an element.
      */
     tree?: MarkdownTree
     /**
@@ -905,7 +993,8 @@ export const MARKDOWN_COMPONENTS: Components = {
         const record = props as Record<string, unknown>
         const kind = record['data-callout'] as CalloutKind | undefined
         const fold = record['data-fold'] as 'open' | 'closed' | undefined
-        const callout = kind === undefined ? undefined : CALLOUTS[kind]
+        // A kind raw HTML may name too, so only the five are read.
+        const callout = kind !== undefined && Object.hasOwn(CALLOUTS, kind) ? CALLOUTS[kind] : undefined
         if (kind === undefined || callout === undefined) return <blockquote {...props}>{children}</blockquote>
         const Icon = callout.icon
         const icon = <Icon aria-hidden className={cn('mt-0.5 size-4 shrink-0', callout.ink)} />
@@ -940,7 +1029,8 @@ export const MARKDOWN_COMPONENTS: Components = {
         const titled = record['data-callout-title'] as CalloutKind | undefined
         if (titled !== undefined) {
             const written = Children.count(children) > 0
-            return <p className={cn('!mt-0 font-medium', CALLOUTS[titled].ink)}>{written ? children : words[titled]}</p>
+            if (Object.hasOwn(CALLOUTS, titled))
+                return <p className={cn('!mt-0 font-medium', CALLOUTS[titled].ink)}>{written ? children : words[titled]}</p>
         }
         const embed = record['data-embed'] as string | undefined
         if (embed !== undefined)
@@ -1129,9 +1219,16 @@ export const MarkdownView = memo(function MarkdownView({
             }),
         [tree, given, reader, math, useMath, streaming, frontmatter, linked, tagged, word],
     )
-    const yaml = parsed.children[0]?.type === 'yaml' ? (parsed.children[0].value ?? '') : undefined
-    const remark: Options['remarkPlugins'] = useMemo(() => [() => () => structuredClone(parsed)], [parsed])
-    const toHast = useMemo(() => ({ handlers: treeHandlers(linked, tagged) }) as Options['remarkRehypeOptions'], [linked, tagged])
+    // A tree given from elsewhere is rebuilt from what a node may hold; one read here is that already.
+    const safe = useMemo(() => (tree === undefined ? parsed : cleanTree(parsed)), [tree, parsed])
+    const yaml = safe.children[0]?.type === 'yaml' ? (safe.children[0].value ?? '') : undefined
+    // A copy for each draw, with no node's `data` kept: a given tree names what is drawn only through its nodes.
+    const remark: Options['remarkPlugins'] = useMemo(() => [() => () => structuredClone(safe)], [safe])
+    const mathDrawn = math && useMath !== undefined
+    const toHast = useMemo(
+        () => ({ handlers: treeHandlers(linked, tagged, mathDrawn) }) as Options['remarkRehypeOptions'],
+        [linked, tagged, mathDrawn],
+    )
     const htmlEngine = useHtmlEngine(allowHtml)
     // The schemes are held by their text, so a list made anew each render keeps the plugins.
     const schemesKey = JSON.stringify(linkSchemes ?? null)
@@ -1154,7 +1251,8 @@ export const MarkdownView = memo(function MarkdownView({
             if (key === 'src' && node.tagName === 'img' && resolveUrl !== undefined) {
                 const resolved = resolveUrl(url, 'image')
                 // An image the app itself points at a blob or a data image is drawn; the text alone never can.
-                return resolved !== url && /^(blob:|data:image\/)/i.test(resolved) ? resolved : defaultUrlTransform(resolved)
+                const own = resolved !== url && !/^(blob|data):/i.test(url.trim())
+                return own && /^(blob:|data:image\/)/i.test(resolved) ? resolved : defaultUrlTransform(resolved)
             }
             if (key !== 'href' || node.tagName !== 'a') return defaultUrlTransform(url)
             return ownLink(node.properties) || linkAllowed(url, schemes) ? url : ''

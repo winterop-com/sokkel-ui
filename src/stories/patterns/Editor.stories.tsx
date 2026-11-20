@@ -407,16 +407,24 @@ const LOG = Array.from({ length: 40 }, (_, index) => {
 }).join('\n')
 
 const NOTE_TEXT = [
+    '---',
+    'owner: grace',
+    'project: harbor',
+    '---',
     '## Nightly export',
     '',
-    'Runs at 02:00 on the worker and writes to the **larkspur** bucket. When it fails,',
+    '<!-- The steps are current as of the last review. -->',
+    'Runs at 02:00 on the worker and writes to the ==larkspur== bucket. When it fails,',
     'follow [[Retry a run]] and tell the owner of [[harbor]]. The *validate* step rejects',
     'rows without an `order_id`; see [the schema](https://example.org/schemas/orders).',
     '',
     '- [x] fetch and transform',
     '- [ ] move notify to the new scheduler',
     '',
+    '> [!question] Retention',
     '> Asked in [[Weekly sync with grace]]: keep a week of exports?',
+    '',
+    '![[Retry a run#Steps]]',
     '',
     '#runbook #on-call',
 ].join('\n')
@@ -585,9 +593,10 @@ export const Schema: StoryObj = { name: 'Schema', render: () => <SchemaChecked /
  */
 export const NamedSchema: StoryObj = { name: 'Named schema', render: () => <NamedSchemas /> }
 /**
- * A note in markdown at the large size, wrapped: headings, strong and emphasized words, code,
- * lists, quotes, links, `[[links]]` to other notes and `#tags` highlighted. Typing `[[` offers the
- * notes by name, and the one chosen goes in with its closing brackets.
+ * A note in markdown at the large size, wrapped: its frontmatter (fences and keys), headings, strong
+ * and emphasized words, code, lists, quotes with a callout marker, links, `[[links]]` and `![[embeds]]`,
+ * `==highlights==`, a comment and `#tags` highlighted. Typing `[[` offers the notes by name, and the
+ * one chosen goes in with its closing brackets.
  */
 export const Markdown: StoryObj = { name: 'Markdown', render: () => <MarkdownNote /> }
 /**

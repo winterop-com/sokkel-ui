@@ -8,7 +8,8 @@ const codeClasses = (defaultSchema.attributes?.code ?? []).filter((entry) => !(A
 /**
  * The sanitize schema `Markdown` uses with `allowHtml`: GitHub's, with the classes remark-math puts
  * on its math (`language-math`, `math-inline`, `math-display`) kept, so KaTeX, which runs after it,
- * finds them.
+ * finds them, and the attributes Markdown draws links between notes, callouts, embeds, highlights and
+ * parts with.
  */
 export const markdownSchema: SanitizeSchema = {
     ...defaultSchema,
@@ -17,10 +18,20 @@ export const markdownSchema: SanitizeSchema = {
         code: [...codeClasses, ['className', /^language-./, 'math-inline', 'math-display']],
         // The links between notes and the tags Markdown draws with `links`.
         a: [...(defaultSchema.attributes?.a ?? []), 'dataWikiLink', 'dataHeading', 'dataTag'],
-        // The placeholder of a part an app embeds, which Markdown fills.
-        div: [...(defaultSchema.attributes?.div ?? []), 'dataPart'],
-        span: [...(defaultSchema.attributes?.span ?? []), 'dataPart'],
+        // The placeholder of a part an app embeds, which Markdown fills, a callout's title and a note's embed.
+        div: [...(defaultSchema.attributes?.div ?? []), 'dataPart', 'dataCalloutTitle', 'dataEmbed', 'dataHeading'],
+        span: [...(defaultSchema.attributes?.span ?? []), 'dataPart', 'dataEmbed', 'dataHeading'],
+        // A callout's kind and fold, and an image embed.
+        blockquote: [...(defaultSchema.attributes?.blockquote ?? []), 'dataCallout', 'dataFold'],
+        img: [...(defaultSchema.attributes?.img ?? []), 'dataEmbed', 'width', 'height'],
+        // A `==highlight==`.
+        mark: ['dataMarked'],
+        // The words a heading's id is made of, which Markdown takes off after sanitizing.
+        ...Object.fromEntries(
+            ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].map((tag) => [tag, [...(defaultSchema.attributes?.[tag] ?? []), 'dataHeadingText']]),
+        ),
     },
+    tagNames: [...(defaultSchema.tagNames ?? []), 'mark'],
 }
 
 /** `markdownSchema` with links of the given schemes kept too, for a text whose `linkSchemes` lists more than GitHub's. */

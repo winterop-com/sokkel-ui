@@ -57,7 +57,8 @@ export function parseMarkdown(text: string, options: ParseMarkdownOptions = {}):
     const yaml = tree.children[0]
     if (yaml?.type === 'yaml') {
         try {
-            const read = parse(yaml.value ?? '') as unknown
+            // A key written twice keeps its last value rather than losing every property.
+            const read = parse(yaml.value ?? '', { uniqueKeys: false }) as unknown
             if (read !== null && typeof read === 'object' && !Array.isArray(read)) yaml.properties = asJson(read)
         } catch {
             // YAML that does not read leaves the node without properties.

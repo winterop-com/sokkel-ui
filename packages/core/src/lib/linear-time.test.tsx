@@ -81,8 +81,9 @@ describe('text an app or a person gives is read in time in step with its length'
             markdownHeadings('## Runs ##\n### [Plan](plan.md) and [more]\n## #\n####### Too deep\n#nospace', [2, 3]).map(
                 (heading) => heading.label,
             ),
-        ).toEqual(['Runs', 'Plan and [more]', '#'])
-        expect(markdownHeadings('##   Spaced   #  \n## [a [b](c) d', [2]).map((heading) => heading.label)).toEqual(['Spaced', 'a [b d'])
+        ).toEqual(['Runs', 'Plan and [more]', ''])
+        // The words are those Markdown draws: `## #` is an empty heading, and `[b](c)` a link in `[a ... d`.
+        expect(markdownHeadings('##   Spaced   #  \n## [a [b](c) d', [2]).map((heading) => heading.label)).toEqual(['Spaced', '[a b d'])
     })
 
     it('widens tracks', () => {

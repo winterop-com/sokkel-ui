@@ -8,8 +8,12 @@ import { markdownParser } from './markdown'
 
 /** Each line's tokens that carry a style, as `style:text`. */
 function tokens(text: string): string[][] {
-    const state = markdownParser.startState?.(2) ?? { fence: null, address: false }
+    const state = markdownParser.startState?.(2) ?? { fence: null, address: false, front: 'start' as const, comment: false }
     return text.split('\n').map((line) => {
+        if (line === '') {
+            markdownParser.blankLine?.(state, 2)
+            return []
+        }
         const stream = new StringStream(line, 4, 2)
         const out: string[] = []
         while (!stream.eol()) {
@@ -48,6 +52,46 @@ describe('the markdown language', () => {
 
     it('colors a link address only after its words', () => {
         expect(tokens('[the docs](https://example.org) (aside)')[0]).toEqual(['link:[the docs]', 'url:(https://example.org)'])
+    })
+
+    it('reads the frontmatter at the top: its fences, and each key as a property', () => {
+        expect(tokens('---\nowner: grace\nsteps: [fetch, upload]\n---\n# Retry')).toEqual([
+            ['processingInstruction:---'],
+            ['propertyName:owner'],
+            ['propertyName:steps'],
+            ['processingInstruction:---'],
+            ['heading:# Retry'],
+        ])
+    })
+
+    it('reads a rule and a sentence at the top as markdown, and no frontmatter after the first line', () => {
+        // The first line is read before the next shows it a rule; both are drawn as punctuation.
+        expect(tokens('---\nThe export **finished**.')).toEqual([['processingInstruction:---'], ['strong:**finished**']])
+        expect(tokens('# Title\n---\nowner: grace')).toEqual([['heading:# Title'], ['contentSeparator:---'], []])
+        expect(tokens('\n---\nowner: grace')[1]).toEqual(['contentSeparator:---'])
+    })
+
+    it('reads callout markers, embeds, highlights and comments', () => {
+        expect(tokens('> [!warning]- Before a rerun')[0]).toEqual(['quote:> ', 'keyword:[!warning]-'])
+        expect(tokens('Not a marker: [!note]')[0]).toEqual([])
+        expect(tokens('![[Retry a run#Steps]] and ![[chart.png|300]]')[0]).toEqual([
+            'link:![[Retry a run#Steps]]',
+            'link:![[chart.png|300]]',
+        ])
+        expect(tokens('The ==failed step==, but a == b.')[0]).toEqual(['inserted:==failed step=='])
+        expect(tokens('Before <!-- hidden --> after')[0]).toEqual(['comment:<!-- hidden -->'])
+        expect(tokens('<!--\n# not a heading\n-->\n# heading')).toEqual([
+            ['comment:<!--'],
+            ['comment:# not a heading'],
+            ['comment:-->'],
+            ['heading:# heading'],
+        ])
+    })
+
+    it('reads a long line of quote marks and equals signs in time in step with its length', () => {
+        const started = performance.now()
+        tokens('>'.repeat(20_000) + '='.repeat(20_000))
+        expect(performance.now() - started).toBeLessThan(1000)
     })
 
     it('keeps a fenced block open across lines until its mark closes it', () => {

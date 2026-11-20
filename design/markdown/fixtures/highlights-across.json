@@ -1,0 +1,195 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "highlight",
+          "children": [
+            {
+              "type": "text",
+              "value": "a "
+            },
+            {
+              "type": "strong",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "b"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": " c"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " and "
+        },
+        {
+          "type": "highlight",
+          "children": [
+            {
+              "type": "strong",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "bold"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": ", "
+        },
+        {
+          "type": "highlight",
+          "children": [
+            {
+              "type": "text",
+              "value": "a "
+            },
+            {
+              "type": "inlineCode",
+              "value": "code"
+            },
+            {
+              "type": "text",
+              "value": " b"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": ", "
+        },
+        {
+          "type": "highlight",
+          "children": [
+            {
+              "type": "text",
+              "value": "a "
+            },
+            {
+              "type": "link",
+              "title": null,
+              "url": "https://example.org",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "link"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": " b"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "Not across a line: ==a "
+        },
+        {
+          "type": "strong",
+          "children": [
+            {
+              "type": "text",
+              "value": "b"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\nc== and not unclosed: ==open "
+        },
+        {
+          "type": "strong",
+          "children": [
+            {
+              "type": "text",
+              "value": "b"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " never."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "x "
+        },
+        {
+          "type": "highlight",
+          "children": [
+            {
+              "type": "text",
+              "value": "a "
+            },
+            {
+              "type": "emphasis",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "b"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " y "
+        },
+        {
+          "type": "highlight",
+          "children": [
+            {
+              "type": "text",
+              "value": "c"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " z, but a == b "
+        },
+        {
+          "type": "strong",
+          "children": [
+            {
+              "type": "text",
+              "value": "c"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " d == e."
+        }
+      ]
+    }
+  ]
+}

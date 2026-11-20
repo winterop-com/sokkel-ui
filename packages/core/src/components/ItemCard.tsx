@@ -83,6 +83,7 @@ export function ItemCard({
     const Cover = href !== undefined ? Link : 'button'
     return (
         <article
+            data-slot="item-card"
             data-selected={selected || undefined}
             className={cn(
                 'group/item relative flex min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card text-sm text-card-foreground transition-colors',
@@ -94,6 +95,7 @@ export function ItemCard({
             {interactive && (
                 <Cover
                     {...(href !== undefined ? { href } : { type: 'button' as const, onClick: onSelect, 'aria-pressed': selected })}
+                    data-slot="item-card-cover"
                     className="absolute inset-0 z-0 rounded-surface outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                 >
                     <span className="sr-only">{typeof heading === 'string' ? heading : code}</span>
@@ -102,11 +104,12 @@ export function ItemCard({
             {media !== undefined && (
                 <div className="pointer-events-none aspect-[16/9] min-h-0 overflow-hidden bg-muted [&>*]:size-full">{media}</div>
             )}
-            <div className="pointer-events-none flex flex-1 flex-col gap-2 p-4">
-                <header className="flex items-start gap-2">
+            <div data-slot="item-card-body" className="pointer-events-none flex flex-1 flex-col gap-2 p-4">
+                <header data-slot="item-card-head" className="flex items-start gap-2">
                     {icon !== undefined && (
                         <span
                             aria-hidden
+                            data-slot="item-card-icon"
                             className="mr-1 flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-4"
                         >
                             {icon}
@@ -114,7 +117,10 @@ export function ItemCard({
                     )}
                     <ItemHeading name={title} code={code} as="h3" lines={titleLines} className="flex-1" />
                     {selected === true && (
-                        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                        <span
+                            data-slot="item-card-check"
+                            className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                        >
                             <Check className="size-3.5" aria-hidden />
                         </span>
                     )}
@@ -124,6 +130,7 @@ export function ItemCard({
                                 <DropdownMenuTrigger
                                     aria-label={words.menu}
                                     title={words.menu}
+                                    data-slot="item-card-menu"
                                     className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid"
                                 >
                                     <MoreHorizontal className="size-4" aria-hidden />
@@ -135,11 +142,22 @@ export function ItemCard({
                         </div>
                     )}
                 </header>
-                {status !== undefined && <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">{status}</div>}
-                {description !== undefined && <p className="line-clamp-3 text-muted-foreground">{description}</p>}
+                {status !== undefined && (
+                    <div data-slot="item-card-status" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        {status}
+                    </div>
+                )}
+                {description !== undefined && (
+                    <p data-slot="item-card-description" className="line-clamp-3 text-muted-foreground">
+                        {description}
+                    </p>
+                )}
             </div>
             {facts !== undefined && facts.length > 0 && (
-                <dl className="pointer-events-none grid grid-cols-[repeat(auto-fit,minmax(5rem,1fr))] gap-3 border-t border-border px-4 py-2.5">
+                <dl
+                    data-slot="item-card-facts"
+                    className="pointer-events-none grid grid-cols-[repeat(auto-fit,minmax(5rem,1fr))] gap-3 border-t border-border px-4 py-2.5"
+                >
                     {facts.map((fact, index) => (
                         <div key={index} className="flex min-w-0 flex-col">
                             <dt className="truncate text-xs text-muted-foreground">{fact.label}</dt>

@@ -1,0 +1,18 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "yaml",
+      "value": ""
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "An empty frontmatter has a value and no properties."
+        }
+      ]
+    }
+  ]
+}

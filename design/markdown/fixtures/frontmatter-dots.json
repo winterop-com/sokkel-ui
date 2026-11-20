@@ -1,0 +1,21 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "yaml",
+      "value": "owner: grace",
+      "properties": {
+        "owner": "grace"
+      }
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "Closed by three dots, as YAML ends a document."
+        }
+      ]
+    }
+  ]
+}
