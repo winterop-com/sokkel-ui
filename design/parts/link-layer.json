@@ -4,11 +4,11 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
+        "sokkel-ui": {"state": "built", "as_of": "0e3eea8"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
-    "summary": "Lines between two positions, each in its tone over a casing in the card color: straight on the map or along the great circle, solid or dashed, and with measure a chip midway saying the distance and the bearing from where it starts, as the ruler's does. The link under the pointer thickens; the selected one is drawn in the selection color. Hundreds of links stay cheap.",
+    "summary": "Lines between two positions, each in its tone over a casing in the card color: straight on the map or along the great circle, solid or dashed, and with measure a chip midway saying the distance and the bearing from where it starts, as the ruler's does. The link under the pointer thickens; the selected one is drawn in the selection color. Hundreds of links stay cheap. With arc the links curve off the line between their ends; with flow, light runs along each from its start to its end, faster, more often and brighter the busier the link.",
     "sources": {
         "sokkel-ui": [
             "packages/maps/src/LinkLayer.tsx",
@@ -18,13 +18,15 @@
     },
     "anatomy": {
         "line": "From one end to the other: along the great circle in steps of at most 50 km (64 at most), or straight on the map (the rhumb line); the width (1.5) in the tone, 0.75 more under the pointer and 1 more selected in map-selection, dashed 3 on 2 when dashed, round-capped, over a casing 2.5 wider in card at 80 percent.",
-        "chip": "Over the link's middle (along the great circle, or halfway along the straight line on the map), 8 above it: words.measured with the distance and the bearing, as the ruler's chip: text.xs at 500 in tabular figures on card, padded 6 across and 2 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent. A chip that would cover another, or a track's label (parts/track-layer) or a zone's label (parts/zone-layer) on the same map, is left out; the selected link's never is, and is placed first. Only chips whose middle is in view are written."
+        "chip": "Over the link's middle (along the great circle, or halfway along the straight line on the map), 8 above it: words.measured with the distance and the bearing, as the ruler's chip: text.xs at 500 in tabular figures on card, padded 6 across and 2 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent. A chip that would cover another is left out; the selected link's never is, and is placed first. Only chips whose middle is in view are written.",
+        "arc": "With arc, each link drawn through at least 32 steps (its great circle, or its straight line on the map), each position moved off the line between the ends, on the Mercator map, by the height times that line's length times the sine of half a turn times its share of the way along: the most at the middle, none at the ends. It rises to the north side of the line, or to its west where the line runs due north or south. A measure is written at the arc's middle.",
+        "flow": "With flow, over each line a strip the width and 3 more, soft across (full to 0.2 of its half width, then fading to nothing at the edge), along which comets run from the start to the end: 1, 2 or 3 at once by the rate (1 below a third, 3 above two thirds), each crossing the link in 1 / (0.06 + 0.3 x rate) seconds, each link starting at its own point drawn from its id. A comet is its head in the tone (mixed toward white in the dark scheme at its head) and a tail half the gap between comets, fading as the square of its nearness to the head, at 0.45 + 0.55 x rate of full. The lines step back to 0.3 of the layer's opacity, and their casing with them, except the link under the pointer and the selected one. It holds still where motion is reduced (the look's motion setting, else the system's), and stops while the map is out of sight: the document hidden, or the map's element off the screen. Held still, the comets stand where they are 1.2 seconds in."
     },
     "standsOn": {"default": "card"},
     "options": {
         "links": {
             "type": "rows",
-            "does": "Each link { id, from, to, tone?, path?, dashed?, measure? }. Plain unless given. The tone is friend, hostile, neutral, unknown or pending, drawn in that track affiliation's token (track-friend and the rest), or plain, drawn in muted-foreground."
+            "does": "Each link { id, from, to, tone?, path?, dashed?, measure?, rate? }: the rate how busy it is, from 0 to 1 (0.5 unless given), which the flow reads. Plain unless given. The tone is friend, hostile, neutral, unknown or pending, drawn in that track affiliation's token (track-friend and the rest), or plain, drawn in muted-foreground."
         },
         "path": {
             "type": "text",
@@ -52,6 +54,16 @@
             "type": "boolean",
             "default": true,
             "does": "Links answer the pointer and presses; a press selects one as the map's selection."
+        },
+        "arc": {
+            "type": "number",
+            "default": 0,
+            "does": "Lifts each link into an arc rising this share of its length on the map at the middle; true is 0.2, false or 0 a plain line."
+        },
+        "flow": {
+            "type": "boolean",
+            "default": false,
+            "does": "Light running along each link from its start to its end, by its rate."
         }
     },
     "sizes": {"chip": {"padX": 6, "padY": 2, "text": "text.badge", "radius": "radius-control"}},
@@ -61,6 +73,16 @@
         "greatCircleStep": {
             "value": 50000,
             "note": "The longest step a great-circle link is drawn in, in meters; 64 steps at most."
+        },
+        "arcHeight": {
+            "value": 0.2,
+            "note": "How high an arc rises at its middle, as a share of the link's length on the map, when arc is true."
+        },
+        "arcSteps": {"value": 32, "note": "The fewest steps an arced link is drawn in."},
+        "flowWidth": {"value": 3, "note": "How much wider the flow's strip is than the line."},
+        "flowLine": {
+            "value": 0.3,
+            "note": "The share of the layer's opacity a line and its casing keep under a flow, unless under the pointer or selected."
         }
     },
     "states": {
@@ -69,7 +91,12 @@
         "selected": {
             "means": "The map's selected link: drawn in the selection color, its chip placed first.",
             "reached": "a press on it, or the map's selected"
-        }
+        },
+        "flowing": {
+            "means": "Comets running along each link.",
+            "reached": "flow on, motion not reduced and the map in sight"
+        },
+        "still": {"means": "The comets held where they stand 1.2 seconds in.", "reached": "flow on and motion reduced"}
     },
     "pieces": {
         "line": {
@@ -84,6 +111,12 @@
                 "weight": 500,
                 "radius": "radius-control",
                 "ring": {"color": "foreground/10", "width": 1}
+            }
+        },
+        "flow": {
+            "rest": {
+                "ink": "muted-foreground",
+                "note": "In the link's tone token at 0.45 + 0.55 x its rate at the head, toward white in the dark scheme; the line under it at 30."
             }
         }
     },
@@ -100,7 +133,8 @@
         "sokkel-ui": [
             "Drawn on maplibre: every link one feature of one GeoJSON source, with a casing and a solid and a dashed line layer, however many links there are.",
             "A straight link's measure is along the rhumb line (rhumbDistance, rhumbBearing), its middle halfway up the Mercator scale (rhumbMiddle); a great-circle link's as the ruler's.",
-            "Chips are written in the map's overlay, projected again after every move, only those in view."
+            "Chips are written in the map's overlay, projected again after every move, only those in view.",
+            "The flow is a maplibre custom layer: every link's steps as quads in one mesh (four vertices a step, carrying both ends, the share of the way along, the rate, the tone and the start), uploaded once when the links change, drawn in one call by a small WebGL2 shader that widens each quad across the screen and is projected by maplibre's own projectTile. A frame sets only uniforms (the time, the width, the opacity, the scheme and the six tone colors), so its cost does not grow with the links: 600 arced links are 76,800 vertices (3.4 MB), built in about 14 ms when they change. The map is repainted each animation frame only while the flow runs. Positions are stored as 32-bit offsets from the mesh's own origin, which the projection's matrices take in, worked in 64 bits, so a 50 m link keeps its ends apart at any zoom; longitudes run on past 180 rather than jump back, so a cone or arc across the antimeridian stays whole. The layer deletes what it held on the GPU before it is added again, as a style rebuilt in full re-adds it without removing it."
         ]
     },
     "drift": [
