@@ -1197,7 +1197,8 @@ export function VideoPlayer({
             }}
             onFocus={reveal}
             className={cn(
-                '@container relative isolate aspect-video w-full overflow-hidden rounded-surface bg-terminal text-terminal-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 data-[controls=hidden]:data-playing:cursor-none',
+                // A double press on the picture goes full screen, so nothing over it is selectable.
+                '@container relative isolate aspect-video w-full overflow-hidden rounded-surface bg-terminal text-terminal-foreground outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 data-[controls=hidden]:data-playing:cursor-none',
                 fullscreen && 'aspect-auto rounded-none',
                 className,
             )}

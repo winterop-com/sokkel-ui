@@ -151,7 +151,8 @@ export function Position({
     return (
         <div
             className={cn(
-                'flex items-center font-mono tabular-nums',
+                // A drag along the slider never highlights the times beside it.
+                'flex items-center font-mono tabular-nums select-none',
                 size === 'lg' ? 'gap-4 text-sm' : 'gap-2 text-xs',
                 tone === 'overlay' ? 'text-terminal-foreground' : 'text-muted-foreground',
                 className,
