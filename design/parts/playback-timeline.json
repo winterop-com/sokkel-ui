@@ -1,0 +1,146 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "playback-timeline",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A time to look back at, such as a map's tracks an hour ago: an axis with day and hour ticks on the zone's clock, the live edge marked, a strip of activity as bars over it, and a playhead to drag or move with the keys. Play moves the time on, Step back and Step forward move it by a step, and Live returns to now; a drag or step that reaches the live edge, or ends within 8 of it, returns to live too. Its axis is the run timeline's (parts/run-timeline).",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/PlaybackTimeline.tsx",
+            "packages/core/src/components/time-axis.tsx",
+            "packages/core/src/lib/time-axis.ts"
+        ]
+    },
+    "anatomy": {
+        "container": "A column on card with a border edge, rounded by radius-surface, in card-foreground.",
+        "bar": "Over a border rule, padded 8 across and 4 down: Step back, Play or Pause, Step forward as ghost icon buttons (icon-sm), 4 apart; the readout in the code face at text.help, Live in good-ink while live, the time shown (Nov 20, 12:30:00) otherwise; the Live button at the end, small, a dot before it (good and pulsing while live, faint otherwise), ghost and pressed while live, outline otherwise.",
+        "strip": "32 tall, on muted at half strength, rounded by radius-mini, padded 12 across inside the box, 8 below the bar: the ticks' lines in border, the live edge's line in primary, the activity as one bar per bin 80 percent of its width, as tall as its count of the tallest, in primary at 55 percent up to the time shown and muted-foreground at 30 after it; past the live edge a hatch in border.",
+        "ticks": "Under the strip, 32 tall, as the run timeline's axis: labels in the code face at text.2xs in muted-foreground, a day's name at the zone's midnight and the time otherwise; the live edge's chip, Live, on primary.",
+        "playhead": "A line 2 wide down the strip at the time shown, with a knob 10 across at its top edged 2 in card: foreground while playing back, good while live.",
+        "readout": "The time shown, or Live, beside the controls, in the code face.",
+        "barPlayed": "An activity bar at or before the playhead, in its full ink.",
+        "barAhead": "An activity bar after the playhead, quieter, the time not yet played back.",
+        "liveChip": "The chip at the live edge, Live while the playhead is there."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "from": {"type": "text", "does": "Where the axis starts."},
+        "to": {"type": "text", "does": "Where it ends."},
+        "live": {"type": "text", "does": "The live edge; to by default."},
+        "value": {"type": "number", "does": "The time shown, or null while live."},
+        "onValueChange": {
+            "type": "callback",
+            "does": "Hears the time a scrub, step or play moves to, or null on returning to live."
+        },
+        "playing": {"type": "boolean", "default": false, "does": "Whether it plays."},
+        "rate": {"type": "number", "default": 60, "does": "How many times real time playing runs."},
+        "step": {"type": "number", "default": 60000, "does": "How far a step moves, in ms."},
+        "activity": {"type": "rows", "does": "Counts in bins of one size from from to to."},
+        "label": {"type": "text", "does": "What is played back, naming the playhead."}
+    },
+    "layout": {
+        "liveSnap": {"value": 8, "note": "How near the live edge a drag lets go to return to live."},
+        "frame": {"value": 250, "note": "How often playing moves the time on, in ms."},
+        "stripHeight": 32
+    },
+    "states": {
+        "live": {
+            "means": "At the live edge: the readout says Live, Play and Step forward are shut.",
+            "reached": "value null"
+        },
+        "back": {"means": "Played back: the readout says the time, the bars after it quieter.", "reached": "value set"},
+        "playing": {
+            "means": "The time moves on at rate; at the live edge it stops and returns to live.",
+            "reached": "Play"
+        },
+        "focus": {
+            "means": "Keyboard focus on the playhead: the focus outline around it.",
+            "reached": "Tab, or a press on the axis",
+            "on": "keyboard"
+        },
+        "rest": {"means": "The timeline drawn."}
+    },
+    "pieces": {
+        "container": {
+            "rest": {"ground": "card", "edge": "border", "ink": "card-foreground", "radius": "radius-surface"}
+        },
+        "bar": {"rest": {"rule": "border"}},
+        "readout": {"rest": {"ink": "foreground", "text": "text.help"}, "live": {"ink": "good-ink"}},
+        "strip": {"rest": {"ground": "muted/50", "radius": "radius-mini"}},
+        "barPlayed": {"rest": {"ground": "primary/55"}},
+        "barAhead": {"rest": {"ground": "muted-foreground/30"}},
+        "playhead": {
+            "rest": {"ground": "foreground"},
+            "live": {"ground": "good"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+        },
+        "liveChip": {
+            "rest": {
+                "ground": "primary",
+                "ink": "primary-foreground",
+                "radius": "radius-mini",
+                "text": "text.2xs",
+                "weight": 600,
+                "note": "In the code face, in capitals."
+            }
+        }
+    },
+    "keyboard": [
+        {
+            "keys": ["ArrowLeft", "ArrowDown"],
+            "does": "Back a step; with Shift, a tick.",
+            "when": "the playhead has focus"
+        },
+        {
+            "keys": ["ArrowRight", "ArrowUp"],
+            "does": "On a step; with Shift, a tick; at the live edge, live.",
+            "when": "the playhead has focus"
+        },
+        {"keys": ["PageDown", "PageUp"], "does": "Back or on ten steps.", "when": "the playhead has focus"},
+        {"keys": ["Home"], "does": "To the axis's start.", "when": "the playhead has focus"},
+        {"keys": ["End"], "does": "Back to live.", "when": "the playhead has focus"}
+    ],
+    "words": {
+        "live": "Live",
+        "goLive": "Back to live",
+        "play": "Play",
+        "pause": "Pause",
+        "stepBack": "Step back",
+        "stepForward": "Step forward",
+        "position": "Time shown"
+    },
+    "messages": {
+        "live": {"id": "playbackTimeline.live", "en": "Live"},
+        "goLive": {"id": "playbackTimeline.goLive", "en": "Back to live"},
+        "play": {"id": "playbackTimeline.play", "en": "Play"},
+        "pause": {"id": "playbackTimeline.pause", "en": "Pause"},
+        "stepBack": {"id": "playbackTimeline.stepBack", "en": "Step back"},
+        "stepForward": {"id": "playbackTimeline.stepForward", "en": "Step forward"},
+        "position": {"id": "playbackTimeline.position", "en": "Time shown"}
+    },
+    "appText": {"label": "What is played back."},
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The activity is plain SVG, never a chart engine; the axis's ticks and lines are the run timeline's own parts (components/time-axis)."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

@@ -40,6 +40,7 @@ import { resolveColors } from './color'
 import { ID_PROPERTY, MapContext, useMapContext, type MapContextValue, type MapCorner, type MapLayerEntry } from './context'
 import { unionBounds, type Bounds, type LngLat } from './geometry'
 import { FLAT_SKY, globeSky, starfieldStyle } from './globe'
+import { labelRegistry } from './layer'
 
 export type { MapCorner } from './context'
 
@@ -479,6 +480,7 @@ export function MapView({
     const takeClicks = useCallback((handler: ((at: LngLat) => void) | null) => {
         clickTaker.current = handler
     }, [])
+    const [labels] = useState(labelRegistry)
     const holdCamera = useCallback(() => {
         moved.current = true
     }, [])
@@ -848,8 +850,8 @@ export function MapView({
         () =>
             map === null || scope === null || overlay === null || corners === null
                 ? null
-                : { map, scope, overlay, corners, dark, reading, selected: current, select, register, holdCamera, takeClicks },
-        [map, scope, overlay, corners, dark, reading, current, select, register, holdCamera, takeClicks],
+                : { map, scope, overlay, corners, dark, reading, selected: current, select, register, holdCamera, takeClicks, labels },
+        [map, scope, overlay, corners, dark, reading, current, select, register, holdCamera, takeClicks, labels],
     )
 
     const offered = basemaps.length > 1

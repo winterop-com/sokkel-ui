@@ -4,7 +4,7 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "982188f"},
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -45,8 +45,13 @@
         }
     },
     "sizes": {
-        "button": {"height": "density.control-sm", "width": "density.control-sm", "radius": "radius-control"},
-        "chip": {"padX": 6, "padY": 2, "text": "text.xs", "radius": "radius-control"}
+        "button": {
+            "height": "density.control-sm",
+            "width": "density.control-sm",
+            "radius": "radius-control",
+            "radiusMax": 12
+        },
+        "chip": {"padX": 6, "padY": 2, "text": "text.badge", "radius": "radius-control"}
     },
     "layout": {"chipLift": {"value": 8, "note": "The chip's foot stands this far above the line's middle."}},
     "states": {
@@ -59,7 +64,7 @@
     },
     "pieces": {
         "button": {
-            "rest": {"ground": "card", "ink": "foreground", "edge": "border"},
+            "rest": {"ground": "card", "ink": "foreground", "edge": "border", "dark": {"edge": "input"}},
             "hover": {"ground": "hover"},
             "on": {"ground": "accent", "ink": "accent-foreground", "edge": "primary"}
         },

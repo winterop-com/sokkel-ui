@@ -1,0 +1,89 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "track-roster",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "The tracks a console watches as one list: a table's list (parts/table) of track-card rows gathered under their affiliations' heads, friend first, each head with its count and folding its group; its bar holds a search, filters on the affiliation, the kind and the states, and a sort menu, the list having no column heads. The track picked is drawn as chosen and shared with a map; one picked from outside unfolds its group and comes into view without taking the focus.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/TrackRoster.tsx",
+            "packages/core/src/components/DataTable.tsx",
+            "packages/core/src/components/TrackCard.tsx",
+            "packages/core/src/components/FilterBar.tsx"
+        ]
+    },
+    "anatomy": {
+        "container": "A table in its list look (parts/table), rows as tall as their cards, never stacking.",
+        "bar": "The search (placeholder Search), the count, the sort menu (Name, Affiliation, Kind, Last heard: the freshest first) and, under them, the filter bar.",
+        "groupHead": "A dot in the affiliation's color and its name, the count after it; a press folds the group. Order: friend, hostile, neutral, unknown, pending.",
+        "row": "A track card unframed (parts/track-card), padded 6 across the row's own inset; the picked track's row drawn as the table's chosen row."
+    },
+    "standsOn": {"default": "card"},
+    "options": {
+        "tracks": {"type": "rows", "does": "The tracks: id, name, kind, affiliation, and what the card shows."},
+        "selected": {"type": "text", "does": "The id of the track picked."},
+        "onSelect": {"type": "callback", "does": "Hears the track pressed."},
+        "onAffiliationChange": {"type": "callback", "does": "Makes each card's affiliation a menu."},
+        "filters": {"type": "rows", "does": "The filters, held by the app or by the roster."},
+        "sort": {"type": "text", "does": "The order: name (the default), affiliation, kind or updated."},
+        "foldedGroups": {"type": "rows", "does": "The affiliations folded."},
+        "framed": {"type": "boolean", "default": true, "does": "false for a panel that draws its own frame."}
+    },
+    "states": {
+        "rest": {"means": "The tracks under their heads, sorted by name."},
+        "selected": {"means": "A track picked: its row drawn as the table's chosen row.", "reached": "selected"},
+        "empty": {"means": "No tracks, or none kept: No tracks.", "reached": "no rows"}
+    },
+    "keyboard": [
+        {"keys": ["/"], "does": "Focuses the search."},
+        {"keys": ["ArrowUp", "ArrowDown"], "does": "Moves between rows and group heads, as the table does."},
+        {
+            "keys": ["Enter"],
+            "does": "Picks the active track (onSelect), or folds the active group.",
+            "when": "the list has focus"
+        }
+    ],
+    "words": {
+        "search": "Search",
+        "affiliation": "Affiliation",
+        "kind": "Kind",
+        "state": "State",
+        "name": "Name",
+        "freshest": "Last heard",
+        "empty": "No tracks."
+    },
+    "messages": {
+        "search": {"id": "trackRoster.search", "en": "Search"},
+        "affiliation": {"id": "trackRoster.affiliation", "en": "Affiliation"},
+        "kind": {"id": "trackRoster.kind", "en": "Kind"},
+        "state": {"id": "trackRoster.state", "en": "State"},
+        "name": {"id": "trackRoster.name", "en": "Name"},
+        "freshest": {"id": "trackRoster.freshest", "en": "Last heard"},
+        "empty": {"id": "trackRoster.empty", "en": "No tracks."}
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "A DataTable: variant list, columnHeads false (which puts the sort menu in the bar), rowHeight auto, stackBelow false, groupBy affiliation; the sort reads hidden columns.",
+            "A pick from outside is DataTable's reveal with focus false: the group unfolds and the row scrolls into view, the focus staying where it was."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

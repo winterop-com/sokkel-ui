@@ -1,0 +1,122 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "task-card",
+    "kind": "part",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "One task on a board: what it is and its state as a chip in its tone, its elapsed time at the head's end, a line from who does it to what it is done to with their glyphs, optional facts, and a row of actions; a destructive action asks first.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/TaskCard.tsx",
+            "packages/core/src/components/StatusChip.tsx",
+            "packages/core/src/components/DescriptionList.tsx",
+            "packages/core/src/components/DialogShell.tsx"
+        ]
+    },
+    "anatomy": {
+        "container": "A column 8 apart on card with a border edge, rounded by radius-surface, padded 12, in card-foreground.",
+        "head": "The title at 500 cut with an ellipsis, the id in the code face at text.help in muted-foreground, the state as a status chip with its dot, 8 apart; the elapsed time at the line's end in the code face at text.help, muted-foreground, as a clock (4:07, 1:04:07).",
+        "line": "With from or to: each end's glyph and name, 6 apart, an arrow 14 square in muted-foreground between them, 8 apart.",
+        "facts": "With facts: a description list in its row layout at size sm (parts/description-list).",
+        "actions": "With actions: small buttons in a wrapping row, 8 apart, 4 more above it: outline, primary drawn filled, destructive in the destructive variant.",
+        "confirm": "An action with confirm opens a confirm dialog (parts/dialog) with its question and detail; its Cancel says Keep, and its answer is drawn destructive for a destructive action.",
+        "title": "The task's name (investigate, follow, report), then its id in the code face.",
+        "elapsed": "How long it has run, at the head's end, in tabular figures."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "title": {"type": "node", "does": "What the task is: Follow, Investigate, Report."},
+        "code": {"type": "text", "does": "Its id."},
+        "state": {
+            "values": ["pending", "executing", "paused", "done", "failed"],
+            "does": "Its state, as a chip in its tone."
+        },
+        "startedAt": {"type": "text", "does": "When it started; the elapsed time counts from here."},
+        "endedAt": {"type": "text", "does": "When it ended; the elapsed time stops here."},
+        "now": {
+            "type": "text",
+            "does": "The moment it counts to while it runs; without it, a shared clock while executing."
+        },
+        "elapsed": {"type": "number", "does": "Its elapsed time in ms, in place of startedAt."},
+        "from": {"type": "node", "does": "Who or what does it: a name and a glyph."},
+        "to": {"type": "node", "does": "What it is done to: a name and a glyph."},
+        "facts": {"type": "rows", "does": "Facts in one wrapping line."},
+        "actions": {"type": "rows", "does": "Buttons: label, icon, primary, destructive, confirm, reason, busy."},
+        "selected": {"type": "boolean", "default": false, "does": "Draws it as the task chosen."}
+    },
+    "sizes": {
+        "container": {"padX": 12, "padY": 12, "gap": 8, "radius": "radius-surface"},
+        "line": {"gap": 8, "icon": 14}
+    },
+    "states": {
+        "rest": {"means": "The card drawn."},
+        "selected": {"means": "Edged and ringed in primary.", "reached": "selected"},
+        "pending": {"means": "Waiting to start: the chip in status-pending.", "reached": "state pending"},
+        "executing": {
+            "means": "Under way: the chip in status-running, its dot pulsing; the elapsed time ticks.",
+            "reached": "state executing"
+        },
+        "paused": {"means": "Held: the chip in warning.", "reached": "state paused"},
+        "done": {"means": "Finished: the chip in good.", "reached": "state done"},
+        "failed": {"means": "Given up on: the chip in critical.", "reached": "state failed"}
+    },
+    "pieces": {
+        "container": {
+            "rest": {"ground": "card", "edge": "border", "ink": "card-foreground", "radius": "radius-surface"},
+            "selected": {"edge": "primary", "ring": {"color": "primary", "width": 1}}
+        },
+        "title": {"rest": {"weight": 500, "text": "text.body"}},
+        "elapsed": {
+            "rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face, tabular figures."}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches each action."},
+        {"keys": ["Enter", "Space"], "does": "Runs the action, or opens its confirm.", "when": "an action has focus"}
+    ],
+    "words": {
+        "pending": "pending",
+        "executing": "executing",
+        "paused": "paused",
+        "done": "done",
+        "failed": "failed",
+        "elapsed": "Elapsed",
+        "to": "to",
+        "keep": "Keep"
+    },
+    "messages": {
+        "pending": {"id": "taskCard.pending", "en": "pending"},
+        "executing": {"id": "taskCard.executing", "en": "executing"},
+        "paused": {"id": "taskCard.paused", "en": "paused"},
+        "done": {"id": "taskCard.done", "en": "done"},
+        "failed": {"id": "taskCard.failed", "en": "failed"},
+        "elapsed": {"id": "taskCard.elapsed", "en": "Elapsed"},
+        "to": {"id": "taskCard.to", "en": "to"},
+        "keep": {"id": "taskCard.keep", "en": "Keep"}
+    },
+    "appText": {
+        "title": "What the task is.",
+        "code": "Its id.",
+        "from": "Who does it.",
+        "to": "What it is done to.",
+        "actions": "The actions' labels and the confirm's question."
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}
