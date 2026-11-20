@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "7f043d4"},
         "sokkel-egui": {
-            "state": "missing",
-            "as_of": "fc9d27e",
-            "note": "No prompt yet; DialogShell, ConfirmDialog's busy and TextField exist."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "SecretField and PromptDialog drawn from the pattern: focus on open, a fresh value each time, Enter, the shut Submit, busy with Stop waiting, and failure in the status slot."
         },
         "sokkel-tui": {
             "state": "partial",
@@ -158,12 +158,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "not built",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: no prompt. DialogShell with why, ConfirmDialog's busy and TextField exist; no SecretField, no status slot, no busy and failed flow."
-        },
         {"renderer": "sokkel-tui", "what": "not built", "spec": "This spec.", "today": "As of 64f4b19, no prompt."}
     ]
 }

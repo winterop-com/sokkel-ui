@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "Drags to reorder; the lifted copy, moving aside, keys and words not yet."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "Drawn from the spec: the placeholder, moving aside, the lifted copy, Escape, the keys and the words."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -110,12 +110,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: The placeholder at 0.5 (spec 0.4); no lifted copy, and the others do not move aside (a bar marks where it lands); Escape does not put it back; no keys, no move and moved words, no handle, kind or disabled. The columns match."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",

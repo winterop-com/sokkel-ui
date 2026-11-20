@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "Drawn stacked by default; side as the default, row, sm and the missing dash not yet."
+            "as_of": "cb26531",
+            "note": "Drawn from the spec but for `numeric`, which has no effect yet (drift)."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -90,7 +90,7 @@
             "renderer": "sokkel-egui",
             "what": "gaps",
             "spec": "This spec.",
-            "today": "As of fc9d27e: Stacked by default (spec: side, terms 96 wide); no row layout, size sm, termWidth auto, numeric, wide or the missing value's dash; columns only when stacked and kept below md; side has no 12 gap and a long term runs over its value; the value's line is 22, not 20."
+            "today": "As of cb26531: `numeric` has no effect (no tabular figures). The rest matches."
         },
         {
             "renderer": "sokkel-tui",

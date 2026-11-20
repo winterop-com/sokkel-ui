@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "Drawn; its indents, summary, controlled open, static row and phone height not yet."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "Drawn from the spec: its indents, summary, wrapSummary, controlled open, a static row and the phone height."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -122,12 +122,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: Its heading starts at 26 and its content at 22 (the row does not reach 4 past the column); no summary or wrapSummary, controlled open, static row or phoneMinHeight; the ink is foreground, not what it stands on. Forced, the chevron, hover and the 30 height match."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",

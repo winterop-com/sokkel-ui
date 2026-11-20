@@ -6,9 +6,9 @@
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "11f3a2b"},
         "sokkel-egui": {
-            "state": "partial",
-            "as_of": "fc9d27e",
-            "note": "Drawn with its paints and sizes; its keys, the dark ground and the radio's place not yet."
+            "state": "built",
+            "as_of": "cb26531",
+            "note": "Drawn from the spec: one Tab stop, arrows that move and choose, Space, the dark ground and the radio level with the first line."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
@@ -94,12 +94,6 @@
         ]
     },
     "drift": [
-        {
-            "renderer": "sokkel-egui",
-            "what": "gaps",
-            "spec": "This spec.",
-            "today": "As of fc9d27e: Each row is a Tab stop of its own (no roving focus, no arrows) and Enter also chooses; no dark input/30 ground; the radio is centered on a wrapped label rather than level with its first line; not a radio group to assistive technology. Paints and sizes match."
-        },
         {
             "renderer": "sokkel-tui",
             "what": "not built yet",
