@@ -1,3 +1,4 @@
+import { DARK_BASEMAP, LIGHT_BASEMAP, SCHEME_BASEMAPS, type Basemap } from '@winterop-com/sokkel-ui-maps/basemap'
 import { CoverageLayer, type RangeRings, type SensorCone } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
 import { UNIT_METERS } from '@winterop-com/sokkel-ui-maps/geodesy'
 import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
@@ -22,6 +23,9 @@ import { HARBORS, WATCH_CENTER } from '../sim/world'
 /** Where the watch's map opens: the three harbors and the sea west of them. */
 const CAMERA = { center: WATCH_CENTER, zoom: 5.6 }
 
+/** The grounds the watch's maps offer: the street map, light or dark by the scheme, and the world drawn with no network. */
+const BASEMAPS: Basemap[] = [LIGHT_BASEMAP, DARK_BASEMAP, WORLD_BASEMAP]
+
 /** What the three harbor radars cover: each a wedge out to sea. */
 const RADAR_CONES: SensorCone[] = [
     { id: 'radar-harbor', position: HARBORS.harbor, bearing: 270, width: 140, range: 90_000, tone: 'friend' },
@@ -43,7 +47,10 @@ function ringsIn(unit: Settings['unit']): RangeRings {
 /**
  * The watch's map: its zones, the radars' cover, the lines of running tasks and the tracks, with
  * the ruler, the compass, go to, the cursor's position and the legend; `following` keeps one
- * track centered. `tools` leaves the tools off, for a map beside a list.
+ * track centered. `tools` leaves the tools off, for a map beside a list. It is drawn over the
+ * street map, with its shores, roads and place names, or over the world's countries while that
+ * cannot be had; it flies to what is picked in a list beside it when that is out of view, and
+ * leans toward the horizon close in.
  */
 export function WatchMap({
     label,
@@ -79,10 +86,13 @@ export function WatchMap({
     return (
         <MapView
             label={label}
-            defaultBasemap={WORLD_BASEMAP}
-            basemaps={[WORLD_BASEMAP]}
+            defaultBasemap={SCHEME_BASEMAPS}
+            basemaps={BASEMAPS}
+            fallbackBasemap={WORLD_BASEMAP}
             camera={CAMERA}
             rotate={tools}
+            flyToSelected={following === undefined}
+            pitchWithZoom
             selected={selected}
             onSelectedChange={(id) => onSelectedChange(id)}
             className={className}

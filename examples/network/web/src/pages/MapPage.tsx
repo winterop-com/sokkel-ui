@@ -30,10 +30,14 @@ export function connectionsByHost(snapshot: Snapshot): Map<string, ConnectionFlo
 /** This machine, standing at home in the primary color whatever the map is colored by. */
 const HOME_COLORS = { friend: 'var(--primary)' }
 
+/** What the map's own buttons are: the usual ones, and the switch between the flat map and the globe. */
+const CONTROLS = { projection: true }
+
 /**
  * Every remote host this machine talks to, placed where the lookup says, with a link from home to
  * each: colored by the state of the host's connections or by the process that moves the most with
- * it. A host or a link picked shows the host's connections in the side panel.
+ * it. A host or a link picked shows the host's connections in the side panel. The globe button rolls
+ * the map up into a globe, where each link runs over the earth the short way, as its great circle does.
  */
 export function MapPage({
     state,
@@ -100,6 +104,7 @@ export function MapPage({
                 defaultBasemap={WORLD_BASEMAP}
                 basemaps={[WORLD_BASEMAP]}
                 camera={{ center: [home.at[0] - 20, 28], zoom: 1 }}
+                controls={CONTROLS}
                 selected={selected}
                 onSelectedChange={(id) => onSelect(id !== null && id.startsWith('flow:') ? id : null)}
                 notes={[
