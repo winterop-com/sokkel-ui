@@ -22,6 +22,7 @@ import { Unfoldable } from '@winterop-com/sokkel-ui/Unfoldable'
 import { BOARD_CHECKLIST_WORDS, BOARD_ITEM_PANEL_WORDS, BoardChecklist, BoardItemPanel } from '@winterop-com/sokkel-ui/board/BoardItemPanel'
 import { Banner, BANNER_WORDS, type BannerTone } from '@winterop-com/sokkel-ui/Banner'
 import { CALL_BAR_SHORTCUTS, CALL_BAR_WORDS, CallBar, type CallBarProps } from '@winterop-com/sokkel-ui/CallBar'
+import { CALL_TILE_WORDS, CallTile } from '@winterop-com/sokkel-ui/CallTile'
 import { CHART_LEGEND_WORDS, ChartLegend } from '@winterop-com/sokkel-ui-charts/ChartLegend'
 import { CHART_WORDS, KINDS } from '@winterop-com/sokkel-ui-charts/kinds'
 import { PANEL_WORDS } from '@winterop-com/sokkel-ui-charts/dashboard/series'
@@ -5566,6 +5567,55 @@ const CALL_BAR_ADAPTER: Adapter = {
         }),
 }
 
+// Call tile
+
+const CALL_TILES = once(() => ({
+    plain: draw(CallTile, { name: 'Grace Holm' }),
+    marked: draw(CallTile, { name: 'Grace Holm', muted: true, handRaised: true }),
+}))
+const callTilePieces = (elements: El[]) => ({
+    container: byData(elements, 'data-slot', 'call-tile'),
+    picture: byData(elements, 'data-slot', 'avatar'),
+    name: byData(elements, 'data-slot', 'call-tile-name'),
+    icon: elements.find((element) => element.tag === 'svg'),
+})
+/** The picture's size, a clamp of a least, a share of the tile's width and a most, as drawn: in px and percent. */
+const tilePicture = () => {
+    const sized = /\bsize-\[clamp\(([\d.]+)rem,([\d.]+)cqw,([\d.]+)rem\)\]/.exec(classesOf(callTilePieces(CALL_TILES().plain).picture))
+    return sized === null ? undefined : { least: Number(sized[1]) * 16, share: Number(sized[2]), most: Number(sized[3]) * 16 }
+}
+
+const CALL_TILE_ADAPTER: Adapter = {
+    wordObjects: { CALL_TILE_WORDS },
+    complete: ['CALL_TILE_WORDS'],
+    words: { muted: 'CALL_TILE_WORDS.muted', handRaised: 'CALL_TILE_WORDS.handRaised' },
+    options: {},
+    size: (size, key) => {
+        const pieces = callTilePieces(CALL_TILES().marked)
+        if (size === 'picture') return skip('a clamp the size reader cannot resolve: its least, share and most are read in more')
+        return pieceWhere(key === 'icon' ? pieces.icon : pieces.name)
+    },
+    paint: (_, name) => pieceWhere(callTilePieces(CALL_TILES().plain)[name as 'container' | 'name']),
+    effect: () => skip('a tile states no effects'),
+    keys: {},
+    more: () => {
+        const picture = tilePicture()
+        const name = classesOf(callTilePieces(CALL_TILES().plain).name)
+        return [
+            check('sizes.picture.width', '64', picture === undefined ? undefined : String(picture.least)),
+            check('sizes.picture.height', '64', picture === undefined ? undefined : String(picture.least)),
+            ...layoutChecks('call-tile', {
+                pictureShare: () => (picture === undefined ? undefined : String(picture.share)),
+                pictureMax: () => (picture === undefined ? undefined : String(picture.most)),
+                nameInset: () => {
+                    const start = resolve([name], [], lengthOf('left-'))
+                    return start === resolve([name], [], lengthOf('bottom-')) ? start : undefined
+                },
+            }),
+        ]
+    },
+}
+
 // Letter
 
 const LETTER = source('components/Letter.tsx')
@@ -9390,6 +9440,7 @@ const ADAPTERS: Record<string, Adapter> = {
     composer: COMPOSER_ADAPTER,
     'message-composer': MESSAGE_COMPOSER_ADAPTER,
     'call-bar': CALL_BAR_ADAPTER,
+    'call-tile': CALL_TILE_ADAPTER,
     letter: LETTER_ADAPTER,
     'detail-pane': DETAIL_PANE_ADAPTER,
     'board-item-panel': BOARD_ITEM_PANEL_ADAPTER,
