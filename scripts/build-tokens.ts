@@ -14,7 +14,8 @@
  * answers on `html[data-theme]` for the whole app, overriding what it changes; a token it sets in
  * light but not in dark takes tidevann's dark value, so a theme never carries a light value into
  * dark mode. Every theme also answers on `[data-theme-scope]` for one element and what is inside
- * it, as a theme picker's preview swatch is, in the same rule as its `html` one: every scope first
+ * it, as a theme picker's preview swatch is, in the same rule as its `html` one, and in dark on a scope that
+ * is itself `.dark` as well as inside one: every scope first
  * takes tidevann's whole set, at no specificity, so a scope shows its own theme whatever the page
  * around it wears, and its theme's overrides go over that. A theme may override any token, the
  * density levels' included. A density level answers on `html[data-density]` for the whole app and
@@ -178,7 +179,10 @@ for (const [name, theme] of others) {
         [
             HEADER,
             block([`html[data-theme='${name}']`, `[data-theme-scope='${name}']`], theme.light),
-            block([`html.dark[data-theme='${name}']`, `.dark [data-theme-scope='${name}']`], darkOf(theme)),
+            block(
+                [`html.dark[data-theme='${name}']`, `.dark [data-theme-scope='${name}']`, `[data-theme-scope='${name}'].dark`],
+                darkOf(theme),
+            ),
         ].join('\n'),
     )
 }

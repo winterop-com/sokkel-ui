@@ -36,6 +36,7 @@ export interface MapContextValue {
     /** The element popups and labels are positioned in, over the canvas. */
     overlay: HTMLElement
     corners: Record<MapCorner, HTMLElement>
+    /** Whether the map wears the dark scheme: the page's, or its own over a dark basemap. */
     dark: boolean
     /** Advances whenever the theme changes, so a layer knows to resolve its colors again. */
     reading: number

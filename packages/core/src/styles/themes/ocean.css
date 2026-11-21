@@ -90,7 +90,8 @@ html[data-theme='ocean'],
 }
 
 html.dark[data-theme='ocean'],
-.dark [data-theme-scope='ocean'] {
+.dark [data-theme-scope='ocean'],
+[data-theme-scope='ocean'].dark {
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: color-mix(in oklab, var(--foreground) 18%, var(--card));
     --node-line: color-mix(in oklab, var(--faint) 80%, var(--border-strong));

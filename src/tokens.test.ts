@@ -131,7 +131,7 @@ describe('the theme files', () => {
             )
             expect(selectors).toEqual([
                 [`html[data-theme='${theme}']`, `[data-theme-scope='${theme}']`],
-                [`html.dark[data-theme='${theme}']`, `.dark [data-theme-scope='${theme}']`],
+                [`html.dark[data-theme='${theme}']`, `.dark [data-theme-scope='${theme}']`, `[data-theme-scope='${theme}'].dark`],
             ])
         })
         it(`export ${theme} as themes/${theme}.css`, () => {

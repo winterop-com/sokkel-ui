@@ -88,7 +88,8 @@ html[data-theme='neon'],
 }
 
 html.dark[data-theme='neon'],
-.dark [data-theme-scope='neon'] {
+.dark [data-theme-scope='neon'],
+[data-theme-scope='neon'].dark {
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: color-mix(in oklab, var(--foreground) 18%, var(--card));
     --node-line: color-mix(in oklab, var(--faint) 80%, var(--border-strong));

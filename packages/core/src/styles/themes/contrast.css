@@ -100,7 +100,8 @@ html[data-theme='contrast'],
 }
 
 html.dark[data-theme='contrast'],
-.dark [data-theme-scope='contrast'] {
+.dark [data-theme-scope='contrast'],
+[data-theme-scope='contrast'].dark {
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: color-mix(in oklab, var(--foreground) 18%, var(--card));
     --node-line: color-mix(in oklab, var(--faint) 80%, var(--border-strong));

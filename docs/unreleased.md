@@ -36,6 +36,11 @@ release and empties it.
 - A dark basemap in the light scheme, or a light one in the dark scheme, keeps its own place-name
   colors, where they were inked in the page's colors and smeared over the map. `Basemap.tone` now
   says whether a style basemap is light or dark; the library's basemaps say it.
+- A map over a dark basemap in the light scheme wears the dark scheme, in the page's theme: its
+  layers, track and zone labels, chips, legend and controls read on the dark ground, as the basemap's
+  place names do, where before they kept the page's light colors and stood on the map like stickers.
+  `MapView` sets `dark` and `data-theme-scope` on its frame then, and each theme's dark tokens now
+  also answer on a scope that is itself `.dark`.
 - A side panel's tabs stand as their icons, each named and with its label in a tooltip, when their
   labels do not fit beside the panel's toggle, where they ran under it; tabs without icons scroll.
 - A status line keeps each fact whole but the last, which alone is cut short, where a short fact
