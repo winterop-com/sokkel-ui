@@ -314,6 +314,13 @@ export type MarkdownParts = Readonly<Record<string, ReactNode>> | ((id: string) 
 export interface MarkdownLinks {
     /** Follows a `[[link]]`: the note it names, and the heading after its `#`, if any. */
     onOpen: (target: string, heading?: string) => void
+    /**
+     * The address a `[[link]]` (and an embed's framed link) carries, such as `#/page/notes/a.md`,
+     * so the browser can open it in a new tab or copy it. A plain press still calls `onOpen`; a
+     * press with a modifier key or another button is the browser's. Without it, or when it returns
+     * nothing, the link carries `#` and every press calls `onOpen`.
+     */
+    href?: (target: string, heading?: string) => string | undefined
     /** Whether the note a link names exists; a link to one that does not is drawn faint, so a press can offer to make it. */
     exists?: (target: string) => boolean
     /** Follows a `#tag`, named without its `#`; without it a tag stays text. */
@@ -469,6 +476,11 @@ export function linkAllowed(href: string, schemes?: readonly string[]): boolean 
     if (NEVER.has(scheme)) return false
     if (scheme === '//') return schemes === undefined
     return (schemes ?? DEFAULT_SCHEMES).some((listed) => listed.toLowerCase() === scheme)
+}
+
+/** Whether a press on a link is a plain one: the main button, no modifier key. Any other is the browser's (a new tab, a download). */
+function plainPress(event: { button: number; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 }
 
 /** Whether a link is one of the links between notes or a tag, which the app follows and which go nowhere themselves. */
@@ -1077,11 +1089,16 @@ export const MARKDOWN_COMPONENTS: Components = {
         const tag = record['data-tag'] as string | undefined
         if (target !== undefined && links !== undefined) {
             const heading = record['data-heading'] as string | undefined
+            const given = links.href?.(target, heading)
+            // The address comes from the app, but the target in it from the text, so it is held to the link schemes too.
+            const address = given !== undefined && linkAllowed(given) ? given : undefined
             return (
                 <a
                     {...props}
+                    href={address ?? '#'}
                     className={cn(links.exists?.(target) === false && 'opacity-60')}
                     onClick={(event) => {
+                        if (address !== undefined && !plainPress(event)) return
                         event.preventDefault()
                         links.onOpen(target, heading)
                     }}
@@ -1119,8 +1136,7 @@ export const MARKDOWN_COMPONENTS: Components = {
                     following
                         ? (event) => {
                               const href = event.currentTarget.getAttribute('href')
-                              const plain = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
-                              if (plain && href !== null && follow.current?.(href) === true) event.preventDefault()
+                              if (plainPress(event) && href !== null && follow.current?.(href) === true) event.preventDefault()
                           }
                         : undefined
                 }

@@ -100,16 +100,15 @@ function themeVariables(host: HTMLElement): Record<string, string> {
     }
 }
 
-/** A drawn diagram: its SVG and the least width it is shown at, in pixels. */
+/** A drawn diagram: its SVG and the least width the window shows it at, in pixels. */
 interface Drawn {
     svg: string
     least: number
 }
 
 /**
- * Draws the diagram. Its labels are `--text-xs`; it may shrink to fit its box until they are
- * `--text-2xs`, the smallest text the tokens have, and no further, so `least` is its own width at
- * that scale.
+ * Draws the diagram. Its labels are `--text-xs`; in the window it shrinks only until they are
+ * `--text-2xs`, the smallest text the tokens have, so `least` is its own width at that scale.
  */
 async function render(code: string, host: HTMLElement): Promise<Drawn> {
     const mermaid = (await import('mermaid')).default
@@ -169,10 +168,11 @@ export interface MermaidDiagramProps {
  * while the diagram loads, while it is still streaming, and when it does not parse; a toggle flips
  * between the two. Mermaid loads the first time a diagram is drawn.
  *
- * A diagram shrinks to fit its box only until its labels reach the smallest text size, then keeps
- * that size and scrolls sideways, so a wide diagram in a narrow box stays readable. An expand
- * button beside the toggle opens the diagram near full screen through `WindowedPane`, drawn as
- * large as the window allows; Escape or the close button brings it back.
+ * A diagram is drawn whole: one wider than its box shrinks to fit it, so nothing of it is cut off
+ * at any width. An expand button beside the toggle opens the diagram near full screen through
+ * `WindowedPane`, drawn as large as the window allows and never with labels under the smallest text
+ * size, so a wide one is read there, panning where the window is narrower; Escape or the close
+ * button brings it back.
  */
 export function MermaidDiagram({ code, streaming = false, title, defaultExpanded = false, words: given }: MermaidDiagramProps) {
     const words = useWords(MERMAID_DIAGRAM_PART, given)
@@ -277,9 +277,12 @@ function Diagram({
                 </pre>
             ) : (
                 <div
+                    data-slot="mermaid-diagram"
                     className={cn(
-                        'flex justify-center-safe overflow-x-auto p-4 [&_svg]:max-w-full [&_svg]:min-w-(--diagram-least)',
-                        windowed && 'min-h-0 flex-1 items-center [&_svg]:size-full [&_svg]:max-w-none!',
+                        'flex p-4',
+                        windowed
+                            ? 'min-h-0 flex-1 items-center-safe justify-center-safe overflow-auto [&_svg]:size-full [&_svg]:max-w-none! [&_svg]:min-w-(--diagram-least)'
+                            : 'justify-center [&_svg]:h-auto [&_svg]:max-w-full',
                     )}
                     style={{ '--diagram-least': `${String(drawn.least)}px` } as CSSProperties}
                     // The SVG comes from mermaid run with `securityLevel: 'strict'` and the style keys locked in `mermaidConfig`.

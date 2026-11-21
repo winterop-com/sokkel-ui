@@ -4,25 +4,12 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {
-            "state": "built",
-            "as_of": "67997fe"
-        },
-        "sokkel-egui": {
-            "state": "missing",
-            "as_of": "5532f68",
-            "note": "Not built yet."
-        },
-        "sokkel-tui": {
-            "state": "missing",
-            "as_of": "b99664f",
-            "note": "Not in sokkel-tui's reports as of b99664f."
-        }
+        "sokkel-ui": {"state": "built", "as_of": "67997fe"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
     "summary": "Moving things on a map: each track a symbol for its kind turned to its heading, in its affiliation's color, ringed in the card color over a soft glow, its label beside it and its trail behind it fading into the past. A track with a speed and a heading keeps moving between reports and settles onto each new one; any other glides to where it is. The selected track is ringed in the selection color inside a halo that breathes, a new track appears in a ripple and a hostile one pulses. With motion reduced nothing moves but to where it was reported. Dense tracks may gather into counted clusters.",
-    "sources": {
-        "sokkel-ui": ["packages/maps/src/TrackLayer.tsx", "packages/maps/src/layer.ts (useRenderedPoints)"]
-    },
+    "sources": {"sokkel-ui": ["packages/maps/src/TrackLayer.tsx", "packages/maps/src/layer.ts (useRenderedPoints)"]},
     "anatomy": {
         "symbol": "One per track, the size option square (24 by default), pointing north at a heading of 0 and turned clockwise by the heading with the map: a hull with a pointed bow for a vessel, a notched arrowhead for an aircraft, a box with a point on its front for a vehicle, a ring round a dot for a sensor (not turned), a body with a pointed nose between two solar panels for a satellite, a triangle for any other. Filled in the affiliation's color (or its band's) with a 1.25 halo in card. With scale on it is drawn at 0.72 of the size at zoom 3 and further out, the size at zoom 6 and 1.25 of it at zoom 11 and closer in, straight between; everything measured from the size below follows it.",
         "glow": "Under each symbol, a circle 1.1 of the size in radius in the symbol's color, fading evenly from its middle to nothing at its edge, at 42 percent (24 on a light map) times the crowd: the square root of 300 over the number of tracks, held between 0.4 and 1, so a crowded map stays calm.",
@@ -34,33 +21,20 @@
         "pulse": "Under each hostile track, below its glow: a circle in track-hostile, solid over the inner 0.3 of its radius and fading to nothing at its edge, that every 3.6 seconds swells from 0.8 of the size in radius to 2.1 of it, easing out, as its opacity rises to 50 percent (34 on a light map) times the crowd over the first 0.14 of the time and falls away over the rest. None with motion reduced.",
         "cluster": "With cluster on, nearby tracks gather into a circle of their count: foreground mixed 78 percent into card, 12 across the radius under 10 tracks, 15 to 50, 18 to 150, 22 beyond, ringed 2 in card, or 3 in track-hostile when it holds a hostile track; the count in text.2xs at 500 in card, in tabular figures. A press zooms to where it falls apart."
     },
-    "standsOn": {
-        "default": "card"
-    },
+    "standsOn": {"default": "card"},
     "options": {
         "tracks": {
             "type": "rows",
             "does": "Each track { id, position (lon, lat), heading?, speed? (meters a second), affiliation, kind, label?, trail?, band? }. The affiliation is friend, hostile, neutral, unknown or pending; the kind vessel, aircraft, vehicle, sensor, satellite or other."
         },
-        "trails": {
-            "type": "boolean",
-            "default": true,
-            "does": "Draws each track's trail."
-        },
-        "labels": {
-            "type": "boolean",
-            "default": true,
-            "does": "Writes each track's label beside it."
-        },
+        "trails": {"type": "boolean", "default": true, "does": "Draws each track's trail."},
+        "labels": {"type": "boolean", "default": true, "does": "Writes each track's label beside it."},
         "size": {
             "type": "number",
             "default": 24,
             "does": "The symbol's size, square; its size at zoom 6 with scale on."
         },
-        "colors": {
-            "type": "rows",
-            "does": "Colors for the affiliations in place of their tokens."
-        },
+        "colors": {"type": "rows", "does": "Colors for the affiliations in place of their tokens."},
         "bands": {
             "type": "rows",
             "does": "Colors by band, such as altitude bands: a track whose band is named is painted in the band's color in place of its affiliation's, its trail too for the first eight bands."
@@ -85,11 +59,7 @@
             "default": true,
             "does": "The light and the scaling beyond the symbols, all on, all off, or each by name: glow, halo, ripple, pulse, fade (the trail fading along its length) and scale (the symbols scaling with the zoom)."
         },
-        "visible": {
-            "type": "boolean",
-            "default": true,
-            "does": "Draws the layer."
-        },
+        "visible": {"type": "boolean", "default": true, "does": "Draws the layer."},
         "interactive": {
             "type": "boolean",
             "default": true,
@@ -110,35 +80,18 @@
         }
     },
     "layout": {
-        "trailWidth": {
-            "value": 2,
-            "note": "The trail's width, and its head's."
-        },
-        "haloWidth": {
-            "value": 1.25,
-            "note": "The symbol's halo in card."
-        },
-        "clusterRadius": {
-            "value": 40,
-            "note": "How near tracks gather, in pixels."
-        },
-        "rippleWidth": {
-            "value": 1.5,
-            "note": "The ripple's ring."
-        },
+        "trailWidth": {"value": 2, "note": "The trail's width, and its head's."},
+        "haloWidth": {"value": 1.25, "note": "The symbol's halo in card."},
+        "clusterRadius": {"value": 40, "note": "How near tracks gather, in pixels."},
+        "rippleWidth": {"value": 1.5, "note": "The ripple's ring."},
         "step": {
             "value": 0.25,
             "note": "How far the fastest track moves on the canvas before the map is told of the tracks that moved, in pixels."
         }
     },
     "states": {
-        "rest": {
-            "means": "A track drawn, glowing."
-        },
-        "hover": {
-            "means": "The pointer is over the track: its ring shows.",
-            "reached": "pointer over"
-        },
+        "rest": {"means": "A track drawn, glowing."},
+        "hover": {"means": "The pointer is over the track: its ring shows.", "reached": "pointer over"},
         "selected": {
             "means": "The map's selected track: ringed and filled in the selection color inside its breathing halo, its label marked.",
             "reached": "a press on it, or the map's selected"
@@ -164,9 +117,7 @@
             "rest": {
                 "ground": "track-unknown",
                 "opacity": 0.24,
-                "dark": {
-                    "opacity": 0.42
-                },
+                "dark": {"opacity": 0.42},
                 "note": "The affiliation's token as the symbol, fading to nothing at its edge, and fainter the more tracks there are."
             }
         },
@@ -178,52 +129,25 @@
             }
         },
         "label": {
-            "rest": {
-                "ground": "card/80",
-                "ink": "foreground",
-                "text": "text.2xs",
-                "radius": "radius-mini"
-            },
-            "selected": {
-                "ground": "card",
-                "weight": 500,
-                "ring": {
-                    "color": "map-selection",
-                    "width": 1
-                }
-            }
+            "rest": {"ground": "card/80", "ink": "foreground", "text": "text.2xs", "radius": "radius-mini"},
+            "selected": {"ground": "card", "weight": 500, "ring": {"color": "map-selection", "width": 1}}
         },
         "ring": {
-            "rest": {
-                "ground": "none",
-                "edge": "none"
-            },
-            "hover": {
-                "edge": "mix-oklab(foreground 55%, card)"
-            },
-            "selected": {
-                "ground": "map-selection/18",
-                "edge": "map-selection"
-            }
+            "rest": {"ground": "none", "edge": "none"},
+            "hover": {"edge": "mix-oklab(foreground 55%, card)"},
+            "selected": {"ground": "map-selection/18", "edge": "map-selection"}
         },
         "halo": {
-            "rest": {
-                "ground": "none"
-            },
+            "rest": {"ground": "none"},
             "selected": {
                 "ground": "map-selection",
                 "opacity": 0.36,
-                "dark": {
-                    "opacity": 0.5
-                },
+                "dark": {"opacity": 0.5},
                 "note": "At its smallest; at its widest 14 percent, and 20 on a dark map."
             }
         },
         "ripple": {
-            "rest": {
-                "ground": "none",
-                "edge": "none"
-            },
+            "rest": {"ground": "none", "edge": "none"},
             "appearing": {
                 "ground": "track-unknown",
                 "edge": "track-unknown",
@@ -234,9 +158,7 @@
             "rest": {
                 "ground": "track-hostile",
                 "opacity": 0.34,
-                "dark": {
-                    "opacity": 0.5
-                },
+                "dark": {"opacity": 0.5},
                 "note": "Hostile tracks only, at its strongest, and fainter the more tracks there are; nothing between two pulses."
             }
         },
@@ -265,54 +187,19 @@
         "other": "Other"
     },
     "messages": {
-        "friend": {
-            "id": "track.friend",
-            "en": "Friend"
-        },
-        "hostile": {
-            "id": "track.hostile",
-            "en": "Hostile"
-        },
-        "neutral": {
-            "id": "track.neutral",
-            "en": "Neutral"
-        },
-        "unknown": {
-            "id": "track.unknown",
-            "en": "Unknown"
-        },
-        "pending": {
-            "id": "track.pending",
-            "en": "Pending"
-        },
-        "vessel": {
-            "id": "track.vessel",
-            "en": "Vessel"
-        },
-        "aircraft": {
-            "id": "track.aircraft",
-            "en": "Aircraft"
-        },
-        "vehicle": {
-            "id": "track.vehicle",
-            "en": "Vehicle"
-        },
-        "sensor": {
-            "id": "track.sensor",
-            "en": "Sensor"
-        },
-        "satellite": {
-            "id": "track.satellite",
-            "en": "Satellite"
-        },
-        "other": {
-            "id": "track.other",
-            "en": "Other"
-        }
+        "friend": {"id": "track.friend", "en": "Friend"},
+        "hostile": {"id": "track.hostile", "en": "Hostile"},
+        "neutral": {"id": "track.neutral", "en": "Neutral"},
+        "unknown": {"id": "track.unknown", "en": "Unknown"},
+        "pending": {"id": "track.pending", "en": "Pending"},
+        "vessel": {"id": "track.vessel", "en": "Vessel"},
+        "aircraft": {"id": "track.aircraft", "en": "Aircraft"},
+        "vehicle": {"id": "track.vehicle", "en": "Vehicle"},
+        "sensor": {"id": "track.sensor", "en": "Sensor"},
+        "satellite": {"id": "track.satellite", "en": "Satellite"},
+        "other": {"id": "track.other", "en": "Other"}
     },
-    "appText": {
-        "label": "Each track's label."
-    },
+    "appText": {"label": "Each track's label."},
     "rendererSpecific": {
         "sokkel-ui": [
             "Drawn on maplibre from three GeoJSON sources: the tracks as points, with a symbol layer whose images are signed distance fields made in code, colored by icon-color, over circle layers for the pulse, the glow, the ripple, the halo and the ring; the trails as lines with lineMetrics, a line-gradient layer for each affiliation and each of eight bands, since a gradient takes one color a layer; and the trails' heads as plain lines.",

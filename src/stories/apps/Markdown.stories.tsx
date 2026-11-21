@@ -490,6 +490,8 @@ export const Callouts: StoryObj = { render: () => <MarkdownApp start="callouts" 
 export const Embeds: StoryObj = { render: () => <MarkdownApp start="embeds" view="preview" /> }
 /** Code in eight languages, Rust among them. */
 export const Code: StoryObj = { render: () => <MarkdownApp start="code" view="preview" /> }
+/** Diagrams drawn whole at any width, a wide flowchart shrunk to fit; its expand reads it at size. */
+export const Diagrams: StoryObj = { render: () => <MarkdownApp start="diagrams" view="preview" /> }
 /** The properties page beside its tree: what `parseMarkdown` reads the text into, the frontmatter's properties first. */
 export const Parsed: StoryObj = { name: 'Tree', render: () => <MarkdownApp start="properties" tree /> }
 /** Linked notes beside their tree with positions: each link and tag holds where it was written. */

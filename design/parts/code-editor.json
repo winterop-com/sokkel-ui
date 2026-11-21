@@ -4,18 +4,9 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {
-            "state": "built",
-            "as_of": "8567f05"
-        },
-        "sokkel-egui": {
-            "state": "missing",
-            "as_of": "1a87987"
-        },
-        "sokkel-tui": {
-            "state": "missing",
-            "as_of": "64f4b19"
-        }
+        "sokkel-ui": {"state": "built", "as_of": "8567f05"},
+        "sokkel-egui": {"state": "missing", "as_of": "1a87987"},
+        "sokkel-tui": {"state": "missing", "as_of": "64f4b19"}
     },
     "summary": "The code editor: a document in a language, colored by its tokens in the code-* colors, with line numbers, the caret's line shaded, bracket matching, undo and Tab indenting. Marks wash a line or underline a range (in JSON or YAML the value at a path) in a tone, a message on hover and a dot in the gutter; a JSON Schema checks a JSON or YAML document as it is typed and completes its keys and values, a key whose object requires keys going in whole as a snippet; the app's words are offered while typing and described on hover. A find and replace bar, a fold gutter, brackets colored by depth and indent guides are options, dropped past a megabyte. Boxed like a field, filling a pane, or one line at a control's height as a query bar. In markdown it completes [[links]] to other notes and follows one clicked with Mod held.",
     "sources": {
@@ -80,16 +71,7 @@
     "options": {
         "language": {
             "type": "text",
-            "values": [
-                "json",
-                "yaml",
-                "jq",
-                "markdown",
-                "sql",
-                "shell",
-                "jinja",
-                "text"
-            ],
+            "values": ["json", "yaml", "jq", "markdown", "sql", "shell", "jinja", "text"],
             "default": "text",
             "does": "The language the document is read and colored in: one the editor carries by name (sql, shell and jinja loaded the first time an editor shows one, loadCodeLanguage), one an installed plugin gives by name (lib/plugins; an installed language wins over a built-in one of the same name), a CodeMirror LanguageSupport, or a stream parser with a name (defineLanguage). languageForMediaType picks one by media type. json and yaml are read for schema checks, path marks and onDocument; markdown highlights its frontmatter, headings, strong and emphasized words, code, quotes and callout markers, lists, links, [[links]], ![[embeds]], ==highlights==, HTML comments and #tags (a document that opens with a rule and a sentence has no frontmatter); jq its keywords, strings and interpolation, fields, variables, formats and built-ins."
         },
@@ -102,20 +84,12 @@
             "does": "A document shared with other editors (useSharedDocument) in place of value: one text and one undo history, each editor its own caret; opens at the caret the last one left."
         },
         "variant": {
-            "values": [
-                "field",
-                "pane",
-                "line"
-            ],
+            "values": ["field", "pane", "line"],
             "default": "field",
             "does": "field: boxed like an input; pane: fills its pane edge to edge under the pane's own header; line: one line at an input's height, Enter runs onRun, a pasted line break becomes a space, no line numbers and no caret line."
         },
         "size": {
-            "values": [
-                "sm",
-                "md",
-                "lg"
-            ],
+            "values": ["sm", "md", "lg"],
             "default": "md",
             "does": "md at the body's size on the code line height (text.sm, leading-code), sm at text.xs for a dense pane, lg at text.base for long writing."
         },
@@ -130,11 +104,7 @@
             "does": "The line numbers' gutter; never in the line variant."
         },
         "activeLine": {
-            "values": [
-                "true",
-                "false",
-                "always"
-            ],
+            "values": ["true", "false", "always"],
             "default": "true",
             "does": "Shades the caret's line while the editor has focus; false for a reader who turns it off; always keeps it shaded while the focus is elsewhere.",
             "sokkel-ui": "activeLine: boolean | 'always'; always adds the cm-activeLine-always class"
@@ -169,10 +139,7 @@
             "type": "callback",
             "does": "What a word is (letters, digits, _, a leading $ or @), shown in a tooltip after the pointer rests 300 ms on it; nothing shows nothing."
         },
-        "onRun": {
-            "type": "callback",
-            "does": "Runs the document on Mod+Enter, and on Enter in the line variant."
-        },
+        "onRun": {"type": "callback", "does": "Runs the document on Mod+Enter, and on Enter in the line variant."},
         "keys": {
             "type": "callback",
             "does": "More bindings by CodeMirror's key names ({ 'Mod-s': save }), each given the document; they stand over the editor's own."
@@ -218,10 +185,7 @@
             "does": "Hears a JSON or YAML document read into a value 300 ms after each edit and once at the start; a YAML stream gives every document too."
         },
         "yamlVersion": {
-            "values": [
-                "1.2",
-                "1.1"
-            ],
+            "values": ["1.2", "1.1"],
             "default": "1.2",
             "does": "The YAML version a YAML document's plain values are read by, for the schema check, its hover and completion and onDocument: 1.1 reads yes, no, on, off, y and n as booleans, 010 as octal, 0b101 as binary, 1_000 as a thousand and 1:30 as ninety, as a YAML 1.1 server does, and 0o10 as a string. A string the completion writes is quoted when either version would read it as something else."
         },
@@ -230,10 +194,7 @@
             "default": false,
             "does": "The critical edge outside a pane, and the invalid ring while focused, as a field's control has."
         },
-        "placeholder": {
-            "type": "text",
-            "does": "Shown in muted-foreground while the document is empty."
-        },
+        "placeholder": {"type": "text", "does": "Shown in muted-foreground while the document is empty."},
         "label": {
             "type": "text",
             "does": "What the editor holds, for a screen reader; id gives the editable text an id for a form's label."
@@ -255,32 +216,15 @@
             "radius": "radius-control",
             "note": "variant line: h-(--density-control), a finger tall below md (max-md:min-h-finger); the text centered, no padding over or under."
         },
-        "sm": {
-            "text": "text.xs",
-            "note": "SIZES.sm (EditorView.theme): font-size text-xs on its line height."
-        },
-        "md": {
-            "text": "text.sm",
-            "note": "SIZES.md: font-size text-sm on leading-code, not text.sm's own line height."
-        },
-        "lg": {
-            "text": "text.base",
-            "note": "SIZES.lg: font-size text-base on its line height."
-        },
-        "text": {
-            "padX": 12,
-            "padY": 8,
-            "note": "THEME .cm-line padding 0 0.75rem; .cm-content padding 0.5rem 0."
-        },
+        "sm": {"text": "text.xs", "note": "SIZES.sm (EditorView.theme): font-size text-xs on its line height."},
+        "md": {"text": "text.sm", "note": "SIZES.md: font-size text-sm on leading-code, not text.sm's own line height."},
+        "lg": {"text": "text.base", "note": "SIZES.lg: font-size text-base on its line height."},
+        "text": {"padX": 12, "padY": 8, "note": "THEME .cm-line padding 0 0.75rem; .cm-content padding 0.5rem 0."},
         "gutter": {
             "width": 40,
             "note": "THEME .cm-lineNumbers .cm-gutterElement: padding 0 0.5rem 0 0.75rem (12 before, 8 after), min-width 2.5rem."
         },
-        "lintDot": {
-            "width": 16,
-            "icon": 8,
-            "note": "THEME .cm-gutter-lint width 1rem; the dot 0.5rem round."
-        },
+        "lintDot": {"width": 16, "icon": 8, "note": "THEME .cm-gutter-lint width 1rem; the dot 0.5rem round."},
         "tooltip": {
             "padX": 10,
             "padY": 6,
@@ -314,19 +258,14 @@
             "value": 300,
             "note": "hoverTooltip hoverTime: the pointer rests this many ms on a word before its tooltip shows."
         },
-        "lintWait": {
-            "value": 300,
-            "note": "linter delay: the checks run this many ms after the last edit."
-        },
+        "lintWait": {"value": 300, "note": "linter delay: the checks run this many ms after the last edit."},
         "resolveWait": {
             "value": 500,
             "note": "RESOLVE_PAUSE: typing in a $schema address pauses this many ms before it is resolved."
         }
     },
     "states": {
-        "rest": {
-            "means": "The document at rest: its colors, its gutter, no caret line."
-        },
+        "rest": {"means": "The document at rest: its colors, its gutter, no caret line."},
         "focus": {
             "means": "The editor has focus: the box's edge in ring at 80 percent outside a pane, the caret's line shaded and its number in foreground (with activeLine), the matching bracket washed. A browser shows a text input's focus however it came, so this is any focus.",
             "reached": "Tab or a press",
@@ -360,18 +299,9 @@
             "means": "The chosen completion row; the current search match.",
             "reached": "the arrows in the list; Mod+G in the search"
         },
-        "error": {
-            "means": "A mark or problem in the critical tone.",
-            "reached": "tone error"
-        },
-        "warning": {
-            "means": "A mark or problem in the warning tone.",
-            "reached": "tone warning"
-        },
-        "info": {
-            "means": "A mark or problem in the info tone.",
-            "reached": "tone info"
-        }
+        "error": {"means": "A mark or problem in the critical tone.", "reached": "tone error"},
+        "warning": {"means": "A mark or problem in the warning tone.", "reached": "tone warning"},
+        "info": {"means": "A mark or problem in the info tone.", "reached": "tone info"}
     },
     "pieces": {
         "box": {
@@ -381,19 +311,9 @@
                 "radius": "radius-control",
                 "note": "Outside a pane (bg-field border border-input rounded-control); in a pane bg-background with no edge."
             },
-            "focus": {
-                "edge": "ring/80"
-            },
-            "invalid": {
-                "edge": "critical/80"
-            },
-            "invalid+focus": {
-                "edge": "critical",
-                "ring": {
-                    "color": "invalid-ring",
-                    "width": "invalid-ring-width"
-                }
-            },
+            "focus": {"edge": "ring/80"},
+            "invalid": {"edge": "critical/80"},
+            "invalid+focus": {"edge": "critical", "ring": {"color": "invalid-ring", "width": "invalid-ring-width"}},
             "readOnly": {
                 "ground": "mix-oklab(muted 40%, background)",
                 "note": "bg-(--editor-paper) with --editor-paper: color-mix(in oklab, var(--muted) 40%, var(--background))."
@@ -412,84 +332,42 @@
                 "ink": "editor-gutter-ink",
                 "note": "THEME .cm-gutters: the editor-gutter wash over editor-ground over the box's own ground (--editor-paper), no edge."
             },
-            "focus": {
-                "ink": "foreground",
-                "note": "The caret's line number (.cm-activeLineGutter)."
-            },
-            "always": {
-                "ink": "foreground"
-            }
+            "focus": {"ink": "foreground", "note": "The caret's line number (.cm-activeLineGutter)."},
+            "always": {"ink": "foreground"}
         },
         "activeLine": {
-            "rest": {
-                "ground": "none"
-            },
+            "rest": {"ground": "none"},
             "focus": {
                 "ground": "foreground/5",
                 "note": "&.cm-focused .cm-activeLine: color-mix(in oklab, var(--foreground) 5%, transparent)."
             },
-            "always": {
-                "ground": "foreground/5"
-            }
+            "always": {"ground": "foreground/5"}
         },
         "selection": {
-            "rest": {
-                "ground": "primary/28",
-                "note": ".cm-selectionBackground and ::selection."
-            },
+            "rest": {"ground": "primary/28", "note": ".cm-selectionBackground and ::selection."},
             "focus": {
-                "ring": {
-                    "color": "primary/50",
-                    "width": 1
-                },
+                "ring": {"color": "primary/50", "width": 1},
                 "note": "The matching bracket: ground primary/22 and a 1px primary/50 outline (&.cm-focused .cm-matchingBracket)."
             }
         },
         "lineMark": {
-            "rest": {
-                "note": "Drawn only with a mark's tone."
-            },
-            "error": {
-                "ground": "critical/14"
-            },
-            "warning": {
-                "ground": "warning/14"
-            },
-            "info": {
-                "ground": "info/12"
-            }
+            "rest": {"note": "Drawn only with a mark's tone."},
+            "error": {"ground": "critical/14"},
+            "warning": {"ground": "warning/14"},
+            "info": {"ground": "info/12"}
         },
         "rangeMark": {
-            "rest": {
-                "note": "A wavy underline in the tone (.cm-lintRange-<tone>), drawn as mark."
-            },
-            "error": {
-                "mark": "critical"
-            },
-            "warning": {
-                "mark": "warning"
-            },
-            "info": {
-                "mark": "info"
-            },
-            "selected": {
-                "ground": "warning/18",
-                "note": ".cm-lintRange-active: the problem the caret stands in."
-            }
+            "rest": {"note": "A wavy underline in the tone (.cm-lintRange-<tone>), drawn as mark."},
+            "error": {"mark": "critical"},
+            "warning": {"mark": "warning"},
+            "info": {"mark": "info"},
+            "selected": {"ground": "warning/18", "note": ".cm-lintRange-active: the problem the caret stands in."}
         },
         "lintDot": {
-            "rest": {
-                "note": "A dot in the tone (.cm-lint-marker-<tone>)."
-            },
-            "error": {
-                "ground": "critical"
-            },
-            "warning": {
-                "ground": "warning"
-            },
-            "info": {
-                "ground": "info"
-            }
+            "rest": {"note": "A dot in the tone (.cm-lint-marker-<tone>)."},
+            "error": {"ground": "critical"},
+            "warning": {"ground": "warning"},
+            "info": {"ground": "info"}
         },
         "tooltip": {
             "rest": {
@@ -500,43 +378,23 @@
                 "text": "text.xs",
                 "note": "THEME .cm-tooltip, elevation-pop (--shadow-pop); a hover's detail in muted-foreground in the mono face. A problem's message has a 3 wide start rule in its tone (.cm-diagnostic-<tone>)."
             },
-            "error": {
-                "rule": "critical"
-            },
-            "warning": {
-                "rule": "warning"
-            },
-            "info": {
-                "rule": "info"
-            }
+            "error": {"rule": "critical"},
+            "warning": {"rule": "warning"},
+            "info": {"rule": "info"}
         },
         "completion": {
             "rest": {
                 "ink": "popover-foreground",
                 "note": "Rows in the mono face; the icon and the detail in muted-foreground (.cm-completionIcon, .cm-completionDetail); the matched letters at 600."
             },
-            "selected": {
-                "ground": "accent",
-                "ink": "accent-foreground",
-                "note": "li[aria-selected]."
-            }
+            "selected": {"ground": "accent", "ink": "accent-foreground", "note": "li[aria-selected]."}
         },
         "foldGutter": {
-            "rest": {
-                "ink": "editor-gutter-ink"
-            },
-            "hover": {
-                "ink": "foreground",
-                "note": ".cm-foldGutter .cm-gutterElement:hover."
-            }
+            "rest": {"ink": "editor-gutter-ink"},
+            "hover": {"ink": "foreground", "note": ".cm-foldGutter .cm-gutterElement:hover."}
         },
         "foldPlaceholder": {
-            "rest": {
-                "ground": "muted",
-                "edge": "none",
-                "ink": "muted-foreground",
-                "radius": "radius-control"
-            }
+            "rest": {"ground": "muted", "edge": "none", "ink": "muted-foreground", "radius": "radius-control"}
         },
         "searchPanel": {
             "rest": {
@@ -557,264 +415,96 @@
             }
         },
         "indentGuide": {
-            "rest": {
-                "rule": "border",
-                "note": ".cm-indent-guides: a 1px gradient rule in border at each step."
-            }
+            "rest": {"rule": "border", "note": ".cm-indent-guides: a 1px gradient rule in border at each step."}
         },
-        "placeholder": {
-            "rest": {
-                "ink": "muted-foreground",
-                "note": ".cm-placeholder."
-            }
-        },
+        "placeholder": {"rest": {"ink": "muted-foreground", "note": ".cm-placeholder."}},
         "wikiLink": {
-            "rest": {
-                "note": "Colored as a link (code-link) by the markdown language."
-            },
+            "rest": {"note": "Colored as a link (code-link) by the markdown language."},
             "held": {
                 "underline": true,
                 "note": "&.cm-follow-held .cm-wikiLink: underlined 0.2em under, cursor pointer."
             }
         },
-        "syntax-keyword": {
-            "rest": {
-                "ink": "code-keyword"
-            }
-        },
-        "syntax-operator": {
-            "rest": {
-                "ink": "code-operator"
-            }
-        },
-        "syntax-punctuation": {
-            "rest": {
-                "ink": "code-punctuation"
-            }
-        },
-        "syntax-string": {
-            "rest": {
-                "ink": "code-string"
-            }
-        },
-        "syntax-regexp": {
-            "rest": {
-                "ink": "code-regexp"
-            }
-        },
-        "syntax-number": {
-            "rest": {
-                "ink": "code-number"
-            }
-        },
-        "syntax-constant": {
-            "rest": {
-                "ink": "code-constant"
-            }
-        },
-        "syntax-comment": {
-            "rest": {
-                "ink": "code-comment",
-                "note": "HIGHLIGHT: italic."
-            }
-        },
-        "syntax-function": {
-            "rest": {
-                "ink": "code-function"
-            }
-        },
-        "syntax-variable": {
-            "rest": {
-                "ink": "code-variable"
-            }
-        },
-        "syntax-type": {
-            "rest": {
-                "ink": "code-type"
-            }
-        },
-        "syntax-property": {
-            "rest": {
-                "ink": "code-property"
-            }
-        },
-        "syntax-tag": {
-            "rest": {
-                "ink": "code-tag"
-            }
-        },
-        "syntax-attribute": {
-            "rest": {
-                "ink": "code-attribute"
-            }
-        },
-        "syntax-heading": {
-            "rest": {
-                "ink": "code-heading",
-                "weight": 600
-            }
-        },
-        "syntax-link": {
-            "rest": {
-                "ink": "code-link"
-            }
-        },
-        "syntax-inserted": {
-            "rest": {
-                "ink": "code-inserted"
-            }
-        },
-        "syntax-deleted": {
-            "rest": {
-                "ink": "code-deleted"
-            }
-        },
-        "syntax-invalid": {
-            "rest": {
-                "ink": "code-invalid"
-            }
-        }
+        "syntax-keyword": {"rest": {"ink": "code-keyword"}},
+        "syntax-operator": {"rest": {"ink": "code-operator"}},
+        "syntax-punctuation": {"rest": {"ink": "code-punctuation"}},
+        "syntax-string": {"rest": {"ink": "code-string"}},
+        "syntax-regexp": {"rest": {"ink": "code-regexp"}},
+        "syntax-number": {"rest": {"ink": "code-number"}},
+        "syntax-constant": {"rest": {"ink": "code-constant"}},
+        "syntax-comment": {"rest": {"ink": "code-comment", "note": "HIGHLIGHT: italic."}},
+        "syntax-function": {"rest": {"ink": "code-function"}},
+        "syntax-variable": {"rest": {"ink": "code-variable"}},
+        "syntax-type": {"rest": {"ink": "code-type"}},
+        "syntax-property": {"rest": {"ink": "code-property"}},
+        "syntax-tag": {"rest": {"ink": "code-tag"}},
+        "syntax-attribute": {"rest": {"ink": "code-attribute"}},
+        "syntax-heading": {"rest": {"ink": "code-heading", "weight": 600}},
+        "syntax-link": {"rest": {"ink": "code-link"}},
+        "syntax-inserted": {"rest": {"ink": "code-inserted"}},
+        "syntax-deleted": {"rest": {"ink": "code-deleted"}},
+        "syntax-invalid": {"rest": {"ink": "code-invalid"}}
     },
     "keyboard": [
+        {"keys": ["Mod+Enter"], "does": "Runs the document (onRun), given its text.", "when": "onRun"},
         {
-            "keys": [
-                "Mod+Enter"
-            ],
-            "does": "Runs the document (onRun), given its text.",
-            "when": "onRun"
-        },
-        {
-            "keys": [
-                "Enter"
-            ],
+            "keys": ["Enter"],
             "does": "Runs the document rather than breaking the line.",
             "when": "variant line, with onRun"
         },
         {
-            "keys": [
-                "Tab",
-                "Shift+Tab"
-            ],
+            "keys": ["Tab", "Shift+Tab"],
             "does": "Indents or outdents the line or the selection (indentWithTab); Escape, then Tab, leaves the editor.",
             "when": "the editor has focus and is not read only"
         },
         {
-            "keys": [
-                "Mod+Z",
-                "Mod+Y",
-                "Mod+Shift+Z"
-            ],
+            "keys": ["Mod+Z", "Mod+Y", "Mod+Shift+Z"],
             "does": "Undoes and redoes; one history across the editors of a shared document.",
             "when": "the editor has focus"
         },
+        {"keys": ["Ctrl+Space"], "does": "Opens the words offered here.", "when": "the editor has focus"},
         {
-            "keys": [
-                "Ctrl+Space"
-            ],
-            "does": "Opens the words offered here.",
-            "when": "the editor has focus"
-        },
-        {
-            "keys": [
-                "ArrowDown",
-                "ArrowUp",
-                "PageDown",
-                "PageUp"
-            ],
+            "keys": ["ArrowDown", "ArrowUp", "PageDown", "PageUp"],
             "does": "Moves the chosen word in the list.",
             "when": "the completion list is open"
         },
         {
-            "keys": [
-                "Enter"
-            ],
+            "keys": ["Enter"],
             "does": "Puts in the chosen word (a snippet's whole object for a key whose object requires keys).",
             "when": "the completion list is open"
         },
+        {"keys": ["Escape"], "does": "Closes the completion list.", "when": "the completion list is open"},
         {
-            "keys": [
-                "Escape"
-            ],
-            "does": "Closes the completion list.",
-            "when": "the completion list is open"
-        },
-        {
-            "keys": [
-                "Tab",
-                "Shift+Tab"
-            ],
+            "keys": ["Tab", "Shift+Tab"],
             "does": "Goes to the next or the previous field of a snippet put in by a completion.",
             "when": "a snippet's fields are active"
         },
+        {"keys": ["Mod+F"], "does": "Opens the find and replace bar, its query field focused.", "when": "search"},
         {
-            "keys": [
-                "Mod+F"
-            ],
-            "does": "Opens the find and replace bar, its query field focused.",
-            "when": "search"
-        },
-        {
-            "keys": [
-                "F3",
-                "Mod+G",
-                "Shift+F3",
-                "Mod+Shift+G"
-            ],
+            "keys": ["F3", "Mod+G", "Shift+F3", "Mod+Shift+G"],
             "does": "Goes to the next or the previous match.",
             "when": "search"
         },
+        {"keys": ["Escape"], "does": "Closes the find bar, focus back in the text.", "when": "the find bar has focus"},
         {
-            "keys": [
-                "Escape"
-            ],
-            "does": "Closes the find bar, focus back in the text.",
-            "when": "the find bar has focus"
-        },
-        {
-            "keys": [
-                "Mod+D",
-                "Mod+Shift+L",
-                "Mod+Alt+G"
-            ],
+            "keys": ["Mod+D", "Mod+Shift+L", "Mod+Alt+G"],
             "does": "Selects the next occurrence of the selection, selects every occurrence, or goes to a line (CodeMirror's search keymap).",
             "when": "search"
         },
+        {"keys": ["Mod+.", "Mod+Shift+."], "does": "Folds or unfolds the block at the caret.", "when": "folding"},
+        {"keys": ["Mod+Alt+.", "Mod+Alt+Shift+."], "does": "Folds or unfolds every block.", "when": "folding"},
         {
-            "keys": [
-                "Mod+.",
-                "Mod+Shift+."
-            ],
-            "does": "Folds or unfolds the block at the caret.",
-            "when": "folding"
-        },
-        {
-            "keys": [
-                "Mod+Alt+.",
-                "Mod+Alt+Shift+."
-            ],
-            "does": "Folds or unfolds every block.",
-            "when": "folding"
-        },
-        {
-            "keys": [
-                "Ctrl+Shift+[",
-                "Ctrl+Shift+]"
-            ],
+            "keys": ["Ctrl+Shift+[", "Ctrl+Shift+]"],
             "does": "The second keys for folding and unfolding the block at the caret (Cmd+Alt+[ and Cmd+Alt+] on a Mac), CodeMirror's own, kept beside the keys with no bracket (principle 17).",
             "when": "folding"
         },
         {
-            "keys": [
-                "Ctrl+Alt+[",
-                "Ctrl+Alt+]"
-            ],
+            "keys": ["Ctrl+Alt+[", "Ctrl+Alt+]"],
             "does": "The second keys for folding and unfolding every block, CodeMirror's own.",
             "when": "folding"
         },
         {
-            "keys": [
-                "Mod+Click"
-            ],
+            "keys": ["Mod+Click"],
             "does": "Follows the [[link]] clicked (onFollowLink); while Mod is held the links are underlined and the pointer is a hand.",
             "when": "markdown with onFollowLink"
         }
@@ -829,24 +519,12 @@
         "issue.exclusiveMinimum": "Must be more than {limit}",
         "issue.maximum": "Must be at most {limit}",
         "issue.exclusiveMaximum": "Must be less than {limit}",
-        "issue.minLength": {
-            "one": "Use at least {count} character",
-            "other": "Use at least {count} characters"
-        },
-        "issue.maxLength": {
-            "one": "Use at most {count} character",
-            "other": "Use at most {count} characters"
-        },
+        "issue.minLength": {"one": "Use at least {count} character", "other": "Use at least {count} characters"},
+        "issue.maxLength": {"one": "Use at most {count} character", "other": "Use at most {count} characters"},
         "issue.pattern": "Must match {pattern}",
         "issue.format": "Expected the {format} format",
-        "issue.minItems": {
-            "one": "Needs at least {count} item",
-            "other": "Needs at least {count} items"
-        },
-        "issue.maxItems": {
-            "one": "Holds at most {count} item",
-            "other": "Holds at most {count} items"
-        },
+        "issue.minItems": {"one": "Needs at least {count} item", "other": "Needs at least {count} items"},
+        "issue.maxItems": {"one": "Holds at most {count} item", "other": "Holds at most {count} items"},
         "issue.uniqueItems": "Each item only once",
         "issue.deprecated": "Deprecated: still accepted, and may be removed in a later version",
         "issue.unchecked": "The schema cannot be checked: {reason}",
@@ -855,42 +533,18 @@
         "deprecated": "deprecated"
     },
     "messages": {
-        "issue.required": {
-            "id": "schema.required",
-            "en": "Missing the property {property}"
-        },
-        "issue.additional": {
-            "id": "schema.additional",
-            "en": "{property} is not a known property"
-        },
+        "issue.required": {"id": "schema.required", "en": "Missing the property {property}"},
+        "issue.additional": {"id": "schema.additional", "en": "{property} is not a known property"},
         "issue.type": {
             "id": "schema.type",
             "en": "Expected {expected, select, array {an array} object {an object} integer {an integer} other {a {expected}}}"
         },
-        "issue.enum": {
-            "id": "schema.enum",
-            "en": "Expected one of {values}"
-        },
-        "issue.const": {
-            "id": "schema.const",
-            "en": "Expected {value}"
-        },
-        "issue.minimum": {
-            "id": "schema.minimum",
-            "en": "Must be at least {limit, number}"
-        },
-        "issue.exclusiveMinimum": {
-            "id": "schema.exclusiveMinimum",
-            "en": "Must be more than {limit, number}"
-        },
-        "issue.maximum": {
-            "id": "schema.maximum",
-            "en": "Must be at most {limit, number}"
-        },
-        "issue.exclusiveMaximum": {
-            "id": "schema.exclusiveMaximum",
-            "en": "Must be less than {limit, number}"
-        },
+        "issue.enum": {"id": "schema.enum", "en": "Expected one of {values}"},
+        "issue.const": {"id": "schema.const", "en": "Expected {value}"},
+        "issue.minimum": {"id": "schema.minimum", "en": "Must be at least {limit, number}"},
+        "issue.exclusiveMinimum": {"id": "schema.exclusiveMinimum", "en": "Must be more than {limit, number}"},
+        "issue.maximum": {"id": "schema.maximum", "en": "Must be at most {limit, number}"},
+        "issue.exclusiveMaximum": {"id": "schema.exclusiveMaximum", "en": "Must be less than {limit, number}"},
         "issue.minLength": {
             "id": "schema.minLength",
             "en": "Use at least {count, plural, one {# character} other {# characters}}"
@@ -899,259 +553,71 @@
             "id": "schema.maxLength",
             "en": "Use at most {count, plural, one {# character} other {# characters}}"
         },
-        "issue.pattern": {
-            "id": "schema.pattern",
-            "en": "Must match {pattern}"
-        },
-        "issue.format": {
-            "id": "schema.format",
-            "en": "Expected the {format} format"
-        },
+        "issue.pattern": {"id": "schema.pattern", "en": "Must match {pattern}"},
+        "issue.format": {"id": "schema.format", "en": "Expected the {format} format"},
         "issue.minItems": {
             "id": "schema.minItems",
             "en": "Needs at least {count, plural, one {# item} other {# items}}"
         },
-        "issue.maxItems": {
-            "id": "schema.maxItems",
-            "en": "Holds at most {count, plural, one {# item} other {# items}}"
-        },
-        "issue.uniqueItems": {
-            "id": "schema.uniqueItems",
-            "en": "Each item only once"
-        },
+        "issue.maxItems": {"id": "schema.maxItems", "en": "Holds at most {count, plural, one {# item} other {# items}}"},
+        "issue.uniqueItems": {"id": "schema.uniqueItems", "en": "Each item only once"},
         "issue.deprecated": {
             "id": "schema.deprecatedKey",
             "en": "Deprecated: still accepted, and may be removed in a later version"
         },
-        "issue.unchecked": {
-            "id": "schema.unchecked",
-            "en": "The schema cannot be checked: {reason}"
-        },
-        "issue.other": {
-            "id": "schema.other",
-            "en": "{message}"
-        },
-        "syntax": {
-            "id": "schema.syntax",
-            "en": "Not valid {language, select, json {JSON} other {YAML}}"
-        },
-        "deprecated": {
-            "id": "schema.deprecated",
-            "en": "deprecated"
-        }
+        "issue.unchecked": {"id": "schema.unchecked", "en": "The schema cannot be checked: {reason}"},
+        "issue.other": {"id": "schema.other", "en": "{message}"},
+        "syntax": {"id": "schema.syntax", "en": "Not valid {language, select, json {JSON} other {YAML}}"},
+        "deprecated": {"id": "schema.deprecated", "en": "deprecated"}
     },
     "samples": {
-        "issue.required": [
-            {
-                "with": {
-                    "property": "schedule"
-                },
-                "says": "Missing the property schedule"
-            }
-        ],
-        "issue.additional": [
-            {
-                "with": {
-                    "property": "retries"
-                },
-                "says": "retries is not a known property"
-            }
-        ],
+        "issue.required": [{"with": {"property": "schedule"}, "says": "Missing the property schedule"}],
+        "issue.additional": [{"with": {"property": "retries"}, "says": "retries is not a known property"}],
         "issue.type": [
-            {
-                "with": {
-                    "a": "an",
-                    "expected": "object"
-                },
-                "says": "Expected an object"
-            },
-            {
-                "with": {
-                    "a": "a",
-                    "expected": "string"
-                },
-                "says": "Expected a string"
-            }
+            {"with": {"a": "an", "expected": "object"}, "says": "Expected an object"},
+            {"with": {"a": "a", "expected": "string"}, "says": "Expected a string"}
         ],
-        "issue.enum": [
-            {
-                "with": {
-                    "values": "\"daily\", \"weekly\""
-                },
-                "says": "Expected one of \"daily\", \"weekly\""
-            }
-        ],
+        "issue.enum": [{"with": {"values": "\"daily\", \"weekly\""}, "says": "Expected one of \"daily\", \"weekly\""}],
         "issue.const": [
-            {
-                "with": {
-                    "value": "\"harbor\""
-                },
-                "says": "Expected \"harbor\""
-            },
-            {
-                "with": {
-                    "value": "3"
-                },
-                "says": "Expected 3"
-            }
+            {"with": {"value": "\"harbor\""}, "says": "Expected \"harbor\""},
+            {"with": {"value": "3"}, "says": "Expected 3"}
         ],
-        "issue.minimum": [
-            {
-                "with": {
-                    "limit": "1"
-                },
-                "says": "Must be at least 1"
-            }
-        ],
-        "issue.exclusiveMinimum": [
-            {
-                "with": {
-                    "limit": "0"
-                },
-                "says": "Must be more than 0"
-            }
-        ],
-        "issue.maximum": [
-            {
-                "with": {
-                    "limit": "10"
-                },
-                "says": "Must be at most 10"
-            }
-        ],
-        "issue.exclusiveMaximum": [
-            {
-                "with": {
-                    "limit": "100"
-                },
-                "says": "Must be less than 100"
-            }
-        ],
+        "issue.minimum": [{"with": {"limit": "1"}, "says": "Must be at least 1"}],
+        "issue.exclusiveMinimum": [{"with": {"limit": "0"}, "says": "Must be more than 0"}],
+        "issue.maximum": [{"with": {"limit": "10"}, "says": "Must be at most 10"}],
+        "issue.exclusiveMaximum": [{"with": {"limit": "100"}, "says": "Must be less than 100"}],
         "issue.minLength": [
-            {
-                "with": {
-                    "count": 0
-                },
-                "says": "Use at least 0 characters"
-            },
-            {
-                "with": {
-                    "count": 1
-                },
-                "says": "Use at least 1 character"
-            },
-            {
-                "with": {
-                    "count": 1200
-                },
-                "says": "Use at least 1,200 characters"
-            }
+            {"with": {"count": 0}, "says": "Use at least 0 characters"},
+            {"with": {"count": 1}, "says": "Use at least 1 character"},
+            {"with": {"count": 1200}, "says": "Use at least 1,200 characters"}
         ],
         "issue.maxLength": [
-            {
-                "with": {
-                    "count": 0
-                },
-                "says": "Use at most 0 characters"
-            },
-            {
-                "with": {
-                    "count": 1
-                },
-                "says": "Use at most 1 character"
-            },
-            {
-                "with": {
-                    "count": 1200
-                },
-                "says": "Use at most 1,200 characters"
-            }
+            {"with": {"count": 0}, "says": "Use at most 0 characters"},
+            {"with": {"count": 1}, "says": "Use at most 1 character"},
+            {"with": {"count": 1200}, "says": "Use at most 1,200 characters"}
         ],
         "issue.minItems": [
-            {
-                "with": {
-                    "count": 0
-                },
-                "says": "Needs at least 0 items"
-            },
-            {
-                "with": {
-                    "count": 1
-                },
-                "says": "Needs at least 1 item"
-            },
-            {
-                "with": {
-                    "count": 1200
-                },
-                "says": "Needs at least 1,200 items"
-            }
+            {"with": {"count": 0}, "says": "Needs at least 0 items"},
+            {"with": {"count": 1}, "says": "Needs at least 1 item"},
+            {"with": {"count": 1200}, "says": "Needs at least 1,200 items"}
         ],
         "issue.maxItems": [
-            {
-                "with": {
-                    "count": 0
-                },
-                "says": "Holds at most 0 items"
-            },
-            {
-                "with": {
-                    "count": 1
-                },
-                "says": "Holds at most 1 item"
-            },
-            {
-                "with": {
-                    "count": 1200
-                },
-                "says": "Holds at most 1,200 items"
-            }
+            {"with": {"count": 0}, "says": "Holds at most 0 items"},
+            {"with": {"count": 1}, "says": "Holds at most 1 item"},
+            {"with": {"count": 1200}, "says": "Holds at most 1,200 items"}
         ],
-        "issue.pattern": [
-            {
-                "with": {
-                    "pattern": "^[a-z-]+$"
-                },
-                "says": "Must match ^[a-z-]+$"
-            }
-        ],
-        "issue.format": [
-            {
-                "with": {
-                    "format": "date"
-                },
-                "says": "Expected the date format"
-            }
-        ],
+        "issue.pattern": [{"with": {"pattern": "^[a-z-]+$"}, "says": "Must match ^[a-z-]+$"}],
+        "issue.format": [{"with": {"format": "date"}, "says": "Expected the date format"}],
         "issue.unchecked": [
             {
-                "with": {
-                    "reason": "the checker did not load"
-                },
+                "with": {"reason": "the checker did not load"},
                 "says": "The schema cannot be checked: the checker did not load"
             }
         ],
-        "issue.other": [
-            {
-                "with": {
-                    "message": "Must not be empty"
-                },
-                "says": "Must not be empty"
-            }
-        ],
+        "issue.other": [{"with": {"message": "Must not be empty"}, "says": "Must not be empty"}],
         "syntax": [
-            {
-                "with": {
-                    "language": "json"
-                },
-                "says": "Not valid JSON"
-            },
-            {
-                "with": {
-                    "language": "yaml"
-                },
-                "says": "Not valid YAML"
-            }
+            {"with": {"language": "json"}, "says": "Not valid JSON"},
+            {"with": {"language": "yaml"}, "says": "Not valid YAML"}
         ]
     },
     "appText": {
