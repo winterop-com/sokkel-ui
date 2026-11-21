@@ -4,7 +4,7 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "b1cf984"},
+        "sokkel-ui": {"state": "built", "as_of": "eef59f4"},
         "sokkel-egui": {
             "state": "partial",
             "as_of": "d163191",
@@ -43,7 +43,7 @@
         "list": "Under the search bar, padded 4, at most 320 tall, then it scrolls: the Clear row when optional and no search is typed, then the tree.",
         "clearRow": "With optional, while no search is typed: a row (as the tree's) with an x in the chevron's place and words.clear, quiet; chosen while nothing is, it empties the choice and closes the popup.",
         "row": "One node of the tree, 32 tall, corners radius-md, indented 16 a level from 4 at the top: the toggle, its icon, its checkbox in multiple choice, its label, then its reason when shut and its meta at its end, 6 apart. The chosen row is washed in single choice.",
-        "toggle": "Before a branch's label: a 20 square button with a chevron that points right while closed and down while open; a leaf keeps the room empty.",
+        "toggle": "Before a branch's label: a 20 square button with a chevron that points right while closed and down while open; a leaf keeps the room empty. A branch is a node given a list of children, even an empty one, or marked as having children to load; a leaf has neither.",
         "icon": "The node's icon before its label, 16, in the muted ink; an open branch shows its open icon.",
         "checkbox": "In multiple choice: a 16 checkbox before the label, ticked when chosen, a dash when the branch holds some choices but is not chosen itself; shut with the row.",
         "label": "The node's label, cut short; the part a search matched marked.",
@@ -53,6 +53,7 @@
         "meta": "A short fact at the row's end, a count or a code, small, quiet and in tabular figures.",
         "loadingRow": "Under a branch whose level is loading: a spinner in the chevron's place and words.loading, quiet.",
         "failedRow": "Under a branch whose level did not load: words.failed in critical, then a retry button at its end with words.retry.",
+        "emptyRow": "Under an open branch with nothing in it: words.emptyBranch, quiet, where its first child would stand.",
         "retry": "A small text button with a turning arrow and words.retry, in foreground, underlined on hover.",
         "note": "Under the tree in place of rows: words.searching with a spinner while the app's search answers, words.searchFailed with a retry when it did not, or words.empty centered when nothing matches."
     },
@@ -363,6 +364,7 @@
         "search": "Search",
         "clear": "Clear",
         "empty": "Nothing matches.",
+        "emptyBranch": "Empty",
         "selected": "{count} chosen",
         "loading": "Loading",
         "failed": "This level did not load.",
@@ -375,6 +377,7 @@
         "search": {"id": "treeSelect.search", "en": "Search"},
         "clear": {"id": "treeSelect.clear", "en": "Clear"},
         "empty": {"id": "treeSelect.empty", "en": "Nothing matches."},
+        "emptyBranch": {"id": "treeSelect.emptyBranch", "en": "Empty"},
         "selected": {"id": "treeSelect.selected", "en": "{count, number} chosen"},
         "loading": {"id": "treeSelect.loading", "en": "Loading"},
         "failed": {"id": "treeSelect.failed", "en": "This level did not load."},
