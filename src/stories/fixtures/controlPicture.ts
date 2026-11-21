@@ -105,7 +105,7 @@ export function factsOf(track: Track): { term: string; value: string; code: bool
 }
 
 const mapKind = (track: Track): MapTrack['kind'] =>
-    track.kind === 'vessel' || track.kind === 'aircraft' || track.kind === 'sensor' ? track.kind : 'other'
+    track.kind === 'vessel' || track.kind === 'aircraft' || track.kind === 'sensor' || track.kind === 'satellite' ? track.kind : 'other'
 
 const drawn = (source: string, track: Track, band?: string): MapTrack => ({
     id: `${source}:${track.id}`,
@@ -155,8 +155,8 @@ export function pictureOf(data: Partial<ControlData>, at: number, selected: stri
     const inOrbit: Track[] = [
         ...satelliteTracks(catalog, at)
             .filter((track) => stationed === undefined || track.id !== stationed.id)
-            .map((track) => ({ ...track, kind: 'other' as const, affiliation: 'neutral' as const })),
-        ...(stationed === undefined ? [] : [{ ...stationed, kind: 'other' as const, affiliation: 'friend' as const, label: 'Station' }]),
+            .map((track) => ({ ...track, affiliation: 'neutral' as const })),
+        ...(stationed === undefined ? [] : [{ ...stationed, affiliation: 'friend' as const, label: 'Station' }]),
     ]
     const hosts = data.machine?.tracks ?? []
     const busiest = Math.max(1, ...(data.machine?.links ?? []).map((link) => link.rateIn + link.rateOut))
