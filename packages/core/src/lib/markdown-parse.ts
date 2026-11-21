@@ -381,24 +381,33 @@ function spanHighlights(parent: MarkdownNode) {
     for (const child of kids) if (!OWN_WORDS.has(child.type)) spanHighlights(child)
 }
 
-/** What an escaped `=` stands as while highlights are read, so `\=\=` never opens or closes one. */
-const ESCAPED_EQUALS = '\uFDD0'
+/**
+ * What an escaped `=`, `[`, `#` and `!` stand as while links, tags and highlights are read, so `\=\=`
+ * never opens a highlight, `\[[` a link, `\#` a tag or `\![[` an embed. One character each, so every
+ * offset into a text stays where it was.
+ */
+const STAND_INS: Record<string, string> = { '=': '\uFDD0', '[': '\uFDD1', '#': '\uFDD2', '!': '\uFDD3' }
+const STAND_IN = /[\uFDD0-\uFDD3]/
+const ESCAPABLE = /\\[=[#!]/
+const RESTORED: Record<string, string> = Object.fromEntries(Object.entries(STAND_INS).map(([mark, standIn]) => [standIn, mark]))
 
 /**
- * Each `=` written escaped as `\=` in a text node, swapped for `ESCAPED_EQUALS`: the parse drops the
- * backslash, so the written text is read beside the node's words. False when the text already holds
- * the stand-in, and nothing is swapped.
+ * Each `=`, `[`, `#` and `!` written escaped in a text node, swapped for its stand-in: the parse drops
+ * the backslash, so the written text is read beside the node's words. False when the text already
+ * holds a stand-in, and nothing is swapped.
  */
 function markEscapes(tree: MarkdownNode, source: string): boolean {
-    if (!source.includes('\\=') || source.includes(ESCAPED_EQUALS)) return false
+    if (!ESCAPABLE.test(source) || STAND_IN.test(source)) return false
     for (const { node } of nodesOf(tree)) {
         if (node.type !== 'text' || node.value === undefined) continue
         const at = node.position as { start?: { offset?: number }; end?: { offset?: number } } | undefined
         const from = at?.start?.offset
         const to = at?.end?.offset
         if (from === undefined || to === undefined) continue
-        const written = source.slice(from, to)
-        if (!written.includes('\\=')) continue
+        // A text whose span starts after the backslash that opens it still reads that backslash.
+        const opened = source[from] !== '\\' && source[from - 1] === '\\'
+        const written = source.slice(opened ? from - 1 : from, to)
+        if (!ESCAPABLE.test(written)) continue
         const value = node.value
         let out = ''
         let k = 0
@@ -406,7 +415,7 @@ function markEscapes(tree: MarkdownNode, source: string): boolean {
         // character; any other written character not in the words (a quote's `>`, an indent) is passed.
         for (let i = 0; i < written.length && k < value.length; i += 1) {
             if (written[i] === '\\' && written[i + 1] === value[k] && /[!-/:-@[-`{-~]/.test(value[k])) {
-                out += value[k] === '=' ? ESCAPED_EQUALS : value[k]
+                out += STAND_INS[value[k]] ?? value[k]
                 i += 1
                 k += 1
             } else if (written[i] === value[k]) {
@@ -419,11 +428,12 @@ function markEscapes(tree: MarkdownNode, source: string): boolean {
     return true
 }
 
-/** Each stand-in for an escaped `=` back as the `=` it is, in a node's words and in a link's fields. */
+/** Each stand-in for an escaped character back as the character it is, in a node's words and fields. */
 function unmarkEscapes(tree: MarkdownNode) {
     for (const { node } of nodesOf(tree)) {
         for (const [key, field] of Object.entries(node)) {
-            if (typeof field === 'string' && field.includes(ESCAPED_EQUALS)) node[key] = field.replaceAll(ESCAPED_EQUALS, '=')
+            if (typeof field === 'string' && STAND_IN.test(field))
+                node[key] = field.replace(/[\uFDD0-\uFDD3]/g, (standIn) => RESTORED[standIn])
         }
     }
 }
