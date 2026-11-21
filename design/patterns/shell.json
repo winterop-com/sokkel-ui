@@ -4,7 +4,7 @@
     "kind": "pattern",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "97f92d8"},
+        "sokkel-ui": {"state": "built", "as_of": "218db47"},
         "sokkel-egui": {"state": "partial", "as_of": "1a87987"},
         "sokkel-tui": {
             "state": "partial",
@@ -243,7 +243,7 @@
             "useOverlayRoute (hooks/use-overlay-route) draws #/settings over the page it was opened from: it reads the app's route and goes back through the history and the hash, or through the app's own back and replace with a client router.",
             "useOverlay makes the page inert under an overlay; useScrollMemory keeps each page's scroll; the safe-area insets pad the frame.",
             "In a desktop shell (Electron, Tauri) the top strip is the window's title bar.",
-            "Shell's routeKey moves focus to the new page's first visible h1 after a route change, waiting up to 3000 ms while the page loads and until the reader presses a key or the pointer.",
+            "Shell's routeKey moves focus to the new page's first visible h1 after a route change, waiting up to 3000 ms while the page loads and until the reader presses a key or the pointer. The heading shows no focus ring when the reader last pressed the pointer rather than a key, until the focus leaves it.",
             "Every control of the frame (the rail's entries, its mark, home link and head control, the top bar's menu button, crumbs and palette's button, the panel toggle, the account control) wears the button's own focus look: a 2px ring outline 2 off, on keyboard focus only."
         ],
         "sokkel-egui": [

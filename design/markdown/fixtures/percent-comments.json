@@ -1,0 +1,37 @@
+{
+    "type": "root",
+    "children": [
+        {
+            "type": "paragraph",
+            "children": [
+                {
+                    "type": "text",
+                    "value": "Before  after, and  none of them read."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "children": [
+                {
+                    "type": "text",
+                    "value": "Kept as words: "
+                },
+                {
+                    "type": "inlineCode",
+                    "value": "%%in code%%"
+                },
+                {
+                    "type": "text",
+                    "value": ", %%escaped, and %% left open."
+                }
+            ]
+        },
+        {
+            "type": "code",
+            "lang": null,
+            "meta": null,
+            "value": "%% in a fence %%"
+        }
+    ]
+}
