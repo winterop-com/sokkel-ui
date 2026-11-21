@@ -8448,6 +8448,7 @@ const TREE_SELECT_ADAPTER: Adapter = {
         search: 'TREE_SELECT_WORDS.search',
         clear: 'TREE_SELECT_WORDS.clear',
         empty: 'TREE_SELECT_WORDS.empty',
+        emptyBranch: 'TREE_SELECT_WORDS.emptyBranch',
         selected: ['TREE_SELECT_WORDS.selected', (said: (count: number) => string, fill) => said(Number(fill.count))],
         loading: 'TREE_SELECT_WORDS.loading',
         failed: 'TREE_SELECT_WORDS.failed',
@@ -9355,9 +9356,7 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {
-    'tree-select': { 'words.TREE_SELECT_WORDS.emptyBranch': 'an open branch with nothing in it says words.emptyBranch' },
-}
+const PENDING: Record<string, Record<string, string>> = {}
 
 // Markdown view
 
