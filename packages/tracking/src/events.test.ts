@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
     areaMiddle,
+    cancelledMetAlerts,
     atLeast,
     compareSeverity,
     INCIDENT_KINDS,
@@ -557,6 +558,26 @@ describe('MetAlerts warnings', () => {
         expect(incidents.map((incident) => incident.id)).toEqual(['2.49.0.1.578.0.20261120180429.083', '2.49.0.1.578.0.20261120120000.014'])
     })
 
+    it('leaves out a cancellation, and the warning it cancels', () => {
+        const [gale, rain] = WARNINGS.features
+        const cancel = {
+            ...gale,
+            properties: {
+                ...gale.properties,
+                id: '2.49.0.1.578.0.20261120200000.090',
+                type: 'Cancel',
+                references: `noreply@met.no,${String(rain.properties.id)},2026-11-20T12:00:00+00:00`,
+            },
+        }
+        const feed: MetAlertsFeed = { ...WARNINGS, features: [gale, rain, cancel] }
+        expect(parseMetAlerts(feed).map((incident) => incident.id)).toEqual([gale.properties.id])
+        expect(cancelledMetAlerts(feed)).toEqual([rain.properties.id])
+        expect(cancelledMetAlerts(WARNINGS)).toEqual([])
+        // A cancellation that names nothing still is no warning.
+        const bare = { ...cancel, properties: { ...cancel.properties, references: undefined } }
+        expect(parseMetAlerts({ ...WARNINGS, features: [bare] })).toEqual([])
+    })
+
     it('gives the warned areas as zones for a map', () => {
         expect(incidentZones([...incidents, ...parseUsgsQuakes(QUAKES)])).toEqual([
             {
@@ -578,6 +599,47 @@ describe('MetAlerts warnings', () => {
 })
 
 describe('areas and times', () => {
+    it('finds the middle of an area that lies across the antimeridian', () => {
+        const across = areaMiddle({
+            type: 'Polygon',
+            coordinates: [
+                [
+                    [179, 10],
+                    [-179, 10],
+                    [-179, 12],
+                    [179, 12],
+                    [179, 10],
+                ],
+            ],
+        })
+        expect(Math.abs(across?.[0] ?? 0)).toBeCloseTo(180, 9)
+        expect(across?.[1]).toBeCloseTo(11, 9)
+        const east = areaMiddle({
+            type: 'Polygon',
+            coordinates: [
+                [
+                    [178, 0],
+                    [-179, 0],
+                    [-179, 2],
+                    [178, 2],
+                ],
+            ],
+        })
+        expect(east?.[0]).toBeCloseTo(179.5, 9)
+        const west = areaMiddle({
+            type: 'Polygon',
+            coordinates: [
+                [
+                    [-178, 0],
+                    [179, 0],
+                    [179, 2],
+                    [-178, 2],
+                ],
+            ],
+        })
+        expect(west?.[0]).toBeCloseTo(-179.5, 9)
+    })
+
     it('finds the middle of an area, whichever way its outline runs', () => {
         expect(
             areaMiddle({

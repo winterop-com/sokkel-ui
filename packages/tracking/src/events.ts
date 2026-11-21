@@ -369,8 +369,10 @@ export interface MetAlert {
         /** `Actual` for a real warning; `Test`, `Exercise` and others for the rest. */
         status?: string
         title?: string
-        /** `Alert`, `Update` or `Cancel`. */
+        /** `Alert`, `Update` or `Cancel`; a cancellation withdraws the warnings it references. */
         type?: string
+        /** CAP's references: the earlier warnings this one updates or cancels, each as sender, identifier and time. */
+        references?: string | string[]
         web?: string
         [field: string]: unknown
     }
@@ -408,8 +410,20 @@ function polygons(geometry: Record<string, unknown>): LonLat[][][] {
     return parts.map((rings) => list(rings).map(ring)).filter((rings) => rings.length > 0 && rings[0].length >= 3)
 }
 
-/** A ring's area in square degrees, and its middle, by the shoelace formula. */
-function ringMiddle(positions: readonly LonLat[]): { size: number; middle: LonLat } {
+/** A longitude put into [-180, 180). */
+const wrapped = (lon: number): number => ((((lon + 180) % 360) + 360) % 360) - 180
+
+/**
+ * A ring's area in square degrees, and its middle, by the shoelace formula. Each longitude is taken the
+ * short way round from the one before it, so a ring across the antimeridian is measured where it lies
+ * and not as a band round the world.
+ */
+function ringMiddle(ring: readonly LonLat[]): { size: number; middle: LonLat } {
+    const positions: LonLat[] = []
+    for (const [lon, lat] of ring) {
+        const before = positions[positions.length - 1]
+        positions.push([before === undefined ? lon : before[0] + wrapped(lon - before[0]), lat])
+    }
     let twice = 0
     let x = 0
     let y = 0
@@ -423,9 +437,9 @@ function ringMiddle(positions: readonly LonLat[]): { size: number; middle: LonLa
     }
     if (Math.abs(twice) < 1e-12) {
         const sum = positions.reduce<LonLat>((total, [lon, lat]) => [total[0] + lon, total[1] + lat], [0, 0])
-        return { size: 0, middle: [sum[0] / positions.length, sum[1] / positions.length] }
+        return { size: 0, middle: [wrapped(sum[0] / positions.length), sum[1] / positions.length] }
     }
-    return { size: Math.abs(twice / 2), middle: [x / (3 * twice), y / (3 * twice)] }
+    return { size: Math.abs(twice / 2), middle: [wrapped(x / (3 * twice)), y / (3 * twice)] }
 }
 
 /** Where an area's marker stands: the middle of its outline, or of its largest part's. */
@@ -435,14 +449,40 @@ export function areaMiddle(area: IncidentArea): LonLat | undefined {
     return outlines.reduce((largest, each) => (each.size > largest.size ? each : largest)).middle
 }
 
+const cancels = (properties: Record<string, unknown>): boolean => text(properties.type)?.toLowerCase() === 'cancel'
+
+/**
+ * The ids of the warnings a feed's cancellations withdraw: every identifier their references name.
+ * An app that keeps warnings from earlier answers drops these from what it kept.
+ */
+export function cancelledMetAlerts(feed: MetAlertsFeed): string[] {
+    const ids = new Set<string>()
+    for (const feature of features(feed)) {
+        const properties = record(feature.properties)
+        if (!cancels(properties)) continue
+        const references = Array.isArray(properties.references) ? properties.references : [properties.references]
+        for (const reference of references) {
+            // CAP writes a reference as sender, identifier and time apart by commas, and several apart by spaces.
+            for (const triple of (text(reference) ?? '').split(/\s+/)) {
+                const parts = triple.split(',')
+                const id = text(parts.length === 3 ? parts[1] : triple)
+                if (id !== undefined) ids.add(id)
+            }
+        }
+    }
+    return [...ids]
+}
+
 /**
  * The warnings of MetAlerts as incidents of kind `weather`, each with the area it warns as `area` and
  * standing at that area's middle. A warning's severity is CAP's (`Moderate` for yellow, `Severe` for
  * orange, `Extreme` for red), `at` is when it starts to hold and `until` when it stops. What it warns
- * of is `properties.event`. A warning that is not `Actual` (a test, an exercise) is left out.
+ * of is `properties.event`. A warning that is not `Actual` (a test, an exercise) is left out, as is a
+ * cancellation and every warning in the feed that it withdraws.
  */
 export function parseMetAlerts(feed: MetAlertsFeed, options: IncidentOptions = {}): Incident[] {
     const incidents: Incident[] = []
+    const cancelled = new Set(cancelledMetAlerts(feed))
     for (const feature of features(feed)) {
         const properties = record(feature.properties)
         const geometry = record(feature.geometry)
@@ -453,6 +493,7 @@ export function parseMetAlerts(feed: MetAlertsFeed, options: IncidentOptions = {
         const status = text(properties.status)
         if (id === undefined || at === undefined || parts.length === 0) continue
         if (status !== undefined && status !== 'Actual') continue
+        if (cancels(properties) || cancelled.has(id)) continue
         const area: IncidentArea =
             parts.length === 1 ? { type: 'Polygon', coordinates: parts[0] } : { type: 'MultiPolygon', coordinates: parts }
         const middle = areaMiddle(area) as LonLat

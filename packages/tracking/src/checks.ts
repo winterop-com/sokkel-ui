@@ -418,6 +418,12 @@ function run(observations: readonly Observation[], holds: (status: Observation['
     return count
 }
 
+/** The median of sorted values: the central one, or the mean of the two central ones for an even count. */
+const middle = (sorted: readonly number[]): number => {
+    const half = Math.floor(sorted.length / 2)
+    return sorted.length % 2 === 1 ? sorted[half] : (sorted[half - 1] + sorted[half]) / 2
+}
+
 /** The value a share of the sorted values are no greater than, by the nearest rank. */
 const rank = (sorted: readonly number[], share: number): number => sorted[Math.max(0, Math.ceil(share * sorted.length) - 1)]
 
@@ -480,7 +486,7 @@ export function createStatusMonitor(options: StatusMonitorOptions = {}): StatusM
             if (latencies.length > 0)
                 summary.latency = {
                     mean: latencies.reduce((sum, each) => sum + each, 0) / latencies.length,
-                    median: rank(latencies, 0.5),
+                    median: middle(latencies),
                     p95: rank(latencies, 0.95),
                     min: latencies[0],
                     max: latencies[latencies.length - 1],

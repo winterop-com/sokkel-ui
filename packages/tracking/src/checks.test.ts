@@ -326,6 +326,18 @@ describe('the status monitor', () => {
         })
     })
 
+    it('takes the middle of the two central latencies for an even count, and the nearest rank for the 95th', () => {
+        const summarize = (latencies: number[]) => {
+            const monitor = createStatusMonitor()
+            latencies.forEach((latency, index) => monitor.push({ status: 'up', at: AT + index * MINUTE, latency }))
+            return monitor.summary().latency
+        }
+        expect(summarize([100, 10])).toMatchObject({ median: 55, p95: 100 })
+        expect(summarize([10, 30, 20])).toMatchObject({ median: 20, p95: 30 })
+        expect(summarize([40, 10, 30, 20])).toMatchObject({ median: 25, p95: 40 })
+        expect(summarize([7])).toMatchObject({ median: 7, p95: 7 })
+    })
+
     it('forgets what its window has passed, but never the run it counts', () => {
         const monitor = createStatusMonitor({ window: 2 * MINUTE, failures: 3 })
         for (const observation of observe('uuuuuu')) monitor.push(observation)

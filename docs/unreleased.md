@@ -161,7 +161,8 @@ release and empties it.
   kind, a severity on CAP's scale (`minor`, `moderate`, `severe`, `extreme`, `unknown`) and, for one
   that lasts, when it ends. `parseUsgsQuakes` reads the USGS earthquake summary feeds, `parseGdacs`
   GDACS's event lists and `parseMetAlerts` MET Norway's weather warnings, each warning with the area
-  it covers; `incidentZones` gives those areas as zones for a map, and `incidentsAt` the incidents
+  it covers, a cancellation and the warnings it references left out (`cancelledMetAlerts` gives
+  their ids); `incidentZones` gives those areas as zones for a map, and `incidentsAt` the incidents
   that hold at a time. Words `INCIDENT_WORDS`, ids `incident.kinds.*` and `incident.severities.*`.
 - `/checks` (tracking): server health checks as data. A `Check` is a plain object (a path, the
   status, body text and JSON values its answer must hold, how to judge its latency, and values to

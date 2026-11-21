@@ -207,6 +207,22 @@ describe('positions', () => {
         expect(satellitePosition(JSON.parse(JSON.stringify(station)) as typeof station, AT)).toEqual(satellitePosition(station, AT))
     })
 
+    it('places a satellite whose epoch names its zone, however it is written', () => {
+        const here = satellitePosition(station, AT)
+        for (const EPOCH of [
+            '2026-11-19T20:23:51.209664+00:00',
+            '2026-11-19T20:23:51.209664z',
+            '2026-11-19T21:23:51.209664+01:00',
+            ' 2026-11-19T20:23:51.209664 ',
+        ]) {
+            const [zoned] = parseOmm([{ ...STATION, EPOCH }])
+            expect(zoned.epoch).toBe(station.epoch)
+            const place = satellitePosition(zoned, AT)
+            expect(place?.lon).toBeCloseTo(here?.lon ?? 0, 3)
+            expect(place?.lat).toBeCloseTo(here?.lat ?? 0, 3)
+        }
+    })
+
     it('gives no position for an orbit SGP4 refuses, nor for a time that is none', () => {
         const [broken] = parseOmm([{ ...STATION, ECCENTRICITY: 1.5 }])
         expect(satellitePosition(broken, AT)).toBeUndefined()

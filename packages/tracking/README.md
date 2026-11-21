@@ -48,7 +48,7 @@ gives none, a track is `unknown`.
 | `/network`     | `createFlowTracker`, which gathers connection records by remote host and by process, or lists each, with byte rates over a window; `flowTracks`, the located hosts as tracks and links from home; `addressScope` and the address checks                                                                    |
 | `/affiliation` | `TRACKING_WORDS` and `TRACKING_PART`, `AFFILIATION_ORDER`, `compareAffiliation`, `sortByAffiliation`, `groupByAffiliation` and `AFFILIATION_TOKENS`                                                                                                                                                        |
 | `/orbits`      | `parseOmm` and `parseOmmCsv`, which read satellites from OMM in JSON and in CSV; `satellitePosition` and `satelliteTracks`, which place them at any time with SGP4; `groundTrack`, `splitAtAntimeridian`, `footprint` and `horizonRange`; `parseStationPosition` for the space station's position services |
-| `/events`      | `Incident` and its types; `parseUsgsQuakes`, `parseGdacs` and `parseMetAlerts`; `incidentZones` and `incidentsAt`; `quakeSeverity`, `areaMiddle`, `compareSeverity`, `atLeast`, `SEVERITY_ORDER`, and `INCIDENT_WORDS` and `INCIDENT_PART`                                                                 |
+| `/events`      | `Incident` and its types; `parseUsgsQuakes`, `parseGdacs` and `parseMetAlerts`; `incidentZones`, `incidentsAt` and `cancelledMetAlerts`; `quakeSeverity`, `areaMiddle`, `compareSeverity`, `atLeast`, `SEVERITY_ORDER`, and `INCIDENT_WORDS` and `INCIDENT_PART`                                           |
 | `/checks`      | `Check` and its types; `evaluateCheck`, `checkUrl`, `readPath` and `statusPasses`; `createStatusMonitor`, `combineResults` and `worstStatus`; `httpCheck` and `HTTP_KIND`; `CHECK_WORDS` and `CHECK_PART`                                                                                                  |
 | `/simulate`    | Simulated feeds for an example, a story or a test, each from a seed and a moment: `simulateFlights`, `simulateAis` and `simulateCoast`, `createNetworkSimulation`, and `createSimClock`, the clock they are read at                                                                                        |
 
@@ -242,7 +242,9 @@ Severity is CAP's scale, and each feed's colors are read onto it alike: green is
   its `unit`; dates are read as UTC.
 - `parseMetAlerts` reads MET Norway's weather warnings. Each is of kind `weather` (what it warns of is
   `properties.event`), holds from `at` until `until`, carries the area warned as `area` and stands at
-  that area's middle. A warning that is not `Actual`, such as a test, is left out. The feed lists
+  that area's middle. A warning that is not `Actual`, such as a test, is left out, and so is a cancellation with every
+  warning in the feed it references; `cancelledMetAlerts` gives those ids, for an app that kept
+  warnings from an earlier answer. The feed lists
   warnings that have yet to start, which `incidentsAt` leaves out until they do.
 
 `incidentZones` gives every incident with an area as `{ id, area, label, kind, severity }`, the shape a

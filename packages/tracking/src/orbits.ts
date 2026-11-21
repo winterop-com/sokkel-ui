@@ -104,11 +104,21 @@ function epochOf(value: unknown): number | undefined {
 /** SGP4's state for each satellite, built from its elements the first time it is placed; null for elements SGP4 refuses. */
 const RECORDS = new WeakMap<Satellite, SatRec | null>()
 
+/**
+ * An epoch as satellite.js reads one: in UTC, ending in `Z`. It reads any other ending as a time
+ * without a zone, so an epoch written with an offset is written again here, with the digits past the
+ * millisecond it was given.
+ */
+function epochText(satellite: Satellite): string {
+    const past = /\.\d{3}(\d+)/.exec(String(satellite.omm.EPOCH))?.[1] ?? ''
+    return new Date(satellite.epoch).toISOString().replace('Z', `${past}Z`)
+}
+
 function recordOf(satellite: Satellite): SatRec | null {
     let satrec = RECORDS.get(satellite)
     if (satrec === undefined) {
         try {
-            satrec = json2satrec(satellite.omm as Parameters<typeof json2satrec>[0])
+            satrec = json2satrec({ ...satellite.omm, EPOCH: epochText(satellite) } as Parameters<typeof json2satrec>[0])
         } catch {
             satrec = null
         }
