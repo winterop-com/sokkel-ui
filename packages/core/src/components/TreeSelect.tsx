@@ -41,6 +41,7 @@ export const TREE_SELECT_WORDS: TreeSelectWords = {
     search: 'Search',
     clear: 'Clear',
     empty: 'Nothing matches.',
+    emptyBranch: 'Empty',
     selected: (count) => `${count.toLocaleString('en-US')} chosen`,
     loading: 'Loading',
     failed: 'This level did not load.',
