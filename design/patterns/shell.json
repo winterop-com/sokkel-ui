@@ -41,7 +41,7 @@
         "foot": "The status line (parts/status-line), one row of fixed height, level with the rail's foot cell so the account and the status read as one bar. It draws the strip itself; the shell gives it the room and draws no strip of its own.",
         "palette": "The command palette over the page on Mod+K (parts/command-palette): places, the screen's commands and the app's search.",
         "settings": "The settings dialog over the page it was opened from, on its own route (parts/settings-dialog).",
-        "appearance": "Light and dark (the scheme) are chosen in two places only: Settings › Appearance (with the theme and the density) and the command palette's appearance commands. The account menu's Appearance entry opens Settings at Appearance; it holds no scheme rows of its own. Never a scheme toggle in the top bar or in the account menu.",
+        "appearance": "Light and dark (the scheme) are chosen in two places only: Settings › Appearance (with the theme, the density and the text size) and the command palette's appearance commands. The account menu's Appearance entry opens Settings at Appearance; it holds no scheme rows of its own. Never a scheme toggle in the top bar or in the account menu.",
         "dialog": "Every dialog over the page, the settings and shortcuts dialogs among them (parts/dialog).",
         "shortcuts": "The keyboard shortcuts dialog, on ?.",
         "drawer": "Below 768 the rail as a drawer from the top bar's menu button, drawn expanded, with the account."

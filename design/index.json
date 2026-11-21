@@ -253,6 +253,7 @@
     },
     "themes": {"base": "tidevann", "specimens": ["tidevann", "paper", "contrast"]},
     "densities": ["regular", "compact"],
+    "textSizes": ["smaller", "small", "regular", "large"],
     "parts": [
         {"id": "button", "file": "parts/button.json", "status": "stable"},
         {"id": "text-field", "file": "parts/text-field.json", "status": "stable"},

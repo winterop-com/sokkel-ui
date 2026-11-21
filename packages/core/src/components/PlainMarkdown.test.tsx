@@ -325,9 +325,9 @@ describe('PlainMarkdown notes as vaults write them', () => {
         )
     })
 
-    it('shows what it does not read as typed: %%comments%%, inline footnotes, block ids, and a single line break', () => {
+    it('hides a %%comment%%, and shows what it does not read as typed: inline footnotes, block ids, and a single line break', () => {
         const html = draw('%%draft%% then ^[an aside] and a block ^abc123\nnext line')
-        expect(html).toContain('%%draft%%')
+        expect(html).not.toContain('draft')
         expect(html).toContain('^[an aside]')
         expect(html).toContain('^abc123\nnext line')
         expect(html).not.toContain('<br')

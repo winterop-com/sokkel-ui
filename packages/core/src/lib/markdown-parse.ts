@@ -195,6 +195,71 @@ function partsAndComments(tree: MarkdownNode, word: string) {
     })
 }
 
+/** What each character of a `%%` comment is written as before the text is read, so the comment reads as nothing and every other character keeps its place. */
+const HIDDEN = '\uFDDF'
+
+/** The nodes whose words are code (or markup), where a `%%` opens no comment. */
+const CODE_NODES = new Set(['code', 'inlineCode', 'math', 'inlineMath', 'html'])
+
+/**
+ * The text with each `%% comment %%` written as `HIDDEN`, its line ends kept: a `%%` outside code,
+ * not written escaped (`\%%`), up to the next such `%%`, over any number of lines. One left open
+ * stays words. The text as given when it has no comment, or already holds `HIDDEN`.
+ */
+function hideComments(text: string, read: (text: string) => MarkdownNode): string {
+    if (!text.includes('%%') || text.includes(HIDDEN)) return text
+    const code: [number, number][] = []
+    for (const { node } of nodesOf(read(text))) {
+        const at = node.position as { start?: { offset?: number }; end?: { offset?: number } } | undefined
+        const [from, to] = [at?.start?.offset, at?.end?.offset]
+        if (CODE_NODES.has(node.type) && from !== undefined && to !== undefined) code.push([from, to])
+    }
+    // Each `%%` is looked at in order, so the code before it is passed once.
+    code.sort((a, b) => a[0] - b[0])
+    let passed = 0
+    let reach = -1
+    const opens = (at: number) => {
+        while (passed < code.length && code[passed][0] <= at) reach = Math.max(reach, code[passed++][1])
+        if (at < reach) return false
+        let slashes = 0
+        while (text[at - 1 - slashes] === '\\') slashes += 1
+        return slashes % 2 === 0
+    }
+    const next = (from: number) => {
+        for (let at = text.indexOf('%%', from); at >= 0; at = text.indexOf('%%', at + 1)) if (opens(at)) return at
+        return -1
+    }
+    let out = ''
+    let kept = 0
+    for (let open = next(0); open >= 0;) {
+        const close = next(open + 2)
+        if (close < 0) break
+        out += text.slice(kept, open) + text.slice(open, close + 2).replace(/[^\r\n]/g, HIDDEN)
+        kept = close + 2
+        open = next(kept)
+    }
+    return kept === 0 ? text : out + text.slice(kept)
+}
+
+/** Takes each hidden comment out of the words, and drops a text, and a paragraph, it leaves with none. */
+function dropComments(tree: MarkdownNode) {
+    rewrite(tree, (child) => {
+        for (const field of ['value', 'url', 'alt', 'title'] as const) {
+            const value = child[field]
+            if (typeof value === 'string' && value.includes(HIDDEN)) child[field] = value.replaceAll(HIDDEN, '')
+        }
+        if (child.type === 'text' && child.value === '') return []
+        return undefined
+    })
+    rewrite(tree, (child) => {
+        if (child.type !== 'paragraph') return undefined
+        const left = (child.children ?? []).filter(
+            (node) => !(node.type === 'text' && (node.value ?? '').trim() === '') && node.type !== 'break',
+        )
+        return left.length === 0 ? [] : undefined
+    })
+}
+
 /** Where each character of a text's words was written: its first offset in the text and the one after it. */
 interface Spans {
     starts: number[]
@@ -713,7 +778,13 @@ export function parseTree(content: string, rules: ParseRules): MarkdownTree {
         .use(remarkParse)
         .use(remarkGfm)
         .use(rules.math === undefined ? [] : [rules.math])
-    const tree = processor.runSync(processor.parse(text)) as unknown as MarkdownNode
+    const read = (given: string) => processor.runSync(processor.parse(given)) as unknown as MarkdownNode
+    const hidden = hideComments(text, read)
+    const tree = read(hidden)
+    if (hidden !== text) {
+        text = hidden
+        dropComments(tree)
+    }
     // Parts first, so a part's marker is never dropped as a comment; links before highlights, so a
     // link's own words are never read for `==` (a highlight may hold a link); callouts last, from
     // what the rest left of each quote.

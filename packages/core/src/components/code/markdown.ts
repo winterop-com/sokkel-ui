@@ -7,8 +7,8 @@ interface MarkdownState {
     address: boolean
     /** The frontmatter: not yet known (the first line decides), open, or done with (or never there). */
     front: 'start' | 'open' | 'done'
-    /** Inside an HTML comment that runs over lines. */
-    comment: boolean
+    /** Inside a comment that runs over lines: the `-->` or `%%` that closes it, or '' outside one. */
+    comment: '' | '-->' | '%%'
 }
 
 /** A frontmatter line that reads as properties: blank, a comment, indented, a list item, or a key and a colon. */
@@ -45,15 +45,20 @@ function frontmatter(stream: StringStream, state: MarkdownState): string | null 
     return null
 }
 
-/** An HTML comment, which `Markdown` never draws: to its end on this line, or to the line's end when it runs on. */
-function comment(stream: StringStream, state: MarkdownState): string {
-    const end = stream.string.indexOf('-->', stream.pos + (state.comment ? 0 : 4))
+/**
+ * An HTML or `%%` comment, which `Markdown` never draws: to its end on this line, or to the line's
+ * end when it runs on. `closer` is what closes it, given when it opens here.
+ */
+function comment(stream: StringStream, state: MarkdownState, closer?: '-->' | '%%'): string {
+    const close = closer ?? state.comment
+    if (close === '') return 'comment'
+    const end = stream.string.indexOf(close, stream.pos + (closer === undefined ? 0 : closer === '-->' ? 4 : 2))
     if (end < 0) {
-        state.comment = true
+        state.comment = close
         stream.skipToEnd()
     } else {
-        state.comment = false
-        stream.pos = end + 3
+        state.comment = ''
+        stream.pos = end + close.length
     }
     return 'comment'
 }
@@ -175,7 +180,8 @@ function inline(stream: StringStream, state: MarkdownState): string | null {
         closeAt(stream, firstFrom(closers(line).marked, at + 3), 2)
     )
         return 'inserted'
-    if (stream.match('<!--', false)) return comment(stream, state)
+    if (stream.match('<!--', false)) return comment(stream, state, '-->')
+    if (char === '%' && line[at + 1] === '%' && before !== '\\') return comment(stream, state, '%%')
     if (stream.match(/^(`+)[^`]+?\1/)) return 'monospace'
     if ((char === '*' || char === '_') && line[at + 1] === char && /\S/.test(line[at + 2] ?? ' ')) {
         const table = char === '*' ? closers(line).stars : closers(line).unders
@@ -206,21 +212,21 @@ function inline(stream: StringStream, state: MarkdownState): string | null {
     if ((before === '' || /[\s([{"'“‘]/u.test(before)) && stream.match(TAG)) return 'labelName'
     if (stream.match(/^\\./)) return 'escape'
     stream.next()
-    stream.eatWhile(/[^[`*_~!(<h#\\=]/)
+    stream.eatWhile(/[^[`*_~!(<h#\\=%]/)
     return null
 }
 
 /** Markdown's tokens, one line at a time, with a fenced block kept open across lines. */
 export const markdownParser: StreamParser<MarkdownState> = {
     name: 'markdown',
-    startState: () => ({ fence: null, address: false, front: 'start', comment: false }),
+    startState: () => ({ fence: null, address: false, front: 'start', comment: '' }),
     copyState: (state) => ({ ...state }),
     blankLine: (state) => {
         // A document whose first line is blank has no frontmatter.
         if (state.front === 'start') state.front = 'done'
     },
     token: (stream, state) => {
-        if (state.comment) return comment(stream, state)
+        if (state.comment !== '') return comment(stream, state)
         if (state.front !== 'done') {
             if (state.front === 'open' && !stream.sol()) {
                 stream.skipToEnd()

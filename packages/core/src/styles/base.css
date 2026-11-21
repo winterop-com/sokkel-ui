@@ -77,6 +77,10 @@
     body {
         @apply bg-background font-sans text-sm text-foreground antialiased;
     }
+    /* A page heading a route moved the focus to from the pointer: focused for a screen reader, with no ring. */
+    [data-focus-quiet]:focus {
+        outline: none;
+    }
     /* The browser's own scroll bars, as the browser draws them unless a theme sets `--scrollbar`. */
     html,
     [data-theme-scope] {

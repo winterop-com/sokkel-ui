@@ -8,7 +8,7 @@ import { markdownParser } from './markdown'
 
 /** Each line's tokens that carry a style, as `style:text`. */
 function tokens(text: string): string[][] {
-    const state = markdownParser.startState?.(2) ?? { fence: null, address: false, front: 'start' as const, comment: false }
+    const state = markdownParser.startState?.(2) ?? { fence: null, address: false, front: 'start' as const, comment: '' as const }
     return text.split('\n').map((line) => {
         if (line === '') {
             markdownParser.blankLine?.(state, 2)
@@ -86,6 +86,14 @@ describe('the markdown language', () => {
             ['comment:-->'],
             ['heading:# heading'],
         ])
+        expect(tokens('Before %%hidden%% after')[0]).toEqual(['comment:%%hidden%%'])
+        expect(tokens('%%\n# not a heading\n%%\n# heading')).toEqual([
+            ['comment:%%'],
+            ['comment:# not a heading'],
+            ['comment:%%'],
+            ['heading:# heading'],
+        ])
+        expect(tokens('An escaped \\%% one')[0]).toEqual(['escape:\\%'])
     })
 
     it('reads a long line of quote marks and equals signs in time in step with its length', () => {

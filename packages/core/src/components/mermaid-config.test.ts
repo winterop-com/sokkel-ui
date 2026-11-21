@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { MERMAID_SECURE, mermaidConfig } from './mermaid-config'
+import { MERMAID_SECURE, mermaidConfig, plotVariables } from './mermaid-config'
 
 const DEFAULT_SECURE = ['secure', 'securityLevel', 'startOnLoad', 'maxTextSize', 'suppressErrorRendering', 'maxEdges']
 
@@ -45,4 +45,22 @@ describe('mermaidConfig', () => {
         expect(JSON.stringify(drawn)).not.toContain('example.org')
         expect(drawn.flowchart?.htmlLabels).toBe(false)
     }, 60_000)
+})
+
+describe('plotVariables', () => {
+    const hex = (name: string) => `#${String(name.length).padStart(2, '0')}${name.slice(-1).padStart(4, '0')}`
+    const plot = plotVariables(hex)
+    const series = [1, 2, 3, 4, 5].map((n) => hex(`chart-${String(n)}`))
+
+    it("paints an xychart's bars and lines with the chart tokens, in their order", async () => {
+        expect(plot.xyChart.plotColorPalette).toBe(series.join(', '))
+        const mermaid = (await import('mermaid')).default
+        mermaid.initialize(mermaidConfig({ background: '#ffffff', primaryColor: '#f4f4f5', ...plot }, '6px'))
+        const drawn = mermaid.mermaidAPI.getConfig().themeVariables as { xyChart: { plotColorPalette: string } }
+        expect(drawn.xyChart.plotColorPalette).toBe(series.join(', '))
+    })
+
+    it("paints a pie's slices with the chart tokens, starting over after the last", () => {
+        expect([plot.pie1, plot.pie5, plot.pie6, plot.pie12]).toEqual([series[0], series[4], series[0], series[1]])
+    })
 })
