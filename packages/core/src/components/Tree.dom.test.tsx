@@ -173,3 +173,60 @@ describe('openOnChoose', () => {
         expect(rowOf(at, 'europe')?.getAttribute('aria-expanded')).toBe('false')
     })
 })
+
+describe('a branch of many thousand rows', () => {
+    const big = (count: number): TreeNode[] => [
+        {
+            id: 'films',
+            label: 'films',
+            children: Array.from({ length: count }, (_, index) => ({
+                id: `film-${String(index)}`,
+                label: `Film ${String(count - index)}`,
+            })),
+        },
+    ]
+    const order = { sorted: true, band: (node: TreeNode) => (node.children === undefined ? 'notes' : 'folders') }
+
+    /** The time to open the branch by choosing it, then to go to its last row by key. */
+    async function openAndEnd(count: number): Promise<number> {
+        const at = await mount(
+            <div style={{ height: '400px', overflowY: 'auto' }}>
+                <Tree
+                    nodes={big(count)}
+                    label="Notes"
+                    selection="single"
+                    selected={[]}
+                    onSelect={() => undefined}
+                    openOnChoose
+                    order={order}
+                    onMove={() => undefined}
+                />
+            </div>,
+        )
+        const branch = rowOf(at, 'films')
+        if (branch === null) throw new Error('no branch')
+        const started = performance.now()
+        await act(async () => branch.click())
+        await act(async () => branch.focus())
+        await act(async () => branch.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true })))
+        const took = performance.now() - started
+        expect(at.querySelectorAll('[role="treeitem"]').length).toBeLessThan(200)
+        act(() => root?.unmount())
+        host?.remove()
+        root = undefined
+        host = undefined
+        return took
+    }
+
+    it(
+        'opens and walks a branch of 50,000 in time that grows with its rows, drawing only those in view',
+        { retry: 3, timeout: 120_000 },
+        async () => {
+            await openAndEnd(500)
+            const short = Math.min(await openAndEnd(5_000), await openAndEnd(5_000))
+            const long = Math.min(await openAndEnd(50_000), await openAndEnd(50_000))
+            if (long < 100) return
+            expect(long / Math.max(short, 1)).toBeLessThan(30)
+        },
+    )
+})
