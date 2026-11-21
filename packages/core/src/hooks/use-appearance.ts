@@ -26,7 +26,7 @@ export interface AppearanceState {
 
 /**
  * The whole look of an app, kept in `localStorage` and worn on `<html>`: the theme, the scheme
- * (through `useScheme`, following the system until one is chosen), the density, the corners, the
+ * (through `useScheme`, following the system until one is chosen), the density, the text size, the corners, the
  * typeface and the motion. Called once in the app's root; `ThemePicker` takes its `settings` and
  * `setSettings`. `defaults` stand until the person chooses otherwise. `offer.themes` names the
  * themes an app offers when it offers fewer than the library has: a kept theme outside them gives
@@ -41,11 +41,11 @@ export function useAppearance(defaults: Partial<ThemeSettings> = {}, offer: Appe
     const { scheme, resolved } = useScheme(defaults.scheme ?? 'system')
     const text = useSyncExternalStore(subscribeAppearance, readStoredAppearanceText, () => null)
     const look = { ...DEFAULT_APPEARANCE, ...defaults, ...parseAppearance(text) }
-    const { density, corners, typeface, motion } = look
+    const { density, textSize, corners, typeface, motion } = look
     const theme = offeredTheme(look.theme, defaults, offer.themes)
     const settings = useMemo(
-        (): ThemeSettings => ({ theme, scheme, density, corners, typeface, motion }),
-        [theme, scheme, density, corners, typeface, motion],
+        (): ThemeSettings => ({ theme, scheme, density, textSize, corners, typeface, motion }),
+        [theme, scheme, density, textSize, corners, typeface, motion],
     )
     useBeforePaint(() => applyAppearance({ ...settings, scheme: resolved }), [settings, resolved])
     return { settings, resolved, setSettings: storeAppearance }

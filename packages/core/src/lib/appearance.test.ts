@@ -97,7 +97,15 @@ afterEach(() => {
     vi.unstubAllGlobals()
 })
 
-const LOOK: ThemeSettings = { theme: 'paper', scheme: 'dark', density: 'compact', corners: '4px', typeface: 'geist', motion: 'off' }
+const LOOK: ThemeSettings = {
+    theme: 'paper',
+    scheme: 'dark',
+    density: 'compact',
+    textSize: 'small',
+    corners: '4px',
+    typeface: 'geist',
+    motion: 'off',
+}
 
 describe('the option lists', () => {
     it('offer every theme in the tokens, tidevann first, with a label, a line on how it looks and a swatch', () => {
@@ -125,7 +133,12 @@ describe('applyAppearance', () => {
         const root = new FakeRoot()
         applyAppearance(LOOK, root)
         expect(root.classes.has('dark')).toBe(true)
-        expect(Object.fromEntries(root.attributes)).toEqual({ 'data-theme': 'paper', 'data-density': 'compact', 'data-motion': 'off' })
+        expect(Object.fromEntries(root.attributes)).toEqual({
+            'data-theme': 'paper',
+            'data-density': 'compact',
+            'data-text-size': 'small',
+            'data-motion': 'off',
+        })
         expect(root.properties.get('--radius')).toBe('4px')
         expect(root.properties.get('--typeface-sans')).toBe(FACES.geist?.sans)
         expect(root.properties.get('--mono-x-height')).toBe(FACES.geist?.monoX)
@@ -186,6 +199,8 @@ describe('the kept look', () => {
         expect(parseAppearance('not json')).toEqual({})
         expect(parseAppearance('null')).toEqual({})
         expect(parseAppearance('{"theme":3,"density":"compact","motion":"sometimes"}')).toEqual({ density: 'compact' })
+        expect(parseAppearance('{"textSize":"large"}')).toEqual({ textSize: 'large' })
+        expect(parseAppearance('{"textSize":2}')).toEqual({})
     })
 
     it('holds a choice in memory where storage throws', () => {

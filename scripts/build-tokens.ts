@@ -19,7 +19,8 @@
  * around it wears, and its theme's overrides go over that. A theme may override any token, the
  * density levels' included. A density level answers on `html[data-density]` for the whole app and
  * on `[data-density-scope]` for one element and what is inside it, so one part can be shown at
- * another level than the page around it.
+ * another level than the page around it. A text size answers the same way, on `html[data-text-size]`
+ * and `[data-text-size-scope]`.
  *
  * Tidevann sets its surfaces (canvas, node, panel ground and line, critical wash) as fixed
  * colors; every other theme takes them from `derived`, mixed from its own colors, unless it sets
@@ -54,6 +55,7 @@ interface Tokens {
     themes: Record<string, { $label?: string; $description?: string; light: Vars; dark: Vars }>
     derived: { light: Vars; dark: Vars }
     density: Record<string, Vars | string> & { default: string }
+    textSize: Record<string, Vars | string> & { default: string }
 }
 
 const CORE = join(import.meta.dirname, '..', 'packages', 'core')
@@ -113,15 +115,41 @@ const reads = themeReads(tokens.theme)
 const levels = Object.keys(tokens.density).filter((key) => key !== 'default' && !key.startsWith('$'))
 const prefixed = (vars: Vars): Vars => Object.fromEntries(Object.entries(vars).map(([name, value]) => [`density-${name}`, value]))
 
+// Text size: every step of the text scale a level moves is written as a variable the utilities read,
+// not inlined, so a level answers on `html[data-text-size]` and on its own scope, from the md breakpoint up. `regular` is the
+// theme's own sizes. A scope also writes again every token named from a step, which `:root` would
+// otherwise have worked out already at the page's level.
+const sizes = Object.keys(tokens.textSize).filter((key) => key !== 'default' && !key.startsWith('$'))
+const sized = Object.keys(tokens.textSize.smaller as Vars)
+for (const size of sizes) {
+    const keys = Object.keys(tokens.textSize[size] as Vars)
+    if (size !== 'regular' && keys.join() !== sized.join())
+        throw new Error(`tokens.json's text size ${size} moves other steps than smaller`)
+    if (size === 'regular' && keys.length > 0) throw new Error("tokens.json's text size regular is the theme's own sizes, so it sets none")
+}
+for (const key of sized) if (!(key in tokens.theme)) throw new Error(`tokens.json's theme has no ${key} for the text sizes to move`)
+const isSized = (name: string) => sized.includes(name)
+const pick = (vars: Vars, keep: (name: string) => boolean): Vars => Object.fromEntries(Object.entries(vars).filter(([name]) => keep(name)))
+const ownSizes = pick(tokens.theme, isSized)
+const sizeOf = (size: string): Vars => (size === 'regular' ? ownSizes : (tokens.textSize[size] as Vars))
+const namesASize = (value: string | ShadowLayer[]) => typeof value === 'string' && sized.some((name) => value.includes(`var(--${name})`))
+const fromSizes = pick(tokens.theme, (name) => !isSized(name) && namesASize(tokens.theme[name]))
+
 files.set(
     join(STYLES, 'tokens.css'),
     [
         HEADER,
         '@custom-variant dark (&:is(.dark *));\n',
-        block(['@theme inline'], tokens.theme),
+        block(
+            ['@theme inline'],
+            pick(tokens.theme, (name) => !isSized(name)),
+        ),
         // The theme variables the packages' code names, written whatever classes the app uses.
-        block(['@theme inline static'], Object.fromEntries(reads.own.map((name) => [name, tokens.theme[name] as string]))),
-        block(['@theme static'], reads.tailwind),
+        block(
+            ['@theme inline static'],
+            Object.fromEntries(reads.own.filter((name) => !isSized(name)).map((name) => [name, tokens.theme[name] as string])),
+        ),
+        block(['@theme static'], { ...reads.tailwind, ...ownSizes }),
         // Every scope, of whichever theme, starts from tidevann's whole set, so no token of the
         // page's theme reaches into it; `:where` keeps these under any theme's own scope rule.
         block([':root', ':where([data-theme-scope])'], base.light),
@@ -130,6 +158,14 @@ files.set(
         ...levels.map((level) =>
             block([`html[data-density='${level}']`, `[data-density-scope='${level}']`], prefixed(tokens.density[level] as Vars)),
         ),
+        // From the md breakpoint up only: a phone keeps the theme's sizes, so a field's 16px text never
+        // drops under what makes iOS zoom in on focus.
+        `@media (min-width: ${tokens.theme['breakpoint-md'] as string}) {\n${[
+            ...sizes.map((size) => block([`html[data-text-size='${size}']`, `[data-text-size-scope='${size}']`], sizeOf(size))),
+            block(['[data-text-size-scope]'], fromSizes),
+        ]
+            .join('\n')
+            .replace(/^(?=.)/gm, '    ')}}\n`,
     ].join('\n'),
 )
 
@@ -229,6 +265,6 @@ if (process.argv.includes('--check')) {
     for (const [path, css] of files) writeFileSync(path, css)
     for (const path of stale) rmSync(path)
     console.log(
-        `wrote the token CSS: tokens.css, themes.css and ${others.length} themes, with ${levels.length} density levels, and the theme list`,
+        `wrote the token CSS: tokens.css, themes.css and ${others.length} themes, with ${levels.length} density levels and ${sizes.length} text sizes, and the theme list`,
     )
 }

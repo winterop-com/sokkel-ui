@@ -70,13 +70,13 @@ describe('placeCommands', () => {
 })
 
 describe('appearanceCommands', () => {
-    it('offers the schemes, the densities and every theme, hinting the ones in use', () => {
+    it('offers the schemes, the densities, the text sizes and every theme, hinting the ones in use', () => {
         const groups = appearanceCommands({ ...DEFAULT_APPEARANCE, theme: 'paper' }, () => undefined)
-        expect(groups.map((group) => group.commands.length)).toEqual([3, 2, THEMES.length])
+        expect(groups.map((group) => group.commands.length)).toEqual([3, 2, 4, THEMES.length])
         const hinted = groups.flatMap((group) =>
             group.commands.filter((command) => command.hint !== undefined).map((command) => command.id),
         )
-        expect(hinted).toEqual(['scheme-system', 'density-regular', 'theme-paper'])
+        expect(hinted).toEqual(['scheme-system', 'density-regular', 'text-size-regular', 'theme-paper'])
     })
 
     it('answers with the whole settings, one part changed', () => {
@@ -84,8 +84,23 @@ describe('appearanceCommands', () => {
         const groups = appearanceCommands(DEFAULT_APPEARANCE, onChange)
         groups[0]?.commands.find((command) => command.id === 'scheme-dark')?.onSelect()
         expect(onChange).toHaveBeenLastCalledWith({ ...DEFAULT_APPEARANCE, scheme: 'dark' })
-        groups[2]?.commands.find((command) => command.id === 'theme-amber')?.onSelect()
+        groups[2]?.commands.find((command) => command.id === 'text-size-small')?.onSelect()
+        expect(onChange).toHaveBeenLastCalledWith({ ...DEFAULT_APPEARANCE, textSize: 'small' })
+        groups[3]?.commands.find((command) => command.id === 'theme-amber')?.onSelect()
         expect(onChange).toHaveBeenLastCalledWith({ ...DEFAULT_APPEARANCE, theme: 'amber' })
+    })
+
+    it('offers the text sizes from their parts, the one in use hinted, regular when none is given', () => {
+        const onTextSizeChange = vi.fn()
+        const [group] = appearanceCommands({ onTextSizeChange })
+        expect(group?.commands.map((command) => [command.id, command.hint])).toEqual([
+            ['text-size-smaller', undefined],
+            ['text-size-small', undefined],
+            ['text-size-regular', 'in use'],
+            ['text-size-large', undefined],
+        ])
+        group?.commands[3]?.onSelect()
+        expect(onTextSizeChange).toHaveBeenCalledWith('large')
     })
 })
 

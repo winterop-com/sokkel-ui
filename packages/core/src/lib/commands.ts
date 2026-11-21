@@ -1,4 +1,4 @@
-import { Monitor, Moon, Palette, Rows3, Sun } from 'lucide-react'
+import { ALargeSmall, Monitor, Moon, Palette, Rows3, Sun } from 'lucide-react'
 
 import type { PaletteCommand, PaletteGroup, PaletteRun } from '../components/CommandPalette'
 import type { RailEntry, RailGroup } from '../components/Rail'
@@ -198,6 +198,10 @@ export interface AppearanceCommandWords {
     density: string
     regular: string
     compact: string
+    textSize: string
+    smaller: string
+    small: string
+    large: string
     theme: string
     /** The hint on the choice in use. */
     current: string
@@ -213,6 +217,10 @@ export const APPEARANCE_COMMAND_WORDS: AppearanceCommandWords = {
     density: 'Density',
     regular: 'Regular',
     compact: 'Compact',
+    textSize: 'Text size',
+    smaller: 'Smaller',
+    small: 'Small',
+    large: 'Large',
     theme: 'Theme',
     current: 'in use',
     switch: 'Switch',
@@ -230,6 +238,8 @@ export interface AppearanceParts {
     onSchemeChange?: (scheme: Scheme) => void
     density?: string
     onDensityChange?: (density: string) => void
+    textSize?: string
+    onTextSizeChange?: (textSize: string) => void
     theme?: string
     onThemeChange?: (theme: string) => void
 }
@@ -243,9 +253,9 @@ export interface AppearanceCommandOptions {
 
 /**
  * Command palette groups that change the look: the scheme (light, dark, the system's), the
- * density, and the themes, the choice in use hinted. Given `useAppearance`'s settings and setter,
+ * density, the text size, and the themes, the choice in use hinted. Given `useAppearance`'s settings and setter,
  * each command answers with the whole settings, one part changed. Given the parts instead, each
- * with its callback (`onSchemeChange`, `onDensityChange`, `onThemeChange`), each command calls its
+ * with its callback (`onSchemeChange`, `onDensityChange`, `onTextSizeChange`, `onThemeChange`), each command calls its
  * part's, so an app that keeps its look under its own keys is never overruled; a part without a
  * callback is left out.
  */
@@ -269,6 +279,8 @@ export function appearanceCommands(
                   onSchemeChange: (scheme) => whole.onChange({ ...whole.settings, scheme }),
                   density: whole.settings.density,
                   onDensityChange: (density) => whole.onChange({ ...whole.settings, density }),
+                  textSize: whole.settings.textSize ?? 'regular',
+                  onTextSizeChange: (textSize) => whole.onChange({ ...whole.settings, textSize }),
                   theme: whole.settings.theme,
                   onThemeChange: (theme) => whole.onChange({ ...whole.settings, theme }),
               }
@@ -284,8 +296,14 @@ export function appearanceCommands(
         { value: 'regular', label: words.regular },
         { value: 'compact', label: words.compact },
     ]
+    const sizes = [
+        { value: 'smaller', label: words.smaller },
+        { value: 'small', label: words.small },
+        { value: 'regular', label: words.regular },
+        { value: 'large', label: words.large },
+    ]
     const groups: PaletteGroup[] = []
-    const { onSchemeChange, onDensityChange, onThemeChange } = parts
+    const { onSchemeChange, onDensityChange, onTextSizeChange, onThemeChange } = parts
     if (onSchemeChange !== undefined)
         groups.push({
             title: words.scheme,
@@ -310,6 +328,19 @@ export function appearanceCommands(
                 hint: hint(parts.density === density.value),
                 keywords: [words.density],
                 onSelect: () => onDensityChange(density.value),
+            })),
+        })
+    if (onTextSizeChange !== undefined)
+        groups.push({
+            title: words.textSize,
+            verb: words.switch,
+            commands: sizes.map((size) => ({
+                id: `text-size-${size.value}`,
+                label: size.label,
+                icon: ALargeSmall,
+                hint: hint((parts.textSize ?? 'regular') === size.value),
+                keywords: [words.textSize, 'font'],
+                onSelect: () => onTextSizeChange(size.value),
             })),
         })
     if (onThemeChange !== undefined)
