@@ -951,7 +951,7 @@ and puts the rest behind More, Write and Preview becoming one Preview button. `E
 `--density-overlay-inset` from the window's edges and spans the window between them. `WeekGrid` shows
 a lane too narrow for the times its title alone, over as many lines as the block is tall. Gauges
 stand two to a row of a `DashboardGrid`, on shorter bodies with figures at `--chart-stat-size-small`.
-A `MermaidDiagram` shrinks to its box only until its labels reach `--text-2xs`, then scrolls sideways.
+A `MermaidDiagram` is drawn whole, shrunk to fit its box, and its expand button shows it at size.
 
 `SplitPane` sets two panes across or down with a rule between them that drags, the first pane's
 share held within `minShare` and `maxShare`, the second's what is left. It holds its own share from

@@ -4,69 +4,33 @@
     "title": "A markdown text read into its tree",
     "description": "mdast (CommonMark, GitHub-flavored markdown and math) with the nodes linked notes add. Plain objects only: no `data`; `position` only when a reader is asked to keep it. markdown/README.md says how a text is read; markdown/fixtures holds texts and the trees they read into.",
     "type": "object",
-    "required": [
-        "type",
-        "children"
-    ],
+    "required": ["type", "children"],
     "properties": {
-        "type": {
-            "const": "root"
-        },
-        "children": {
-            "type": "array",
-            "items": {
-                "$ref": "#/$defs/node"
-            }
-        },
-        "position": {
-            "$ref": "#/$defs/position"
-        }
+        "type": {"const": "root"},
+        "children": {"type": "array", "items": {"$ref": "#/$defs/node"}},
+        "position": {"$ref": "#/$defs/position"}
     },
     "additionalProperties": false,
     "$defs": {
         "point": {
             "type": "object",
-            "required": [
-                "line",
-                "column"
-            ],
+            "required": ["line", "column"],
             "properties": {
-                "line": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "column": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "offset": {
-                    "type": "integer",
-                    "minimum": 0
-                }
+                "line": {"type": "integer", "minimum": 1},
+                "column": {"type": "integer", "minimum": 1},
+                "offset": {"type": "integer", "minimum": 0}
             },
             "additionalProperties": false
         },
         "position": {
             "type": "object",
-            "required": [
-                "start",
-                "end"
-            ],
-            "properties": {
-                "start": {
-                    "$ref": "#/$defs/point"
-                },
-                "end": {
-                    "$ref": "#/$defs/point"
-                }
-            },
+            "required": ["start", "end"],
+            "properties": {"start": {"$ref": "#/$defs/point"}, "end": {"$ref": "#/$defs/point"}},
             "additionalProperties": false
         },
         "node": {
             "type": "object",
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "properties": {
                 "type": {
                     "enum": [
@@ -107,202 +71,52 @@
                     ]
                 }
             },
-            "not": {
-                "required": [
-                    "data"
-                ]
-            },
+            "not": {"required": ["data"]},
             "allOf": [
+                {"if": {"properties": {"type": {"const": "yaml"}}}, "then": {"$ref": "#/$defs/yaml"}},
+                {"if": {"properties": {"type": {"const": "callout"}}}, "then": {"$ref": "#/$defs/callout"}},
+                {"if": {"properties": {"type": {"const": "calloutTitle"}}}, "then": {"$ref": "#/$defs/calloutTitle"}},
+                {"if": {"properties": {"type": {"const": "wikiLink"}}}, "then": {"$ref": "#/$defs/wikiLink"}},
+                {"if": {"properties": {"type": {"const": "embed"}}}, "then": {"$ref": "#/$defs/embed"}},
+                {"if": {"properties": {"type": {"const": "tag"}}}, "then": {"$ref": "#/$defs/tag"}},
+                {"if": {"properties": {"type": {"const": "highlight"}}}, "then": {"$ref": "#/$defs/highlight"}},
+                {"if": {"properties": {"type": {"const": "part"}}}, "then": {"$ref": "#/$defs/part"}},
                 {
                     "if": {
-                        "properties": {
-                            "type": {
-                                "const": "yaml"
-                            }
-                        }
+                        "properties": {"type": {"enum": ["text", "inlineCode", "inlineMath", "html", "code", "math"]}}
                     },
-                    "then": {
-                        "$ref": "#/$defs/yaml"
-                    }
+                    "then": {"required": ["value"], "properties": {"value": {"type": "string"}}}
                 },
                 {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "const": "callout"
-                            }
-                        }
-                    },
+                    "if": {"properties": {"type": {"const": "heading"}}},
                     "then": {
-                        "$ref": "#/$defs/callout"
-                    }
-                },
-                {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "const": "calloutTitle"
-                            }
-                        }
-                    },
-                    "then": {
-                        "$ref": "#/$defs/calloutTitle"
-                    }
-                },
-                {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "const": "wikiLink"
-                            }
-                        }
-                    },
-                    "then": {
-                        "$ref": "#/$defs/wikiLink"
-                    }
-                },
-                {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "const": "embed"
-                            }
-                        }
-                    },
-                    "then": {
-                        "$ref": "#/$defs/embed"
-                    }
-                },
-                {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "const": "tag"
-                            }
-                        }
-                    },
-                    "then": {
-                        "$ref": "#/$defs/tag"
-                    }
-                },
-                {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "const": "highlight"
-                            }
-                        }
-                    },
-                    "then": {
-                        "$ref": "#/$defs/highlight"
-                    }
-                },
-                {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "const": "part"
-                            }
-                        }
-                    },
-                    "then": {
-                        "$ref": "#/$defs/part"
-                    }
-                },
-                {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "enum": [
-                                    "text",
-                                    "inlineCode",
-                                    "inlineMath",
-                                    "html",
-                                    "code",
-                                    "math"
-                                ]
-                            }
-                        }
-                    },
-                    "then": {
-                        "required": [
-                            "value"
-                        ],
-                        "properties": {
-                            "value": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                },
-                {
-                    "if": {
-                        "properties": {
-                            "type": {
-                                "const": "heading"
-                            }
-                        }
-                    },
-                    "then": {
-                        "required": [
-                            "depth",
-                            "children"
-                        ],
-                        "properties": {
-                            "depth": {
-                                "type": "integer",
-                                "minimum": 1,
-                                "maximum": 6
-                            }
-                        }
+                        "required": ["depth", "children"],
+                        "properties": {"depth": {"type": "integer", "minimum": 1, "maximum": 6}}
                     }
                 }
             ]
         },
         "yaml": {
             "type": "object",
-            "required": [
-                "type",
-                "value"
-            ],
+            "required": ["type", "value"],
             "properties": {
-                "type": {
-                    "const": "yaml"
-                },
-                "value": {
-                    "type": "string",
-                    "description": "The frontmatter as written, without its --- lines."
-                },
+                "type": {"const": "yaml"},
+                "value": {"type": "string", "description": "The frontmatter as written, without its --- lines."},
                 "properties": {
                     "type": "object",
                     "description": "The YAML read, as JSON values, when it is a mapping; absent when it does not read or is not one."
                 },
-                "position": {
-                    "$ref": "#/$defs/position"
-                }
+                "position": {"$ref": "#/$defs/position"}
             },
             "additionalProperties": false
         },
         "callout": {
             "type": "object",
-            "required": [
-                "type",
-                "kind",
-                "marker",
-                "children"
-            ],
+            "required": ["type", "kind", "marker", "children"],
             "properties": {
-                "type": {
-                    "const": "callout"
-                },
+                "type": {"const": "callout"},
                 "kind": {
-                    "enum": [
-                        "note",
-                        "tip",
-                        "important",
-                        "warning",
-                        "caution"
-                    ],
+                    "enum": ["note", "tip", "important", "warning", "caution"],
                     "description": "What it is drawn as."
                 },
                 "marker": {
@@ -310,227 +124,85 @@
                     "description": "The marker as written, lowercased: the kind itself, or a further marker drawn as it (todo, bug)."
                 },
                 "fold": {
-                    "enum": [
-                        "open",
-                        "closed"
-                    ],
+                    "enum": ["open", "closed"],
                     "description": "+ after the marker: open; -: closed. Absent: it does not fold."
                 },
                 "children": {
                     "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/node"
-                    },
+                    "items": {"$ref": "#/$defs/node"},
                     "description": "A calloutTitle first when the callout has one, then its blocks."
                 },
-                "position": {
-                    "$ref": "#/$defs/position"
-                }
+                "position": {"$ref": "#/$defs/position"}
             },
             "additionalProperties": false
         },
         "calloutTitle": {
             "type": "object",
-            "required": [
-                "type",
-                "children"
-            ],
+            "required": ["type", "children"],
             "properties": {
-                "type": {
-                    "const": "calloutTitle"
-                },
-                "children": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/node"
-                    }
-                },
-                "position": {
-                    "$ref": "#/$defs/position"
-                }
+                "type": {"const": "calloutTitle"},
+                "children": {"type": "array", "items": {"$ref": "#/$defs/node"}},
+                "position": {"$ref": "#/$defs/position"}
             },
             "additionalProperties": false
         },
         "wikiLink": {
             "type": "object",
-            "required": [
-                "type",
-                "target",
-                "children"
-            ],
+            "required": ["type", "target", "children"],
             "properties": {
-                "type": {
-                    "const": "wikiLink"
-                },
-                "target": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "The note's name."
-                },
-                "heading": {
-                    "type": "string",
-                    "description": "The heading after #."
-                },
-                "label": {
-                    "type": "string",
-                    "description": "The words after |."
-                },
+                "type": {"const": "wikiLink"},
+                "target": {"type": "string", "minLength": 1, "description": "The note's name."},
+                "heading": {"type": "string", "description": "The heading after #."},
+                "label": {"type": "string", "description": "The words after |."},
                 "children": {
                     "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/node"
-                    },
-                    "description": "The words shown: the label, else the target (with \u203a and the heading)."
+                    "items": {"$ref": "#/$defs/node"},
+                    "description": "The words shown: the label, else the target (with › and the heading)."
                 },
-                "position": {
-                    "$ref": "#/$defs/position"
-                }
+                "position": {"$ref": "#/$defs/position"}
             },
             "additionalProperties": false
         },
         "embed": {
             "type": "object",
-            "required": [
-                "type",
-                "kind",
-                "target"
-            ],
+            "required": ["type", "kind", "target"],
             "properties": {
-                "type": {
-                    "const": "embed"
-                },
-                "kind": {
-                    "enum": [
-                        "note",
-                        "image",
-                        "file"
-                    ]
-                },
-                "target": {
-                    "type": "string",
-                    "minLength": 1
-                },
-                "heading": {
-                    "type": "string"
-                },
-                "alt": {
-                    "type": "string"
-                },
-                "width": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "height": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "children": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/node"
-                    }
-                },
-                "position": {
-                    "$ref": "#/$defs/position"
-                }
+                "type": {"const": "embed"},
+                "kind": {"enum": ["note", "image", "file"]},
+                "target": {"type": "string", "minLength": 1},
+                "heading": {"type": "string"},
+                "alt": {"type": "string"},
+                "width": {"type": "integer", "minimum": 0},
+                "height": {"type": "integer", "minimum": 0},
+                "children": {"type": "array", "items": {"$ref": "#/$defs/node"}},
+                "position": {"$ref": "#/$defs/position"}
             },
             "additionalProperties": false,
             "allOf": [
                 {
-                    "if": {
-                        "properties": {
-                            "kind": {
-                                "const": "image"
-                            }
-                        }
-                    },
+                    "if": {"properties": {"kind": {"const": "image"}}},
                     "then": {
-                        "required": [
-                            "alt"
-                        ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "children"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "heading"
-                                    ]
-                                }
-                            ]
-                        }
+                        "required": ["alt"],
+                        "not": {"anyOf": [{"required": ["children"]}, {"required": ["heading"]}]}
                     }
                 },
                 {
-                    "if": {
-                        "properties": {
-                            "kind": {
-                                "const": "note"
-                            }
-                        }
-                    },
+                    "if": {"properties": {"kind": {"const": "note"}}},
                     "then": {
-                        "required": [
-                            "children"
-                        ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "alt"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "width"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "height"
-                                    ]
-                                }
-                            ]
-                        }
+                        "required": ["children"],
+                        "not": {"anyOf": [{"required": ["alt"]}, {"required": ["width"]}, {"required": ["height"]}]}
                     }
                 },
                 {
-                    "if": {
-                        "properties": {
-                            "kind": {
-                                "const": "file"
-                            }
-                        }
-                    },
+                    "if": {"properties": {"kind": {"const": "file"}}},
                     "then": {
-                        "required": [
-                            "children"
-                        ],
+                        "required": ["children"],
                         "not": {
                             "anyOf": [
-                                {
-                                    "required": [
-                                        "alt"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "width"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "height"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "heading"
-                                    ]
-                                }
+                                {"required": ["alt"]},
+                                {"required": ["width"]},
+                                {"required": ["height"]},
+                                {"required": ["heading"]}
                             ]
                         }
                     }
@@ -539,65 +211,35 @@
         },
         "tag": {
             "type": "object",
-            "required": [
-                "type",
-                "tag"
-            ],
+            "required": ["type", "tag"],
             "properties": {
-                "type": {
-                    "const": "tag"
-                },
-                "tag": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "The tag without its #."
-                },
-                "position": {
-                    "$ref": "#/$defs/position"
-                }
+                "type": {"const": "tag"},
+                "tag": {"type": "string", "minLength": 1, "description": "The tag without its #."},
+                "position": {"$ref": "#/$defs/position"}
             },
             "additionalProperties": false
         },
         "highlight": {
             "type": "object",
-            "required": [
-                "type",
-                "children"
-            ],
+            "required": ["type", "children"],
             "properties": {
-                "type": {
-                    "const": "highlight"
-                },
-                "children": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/node"
-                    }
-                },
-                "position": {
-                    "$ref": "#/$defs/position"
-                }
+                "type": {"const": "highlight"},
+                "children": {"type": "array", "items": {"$ref": "#/$defs/node"}},
+                "position": {"$ref": "#/$defs/position"}
             },
             "additionalProperties": false
         },
         "part": {
             "type": "object",
-            "required": [
-                "type",
-                "id"
-            ],
+            "required": ["type", "id"],
             "properties": {
-                "type": {
-                    "const": "part"
-                },
+                "type": {"const": "part"},
                 "id": {
                     "type": "string",
                     "pattern": "^[\\w.:-]+$",
                     "description": "The app part's ID; a block where its parent holds blocks, inline in a sentence."
                 },
-                "position": {
-                    "$ref": "#/$defs/position"
-                }
+                "position": {"$ref": "#/$defs/position"}
             },
             "additionalProperties": false
         }

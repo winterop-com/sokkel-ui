@@ -92,6 +92,11 @@ export function NotePage({ note }: { note: Note }) {
     const links = useMemo<MarkdownLinks>(() => {
         const plain: MarkdownLinks = {
             onOpen: (target, at) => follow(target, note, at),
+            // A link to a note that exists carries its address, so it opens in a new tab or copies; one to a missing note offers to make it.
+            href: (target) => {
+                const found = vault.resolve(target)
+                return found === undefined ? undefined : `#/note/${found.id}`
+            },
             exists: (target) => vault.resolve(target) !== undefined,
             onTag: (tag) => go(`/tags/${encodeURIComponent(tag)}`),
         }

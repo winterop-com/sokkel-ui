@@ -10,7 +10,8 @@ import { routeTiles } from './tiles.ts'
  * narrowest and widest phones, and tablets upright and on their side. A story passes when it renders
  * without throwing (no uncaught error, no Storybook error screen), its page never scrolls sideways,
  * so nothing runs past the edge of the screen, and no scroll area inside it scrolls sideways past
- * everything it shows: a swipe there would only bring an empty pane into view.
+ * everything it shows: a swipe there would only bring an empty pane into view. A drawn diagram fits
+ * its frame.
  */
 interface Entry {
     id: string
@@ -70,6 +71,23 @@ function emptyScroll(): string[] {
     return found
 }
 
+/**
+ * The drawn diagrams that run past their frame, which would cut them off: a diagram is drawn whole at
+ * any width. One expanded into its window pans there, so a frame that scrolls is left out.
+ */
+function cutDiagrams(): string[] {
+    const found: string[] = []
+    for (const frame of document.body.querySelectorAll<HTMLElement>('[data-slot=mermaid-diagram]')) {
+        const svg = frame.querySelector('svg')
+        if (svg === null || !frame.checkVisibility() || /auto|scroll/.test(getComputedStyle(frame).overflowX)) continue
+        const box = frame.getBoundingClientRect()
+        const drawn = svg.getBoundingClientRect()
+        if (drawn.left < box.left - 1 || drawn.right > box.right + 1)
+            found.push(`a diagram ${String(Math.round(drawn.width))}px wide in a frame of ${String(Math.round(box.width))}px`)
+    }
+    return found
+}
+
 const stories: Entry[] = existsSync(INDEX)
     ? Object.values((JSON.parse(readFileSync(INDEX, 'utf8')) as { entries: Record<string, Entry> }).entries).filter(
           (entry) => entry.type === 'story' && !entry.tags?.includes('no-screenshot'),
@@ -91,6 +109,7 @@ for (const story of stories) {
             const wide = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth))
             if (wide > width + 1) over.push(`${name} (${String(width)}px): the page is ${String(wide)}px wide`)
             for (const area of await page.evaluate(emptyScroll)) over.push(`${name} (${String(width)}px): ${area}`)
+            for (const cut of await page.evaluate(cutDiagrams)) over.push(`${name} (${String(width)}px): ${cut}`)
             const failed = await page.evaluate(() => document.body.classList.contains('sb-show-errordisplay'))
             if (failed) thrown.push(`${name}: Storybook shows its error screen`)
         }
