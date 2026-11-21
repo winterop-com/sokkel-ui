@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 
-import { LABEL_RANK, labelRegistry, placeClear, type RenderedPoint } from './layer'
+import { LABEL_RANK, labelRegistry, nearLongitude, placeClear, type RenderedPoint } from './layer'
 import { measureBox } from './LinkLayer'
 import { placeLabels, trackLabelBox } from './TrackLayer'
 import { zoneLabelBox } from './ZoneLayer'
@@ -60,5 +60,14 @@ describe('labels across layers', () => {
         stop()
         labels.set('wui-watch', LABEL_RANK.track, [[0, 0, 10, 10]])
         expect(heard).toHaveBeenCalledTimes(2)
+    })
+})
+
+describe('a longitude beside another', () => {
+    test('is the copy of it within half the world of the other, however many times round either runs', () => {
+        expect(nearLongitude(-179.9, 179.9)).toBeCloseTo(180.1, 9)
+        expect(nearLongitude(180.1, -179)).toBeCloseTo(-179.9, 9)
+        expect(nearLongitude(10, 20)).toBe(10)
+        expect(nearLongitude(10, 380)).toBeCloseTo(370, 9)
     })
 })

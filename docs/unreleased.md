@@ -14,13 +14,37 @@ release and empties it.
   (message ids `tracking.affiliations.*` and `tracking.kinds.*`), the grouping order and the color
   token names `track-friend`, `track-hostile`, `track-neutral`, `track-unknown` and `track-pending`.
 - `TrackLayer` (`@winterop-com/sokkel-ui-maps/TrackLayer`): moving things on a map, each a symbol
-  for its kind (`vessel`, `aircraft`, `vehicle`, `sensor`, `other`) turned to its heading, in its
-  affiliation's color (`friend`, `hostile`, `neutral`, `unknown`, `pending`), its label beside it and
-  its trail fading behind it. The selected track (the map's `selected`) is ringed in
-  `--map-selection`; new positions glide in over `transition` with the source's data set in place;
-  `cluster` gathers dense tracks into counted clusters, ringed when one holds a hostile track.
-  `trackLegendEntries` and `trackCounts` key the affiliations in a `MapLegend`. Words `TRACK_WORDS`,
-  ids `track.<affiliation>` and `track.<kind>`.
+  for its kind (`vessel`, `aircraft`, `vehicle`, `sensor`, `satellite`, `other`) turned to its
+  heading, in its affiliation's color (`friend`, `hostile`, `neutral`, `unknown`, `pending`), its
+  label beside it and its trail fading behind it. The selected track (the map's `selected`) is ringed
+  in `--map-selection`; `cluster` gathers dense tracks into counted clusters, ringed when one holds a
+  hostile track. `trackLegendEntries` and `trackCounts` key the affiliations in a `MapLegend`. Words
+  `TRACK_WORDS`, ids `track.<affiliation>` and `track.<kind>`.
+- `TrackLayer` moves its tracks and lights them:
+    - `motion` (on by default): a track with a `speed` (meters a second) and a `heading` is moved on
+      along its heading every animation frame between reports, for at most `coast` (60 s), and settles
+      onto each new report over `blend` (1 s) without ever moving back; `motion={false}` leaves every
+      track where it was reported. A track without a speed still glides over `transition`.
+    - `effects` (all on by default; `false`, or each by name): `glow` under each symbol in its color,
+      `halo` breathing round the selected track, `ripple` where a track first appears, `pulse` under
+      a hostile track, `fade` (the trail a gradient from the symbol's color to nothing) and `scale`
+      (symbols at 0.72 of `size` at zoom 3, `size` at zoom 6 and 1.25 of it at zoom 11).
+    - With motion reduced nothing animates and each report is drawn where it says at once; the
+      frames stop while the page is hidden or the map is off the screen.
+    - A map whose tracks never stop still comes to rest: the layer tells it of the next moves only
+      once it has drawn the last, and lets it rest four times a second, so `data-map-idle` holds
+      again and again and whatever waits on it finds the map drawn.
+    - The layer tells its sources only of the tracks that moved, with `updateData`. `trackData` gives
+      each trail as one line with its `tone` and each trail's `heads` line apart; `plotCourse`,
+      `courseAt`, `trackScale` and `trailTone` are the layer's arithmetic, on the sphere: it holds by
+      the poles and across the antimeridian, where longitudes run on past 180 (`nearLongitude` in
+      `layer`, which overlay labels are now placed by too). Labels are placed in the
+      order the tracks are given.
+- The track kind `satellite`, in `TrackLayer` and in the core's `lib/tracks` and `TrackGlyph` (a body
+  with a pointed nose between two solar panels): words `TRACK_WORDS.satellite` and
+  `TRACK_NAMES_WORDS.satellite`, ids `track.satellite` and `trackNames.satellite`.
+- Stories Maps/Motion: Flowing traffic, Harbor at night, New contacts, Selected and Dense, moving at
+  thirty times the world's pace over the street map of the scheme.
 - Tokens `--track-friend`, `--track-hostile`, `--track-neutral`, `--track-unknown` and
   `--track-pending`, set by tidevann in both schemes, so a theme can change them.
 - Map tools, each a part placed in a corner of a `MapView`: `MapRuler` (two clicks measure the

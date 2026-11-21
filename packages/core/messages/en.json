@@ -1029,6 +1029,7 @@
     "trackNames.neutral": "Neutral",
     "trackNames.other": "Other",
     "trackNames.pending": "Pending",
+    "trackNames.satellite": "Satellite",
     "trackNames.sensor": "Sensor",
     "trackNames.unknown": "Unknown",
     "trackNames.vehicle": "Vehicle",

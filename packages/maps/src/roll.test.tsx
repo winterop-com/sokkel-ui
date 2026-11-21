@@ -190,6 +190,7 @@ function drawnMap() {
         off: (type: string, handler: () => void) => handlers.get(type)?.delete(handler),
         getLayer: () => ({}),
         getContainer: () => ({ clientWidth: 1000, clientHeight: 800 }),
+        getCenter: () => ({ lng: 0, lat: 0 }),
         project: ([lng, lat]: [number, number]) => ({ x: lng * 10 + shift, y: lat * 10 }),
         // The far side of a globe: a place east of 90 reads back as another place.
         unproject: ([x, y]: [number, number]) => ({ lng: (x - shift) / 10 > 90 ? 0 : (x - shift) / 10, lat: y / 10 }),

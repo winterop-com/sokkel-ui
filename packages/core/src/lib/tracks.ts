@@ -4,13 +4,13 @@ import type { WordsPart } from './words'
 export type TrackAffiliation = 'friend' | 'hostile' | 'neutral' | 'unknown' | 'pending'
 
 /** What a track is, which picks its glyph. */
-export type TrackKind = 'vessel' | 'aircraft' | 'vehicle' | 'sensor' | 'other'
+export type TrackKind = 'vessel' | 'aircraft' | 'vehicle' | 'sensor' | 'satellite' | 'other'
 
 /** Every affiliation, in the order a list groups them and a menu offers them. */
 export const TRACK_AFFILIATIONS: readonly TrackAffiliation[] = ['friend', 'hostile', 'neutral', 'unknown', 'pending']
 
 /** Every kind, in the order a filter lists them. */
-export const TRACK_KINDS: readonly TrackKind[] = ['vessel', 'aircraft', 'vehicle', 'sensor', 'other']
+export const TRACK_KINDS: readonly TrackKind[] = ['vessel', 'aircraft', 'vehicle', 'sensor', 'satellite', 'other']
 
 /** The color each affiliation is drawn in: a token per affiliation (`--track-friend`), so a theme can change them. */
 export const TRACK_COLORS: Readonly<Record<TrackAffiliation, string>> = {
@@ -53,6 +53,30 @@ export const TRACK_OUTLINES: Readonly<Record<Exclude<TrackKind, 'sensor'>, reado
         [12, 13],
         [17, 13],
     ],
+    // A body with a pointed nose between two solar panels, each on a short arm.
+    satellite: [
+        [24, 4],
+        [29, 11],
+        [29, 22],
+        [34, 22],
+        [34, 16],
+        [46, 16],
+        [46, 32],
+        [34, 32],
+        [34, 26],
+        [29, 26],
+        [29, 40],
+        [19, 40],
+        [19, 26],
+        [14, 26],
+        [14, 32],
+        [2, 32],
+        [2, 16],
+        [14, 16],
+        [14, 22],
+        [19, 22],
+        [19, 11],
+    ],
     // A plain triangle.
     other: [
         [24, 6],
@@ -74,6 +98,7 @@ export const TRACK_NAMES_WORDS: TrackNameWords = {
     aircraft: 'Aircraft',
     vehicle: 'Vehicle',
     sensor: 'Sensor',
+    satellite: 'Satellite',
     other: 'Other',
 }
 
