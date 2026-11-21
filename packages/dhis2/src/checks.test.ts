@@ -9,7 +9,7 @@ import {
 } from '@winterop-com/sokkel-ui-tracking/checks'
 import { describe, expect, it } from 'vitest'
 
-import { DHIS2_CHECK_PART, DHIS2_CHECK_WORDS, DHIS2_DEMO, DHIS2_KIND, DHIS2_LATENCY, dhis2Checks } from './checks'
+import { DHIS2_CHECK_PART, DHIS2_CHECK_WORDS, DHIS2_DEMO, DHIS2_KIND, DHIS2_LATENCY, DHIS2_SAMPLE_ANSWERS, dhis2Checks } from './checks'
 
 /** 20 November 2026, 18:40:00 UTC. */
 const AT = 1_795_200_000_000
@@ -208,5 +208,20 @@ describe('the demo server', () => {
             'https://play.dhis2.org/demo/api/system/info',
             'https://play.dhis2.org/demo/api/me?fields=id,username,displayName',
         ])
+    })
+})
+
+describe('the sample answers', () => {
+    it('pass every check, with and without credentials', () => {
+        for (const check of [...dhis2Checks(), ...dhis2Checks({ credentials: true })]) {
+            const { status, body } = DHIS2_SAMPLE_ANSWERS[check.id]
+            const result = evaluateCheck(check as Check, {
+                at: AT,
+                status,
+                body: typeof body === 'string' ? body : JSON.stringify(body),
+                latency: 120,
+            })
+            expect(result.status, check.id).toBe('up')
+        }
     })
 })

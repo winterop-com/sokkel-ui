@@ -190,3 +190,30 @@ export const DHIS2_DEMO: Dhis2Target = {
     kind: DHIS2_KIND.id,
     url: 'https://play.dhis2.org/demo',
 }
+
+/** What a server answers one check with: its status and its body, as text or as a value written as JSON. */
+export interface Dhis2SampleAnswer {
+    status: number
+    body?: unknown
+}
+
+/**
+ * What a DHIS2 server that is well answers each check with, by the check's id, for an example, a
+ * story or a test with no server at hand. Every check of `dhis2Checks`, with or without
+ * credentials, passes on its answer here.
+ */
+export const DHIS2_SAMPLE_ANSWERS: Readonly<Record<string, Dhis2SampleAnswer>> = {
+    'dhis2-reachable': { status: 200, body: '<!doctype html><html><head><title>DHIS2</title></head><body></body></html>' },
+    'dhis2-login-config': { status: 200, body: { apiVersion: '2.42.2', applicationTitle: 'DHIS2 Demo', selfRegistrationEnabled: false } },
+    'dhis2-system-info': {
+        status: 200,
+        body: {
+            version: '2.42.2',
+            revision: '7a1c2e9',
+            buildTime: '2026-10-28T09:14:00.000',
+            serverDate: '2026-11-20T17:00:00.000',
+            systemName: 'DHIS2 Demo',
+        },
+    },
+    'dhis2-me': { status: 200, body: { id: 'xE7jOejl9FI', username: 'ada', displayName: 'Ada' } },
+}

@@ -59,6 +59,10 @@
         "./checks": {
             "types": "./dist/checks.d.ts",
             "import": "./dist/checks.js"
+        },
+        "./sources": {
+            "types": "./dist/sources.d.ts",
+            "import": "./dist/sources.js"
         }
     },
     "publishConfig": {

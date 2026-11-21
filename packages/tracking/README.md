@@ -39,18 +39,56 @@ gives none, a track is `unknown`.
 
 ## Modules
 
-| Module         | Holds                                                                                                                                                                                                                                                                                                      |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/track`       | `Track` and its types, `TRACK_AFFILIATIONS`, `TRACK_KINDS`, `KNOT` and `FOOT`                                                                                                                                                                                                                              |
-| `/adsb`        | `parseReadsb` (readsb's JSON and the v2 APIs on it: `/v2/point`, `/v2/hex`), `parseOpenSky` (`/api/states/all`) and `parseFlights`, which tells them apart; `altitudeBand` and `verticalTrend`                                                                                                             |
-| `/ais`         | `createAisDecoder`, which reads `VDM` and `VDO` lines of any talker (`!AIVDM`, `!BSVDM`) into vessel tracks with a registry by MMSI; `parseAisSentence`, `decodeAisPayload` and `aisChecksum` underneath                                                                                                   |
-| `/geo`         | `distance`, `bearing` and `destination` on a great circle; `toUtm`, `fromUtm`, `formatUtm`, `utmZone` and `latitudeBand`; `toMgrs` and `parseMgrs`                                                                                                                                                         |
-| `/network`     | `createFlowTracker`, which gathers connection records by remote host and by process, or lists each, with byte rates over a window; `flowTracks`, the located hosts as tracks and links from home; `addressScope` and the address checks                                                                    |
-| `/affiliation` | `TRACKING_WORDS` and `TRACKING_PART`, `AFFILIATION_ORDER`, `compareAffiliation`, `sortByAffiliation`, `groupByAffiliation` and `AFFILIATION_TOKENS`                                                                                                                                                        |
-| `/orbits`      | `parseOmm` and `parseOmmCsv`, which read satellites from OMM in JSON and in CSV; `satellitePosition` and `satelliteTracks`, which place them at any time with SGP4; `groundTrack`, `splitAtAntimeridian`, `footprint` and `horizonRange`; `parseStationPosition` for the space station's position services |
-| `/events`      | `Incident` and its types; `parseUsgsQuakes`, `parseGdacs` and `parseMetAlerts`; `incidentZones`, `incidentsAt` and `cancelledMetAlerts`; `quakeSeverity`, `areaMiddle`, `compareSeverity`, `atLeast`, `SEVERITY_ORDER`, and `INCIDENT_WORDS` and `INCIDENT_PART`                                           |
-| `/checks`      | `Check` and its types; `evaluateCheck`, `checkUrl`, `readPath` and `statusPasses`; `createStatusMonitor`, `combineResults` and `worstStatus`; `httpCheck` and `HTTP_KIND`; `CHECK_WORDS` and `CHECK_PART`                                                                                                  |
-| `/simulate`    | Simulated feeds for an example, a story or a test, each from a seed and a moment: `simulateFlights`, `simulateAis` and `simulateCoast`, `createNetworkSimulation`, and `createSimClock`, the clock they are read at                                                                                        |
+| Module         | Holds                                                                                                                                                                                                                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/track`       | `Track` and its types, `TRACK_AFFILIATIONS`, `TRACK_KINDS`, `KNOT` and `FOOT`                                                                                                                                                                                                                                                               |
+| `/adsb`        | `parseReadsb` (readsb's JSON and the v2 APIs on it: `/v2/point`, `/v2/hex`), `parseOpenSky` (`/api/states/all`) and `parseFlights`, which tells them apart; `altitudeBand` and `verticalTrend`                                                                                                                                              |
+| `/ais`         | `createAisDecoder`, which reads `VDM` and `VDO` lines of any talker (`!AIVDM`, `!BSVDM`) into vessel tracks with a registry by MMSI; `parseAisSentence`, `decodeAisPayload` and `aisChecksum` underneath                                                                                                                                    |
+| `/geo`         | `distance`, `bearing` and `destination` on a great circle; `toUtm`, `fromUtm`, `formatUtm`, `utmZone` and `latitudeBand`; `toMgrs` and `parseMgrs`                                                                                                                                                                                          |
+| `/network`     | `createFlowTracker`, which gathers connection records by remote host and by process, or lists each, with byte rates over a window; `flowTracks`, the located hosts as tracks and links from home; `addressScope` and the address checks                                                                                                     |
+| `/affiliation` | `TRACKING_WORDS` and `TRACKING_PART`, `AFFILIATION_ORDER`, `compareAffiliation`, `sortByAffiliation`, `groupByAffiliation` and `AFFILIATION_TOKENS`                                                                                                                                                                                         |
+| `/orbits`      | `parseOmm` and `parseOmmCsv`, which read satellites from OMM in JSON and in CSV; `satellitePosition` and `satelliteTracks`, which place them at any time with SGP4; `groundTrack`, `splitAtAntimeridian`, `footprint` and `horizonRange`; `parseStationPosition` for the space station's position services                                  |
+| `/events`      | `Incident` and its types; `parseUsgsQuakes`, `parseGdacs` and `parseMetAlerts`; `incidentZones`, `incidentsAt` and `cancelledMetAlerts`; `quakeSeverity`, `areaMiddle`, `compareSeverity`, `atLeast`, `SEVERITY_ORDER`, and `INCIDENT_WORDS` and `INCIDENT_PART`                                                                            |
+| `/checks`      | `Check` and its types; `evaluateCheck`, `checkUrl`, `readPath` and `statusPasses`; `createStatusMonitor`, `combineResults` and `worstStatus`; `httpCheck` and `HTTP_KIND`; `CHECK_WORDS` and `CHECK_PART`                                                                                                                                   |
+| `/sources`     | `Source` and its types; `createSourceEngine`, which reads each source when it is due, judges it with its checks, holds its status and raises an alert when it changes, and hands its state to another window                                                                                                                                |
+| `/simulate`    | Simulated feeds for an example, a story or a test, each from a seed and a moment: `simulateFlights`, `simulateAis` and `simulateCoast`, `createNetworkSimulation`, `simulateQuakes`, `simulateDisasters` and `simulateWarnings`, `simulateOmmCsv` and `simulateStation`, `simulateAnswer`, and `createSimClock`, the clock they are read at |
+
+## Sources and their engine
+
+```ts
+import { createSourceEngine, type Source } from '@winterop-com/sokkel-ui-tracking/sources'
+
+const quakes: Source = {
+    id: 'quakes',
+    label: 'Earthquakes',
+    kind: 'incidents',
+    interval: 60_000,
+    checks: [{ id: 'answers', label: 'Feed answers', path: '', expect: { status: 200 }, latency: { degraded: 3000 } }],
+    read: async ({ at }) => {
+        const started = performance.now()
+        const answer = await fetch(url)
+        const feed = await answer.json()
+        return { responses: { answers: { at, status: answer.status, latency: performance.now() - started } }, data: parseUsgsQuakes(feed) }
+    },
+    simulate: ({ at }) => ({ responses: { answers: { at, status: 200, latency: 200 } }, data: parseUsgsQuakes(simulateQuakes(at)) }),
+}
+
+const engine = createSourceEngine({ sources: [quakes] })
+setInterval(() => engine.poll(Date.now(), { hidden: document.hidden }), 1000)
+engine.subscribe(() => draw(engine.state(), engine.data('quakes')))
+```
+
+A source is a plugin: what it is called, how often it is read, the checks its answers must pass, how
+to read it live and what stands in when it cannot be read. The engine holds no timer and asks no
+server: the app calls `poll`, which reads what is due through the source's own `read`. Each read's
+answers go through the source's checks; the worst is one observation for the source's status
+monitor, and a change of status is kept in the source's `transitions` and raised once as an alert,
+newest first in `state().alerts`. A live read that comes back down leaves the source showing its
+simulation (`mode: 'simulated'`, `fallback: true`) until a later read is better. `setEnabled`
+switches a source off and on, `setLive` between its live read and its simulation alone, and
+`refresh` reads one now. Everything it holds is plain data: `snapshot()` gives the state and every
+source's data (or, given the versions a reader holds, only what changed), and `adopt` takes one as
+its own, monitors included, so one window can read the sources and others follow it and take over.
 
 ## Flights
 

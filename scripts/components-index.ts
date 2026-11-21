@@ -229,7 +229,10 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'simulate/clock': 'the simulated clock, exported by `simulate`',
         'simulate/coast': 'the simulated coast, its contacts, events and picture, exported by `simulate`',
         'simulate/flights': 'the simulated flights and their timetable, exported by `simulate`',
+        'simulate/health': "the simulated server's answers to health checks, exported by `simulate`",
+        'simulate/incidents': 'the simulated earthquakes, disasters and weather warnings, exported by `simulate`',
         'simulate/network': "the simulated machine's connections and hosts, exported by `simulate`",
+        'simulate/orbits': "the simulated satellites' elements and the station's position, exported by `simulate`",
         'simulate/nmea': 'the AIS sentences the simulated coast writes its vessels as, exported by `simulate`',
     },
 }
@@ -294,6 +297,7 @@ const CORE_AREAS: Record<string, string> = {
     SchemeChoice: 'Frame and navigation',
     ThemeToggle: 'Frame and navigation',
     TopBar: 'Frame and navigation',
+    Kiosk: 'Frame and navigation',
     ServerMenu: 'Frame and navigation',
     // Page layout: what a page is arranged with.
     Inspector: 'Page layout',
@@ -406,6 +410,8 @@ const CORE_AREAS: Record<string, string> = {
     TrackRoster: 'Data display',
     TaskCard: 'Data display',
     UptimeBar: 'Data display',
+    StatusWall: 'Data display',
+    AlertTicker: 'Data display',
     // Actions, dialogs and feedback.
     Banner: 'Actions, dialogs and feedback',
     Callout: 'Actions, dialogs and feedback',
