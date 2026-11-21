@@ -1,14 +1,14 @@
 /**
  * A track: one thing a tracking console follows on a map, as a plain, serializable record. Every
- * reader in this package (flights, AIS, network connections) gives tracks in this shape, so a map
- * layer, a list and a filter take any of them alike.
+ * reader in this package (flights, AIS, orbits, network connections) gives tracks in this shape, so a
+ * map layer, a list and a filter take any of them alike.
  */
 
 /** Whose side a track is on. */
 export type TrackAffiliation = 'friend' | 'hostile' | 'neutral' | 'unknown' | 'pending'
 
 /** What moves. */
-export type TrackKind = 'vessel' | 'aircraft' | 'vehicle' | 'sensor' | 'other'
+export type TrackKind = 'vessel' | 'aircraft' | 'satellite' | 'vehicle' | 'sensor' | 'other'
 
 /** A point as longitude and latitude, in degrees. */
 export type LonLat = [lon: number, lat: number]
@@ -45,7 +45,7 @@ export interface Track {
 export const TRACK_AFFILIATIONS: readonly TrackAffiliation[] = ['friend', 'hostile', 'neutral', 'unknown', 'pending']
 
 /** Every kind, in the order the words list them. */
-export const TRACK_KINDS: readonly TrackKind[] = ['vessel', 'aircraft', 'vehicle', 'sensor', 'other']
+export const TRACK_KINDS: readonly TrackKind[] = ['vessel', 'aircraft', 'satellite', 'vehicle', 'sensor', 'other']
 
 /** Gives a track its affiliation from what a feed knows of it; undefined leaves it `unknown`. */
 export type TrackClassifier = (track: Track) => TrackAffiliation | undefined

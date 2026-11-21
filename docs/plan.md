@@ -1299,19 +1299,53 @@ it shows so that it needs no more tiles than it must.
 
 ## Tracks on a map
 
-A map that watches moving things (vessels, aircraft, vehicles, sensors) draws them with `TrackLayer`:
-one symbol per kind, drawn in code as a signed distance field so one image takes any color, turned
-to the track's heading and painted in its affiliation's token (`--track-friend`, `--track-hostile`,
-`--track-neutral`, `--track-unknown`, `--track-pending`), which a theme may change. A trail is cut
-into one piece per step, each fading further into the past; a label is written beside its track in
-the map's overlay, since a basemap without fonts writes no text, and a label that would cover another
-or another track is left out, the selected track's never. New positions glide in: the layer sets its
-sources' data frame by frame from where each track was to where it is, so a feed that updates every
-second moves smoothly and the selection, kept as feature state, stays on. `cluster` uses maplibre's
-own clustering. Selection is the map's, as every layer's is. A track may carry a `band` (an altitude
-band, a speed band), and a layer given `bands` paints a track whose band it names in that band's
-color in place of its affiliation's, its trail too, as a flight map colored by altitude needs; the
-band colors are the app's, from tokens. A map's `onViewChange` tells where it looks (center, zoom and
+A map that watches moving things (vessels, aircraft, vehicles, sensors, satellites) draws them with
+`TrackLayer`: one symbol per kind, drawn in code as a signed distance field so one image takes any
+color, turned to the track's heading and painted in its affiliation's token (`--track-friend`,
+`--track-hostile`, `--track-neutral`, `--track-unknown`, `--track-pending`), which a theme may
+change, over a soft glow in the same color. A label is written beside its track in the map's
+overlay, since a basemap without fonts writes no text, and a label that would cover another or
+another track is left out, the selected track's never. `cluster` uses maplibre's own clustering.
+
+The tracks move. One that reports a `speed` and a `heading` is moved on between reports (`motion`):
+the layer keeps its course, brings it on along its heading every animation frame for at most `coast`
+(a minute), and settles it onto the next report over `blend` (a second), a track drawn ahead of its
+report waiting for its course to reach it rather than move back. One without them glides to where it
+is over `transition`. Both are reckoned along great circles, so a track goes over a pole rather than
+past it, and a report across the antimeridian is taken up beside where the track was drawn, its
+longitude running on past 180: trails and their heads stay whole lines, and labels are written in
+the copy of the world the camera looks at (`nearLongitude`). A track that leaves takes its feature
+state with it. The layer tells its sources only of what moved, with `updateData`: once the
+fastest track has moved a quarter of a pixel on the canvas, each that moved a twentieth of one goes
+in one change a source, so a map zoomed far out is told a few times a second, a frame of two thousand
+tracks costs the layer a few tenths of a millisecond of its own, and the selection, kept as feature
+state, stays on. A trail is one line through the track's past positions that fades along its length
+(a gradient along the line takes one color a layer, so each affiliation and each of the first eight
+bands has one), and its head a second, plain line on from the trail's newest position to where the
+track is drawn. The head moves with the track; the trail changes only when a report extends it, and
+with many trails less often than that, since maplibre draws a gradient line afresh pixel by pixel
+whenever its tile is rebuilt.
+
+The light is paint, never data: the selected track's halo breathes and a new track's ripple spreads
+as feature state, and a hostile track's pulse is two constant paint properties, each stepped at most
+thirty times a second, so none of them rebuilds a tile. The symbols scale gently with the zoom, and the
+glow and the pulse dim as the tracks grow many. `effects` turns each off. With motion reduced
+(`useReducedMotion`) nothing animates and a report is drawn where it says at once; the frames stop
+when nothing moves, when the page is hidden and when the map is off the screen.
+
+A map of moving tracks still comes to rest. The layer tells the map of the next moves only once the
+map has drawn the last, so the map is never told more than it draws, and when the map has not rested
+for a quarter of a second the layer waits for it to (maplibre's `idle`, and one frame more) before
+it goes on, unless the camera is moving or the map cannot rest within six frames. A paint property
+set leaves the style changed for the frame it is drawn in, which is not a frame at rest, so the
+pulse is stepped only with a clean frame between two steps. So `data-map-idle` holds again and
+again however long the tracks move, and what waits on it (the browser suites' `settled`, an
+export) finds the map drawn; what a report changes is told at once all the same.
+
+Selection is the map's, as every layer's is. A track may carry a `band` (an altitude band, a speed
+band), and a layer given `bands` paints a track whose band it names in that band's color in place of
+its affiliation's, its trail too, as a flight map colored by altitude needs; the band colors are the
+app's, from tokens. A map's `onViewChange` tells where it looks (center, zoom and
 bounds) once drawn and each time it comes to rest, for an app that reads a feed for the area in view.
 
 The tools around such a map are parts in its corners, each taking only what it needs from the map's

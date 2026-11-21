@@ -457,6 +457,15 @@ export function useLabelBoxes(key: string, rank: number, boxes: readonly PixelBo
     useEffect(() => () => labels.set(key, rank, []), [labels, key, rank])
 }
 
+/**
+ * A longitude as the copy of it nearest another, which may lie past 180: what keeps a line whole
+ * across the antimeridian, and a place in the copy of the world a camera looks at.
+ */
+export function nearLongitude(lng: number, to: number): number {
+    const apart = lng - to
+    return apart >= -180 && apart <= 180 ? lng : to + ((((apart + 180) % 360) + 360) % 360) - 180
+}
+
 /** A place an overlay writes beside, by its position on the map. */
 export interface PlacedText {
     key: string
@@ -486,11 +495,14 @@ export function useProjectedPoints(map: MapLibreMap, places: readonly PlacedText
             const canvas = map.getContainer()
             const [width, height] = [canvas.clientWidth, canvas.clientHeight]
             const next: RenderedPoint[] = []
+            // Each place is written in the copy of the world the camera looks at.
+            const middle = map.getCenter().lng
             for (const place of latest.current) {
-                const point = map.project(place.at)
+                const lng = nearLongitude(place.at[0], middle)
+                const point = map.project([lng, place.at[1]])
                 const [x, y] = [Math.round(point.x), Math.round(point.y)]
                 const inView = width === 0 || (x >= -margin && y >= -margin && x <= width + margin && y <= height + margin)
-                if (inView && facing(map.unproject([point.x, point.y]), place.at[0], place.at[1]))
+                if (inView && facing(map.unproject([point.x, point.y]), lng, place.at[1]))
                     next.push({ key: place.key, x, y, text: place.text })
             }
             return next

@@ -27,7 +27,8 @@ export interface TrackGlyphProps {
 
 /**
  * What a track is, as the map draws it: its kind's shape (a hull, an arrowhead, a box with a point,
- * a ring round a dot for a sensor, a triangle for anything else) filled in its affiliation's color
+ * a ring round a dot for a sensor, a body between two panels for a satellite, a triangle for
+ * anything else) filled in its affiliation's color
  * and turned to its heading, so a list, a card and a line between two things show a track as the map
  * shows it.
  */

@@ -25,7 +25,7 @@ interface Track {
     speed?: number
     altitude?: number
     affiliation: 'friend' | 'hostile' | 'neutral' | 'unknown' | 'pending'
-    kind: 'vessel' | 'aircraft' | 'vehicle' | 'sensor' | 'other'
+    kind: 'vessel' | 'aircraft' | 'satellite' | 'vehicle' | 'sensor' | 'other'
     label?: string
     trail?: [number, number][] // lon, lat, oldest first
     updatedAt?: number

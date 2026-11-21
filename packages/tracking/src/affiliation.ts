@@ -14,7 +14,7 @@ export interface TrackingWords {
 
 export const TRACKING_WORDS: TrackingWords = {
     affiliations: { friend: 'Friend', hostile: 'Hostile', neutral: 'Neutral', unknown: 'Unknown', pending: 'Pending' },
-    kinds: { vessel: 'Vessel', aircraft: 'Aircraft', vehicle: 'Vehicle', sensor: 'Sensor', other: 'Other' },
+    kinds: { vessel: 'Vessel', aircraft: 'Aircraft', satellite: 'Satellite', vehicle: 'Vehicle', sensor: 'Sensor', other: 'Other' },
 }
 
 export const TRACKING_PART: WordsPart<TrackingWords> = { id: 'tracking', words: TRACKING_WORDS }

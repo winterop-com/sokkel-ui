@@ -12,7 +12,7 @@
 import { eciToGeodetic, gstime, json2satrec, propagate, type SatRec } from 'satellite.js'
 
 import { bearing, distance, EARTH_RADIUS } from './geo'
-import type { LonLat, Track, TrackAffiliation, TrackProperties } from './track'
+import type { LonLat, Track, TrackAffiliation, TrackClassifier, TrackProperties } from './track'
 
 /** One satellite's mean elements as OMM in JSON; numbers come as numbers from CelesTrak and as text from Space-Track. */
 export interface OmmRecord {
@@ -218,11 +218,11 @@ export function satellitePosition(satellite: Satellite, at: number): SatellitePo
 }
 
 /** A satellite as a track: a `Track` whose kind is `satellite`. */
-export type SatelliteTrack = Omit<Track, 'kind'> & { kind: 'satellite' }
+export type SatelliteTrack = Track & { kind: 'satellite' }
 
 export interface SatelliteOptions {
     /** Gives each satellite its affiliation from its name, catalog number or the rest; `unknown` when it gives none. */
-    classify?: (track: SatelliteTrack) => TrackAffiliation | undefined
+    classify?: TrackClassifier
     /** The tracks' `source`; `omm` by default. */
     source?: string
 }

@@ -9350,7 +9350,14 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {}
+const PENDING: Record<string, Record<string, string>> = {
+    'track-card': {
+        'options.kind': 'a satellite is a kind too, with a glyph of its own: design-drafts/parts/track-card.json',
+    },
+    'track-glyph': {
+        'options.kind': 'a satellite is a kind too, a body between two panels: design-drafts/parts/track-glyph.json',
+    },
+}
 
 // Markdown view
 
@@ -9519,6 +9526,7 @@ function fakeMap(): FakeMap {
         off: (type: string, handler: (event: object) => void) => handlers.get(type)?.delete(handler),
         getBearing: () => bearing,
         getZoom: () => 6,
+        getCenter: () => ({ lng: 0, lat: 0 }),
         getContainer: () => container,
         project: ([lng, lat]: [number, number]) => ({ x: lng * 100, y: -lat * 100 }),
         unproject: ([x, y]: [number, number]) => ({ lng: x / 100, lat: -y / 100 }),
@@ -9640,7 +9648,8 @@ const MAP_UNITS = Object.keys(UNIT_SYMBOLS)
 
 /**
  * What a maplibre expression gives for a feature in a feature state: the operators the map layers
- * paint with (case, match, step, get, has, feature-state, concat and plain arithmetic).
+ * paint with (case, match, step, get, has, feature-state, concat and plain arithmetic), and a
+ * straight interpolation by the zoom the state gives.
  */
 function evaluate(expression: unknown, properties: Record<string, unknown>, state: Record<string, unknown> = {}): unknown {
     if (!Array.isArray(expression)) return expression
@@ -9688,6 +9697,20 @@ function evaluate(expression: unknown, properties: Record<string, unknown>, stat
             return args.map((value) => String(at(value))).join('')
         case '^':
             return Number(at(args[0])) ** Number(at(args[1]))
+        case 'zoom':
+            return state.zoom
+        case 'interpolate': {
+            // Between the stops either side of the input, and held at the first and the last.
+            const input = Number(at(args[1]))
+            const stops = args.slice(2)
+            for (let index = 0; index + 3 < stops.length; index += 2) {
+                const [from, to] = [Number(stops[index]), Number(stops[index + 2])]
+                if (input > to) continue
+                const [low, high] = [Number(at(stops[index + 1])), Number(at(stops[index + 3]))]
+                return input <= from ? low : low + ((input - from) / (to - from)) * (high - low)
+            }
+            return at(stops.at(-1))
+        }
         default:
             return undefined
     }
@@ -9776,13 +9799,18 @@ const TRACK_LAYER_ADAPTER: Adapter = {
         const symbol = trackLayerOf(plain.fake, '-symbol')
         const ring = trackLayerOf(plain.fake, '-ring')
         const trail = trackLayerOf(plain.fake, '-trail-line')
+        const glow = trackLayerOf(plain.fake, '-glow')
+        const halo = trackLayerOf(plain.fake, '-halo')
+        const pulse = trackLayerOf(plain.fake, '-pulse')
+        const ripple = trackLayerOf(plain.fake, '-ripple')
         const cluster = trackLayerOf(clustered.fake, '-cluster')
         const unknown = { affiliation: 'unknown', kind: 'vessel' }
         const image = plain.fake.images.get('wui-track-vessel')
         const symbolSize =
             symbol === undefined || image === undefined
                 ? undefined
-                : String((Number(symbol.layout?.['icon-size']) * 48) / Number(image.pixelRatio ?? 1))
+                : // The symbols scale with the zoom, and are their size at zoom 6.
+                  String((Number(evaluate(symbol.layout?.['icon-size'], {}, { zoom: 6 })) * 48) / Number(image.pixelRatio ?? 1))
         const ringIn = (state: Record<string, unknown>) => ({
             ground: mapColor(
                 evaluate(ring?.paint?.['circle-color'], unknown, state),
@@ -9816,6 +9844,13 @@ const TRACK_LAYER_ADAPTER: Adapter = {
                 edge: mapColor(symbol?.paint?.['icon-halo-color']),
             }),
             ...mapPaintChecks('track-layer', 'trail', 'rest', { ink: mapColor(evaluate(trail?.paint?.['line-color'], unknown)) }),
+            // The light around a track, once the spec paints it: the map drawn here is a light one.
+            ...mapPaintChecks('track-layer', 'glow', 'rest', {
+                ground: mapColor(evaluate(glow?.paint?.['circle-color'], unknown)),
+                opacity: String(glow?.paint?.['circle-opacity']),
+            }),
+            ...mapPaintChecks('track-layer', 'halo', 'selected', { ground: mapColor(halo?.paint?.['circle-color']) }),
+            ...mapPaintChecks('track-layer', 'pulse', 'rest', { ground: mapColor(pulse?.paint?.['circle-color']) }),
             ...mapPaintChecks('track-layer', 'ring', 'rest', ringIn({})),
             ...mapPaintChecks('track-layer', 'ring', 'hover', { edge: ringIn({ hover: true }).edge.replace(/\/80$/, '') }),
             ...mapPaintChecks('track-layer', 'ring', 'selected', ringIn({ selected: true })),
@@ -9842,6 +9877,8 @@ const TRACK_LAYER_ADAPTER: Adapter = {
                     const held = clustered.fake.sources.get('wui-watch')
                     return held?.clusterRadius === undefined ? undefined : String(held.clusterRadius)
                 },
+                rippleWidth: () => (ripple === undefined ? undefined : String(ripple.paint?.['circle-stroke-width'])),
+                step: () => numberIn(MAPS_SOURCE('TrackLayer.tsx'), /const STEP = ([\d.]+)/),
             }),
         ]
     },

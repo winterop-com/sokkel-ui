@@ -51,6 +51,7 @@
     "track.neutral": "Neutral",
     "track.other": "Other",
     "track.pending": "Pending",
+    "track.satellite": "Satellite",
     "track.sensor": "Sensor",
     "track.unknown": "Unknown",
     "track.vehicle": "Vehicle",
