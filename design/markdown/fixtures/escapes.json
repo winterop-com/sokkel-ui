@@ -11,6 +11,81 @@
       ]
     },
     {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "[[old]] !"
+        },
+        {
+          "type": "wikiLink",
+          "target": "pic.png",
+          "children": [
+            {
+              "type": "text",
+              "value": "pic.png"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " #hidden but "
+        },
+        {
+          "type": "wikiLink",
+          "target": "real",
+          "children": [
+            {
+              "type": "text",
+              "value": "real"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "#quoted and [[quoted]] stay words."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "start": null,
+      "spread": false,
+      "children": [
+        {
+          "type": "listItem",
+          "spread": false,
+          "checked": null,
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "value": "#listed, but "
+                },
+                {
+                  "type": "tag",
+                  "tag": "seen"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "blockquote",
       "children": [
         {
