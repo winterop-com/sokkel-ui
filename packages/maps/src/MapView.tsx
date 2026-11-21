@@ -38,8 +38,24 @@ import { BasemapSwitcher } from './BasemapSwitcher'
 import { ControlButton } from './control'
 import { resolveColors } from './color'
 import { ID_PROPERTY, MapContext, useMapContext, type MapContextValue, type MapCorner, type MapLayerEntry } from './context'
-import { unionBounds, type Bounds, type LngLat } from './geometry'
-import { FLAT_SKY, globeSky, starfieldStyle } from './globe'
+import { anchorOf, unionBounds, type Bounds, type LngLat } from './geometry'
+import {
+    FLAT_SKY,
+    GLOBE_STATE,
+    MORPH_PROJECTION,
+    SPACE_STYLE,
+    WHOLE_GLOBE,
+    globeRadius,
+    globeShare,
+    globeSky,
+    globeZoom,
+    haloShadow,
+    roll,
+    starfieldPosition,
+    starfieldStyle,
+    starlight,
+    zoomedByHand,
+} from './globe'
 import { labelRegistry } from './layer'
 
 export type { MapCorner } from './context'
@@ -131,6 +147,58 @@ export interface MapViewport extends MapCamera {
     bounds: Bounds
 }
 
+/** How the map flies to the selected feature when the selection changes. */
+export interface SelectionFlight {
+    /**
+     * Whether a feature picked on the map itself is flown to as well, which brings it to the middle.
+     * Without it only a selection made outside the map flies, such as a row picked in a list beside it.
+     */
+    picks?: boolean
+    /** The zoom a flight ends at when the map is further out; a map already closer in keeps its zoom. */
+    zoom?: number
+}
+
+/** How the map leans toward the horizon as it is zoomed in. */
+export interface ZoomPitch {
+    /** The zoom the map starts to lean at; 10 by default. */
+    from?: number
+    /** The zoom from which it leans all the way; 14 by default. */
+    to?: number
+    /** How far it leans there, in degrees from straight down; 45 by default. */
+    pitch?: number
+}
+
+const ZOOM_PITCH: Required<ZoomPitch> = { from: 10, to: 14, pitch: 45 }
+
+/** How far the map leans at a zoom: level up to `from`, by `pitch` from `to` on, and easing in and out between. */
+export function pitchAtZoom(zoom: number, { from, to, pitch }: Required<ZoomPitch>): number {
+    if (to <= from) return zoom >= to ? pitch : 0
+    const share = Math.min(1, Math.max(0, (zoom - from) / (to - from)))
+    return pitch * share * share * (3 - 2 * share)
+}
+
+/**
+ * How the map glides on once a drag lets go of it: it leaves the hand at the speed it was dragged
+ * at and slows evenly to a stop, further and for longer than the engine's own glide, which starts
+ * at half that speed.
+ */
+const MOMENTUM = { linearity: 0.5, deceleration: 1600, maxSpeed: 1400, easing: (share: number) => 1 - (1 - share) ** 4 }
+
+/** No glide: the map stops where it is let go. */
+const NO_MOMENTUM = { maxSpeed: 0 }
+
+/** Slow at both ends and quick between, for a camera that sets off at once and arrives gently. */
+const easeInOut = (share: number) => (share < 0.5 ? 2 * share ** 2 : 1 - (-2 * share + 2) ** 2 / 2)
+
+/** The color the globe's rim glows in: the one its horizon is drawn in. */
+const HALO_COLOR = 'var(--chart-2)'
+
+/** How long the map takes to roll up into the globe, or back out of it, in milliseconds. */
+const MORPH_MS = 1100
+
+/** Whether the reader asked for less motion, in which case the camera jumps where it would fly. */
+const calm = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
 export interface MapViewProps {
     /** What the map is called, for a screen reader. */
     label: string
@@ -159,7 +227,10 @@ export interface MapViewProps {
     basemapOpacity?: number
     /** Whether the basemap's tiles and place names are drawn; the ground always is. */
     basemapVisible?: boolean
-    /** The projection, when the caller holds it. */
+    /**
+     * The projection, when the caller holds it. A change rolls the flat map up into the globe, or
+     * back out of it, over about a second; under `prefers-reduced-motion` it changes at once.
+     */
     projection?: MapProjection
     /** The projection the map opens in when it holds it itself; the `projection` control toggles it. */
     defaultProjection?: MapProjection
@@ -180,6 +251,24 @@ export interface MapViewProps {
     selected?: string | null
     defaultSelected?: string | null
     onSelectedChange?: (id: string | null, feature: Feature | null) => void
+    /**
+     * Flies to the selected feature when the selection changes: a short way is eased and a long way
+     * flown, zooming out over the ground between. Only a selection made outside the map flies, such
+     * as a row picked in a list beside it, and only when the feature is out of view, behind a corner's
+     * overlay or further out than `zoom`; `picks` flies to a feature picked on the map too. The camera
+     * is held from then on. Under `prefers-reduced-motion` the map jumps there.
+     */
+    flyToSelected?: boolean | SelectionFlight
+    /**
+     * Whether the map glides on after a drag lets go of it, slowing to a stop; without it the map
+     * stops where it is let go. Read once, when the map is made.
+     */
+    momentum?: boolean
+    /**
+     * Leans the map toward the horizon as it is zoomed in, so the ground close up is seen at an
+     * angle: level from afar, and by 45 degrees from zoom 14, or as the option says.
+     */
+    pitchWithZoom?: boolean | ZoomPitch
     /** Called with the position of every click on the map. */
     onMapClick?: (at: LngLat) => void
     /**
@@ -381,6 +470,26 @@ function fitCamera(map: MapLibreMap, bounds: Bounds, boxes: ReturnType<typeof co
 }
 
 /**
+ * Whether a place is where the reader sees it: inside the map by a margin, on the near side of a
+ * globe, and under no corner's overlay.
+ */
+function inView(map: MapLibreMap, stage: HTMLElement, corners: Record<MapCorner, HTMLElement> | null, at: LngLat): boolean {
+    const point = map.project(at)
+    const width = stage.clientWidth
+    const height = stage.clientHeight
+    const margin = Math.min(width, height) * 0.1
+    if (point.x < margin || point.y < margin || point.x > width - margin || point.y > height - margin) return false
+    // A place on the far side of a globe lands on a point that reads back as another place.
+    const back = map.unproject(point)
+    if (Math.abs(back.lat - at[1]) > 0.5 || Math.abs(((((back.lng - at[0]) % 360) + 540) % 360) - 180) > 0.5) return false
+    return !cornerBoxes(stage, corners).some((box) => {
+        const across = box.corner.endsWith('left') ? point.x : width - point.x
+        const down = box.corner.startsWith('top') ? point.y : height - point.y
+        return across < box.width && down < box.height
+    })
+}
+
+/**
  * A maplibre map over a basemap, with its layers and overlays as children.
  *
  * It opens on the light or dark street map by the document's scheme, with the basemap's place
@@ -398,6 +507,12 @@ function fitCamera(map: MapLibreMap, bounds: Bounds, boxes: ReturnType<typeof co
  * `fallbackBasemap` is drawn while the chosen basemap cannot be had: offline, or when its style or
  * all of its tiles fail. The `export` control, or `handle` for an app's own menu, saves the map as
  * drawn as a PNG, with the basemap's credits in its corner.
+ * Its camera glides on after a drag is let go of (`momentum`), flies to a feature selected outside
+ * it (`flyToSelected`) and leans toward the horizon close in (`pitchWithZoom`). A change of
+ * `projection` rolls the flat map up into the globe, or back out of it, bringing the camera to
+ * where the globe is seen whole and back to the zoom it had; the globe glows round its rim before
+ * stars that drift as it turns and fade as it grows. Under `prefers-reduced-motion` every one of
+ * these is a jump.
  */
 export function MapView({
     label,
@@ -418,6 +533,9 @@ export function MapView({
     selected,
     defaultSelected = null,
     onSelectedChange,
+    flyToSelected = false,
+    momentum = true,
+    pitchWithZoom = false,
     onMapClick,
     onViewChange,
     controls = true,
@@ -463,6 +581,25 @@ export function MapView({
     const [unreadable, setUnreadable] = useState(0)
     const [heldSelection, setHeldSelection] = useState<string | null>(defaultSelected)
     const current = selected !== undefined ? selected : heldSelection
+    const flight: SelectionFlight | null = flyToSelected === false ? null : flyToSelected === true ? {} : flyToSelected
+    const lean = pitchWithZoom === false ? null : { ...ZOOM_PITCH, ...(pitchWithZoom === true ? {} : pitchWithZoom) }
+    const leanKey = lean === null ? '' : `${String(lean.from)} ${String(lean.to)} ${String(lean.pitch)}`
+    // Whether deep space lies behind the canvas: on the globe, and while the map rolls into or out of it.
+    const [space, setSpace] = useState(shownProjection === 'globe')
+    const [stars, setStars] = useState<HTMLDivElement | null>(null)
+    const [halo, setHalo] = useState<HTMLDivElement | null>(null)
+    // How far the map is a globe: 0 flat, 1 the globe, and between while one becomes the other.
+    const shape = useRef(0)
+    // Whether the style wears the projection that bends, and whether the map has taken its first shape, which it takes at once.
+    const morphed = useRef(false)
+    const shaped = useRef(false)
+    // The zoom the map had before it was brought to where the globe is seen whole; null when it was not brought there, or the reader has zoomed since.
+    const whole = useRef<number | null>(null)
+    // Calls off the roll under way, if any.
+    const cancelRoll = useRef<() => void>(() => undefined)
+    // What the selection was when the camera last looked at it, and the feature a click on the map last picked, with when.
+    const flownTo = useRef<string | null | undefined>(undefined)
+    const pickedOnMap = useRef<{ id: string; at: number } | null>(null)
 
     const entries = useRef(new Map<string, MapLayerEntry>())
     const [layerVersion, setLayerVersion] = useState(0)
@@ -496,10 +633,14 @@ export function MapView({
     const holdCamera = useCallback(() => {
         moved.current = true
     }, [])
+    const leanNow = useRef(lean)
+    const flightNow = useRef(flight)
     useEffect(() => {
         selectNow.current = select
         clickNow.current = onMapClick
         viewNow.current = onViewChange
+        leanNow.current = lean
+        flightNow.current = flight
     })
 
     const register = useCallback((key: string, entry: MapLayerEntry) => {
@@ -632,7 +773,9 @@ export function MapView({
             },
             center: camera?.center ?? [0, 0],
             zoom: camera?.zoom ?? 1,
+            pitch: leanNow.current === null ? 0 : pitchAtZoom(camera?.zoom ?? 1, leanNow.current),
             attributionControl: false,
+            dragPan: momentum ? MOMENTUM : NO_MOMENTUM,
             dragRotate: rotate,
             pitchWithRotate: false,
             touchPitch: false,
@@ -691,7 +834,9 @@ export function MapView({
                 return
             }
             const id: unknown = hit.feature.properties[ID_PROPERTY]
-            if (typeof id === 'string') selectNow.current(id)
+            if (typeof id !== 'string') return
+            pickedOnMap.current = { id, at: performance.now() }
+            selectNow.current(id)
         })
         instance.on('mousemove', (event) => {
             if (clickTaker.current !== null) {
@@ -707,6 +852,9 @@ export function MapView({
         instance.on('mouseout', () => {
             hover(null)
             instance.getCanvas().style.cursor = ''
+        })
+        instance.on('zoomstart', (event) => {
+            if ('originalEvent' in event && zoomedByHand(event.originalEvent as Event | undefined)) whole.current = null
         })
         instance.on('movestart', (event) => {
             if ('originalEvent' in event && event.originalEvent !== undefined) moved.current = true
@@ -754,11 +902,17 @@ export function MapView({
         resize.observe(stage)
         setMap(instance)
         return () => {
+            cancelRoll.current()
             resize.disconnect()
             armed.current = false
             pendingStyle.current = true
             lastFit.current = ''
             framedOn.current = null
+            shape.current = 0
+            morphed.current = false
+            shaped.current = false
+            whole.current = null
+            flownTo.current = undefined
             setReady(false)
             setIdle(false)
             setMap(null)
@@ -833,12 +987,155 @@ export function MapView({
         }
     }, [map, scope, ready, graticule, reading])
 
+    // Writes how far the map is a globe to the style, where the projection reads it; lights the
+    // stars by it and by the zoom, drifting them with the center; and sizes the glow to the globe's rim.
+    const paintGlobe = useCallback(() => {
+        if (map === null) return
+        const zoom = map.getZoom()
+        const center = map.getCenter()
+        if (morphed.current) {
+            const share = shape.current * globeShare(zoom)
+            if (map.getGlobalState()[GLOBE_STATE] !== share) map.setGlobalStateProperty(GLOBE_STATE, share)
+        }
+        if (stars !== null) {
+            stars.style.opacity = String(shape.current * starlight(zoom))
+            stars.style.backgroundPosition = starfieldPosition([center.lng, center.lat])
+        }
+        if (halo !== null) {
+            const canvas = map.getContainer()
+            const radius = globeRadius(zoom, center.lat, canvas.clientHeight)
+            // A globe larger than the map has no rim in view, and a leaning one's rim is no circle.
+            const seen = radius < Math.hypot(canvas.clientWidth, canvas.clientHeight) / 2 && map.getPitch() < 1
+            halo.style.display = seen ? '' : 'none'
+            halo.style.width = halo.style.height = `${(radius * 2).toFixed(1)}px`
+            halo.style.boxShadow = haloShadow(radius, HALO_COLOR)
+            halo.style.opacity = String(shape.current ** 4)
+        }
+    }, [map, stars, halo])
+    const paintGlobeNow = useRef(paintGlobe)
+    useEffect(() => {
+        paintGlobeNow.current = paintGlobe
+    })
+    // The stars are drawn from a token, which only a document can read, so they are lit once their box is in one.
+    useEffect(() => {
+        if (stars !== null) stars.style.backgroundImage = starfieldStyle().backgroundImage
+    }, [stars])
+    useEffect(() => {
+        if (map === null) return
+        paintGlobe()
+        map.on('move', paintGlobe)
+        // A style built afresh has lost the state the projection reads.
+        map.on('styledata', paintGlobe)
+        return () => {
+            map.off('move', paintGlobe)
+            map.off('styledata', paintGlobe)
+        }
+    }, [map, paintGlobe])
+
+    // The projection: the flat map, or the globe with its sky. A change rolls one into the other,
+    // from wherever the last change had got to.
     useEffect(() => {
         if (map === null || scope === null || !ready) return
-        map.setProjection({ type: shownProjection })
-        const palette = mapPalette(scope)
-        map.setSky(shownProjection === 'globe' ? globeSky(palette.horizon, palette.ground) : FLAT_SKY)
-    }, [map, scope, ready, shownProjection, reading])
+        const target = shownProjection === 'globe' ? 1 : 0
+        const bend = (share: number) => {
+            shape.current = share
+            paintGlobeNow.current()
+        }
+        // The atmosphere belongs to the whole globe: it comes once the map has rolled up, and goes
+        // before it rolls out.
+        const settle = () => {
+            bend(target)
+            if (target === 0) {
+                if (morphed.current) map.setProjection({ type: 'mercator' })
+                morphed.current = false
+                whole.current = null
+                setSpace(false)
+            } else {
+                const palette = mapPalette(scope)
+                map.setSky(globeSky(palette.horizon, palette.ground))
+            }
+            map.triggerRepaint()
+        }
+        if (target === 0) map.setSky(FLAT_SKY)
+        if (target === 1 || shape.current > 0) {
+            if (!morphed.current) {
+                map.setGlobalStateProperty(GLOBE_STATE, shape.current * globeShare(map.getZoom()))
+                map.setProjection(MORPH_PROJECTION)
+                morphed.current = true
+            }
+            setSpace(true)
+        }
+        const from = shape.current
+        if (!shaped.current || from === target) {
+            shaped.current = true
+            settle()
+            return
+        }
+        // Rolled up, the camera goes to where the globe is seen whole, and the zoom it left is kept;
+        // rolled out again, it goes back to that zoom, also when the roll is turned round half
+        // way. The kept zoom is let go of only when the reader zooms, or the map lies flat again.
+        const canvas = map.getContainer()
+        const latitude = map.getCenter().lat
+        let zoom: number | null = null
+        if (target === 1) {
+            const wanted = WHOLE_GLOBE * Math.min(canvas.clientWidth, canvas.clientHeight)
+            const off = Math.abs(Math.log2(globeRadius(map.getZoom(), latitude, canvas.clientHeight) / wanted)) > 0.4
+            if (whole.current === null && off) whole.current = map.getZoom()
+            if (whole.current !== null) zoom = globeZoom(wanted, latitude, canvas.clientHeight)
+        } else {
+            zoom = whole.current
+        }
+        // A long way out or in takes longer, so the ground is not rushed past.
+        const far = zoom === null ? 1 : Math.min(2.5, Math.max(1, Math.abs(zoom - map.getZoom()) / 3))
+        const length = calm() ? 0 : MORPH_MS * Math.abs(target - from) * far
+        if (zoom !== null) moved.current = true
+        setIdle(false)
+        const cancel = roll(map, {
+            from,
+            to: target,
+            length,
+            zoom,
+            easing: easeInOut,
+            bend,
+            settle,
+            veil: (hidden) => {
+                if (overlay !== null) overlay.style.opacity = hidden ? '0' : ''
+            },
+        })
+        cancelRoll.current = cancel
+        return cancel
+    }, [map, scope, overlay, ready, shownProjection, reading])
+
+    // The lean: every move of the camera takes the pitch its zoom has, and a change of the option eases to it.
+    useEffect(() => {
+        if (map === null) return
+        const options = leanNow.current
+        map.setTransformCameraUpdate(options === null ? null : (next) => ({ pitch: pitchAtZoom(next.zoom, options) }))
+        const pitch = options === null ? 0 : pitchAtZoom(map.getZoom(), options)
+        if (Math.abs(map.getPitch() - pitch) > 0.01) map.easeTo({ pitch, duration: 300 })
+    }, [map, leanKey])
+
+    // Flies to the feature a new selection names: one made outside the map, when the feature is not
+    // in view already, and one picked on the map when the option says so.
+    useEffect(() => {
+        if (map === null || stage === null || !ready) return
+        const before = flownTo.current
+        flownTo.current = current
+        const options = flightNow.current
+        if (before === undefined || before === current || current === null || options === null) return
+        const pick = pickedOnMap.current
+        pickedOnMap.current = null
+        const here = pick !== null && pick.id === current && performance.now() - pick.at < 1000
+        if (here && options.picks !== true) return
+        let feature: Feature | null = null
+        for (const entry of entries.current.values()) feature ??= entry.features.get(current) ?? null
+        const at = feature === null ? null : anchorOf(feature)
+        if (at === null) return
+        const zoom = Math.max(map.getZoom(), options.zoom ?? 0)
+        if (!here && zoom === map.getZoom() && inView(map, stage, corners, at)) return
+        moved.current = true
+        map.flyTo({ center: at, zoom, speed: 0.9, curve: 1.42, easing: easeInOut })
+    }, [map, stage, corners, ready, current])
 
     // Runs after every layer's own effects, so the fit sees what they registered. New bounds are a
     // new subject, eased to whether or not the reader has moved the map since the last.
@@ -924,12 +1221,15 @@ export function MapView({
             )}
         >
             <div ref={setStage} className="relative min-h-0 flex-1">
-                {shownProjection === 'globe' && (
-                    <div aria-hidden className="pointer-events-none absolute inset-0" style={starfieldStyle()} />
+                {space && (
+                    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden" style={SPACE_STYLE}>
+                        <div ref={setStars} className="absolute inset-0" />
+                        <div ref={setHalo} className="absolute top-1/2 left-1/2 -translate-1/2 rounded-full" />
+                    </div>
                 )}
                 {/* Positioned inline: maplibre's own stylesheet sets the element relative, outside any layer. */}
                 <div ref={setCanvasHost} style={{ position: 'absolute', inset: 0 }} />
-                <div ref={setOverlay} className="pointer-events-none absolute inset-0 overflow-hidden" />
+                <div ref={setOverlay} className="pointer-events-none absolute inset-0 overflow-hidden transition-opacity" />
                 {CORNERS.map((corner) => (
                     <div
                         key={corner}
@@ -951,6 +1251,7 @@ export function MapView({
                                                     container={scope}
                                                     onClick={() => {
                                                         moved.current = true
+                                                        whole.current = null
                                                         map?.zoomIn()
                                                     }}
                                                 >
@@ -961,6 +1262,7 @@ export function MapView({
                                                     container={scope}
                                                     onClick={() => {
                                                         moved.current = true
+                                                        whole.current = null
                                                         map?.zoomOut()
                                                     }}
                                                 >

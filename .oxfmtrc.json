@@ -24,6 +24,7 @@
         "packages/maps/src/data/countries-110m.json",
         "examples/shared/geo/*.json",
         "src/stories/map/fixtures/regions.json",
-        "src/stories/map/fixtures/places.json"
+        "src/stories/map/fixtures/places.json",
+        "src/stories/map/fixtures/cities.json"
     ]
 }

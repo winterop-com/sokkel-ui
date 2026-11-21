@@ -28,6 +28,10 @@ package manager rather than redistributed with it, so they are not listed.
   `scripts/geo-examples.ts` to each county's outline and name. Natural Earth is in the public
   domain. `places.json` beside each is made by the same script: invented site names at positions
   drawn from a seeded generator inside those counties, carrying no third-party data.
+- `src/stories/map/fixtures/cities.json`, in the repository only and shipped in no package, is some
+  five hundred of Natural Earth's 1:50m populated places, version 5.1.2
+  (https://www.naturalearthdata.com), trimmed by `scripts/world-cities.ts` to each place's name,
+  country, people and position. Natural Earth is in the public domain.
 - `e2e/tiles/`, in the repository only and shipped in no package, holds responses recorded from
   `tiles.openfreemap.org` and `gibs.earthdata.nasa.gov`, which the browser suites serve in place of
   the network:

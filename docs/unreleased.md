@@ -185,6 +185,23 @@ release and empties it.
   base station sentences (`!BSVDM`, each behind a tag block) decodes as a receiver's `!AIVDM` does.
   `AisSentence.talker` is the talker and the sentence as sent.
 
+- `MapView` camera options: `flyToSelected` flies to the feature a selection made outside the map
+  names, eased over a short way and flown over a long one, and leaves a feature in view where it is
+  (`SelectionFlight`: `picks` flies to a feature picked on the map too, `zoom` flies in to at least
+  that zoom); `momentum` (on by default) glides on after a drag is let go of; `pitchWithZoom` leans
+  the map toward the horizon close in (`ZoomPitch`: `from`, `to`, `pitch`; `pitchAtZoom`). Under
+  `prefers-reduced-motion` the camera jumps. Stories Maps/Camera: Fly to and Pitch.
+- A map's `projection` change rolls the flat map up into the globe and back out of it, the camera
+  drawing back until the globe is seen whole and returning to the zoom it had. The globe glows
+  round its rim and its stars drift as it turns and fade as it is zoomed in.
+- `PointLayer` takes `glow`, which draws each point as a light, a halo round a bright core, and
+  `label`, which names the points beside them: as many names as fit, those with the largest `size`
+  value first, the one under the cursor and the selected one always. Stories Maps/Globe: Cities and
+  Selected, some five hundred of the world's cities as lights on the dark globe.
+- `e2e/record-tiles.ts` records each story at the layout check's widths too, and the areas it names a
+  step closer in; `e2e/tiles` gains the dark street map for the coast the watch stories draw and for
+  the world from afar.
+
 ## Changed
 
 - A `MapPopup` stands over whatever a layer writes in the map's overlay, such as cluster counts and
@@ -192,3 +209,22 @@ release and empties it.
 - The labels a map's layers write in its overlay keep clear of one another across layers: a
   `ZoneLayer`'s names give way to a `TrackLayer`'s labels, and a `LinkLayer`'s measure chips to
   both, the selected zone's or link's still placed first and always.
+- Maps/Tracks and Patterns/Tracking console draw on the dark street map (`DARK_BASEMAP`), with the
+  world's countries (`WORLD_BASEMAP`) as the fallback while its tiles cannot be had. The harbor
+  example's maps draw on the street map by the scheme, with the same fallback, fly to what a list
+  beside them picks and lean close in; the flights and network examples' maps gain the globe switch,
+  the flights' with each aircraft's route ahead along its great circle.
+- A map glides further after a drag than before, and for longer: `momentum={false}` stops it where
+  it is let go of.
+- What a map's layers write in its overlay (track, zone and point names, cluster counts, measure
+  chips) stays on its place while the map flies or glides, where it waited for the map to rest, and
+  is left out for a place on the far side of a globe, where it was written over the near side.
+- A map's change of projection is told as a move, and `onViewChange` is called with where the map
+  looks once it has changed. What the layers write over the map is hidden while it rolls and shown
+  again at rest, since the engine places a name on the globe before the ground under it has got
+  there. A roll turned round half way goes back to the zoom it left, and a move by the reader ends
+  it at once.
+- A `TrackLayer`'s label is left out where it would hang past the rim of a globe, as a point's name
+  is; the selected track's is always written.
+- A `PointLayer` with both `scale` and `glow` shows the selected and the highlighted points in the
+  selection and highlight colors.

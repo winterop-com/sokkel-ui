@@ -111,4 +111,11 @@ describe('placing labels', () => {
     test('places the label of the selected track first, whatever it covers', () => {
         expect(placeLabels([at('a', 0, 0), at('b', 10, 4)], 'b', 24).map((point) => point.key)).toEqual(['b'])
     })
+
+    test("leaves out a label whose far end is off the ground, past a globe's rim, the selected track's excepted", () => {
+        const onGround = (x: number) => x < 300
+        const points = [at('a', 0, 0), at('b', 280, 100)]
+        expect(placeLabels(points, null, 24, onGround).map((point) => point.key)).toEqual(['a'])
+        expect(placeLabels(points, 'b', 24, onGround).map((point) => point.key)).toEqual(['b', 'a'])
+    })
 })

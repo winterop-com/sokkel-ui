@@ -19,7 +19,7 @@ const TYPES: Record<string, string> = {
 }
 
 /** The file a response is kept in; a path without an extension is a JSON document. */
-function tileFile(address: string): string {
+export function tileFile(address: string): string {
     const path = decodeURIComponent(new URL(address).pathname)
     const named = /\.[a-z]+$/.test(path) ? path : `${path}.json`
     return join(TILE_DIR, new URL(address).hostname, named)

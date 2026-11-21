@@ -221,7 +221,8 @@ export function loadStyle(url: string): Promise<StyleSpecification> {
  * A basemap's style with the map's own layers carried over from the style before it: the ground,
  * the basemap's own layers, a veil that fades them, the map's layers, and the basemap's labels on
  * top. Place names are inked in the foreground over a halo in the ground color, so they read over
- * any data color.
+ * any data color. The projection and the sky the map set on the style before are kept, so a globe
+ * stays a globe over a new basemap.
  */
 export function composeStyle(
     basemap: StyleSpecification,

@@ -14,6 +14,7 @@ import {
     state,
     useGeoJsonLayer,
     useLabelBoxes,
+    groundAt,
     useRenderedPoints,
     type PixelBox,
     type PreparedData,
@@ -372,9 +373,15 @@ export const trackLabelBox = (point: RenderedPoint, size: number): PixelBox => {
 /**
  * The labels that fit beside their tracks without covering another label or another track's
  * symbol: the selected track's first, then in the order given, each taken only where it is clear.
- * A label's box is reckoned from its length, at about six pixels a letter of the 2xs text.
+ * A label's box is reckoned from its length, at about six pixels a letter of the 2xs text. A label
+ * whose far end is not `onGround` is left out, so none hangs past the rim of a globe.
  */
-export function placeLabels(points: readonly RenderedPoint[], selected: string | null, size: number): RenderedPoint[] {
+export function placeLabels(
+    points: readonly RenderedPoint[],
+    selected: string | null,
+    size: number,
+    onGround: (x: number, y: number) => boolean = () => true,
+): RenderedPoint[] {
     const symbols = points.map((point): [string, PixelBox] => [point.key, trackSymbolBox(point, size)])
     const ordered = [...points].sort((a, b) => Number(b.key === selected) - Number(a.key === selected))
     const taken: PixelBox[] = []
@@ -383,7 +390,10 @@ export function placeLabels(points: readonly RenderedPoint[], selected: string |
         const box = trackLabelBox(point, size)
         const clear =
             point.key === selected ||
-            (!taken.some((other) => overlaps(box, other)) && !symbols.some(([key, symbol]) => key !== point.key && overlaps(box, symbol)))
+            (!taken.some((other) => overlaps(box, other)) &&
+                !symbols.some(([key, symbol]) => key !== point.key && overlaps(box, symbol)) &&
+                onGround(box[2], box[1]) &&
+                onGround(box[2], box[3]))
         if (!clear) continue
         taken.push(box)
         placed.push(point)
@@ -618,7 +628,7 @@ export function TrackLayer({
         return typeof key === 'string' && typeof label === 'string' && label !== '' ? { key, text: label } : null
     })
 
-    const placed = placeLabels(names, selected, size)
+    const placed = placeLabels(names, selected, size, groundAt(map))
     useLabelBoxes(`wui-${id}`, LABEL_RANK.track, visible ? placed.map((name) => trackLabelBox(name, size)) : [])
 
     if (!visible || (counts.length === 0 && names.length === 0)) return null
