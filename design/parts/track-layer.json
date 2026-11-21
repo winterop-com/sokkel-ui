@@ -4,74 +4,152 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "982188f"},
-        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
-        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+        "sokkel-ui": {
+            "state": "built",
+            "as_of": "67997fe"
+        },
+        "sokkel-egui": {
+            "state": "missing",
+            "as_of": "5532f68",
+            "note": "Not built yet."
+        },
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "b99664f",
+            "note": "Not in sokkel-tui's reports as of b99664f."
+        }
     },
-    "summary": "Moving things on a map: each track a symbol for its kind turned to its heading, in its affiliation's color, ringed in the card color, its label beside it and its trail behind it fading into the past. The selected track is ringed in the selection color. New positions glide in from where each track was. Dense tracks may gather into counted clusters.",
-    "sources": {"sokkel-ui": ["packages/maps/src/TrackLayer.tsx", "packages/maps/src/layer.ts (useRenderedPoints)"]},
+    "summary": "Moving things on a map: each track a symbol for its kind turned to its heading, in its affiliation's color, ringed in the card color over a soft glow, its label beside it and its trail behind it fading into the past. A track with a speed and a heading keeps moving between reports and settles onto each new one; any other glides to where it is. The selected track is ringed in the selection color inside a halo that breathes, a new track appears in a ripple and a hostile one pulses. With motion reduced nothing moves but to where it was reported. Dense tracks may gather into counted clusters.",
+    "sources": {
+        "sokkel-ui": ["packages/maps/src/TrackLayer.tsx", "packages/maps/src/layer.ts (useRenderedPoints)"]
+    },
     "anatomy": {
-        "symbol": "One per track, the size option square (24 by default), pointing north at a heading of 0 and turned clockwise by the heading with the map: a hull with a pointed bow for a vessel, a notched arrowhead for an aircraft, a box with a point on its front for a vehicle, a ring round a dot for a sensor (not turned), a triangle for any other. Filled in the affiliation's color with a 1.25 halo in card.",
-        "trail": "The track's past positions, oldest first, ending where it is now, as a 2 wide line in the affiliation's color, cut into one piece per step; each piece at 0.85 of full times its share of the way from the oldest to the newest raised to 1.5, so the oldest step all but vanishes.",
-        "label": "The track's label 0.75 of the size plus 4 right of its point, centered on it: text.2xs on card at 80 percent, padded 4 across, rounded by radius-mini. A label that would cover another label or another track's symbol is left out; the selected track's never is, and is placed first.",
+        "symbol": "One per track, the size option square (24 by default), pointing north at a heading of 0 and turned clockwise by the heading with the map: a hull with a pointed bow for a vessel, a notched arrowhead for an aircraft, a box with a point on its front for a vehicle, a ring round a dot for a sensor (not turned), a body with a pointed nose between two solar panels for a satellite, a triangle for any other. Filled in the affiliation's color (or its band's) with a 1.25 halo in card. With scale on it is drawn at 0.72 of the size at zoom 3 and further out, the size at zoom 6 and 1.25 of it at zoom 11 and closer in, straight between; everything measured from the size below follows it.",
+        "glow": "Under each symbol, a circle 1.1 of the size in radius in the symbol's color, fading evenly from its middle to nothing at its edge, at 42 percent (24 on a light map) times the crowd: the square root of 300 over the number of tracks, held between 0.4 and 1, so a crowded map stays calm.",
+        "trail": "The track's past positions, oldest first, as one 2 wide line that fades along its length from nothing at its oldest end (16 percent of the color 0.4 of the way along, 50 percent at 0.75) to the color at its newest, the whole at 90 percent; then its head, a 2 wide line in the color at 90 percent on from the newest position to where the track is drawn, which moves with the track while the trail stays. With fade off, both are an even 60 percent. In the affiliation's color, or the band's for the first eight bands.",
+        "label": "The track's label 0.75 of the drawn size plus 4 right of its point, centered on it: text.2xs on card at 80 percent, padded 4 across, rounded by radius-mini. A label that would cover another label or another track's symbol is left out, in the order the tracks are given; the selected track's never is, and is placed first.",
         "ring": "Under the symbol, a circle 0.75 of the size in radius: none at rest; a 1.25 line in foreground mixed 55 percent into card at 80 percent under the pointer; for the selected track a 2 line in map-selection over a fill of map-selection at 18 percent, and its label at 500 weight on card, ringed 1 in map-selection.",
+        "halo": "Around the selected track, under its ring: a circle in map-selection, solid over the inner 0.35 of its radius and fading to nothing at its edge, that breathes over 3.2 seconds on a cosine from 1.05 of the size at 50 percent (36 on a light map) out to 1.8 of the size at 20 percent (14) and back. Still, at its smallest, with motion reduced.",
+        "ripple": "Where a track first appears after the layer's own start: a 1.5 ring in its color spreading from 0.45 of the size in radius to 2.35 of it over 1.8 seconds, easing out, its line fading evenly from 90 percent to nothing and its inside from 18 percent, faster. None with motion reduced, nor while the page is hidden.",
+        "pulse": "Under each hostile track, below its glow: a circle in track-hostile, solid over the inner 0.3 of its radius and fading to nothing at its edge, that every 3.6 seconds swells from 0.8 of the size in radius to 2.1 of it, easing out, as its opacity rises to 50 percent (34 on a light map) times the crowd over the first 0.14 of the time and falls away over the rest. None with motion reduced.",
         "cluster": "With cluster on, nearby tracks gather into a circle of their count: foreground mixed 78 percent into card, 12 across the radius under 10 tracks, 15 to 50, 18 to 150, 22 beyond, ringed 2 in card, or 3 in track-hostile when it holds a hostile track; the count in text.2xs at 500 in card, in tabular figures. A press zooms to where it falls apart."
     },
-    "standsOn": {"default": "card"},
+    "standsOn": {
+        "default": "card"
+    },
     "options": {
         "tracks": {
             "type": "rows",
-            "does": "Each track { id, position (lon, lat), heading?, affiliation, kind, label?, trail? }. The affiliation is friend, hostile, neutral, unknown or pending; the kind vessel, aircraft, vehicle, sensor or other."
+            "does": "Each track { id, position (lon, lat), heading?, speed? (meters a second), affiliation, kind, label?, trail?, band? }. The affiliation is friend, hostile, neutral, unknown or pending; the kind vessel, aircraft, vehicle, sensor, satellite or other."
         },
-        "trails": {"type": "boolean", "default": true, "does": "Draws each track's trail."},
-        "labels": {"type": "boolean", "default": true, "does": "Writes each track's label beside it."},
-        "size": {"type": "number", "default": 24, "does": "The symbol's size, square."},
-        "colors": {"type": "rows", "does": "Colors for the affiliations in place of their tokens."},
+        "trails": {
+            "type": "boolean",
+            "default": true,
+            "does": "Draws each track's trail."
+        },
+        "labels": {
+            "type": "boolean",
+            "default": true,
+            "does": "Writes each track's label beside it."
+        },
+        "size": {
+            "type": "number",
+            "default": 24,
+            "does": "The symbol's size, square; its size at zoom 6 with scale on."
+        },
+        "colors": {
+            "type": "rows",
+            "does": "Colors for the affiliations in place of their tokens."
+        },
+        "bands": {
+            "type": "rows",
+            "does": "Colors by band, such as altitude bands: a track whose band is named is painted in the band's color in place of its affiliation's, its trail too for the first eight bands."
+        },
         "cluster": {
             "type": "boolean",
             "default": false,
             "does": "Gathers nearby tracks into counted clusters; a radius (40) and the deepest zoom that clusters (10) may be given."
         },
+        "motion": {
+            "type": "boolean",
+            "default": true,
+            "does": "Moves each track that has a speed and a heading on along its heading at its speed between reports, frame by frame, for at most coast (60 seconds), and settles it onto each new report over blend (1 second), easing out: a track drawn behind its report catches up, one drawn to one side comes across, and one drawn ahead waits for its course to reach it, so it never moves back. Both times may be given. Off leaves every track where it was reported."
+        },
         "transition": {
             "type": "number",
             "default": 600,
-            "does": "How long a track glides from where it was to where it is, in milliseconds, easing out; 0 moves it at once. A track turns the short way round."
+            "does": "How long a track that is not moved on glides from where it was to where it is, in milliseconds, easing out; 0 moves it at once. A track turns the short way round."
         },
-        "visible": {"type": "boolean", "default": true, "does": "Draws the layer."},
+        "effects": {
+            "type": "boolean",
+            "default": true,
+            "does": "The light and the scaling beyond the symbols, all on, all off, or each by name: glow, halo, ripple, pulse, fade (the trail fading along its length) and scale (the symbols scaling with the zoom)."
+        },
+        "visible": {
+            "type": "boolean",
+            "default": true,
+            "does": "Draws the layer."
+        },
         "interactive": {
             "type": "boolean",
             "default": true,
             "does": "Tracks answer the pointer and presses; a press selects one as the map's selection."
-        },
-        "bands": {
-            "type": "rows",
-            "does": "Colors by band name. A track whose band the layer names is painted (symbol and trail) in that band's color in place of its affiliation's, as an altitude-colored flight map needs."
         }
     },
     "sizes": {
         "symbol": {
             "width": 24,
             "height": 24,
-            "note": "The size option; the shapes are drawn in a 48 square at twice the pixel."
+            "note": "The size option, at zoom 6 with scale on; the shapes are drawn in a 48 square at twice the pixel."
         },
         "label": {
             "padX": 4,
             "text": "text.2xs",
             "radius": "radius-mini",
-            "note": "0.75 of the size plus 4 right of the track's point."
+            "note": "0.75 of the drawn size plus 4 right of the track's point."
         }
     },
     "layout": {
-        "trailWidth": {"value": 2, "note": "The trail's width."},
-        "haloWidth": {"value": 1.25, "note": "The symbol's halo in card."},
-        "clusterRadius": {"value": 40, "note": "How near tracks gather, in pixels."}
+        "trailWidth": {
+            "value": 2,
+            "note": "The trail's width, and its head's."
+        },
+        "haloWidth": {
+            "value": 1.25,
+            "note": "The symbol's halo in card."
+        },
+        "clusterRadius": {
+            "value": 40,
+            "note": "How near tracks gather, in pixels."
+        },
+        "rippleWidth": {
+            "value": 1.5,
+            "note": "The ripple's ring."
+        },
+        "step": {
+            "value": 0.25,
+            "note": "How far the fastest track moves on the canvas before the map is told of the tracks that moved, in pixels."
+        }
     },
     "states": {
-        "rest": {"means": "A track drawn."},
-        "hover": {"means": "The pointer is over the track: its ring shows.", "reached": "pointer over"},
+        "rest": {
+            "means": "A track drawn, glowing."
+        },
+        "hover": {
+            "means": "The pointer is over the track: its ring shows.",
+            "reached": "pointer over"
+        },
         "selected": {
-            "means": "The map's selected track: ringed and filled in the selection color, its label marked.",
+            "means": "The map's selected track: ringed and filled in the selection color inside its breathing halo, its label marked.",
             "reached": "a press on it, or the map's selected"
+        },
+        "appearing": {
+            "means": "A track new to the layer since its start: its ripple spreads and fades, once.",
+            "reached": "a track whose id the layer has not drawn"
+        },
+        "coasting": {
+            "means": "A track with a speed and a heading between reports: drawn on along its heading, for at most coast, then stopped where it got to until its next report.",
+            "reached": "motion on, and time passing since its report"
         }
     },
     "pieces": {
@@ -82,15 +160,85 @@
                 "note": "The fill is the track's affiliation token: track-friend, track-hostile, track-neutral, track-unknown or track-pending."
             }
         },
-        "trail": {"rest": {"ink": "track-unknown", "note": "In the affiliation's token, as the symbol."}},
+        "glow": {
+            "rest": {
+                "ground": "track-unknown",
+                "opacity": 0.24,
+                "dark": {
+                    "opacity": 0.42
+                },
+                "note": "The affiliation's token as the symbol, fading to nothing at its edge, and fainter the more tracks there are."
+            }
+        },
+        "trail": {
+            "rest": {
+                "ink": "track-unknown",
+                "opacity": 0.9,
+                "note": "In the affiliation's token, as the symbol, from nothing at its oldest end; an even 60 percent with fade off."
+            }
+        },
         "label": {
-            "rest": {"ground": "card/80", "ink": "foreground", "text": "text.2xs", "radius": "radius-mini"},
-            "selected": {"ground": "card", "weight": 500, "ring": {"color": "map-selection", "width": 1}}
+            "rest": {
+                "ground": "card/80",
+                "ink": "foreground",
+                "text": "text.2xs",
+                "radius": "radius-mini"
+            },
+            "selected": {
+                "ground": "card",
+                "weight": 500,
+                "ring": {
+                    "color": "map-selection",
+                    "width": 1
+                }
+            }
         },
         "ring": {
-            "rest": {"ground": "none", "edge": "none"},
-            "hover": {"edge": "mix-oklab(foreground 55%, card)"},
-            "selected": {"ground": "map-selection/18", "edge": "map-selection"}
+            "rest": {
+                "ground": "none",
+                "edge": "none"
+            },
+            "hover": {
+                "edge": "mix-oklab(foreground 55%, card)"
+            },
+            "selected": {
+                "ground": "map-selection/18",
+                "edge": "map-selection"
+            }
+        },
+        "halo": {
+            "rest": {
+                "ground": "none"
+            },
+            "selected": {
+                "ground": "map-selection",
+                "opacity": 0.36,
+                "dark": {
+                    "opacity": 0.5
+                },
+                "note": "At its smallest; at its widest 14 percent, and 20 on a dark map."
+            }
+        },
+        "ripple": {
+            "rest": {
+                "ground": "none",
+                "edge": "none"
+            },
+            "appearing": {
+                "ground": "track-unknown",
+                "edge": "track-unknown",
+                "note": "The affiliation's token: the ring from 90 percent to nothing, its inside from 18 percent."
+            }
+        },
+        "pulse": {
+            "rest": {
+                "ground": "track-hostile",
+                "opacity": 0.34,
+                "dark": {
+                    "opacity": 0.5
+                },
+                "note": "Hostile tracks only, at its strongest, and fainter the more tracks there are; nothing between two pulses."
+            }
         },
         "cluster": {
             "rest": {
@@ -113,27 +261,68 @@
         "aircraft": "Aircraft",
         "vehicle": "Vehicle",
         "sensor": "Sensor",
+        "satellite": "Satellite",
         "other": "Other"
     },
     "messages": {
-        "friend": {"id": "track.friend", "en": "Friend"},
-        "hostile": {"id": "track.hostile", "en": "Hostile"},
-        "neutral": {"id": "track.neutral", "en": "Neutral"},
-        "unknown": {"id": "track.unknown", "en": "Unknown"},
-        "pending": {"id": "track.pending", "en": "Pending"},
-        "vessel": {"id": "track.vessel", "en": "Vessel"},
-        "aircraft": {"id": "track.aircraft", "en": "Aircraft"},
-        "vehicle": {"id": "track.vehicle", "en": "Vehicle"},
-        "sensor": {"id": "track.sensor", "en": "Sensor"},
-        "other": {"id": "track.other", "en": "Other"}
+        "friend": {
+            "id": "track.friend",
+            "en": "Friend"
+        },
+        "hostile": {
+            "id": "track.hostile",
+            "en": "Hostile"
+        },
+        "neutral": {
+            "id": "track.neutral",
+            "en": "Neutral"
+        },
+        "unknown": {
+            "id": "track.unknown",
+            "en": "Unknown"
+        },
+        "pending": {
+            "id": "track.pending",
+            "en": "Pending"
+        },
+        "vessel": {
+            "id": "track.vessel",
+            "en": "Vessel"
+        },
+        "aircraft": {
+            "id": "track.aircraft",
+            "en": "Aircraft"
+        },
+        "vehicle": {
+            "id": "track.vehicle",
+            "en": "Vehicle"
+        },
+        "sensor": {
+            "id": "track.sensor",
+            "en": "Sensor"
+        },
+        "satellite": {
+            "id": "track.satellite",
+            "en": "Satellite"
+        },
+        "other": {
+            "id": "track.other",
+            "en": "Other"
+        }
     },
-    "appText": {"label": "Each track's label."},
+    "appText": {
+        "label": "Each track's label."
+    },
     "rendererSpecific": {
         "sokkel-ui": [
-            "Drawn on maplibre: the tracks as one GeoJSON source of points with a symbol layer whose images are signed distance fields made in code, colored by icon-color; the trails as a second source of line pieces.",
-            "Labels and cluster counts are written in the map's overlay, measured after each frame, since a basemap without fonts writes no text.",
-            "Selection and hover are feature state, so they stay on as the source's data is set frame by frame.",
-            "trackLegendEntries and trackCounts key the affiliations in a MapLegend."
+            "Drawn on maplibre from three GeoJSON sources: the tracks as points, with a symbol layer whose images are signed distance fields made in code, colored by icon-color, over circle layers for the pulse, the glow, the ripple, the halo and the ring; the trails as lines with lineMetrics, a line-gradient layer for each affiliation and each of eight bands, since a gradient takes one color a layer; and the trails' heads as plain lines.",
+            "Each frame the layer brings every track to where it is drawn and tells the sources, with updateData, only of the tracks that moved 0.05 of a pixel or more, and only once the fastest has moved a quarter of a pixel; a trail takes its newest positions at most every 4 milliseconds a trail (8 seconds at most), since maplibre draws a gradient line afresh pixel by pixel, and its head runs on from where it ends meanwhile.",
+            "The halo and the ripples are feature state (breath, ripple) stepped thirty times a second, and the pulse two constant paint properties, so none of them reloads a tile.",
+            "The layer tells the map of the next moves only once the map has drawn the last (a render with the three sources loaded), and when the map has not been idle for a quarter of a second it waits for maplibre's idle and one frame more first, unless the camera is moving or six frames pass without it; the pulse is stepped only once two frames are drawn since its last step, since a paint property set leaves the style changed for a frame. So a map of moving tracks is idle again and again, and data-map-idle holds for what waits on it.",
+            "The frames stop when nothing moves, when the page is hidden and when the map is off the screen; motion is reduced by useReducedMotion.",
+            "Labels and cluster counts are written in the map's overlay, since a basemap without fonts writes no text: labels where the layer draws its tracks, counts where the map draws its clusters.",
+            "Selection and hover are feature state, so they stay on as the sources are told of moves.",
+            "trackLegendEntries and trackCounts key the affiliations in a MapLegend; plotCourse and courseAt give a track's course and where it is drawn along it."
         ]
     },
     "drift": [

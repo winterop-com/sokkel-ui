@@ -9350,14 +9350,7 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {
-    'track-card': {
-        'options.kind': 'a satellite is a kind too, with a glyph of its own: design-drafts/parts/track-card.json',
-    },
-    'track-glyph': {
-        'options.kind': 'a satellite is a kind too, a body between two panels: design-drafts/parts/track-glyph.json',
-    },
-}
+const PENDING: Record<string, Record<string, string>> = {}
 
 // Markdown view
 

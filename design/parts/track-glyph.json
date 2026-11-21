@@ -4,33 +4,75 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
-        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
-        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+        "sokkel-ui": {
+            "state": "built",
+            "as_of": "67997fe"
+        },
+        "sokkel-egui": {
+            "state": "missing",
+            "as_of": "5532f68",
+            "note": "Not built yet."
+        },
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "b99664f",
+            "note": "Not in sokkel-tui's reports as of b99664f."
+        }
     },
     "summary": "What a tracked thing is, as a map draws it: its kind's shape filled in its affiliation's color and turned to its heading, so a list, a card and a task's line show a track as the map does.",
-    "sources": {"sokkel-ui": ["packages/core/src/components/TrackGlyph.tsx", "packages/core/src/lib/tracks.ts"]},
+    "sources": {
+        "sokkel-ui": ["packages/core/src/components/TrackGlyph.tsx", "packages/core/src/lib/tracks.ts"]
+    },
     "anatomy": {
         "container": "A square, 48 units on a side in its own space, drawn at its size; nothing else.",
-        "shape": "The kind's outline pointing north (vessel: a hull with a pointed bow; aircraft: an arrowhead with a notched tail; vehicle: a box with a point on its front; other: a triangle), filled; a sensor is a ring 5 wide of radius 14 around a dot of radius 4.5, and never turns.",
+        "shape": "The kind's outline pointing north (vessel: a hull with a pointed bow; aircraft: an arrowhead with a notched tail; vehicle: a box with a point on its front; satellite: a body 10 wide with a pointed nose, between two solar panels 12 wide and 16 tall, each on an arm 5 long and 4 thick; other: a triangle), filled; a sensor is a ring 5 wide of radius 14 around a dot of radius 4.5, and never turns.",
         "heading": "With heading: the shape turned that many degrees clockwise from north about its center."
     },
-    "standsOn": {"default": "background"},
+    "standsOn": {
+        "default": "background"
+    },
     "options": {
-        "kind": {"values": ["vessel", "aircraft", "vehicle", "sensor", "other"], "does": "Which shape."},
+        "kind": {
+            "values": ["vessel", "aircraft", "vehicle", "sensor", "satellite", "other"],
+            "does": "Which shape."
+        },
         "affiliation": {
             "values": ["friend", "hostile", "neutral", "unknown", "pending"],
             "does": "Fills it in track-<affiliation>; the ink around it without one."
         },
-        "heading": {"type": "number", "does": "Degrees from north it points."},
-        "size": {"values": ["sm", "md", "lg"], "default": "md", "does": "14, 16 or 20 square."},
+        "heading": {
+            "type": "number",
+            "does": "Degrees from north it points."
+        },
+        "size": {
+            "values": ["sm", "md", "lg"],
+            "default": "md",
+            "does": "14, 16 or 20 square."
+        },
         "label": {
             "type": "text",
             "does": "Names it as an image; true names it by its affiliation and kind (Hostile vessel). Without it, it is decoration."
         }
     },
-    "sizes": {"sm": {"width": 14, "height": 14}, "md": {"width": 16, "height": 16}, "lg": {"width": 20, "height": 20}},
-    "states": {"rest": {"means": "Drawn."}},
+    "sizes": {
+        "sm": {
+            "width": 14,
+            "height": 14
+        },
+        "md": {
+            "width": 16,
+            "height": 16
+        },
+        "lg": {
+            "width": 20,
+            "height": 20
+        }
+    },
+    "states": {
+        "rest": {
+            "means": "Drawn."
+        }
+    },
     "pieces": {
         "shape": {
             "rest": {
@@ -50,23 +92,59 @@
         "aircraft": "Aircraft",
         "vehicle": "Vehicle",
         "sensor": "Sensor",
+        "satellite": "Satellite",
         "other": "Other"
     },
     "messages": {
-        "friend": {"id": "trackNames.friend", "en": "Friend"},
-        "hostile": {"id": "trackNames.hostile", "en": "Hostile"},
-        "neutral": {"id": "trackNames.neutral", "en": "Neutral"},
-        "unknown": {"id": "trackNames.unknown", "en": "Unknown"},
-        "pending": {"id": "trackNames.pending", "en": "Pending"},
-        "vessel": {"id": "trackNames.vessel", "en": "Vessel"},
-        "aircraft": {"id": "trackNames.aircraft", "en": "Aircraft"},
-        "vehicle": {"id": "trackNames.vehicle", "en": "Vehicle"},
-        "sensor": {"id": "trackNames.sensor", "en": "Sensor"},
-        "other": {"id": "trackNames.other", "en": "Other"}
+        "friend": {
+            "id": "trackNames.friend",
+            "en": "Friend"
+        },
+        "hostile": {
+            "id": "trackNames.hostile",
+            "en": "Hostile"
+        },
+        "neutral": {
+            "id": "trackNames.neutral",
+            "en": "Neutral"
+        },
+        "unknown": {
+            "id": "trackNames.unknown",
+            "en": "Unknown"
+        },
+        "pending": {
+            "id": "trackNames.pending",
+            "en": "Pending"
+        },
+        "vessel": {
+            "id": "trackNames.vessel",
+            "en": "Vessel"
+        },
+        "aircraft": {
+            "id": "trackNames.aircraft",
+            "en": "Aircraft"
+        },
+        "vehicle": {
+            "id": "trackNames.vehicle",
+            "en": "Vehicle"
+        },
+        "sensor": {
+            "id": "trackNames.sensor",
+            "en": "Sensor"
+        },
+        "satellite": {
+            "id": "trackNames.satellite",
+            "en": "Satellite"
+        },
+        "other": {
+            "id": "trackNames.other",
+            "en": "Other"
+        }
     },
     "rendererSpecific": {
         "sokkel-ui": [
-            "An SVG of viewBox 0 0 48 48 with the outlines of lib/tracks (TRACK_OUTLINES), the same points the maps package draws its symbols from."
+            "An SVG of viewBox 0 0 48 48 with the outlines of lib/tracks (TRACK_OUTLINES), which the maps package draws its symbols from too.",
+            "The satellite's outline, in the 48 square: 24,4 29,11 29,22 34,22 34,16 46,16 46,32 34,32 34,26 29,26 29,40 19,40 19,26 14,26 14,32 2,32 2,16 14,16 14,22 19,22 19,11."
         ]
     },
     "drift": [
