@@ -147,6 +147,9 @@ its selector picks, as the cascade would, in light and in dark (`primary/80` on 
 browser shows (a tooltip on focus, Base UI's Escape) is listed beside the part with the reason. A
 spec's `drift` entries for sokkel-ui are differences on purpose: the test names the checks each one
 covers, passes on them, and fails once one no longer differs, so fixed drift leaves the spec.
+A spec whose `status` is `preview` (a part new in its round whose looks may still move) is checked
+for its words, messages, options, keys and routes only; its sizes, paints and layout are left until
+it is `stable`.
 
 When `parts.test` fails, either the component is wrong, and is fixed here, or the spec is: then the
 spec changes in a sokkel-design PR first, the difference waits in the test's `PENDING` with the note

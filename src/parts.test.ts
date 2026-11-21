@@ -309,6 +309,8 @@ interface Effect {
 interface Spec {
     id: string
     kind: 'part' | 'pattern'
+    /** `preview` while a new part's looks may still move: its sizes, paints and layout are not checked. */
+    status?: 'preview' | 'stable'
     options?: Record<string, { values?: string[]; default?: unknown; context?: string }>
     sizes?: Record<string, Record<string, Length | null | undefined>>
     layout?: Record<string, Length | { value: Length; note?: string }>
@@ -12480,14 +12482,16 @@ describe('the design pin', () => {
 })
 
 for (const id of SPECS.keys()) {
+    // A preview spec's sizes, paints and layout may still move, so only its words, options, keys and routes are held.
+    const preview = SPECS.get(id)?.status === 'preview'
     describe(id, () => {
         it('says the words the spec lists, and no word it does not', () => holds(id, 'words.'))
         it("keys its words by the catalogs' message ids", () => holds(id, 'messages.'))
         it('takes the values each option lists', () => holds(id, 'options.'))
-        it('draws each size at the lengths the spec gives', () => holds(id, 'sizes.'))
-        it('paints each state as the spec does', () => holds(id, 'variants.', 'pieces.', 'states.'))
+        it.skipIf(preview)('draws each size at the lengths the spec gives', () => holds(id, 'sizes.'))
+        it.skipIf(preview)('paints each state as the spec does', () => holds(id, 'variants.', 'pieces.', 'states.'))
         it('handles the keys the spec binds', () => holds(id, 'keyboard.'))
-        it('meets the rest of the spec', () => holds(id, 'routes.', 'layout.'))
+        it('meets the rest of the spec', () => (preview ? holds(id, 'routes.') : holds(id, 'routes.', 'layout.')))
         it("states its drift: each of sokkel-ui's drift entries still differs, and nothing else is allowed to", async () => {
             const spec = SPECS.get(id)
             const checks = await checksOf(id)

@@ -68,7 +68,13 @@ and ask before acting.
   `bun run design --ref <its commit>` here. A release moves both to the same version.
   What lands in sokkel-ui is the new normal: a part added or changed here is specified there in the
   same round, as it landed (its words, options, sizes, paints and keys), never left for later and
-  never marked as a draft.
+  never marked as a draft. A part new in a round may land `preview`: specified in full the same way,
+  but its sizes and paints may still move, so `parts.test` checks its words, options and keys and not
+  its sizes, paints and layout, and the other renderers may wait before porting it. It becomes
+  `stable` once its looks settle. Preview is never a reason to leave out any of the spec.
+  A map layer's spec gives what it means (what a reader sees and an app sets: periods, trails,
+  tokens, which states move), never its drawing constants (a shader's edge, an arc's steps, a glow's
+  blur), which stay in the code.
   `bun run design --tokens` fails when `tokens.json` is not the one the pinned contract was resolved
   from: CI warns on it, and the release stops.
 - `packages/core/tokens/tokens.json` is the only place a token is defined. Run `bun run tokens`
