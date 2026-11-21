@@ -97,11 +97,18 @@ describe('sentences', () => {
         expect(parseAisSentence(`2026-11-20T10:00:00Z ${CLASS_A}\r`)?.channel).toBe('B')
     })
 
-    it('takes the receiving vessel own reports and other talker prefixes', () => {
-        const own = `AIVDO${CLASS_A.slice(6, CLASS_A.indexOf('*'))}`
-        expect(parseAisSentence(`!${own}*${aisChecksum(own)}`)?.talker).toBe('AIVDO')
-        const base = `BSVDM${CLASS_A.slice(6, CLASS_A.indexOf('*'))}`
-        expect(parseAisSentence(`!${base}*${aisChecksum(base)}`)).toBeUndefined()
+    it('takes the receiving vessel own reports, and sentences from any talker', () => {
+        const from = (head: string) => {
+            const body = `${head}${CLASS_A.slice(6, CLASS_A.indexOf('*'))}`
+            return parseAisSentence(`!${body}*${aisChecksum(body)}`)
+        }
+        expect(from('AIVDO')?.talker).toBe('AIVDO')
+        // A base station on shore relays what it hears as its own talker.
+        expect(from('BSVDM')).toMatchObject({ talker: 'BSVDM', payload: '177KQJ5000G?tO`K>RA1wUbN0TKH' })
+        expect(from('ABVDM')?.talker).toBe('ABVDM')
+        // Other sentences of an AIS unit carry no message of a vessel.
+        expect(from('AIABK')).toBeUndefined()
+        expect(from('AIVDX')).toBeUndefined()
     })
 })
 
@@ -305,6 +312,17 @@ describe('the decoder', () => {
         const { payload, fill } = parseAisSentence(position(257000003, 10.7, 59.9))!
         const [track] = createAisDecoder().push(sentence(payload, fill, 'AIVDO'), 0)
         expect(track.properties?.own).toBe(true)
+    })
+
+    it("reads a coastal network's feed: base station sentences, each behind a tag block", () => {
+        const { payload, fill } = parseAisSentence(position(257000004, 5.32, 60.39, 12, 270))!
+        // As an open coastal feed writes a line: the station and the time it heard the message, then the sentence.
+        const line = `\\s:2573335,c:1795199301*03\\${sentence(payload, fill, 'BSVDM')}`
+        const [track] = createAisDecoder().push(`${line}\r\n`, 1_795_199_301_000)
+        expect(track).toMatchObject({ id: '257000004', kind: 'vessel', updatedAt: 1_795_199_301_000 })
+        expect(track.lon).toBeCloseTo(5.32, 5)
+        expect(track.lat).toBeCloseTo(60.39, 5)
+        expect(track.properties?.own).toBeUndefined()
     })
 
     it('classifies vessels as the app says', () => {

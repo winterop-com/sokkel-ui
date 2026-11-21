@@ -147,6 +147,43 @@ release and empties it.
   real machine's pace), so tracks move, trails grow, contacts and flights come and go, and
   connections open and close. Pause in the top bar holds the clock, and the harbor watch's timeline
   plays the last six hours back.
+- `/orbits` (tracking): satellites from the OMM elements CelesTrak and Space-Track publish, placed at
+  any time with SGP4. `parseOmm` reads them from JSON and `parseOmmCsv` from CSV, the form CelesTrak
+  asks for, into plain `Satellite` records;
+  `satellitePosition` and `satelliteTracks` give where each is, as a track of kind `satellite` over
+  the point under it (its height as the altitude, the point's heading and speed over the ground, the
+  orbital speed as `properties.velocity`); `groundTrack` gives the path behind and ahead as lines
+  split at the antimeridian (`splitAtAntimeridian` for any path); `footprint` and `horizonRange` give
+  the circle a satellite is in view from; `parseStationPosition` reads the space station's position
+  from wheretheiss.at and Open Notify. The tracking package now depends on satellite.js (MIT, held at
+  version 6), which only an app that imports `/orbits` bundles, about 10 kB gzipped.
+- `/events` (tracking): `Incident`, one plain shape for what happens at a place and a time, with a
+  kind, a severity on CAP's scale (`minor`, `moderate`, `severe`, `extreme`, `unknown`) and, for one
+  that lasts, when it ends. `parseUsgsQuakes` reads the USGS earthquake summary feeds, `parseGdacs`
+  GDACS's event lists and `parseMetAlerts` MET Norway's weather warnings, each warning with the area
+  it covers, a cancellation and the warnings it references left out (`cancelledMetAlerts` gives
+  their ids); `incidentZones` gives those areas as zones for a map, and `incidentsAt` the incidents
+  that hold at a time. Words `INCIDENT_WORDS`, ids `incident.kinds.*` and `incident.severities.*`.
+- `/checks` (tracking): server health checks as data. A `Check` is a plain object (a path, the
+  status, body text and JSON values its answer must hold, how to judge its latency, and values to
+  capture); the app performs the request and `evaluateCheck` says `up`, `degraded` or `down` with the
+  reason. `createStatusMonitor` holds a status steady over a run of observations (`failures`,
+  `recoveries`), gives a change only when the status changes, and gives uptime and latency over a
+  window; `combineResults` and `worstStatus` make one observation of a server's checks. `HTTP_KIND`
+  and `httpCheck` check any server that answers over HTTP; `checkUrl` joins a check's path to a base
+  URL. Words `CHECK_WORDS`, ids `check.statuses.*`, `check.reasons.*` and `check.answers`.
+- `@winterop-com/sokkel-ui-dhis2/checks`: the health checks of a DHIS2 server as data, in the shape
+  the tracking add-on's `evaluateCheck` takes. `dhis2Checks()` checks that the base URL answers and
+  reads the version from `/api/loginConfig`; with `credentials: true` it reads the version, revision
+  and build time from `/api/system/info` and the signed-in user from `/api/me`. `DHIS2_KIND` is DHIS2
+  as a kind of server, and `DHIS2_DEMO` the public demo server for a quick-add list, without
+  credentials. Words `DHIS2_CHECK_WORDS`, ids `dhis2Check.*`; the package now carries a catalog,
+  `messages/en.json`.
+- The tracking package's README lists, for each public source its modules read, whether a page can
+  fetch it, its key, its limits and its license, and so which need a server of the app's own.
+- `/ais` (tracking) reads `VDM` and `VDO` sentences from any talker, so a coastal network's feed of
+  base station sentences (`!BSVDM`, each behind a tag block) decodes as a receiver's `!AIVDM` does.
+  `AisSentence.talker` is the talker and the sentence as sent.
 
 ## Changed
 

@@ -1,6 +1,8 @@
 /**
- * Vessels as tracks, decoded from AIS NMEA sentences (`!AIVDM` from other vessels, `!AIVDO` from the
- * receiving vessel itself). The app reads the lines from its feed; this module checks each line's
+ * Vessels as tracks, decoded from AIS NMEA sentences (`VDM` from other vessels, `VDO` from the
+ * receiving vessel itself), whoever the talker is: `!AIVDM` from a receiver on board, `!BSVDM` or
+ * `!ABVDM` from a base station on shore, as a coastal network's feed sends them. The app reads the
+ * lines from its feed; this module checks each line's
  * checksum, puts multi-sentence messages back together, decodes the six-bit payload and keeps a
  * registry of vessels by MMSI, so a name sent in a static report reaches the vessel's later positions.
  *
@@ -11,8 +13,11 @@ import { KNOT, type LonLat, type Track, type TrackClassifier, type TrackProperti
 
 /** One NMEA sentence, read but not yet put together with the other fragments of its message. */
 export interface AisSentence {
-    /** `AIVDM` for another vessel, `AIVDO` for the receiving vessel itself. */
-    talker: 'AIVDM' | 'AIVDO'
+    /**
+     * The talker and the sentence, as sent: two letters for who relays it (`AI` a receiver on board,
+     * `BS` and `AB` a base station), then `VDM` for another vessel or `VDO` for the receiving vessel itself.
+     */
+    talker: string
     fragments: number
     fragment: number
     /** Ties the fragments of one message together; empty for a message of one sentence. */
@@ -95,7 +100,7 @@ export function parseAisSentence(line: string): AisSentence | undefined {
     if (fields.length !== 7) return undefined
     const [head, fragments, fragment, sequence, channel, payload, fill] = fields
     const talker = head.slice(-5)
-    if (talker !== 'AIVDM' && talker !== 'AIVDO') return undefined
+    if (!/^[A-Z]{2}VD[MO]$/.test(talker)) return undefined
     const parsed = { fragments: Number(fragments), fragment: Number(fragment), fill: Number(fill) }
     if (!Number.isInteger(parsed.fragments) || !Number.isInteger(parsed.fragment) || !Number.isInteger(parsed.fill)) return undefined
     if (parsed.fragment < 1 || parsed.fragment > parsed.fragments || parsed.fill < 0 || parsed.fill > 5) return undefined
@@ -248,7 +253,7 @@ export interface AisVessel {
     beam?: number
     /** The class of its transponder, from the messages it sends. */
     class?: 'A' | 'B'
-    /** Whether it is the receiving vessel itself, from `!AIVDO`. */
+    /** Whether it is the receiving vessel itself, from a `VDO` sentence. */
     own?: boolean
     lon?: number
     lat?: number
@@ -372,7 +377,7 @@ export function createAisDecoder(options: AisDecoderOptions = {}): AisDecoder {
         const message = decodeAisPayload(whole.payload, whole.fill)
         if (message === undefined || message.mmsi === 0) return undefined
         const vessel = vesselOf(message.mmsi)
-        if (sentence.talker === 'AIVDO') vessel.own = true
+        if (sentence.talker.endsWith('VDO')) vessel.own = true
         if (isPosition(message)) {
             vessel.class = message.type === 18 ? 'B' : 'A'
             vessel.speed = message.speed

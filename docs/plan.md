@@ -28,9 +28,11 @@ the core, the engine add-ons (and media), and the domain add-ons.
 - `@winterop-com/sokkel-ui-fhir` (`packages/fhir`), the first domain add-on: the health-data
   standards' languages, FHIRPath and CQL, for `CodeEditor`, as the plugin `fhir`.
 - `@winterop-com/sokkel-ui-dhis2` (`packages/dhis2`), a domain add-on for the DHIS2 platform: its
-  expression languages for `CodeEditor`, as the plugin `dhis2`.
+  expression languages for `CodeEditor`, as the plugin `dhis2`, and the health checks of a DHIS2
+  server as data.
 - `@winterop-com/sokkel-ui-tracking` (`packages/tracking`), a domain add-on for map tracking
-  consoles: tracks read from flight, AIS and network connection data, with geodesy and MGRS.
+  consoles: tracks read from flight, AIS, orbit and network connection data, incidents read from
+  earthquake, disaster and weather warning feeds, and server health checks, with geodesy and MGRS.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -1391,21 +1393,40 @@ changes between versions, so the names are data the languages take, the latest s
 `dhis2Plugin({ functions, variables })`, and a name it was not given is read as a plain name rather
 than an error, so an older or newer server never breaks the editor. The grammars follow the
 platform's ANTLR expression grammar and its manual, and the tests read real expressions a demo
-server holds.
+server holds. Its `checks` module gives the health checks of a DHIS2 server as data, in the shape the
+tracking add-on's `checks` judges, written out again since no add-on imports another: whether the
+base URL answers, which version runs (`/api/system/info` for a signed-in user, with the revision and
+the build time, and `/api/loginConfig` for anyone, on 2.41 and later) and whether the app's
+credentials sign in (`/api/me`). Each API request is marked as a script's, so a server that does not
+let it in answers 401 and not its sign-in page. `DHIS2_DEMO` names the public demo server for a list
+of servers to add, and carries no credentials.
 
 The third, `@winterop-com/sokkel-ui-tracking`, serves map tracking consoles: things that move
-(vessels, aircraft, vehicles) and network flows. It is data only and UI only: it draws nothing,
+(vessels, aircraft, satellites, vehicles), things that happen at a place and a time, network flows
+and the health of servers. It is data only and UI only: it draws nothing,
 contributes nothing to a core part and so has no plugin, never calls a server and ships no
-database. Everything it reads becomes one plain, serializable `Track` (an id, a position, heading,
+database. Everything that moves becomes one plain, serializable `Track` (an id, a position, heading,
 speed and altitude in SI units, an affiliation, a kind, a label, a trail and plain properties), so
 a map layer, a list and a filter take any feed alike. `adsb` reads the JSON of readsb and the APIs
 built on it, and OpenSky's state vectors; `ais` decodes AIS NMEA sentences, checksums, fragments and
 six-bit payloads, positions of class A and B and their static data, into a registry by MMSI; and
 `network` gathers connection records by remote host and by process with byte rates over a window,
-placing a public address only through the app's own `locate`. `geo` holds the great-circle
+placing a public address only through the app's own `locate`. `orbits` reads satellites from OMM
+elements, in JSON or CSV, and places them at any time with SGP4, through satellite.js, the package's one dependency:
+one fetch of elements serves for days, and every reader of one clock agrees on where a satellite is.
+It gives each as a track over the point under it, its ground track as lines split at the
+antimeridian and its footprint as a circle. `events` reads what happens into one `Incident` (an id,
+a position, when it holds, a kind, a severity on CAP's scale, a label and, for a warning, the area
+it covers): earthquakes from the USGS summary feeds, disasters from GDACS and weather warnings from
+MET Norway's MetAlerts, whose areas become zones for a map. `checks` holds server health checks as
+data: a check is a plain object naming a path, what its answer must be and how to judge its latency;
+the app performs the request and `evaluateCheck` says up, degraded or down with the reason, and a
+status monitor holds the status steady over a run of observations, so an alert is raised when it
+changes, and gives uptime and latency over a window. `geo` holds the great-circle
 functions and UTM and MGRS on WGS84, with the grid's exceptions over Norway and Svalbard;
 `affiliation` the words an app translates, the order a list groups tracks in and the names of the
-color tokens a theme paints each affiliation with.
+color tokens a theme paints each affiliation with. The package's README lists what a page can fetch
+from each public source and which need the app's own server.
 
 Its `simulate` module gives a console something to read where there is no live feed: an example, a
 story, a test. Flights on a timetable between real cities, a coast whose vessels, aircraft and

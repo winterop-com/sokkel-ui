@@ -1,7 +1,7 @@
 {
     "name": "@winterop-com/sokkel-ui-tracking",
     "version": "0.33.2",
-    "description": "Tracks for map tracking consoles, read from flight, AIS and network connection data, with the geodesy and the grid references they need, for sokkel-ui.",
+    "description": "Tracks for map tracking consoles, read from flight, AIS, orbit and network connection data, incidents read from earthquake, disaster and weather warning feeds, and server health checks, with the geodesy and the grid references they need, for sokkel-ui.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
         "type": "git",
@@ -47,6 +47,18 @@
         "./simulate": {
             "types": "./dist/simulate.d.ts",
             "import": "./dist/simulate.js"
+        },
+        "./events": {
+            "types": "./dist/events.d.ts",
+            "import": "./dist/events.js"
+        },
+        "./orbits": {
+            "types": "./dist/orbits.d.ts",
+            "import": "./dist/orbits.js"
+        },
+        "./checks": {
+            "types": "./dist/checks.d.ts",
+            "import": "./dist/checks.js"
         }
     },
     "publishConfig": {
@@ -55,6 +67,9 @@
     "scripts": {
         "build": "vite build && tsc -p tsconfig.build.json",
         "prepack": "cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ."
+    },
+    "dependencies": {
+        "satellite.js": "^6.0.2"
     },
     "peerDependencies": {
         "@winterop-com/sokkel-ui": "workspace:*"

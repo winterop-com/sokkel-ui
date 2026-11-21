@@ -821,10 +821,13 @@ export function render(entries: Entry[]): string {
         'A domain package plugs into the core as a plugin an app installs once with `registerPlugins`',
         '(`@winterop-com/sokkel-ui/lib/plugins`): `fhir` (`@winterop-com/sokkel-ui-fhir/plugin`) gives',
         '`CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`',
-        "(`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages. `tracking`",
-        '(`@winterop-com/sokkel-ui-tracking`) draws nothing and needs no plugin: it reads flight, AIS and',
-        'network connection data into tracks (`adsb`, `ais`, `network`) and gives the geodesy and grid',
-        'references a map console works in (`geo`).',
+        "(`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages, beside the",
+        'health checks of a DHIS2 server as data (`checks`). `tracking`',
+        '(`@winterop-com/sokkel-ui-tracking`) draws nothing and needs no plugin: it reads flight, AIS,',
+        'orbit and network connection data into tracks (`adsb`, `ais`, `orbits`, `network`), earthquake,',
+        'disaster and weather warning feeds into incidents (`events`) and the answers of server health',
+        'checks into statuses (`checks`), and gives the geodesy and grid references a map console works',
+        'in (`geo`).',
         '',
     ]
     const packages = [...new Set(entries.map((entry) => entry.pkg))]

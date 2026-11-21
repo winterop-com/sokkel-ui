@@ -84,17 +84,17 @@ stays (`make screenshots-ci`, `scripts/baselines.sh`) for when it returns near 1
 The library is nine packages on GitHub Packages, released together at one version: the core, the
 engine add-ons (and media), and the domain add-ons, each holding one domain's parts.
 
-| Package                            | Holds                                                                                      |
-| ---------------------------------- | ------------------------------------------------------------------------------------------ |
-| `@winterop-com/sokkel-ui`          | the tokens and themes, the primitives and every pattern below                              |
-| `@winterop-com/sokkel-ui-charts`   | `Chart` and its kinds on ECharts, and the dashboard's chart panels                         |
-| `@winterop-com/sokkel-ui-maps`     | `MapView` on maplibre, with its layers, legends, popups and basemaps                       |
-| `@winterop-com/sokkel-ui-graph`    | the graphs and the graph editor on React Flow, laid out by elk                             |
-| `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js                       |
-| `@winterop-com/sokkel-ui-media`    | `MediaBar` and its fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession` |
-| `@winterop-com/sokkel-ui-fhir`     | a domain add-on: FHIRPath and CQL, the health-data standards' languages, for `CodeEditor`  |
-| `@winterop-com/sokkel-ui-dhis2`    | a domain add-on: DHIS2's expression languages, for `CodeEditor`                            |
-| `@winterop-com/sokkel-ui-tracking` | a domain add-on: tracks from flight, AIS and network data, with geodesy and MGRS           |
+| Package                            | Holds                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `@winterop-com/sokkel-ui`          | the tokens and themes, the primitives and every pattern below                                                |
+| `@winterop-com/sokkel-ui-charts`   | `Chart` and its kinds on ECharts, and the dashboard's chart panels                                           |
+| `@winterop-com/sokkel-ui-maps`     | `MapView` on maplibre, with its layers, legends, popups and basemaps                                         |
+| `@winterop-com/sokkel-ui-graph`    | the graphs and the graph editor on React Flow, laid out by elk                                               |
+| `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js                                         |
+| `@winterop-com/sokkel-ui-media`    | `MediaBar` and its fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession`                   |
+| `@winterop-com/sokkel-ui-fhir`     | a domain add-on: FHIRPath and CQL, the health-data standards' languages, for `CodeEditor`                    |
+| `@winterop-com/sokkel-ui-dhis2`    | a domain add-on: DHIS2's expression languages, for `CodeEditor`, and a server's health checks                |
+| `@winterop-com/sokkel-ui-tracking` | a domain add-on: tracks from flight, AIS, orbit and network data, incidents, health checks, geodesy and MGRS |
 
 Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that
 package too, which brings its engine with it, and a music or video app adds the media package (the
@@ -116,8 +116,8 @@ bun add @winterop-com/sokkel-ui-graph@0.22.2    # only for graphs
 bun add @winterop-com/sokkel-ui-terminal@0.22.2 # only for terminals
 bun add @winterop-com/sokkel-ui-media@0.22.2    # only for the music and video parts
 bun add @winterop-com/sokkel-ui-fhir@0.22.2     # only for FHIRPath and CQL in the code editor
-bun add @winterop-com/sokkel-ui-dhis2@0.22.2    # only for DHIS2's expression languages in the code editor
-bun add @winterop-com/sokkel-ui-tracking@0.22.2 # only for tracks on a map tracking console
+bun add @winterop-com/sokkel-ui-dhis2@0.22.2    # only for DHIS2's expression languages in the code editor, and a DHIS2 server's checks
+bun add @winterop-com/sokkel-ui-tracking@0.22.2 # only for tracks, incidents and server checks on a tracking console
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
@@ -487,22 +487,40 @@ registerPlugins([dhis2Plugin({ functions: DHIS2_FUNCTIONS.filter((name) => name 
 <CodeEditor label="Condition" language={languageForMediaType('text/x-dhis2-rule')} value={condition} onChange={setCondition} />
 ```
 
+It also gives the health checks of a DHIS2 server as data (`@winterop-com/sokkel-ui-dhis2/checks`),
+which the tracking add-on's `evaluateCheck` judges: `dhis2Checks()` asks whether the base URL answers
+and, of `/api/loginConfig`, which version runs; `dhis2Checks({ credentials: true })` reads the version,
+the revision and the build time from `/api/system/info` and the signed-in user from `/api/me`. The app
+performs the requests, with the credentials it holds. `DHIS2_KIND` is DHIS2 in a list of kinds of
+server, and `DHIS2_DEMO` the public demo server for a list of servers to add, without credentials.
+
 The tracking one needs no plugin: it is data only, for a map tracking console. It reads what the
 app fetched into tracks, one plain shape (`Track` in `@winterop-com/sokkel-ui-tracking/track`):
-aircraft from readsb's and OpenSky's JSON (`adsb`), vessels from AIS sentences (`ais`) and remote
-hosts from network connection records (`network`), where the app supplies where an address is.
+aircraft from readsb's and OpenSky's JSON (`adsb`), vessels from AIS sentences (`ais`), satellites
+from OMM elements, placed at any time with SGP4 (`orbits`), and remote hosts from network connection
+records (`network`), where the app supplies where an address is. `events` reads what happens at a
+place and a time into incidents: earthquakes from the USGS, disasters from GDACS and weather warnings
+from MET Norway, whose areas become zones. `checks` judges the answers of server health checks, each
+check a plain object, and holds a status steady so an alert is raised when it changes.
 It never calls a server and ships no database. `geo` gives great-circle distance and bearing, and
-UTM and MGRS references; `affiliation` the words, the order and the color token names:
+UTM and MGRS references; `affiliation` the words, the order and the color token names. Its README
+lists what a page can fetch from each public source, and which need a server of the app's own.
 
 ```ts
 import { parseFlights } from '@winterop-com/sokkel-ui-tracking/adsb'
 import { createAisDecoder } from '@winterop-com/sokkel-ui-tracking/ais'
+import { evaluateCheck, HTTP_KIND } from '@winterop-com/sokkel-ui-tracking/checks'
+import { parseUsgsQuakes } from '@winterop-com/sokkel-ui-tracking/events'
 import { toMgrs } from '@winterop-com/sokkel-ui-tracking/geo'
+import { parseOmm, satelliteTracks } from '@winterop-com/sokkel-ui-tracking/orbits'
 
 const aircraft = parseFlights(await (await fetch(url)).json())
 const decoder = createAisDecoder()
 socket.onmessage = (event) => update(decoder.push(event.data))
 toMgrs([10.7522, 59.9139]) // '32V NM 97979 43118'
+const satellites = satelliteTracks(parseOmm(elements), Date.now())
+const quakes = parseUsgsQuakes(feed)
+const result = evaluateCheck(HTTP_KIND.checks()[0], { at, status: 200, latency: 84 })
 ```
 
 The core's own dependencies are what every app's frame draws with: Base UI, lucide, the class helpers and the IBM Plex fonts, and dnd-kit, the drag

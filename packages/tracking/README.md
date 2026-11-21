@@ -1,9 +1,10 @@
 # @winterop-com/sokkel-ui-tracking
 
 A domain add-on of sokkel-ui for map tracking consoles: things that move (vessels, aircraft,
-vehicles) and network flows. It is data only and UI only. It draws nothing and needs no plugin, it
+satellites, vehicles), things that happen (earthquakes, disasters, weather warnings), network flows
+and the health of servers. It is data only and UI only. It draws nothing and needs no plugin, it
 never calls a server, and it ships no database: the app fetches, and this package turns what it
-fetched into tracks.
+fetched into tracks, incidents and statuses.
 
 ```
 bun add @winterop-com/sokkel-ui @winterop-com/sokkel-ui-tracking
@@ -38,15 +39,18 @@ gives none, a track is `unknown`.
 
 ## Modules
 
-| Module         | Holds                                                                                                                                                                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/track`       | `Track` and its types, `TRACK_AFFILIATIONS`, `TRACK_KINDS`, `KNOT` and `FOOT`                                                                                                                                                           |
-| `/adsb`        | `parseReadsb` (readsb's JSON and the v2 APIs on it: `/v2/point`, `/v2/hex`), `parseOpenSky` (`/api/states/all`) and `parseFlights`, which tells them apart; `altitudeBand` and `verticalTrend`                                          |
-| `/ais`         | `createAisDecoder`, which reads `!AIVDM` and `!AIVDO` lines into vessel tracks with a registry by MMSI; `parseAisSentence`, `decodeAisPayload` and `aisChecksum` underneath                                                             |
-| `/geo`         | `distance`, `bearing` and `destination` on a great circle; `toUtm`, `fromUtm`, `formatUtm`, `utmZone` and `latitudeBand`; `toMgrs` and `parseMgrs`                                                                                      |
-| `/network`     | `createFlowTracker`, which gathers connection records by remote host and by process, or lists each, with byte rates over a window; `flowTracks`, the located hosts as tracks and links from home; `addressScope` and the address checks |
-| `/affiliation` | `TRACKING_WORDS` and `TRACKING_PART`, `AFFILIATION_ORDER`, `compareAffiliation`, `sortByAffiliation`, `groupByAffiliation` and `AFFILIATION_TOKENS`                                                                                     |
-| `/simulate`    | Simulated feeds for an example, a story or a test, each from a seed and a moment: `simulateFlights`, `simulateAis` and `simulateCoast`, `createNetworkSimulation`, and `createSimClock`, the clock they are read at                     |
+| Module         | Holds                                                                                                                                                                                                                                                                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/track`       | `Track` and its types, `TRACK_AFFILIATIONS`, `TRACK_KINDS`, `KNOT` and `FOOT`                                                                                                                                                                                                                              |
+| `/adsb`        | `parseReadsb` (readsb's JSON and the v2 APIs on it: `/v2/point`, `/v2/hex`), `parseOpenSky` (`/api/states/all`) and `parseFlights`, which tells them apart; `altitudeBand` and `verticalTrend`                                                                                                             |
+| `/ais`         | `createAisDecoder`, which reads `VDM` and `VDO` lines of any talker (`!AIVDM`, `!BSVDM`) into vessel tracks with a registry by MMSI; `parseAisSentence`, `decodeAisPayload` and `aisChecksum` underneath                                                                                                   |
+| `/geo`         | `distance`, `bearing` and `destination` on a great circle; `toUtm`, `fromUtm`, `formatUtm`, `utmZone` and `latitudeBand`; `toMgrs` and `parseMgrs`                                                                                                                                                         |
+| `/network`     | `createFlowTracker`, which gathers connection records by remote host and by process, or lists each, with byte rates over a window; `flowTracks`, the located hosts as tracks and links from home; `addressScope` and the address checks                                                                    |
+| `/affiliation` | `TRACKING_WORDS` and `TRACKING_PART`, `AFFILIATION_ORDER`, `compareAffiliation`, `sortByAffiliation`, `groupByAffiliation` and `AFFILIATION_TOKENS`                                                                                                                                                        |
+| `/orbits`      | `parseOmm` and `parseOmmCsv`, which read satellites from OMM in JSON and in CSV; `satellitePosition` and `satelliteTracks`, which place them at any time with SGP4; `groundTrack`, `splitAtAntimeridian`, `footprint` and `horizonRange`; `parseStationPosition` for the space station's position services |
+| `/events`      | `Incident` and its types; `parseUsgsQuakes`, `parseGdacs` and `parseMetAlerts`; `incidentZones`, `incidentsAt` and `cancelledMetAlerts`; `quakeSeverity`, `areaMiddle`, `compareSeverity`, `atLeast`, `SEVERITY_ORDER`, and `INCIDENT_WORDS` and `INCIDENT_PART`                                           |
+| `/checks`      | `Check` and its types; `evaluateCheck`, `checkUrl`, `readPath` and `statusPasses`; `createStatusMonitor`, `combineResults` and `worstStatus`; `httpCheck` and `HTTP_KIND`; `CHECK_WORDS` and `CHECK_PART`                                                                                                  |
+| `/simulate`    | Simulated feeds for an example, a story or a test, each from a seed and a moment: `simulateFlights`, `simulateAis` and `simulateCoast`, `createNetworkSimulation`, and `createSimClock`, the clock they are read at                                                                                        |
 
 ## Flights
 
@@ -72,6 +76,8 @@ socket.onmessage = (event) => update(decoder.push(event.data))
 `push` takes one line or many and gives the tracks they changed. The decoder checks each checksum,
 puts multi-sentence messages back together, and reads position reports (types 1, 2, 3 and 18) and
 static data (types 5 and 24), so a name sent in a static report labels the vessel's later positions.
+It takes a sentence from any talker, a receiver on board (`!AIVDM`) or a base station on shore
+(`!BSVDM`, `!ABVDM`), and skips a tag block before it, so a coastal network's feed reads line by line.
 
 ## Network connections
 
@@ -155,3 +161,162 @@ UTM and MGRS cover 80°S to 84°N on WGS84, with zone 32V widened over western N
 ids (`tracking.affiliations.hostile`, `tracking.kinds.vessel`), listed in `messages/en.json`.
 `AFFILIATION_ORDER` groups tracks most pressing first: hostile, unknown, pending, neutral, friend.
 `AFFILIATION_TOKENS` names the color token a theme paints each affiliation with (`track-friend`).
+
+## Satellites
+
+```ts
+import { footprint, groundTrack, parseOmmCsv, satelliteTracks } from '@winterop-com/sokkel-ui-tracking/orbits'
+
+const satellites = parseOmmCsv(await (await fetch(url)).text()) // once: the elements hold for days
+const tracks = satelliteTracks(satellites, clock) // every tick, for any time
+const circles = tracks.flatMap((track) => footprint(track) ?? [])
+const { past, future } = groundTrack(satellites[0], clock)
+```
+
+`parseOmm` reads the mean elements CelesTrak and Space-Track publish as OMM in JSON, numbers or text
+alike, and `parseOmmCsv` the same elements in CSV, which CelesTrak asks its readers to take: it is a
+third of the size. A `Satellite` is a plain record (its catalog number as `id`, its name, the epoch of its
+elements, its period and its inclination), so it survives JSON; SGP4 (satellite.js) places it at any
+time from them, and every reader of one clock agrees on where it is. A satellite SGP4 cannot place,
+as one whose orbit has decayed, is skipped.
+
+A satellite's track has kind `satellite`, stands at the point under it and carries its height over the
+WGS84 ellipsoid as the altitude. Its `heading` and `speed` are those of that point over the ground;
+its speed along its orbit is `properties.velocity`, beside its catalog number, designator, period,
+inclination and the epoch of its elements. A position far from that epoch is less sure: elements a
+week old place a satellite in low orbit kilometers off.
+
+`groundTrack` gives the path the point draws, one revolution behind and one ahead by default
+(`before`, `after` and `step` in milliseconds), as lines split where they cross the antimeridian, so a
+map never draws a line back across the world; `splitAtAntimeridian` does the same for any path.
+`footprint` gives the circle a satellite is in view from as a position and a range in meters, which a
+coverage layer draws as a full cone; `elevation` narrows it to where the satellite stands that many
+degrees over the horizon.
+
+`parseStationPosition` reads the International Space Station's position from wheretheiss.at or Open
+Notify into the same track, for an app that asks a service in place of propagating.
+
+satellite.js is this package's one dependency, under the MIT license, and reaches only an app that
+imports `/orbits`: about 10 kB gzipped. It is held at version 6: version 7 adds a WebAssembly
+propagator whose worker a Vite build refuses unless the app sets `worker.format` to `es`.
+
+## Incidents
+
+```ts
+import { incidentsAt, incidentZones, parseGdacs, parseMetAlerts, parseUsgsQuakes } from '@winterop-com/sokkel-ui-tracking/events'
+
+const incidents = [...parseUsgsQuakes(quakes), ...parseGdacs(disasters), ...parseMetAlerts(warnings)]
+const now = incidentsAt(incidents, clock, 86_400_000) // what holds at the clock's time; a quake for a day
+const zones = incidentZones(now) // the warned areas, for a zone layer
+```
+
+An `Incident` is a thing that happens at a place and a time, where a track is a thing that moves:
+
+```ts
+interface Incident {
+    id: string
+    lon: number
+    lat: number
+    at: number // when it happened or takes effect
+    until?: number // when it ends, for one that lasts
+    kind: 'earthquake' | 'tsunami' | 'cyclone' | 'flood' | 'volcano' | 'drought' | 'wildfire' | 'weather' | 'other'
+    severity: 'minor' | 'moderate' | 'severe' | 'extreme' | 'unknown'
+    magnitude?: number // an earthquake's
+    label: string
+    url?: string
+    area?: Polygon | MultiPolygon // as GeoJSON holds one
+    updatedAt?: number
+    source?: string
+    properties?: Record<string, string | number | boolean | null>
+}
+```
+
+Severity is CAP's scale, and each feed's colors are read onto it alike: green is `minor`, yellow
+`moderate`, orange `severe` and red `extreme`.
+
+- `parseUsgsQuakes` reads a USGS summary feed. A quake takes the PAGER alert level where the USGS
+  gave one, and `quakeSeverity` of its magnitude otherwise (`minor` below 5, `moderate` below 6,
+  `severe` below 7, `extreme` from 7). Its depth is `properties.depth`, in meters.
+- `parseGdacs` reads a GDACS event list: the event type gives the kind and the alert level the
+  severity. An event's own measure (a cyclone's wind, a drought's area) is `properties.measure` with
+  its `unit`; dates are read as UTC.
+- `parseMetAlerts` reads MET Norway's weather warnings. Each is of kind `weather` (what it warns of is
+  `properties.event`), holds from `at` until `until`, carries the area warned as `area` and stands at
+  that area's middle. A warning that is not `Actual`, such as a test, is left out, and so is a cancellation with every
+  warning in the feed it references; `cancelledMetAlerts` gives those ids, for an app that kept
+  warnings from an earlier answer. The feed lists
+  warnings that have yet to start, which `incidentsAt` leaves out until they do.
+
+`incidentZones` gives every incident with an area as `{ id, area, label, kind, severity }`, the shape a
+zone layer draws once the app has given each a tone for its severity. `INCIDENT_WORDS` says the kinds
+and severities in English (message ids `incident.kinds.*` and `incident.severities.*`).
+
+## Health checks
+
+```ts
+import { checkUrl, combineResults, createStatusMonitor, evaluateCheck, HTTP_KIND } from '@winterop-com/sokkel-ui-tracking/checks'
+
+const checks = HTTP_KIND.checks()
+const monitor = createStatusMonitor({ failures: 3, window: 3_600_000 })
+
+const results = await Promise.all(
+    checks.map(async (check) => {
+        const at = Date.now()
+        const response = await fetch(checkUrl(server.url, check)).catch(() => undefined)
+        return evaluateCheck(check, { at, status: response?.status, body: await response?.text(), latency: Date.now() - at })
+    }),
+)
+const change = monitor.push(combineResults(results)!)
+if (change) notify(`${server.label} is ${change.to}`)
+const { status, uptime, latency } = monitor.summary()
+```
+
+A check is a plain object: the `path` to request under a server's base URL, what to `expect` of the
+answer (its `status`, one or a range; text its `body` must hold; values its `json` must hold, each by
+a path such as `database.connected` or `services[0].state`, to equal a value, match a pattern or only
+be there) and how to judge its `latency` (slower than `degraded` milliseconds, or than `down`).
+`capture` names values to read from the JSON body for showing, such as a version. The app performs
+the request, with its own credentials and through its own server where the browser may not ask, and
+hands over what came back; `evaluateCheck` says `up`, `degraded` or `down`, with the reason as data
+(`unreachable`, `status`, `body`, `json`, `latency`) and what was expected and what came.
+
+`createStatusMonitor` holds a status steady: it turns `down` after `failures` observations in a row
+that were down (3 by default), `degraded` after as many that were not up, and improves after
+`recoveries` in a row that were better (1 by default). `push` gives a change only when the status
+changes, which is when to raise an alert. `summary` gives the uptime (the share of observations that
+were not down) and the latency (mean, median, 95th percentile, least and greatest) over the `window`.
+`state()` is plain data to keep, and `initial` starts a monitor from it again. One round of a server's
+checks is one observation: `combineResults` takes the worst status and the slowest answer.
+
+A kind names the checks a kind of server takes. `HTTP_KIND` is any server that answers over HTTP:
+one check of its base URL, up on a status from 200 to 399, degraded past a second and down past ten;
+`httpCheck` builds one for a path. A domain add-on gives its own kind, in the same shape, as
+`@winterop-com/sokkel-ui-dhis2/checks` does.
+`CHECK_WORDS` says the statuses and the reasons in English (message ids `check.statuses.*` and
+`check.reasons.*`).
+
+## Live sources
+
+What a page can fetch from each public source these modules read, measured on 20 November 2026 with a
+request from another origin. A source that sends no `Access-Control-Allow-Origin` needs the app's own
+server, or its desktop shell, to fetch it.
+
+| Source                                                                                                                                 | Read with                 | From a page                                                                                                                                                                               | Key                                                     | Limits                                                                                                                                                                                                                                                                              | License and credit                                                                                                                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| USGS earthquake feeds, `earthquake.usgs.gov/earthquakes/feed/v1.0/summary/{all,1.0,2.5,4.5,significant}_{hour,day,week,month}.geojson` | `parseUsgsQuakes`         | Yes: any origin                                                                                                                                                                           | None                                                    | None stated; rebuilt every minute and cached for 60 seconds                                                                                                                                                                                                                         | Public domain in the United States; credit the U.S. Geological Survey                                                                                                    |
+| GDACS event lists, `www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=EQ,TC,FL,VO,DR,WF` and `EVENTS4APP`                | `parseGdacs`              | Yes: any origin. Its RSS feed (`/xml/rss.xml`) sends no such header                                                                                                                       | None                                                    | None stated                                                                                                                                                                                                                                                                         | CC BY 4.0, by the European Commission's notice the site points to: credit GDACS and say what was changed. Its terms call the alerts indicative, never to decide by alone |
+| MET Norway MetAlerts, `api.met.no/weatherapi/metalerts/2.0/current.json` (`?lang=en`)                                                  | `parseMetAlerts`          | Yes: any origin, `GET` with no headers of the app's own. Its terms still ask browsers to go through the app's own server; a low-volume site may ask directly and is known by its `Origin` | None; a server-side client names itself in `User-Agent` | 20 requests a second for the whole app; never before `Expires` (two minutes), and with `If-Modified-Since`                                                                                                                                                                          | NLOD 2.0 and CC BY 4.0; credit "Data from MET Norway"                                                                                                                    |
+| CelesTrak GP data, `celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=csv` (or `json`)                                         | `parseOmmCsv`, `parseOmm` | Yes: any origin. It answered late on the day, after an hour and a half of taking no connection                                                                                            | None                                                    | Its usage policy: one download of a set for each update, every two hours; CSV rather than JSON; stop at any answer but 200, for 15 minutes at a 500 or 503; an address that goes on asking is blocked, and many readers behind one address go through a caching server of their own | None stated; credit CelesTrak                                                                                                                                            |
+| wheretheiss.at, `api.wheretheiss.at/v1/satellites/25544`                                                                               | `parseStationPosition`    | Yes: any origin                                                                                                                                                                           | None                                                    | About one request a second; its headers said 350 in five minutes                                                                                                                                                                                                                    | None stated                                                                                                                                                              |
+| Open Notify, `api.open-notify.org/iss-now.json`                                                                                        | `parseStationPosition`    | Only from a page served over HTTP: it allows any origin but answers on port 80 alone                                                                                                      | None                                                    | About one request in five seconds                                                                                                                                                                                                                                                   | None stated                                                                                                                                                              |
+| Norwegian Coastal Administration AIS, TCP `153.44.253.27:5631`                                                                         | `createAisDecoder`        | No: a raw TCP stream of NMEA lines, for Node or a desktop shell. Its lines are `!BSVDM` behind a tag block, which the decoder reads                                                       | None, and no registration                               | None stated                                                                                                                                                                                                                                                                         | NLOD. Vessels in Norway's economic zone and off Svalbard and Jan Mayen, without fishing vessels under 15 m and leisure craft under 45 m                                  |
+| adsb.lol, `api.adsb.lol/v2/point/{lat}/{lon}/{nm}`                                                                                     | `parseReadsb`             | No: no header                                                                                                                                                                             | None; a key raises the limit                            | 500 requests a day for an address without a key                                                                                                                                                                                                                                     | ODbL 1.0                                                                                                                                                                 |
+| adsb.fi, `opendata.adsb.fi/api/v2/lat/{lat}/lon/{lon}/dist/{nm}` (its notes move this to `/api/v3/`)                                   | `parseReadsb`             | No: no header                                                                                                                                                                             | None                                                    | One request a second                                                                                                                                                                                                                                                                | Personal, non-commercial use; cite adsb.fi with a link                                                                                                                   |
+| airplanes.live, `api.airplanes.live/v2/point/{lat}/{lon}/{nm}`                                                                         | `parseReadsb`             | No: it answered 403, asking for a description of the project by mail first                                                                                                                | Permission                                              | Not read                                                                                                                                                                                                                                                                            | Not read                                                                                                                                                                 |
+| OpenSky, `opensky-network.org/api/states/all`                                                                                          | `parseOpenSky`            | No: it allows its own origin alone                                                                                                                                                        | None for 400 credits a day; an account for more         | 400 credits a day without an account, in steps of 10 seconds                                                                                                                                                                                                                        | Its terms page refused the request; read them before use                                                                                                                 |
+
+So a page may ask the USGS, GDACS, CelesTrak and wheretheiss.at itself; MetAlerts allows it and asks
+for a server of the app's own; and Open Notify, the AIS stream and every flight service need that
+server. CelesTrak's elements change every two hours and serve every reader for days: a page keeps the
+copy it fetched until the next update, and an app with many readers behind one address fetches them
+once on its own server and hands every page the same copy.
