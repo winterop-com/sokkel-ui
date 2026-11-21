@@ -21,6 +21,7 @@ export function fromGlobals(globals: Record<string, unknown>): ThemeSettings {
         theme: read('look', 'tidevann'),
         scheme: read('theme', 'dark') === 'light' ? 'light' : 'dark',
         density: read('density', 'regular'),
+        textSize: read('textSize', 'regular'),
         corners: read('corners', 'theme'),
         typeface: read('typeface', 'theme'),
         motion: (['on', 'off'] as const).find((one) => one === globals.motion) ?? 'system',
@@ -33,13 +34,14 @@ export function toGlobals(settings: ThemeSettings): string {
         `theme:${settings.scheme}`,
         `look:${settings.theme}`,
         `density:${settings.density}`,
+        `textSize:${settings.textSize ?? 'regular'}`,
         `corners:${settings.corners}`,
         `typeface:${settings.typeface}`,
         `motion:${settings.motion ?? 'system'}`,
     ].join(';')
 }
 
-const ATTRIBUTES = ['class', 'data-theme', 'data-density', 'data-motion', 'style'] as const
+const ATTRIBUTES = ['class', 'data-theme', 'data-density', 'data-text-size', 'data-motion', 'style'] as const
 
 /**
  * Wears the settings on the document as the toolbar does, and answers with a function that puts the

@@ -23,7 +23,7 @@ const TOOLBAR_THEMES = [
     ...(candidates as Candidate[]).map((entry) => ({ value: entry.value, title: `${entry.title} (candidate)`, right: entry.app })),
 ]
 
-/** The scheme, theme, density, corners, typeface and motion a story is drawn in, worn on the document as an app wears them. */
+/** The scheme, theme, density, text size, corners, typeface and motion a story is drawn in, worn on the document as an app wears them. */
 const withLook: Decorator = (Story, context) => {
     applyAppearance(fromGlobals(context.globals))
     return <Story />
@@ -143,6 +143,20 @@ const preview: Preview = {
                 dynamicTitle: true,
             },
         },
+        textSize: {
+            description: 'Text size',
+            toolbar: {
+                title: 'Text size',
+                icon: 'paragraph',
+                items: [
+                    { value: 'smaller', title: 'Smaller text' },
+                    { value: 'small', title: 'Small text' },
+                    { value: 'regular', title: 'Regular text' },
+                    { value: 'large', title: 'Large text' },
+                ],
+                dynamicTitle: true,
+            },
+        },
         corners: {
             description: 'Corner radius, overriding the theme',
             toolbar: {
@@ -197,6 +211,7 @@ const preview: Preview = {
         theme: 'dark',
         look: 'tidevann',
         density: 'regular',
+        textSize: 'regular',
         corners: 'theme',
         typeface: 'theme',
         motion: 'system',

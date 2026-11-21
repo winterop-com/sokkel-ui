@@ -3,6 +3,21 @@
 What changed since 0.33.5, for the next release's notes. A release copies this into its GitHub
 release and empties it.
 
+## Added
+
+- A text size, beside the density in the look: `ThemeSettings.textSize` is `smaller`, `small`,
+  `regular` (the theme's own sizes, and the default) or `large`, moving every step of the text
+  scale about two pixels down, one down or one up (body text 13, 14, 15 or 16 px); spacing and
+  control heights stay with the density. `useAppearance` keeps it and wears it on `<html>` as
+  `data-text-size`, as `appearanceScript` and `appearance.js` do before the first paint;
+  `ThemePicker` and `useThemeSettings` offer it as a Text size row (`textSizes` gives other
+  options, `[]` hides it, and `words.textSize`, `smaller`, `small`, `large` and `textSizeHint` are
+  new), and `appearanceCommands` offers a Text size group (`onTextSizeChange` with the parts). A
+  level answers from the md breakpoint up: a phone keeps the theme's sizes, so a field's 16 px
+  text never drops under what makes iOS zoom in on focus. `[data-text-size-scope]` shows one part
+  at another level, as Foundations › Text size does side by side. The text steps (`--text-2xs` to
+  `--text-display`) are now variables the classes read rather than values written into them.
+
 ## Fixed
 
 - A tree node given a list of children, even an empty one, is a branch, such as an empty folder:

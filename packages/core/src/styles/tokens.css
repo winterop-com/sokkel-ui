@@ -8,22 +8,6 @@
     --font-mono: var(--typeface-mono);
     --font-terminal: var(--typeface-terminal);
     --font-emoji: var(--typeface-emoji);
-    --text-2xs: 0.6875rem;
-    --text-2xs--line-height: 1rem;
-    --text-xs: 0.8125rem;
-    --text-xs--line-height: 1.25rem;
-    --text-sm: 0.9375rem;
-    --text-sm--line-height: 1.375rem;
-    --text-base: 1rem;
-    --text-base--line-height: 1.5rem;
-    --text-title: 1rem;
-    --text-title--line-height: 1.5rem;
-    --text-page: 1.5rem;
-    --text-page--line-height: 2rem;
-    --text-stat: 2rem;
-    --text-stat--line-height: 2.25rem;
-    --text-display: 3rem;
-    --text-display--line-height: 3.5rem;
     --text-emoji: 1.5rem;
     --text-emoji--line-height: 1.5rem;
     --text-graph-title: 0.75rem;
@@ -282,18 +266,26 @@
     --spacing-shell-tabs: 56px;
     --spacing-shell-top: 46px;
     --spacing-traffic-lights: 80px;
-    --text-2xs: 0.6875rem;
-    --text-base: 1rem;
-    --text-base--line-height: 1.5rem;
-    --text-display: 3rem;
-    --text-page: 1.5rem;
-    --text-sm: 0.9375rem;
-    --text-xs: 0.8125rem;
-    --text-xs--line-height: 1.25rem;
 }
 
 @theme static {
     --spacing: 0.25rem;
+    --text-2xs: 0.6875rem;
+    --text-2xs--line-height: 1rem;
+    --text-xs: 0.8125rem;
+    --text-xs--line-height: 1.25rem;
+    --text-sm: 0.9375rem;
+    --text-sm--line-height: 1.375rem;
+    --text-base: 1rem;
+    --text-base--line-height: 1.5rem;
+    --text-title: 1rem;
+    --text-title--line-height: 1.5rem;
+    --text-page: 1.5rem;
+    --text-page--line-height: 2rem;
+    --text-stat: 2rem;
+    --text-stat--line-height: 2.25rem;
+    --text-display: 3rem;
+    --text-display--line-height: 3.5rem;
 }
 
 :root,
@@ -710,4 +702,119 @@ html[data-density='compact'],
     --density-chat-follow: 0.0625rem;
     --density-chat-inset: 1rem;
     --density-channel-row: 1.5rem;
+}
+
+@media (min-width: 48rem) {
+    html[data-text-size='smaller'],
+    [data-text-size-scope='smaller'] {
+        --text-2xs: 0.625rem;
+        --text-2xs--line-height: 0.875rem;
+        --text-xs: 0.6875rem;
+        --text-xs--line-height: 1rem;
+        --text-sm: 0.8125rem;
+        --text-sm--line-height: 1.25rem;
+        --text-base: 0.875rem;
+        --text-base--line-height: 1.25rem;
+        --text-title: 0.875rem;
+        --text-title--line-height: 1.25rem;
+        --text-page: 1.25rem;
+        --text-page--line-height: 1.75rem;
+        --text-stat: 1.75rem;
+        --text-stat--line-height: 2rem;
+        --text-display: 2.75rem;
+        --text-display--line-height: 3.25rem;
+    }
+
+    html[data-text-size='small'],
+    [data-text-size-scope='small'] {
+        --text-2xs: 0.65625rem;
+        --text-2xs--line-height: 1rem;
+        --text-xs: 0.75rem;
+        --text-xs--line-height: 1.125rem;
+        --text-sm: 0.875rem;
+        --text-sm--line-height: 1.25rem;
+        --text-base: 0.9375rem;
+        --text-base--line-height: 1.375rem;
+        --text-title: 0.9375rem;
+        --text-title--line-height: 1.375rem;
+        --text-page: 1.375rem;
+        --text-page--line-height: 1.875rem;
+        --text-stat: 1.875rem;
+        --text-stat--line-height: 2.25rem;
+        --text-display: 2.875rem;
+        --text-display--line-height: 3.375rem;
+    }
+
+    html[data-text-size='regular'],
+    [data-text-size-scope='regular'] {
+        --text-2xs: 0.6875rem;
+        --text-2xs--line-height: 1rem;
+        --text-xs: 0.8125rem;
+        --text-xs--line-height: 1.25rem;
+        --text-sm: 0.9375rem;
+        --text-sm--line-height: 1.375rem;
+        --text-base: 1rem;
+        --text-base--line-height: 1.5rem;
+        --text-title: 1rem;
+        --text-title--line-height: 1.5rem;
+        --text-page: 1.5rem;
+        --text-page--line-height: 2rem;
+        --text-stat: 2rem;
+        --text-stat--line-height: 2.25rem;
+        --text-display: 3rem;
+        --text-display--line-height: 3.5rem;
+    }
+
+    html[data-text-size='large'],
+    [data-text-size-scope='large'] {
+        --text-2xs: 0.75rem;
+        --text-2xs--line-height: 1rem;
+        --text-xs: 0.875rem;
+        --text-xs--line-height: 1.25rem;
+        --text-sm: 1rem;
+        --text-sm--line-height: 1.5rem;
+        --text-base: 1.0625rem;
+        --text-base--line-height: 1.625rem;
+        --text-title: 1.0625rem;
+        --text-title--line-height: 1.625rem;
+        --text-page: 1.625rem;
+        --text-page--line-height: 2rem;
+        --text-stat: 2.125rem;
+        --text-stat--line-height: 2.5rem;
+        --text-display: 3.25rem;
+        --text-display--line-height: 3.75rem;
+    }
+
+    [data-text-size-scope] {
+        --text-page-title: var(--text-page);
+        --text-page-title--line-height: var(--text-page--line-height);
+        --text-detail-title: var(--text-title);
+        --text-detail-title--line-height: var(--text-title--line-height);
+        --text-section-title: var(--text-sm);
+        --text-section-title--line-height: var(--text-sm--line-height);
+        --text-head: var(--text-xs);
+        --text-head--line-height: var(--text-xs--line-height);
+        --text-column-head--line-height: var(--text-base--line-height);
+        --text-body: var(--text-sm);
+        --text-body--line-height: var(--text-sm--line-height);
+        --text-action: var(--text-sm);
+        --text-action--line-height: var(--text-sm--line-height);
+        --text-label: var(--text-sm);
+        --text-help: var(--text-xs);
+        --text-help--line-height: var(--text-xs--line-height);
+        --text-badge: var(--text-xs);
+        --text-badge--line-height: var(--text-xs--line-height);
+        --text-statistic: var(--text-stat);
+        --text-statistic--line-height: var(--text-stat--line-height);
+        --text-statistic-hero: var(--text-display);
+        --text-statistic-hero--line-height: var(--text-display--line-height);
+        --text-media-title: var(--text-display);
+        --text-media-title--line-height: var(--text-display--line-height);
+        --text-brand-name: var(--text-display);
+        --text-brand-name--line-height: var(--text-display--line-height);
+        --text-welcome-title: var(--text-stat);
+        --text-welcome-title--line-height: var(--text-stat--line-height);
+        --text-eyebrow: var(--text-sm);
+        --text-eyebrow--line-height: var(--text-sm--line-height);
+    }
 }

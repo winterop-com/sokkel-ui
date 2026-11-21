@@ -19,11 +19,13 @@ export interface ThemeOption {
     swatch?: boolean
 }
 
-/** The whole look of an app: the named theme, the scheme, the density, the corners, the typeface and the motion. */
+/** The whole look of an app: the named theme, the scheme, the density, the text size, the corners, the typeface and the motion. */
 export interface ThemeSettings {
     theme: string
     scheme: Scheme
     density: string
+    /** How large the text is: `smaller`, `small`, `regular` (the theme's own sizes) or `large`; regular when not given. */
+    textSize?: string
     corners: string
     typeface: string
     /** Whether things slide and fade: as the system asks, always, or never. */
@@ -89,6 +91,7 @@ export const DEFAULT_APPEARANCE: Readonly<ThemeSettings> = {
     theme: BASE_THEME,
     scheme: 'system',
     density: 'regular',
+    textSize: 'regular',
     corners: 'theme',
     typeface: 'theme',
     motion: 'system',
@@ -186,7 +189,7 @@ export function applyScheme(resolved: ResolvedScheme, root: AppearanceRoot | und
 
 /**
  * Writes the whole look on `<html>`: `.dark` for the scheme (the system's for `system`), `data-theme`
- * unless tidevann, the base theme, `data-density`, `data-motion` unless the system's, `--radius`
+ * unless tidevann, the base theme, `data-density`, `data-text-size` unless regular, `data-motion` unless the system's, `--radius`
  * unless the theme's, and the typeface's variables unless the theme's. Whatever it does not set it
  * clears, so the look before leaves nothing behind.
  */
@@ -203,6 +206,8 @@ export function applyAppearance(settings: ThemeSettings, root: AppearanceRoot | 
     if (worn.dark === dark && worn.theme === theme) recolor()
     else withoutTransitions(root, recolor)
     root.setAttribute('data-density', settings.density)
+    if (settings.textSize === undefined || settings.textSize === 'regular') root.removeAttribute('data-text-size')
+    else root.setAttribute('data-text-size', settings.textSize)
     if (settings.motion === undefined || settings.motion === 'system') root.removeAttribute('data-motion')
     else root.setAttribute('data-motion', settings.motion)
     if (settings.corners === 'theme') root.style.removeProperty('--radius')
@@ -370,7 +375,7 @@ export function parseAppearance(text: string | null): Partial<Omit<ThemeSettings
     if (typeof value !== 'object' || value === null) return {}
     const record = value as Record<string, unknown>
     const out: Partial<Omit<ThemeSettings, 'scheme'>> = {}
-    for (const key of ['theme', 'density', 'corners', 'typeface'] as const) {
+    for (const key of ['theme', 'density', 'textSize', 'corners', 'typeface'] as const) {
         const field = record[key]
         if (typeof field === 'string') out[key] = field
     }
@@ -432,6 +437,7 @@ function scriptWith(defaults: string): string {
         "r.classList.toggle('dark',d);",
         `if(typeof a.theme==='string'&&a.theme!==${scriptJson(BASE_THEME)})r.setAttribute('data-theme',a.theme);`,
         "if(typeof a.density==='string')r.setAttribute('data-density',a.density);",
+        "if(typeof a.textSize==='string'&&a.textSize!=='regular')r.setAttribute('data-text-size',a.textSize);",
         "if(a.motion==='on'||a.motion==='off')r.setAttribute('data-motion',a.motion);",
         "if(typeof a.corners==='string'&&a.corners!=='theme')r.style.setProperty('--radius',a.corners);",
         'var t=Object.prototype.hasOwnProperty.call(f,a.typeface)?f[a.typeface]:null;',
@@ -463,7 +469,7 @@ export function appearanceScript(defaults: Partial<ThemeSettings> = {}, offer: A
  * module, loaded first in `<head>` with neither `async` nor `defer`, so it runs before the page
  * draws. It takes the defaults `useAppearance` is given from its own data attributes:
  * `<script src="appearance.js" data-theme="paper" data-scheme="dark"></script>`, and `data-density`,
- * `data-corners`, `data-typeface` and `data-motion` likewise. `data-themes="amber paper contrast"`
+ * `data-text-size`, `data-corners`, `data-typeface` and `data-motion` likewise. `data-themes="amber paper contrast"`
  * names the themes the app offers, as `useAppearance`'s `themes` does.
  */
 export function appearanceScriptFile(): string {
