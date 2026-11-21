@@ -1,11 +1,23 @@
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
+import { DARK_BASEMAP, LIGHT_BASEMAP } from './basemap'
 import { MapView, pitchAtZoom } from './MapView'
 
 describe('MapView on a server', () => {
     it('renders to a string with no document', () => {
         expect(renderToString(<MapView label="Sites" />)).toContain('Sites')
+    })
+
+    it('wears the dark scheme over a dark basemap in the light scheme, in the theme the page wears', () => {
+        const root = (html: string) => /<div [^>]*data-map-view=""[^>]*>/.exec(html)?.[0] ?? ''
+        const classes = (html: string) => (/class="([^"]*)"/.exec(root(html))?.[1] ?? '').split(' ')
+        const dark = renderToString(<MapView label="Sites" basemap={DARK_BASEMAP} />)
+        expect(classes(dark)).toContain('dark')
+        expect(root(dark)).toContain('data-theme-scope="tidevann"')
+        const light = renderToString(<MapView label="Sites" basemap={LIGHT_BASEMAP} />)
+        expect(classes(light)).not.toContain('dark')
+        expect(root(light)).not.toContain('data-theme-scope')
     })
 
     it('renders with its camera options, which only a drawn map reads', () => {

@@ -1,7 +1,7 @@
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
 
-import { composeStyle, DARK_BASEMAP, inksLabels, LIGHT_BASEMAP, SATELLITE_BASEMAP, STREETS_BASEMAP } from './basemap'
+import { composeStyle, DARK_BASEMAP, darkGround, inksLabels, LIGHT_BASEMAP, SATELLITE_BASEMAP, STREETS_BASEMAP } from './basemap'
 
 const STYLE: StyleSpecification = {
     version: 8,
@@ -44,5 +44,16 @@ describe('place names over a basemap', () => {
         expect(inksLabels(SATELLITE_BASEMAP, true)).toBe(true)
         expect(inksLabels({ id: 'custom', name: 'Custom', style: 'https://example.org/style.json' }, false)).toBe(true)
         expect(inksLabels({ id: 'custom', name: 'Custom', style: 'https://example.org/style.json' }, true)).toBe(true)
+    })
+})
+
+describe('the scheme over a basemap', () => {
+    it('is dark over a dark basemap in the light scheme, and the page scheme otherwise', () => {
+        expect(darkGround(DARK_BASEMAP, false)).toBe(true)
+        expect(darkGround(SATELLITE_BASEMAP, false)).toBe(true)
+        expect(darkGround(DARK_BASEMAP, true)).toBe(false)
+        expect(darkGround(LIGHT_BASEMAP, false)).toBe(false)
+        expect(darkGround(STREETS_BASEMAP, true)).toBe(false)
+        expect(darkGround({ id: 'custom', name: 'Custom', style: 'https://example.org/style.json' }, false)).toBe(false)
     })
 })

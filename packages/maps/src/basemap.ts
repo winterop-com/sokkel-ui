@@ -164,6 +164,15 @@ export function inksLabels(basemap: Basemap, dark: boolean): boolean {
     return basemap.tone === undefined || (basemap.tone === 'dark') === dark
 }
 
+/**
+ * Whether the map wears the dark scheme over its basemap where the page wears the light one: over a
+ * dark basemap, so the labels, chips and controls it holds read on its ground as the place names do.
+ * A light basemap in the dark scheme is dimmed to a dark ground, so it keeps the page's scheme.
+ */
+export function darkGround(basemap: Basemap, dark: boolean): boolean {
+    return !dark && basemap.tone === 'dark'
+}
+
 /** A raster source for tile urls. */
 export function rasterSource(basemap: Basemap, tiles: string[]): RasterSourceSpecification {
     return { type: 'raster', tiles, tileSize: basemap.tileSize ?? 256, maxzoom: basemap.maxZoom ?? 19 }

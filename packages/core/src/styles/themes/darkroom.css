@@ -111,7 +111,8 @@ html[data-theme='darkroom'],
 }
 
 html.dark[data-theme='darkroom'],
-.dark [data-theme-scope='darkroom'] {
+.dark [data-theme-scope='darkroom'],
+[data-theme-scope='darkroom'].dark {
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: color-mix(in oklab, var(--foreground) 18%, var(--card));
     --node-line: color-mix(in oklab, var(--faint) 80%, var(--border-strong));

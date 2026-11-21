@@ -59,6 +59,7 @@ describe('the scoped tokens a card wears', () => {
             const css = readFileSync(join(THEMES_DIR, `${theme.value}.css`), 'utf8')
             expect(css).toContain(`[data-theme-scope='${theme.value}']`)
             expect(css).toContain(`.dark [data-theme-scope='${theme.value}']`)
+            expect(css).toContain(`[data-theme-scope='${theme.value}'].dark`)
         }
         const contrast = readFileSync(join(THEMES_DIR, 'contrast.css'), 'utf8')
         for (const token of ['--background', '--card', '--border', '--foreground', '--primary']) expect(contrast).toContain(`${token}:`)

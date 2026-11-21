@@ -25,6 +25,7 @@ import {
     geometryStyle,
     graticule as graticuleLines,
     hasTiles,
+    darkGround,
     inksLabels,
     isBasemapLayer,
     labelAnchor,
@@ -321,6 +322,11 @@ function isDark(): boolean {
     return typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
 }
 
+/** The theme the page wears; the base theme on a server, or where the page names none. */
+function pageTheme(): string {
+    return (typeof document === 'undefined' ? undefined : document.documentElement.dataset.theme) || 'tidevann'
+}
+
 let webgl: boolean | undefined
 
 /** Whether the browser draws WebGL2, probed once for every map and its context let go; true on a server, so it renders the map's box. */
@@ -564,6 +570,7 @@ export function MapView({
     const [ready, setReady] = useState(false)
     const [idle, setIdle] = useState(false)
     const [dark, setDark] = useState(isDark)
+    const [theme, setTheme] = useState(pageTheme)
     const [reading, setReading] = useState(0)
     const [fullscreen, setFullscreen] = useState(false)
     const [picked, setPicked] = useState<Basemap | null>(null)
@@ -577,6 +584,9 @@ export function MapView({
         fallbackBasemap !== undefined && hasTiles(chosenBasemap) && (failed === '*' || failed === chosenKey)
             ? fallbackBasemap
             : chosenBasemap
+    // Over a dark basemap in the light scheme the map wears the dark scheme, in the page's theme, so
+    // its layers, labels, chips and controls are drawn for the ground they sit on.
+    const ground = darkGround(shownBasemap, dark)
     const [heldProjection, setHeldProjection] = useState<MapProjection>(defaultProjection)
     const shownProjection = projection ?? heldProjection
     const [unreadable, setUnreadable] = useState(0)
@@ -925,14 +935,24 @@ export function MapView({
         const root = document.documentElement
         // An app wears its kept scheme before paint, after this map first read it, so it reads it again here.
         setDark(isDark())
+        setTheme(pageTheme())
         const observer = new MutationObserver(() => {
             setDark(isDark())
+            setTheme(pageTheme())
             setReading((value) => value + 1)
             setIdle(false)
         })
         observer.observe(root, { attributes: true, attributeFilter: ['class', 'data-theme'] })
         return () => observer.disconnect()
     }, [])
+
+    // The layers read their colors again when the map takes up or puts down the dark scheme over its ground.
+    const groundRead = useRef(ground)
+    useEffect(() => {
+        if (groundRead.current === ground) return
+        groundRead.current = ground
+        setReading((value) => value + 1)
+    }, [ground])
 
     // The basemap's style, composed with the map's own layers; a change of basemap, scheme or
     // opacity is a diff of the style, so the data layers and their feature state stay.
@@ -1181,8 +1201,21 @@ export function MapView({
         () =>
             map === null || scope === null || overlay === null || corners === null
                 ? null
-                : { map, scope, overlay, corners, dark, reading, selected: current, select, register, holdCamera, takeClicks, labels },
-        [map, scope, overlay, corners, dark, reading, current, select, register, holdCamera, takeClicks, labels],
+                : {
+                      map,
+                      scope,
+                      overlay,
+                      corners,
+                      dark: dark || ground,
+                      reading,
+                      selected: current,
+                      select,
+                      register,
+                      holdCamera,
+                      takeClicks,
+                      labels,
+                  },
+        [map, scope, overlay, corners, dark, ground, reading, current, select, register, holdCamera, takeClicks, labels],
     )
 
     const offered = basemaps.length > 1
@@ -1221,8 +1254,10 @@ export function MapView({
             aria-label={label}
             data-map-view=""
             data-map-idle={idle ? '' : undefined}
+            data-theme-scope={ground ? theme : undefined}
             className={cn(
                 'relative isolate flex min-h-64 flex-col overflow-hidden bg-card',
+                ground && 'dark text-foreground',
                 framed && 'rounded-surface border border-border',
                 className,
             )}

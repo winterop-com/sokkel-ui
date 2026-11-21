@@ -118,7 +118,8 @@ html[data-theme='terminal'],
 }
 
 html.dark[data-theme='terminal'],
-.dark [data-theme-scope='terminal'] {
+.dark [data-theme-scope='terminal'],
+[data-theme-scope='terminal'].dark {
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
     --node: color-mix(in oklab, var(--foreground) 18%, var(--card));
     --node-line: color-mix(in oklab, var(--faint) 80%, var(--border-strong));
