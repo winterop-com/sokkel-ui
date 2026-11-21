@@ -4,7 +4,7 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "a2afcc0"},
+        "sokkel-ui": {"state": "built", "as_of": "218db47"},
         "sokkel-egui": {
             "state": "partial",
             "as_of": "fc9d27e",
@@ -44,7 +44,7 @@
         "tableHead": "A head cell: on muted with a 1px border edge, its text a table's column head.",
         "inlineCode": "Code in a sentence in the code face: as a chip on muted (chip, the default), as the face alone (plain), or on a faint wash with no fill in a table (wash).",
         "codeBlock": "A fence: the code block, highlighted in the code-* colors in the language the fence names, with a copy button (codeBlock.copy, then codeBlock.copied). Built in: bash, css, diff, html, javascript, jq, json, jsx, markdown, python, rust, sql, tsx, typescript, xml and yaml, and ansi output; others are added by the app.",
-        "diagram": "A mermaid fence: the diagram in the theme's colors, in a frame with a toggle between diagram and source (diagram, source), a copy (copy, copied) and an expand into a window (expand, close; in its place meanwhile, away). Drawn whole, shrunk to fit the frame's width at any width; in the window as large as it allows, its labels never under text.2xs, panning where the window is narrower. Source that does not parse shows its source and failed. While streaming, the source until the text completes.",
+        "diagram": "A mermaid fence: the diagram in the theme's colors, a pie's slices and an xychart's bars and lines in chart-1 to chart-5 in order, in a frame with a toggle between diagram and source (diagram, source), a copy (copy, copied) and an expand into a window (expand, close; in its place meanwhile, away). Drawn whole, shrunk to fit the frame's width at any width; in the window as large as it allows, its labels never under text.2xs, panning where the window is narrower. Source that does not parse shows its source and failed. While streaming, the source until the text completes.",
         "math": "LaTeX: $...$ and \\(...\\) in a sentence, $$...$$, \\[...\\] and a math fence on their own lines, scrolled sideways inside itself when wide. A lone $ is math only as Pandoc reads it, so prices stay prices. A formula that does not parse is its source in the failed ink.",
         "link": "A link in primary-ink, underlined 2 below. A link to a place in the page stays in it, one the app answers for (onLink) stays in the app, any other opens in a new tab. A link whose scheme is not allowed is drawn as its words.",
         "wikiLink": "With links: [[Note]], [[Note|words]] and [[Note#Heading]] as links the app follows (onOpen), the heading after a chevron; with href, each carries the address it returns, a plain press following it through onOpen and a press with a modifier key or the middle button left to the browser, else #; a link to a note that does not exist drawn at 60 percent. Never read inside code.",
