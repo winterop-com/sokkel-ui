@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "track-layer",
     "kind": "part",
-    "status": "stable",
+    "status": "preview",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "67997fe"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
@@ -12,13 +12,13 @@
     "sources": {"sokkel-ui": ["packages/maps/src/TrackLayer.tsx", "packages/maps/src/layer.ts (useRenderedPoints)"]},
     "anatomy": {
         "symbol": "One per track, the size option square (24 by default), pointing north at a heading of 0 and turned clockwise by the heading with the map: a hull with a pointed bow for a vessel, a notched arrowhead for an aircraft, a box with a point on its front for a vehicle, a ring round a dot for a sensor (not turned), a body with a pointed nose between two solar panels for a satellite, a triangle for any other. Filled in the affiliation's color (or its band's) with a 1.25 halo in card. With scale on it is drawn at 0.72 of the size at zoom 3 and further out, the size at zoom 6 and 1.25 of it at zoom 11 and closer in, straight between; everything measured from the size below follows it.",
-        "glow": "Under each symbol, a circle 1.1 of the size in radius in the symbol's color, fading evenly from its middle to nothing at its edge, at 42 percent (24 on a light map) times the crowd: the square root of 300 over the number of tracks, held between 0.4 and 1, so a crowded map stays calm.",
-        "trail": "The track's past positions, oldest first, as one 2 wide line that fades along its length from nothing at its oldest end (16 percent of the color 0.4 of the way along, 50 percent at 0.75) to the color at its newest, the whole at 90 percent; then its head, a 2 wide line in the color at 90 percent on from the newest position to where the track is drawn, which moves with the track while the trail stays. With fade off, both are an even 60 percent. In the affiliation's color, or the band's for the first eight bands.",
+        "glow": "Under each symbol, a soft circle in the symbol's color fading from its middle, fainter on a light map and the more tracks there are, so a crowded map stays calm.",
+        "trail": "The track's past positions, oldest first, as one 2 wide line that fades along its length from nothing at its oldest end to the color at its newest; then its head, a 2 wide line in the color on from the newest position to where the track is drawn, which moves with the track while the trail stays. With fade off, both are even. In the affiliation's color, or the band's for the first eight bands.",
         "label": "The track's label 0.75 of the drawn size plus 4 right of its point, centered on it: text.2xs on card at 80 percent, padded 4 across, rounded by radius-mini. A label that would cover another label or another track's symbol is left out, in the order the tracks are given; the selected track's never is, and is placed first.",
         "ring": "Under the symbol, a circle 0.75 of the size in radius: none at rest; a 1.25 line in foreground mixed 55 percent into card at 80 percent under the pointer; for the selected track a 2 line in map-selection over a fill of map-selection at 18 percent, and its label at 500 weight on card, ringed 1 in map-selection.",
-        "halo": "Around the selected track, under its ring: a circle in map-selection, solid over the inner 0.35 of its radius and fading to nothing at its edge, that breathes over 3.2 seconds on a cosine from 1.05 of the size at 50 percent (36 on a light map) out to 1.8 of the size at 20 percent (14) and back. Still, at its smallest, with motion reduced.",
-        "ripple": "Where a track first appears after the layer's own start: a 1.5 ring in its color spreading from 0.45 of the size in radius to 2.35 of it over 1.8 seconds, easing out, its line fading evenly from 90 percent to nothing and its inside from 18 percent, faster. None with motion reduced, nor while the page is hidden.",
-        "pulse": "Under each hostile track, below its glow: a circle in track-hostile, solid over the inner 0.3 of its radius and fading to nothing at its edge, that every 3.6 seconds swells from 0.8 of the size in radius to 2.1 of it, easing out, as its opacity rises to 50 percent (34 on a light map) times the crowd over the first 0.14 of the time and falls away over the rest. None with motion reduced.",
+        "halo": "Around the selected track, under its ring: a soft circle in map-selection that breathes, growing and fading over 3.2 seconds and back. Still, at its smallest, with motion reduced.",
+        "ripple": "Where a track first appears after the layer's own start: a ring in its color spreading out and fading over 1.8 seconds, once. None with motion reduced, nor while the page is hidden.",
+        "pulse": "Under each hostile track, below its glow: a soft circle in track-hostile that swells and fades every 3.6 seconds, fainter on a light map and the more tracks there are. None with motion reduced.",
         "cluster": "With cluster on, nearby tracks gather into a circle of their count: foreground mixed 78 percent into card, 12 across the radius under 10 tracks, 15 to 50, 18 to 150, 22 beyond, ringed 2 in card, or 3 in track-hostile when it holds a hostile track; the count in text.2xs at 500 in card, in tabular figures. A press zooms to where it falls apart."
     },
     "standsOn": {"default": "card"},
@@ -82,12 +82,7 @@
     "layout": {
         "trailWidth": {"value": 2, "note": "The trail's width, and its head's."},
         "haloWidth": {"value": 1.25, "note": "The symbol's halo in card."},
-        "clusterRadius": {"value": 40, "note": "How near tracks gather, in pixels."},
-        "rippleWidth": {"value": 1.5, "note": "The ripple's ring."},
-        "step": {
-            "value": 0.25,
-            "note": "How far the fastest track moves on the canvas before the map is told of the tracks that moved, in pixels."
-        }
+        "clusterRadius": {"value": 40, "note": "How near tracks gather, in pixels."}
     },
     "states": {
         "rest": {"means": "A track drawn, glowing."},

@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "map-coordinates",
     "kind": "part",
-    "status": "stable",
+    "status": "preview",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "982188f"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},

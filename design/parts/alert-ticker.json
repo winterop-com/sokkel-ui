@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "alert-ticker",
     "kind": "part",
-    "status": "stable",
+    "status": "preview",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "f0e8943"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
