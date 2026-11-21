@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.33.4** is the latest release (2026-11-21): `MarkdownLinks.href`, so a note link carries a real
+- **0.33.5** is the latest release (2026-11-21): an escaped `\[[`, `\![[` and `\#` in markdown read
+  as their words; zone and boundary hatches drawn once; contract 0.33.5, with a preview status for
+  parts new in their round and map layers specified by meaning.
+- **0.33.4** (2026-11-21): `MarkdownLinks.href`, so a note link carries a real
   address and opens in a new tab; a Mermaid diagram is drawn whole at any width; contract 0.33.4.
 - **0.33.3** (2026-11-21): the tracking add-on
   (`@winterop-com/sokkel-ui-tracking`: AIS, ADS-B, orbits, incidents, checks, sources and simulated
