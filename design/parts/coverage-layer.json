@@ -2,7 +2,7 @@
     "$schema": "../schema/part.schema.json",
     "id": "coverage-layer",
     "kind": "part",
-    "status": "stable",
+    "status": "preview",
     "renderers": {
         "sokkel-ui": {"state": "built", "as_of": "0e3eea8"},
         "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
@@ -17,11 +17,11 @@
         ]
     },
     "anatomy": {
-        "cone": "Cut into bands (6) from the sensor out, each a wedge between two distances along the great circle, the nearest reaching the sensor; each band in the tone at 0.28 of full times its nearness raised to 1.6, nearness 1 for the nearest band and the share of the range the last begins at for the last, so the far end all but vanishes.",
+        "cone": "Bands from the sensor out, each a wedge along the great circle in the tone, faint and fading with distance so the far end all but vanishes.",
         "edge": "Round the wedge from the sensor and back, or round the disc: 1 wide in the tone at 0.55 of full.",
         "ring": "A circle at each distance, 1 wide in the tone at 0.7 of full, dashed 2 on 2.",
         "distance": "Each ring's distance, written where its label bearing (north unless given) meets it, centered: text.2xs in muted-foreground in tabular figures on card at 80 percent, padded 4 across, rounded by radius-mini; in the unit with no more figures than it has (20 km, 2.5 NM), whole meters under a kilometer.",
-        "sweep": "With sweep, over the cones: a beam standing on a line from the sensor to its range, turning clockwise once each period (4000 ms), round a disc from north, or across a sector from one edge to the other and on until its trail has left (the turn is the width and the trail), each cone starting at its own point of the turn, drawn from its id. A point is lit by how far it trails the beam: the leading edge, within 1.2 degrees, in the tone at 0.7 of full (mixed halfway toward white in the dark scheme), and a glow over the trail (90 degrees) at 0.6 of full times its nearness to the beam raised to 1.6; both dimmed toward the range, to 0.55 at the range. It holds still where motion is reduced (the look's motion setting, else the system's), and stops while the map is out of sight: the document hidden, or the map's element off the screen. Held still, the beam stands three tenths of the way round its turn."
+        "sweep": "With sweep, over the cones: a beam standing on a line from the sensor to its range, turning clockwise once each period (4000 ms), round a disc from north, or across a sector from one edge to the other and on until its trail has left (the turn is the width and the trail), each cone starting at its own point of the turn, drawn from its id. Its leading edge is bright in the tone (lighter in the dark scheme), with a glow fading behind it over the trail (90 degrees), both dimmer toward the range. It holds still where motion is reduced (the look's motion setting, else the system's), and stops while the map is out of sight: the document hidden, or the map's element off the screen. Held still, the beam stands three tenths of the way round its turn."
     },
     "standsOn": {"default": "card"},
     "options": {
@@ -52,12 +52,9 @@
     },
     "sizes": {"distance": {"padX": 4, "text": "text.2xs", "radius": "radius-mini", "note": "Centered on the ring."}},
     "layout": {
-        "coneFill": {"value": 0.28, "note": "The nearest band's share of the tone."},
-        "coneFade": {"value": 1.6, "note": "The power each band's nearness is raised to."},
         "edgeWidth": {"value": 1, "note": "The cone's edge and each ring."},
         "sweepPeriod": {"value": 4000, "note": "How long a turn of the beam takes, in milliseconds, unless given."},
-        "sweepTrail": {"value": 90, "note": "How far behind the beam its glow reaches, in degrees, unless given."},
-        "sweepEdge": {"value": 1.2, "note": "How wide the beam's bright leading edge is, in degrees."}
+        "sweepTrail": {"value": 90, "note": "How far behind the beam its glow reaches, in degrees, unless given."}
     },
     "states": {
         "rest": {"means": "The cones and rings drawn."},

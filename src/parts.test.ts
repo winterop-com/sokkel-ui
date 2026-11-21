@@ -150,20 +150,10 @@ import { YES_NO_FIELD_WORDS, YesNoField, type YesNoFieldProps } from '@winterop-
 import { Tree, type TreeNode, type TreeProps } from '@winterop-com/sokkel-ui/Tree'
 import { TREE_SELECT_WORDS, TreeSelect, type TreeSelectProps } from '@winterop-com/sokkel-ui/TreeSelect'
 import type { FeatureCollection } from 'geojson'
-import { CoverageLayer, SWEEP, SWEEP_EDGE } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
-import { distance as geoDistance, UNIT_SYMBOLS } from '@winterop-com/sokkel-ui-maps/geodesy'
-import {
-    ARC_HEIGHT,
-    ARC_STEPS,
-    FLOW_LINE,
-    FLOW_WIDTH,
-    LINK_WORDS,
-    LinkLayer,
-    linkLine,
-    type LinkLayerProps,
-    type MapLink,
-} from '@winterop-com/sokkel-ui-maps/LinkLayer'
-import { ZONE_GLOW, ZoneLayer, type Zone, type ZoneLayerProps } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
+import { CoverageLayer, SWEEP } from '@winterop-com/sokkel-ui-maps/CoverageLayer'
+import { UNIT_SYMBOLS } from '@winterop-com/sokkel-ui-maps/geodesy'
+import { LINK_WORDS, LinkLayer, type LinkLayerProps, type MapLink } from '@winterop-com/sokkel-ui-maps/LinkLayer'
+import { ZoneLayer, type Zone, type ZoneLayerProps } from '@winterop-com/sokkel-ui-maps/ZoneLayer'
 import type { LngLat } from '@winterop-com/sokkel-ui-maps/geometry'
 import { MAP_COMPASS_WORDS, MapCompass } from '@winterop-com/sokkel-ui-maps/MapCompass'
 import { MAP_COORDINATES_WORDS, MapCoordinates, scaleBar } from '@winterop-com/sokkel-ui-maps/MapCoordinates'
@@ -9810,7 +9800,6 @@ const TRACK_LAYER_ADAPTER: Adapter = {
         const glow = trackLayerOf(plain.fake, '-glow')
         const halo = trackLayerOf(plain.fake, '-halo')
         const pulse = trackLayerOf(plain.fake, '-pulse')
-        const ripple = trackLayerOf(plain.fake, '-ripple')
         const cluster = trackLayerOf(clustered.fake, '-cluster')
         const unknown = { affiliation: 'unknown', kind: 'vessel' }
         const image = plain.fake.images.get('wui-track-vessel')
@@ -9885,8 +9874,6 @@ const TRACK_LAYER_ADAPTER: Adapter = {
                     const held = clustered.fake.sources.get('wui-watch')
                     return held?.clusterRadius === undefined ? undefined : String(held.clusterRadius)
                 },
-                rippleWidth: () => (ripple === undefined ? undefined : String(ripple.paint?.['circle-stroke-width'])),
-                step: () => numberIn(MAPS_SOURCE('TrackLayer.tsx'), /const STEP = ([\d.]+)/),
             }),
         ]
     },
@@ -10346,8 +10333,6 @@ const ZONE_LAYER_ADAPTER: Adapter = {
             ...layoutChecks('zone-layer', {
                 edgeWidth: () => widths[0],
                 hatchSpacing: () => (tile?.width === undefined ? undefined : String(tile.width / Number(tile.pixelRatio ?? 1))),
-                glowWidth: () => String(ZONE_GLOW.width),
-                glowBlur: () => String(ZONE_GLOW.blur),
                 haloWidth: () => {
                     const rest = painted(halo, 'line-width', zone)
                     return rest === 0 ? String(painted(halo, 'line-width', zone, { selected: true })) : `${String(rest)} at rest`
@@ -10396,7 +10381,6 @@ const COVERAGE_LAYER_ADAPTER: Adapter = {
         const ring = styleLayer(fake, 'cover', '-ring')
         const plain = { tone: 'plain' }
         const near = Number(painted(band, 'fill-opacity', { ...plain, fade: 1 }))
-        const half = Number(painted(band, 'fill-opacity', { ...plain, fade: 0.5 }))
         const bands = fake.sources.get('wui-cover')?.data.features.filter((feature) => feature.properties?.kind === 'band').length
         return [
             ...mapPaintChecks('coverage-layer', 'cone', 'rest', {
@@ -10436,17 +10420,13 @@ const COVERAGE_LAYER_ADAPTER: Adapter = {
                 ),
             ),
             ...layoutChecks('coverage-layer', {
-                coneFill: () => String(near),
-                // Each band's share is its nearness raised to the fade: half as near is 2 to the minus fade as much.
-                coneFade: () => String(Math.round((Math.log(near / half) / Math.log(2)) * 1000) / 1000),
                 edgeWidth: () => {
                     const [edgeWidth, ringWidth] = [edge?.paint?.['line-width'], ring?.paint?.['line-width']]
                     return edgeWidth === ringWidth ? String(edgeWidth) : `edge ${String(edgeWidth)}, ring ${String(ringWidth)}`
                 },
-                // The sweep is drawn by a shader: its turn, trail and edge are the values it is given.
+                // The sweep is drawn by a shader: its turn and trail are the values it is given.
                 sweepPeriod: () => String(SWEEP.period),
                 sweepTrail: () => String(SWEEP.trail),
-                sweepEdge: () => String(SWEEP_EDGE),
             }),
         ]
     },
@@ -10496,15 +10476,6 @@ const LINK_LAYER_ADAPTER: Adapter = {
         const width = (state: Record<string, unknown>) => Number(painted(line, 'line-width', link, state))
         const chip = linkChips(plain.elements)[0]
         const lift = /-translate-y-\[calc\(100%\+([\d.]+)rem\)\]/.exec(classesOf(chip))?.[1]
-        // Along a meridian, the longest link drawn in one step, and how many positions a link half round the earth takes.
-        let [short, long] = [0, 2]
-        for (let round = 0; round < 40; round += 1) {
-            const middle = (short + long) / 2
-            if (linkLine([5, 60], [5, 60 + middle]).length === 2) short = middle
-            else long = middle
-        }
-        const longest = Math.round(geoDistance([5, 60], [5, 60 + short]) / 100) * 100
-        const farthest = linkLine([0, 0], [179, 0]).length
         return [
             ...mapPaintChecks('link-layer', 'line', 'rest', {
                 ink: mapColor(painted(line, 'line-color', link)),
@@ -10531,12 +10502,6 @@ const LINK_LAYER_ADAPTER: Adapter = {
             ...layoutChecks('link-layer', {
                 chipLift: () => (lift === undefined ? undefined : String(Number(lift) * 16)),
                 casing: () => String(Number(painted(casing, 'line-width', link)) - width({})),
-                greatCircleStep: () => (farthest === 65 ? String(longest) : `${String(longest)}, ${String(farthest - 1)} steps at most`),
-                // The arcs and the flow are drawn by a shader: these are the values it is given.
-                arcHeight: () => String(ARC_HEIGHT),
-                arcSteps: () => String(ARC_STEPS),
-                flowWidth: () => String(FLOW_WIDTH),
-                flowLine: () => String(FLOW_LINE),
             }),
         ]
     },
