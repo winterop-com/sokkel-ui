@@ -41,6 +41,7 @@ import {
     type PixelBox,
     type PreparedData,
     type RenderedPoint,
+    useSameContent,
 } from './layer'
 import { SELECTION_COLOR } from './scale'
 import { MAP_TONE_COLORS, TONE_PROPERTY, toneColor, toneOf, type MapTone } from './tone'
@@ -387,7 +388,7 @@ export interface LinkLayerProps {
  */
 export function LinkLayer({
     id,
-    links,
+    links: given,
     path = 'great-circle',
     dashed = false,
     measure = false,
@@ -404,6 +405,7 @@ export function LinkLayer({
     const { map, overlay, selected, scope, reading, dark } = useMapContext()
     const { measured } = useWords(LINK_PART, words)
     const locale = useLocale()
+    const links = useSameContent(given)
     const height = arc === true ? ARC_HEIGHT : arc === false ? 0 : Math.max(0, arc)
     const data = useMemo(
         () => linkData(links, { path, dashed, measure, unit, locale, words: { measured }, arc: height }),

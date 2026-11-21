@@ -19,6 +19,7 @@ import {
     type PixelBox,
     type PreparedData,
     type RenderedPoint,
+    useSameContent,
 } from './layer'
 import type { MapLegendEntry } from './MapLegend'
 import { SELECTION_COLOR } from './scale'
@@ -222,7 +223,7 @@ const FILLED: Record<ZoneFill, ExpressionSpecification> = {
  */
 export function ZoneLayer({
     id,
-    zones,
+    zones: given,
     fill = 'solid',
     edge = 'solid',
     labels = true,
@@ -233,6 +234,7 @@ export function ZoneLayer({
     glow = false,
 }: ZoneLayerProps) {
     const { map, overlay, selected } = useMapContext()
+    const zones = useSameContent(given)
     const data = useMemo(() => zoneData(zones, fill, edge), [zones, fill, edge])
     const palette = { ...MAP_TONE_COLORS, ...colors, card: 'var(--card)', selection: SELECTION_COLOR }
     const hatch = (tone: MapTone) => `wui-${id}-hatch-${tone}`

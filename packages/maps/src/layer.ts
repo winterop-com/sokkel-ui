@@ -10,6 +10,19 @@ import type {
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { flushSync } from 'react-dom'
 
+/**
+ * The value as it was last given while what it holds is the same, so what a layer derives from it
+ * (geometry, and the data the map is told of) is derived again only when it changed: an app may
+ * build its zones, cones or links afresh on every render. It compares the value as JSON.
+ */
+export function useSameContent<T>(value: T): T {
+    const key = JSON.stringify(value)
+    const [kept, setKept] = useState({ value, key })
+    if (kept.key === key) return kept.value
+    setKept({ value, key })
+    return value
+}
+
 import { labelAnchor } from './basemap'
 import { resolveColors } from './color'
 import { ID_PROPERTY, useMapContext } from './context'
