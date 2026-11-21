@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { CalendarClock, Folder, Play, Server, Workflow } from 'lucide-react'
-import { act, createElement, Fragment, type ComponentType, type ReactElement, type ReactNode } from 'react'
+import { act, createElement, Fragment, useState, type ComponentType, type ReactElement, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
@@ -116,6 +116,18 @@ import { FRESHNESS_WORDS, Freshness, freshnessTick, type FreshnessProps } from '
 import { PLAYBACK_TIMELINE_WORDS, PlaybackTimeline, scrubTime, type PlaybackTimelineProps } from '@winterop-com/sokkel-ui/PlaybackTimeline'
 import { TASK_CARD_WORDS, TASK_STATES, TaskCard, taskStatuses, type TaskCardProps } from '@winterop-com/sokkel-ui/TaskCard'
 import { TRACK_CARD_WORDS, TrackCard, type TrackCardProps } from '@winterop-com/sokkel-ui/TrackCard'
+import {
+    STATUS_WALL_WORDS,
+    StatusTile,
+    StatusWall,
+    WALL_STATUSES,
+    wallSeriesPath,
+    type StatusTileProps,
+    type StatusWallProps,
+    type WallStatus,
+} from '@winterop-com/sokkel-ui/StatusWall'
+import { ALERT_TICKER_WORDS, AlertTicker, type AlertTickerItem, type AlertTickerProps } from '@winterop-com/sokkel-ui/AlertTicker'
+import { Kiosk, type KioskProps } from '@winterop-com/sokkel-ui/Kiosk'
 import { TrackGlyph, type TrackGlyphProps } from '@winterop-com/sokkel-ui/TrackGlyph'
 import { TRACK_ROSTER_WORDS, TrackRoster, type TrackRosterItem, type TrackRosterProps } from '@winterop-com/sokkel-ui/TrackRoster'
 import { TRACK_NAMES_WORDS } from '@winterop-com/sokkel-ui/lib/tracks'
@@ -891,6 +903,7 @@ const FILL: Record<string, string | number> = {
     distance: '57.7 km',
     bearing: '308°',
     name: 'Patrol 7',
+    index: 2,
 }
 const filled = (template: string, values: Record<string, string | number>) =>
     template.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? FILL[name]))
@@ -11274,6 +11287,815 @@ const PLAYBACK_TIMELINE_ADAPTER: Adapter = {
     },
 }
 
+// Status wall
+
+const STATUS_WALL = source('components/StatusWall.tsx')
+const TILE_PROPS: StatusTileProps = {
+    name: 'api',
+    status: 'up',
+    caption: 'Service',
+    icon: createElement(Server),
+    value: '214',
+    unit: 'ms',
+    detail: 'Answering in time',
+    series: [4, 8, 2, 6],
+    flag: 'Simulated',
+    updatedAt: NOON - 3_000,
+    now: NOON,
+}
+const statusTile = (props: Partial<StatusTileProps> = {}) => draw(StatusTile, { ...TILE_PROPS, ...props })
+const STATUS_TILES = once(() => ({
+    ...(Object.fromEntries(WALL_STATUSES.map((status) => [status, statusTile({ status })])) as Record<WallStatus, El[]>),
+    pressable: statusTile({ onSelect: noop }),
+    selected: statusTile({ onSelect: noop, selected: true }),
+    linked: statusTile({ href: 'https://example.org/sources/api' }),
+}))
+const statusTilePieces = (elements: El[]) => {
+    const head = bySlotIn(elements, 'status-tile-head')
+    const status = bySlotIn(elements, 'status-tile-status')
+    const figure = bySlotIn(elements, 'status-tile-figure')
+    const series = bySlotIn(elements, 'status-tile-series')
+    const inside = (root: El | undefined, found: (element: El) => boolean) =>
+        root === undefined ? undefined : elements.find((element) => within(element, root) && found(element))
+    const row = inside(head, (element) => /\btext-label\b/.test(classesOf(element)))
+    return {
+        tile: bySlotIn(elements, 'status-tile'),
+        glow: bySlotIn(elements, 'status-tile-glow'),
+        cover: bySlotIn(elements, 'status-tile-cover'),
+        head,
+        caption: inside(head, (element) => /\btext-xs\b/.test(classesOf(element))),
+        flag: inside(head, (element) => element.attrs['data-slot'] === 'chip'),
+        row,
+        name: inside(row, (element) => element.tag === 'span'),
+        status,
+        dot: inside(status, (element) => element.attrs['aria-hidden'] === 'true' && /\brounded-full\b/.test(classesOf(element))),
+        figure,
+        value: inside(figure, (element) => /\btext-statistic\b/.test(classesOf(element))),
+        unit: inside(figure, (element) => !/\btext-statistic\b/.test(classesOf(element))),
+        detail: bySlotIn(elements, 'status-tile-detail'),
+        foot: bySlotIn(elements, 'status-tile-foot'),
+        series,
+        chart: inside(series, (element) => element.tag === 'svg'),
+        area: inside(series, (element) => element.tag === 'path' && element.attrs.fill === 'currentColor'),
+        line: inside(series, (element) => element.tag === 'path' && element.attrs.stroke === 'currentColor'),
+    }
+}
+/** The token a tile's status color is: what its `--wall-tone` names. */
+const wallTone = (elements: El[]) => /--wall-tone:\s*var\(--([a-z0-9-]+)\)/.exec(statusTilePieces(elements).tile?.attrs.style ?? '')?.[1]
+/** The rule along a tile's top, in px, where it is drawn in the tile's status color. */
+const wallRule = (elements: El[]) =>
+    /(?:^|\s)shadow-\[inset_0_(\d+)px_0_var\(--wall-tone\)\]/.exec(classesOf(statusTilePieces(elements).tile))?.[1]
+/** The narrowest a wall's tile gets, in px: the least its columns take. */
+const wallTile = (tile?: StatusWallProps['tile']) =>
+    numberIn(draw(StatusWall, { label: 'Sources', tile, children: null })[0]?.attrs.style ?? '', /minmax\(min\(([\d.]+)rem,/, 'rem')
+const WALL_STATUS_SKIP = "the status color is the tile's --wall-tone, which a style sets: read in more"
+/** Three tiles on a wall drawn in the page: a button, a plain tile and a link; `look` gets how often the button was pressed. */
+const liveWall = <T>(look: (box: HTMLElement, selected: () => number) => T) => {
+    let selected = 0
+    return live(
+        createElement(StatusWall, {
+            label: 'Sources',
+            children: [
+                createElement(StatusTile, { ...TILE_PROPS, key: 'api', onSelect: () => (selected += 1) }),
+                createElement(StatusTile, { ...TILE_PROPS, key: 'worker', name: 'worker' }),
+                createElement(StatusTile, {
+                    ...TILE_PROPS,
+                    key: 'scheduler',
+                    name: 'scheduler',
+                    href: 'https://example.org/sources/scheduler',
+                }),
+            ],
+        }),
+        (box) => look(box, () => selected),
+    )
+}
+
+const STATUS_WALL_ADAPTER: Adapter = {
+    wordObjects: { STATUS_WALL_WORDS },
+    complete: ['STATUS_WALL_WORDS'],
+    words: Object.fromEntries(Object.keys(STATUS_WALL_WORDS).map((key) => [key, `STATUS_WALL_WORDS.${key}`])),
+    options: {
+        tile: [...(/const TILE = \{([^}]+)\}/.exec(STATUS_WALL)?.[1] ?? '').matchAll(/(\w+):/g)].map((match) => match[1]),
+        status: [...WALL_STATUSES],
+    },
+    size: (size, key) => {
+        const pieces = statusTilePieces(STATUS_TILES().up)
+        if (size === 'wall') return pieceWhere(draw(StatusWall, { label: 'Sources', children: null })[0])
+        if (size === 'head') return pieceWhere(key === 'gap' ? pieces.head : pieces.row)
+        if (size === 'status') return pieceWhere(key === 'icon' ? pieces.dot : pieces.status)
+        if (size === 'figure') return pieceWhere(key === 'text' ? pieces.value : pieces.figure)
+        if (size === 'tile' || size === 'series') return pieceWhere(pieces[size])
+        return undefined
+    },
+    paint: (_, name, state) => {
+        const tiles = STATUS_TILES()
+        const known = (WALL_STATUSES as readonly string[]).includes(state) && state !== 'unknown'
+        if (name === 'tile') {
+            if (known) return skip(WALL_STATUS_SKIP)
+            if (state === 'unknown') return pieceWhere(statusTilePieces(tiles.unknown).tile)
+            if (state === 'hover') return pieceWhere(statusTilePieces(tiles.pressable).tile, ['hover'])
+            if (state === 'selected') return pieceWhere(statusTilePieces(tiles.selected).tile)
+            if (state === 'focus') return pieceWhere(statusTilePieces(tiles.pressable).cover, ['focus-visible'])
+            return pieceWhere(statusTilePieces(tiles.up).tile)
+        }
+        if (name === 'glow') return skip("the glow is a gradient of the tile's --wall-tone, which a style sets: read in more")
+        if (name === 'series') return skip(WALL_STATUS_SKIP)
+        if (name === 'status' && state !== 'rest')
+            return skip('the dot is painted by a style its color sets: its ink and mark are read in more')
+        const pieces = statusTilePieces(tiles.up)
+        if (name === 'name') return withPart(pieces.row, pieces.name)
+        if (name === 'caption' || name === 'status' || name === 'value' || name === 'unit' || name === 'detail')
+            return pieceWhere(pieces[name])
+        return undefined
+    },
+    effect: () => skip('the status wall states no effects'),
+    keys: {
+        Tab: () =>
+            liveWall((box) => {
+                const tiles = [...box.querySelectorAll('[data-slot="status-tile"]')]
+                const stops = tiles.map((tile) => {
+                    const cover = tile.querySelector<HTMLElement>('[data-slot="status-tile-cover"]')
+                    if (cover === null) return 'none'
+                    return cover.tabIndex < 0 || cover.hasAttribute('disabled') ? 'out of the tab order' : cover.tagName.toLowerCase()
+                })
+                // The cover is the tile's only stop, and the covers stand in the tiles' order.
+                const others = box.querySelectorAll('button, a, [tabindex]').length - stops.filter((stop) => stop !== 'none').length
+                return stops.join(' ') === 'button none a' && others === 0
+                    ? true
+                    : `a button, a plain and a linked tile stop at ${stops.join(', ')}, with ${String(others)} other stops`
+            }),
+        'Enter (a tile has focus)': () =>
+            liveWall((box, selected) => {
+                const [button, link] = [...box.querySelectorAll<HTMLElement>('[data-slot="status-tile-cover"]')]
+                // A native button and a native link: a browser presses the one and follows the other on Enter.
+                if (button?.tagName !== 'BUTTON') return 'a tile with onSelect is not a native button, which Enter presses'
+                if (link?.tagName !== 'A' || link.getAttribute('href') !== 'https://example.org/sources/scheduler')
+                    return 'a tile with href is not a native link to it, which Enter follows'
+                act(() => button.click())
+                return selected() === 1 ? true : `a press of the tile calls onSelect ${String(selected())} times`
+            }),
+        'Space (a tile with onSelect has focus)': () =>
+            liveWall((box, selected) => {
+                const button = box.querySelector<HTMLElement>('[data-slot="status-tile-cover"]')
+                // A native button: a browser presses it on Space, and the press is a click.
+                if (button?.tagName !== 'BUTTON' || button.getAttribute('type') !== 'button')
+                    return 'a tile with onSelect is not a native button, which Space presses'
+                act(() => button.click())
+                return selected() === 1 ? true : `a press of the tile calls onSelect ${String(selected())} times`
+            }),
+    },
+    more: () => {
+        const tiles = STATUS_TILES()
+        const spec = SPECS.get('status-wall')
+        const up = statusTilePieces(tiles.up)
+        const lone = statusTilePieces(draw(StatusTile, { name: 'api', status: 'up' }))
+        const pulses = (element: El | undefined) => /\banimate-live\b/.test(classesOf(element))
+        const wall = draw(StatusWall, { label: 'Sources', children: null })[0]
+        return [
+            ...WALL_STATUSES.flatMap((status) => {
+                const pieces = statusTilePieces(tiles[status])
+                const tone = wallTone(tiles[status])
+                const named = (value: string | undefined) => value?.replace('wall-tone', String(tone))
+                const dot = dotPaint(pieces.dot)
+                const rule = wallRule(tiles[status])
+                const glow = /color-mix\(in oklab, var\(--wall-tone\) (\d+)%, transparent\), transparent\)/.exec(
+                    pieces.glow?.attrs.style ?? '',
+                )
+                const checks: Check[] = []
+                if (status !== 'unknown') {
+                    checks.push(
+                        check(
+                            `pieces.tile.${status}.edge`,
+                            spec?.pieces?.tile[status].edge,
+                            named(resolve([classesOf(pieces.tile)], [], READ.edge)),
+                        ),
+                        check(`pieces.tile.${status}.rule`, spec?.pieces?.tile[status].rule, rule === undefined ? undefined : tone),
+                        check(
+                            `pieces.glow.${status}.ground`,
+                            spec?.pieces?.glow[status].ground,
+                            glow === null ? undefined : `${String(tone)}/${glow[1]}`,
+                        ),
+                    )
+                }
+                checks.push(
+                    check(
+                        `pieces.status.${status}.ink`,
+                        spec?.pieces?.status[status].ink,
+                        resolve([classesOf(pieces.status)], [], READ.ink),
+                    ),
+                    // A hollow dot's mark is its edge.
+                    check(`pieces.status.${status}.mark`, spec?.pieces?.status[status].mark, status === 'unknown' ? dot.edge : dot.ground),
+                    check(
+                        `pieces.series.${status}.mark`,
+                        spec?.pieces?.series[status].mark,
+                        /color:\s*var\(--wall-tone\)/.test(pieces.series?.attrs.style ?? '') ? tone : undefined,
+                    ),
+                )
+                return checks
+            }),
+            check(
+                'states.rest (each status says its word beside its dot)',
+                'Up Degraded Down Unknown',
+                WALL_STATUSES.map((status) => statusTilePieces(tiles[status]).status?.text).join(' '),
+            ),
+            check(
+                'states.down (the dot and the glow breathe with the live pulse, and in no other status)',
+                'down',
+                WALL_STATUSES.filter((status) => {
+                    const pieces = statusTilePieces(tiles[status])
+                    return pulses(pieces.glow) && pulses(pieces.dot?.parent)
+                }).join(' '),
+            ),
+            check(
+                'states.unknown (a dashed edge, no rule, no glow and a hollow dot)',
+                'dashed | no rule | no glow | hollow',
+                (() => {
+                    const pieces = statusTilePieces(tiles.unknown)
+                    const dot = dotPaint(pieces.dot)
+                    return [
+                        /\bborder-dashed\b/.test(classesOf(pieces.tile)) ? 'dashed' : 'solid',
+                        wallRule(tiles.unknown) === undefined ? 'no rule' : 'a rule',
+                        pieces.glow === undefined ? 'no glow' : 'a glow',
+                        dot.ground === undefined && /\bborder\b/.test(classesOf(pieces.dot)) ? 'hollow' : 'filled',
+                    ].join(' | ')
+                })(),
+            ),
+            check(
+                'states.selected (a tile that is a button says whether it is pressed; a link says nothing)',
+                'false true none',
+                [tiles.pressable, tiles.selected, tiles.linked]
+                    .map((elements) => statusTilePieces(elements).cover?.attrs['aria-pressed'] ?? 'none')
+                    .join(' '),
+            ),
+            check(
+                'states.hover (only a tile that is a control washes; a plain tile has no cover)',
+                'none | no cover',
+                `${resolve([classesOf(up.tile)], ['hover'], READ.ground) === 'hover' ? 'washed' : 'none'} | ${up.cover === undefined ? 'no cover' : 'a cover'}`,
+            ),
+            check(
+                'states.rest (the series: a line at 70 percent over an area at 12 percent, both in the status color)',
+                'currentColor 0.7 | currentColor 0.12',
+                `${String(up.line?.attrs.stroke)} ${String(up.line?.attrs['stroke-opacity'])} | ${String(up.area?.attrs.fill)} ${String(up.area?.attrs['fill-opacity'])}`,
+            ),
+            check(
+                'states.rest (equal values, or one, are a level line through the middle)',
+                'M0.0 16.0 L50.0 16.0 L100.0 16.0 | M0 16.0 L100.0 16.0',
+                `${wallSeriesPath([5, 5, 5])} | ${wallSeriesPath([5])}`,
+            ),
+            check(
+                'states.rest (the series is decoration without seriesLabel, an image named by it with one)',
+                'true | img Latency',
+                (() => {
+                    const named = statusTilePieces(statusTile({ seriesLabel: 'Latency' })).chart
+                    return `${String(up.chart?.attrs['aria-hidden'])} | ${String(named?.attrs.role)} ${String(named?.attrs['aria-label'])}`
+                })(),
+            ),
+            check(
+                'states.rest (the figure, the detail, the freshness, the series and the caption line only with their options)',
+                'none',
+                (['caption', 'flag', 'figure', 'detail', 'foot', 'series'] as const).filter((name) => lone[name] !== undefined).join(' ') ||
+                    'none',
+            ),
+            check(
+                'states.rest (the freshness at the foot, No data for a source never heard from)',
+                'live Live | lost No data',
+                [tiles.up, statusTile({ updatedAt: null })]
+                    .map((elements) => {
+                        const fresh = bySlotIn(elements, 'freshness')
+                        return `${String(fresh?.attrs['data-state'])} ${String(fresh?.text)}`
+                    })
+                    .join(' | '),
+            ),
+            check('states.rest (the flag is a chip at the end of the caption line)', 'Simulated', up.flag?.text),
+            check(
+                'states.rest (the wall is a group named by label, each tile an article)',
+                'group Sources | article',
+                `${String(wall?.attrs.role)} ${String(wall?.attrs['aria-label'])} | ${String(up.tile?.tag)}`,
+            ),
+            ...layoutChecks('status-wall', {
+                tileSm: () => wallTile('sm'),
+                // The default: no tile named.
+                tileMd: () =>
+                    wallTile() === wallTile('md') ? wallTile() : `${String(wallTile())} by default, ${String(wallTile('md'))} at md`,
+                tileLg: () => wallTile('lg'),
+                topRule: () => wallRule(tiles.up),
+                glowHeight: () => lengthOn(up.glow, READ.height),
+                seriesLine: () => up.line?.attrs['stroke-width'],
+            }),
+        ]
+    },
+}
+
+// Alert ticker
+
+const TICKER_ITEMS: AlertTickerItem[] = [
+    { id: 'export', text: 'nightly-export failed at upload', tone: 'critical', when: '14:28', icon: createElement(Server) },
+    { id: 'inventory', text: 'sync-inventory is running late', tone: 'warning', when: '14:21' },
+    { id: 'index', text: 'rebuild-index succeeded' },
+]
+const ticker = (props: Partial<AlertTickerProps> = {}) => draw(AlertTicker, { items: TICKER_ITEMS, label: 'Alerts', ...props })
+const TICKERS = once(() => ({
+    plain: ticker(),
+    pressable: ticker({ onSelect: noop }),
+    empty: ticker({ items: [] }),
+}))
+const tickerPieces = (elements: El[]): Record<string, El | undefined> => {
+    const item = bySlotIn(elements, 'alert-ticker-item')
+    return {
+        container: bySlotIn(elements, 'alert-ticker'),
+        item,
+        dot: elements.find((element) => element.attrs['aria-hidden'] === 'true' && /\brounded-full\b/.test(classesOf(element))),
+        icon: elements.find((element) => element.parent === item && element.attrs['data-slot'] !== 'dot' && iconOf(elements, element)),
+        when: bySlotIn(elements, 'alert-ticker-when'),
+        position: bySlotIn(elements, 'alert-ticker-position'),
+        empty: bySlotIn(elements, 'alert-ticker-empty'),
+    }
+}
+/** The tone a ticker's shown alert has, by the state that names it; `rest` is an alert that names none. */
+const TICKER_TONES: Record<string, AlertTickerItem['tone']> = {
+    rest: undefined,
+    critical: 'critical',
+    warning: 'warning',
+    good: 'good',
+    quiet: 'quiet',
+}
+const tickerOf = (tone: AlertTickerItem['tone']) => ticker({ items: [{ id: 'one', text: 'send-digest queued', tone }] })
+/**
+ * A ticker drawn in the page on a clock the test moves: `look` gets the indexes it moved on to, and
+ * `pass`, which lets that many ms go by.
+ */
+function tickerRuns<T>(props: Partial<AlertTickerProps>, look: (box: HTMLElement, moved: number[], pass: (ms: number) => void) => T): T {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+        const moved: number[] = []
+        return live(
+            createElement(AlertTicker, { items: TICKER_ITEMS, label: 'Alerts', ...props, onIndexChange: (index) => moved.push(index) }),
+            (box) => look(box, moved, (ms) => act(() => vi.advanceTimersByTime(ms))),
+        )
+    } finally {
+        vi.useRealTimers()
+    }
+}
+const tickerItem = (box: HTMLElement) => box.querySelector<HTMLElement>('[data-slot="alert-ticker-item"]')
+/** Whether the alert shown is sliding in, and from how far below, in px, over which motion token. */
+const tickerSlide = (box: HTMLElement) => {
+    const classes = tickerItem(box)?.className ?? ''
+    return {
+        moving: /(?:^|\s)animate-in(?:\s|$)/.test(classes) && /(?:^|\s)fade-in-0(?:\s|$)/.test(classes),
+        from: numberIn(classes, /(?:^|\s)slide-in-from-bottom-([\d.]+)(?:\s|$)/, 'step'),
+        over: durationIn(classes, /(?:^|\s)duration-(\w+)(?:\s|$)/),
+        eased: /(?:^|\s)ease-motion(?:\s|$)/.test(classes),
+    }
+}
+/** A pointer event as a browser sends it over the strip: React hears a pointer entering and leaving from these. */
+const pointer = (target: Element | null, type: 'pointerover' | 'pointerout') =>
+    act(() => {
+        target?.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }))
+    })
+/** The first alert shown, held, then a newer alert put before it: whether the new one slides in. */
+function tickerTakesPlace(): string {
+    let put: (items: AlertTickerItem[]) => void = noop
+    const Held = () => {
+        const [items, setItems] = useState(TICKER_ITEMS)
+        put = setItems
+        return createElement(AlertTicker, { items, label: 'Alerts', paused: true })
+    }
+    return live(createElement(Held), (box) => {
+        const first = tickerSlide(box).moving ? 'moving' : 'still'
+        act(() => put([{ id: 'digest', text: 'send-digest failed at notify', tone: 'critical' }, ...TICKER_ITEMS]))
+        return `${first} | ${tickerItem(box)?.textContent ?? 'nothing'} ${tickerSlide(box).moving ? 'moving' : 'still'}`
+    })
+}
+
+const ALERT_TICKER_ADAPTER: Adapter = {
+    wordObjects: { ALERT_TICKER_WORDS },
+    complete: ['ALERT_TICKER_WORDS'],
+    words: {
+        empty: 'ALERT_TICKER_WORDS.empty',
+        position: [
+            'ALERT_TICKER_WORDS.position',
+            (said: (index: number, count: number) => string, fill) => said(Number(fill.index), Number(fill.count)),
+        ],
+    },
+    options: {},
+    size: (size, key) => {
+        const pieces = tickerPieces(TICKERS().plain)
+        if (size === 'item' && key === 'icon') return pieceWhere(pieces.icon)
+        return pieceWhere(pieces[size])
+    },
+    paint: (_, name, state) => {
+        const tickers = TICKERS()
+        if (name === 'dot') return skip('the dot is painted by a style its color sets: read in more')
+        if (name === 'item') {
+            const button = tickerPieces(tickers.pressable).item
+            if (state === 'hover') return pieceWhere(button, ['hover'])
+            if (state === 'focus') return pieceWhere(button, ['focus-visible'])
+            const pieces = tickerPieces(tickers.plain)
+            return withPart(pieces.container, pieces.item)
+        }
+        if (name === 'empty') {
+            const pieces = tickerPieces(tickers.empty)
+            return withPart(pieces.container, pieces.empty)
+        }
+        return pieceWhere(tickerPieces(tickers.plain)[name])
+    },
+    effect: () => skip('the alert ticker states no effects'),
+    keys: {
+        Tab: () => {
+            const { item } = tickerPieces(TICKERS().pressable)
+            if (item?.tag !== 'button' || !focusable(item)) return 'the alert shown is not a button in the tab order with onSelect'
+            if (tickerPieces(TICKERS().plain).item?.tag === 'button') return 'the alert shown takes focus with no onSelect'
+            return tickerRuns({ onSelect: noop }, (box, moved, pass) => {
+                act(() => tickerItem(box)?.focus())
+                pass(20_000)
+                const held = moved.length
+                act(() => tickerItem(box)?.blur())
+                pass(5_000)
+                return held === 0 && moved.join(' ') === '1'
+                    ? true
+                    : `with focus in it the ticker moves ${String(held)} times in 20 s; once focus leaves it moves to ${moved.slice(held).join(' ') || 'nothing'}`
+            })
+        },
+        ...Object.fromEntries(
+            ['Enter', 'Space'].map((key) => [
+                `${key} (the alert has focus)`,
+                () => {
+                    const picked: string[] = []
+                    return live(
+                        createElement(AlertTicker, {
+                            items: TICKER_ITEMS,
+                            label: 'Alerts',
+                            defaultIndex: 1,
+                            paused: true,
+                            onSelect: (id) => picked.push(id),
+                        }),
+                        (box) => {
+                            const button = tickerItem(box)
+                            // A native button: a browser presses it on Enter and Space, and the press is a click.
+                            if (button?.tagName !== 'BUTTON' || button.getAttribute('type') !== 'button')
+                                return `the alert shown is not a native button, which ${key} presses`
+                            act(() => button.click())
+                            return picked.join(' ') === 'inventory'
+                                ? true
+                                : `a press of the second alert picks ${picked.join(' ') || 'nothing'}`
+                        },
+                    )
+                },
+            ]),
+        ),
+    },
+    more: () => {
+        const tickers = TICKERS()
+        const spec = SPECS.get('alert-ticker')
+        const pieces = tickerPieces(tickers.plain)
+        const button = tickerPieces(tickers.pressable).item
+        /** Whether the ticker stays on its alert for 20 s, drawn with `props` and after `before`. */
+        const holds_ = (props: Partial<AlertTickerProps>, before: (box: HTMLElement) => void = noop) =>
+            tickerRuns(props, (box, moved, pass) => {
+                before(box)
+                pass(20_000)
+                return moved.length === 0 ? 'held' : 'moves'
+            })
+        const reduced = () => {
+            document.documentElement.setAttribute('data-motion', 'off')
+            try {
+                return holds_({})
+            } finally {
+                document.documentElement.removeAttribute('data-motion')
+            }
+        }
+        return [
+            ...Object.entries(TICKER_TONES).flatMap(([state, tone]) => {
+                const paint = spec?.pieces?.dot[state]
+                const found = dotPaint(tickerPieces(tickerOf(tone)).dot)
+                return [
+                    ...(paint?.mark === undefined ? [] : [check(`pieces.dot.${state}.mark`, paint.mark, found.ground)]),
+                    ...(paint?.edge === undefined ? [] : [check(`pieces.dot.${state}.edge`, paint.edge, found.edge)]),
+                ]
+            }),
+            check(
+                'pieces.dot.rest.mark (info for an alert that says so, as for one with no tone)',
+                String(spec?.pieces?.dot.rest.mark),
+                dotPaint(tickerPieces(tickerOf('info')).dot).ground,
+            ),
+            check(
+                'pieces.dot.quiet (hollow: an edge and no ground)',
+                'hollow',
+                (() => {
+                    const dot = tickerPieces(tickerOf('quiet')).dot
+                    return dotPaint(dot).ground === undefined && /\bborder\b/.test(classesOf(dot)) ? 'hollow' : 'filled'
+                })(),
+            ),
+            check(
+                'pieces.item.focus.ring.inset',
+                String(spec?.pieces?.item.focus.ring?.inset),
+                resolve([classesOf(button)], ['focus-visible'], READ.ringInset),
+            ),
+            check(
+                'states.critical (the strip says the tone of the alert shown, info for one that names none; only a critical dot breathes)',
+                'info critical warning good quiet | critical',
+                `${Object.values(TICKER_TONES)
+                    .map((tone) => tickerPieces(tickerOf(tone)).container?.attrs['data-tone'])
+                    .join(' ')} | ${Object.values(TICKER_TONES)
+                    .filter((tone) => /\banimate-live\b/.test(classesOf(tickerPieces(tickerOf(tone)).dot?.parent)))
+                    .join(' ')}`,
+            ),
+            check(
+                'states.rest (the first alert stands still, with when it happened and its place among the alerts)',
+                'still | nightly-export failed at upload | 14:28 | 1 of 3',
+                tickerRuns({}, (box) =>
+                    [
+                        tickerSlide(box).moving ? 'moving' : 'still',
+                        tickerItem(box)?.textContent,
+                        box.querySelector('[data-slot="alert-ticker-when"]')?.textContent,
+                        box.querySelector('[data-slot="alert-ticker-position"]')?.textContent,
+                    ].join(' | '),
+                ),
+            ),
+            check(
+                'states.moving (the interval passing: the next alert slides in, and the first again after the last)',
+                'sync-inventory is running late moving 2 of 3 | 1 2 0',
+                tickerRuns({}, (box, moved, pass) => {
+                    pass(5_000)
+                    const second = `${String(tickerItem(box)?.textContent)} ${tickerSlide(box).moving ? 'moving' : 'still'} ${String(
+                        box.querySelector('[data-slot="alert-ticker-position"]')?.textContent,
+                    )}`
+                    pass(5_000)
+                    pass(5_000)
+                    return `${second} | ${moved.join(' ')}`
+                }),
+            ),
+            check(
+                "states.moving (the app's index: the ticker asks for the next and waits for it)",
+                '1 | nightly-export failed at upload',
+                tickerRuns({ index: 0 }, (box, moved, pass) => {
+                    pass(20_000)
+                    return `${moved.join(' ')} | ${String(tickerItem(box)?.textContent)}`
+                }),
+            ),
+            check(
+                "states.moving (a new alert taking the shown one's place slides in)",
+                'still | send-digest failed at notify moving',
+                tickerTakesPlace(),
+            ),
+            check(
+                'states.held (paused, the pointer over the strip, focus in it, motion reduced, fewer than two alerts)',
+                'held held held held held',
+                [
+                    holds_({ paused: true }),
+                    holds_({}, (box) => pointer(box.querySelector('[data-slot="alert-ticker"]'), 'pointerover')),
+                    holds_({ onSelect: noop }, (box) => act(() => tickerItem(box)?.focus())),
+                    reduced(),
+                    holds_({ items: TICKER_ITEMS.slice(0, 1) }),
+                ].join(' '),
+            ),
+            check(
+                'states.held (it moves on once the pointer leaves)',
+                '1',
+                tickerRuns({}, (box, moved, pass) => {
+                    const strip = box.querySelector('[data-slot="alert-ticker"]')
+                    pointer(strip, 'pointerover')
+                    pass(20_000)
+                    pointer(strip, 'pointerout')
+                    pass(5_000)
+                    return moved.join(' ')
+                }),
+            ),
+            check(
+                'states.empty (the strip keeps its height and says so, with no place)',
+                'No alerts | 40 | no place',
+                (() => {
+                    const empty = tickerPieces(tickers.empty)
+                    return `${String(empty.empty?.text)} | ${String(lengthOn(empty.container, READ.height))} | ${empty.position === undefined ? 'no place' : 'a place'}`
+                })(),
+            ),
+            check(
+                'states.rest (the place only with two alerts or more; a region named by label; the words cut to one line)',
+                'no place | section Alerts | truncate',
+                [
+                    tickerPieces(ticker({ items: TICKER_ITEMS.slice(0, 1) })).position === undefined ? 'no place' : 'a place',
+                    `${String(pieces.container?.tag)} ${String(pieces.container?.attrs['aria-label'])}`,
+                    tickers.plain.some((element) => element.parent === pieces.item && /\btruncate\b/.test(classesOf(element)))
+                        ? 'truncate'
+                        : 'not cut',
+                ].join(' | '),
+            ),
+            ...layoutChecks('alert-ticker', {
+                // How long the first alert stands with no interval given, to a tenth of a second.
+                interval: () =>
+                    tickerRuns({}, (_, moved, pass) => {
+                        let waited = 0
+                        while (moved.length === 0 && waited < 60_000) {
+                            pass(100)
+                            waited += 100
+                        }
+                        return moved.length === 0 ? 'never' : String(waited)
+                    }),
+                slide: () =>
+                    tickerRuns({}, (box, _, pass) => {
+                        pass(5_000)
+                        const slide = tickerSlide(box)
+                        return slide.eased ? slide.over : `${String(slide.over)}, not eased by motion-ease`
+                    }),
+                slideFrom: () =>
+                    tickerRuns({}, (box, _, pass) => {
+                        pass(5_000)
+                        return tickerSlide(box).from
+                    }),
+            }),
+        ]
+    },
+}
+
+// Kiosk
+
+const KIOSK = source('components/Kiosk.tsx')
+const KIOSK_PROPS: KioskProps = {
+    mark: createElement('span', { 'data-mark': '' }, 'Tidevann'),
+    title: 'Harbor',
+    clock: '14:32',
+    actions: createElement(Button, { variant: 'ghost', size: 'sm' }, 'Leave'),
+    figures: createElement(
+        Fragment,
+        {},
+        createElement(Stat, { label: 'Sources', value: '12' }),
+        createElement(Stat, { label: 'Tracks', value: '248' }),
+    ),
+    children: createElement('div', { 'data-stage': '' }, 'Map'),
+    aside: createElement(Button, { variant: 'outline', size: 'sm' }, 'Sources'),
+    foot: createElement(AlertTicker, { items: TICKER_ITEMS, label: 'Alerts', paused: true, onSelect: noop }),
+    label: 'Harbor wall',
+}
+const kiosk = (props: Partial<KioskProps> = {}) => draw(Kiosk, { ...KIOSK_PROPS, ...props })
+const KIOSKS = once(() => ({
+    full: kiosk(),
+    bare: draw(Kiosk, { title: 'Harbor', children: 'Map' }),
+}))
+const kioskPieces = (elements: El[]): Record<string, El | undefined> => {
+    const frame = bySlotIn(elements, 'kiosk')
+    const head = bySlotIn(elements, 'kiosk-head')
+    const stage = bySlotIn(elements, 'kiosk-stage')
+    return {
+        frame,
+        // The column the frame's pieces stand in, which holds its padding and its gaps.
+        column: elements.find((element) => element.parent === frame),
+        head,
+        mark: elements.find((element) => element.parent === head && element.tag === 'span' && element.attrs['data-slot'] === undefined),
+        title: elements.find((element) => element.tag === 'h1'),
+        actions: bySlotIn(elements, 'kiosk-actions'),
+        clock: bySlotIn(elements, 'kiosk-clock'),
+        figures: bySlotIn(elements, 'kiosk-figures'),
+        body: bySlotIn(elements, 'kiosk-body'),
+        stage,
+        over: elements.find((element) => element.parent === stage),
+        aside: bySlotIn(elements, 'kiosk-aside'),
+        foot: bySlotIn(elements, 'kiosk-foot'),
+    }
+}
+/** The variants the frame's wide room turns on: its own width from 48rem. */
+const KIOSK_WIDE = ['@3xl']
+/** The aside's width beside the stage, in px, at one of its widths. */
+const kioskAside = (asideWidth?: KioskProps['asideWidth']) =>
+    numberIn(classesOf(kioskPieces(kiosk({ asideWidth })).body), /(?:^|\s)@3xl:grid-cols-\[minmax\(0,1fr\)_([\d.]+)rem\]/, 'rem')
+
+/** The kiosk is a frame: what stands in it (stats, a map, an alert ticker) has specs of its own. */
+const KIOSK_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: { asideWidth: unionIn(KIOSK, 'KioskAsideWidth') },
+    size: (size, key) => {
+        const pieces = kioskPieces(KIOSKS().full)
+        if (size === 'frame') return pieceWhere(pieces.column)
+        if (size === 'head') return pieceWhere(key === 'text' ? pieces.title : pieces.head)
+        if (size === 'clock') return pieceWhere(pieces.clock, KIOSK_WIDE)
+        return pieceWhere(pieces[size])
+    },
+    paint: (_, name, state) => {
+        const pieces = kioskPieces(KIOSKS().full)
+        if (state !== 'rest' && state !== 'stacked') return undefined
+        return pieceWhere(pieces[name], state === 'rest' ? KIOSK_WIDE : [])
+    },
+    effect: () => skip('the kiosk states no effects'),
+    keys: {
+        Tab: () =>
+            live(
+                createElement(Kiosk, {
+                    ...KIOSK_PROPS,
+                    children: createElement(Button, {}, 'Map'),
+                }),
+                (box) => {
+                    const frame = box.querySelector('[data-slot="kiosk"]')
+                    const stops = [...(frame?.querySelectorAll<HTMLElement>('button, a, [tabindex]') ?? [])]
+                    const places = stops.map((stop) => {
+                        const piece = stop.closest('[data-slot^="kiosk-"]:not([data-slot="kiosk-head"])')
+                        return piece?.getAttribute('data-slot')?.replace('kiosk-', '') ?? 'the frame'
+                    })
+                    // The frame adds no stop of its own, and its pieces stand in the order Tab walks them.
+                    return places.join(' ') === 'actions stage aside foot' && stops.every((stop) => stop.tabIndex >= 0)
+                        ? true
+                        : `Tab stops at ${places.join(', ') || 'nothing'}`
+                },
+            ),
+    },
+    more: () => {
+        const { full, bare } = KIOSKS()
+        const pieces = kioskPieces(full)
+        const without = kioskPieces(bare)
+        const wide = (element: El | undefined, read: Reader) => resolve([classesOf(element)], KIOSK_WIDE, read)
+        const has = (element: El | undefined, name: string) => classesOf(element).split(/\s+/).includes(name)
+        const rows = (element: El | undefined) => /(?:^|\s)grid-rows-\[minmax\(([\d.]+)rem,1fr\)(_auto)?\]/.exec(classesOf(element))
+        return [
+            check(
+                'sizes.frame (16, 16 and 16 from a room 768 wide, the stage and the aside 16 apart too)',
+                '16 16 16 | 16',
+                `${[READ.pad, READ.pad, READ.gap].map((read) => wide(pieces.column, read)).join(' ')} | ${String(wide(pieces.body, READ.gap))}`,
+            ),
+            check(
+                'states.rest (the frame as tall as its room on a column that grows to it; the aside beside the stage, as tall as it and scrolling by itself)',
+                'h-full | beside | one row | scrolls by itself',
+                [
+                    has(pieces.frame, 'h-full') && has(pieces.column, 'grow') ? 'h-full' : 'its own height',
+                    kioskAside() === undefined ? 'under' : 'beside',
+                    has(pieces.body, '@3xl:grid-rows-[minmax(0,1fr)]') ? 'one row' : 'two rows',
+                    has(pieces.aside, '@3xl:overflow-y-auto') && has(pieces.aside, 'min-h-0') ? 'scrolls by itself' : 'grows',
+                ].join(' | '),
+            ),
+            check(
+                'states.stacked (one column, the aside under the stage at its own height, the frame scrolling down and never sideways)',
+                'one column | under at its own height | scrolls down | never sideways',
+                [
+                    has(pieces.body, 'grid-cols-1') ? 'one column' : 'columns',
+                    rows(pieces.body)?.[2] === '_auto' ? 'under at its own height' : 'no row of its own',
+                    has(pieces.frame, 'overflow-y-auto') ? 'scrolls down' : 'does not scroll',
+                    has(pieces.frame, 'overflow-x-hidden') ? 'never sideways' : 'sideways',
+                ].join(' | '),
+            ),
+            check(
+                'states.stacked (the frame pads and spaces 12, the stage and the aside 12 apart)',
+                '12 12 | 12',
+                `${String(lengthOn(pieces.column, READ.pad))} ${String(lengthOn(pieces.column, READ.gap))} | ${String(lengthOn(pieces.body, READ.gap))}`,
+            ),
+            check(
+                'states.rest (a region named by label, its title the heading cut to one line, its clock in tabular figures on one line)',
+                'section Harbor wall | h1 truncate | tabular-nums whitespace-nowrap',
+                [
+                    `${String(pieces.frame?.tag)} ${String(pieces.frame?.attrs['aria-label'])}`,
+                    `${String(pieces.title?.tag)} ${has(pieces.title, 'truncate') ? 'truncate' : 'wraps'}`,
+                    ['tabular-nums', 'whitespace-nowrap'].filter((name) => has(pieces.clock, name)).join(' '),
+                ].join(' | '),
+            ),
+            check(
+                "states.rest (what is on the stage is laid over the stage's box and fills it; the head, the counters and the foot never shrink)",
+                'absolute inset-0 | *:flex-1 | shrink-0 shrink-0 shrink-0',
+                [
+                    ['absolute', 'inset-0'].filter((name) => has(pieces.over, name)).join(' '),
+                    has(pieces.over, '*:flex-1') ? '*:flex-1' : 'at its own height',
+                    [pieces.head, pieces.figures, pieces.foot]
+                        .map((element) => (has(element, 'shrink-0') ? 'shrink-0' : 'shrinks'))
+                        .join(' '),
+                ].join(' | '),
+            ),
+            check(
+                'states.rest (the mark, the actions, the clock, the counters, the aside and the foot only with their options)',
+                'none',
+                (['mark', 'actions', 'clock', 'figures', 'aside', 'foot'] as const)
+                    .filter((name) => without[name] !== undefined)
+                    .join(' ') || 'none',
+            ),
+            check(
+                'states.rest (the counters in as many equal columns as fit, each row filled to its ends)',
+                'repeat(auto-fit, minmax(min(9rem, 100%), 1fr))',
+                /grid-template-columns:\s*([^;]+)/.exec(pieces.figures?.attrs.style ?? '')?.[1],
+            ),
+            ...layoutChecks('kiosk', {
+                // The frame is the container its pieces ask: `@3xl` is its own width, not the window's.
+                wide: () =>
+                    has(pieces.frame, '@container') && /(?:^|\s)@3xl:/.test(classesOf(pieces.column))
+                        ? tailwind('container', '3xl')
+                        : undefined,
+                // The stage's row while stacked, and the body's least height beside the aside.
+                stageMinHeight: () => {
+                    const stacked = [rows(pieces.body), rows(without.body)].map((found) =>
+                        found === null ? undefined : String(Number(found[1]) * 16),
+                    )
+                    const beside = wide(pieces.body, READ.minHeight)
+                    return new Set([...stacked, beside]).size === 1 ? beside : `${stacked.join(' and ')} stacked, ${String(beside)} wide`
+                },
+                figureMinWidth: () => numberIn(pieces.figures?.attrs.style ?? '', /minmax\(min\(([\d.]+)rem,/, 'rem'),
+                asideSm: () => kioskAside('sm'),
+                // The default: no width named.
+                asideMd: () =>
+                    kioskAside() === kioskAside('md')
+                        ? kioskAside()
+                        : `${String(kioskAside())} by default, ${String(kioskAside('md'))} at md`,
+                asideLg: () => kioskAside('lg'),
+                headRowGap: () => lengthOn(pieces.head, lengthOf('gap-y-')),
+            }),
+        ]
+    },
+}
+
 const ADAPTERS: Record<string, Adapter> = {
     button: BUTTON_ADAPTER,
     'text-field': TEXT_FIELD_ADAPTER,
@@ -11348,6 +12170,9 @@ const ADAPTERS: Record<string, Adapter> = {
     'track-roster': TRACK_ROSTER_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
+    'status-wall': STATUS_WALL_ADAPTER,
+    'alert-ticker': ALERT_TICKER_ADAPTER,
+    kiosk: KIOSK_ADAPTER,
 }
 
 // The checks, walked from each spec
