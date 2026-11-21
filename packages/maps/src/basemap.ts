@@ -32,7 +32,10 @@ export interface Basemap {
      * it, so a page that never opens the switcher fetches no preview.
      */
     preview?: string | (() => Promise<string>)
-    /** Whether raster tiles are light or dark; light tiles are dimmed in the dark scheme. */
+    /**
+     * Whether the basemap is light or dark. Light raster tiles are dimmed in the dark scheme, and a
+     * style's place names keep the style's own colors in the scheme it does not match.
+     */
     tone?: 'light' | 'dark'
     /** The credits the hosts require, shown in the map's corner while the basemap is drawn. */
     attribution?: Credit[]
@@ -60,6 +63,7 @@ export const LIGHT_BASEMAP: Basemap = {
     id: 'light',
     name: 'Light',
     style: 'https://tiles.openfreemap.org/styles/positron',
+    tone: 'light',
     preview: () => import('./previews/light.jpg').then((image) => image.default),
     attribution: OPENFREEMAP_CREDITS,
 }
@@ -69,6 +73,7 @@ export const DARK_BASEMAP: Basemap = {
     id: 'dark',
     name: 'Dark',
     style: 'https://tiles.openfreemap.org/styles/dark',
+    tone: 'dark',
     preview: () => import('./previews/dark.jpg').then((image) => image.default),
     attribution: OPENFREEMAP_CREDITS,
 }
@@ -78,6 +83,7 @@ export const STREETS_BASEMAP: Basemap = {
     id: 'streets',
     name: 'Streets',
     style: 'https://tiles.openfreemap.org/styles/liberty',
+    tone: 'light',
     preview: () => import('./previews/streets.jpg').then((image) => image.default),
     attribution: OPENFREEMAP_CREDITS,
 }
@@ -97,6 +103,7 @@ export const SATELLITE_BASEMAP: Basemap = {
             href: 'https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api',
         },
     ],
+    tone: 'dark',
     maxZoom: 8,
 }
 
@@ -146,6 +153,15 @@ type RasterPaint = NonNullable<RasterLayerSpecification['paint']>
 /** Whether a basemap draws anything over the ground. */
 export function hasTiles(basemap: Basemap): boolean {
     return basemap.style !== undefined || (basemap.tiles !== undefined && basemap.tiles.length > 0)
+}
+
+/**
+ * Whether a basemap's place names are inked in the scheme's tokens: when the basemap is as dark as
+ * the scheme, or says nothing of its tone. A dark basemap in the light scheme keeps its own names,
+ * light over a dark halo, as the style drew them for its ground; a light one in the dark scheme too.
+ */
+export function inksLabels(basemap: Basemap, dark: boolean): boolean {
+    return basemap.tone === undefined || (basemap.tone === 'dark') === dark
 }
 
 /** A raster source for tile urls. */
@@ -221,13 +237,13 @@ export function loadStyle(url: string): Promise<StyleSpecification> {
  * A basemap's style with the map's own layers carried over from the style before it: the ground,
  * the basemap's own layers, a veil that fades them, the map's layers, and the basemap's labels on
  * top. Place names are inked in the foreground over a halo in the ground color, so they read over
- * any data color. The projection and the sky the map set on the style before are kept, so a globe
+ * any data color, unless `inked` is false: then they keep the basemap's own colors. The projection and the sky the map set on the style before are kept, so a globe
  * stays a globe over a new basemap.
  */
 export function composeStyle(
     basemap: StyleSpecification,
     previous: StyleSpecification | undefined,
-    { ground, ink, opacity, visible }: { ground: string; ink: string; opacity: number; visible: boolean },
+    { ground, ink, opacity, visible, inked = true }: { ground: string; ink: string; opacity: number; visible: boolean; inked?: boolean },
 ): StyleSpecification {
     const own = (id: string) => id.startsWith('wui-') && !BASEMAP_IDS.has(id)
     // Text needs the basemap's glyph server; a layer of names waits for a basemap that has one.
@@ -243,7 +259,7 @@ export function composeStyle(
         .filter((layer) => layer.type === 'symbol')
         .map(hide)
         .map((layer) =>
-            layer.type === 'symbol' && layer.id.startsWith('place')
+            inked && layer.type === 'symbol' && layer.id.startsWith('place')
                 ? {
                       ...layer,
                       paint: {

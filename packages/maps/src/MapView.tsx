@@ -25,6 +25,7 @@ import {
     geometryStyle,
     graticule as graticuleLines,
     hasTiles,
+    inksLabels,
     isBasemapLayer,
     labelAnchor,
     loadStyle,
@@ -944,7 +945,13 @@ export function MapView({
         setIdle(false)
         const basemap = shownBasemapRef.current
         const palette = mapPalette(scope)
-        const options = { ground: palette.ground, ink: palette.ink, opacity: basemapOpacity, visible: basemapVisible }
+        const options = {
+            ground: palette.ground,
+            ink: palette.ink,
+            opacity: basemapOpacity,
+            visible: basemapVisible,
+            inked: inksLabels(basemap, dark),
+        }
         const apply = (style: StyleSpecification) => {
             if (cancelled) return
             map.setStyle(style, { diff: true, transformStyle: (previous, next) => composeStyle(next, previous, options) })

@@ -1,6 +1,7 @@
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { NotFound } from '@winterop-com/sokkel-ui/NotFound'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -180,10 +181,9 @@ export function Console({ frame }: { frame: Frame }) {
                     <TopBar
                         trail={[{ label: 'Control site', href: '#/operator' }, ...trail]}
                         actions={
-                            <Button variant="ghost" size="sm" onClick={openWall}>
+                            <IconButton label="Open wall in new window" variant="ghost" size="icon-sm" onClick={openWall}>
                                 <MonitorPlay aria-hidden />
-                                Open wall in new window
-                            </Button>
+                            </IconButton>
                         }
                     />
                 }
