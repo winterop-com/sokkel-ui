@@ -4,9 +4,20 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "b05ad7e"},
-        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
-        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+        "sokkel-ui": {
+            "state": "built",
+            "as_of": "67997fe"
+        },
+        "sokkel-egui": {
+            "state": "missing",
+            "as_of": "5532f68",
+            "note": "Not built yet."
+        },
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "b99664f",
+            "note": "Not in sokkel-tui's reports as of b99664f."
+        }
     },
     "summary": "One tracked thing, densely: its glyph, name and id, its freshness at the head's end, and under them its affiliation as a chip (a menu of the affiliations when it can be changed), the states it is in as chips, and a quiet line of what it is doing. A thumbnail may lead it. Framed it is a card; unframed, a list's row.",
     "sources": {
@@ -26,23 +37,59 @@
         "code": "The track's id after its name, in the code face.",
         "detail": "A line under the chips: speed and heading, or what the app says."
     },
-    "standsOn": {"default": "background"},
+    "standsOn": {
+        "default": "background"
+    },
     "options": {
-        "name": {"type": "text", "does": "What it is called."},
-        "code": {"type": "text", "does": "Its id, after the name."},
-        "kind": {"values": ["vessel", "aircraft", "vehicle", "sensor", "other"], "does": "Its glyph."},
+        "name": {
+            "type": "text",
+            "does": "What it is called."
+        },
+        "code": {
+            "type": "text",
+            "does": "Its id, after the name."
+        },
+        "kind": {
+            "values": ["vessel", "aircraft", "vehicle", "sensor", "satellite", "other"],
+            "does": "Its glyph."
+        },
         "affiliation": {
             "values": ["friend", "hostile", "neutral", "unknown", "pending"],
             "does": "Its color and its chip."
         },
-        "heading": {"type": "number", "does": "Turns the glyph."},
-        "thumbnail": {"type": "node", "does": "A picture at the start."},
-        "states": {"type": "rows", "does": "Chips for its states: a word, or a word in a tone."},
-        "detail": {"type": "node", "does": "One quiet line, such as speed and heading."},
-        "updatedAt": {"type": "text", "does": "When it was last heard from; the freshness is drawn only with it."},
-        "onAffiliationChange": {"type": "callback", "does": "Makes the affiliation chip a menu of the affiliations."},
-        "onSelect": {"type": "callback", "does": "Makes the whole card one control."},
-        "selected": {"type": "boolean", "default": false, "does": "Draws it as chosen."},
+        "heading": {
+            "type": "number",
+            "does": "Turns the glyph."
+        },
+        "thumbnail": {
+            "type": "node",
+            "does": "A picture at the start."
+        },
+        "states": {
+            "type": "rows",
+            "does": "Chips for its states: a word, or a word in a tone."
+        },
+        "detail": {
+            "type": "node",
+            "does": "One quiet line, such as speed and heading."
+        },
+        "updatedAt": {
+            "type": "text",
+            "does": "When it was last heard from; the freshness is drawn only with it."
+        },
+        "onAffiliationChange": {
+            "type": "callback",
+            "does": "Makes the affiliation chip a menu of the affiliations."
+        },
+        "onSelect": {
+            "type": "callback",
+            "does": "Makes the whole card one control."
+        },
+        "selected": {
+            "type": "boolean",
+            "default": false,
+            "does": "Draws it as chosen."
+        },
         "framed": {
             "type": "boolean",
             "default": true,
@@ -50,17 +97,34 @@
         }
     },
     "sizes": {
-        "container": {"padX": 10, "padY": 10, "gap": 10, "radius": "radius-surface"},
-        "thumbnail": {"width": 40, "height": 40, "radius": "radius-control"},
-        "head": {"gap": 8, "text": "text.body"}
+        "container": {
+            "padX": 10,
+            "padY": 10,
+            "gap": 10,
+            "radius": "radius-surface"
+        },
+        "thumbnail": {
+            "width": 40,
+            "height": 40,
+            "radius": "radius-control"
+        },
+        "head": {
+            "gap": 8,
+            "text": "text.body"
+        }
     },
     "states": {
-        "rest": {"means": "The card drawn."},
+        "rest": {
+            "means": "The card drawn."
+        },
         "hover": {
             "means": "The pointer over a card that is a control: washed.",
             "reached": "pointer over, with onSelect"
         },
-        "selected": {"means": "The card chosen: edged and ringed in primary.", "reached": "selected"},
+        "selected": {
+            "means": "The card chosen: edged and ringed in primary.",
+            "reached": "selected"
+        },
         "focus": {
             "means": "Keyboard focus on the card: the focus outline around it.",
             "reached": "Tab, with onSelect",
@@ -76,25 +140,72 @@
                 "radius": "radius-surface",
                 "note": "framed"
             },
-            "hover": {"ground": "hover"},
-            "selected": {"edge": "primary", "ring": {"color": "primary", "width": 1}},
-            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+            "hover": {
+                "ground": "hover"
+            },
+            "selected": {
+                "edge": "primary",
+                "ring": {
+                    "color": "primary",
+                    "width": 1
+                }
+            },
+            "focus": {
+                "ring": {
+                    "color": "ring",
+                    "width": "focus-ring-width",
+                    "offset": "focus-ring-offset"
+                }
+            }
         },
-        "name": {"rest": {"weight": 500, "text": "text.sm"}},
-        "code": {"rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face."}},
-        "detail": {"rest": {"ink": "muted-foreground", "text": "text.help"}}
+        "name": {
+            "rest": {
+                "weight": 500,
+                "text": "text.sm"
+            }
+        },
+        "code": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.help",
+                "note": "In the code face."
+            }
+        },
+        "detail": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.help"
+            }
+        }
     },
     "keyboard": [
-        {"keys": ["Tab"], "does": "Reaches the card when it is a control, then the affiliation chip's menu."},
-        {"keys": ["Enter"], "does": "Calls onSelect.", "when": "the card has focus"}
+        {
+            "keys": ["Tab"],
+            "does": "Reaches the card when it is a control, then the affiliation chip's menu."
+        },
+        {
+            "keys": ["Enter"],
+            "does": "Calls onSelect.",
+            "when": "the card has focus"
+        }
     ],
-    "words": {"changeAffiliation": "Affiliation: {affiliation}. Change"},
-    "messages": {"changeAffiliation": {"id": "trackCard.changeAffiliation", "en": "Affiliation: {affiliation}. Change"}},
-    "appText": {"name": "The track's name.", "code": "Its id.", "detail": "What it is doing.", "states": "Its states."},
+    "words": {
+        "changeAffiliation": "Affiliation: {affiliation}. Change"
+    },
+    "messages": {
+        "changeAffiliation": {
+            "id": "trackCard.changeAffiliation",
+            "en": "Affiliation: {affiliation}. Change"
+        }
+    },
+    "appText": {
+        "name": "The track's name.",
+        "code": "Its id.",
+        "detail": "What it is doing.",
+        "states": "Its states."
+    },
     "rendererSpecific": {
-        "sokkel-ui": [
-            "With onSelect a button covers the card under its pieces; the affiliation chip stands over it as its own control."
-        ]
+        "sokkel-ui": ["With onSelect a button covers the card under its pieces; the affiliation chip stands over it as its own control."]
     },
     "drift": [
         {
@@ -110,5 +221,14 @@
             "today": "As of b99664f its reports name no such part."
         }
     ],
-    "samples": {"changeAffiliation": [{"with": {"affiliation": "Hostile"}, "says": "Affiliation: Hostile. Change"}]}
+    "samples": {
+        "changeAffiliation": [
+            {
+                "with": {
+                    "affiliation": "Hostile"
+                },
+                "says": "Affiliation: Hostile. Change"
+            }
+        ]
+    }
 }
