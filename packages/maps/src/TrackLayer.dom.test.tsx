@@ -104,8 +104,12 @@ let root: Root | undefined
 let host: HTMLElement | undefined
 let fake = fakeMap()
 
-/** Draws the layer over the fake map, or draws it again with other props. */
-function draw(props: Partial<TrackLayerProps> & { tracks: readonly Track[] }, selected: string | null = null) {
+/** Draws the layer over the fake map, or draws it again with other props; with `beside`, a second layer `other` on the same map. */
+function draw(
+    props: Partial<TrackLayerProps> & { tracks: readonly Track[] },
+    selected: string | null = null,
+    beside?: Partial<TrackLayerProps> & { tracks: readonly Track[] },
+) {
     if (root === undefined) {
         host = document.createElement('div')
         document.body.append(host)
@@ -130,6 +134,7 @@ function draw(props: Partial<TrackLayerProps> & { tracks: readonly Track[] }, se
         root?.render(
             <MapContext.Provider value={value}>
                 <TrackLayer id="watch" {...props} />
+                {beside === undefined ? null : <TrackLayer id="other" {...beside} />}
             </MapContext.Provider>,
         ),
     )
@@ -232,6 +237,25 @@ describe('a track layer on a map', () => {
         act(() => fake.draw())
         pass(16)
         expect(told('watch')).toHaveLength(3)
+    })
+
+    it('lets the map rest with every layer of moving tracks on it at once, not each layer on its own', () => {
+        fake.settings.drawsItself = false
+        draw({ tracks: [RACER] })
+        pass(200)
+        draw({ tracks: [RACER] }, null, { tracks: [{ ...RACER, id: 'racer-2' }] })
+        pass(100)
+        const watch = told('watch').length
+        const other = told('other').length
+        // The first layer lets the map rest once it has drawn; the second, though newer, holds its moves while it does.
+        act(() => fake.draw())
+        pass(48)
+        expect(told('watch')).toHaveLength(watch)
+        expect(told('other')).toHaveLength(other)
+        act(() => fake.rest())
+        pass(32)
+        expect(told('watch').length).toBeGreaterThan(watch)
+        expect(told('other').length).toBeGreaterThan(other)
     })
 
     it('goes on when the map draws on without coming to rest, or neither draws nor rests', () => {

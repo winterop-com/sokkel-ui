@@ -768,6 +768,26 @@ interface TrackStage {
 }
 
 /**
+ * When the track layers on one map let it come to rest: when it last rested, and the layers waiting
+ * for it to now and since when. Each layer that rests holds the others' moves too, so a map with
+ * several layers of moving tracks comes to rest as often as one with a single layer does.
+ */
+interface RestClock {
+    restedAt: number
+    resting: Set<object>
+    since: number
+}
+const REST_CLOCKS = new WeakMap<MapLibreMap, RestClock>()
+const restClockOf = (map: MapLibreMap): RestClock => {
+    let clock = REST_CLOCKS.get(map)
+    if (clock === undefined) {
+        clock = { restedAt: performance.now(), resting: new Set(), since: 0 }
+        REST_CLOCKS.set(map, clock)
+    }
+    return clock
+}
+
+/**
  * What moves a layer's tracks and lights them, frame by frame. It holds each track's course, tells
  * the sources only of what moved far enough to show (the points and the trails' heads in one
  * change each, the trails themselves far less often), steps the halo, the ripples and the pulse,
@@ -813,8 +833,9 @@ function trackStage(
     let frames = 0
     let pulsedAt = -2
     let pulsedWhen = 0
-    /** When the map last came to rest. */
-    let restedAt = performance.now()
+    /** When the map last came to rest, shared with the map's other track layers, and this layer among those waiting for it to. */
+    const rest = restClockOf(map)
+    const self = {}
 
     const allowed = (now: StageSettings) => now.shown && !now.still && onscreen && !document.hidden
 
@@ -845,18 +866,24 @@ function trackStage(
             if (map.getSource(id) !== undefined && !map.isSourceLoaded(id)) return
         }
         const time = performance.now()
-        wait = time - restedAt >= REST_EVERY && !map.isMoving() ? 'rest' : 'none'
+        wait = time - rest.restedAt >= REST_EVERY && !map.isMoving() ? 'rest' : 'none'
+        if (wait === 'rest') {
+            if (rest.resting.size === 0) rest.since = time
+            rest.resting.add(self)
+        }
         waitFrom = time
         restless = 0
     }
     /** Goes on without the map having come to rest, and lets it try again a second later. */
     const unrested = (time: number) => {
         wait = 'none'
-        restedAt = time + 3 * REST_EVERY
+        rest.resting.delete(self)
+        rest.restedAt = time + 3 * REST_EVERY
     }
     /** Hears the map come to rest: a frame later, so what waits on the map can see it rest, the moves go on. */
     const calmed = () => {
-        restedAt = performance.now()
+        rest.restedAt = performance.now()
+        rest.resting.delete(self)
         if (wait === 'draw' || wait === 'rest') wait = 'frame'
     }
     map.on('render', drawn)
@@ -916,7 +943,12 @@ function trackStage(
         if (wait === 'draw' && time - waitFrom > PATIENCE) wait = 'none'
         if (wait === 'rest' && time - waitFrom > REST_PATIENCE) unrested(time)
         // The moves wait; what a report changed never does.
-        const held = !all && wait !== 'none'
+        // Another layer waiting for the map to rest holds these moves too, as long as this layer would wait itself.
+        if (rest.resting.size > 0 && time - rest.since > REST_PATIENCE) {
+            rest.resting.clear()
+            rest.restedAt = time + 3 * REST_EVERY
+        }
+        const held = !all && (wait !== 'none' || rest.resting.size > 0)
         if (wait === 'frame') wait = 'none'
         let sweep = all
         // The trails take their newest positions together, and the heads then start from where they now end.
@@ -1187,6 +1219,7 @@ function trackStage(
             frame = 0
             map.off('render', drawn)
             map.off('idle', calmed)
+            rest.resting.delete(self)
             observer?.disconnect()
             document.removeEventListener('visibilitychange', shown)
         },

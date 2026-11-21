@@ -19,7 +19,7 @@ import {
 } from './effects'
 import { arc, destination, inUnit, UNIT_SYMBOLS, type DistanceUnit } from './geodesy'
 import type { Bounds, LngLat } from './geometry'
-import { useGeoJsonLayer, useProjectedPoints, type PlacedText, type PreparedData } from './layer'
+import { useGeoJsonLayer, useProjectedPoints, useSameContent, type PlacedText, type PreparedData } from './layer'
 import { MAP_TONE_COLORS, TONE_PROPERTY, toneColor, toneOf, type MapTone } from './tone'
 
 /** What a sensor covers: a wedge from where it stands, turned to its bearing, as wide as its width and as long as its range. */
@@ -310,6 +310,9 @@ export interface CoverageLayerProps {
     sweep?: boolean | CoverageSweep
 }
 
+const NO_CONES: readonly SensorCone[] = []
+const NO_RINGS: readonly RangeRings[] = []
+
 /**
  * What sensors cover, under the tracks: each cone a wedge from where its sensor stands, turned to
  * its bearing and opened to its width (360 is a whole disc), in its tone, fading out with distance
@@ -320,8 +323,8 @@ export interface CoverageLayerProps {
  */
 export function CoverageLayer({
     id,
-    cones = [],
-    rings = [],
+    cones: givenCones = NO_CONES,
+    rings: givenRings = NO_RINGS,
     bands = 6,
     unit = 'km',
     labels = true,
@@ -332,6 +335,8 @@ export function CoverageLayer({
 }: CoverageLayerProps) {
     const { map, overlay, scope, reading, dark } = useMapContext()
     const locale = useLocale()
+    const cones = useSameContent(givenCones)
+    const rings = useSameContent(givenRings)
     const data = useMemo(() => coverageData(cones, rings, { bands, unit, locale }), [cones, rings, bands, unit, locale])
     const palette = { ...MAP_TONE_COLORS, ...colors }
 

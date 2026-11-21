@@ -15,6 +15,7 @@ declare global {
 function fakeMap() {
     const heard = new Map<string, Set<() => void>>()
     const images = new Set<string>()
+    const told = { count: 0 }
     const map = {
         on: (type: string, handler: () => void) => heard.set(type, (heard.get(type) ?? new Set()).add(handler)),
         off: (type: string, handler: () => void) => heard.get(type)?.delete(handler),
@@ -23,7 +24,7 @@ function fakeMap() {
         updateImage: () => undefined,
         removeImage: (name: string) => images.delete(name),
         addSource: () => undefined,
-        getSource: () => ({ setData: () => undefined }),
+        getSource: () => ({ setData: () => (told.count += 1) }),
         removeSource: () => undefined,
         addLayer: () => undefined,
         getLayer: () => undefined,
@@ -42,7 +43,7 @@ function fakeMap() {
     const fire = (type: string) => {
         for (const handler of heard.get(type) ?? []) handler()
     }
-    return { map: map as unknown as MapContextValue['map'], images, fire }
+    return { map: map as unknown as MapContextValue['map'], images, fire, told }
 }
 
 describe('a zone layer on a map whose style keeps changing', () => {
@@ -109,6 +110,56 @@ describe('a zone layer on a map whose style keeps changing', () => {
             expect(fake.images.has(lost)).toBe(true)
         } finally {
             document.createElement = create
+            act(() => root.unmount())
+            host.remove()
+        }
+    })
+
+    it('tells the map of its zones again only when what they hold changed, not each time they are built afresh', () => {
+        globalThis.IS_REACT_ACT_ENVIRONMENT = true
+        const fake = fakeMap()
+        const host = document.createElement('div')
+        document.body.append(host)
+        const value: MapContextValue = {
+            map: fake.map,
+            scope: host,
+            overlay: host,
+            corners: { 'top-left': host, 'top-right': host, 'bottom-left': host, 'bottom-right': host },
+            dark: true,
+            reading: 0,
+            selected: null,
+            select: () => undefined,
+            register: () => () => undefined,
+            holdCamera: () => undefined,
+            takeClicks: () => undefined,
+            labels: labelRegistry(),
+        }
+        const zone = (east: number) => ({
+            id: 'a',
+            area: [
+                [0, 0],
+                [east, 0],
+                [east, 1],
+            ] as [number, number][],
+            tone: 'hostile' as const,
+        })
+        const draw = (east: number) =>
+            act(() =>
+                root.render(
+                    <MapContext.Provider value={value}>
+                        <ZoneLayer id="warned" zones={[zone(east)]} />
+                    </MapContext.Provider>,
+                ),
+            )
+        const root = createRoot(host)
+        try {
+            draw(1)
+            const first = fake.told.count
+            for (let render = 0; render < 10; render += 1) draw(1)
+            expect(fake.told.count).toBe(first)
+            draw(2)
+            expect(fake.told.count).toBe(first + 1)
+        } finally {
             act(() => root.unmount())
             host.remove()
         }
