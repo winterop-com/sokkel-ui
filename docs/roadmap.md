@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.33.3** is the latest release (2026-11-21): the tracking add-on
+- **0.33.4** is the latest release (2026-11-21): `MarkdownLinks.href`, so a note link carries a real
+  address and opens in a new tab; a Mermaid diagram is drawn whole at any width; contract 0.33.4.
+- **0.33.3** (2026-11-21): the tracking add-on
   (`@winterop-com/sokkel-ui-tracking`: AIS, ADS-B, orbits, incidents, checks, sources and simulated
   feeds); `TrackLayer` with motion and the satellite kind, `geodesy`, the map's camera, rotation,
   dark street map and globe; `StatusWall`, `AlertTicker` and `Kiosk`; `useClock` and
