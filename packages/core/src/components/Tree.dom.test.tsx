@@ -125,6 +125,18 @@ describe('a level that did not load', () => {
     })
 })
 
+describe('a branch with nothing in it', () => {
+    it('opens by its arrow to a row that says it is empty, in the words given', async () => {
+        const nodes: TreeNode[] = [{ id: 'juniper', label: 'Juniper', children: [] }]
+        const at = await mount(<Tree nodes={nodes} label="Folders" words={{ emptyBranch: 'Nothing here' }} />)
+        const row = rowOf(at, 'juniper')
+        expect(row?.getAttribute('aria-expanded')).toBe('false')
+        await act(async () => row?.querySelector('button')?.click())
+        expect(rowOf(at, 'juniper')?.getAttribute('aria-expanded')).toBe('true')
+        expect(at.textContent).toContain('Nothing here')
+    })
+})
+
 describe('a row that moves', () => {
     it('keeps the press on its menu button, which the drag leaves alone', async () => {
         const at = await mount(

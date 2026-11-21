@@ -31,6 +31,7 @@ export interface TreeNode {
     label: string
     /** A short fact at the row's right end: a count, a code. */
     meta?: ReactNode
+    /** What is under the node. A list, even an empty one, makes it a branch, such as an empty folder; none makes it a leaf. */
     children?: readonly TreeNode[]
     /** Has children not given in `children`, which the tree's `loadChildren` brings when the node is first opened. */
     hasChildren?: boolean
@@ -62,13 +63,14 @@ const NO_TRAILS: readonly TreeTrail[] = []
 
 /**
  * A visible row: the node, how deep it is, and its parent. A row with a `status` stands under its
- * node for children still loading or refused; a row with a `trail` is a search result.
+ * node for children still loading or refused, or for an open branch with nothing in it; a row with
+ * a `trail` is a search result.
  */
 export interface TreeRow {
     node: TreeNode
     level: number
     parent: string | null
-    status?: 'loading' | 'failed'
+    status?: 'loading' | 'failed' | 'empty'
     trail?: TreeTrail
 }
 
@@ -81,6 +83,8 @@ export interface TreeWords {
     searching: string
     searchFailed: string
     empty: string
+    /** The row under an open branch with nothing in it. */
+    emptyBranch: string
     /** Said to a screen reader once a row is moved from the keyboard: where it went, its place counted from 1. */
     moved: (item: string, into: string, place: number, count: number) => string
     /** What `moved` calls the top level. */
@@ -95,6 +99,7 @@ export const TREE_WORDS: TreeWords = {
     searching: 'Searching',
     searchFailed: 'The search did not answer.',
     empty: 'Nothing matches.',
+    emptyBranch: 'Empty',
     moved: (item, into, place, count) => `${item} moved to ${place.toLocaleString('en-US')} of ${count.toLocaleString('en-US')} in ${into}`,
     topLevel: 'the top level',
 }
@@ -139,10 +144,9 @@ export function tabStop(shown: readonly TreeRow[], current: TreeRow | undefined)
     return shown.find((row) => row.status === undefined)
 }
 
-/** Whether a node opens: it has children, or is marked as having some not loaded yet. */
-export function isBranch(node: TreeNode, loads: TreeLoads = NO_LOADS): boolean {
-    const children = childrenOf(node, loads)
-    return children === undefined ? node.hasChildren === true : children.length > 0
+/** Whether a node opens: it is given a list of children, even an empty one, or is marked as having some to load. */
+export function isBranch(node: TreeNode, _loads: TreeLoads = NO_LOADS): boolean {
+    return node.children !== undefined || node.hasChildren === true
 }
 
 /** The ids of every node whose label or one of whose descendants' labels matches the query, with their ancestors. */
@@ -403,7 +407,8 @@ export function treeHolding(nodes: readonly TreeNode[], chosen: ReadonlySet<stri
 
 /**
  * The rows a reader sees: the open nodes' children in order, or every match and its ancestors while
- * searching. An open node whose children are not loaded yet shows a loading or a failed row under it.
+ * searching. An open node whose children are not loaded yet shows a loading or a failed row under it,
+ * and an open branch with nothing in it an empty row.
  */
 export function visibleRows(
     nodes: readonly TreeNode[],
@@ -418,8 +423,10 @@ export function visibleRows(
             rows.push({ node, level, parent })
             if (!isBranch(node, loads) || (matches === null && !open.has(node.id))) continue
             const children = childrenOf(node, loads)
-            if (children !== undefined) walk(children, level + 1, node.id)
-            else if (matches === null) {
+            if (children !== undefined && children.length > 0) walk(children, level + 1, node.id)
+            else if (children !== undefined) {
+                if (matches === null) rows.push({ node, level: level + 1, parent: node.id, status: 'empty' })
+            } else if (matches === null) {
                 const status = loads.get(node.id)?.state === 'failed' ? 'failed' : 'loading'
                 rows.push({ node, level: level + 1, parent: node.id, status })
             }
@@ -913,7 +920,7 @@ export function Tree({
                             </span>
                             <span className="truncate">{words.loading}</span>
                         </>
-                    ) : (
+                    ) : row.status === 'failed' ? (
                         <>
                             <span className="size-5 shrink-0" aria-hidden />
                             <span className="min-w-0 flex-1 truncate text-critical">{words.failed}</span>
@@ -925,6 +932,11 @@ export function Tree({
                                 <RotateCw className="size-3.5" aria-hidden />
                                 {words.retry}
                             </button>
+                        </>
+                    ) : (
+                        <>
+                            <span className="size-5 shrink-0" aria-hidden />
+                            <span className="truncate">{words.emptyBranch}</span>
                         </>
                     )}
                 </li>

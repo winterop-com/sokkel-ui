@@ -9355,7 +9355,9 @@ const DRIFT: Record<string, Record<string, readonly string[] | (() => boolean)>>
 }
 
 /** Differences where the spec is to change, by part and check, until the pin moves past the change: spec change pending. */
-const PENDING: Record<string, Record<string, string>> = {}
+const PENDING: Record<string, Record<string, string>> = {
+    'tree-select': { 'words.TREE_SELECT_WORDS.emptyBranch': 'an open branch with nothing in it says words.emptyBranch' },
+}
 
 // Markdown view
 

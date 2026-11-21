@@ -74,10 +74,25 @@ describe('a tree', () => {
         expect(visibleRows(lazy, new Set(['harbor']), null, done).map((row) => row.node.id)).toEqual(['harbor', 'reports'])
     })
 
-    test('stops counting a lazy node as a branch once it loads no children', () => {
-        const node: TreeNode = { id: 'juniper', label: 'Juniper', hasChildren: true }
-        expect(isBranch(node)).toBe(true)
-        expect(isBranch(node, new Map([['juniper', { state: 'done', children: [] }]]))).toBe(false)
+    test('counts a node given a list of children as a branch, an empty list too, and one with neither as a leaf', () => {
+        expect(isBranch({ id: 'juniper', label: 'Juniper', children: [] })).toBe(true)
+        expect(isBranch({ id: 'readme', label: 'Readme' })).toBe(false)
+        const lazy: TreeNode = { id: 'juniper', label: 'Juniper', hasChildren: true }
+        expect(isBranch(lazy)).toBe(true)
+        expect(isBranch(lazy, new Map([['juniper', { state: 'done', children: [] }]]))).toBe(true)
+    })
+
+    test('shows an empty row under an open branch with nothing in it, and none while searching', () => {
+        const nodes: TreeNode[] = [{ id: 'juniper', label: 'Juniper', children: [] }]
+        expect(visibleRows(nodes, new Set(['juniper']), null).map((row) => [row.node.id, row.level, row.status])).toEqual([
+            ['juniper', 1, undefined],
+            ['juniper', 2, 'empty'],
+        ])
+        expect(visibleRows(nodes, new Set(), null)).toHaveLength(1)
+        expect(visibleRows(nodes, new Set(['juniper']), new Set(['juniper']))).toHaveLength(1)
+        const lazy: TreeNode[] = [{ id: 'juniper', label: 'Juniper', hasChildren: true }]
+        const done = new Map<string, TreeLoad>([['juniper', { state: 'done', children: [] }]])
+        expect(visibleRows(lazy, new Set(['juniper']), null, done)[1].status).toBe('empty')
     })
 
     test('marks the ancestors of a choice among loaded children', () => {
@@ -164,6 +179,12 @@ describe('moving a node', () => {
             expect(treeTarget(VAULT, 'readme', row('plan', 'harbor'), 'before', undefined, banded)).toEqual({ into: 'harbor', index: 0 })
             expect(treeTarget(VAULT, 'readme', row('harbor', null), 'inside', undefined, banded)).toEqual({ into: 'harbor', index: 2 })
             expect(treeTarget(VAULT, 'notes', row('plan', 'harbor'), 'before', undefined, banded)).toEqual({ into: 'harbor', index: 0 })
+        })
+
+        test('takes a row inside a branch with nothing in it yet', () => {
+            expect(dropPart(16, 0, 32, isBranch(VAULT[1]))).toBe('inside')
+            expect(treeTarget(VAULT, 'readme', row('juniper', null), 'inside')).toEqual({ into: 'juniper', index: 0 })
+            expect(treeTarget(VAULT, 'readme', row('juniper', null), 'inside', undefined, banded)).toEqual({ into: 'juniper', index: 0 })
         })
 
         test('never offers a place beside a row of another band', () => {

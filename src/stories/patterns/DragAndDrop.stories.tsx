@@ -325,9 +325,10 @@ const RUNBOOKS: TreeNode[] = [
 
 /**
  * A tree whose order is the reader's: a row dragged by its upper or lower edge goes beside another,
- * reordering its level, and by its middle into a folder, a line or a ring showing where. Alt
- * (Option) with the arrows moves the focused row: up and down its level, right into the folder
- * above it, left out beside its folder.
+ * reordering its level, and by its middle into a folder, a line or a ring showing where; the empty
+ * folder larkspur opens to an Empty row and takes a row dropped on it. Alt (Option) with the arrows
+ * moves the focused row: up and down its level, right into the folder above it, left out beside its
+ * folder.
  */
 export const TreeOrder: StoryObj = {
     name: 'Tree order',
@@ -339,7 +340,7 @@ export const TreeOrder: StoryObj = {
                     label="Runbooks"
                     nodes={nodes}
                     selection="none"
-                    defaultExpanded={['harbor', 'juniper']}
+                    defaultExpanded={['harbor', 'juniper', 'larkspur']}
                     onMove={(id, into, index) => setNodes(moveTreeNode(nodes, id, { into, index }))}
                     className="p-1"
                 />
