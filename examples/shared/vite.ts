@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { Plugin } from 'vite'
 
 export interface PagePolicyOptions {
@@ -40,7 +43,45 @@ export function pagePolicy(options: PagePolicyOptions = {}): string {
  * opened: on the web, from a file in Electron and in Tauri's webview. The dev server is left
  * without it, since its module reloading runs inline scripts.
  */
-export function pagePolicyVite(options: PagePolicyOptions = {}): Plugin {
+export function pagePolicyVite(options: PagePolicyOptions = {}): Plugin[] {
+    return [sharedDepsVite(), pagePolicyBuild(options)]
+}
+
+/** The library modules this folder's sources import at run time, read from their import lines. */
+export function sharedLibraryImports(root = fileURLToPath(new URL('.', import.meta.url))): string[] {
+    const found = new Set<string>()
+    const walk = (dir: string): void => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+            if (entry.name === 'node_modules') continue
+            const path = join(dir, entry.name)
+            if (entry.isDirectory()) walk(path)
+            else if (/\.tsx?$/.test(entry.name) && !entry.name.endsWith('.test.ts')) {
+                for (const match of readFileSync(path, 'utf8').matchAll(
+                    /^import (?!type )[^'"]*from '(@winterop-com\/sokkel-ui\/[^']+)'/gm,
+                )) {
+                    found.add(match[1] as string)
+                }
+            }
+        }
+    }
+    walk(root)
+    return [...found].sort()
+}
+
+/**
+ * Vite's dev server finds what to bundle ahead by reading the app's own sources, never a package's.
+ * A library module only this folder imports would be served unbundled, and its CommonJS
+ * dependencies fail in the browser, so the dev server is told of them.
+ */
+function sharedDepsVite(): Plugin {
+    return {
+        name: 'tidevann-shared-deps',
+        apply: 'serve',
+        config: () => ({ optimizeDeps: { include: sharedLibraryImports() } }),
+    }
+}
+
+function pagePolicyBuild(options: PagePolicyOptions): Plugin {
     return {
         name: 'tidevann-page-policy',
         apply: 'build',

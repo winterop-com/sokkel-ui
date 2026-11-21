@@ -9,6 +9,11 @@
  *   `createAisDecoder`) and the whole picture read through the readers (`simulateCoast`).
  * - A machine's network connections, as connection records (`createNetworkSimulation`, for
  *   `createFlowTracker`).
+ * - Earthquakes, disasters and weather warnings, as their feeds answer (`simulateQuakes`,
+ *   `simulateDisasters` and `simulateWarnings`, for the readers of `events`).
+ * - Satellites as a catalog's elements and a station's position (`simulateOmmCsv` and
+ *   `simulateStation`, for the readers of `orbits`).
+ * - A server's answers to health checks (`simulateAnswer`, for `evaluateCheck`).
  *
  * `createSimClock` is the clock they are read at: a moment that plays at a multiple of real time,
  * pauses and seeks.
@@ -35,6 +40,8 @@ export {
     type CoastMotion,
     type CoastPicture,
 } from './simulate/coast'
+export { serverSpell, simulateAnswer, type ServerAnswer, type ServerSimOptions } from './simulate/health'
+export { simulateDisasters, simulateQuakes, simulateWarnings, type IncidentSimOptions } from './simulate/incidents'
 export {
     FLIGHT_CITIES,
     flightRoute,
@@ -59,4 +66,5 @@ export {
     type NetworkSimOptions,
     type NetworkSimulation,
 } from './simulate/network'
+export { ORBIT_EPOCH, simulateOmmCsv, simulateStation } from './simulate/orbits'
 export { encodeAisPosition, encodeAisStatic, type AisPositionReport, type AisStaticReport } from './simulate/nmea'

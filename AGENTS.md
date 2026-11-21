@@ -156,10 +156,14 @@ and ask before acting.
 - `examples/<name>/{web,electron,tauri}` holds working Tidevann apps on a simulated backend
   (`examples/shared`): every page, button, menu and setting does what it says, and a dashboard
   updates live. What cannot work is left out, never stubbed.
-- One exception to the simulated backend: the flight watch (`examples/flights`) may offer an opt-in
-  live public source (adsb.lol's API, read through its Electron shell). It is off by default, shows
-  the source's attribution while on, falls back to the simulation when it fails, and is never
-  reached from a story or a test.
+- Two exceptions to the simulated backend, and no more. The flight watch (`examples/flights`) may
+  offer an opt-in live public source (adsb.lol's API, read through its Electron shell). It is off by
+  default. The control site (`examples/control`) reads live public sources through its own proxy:
+  the USGS earthquake feed, GDACS's disaster events, MET Norway's weather warnings, CelesTrak's orbit
+  elements, wheretheiss.at's station position, adsb.lol's flights, the Norwegian Coastal
+  Administration's AIS stream, and the health of DHIS2's public demo server. They are on by default.
+  In both, a source shows its attribution while it is on and falls back to the simulation when it
+  fails. No story and no test ever reaches one.
 - An example installs the packages and imports only their public entry points, as any app does. A
   part it needs that the library lacks goes into the library, never into the example.
 - A library fix for a gap an example found updates that example in the same change, so it uses the

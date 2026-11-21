@@ -228,6 +228,49 @@ release and empties it.
 - `e2e/record-tiles.ts` records each story at the layout check's widths too, and the areas it names a
   step closer in; `e2e/tiles` gains the dark street map for the coast the watch stories draw and for
   the world from afar.
+- `@winterop-com/sokkel-ui-tracking/sources`: sources as plugins, and the one engine that runs them.
+  A `Source` is a plain object (its id, label and kind, how often it is read, the checks its answers
+  must pass, a live `read` and a `simulate` that stands in for it); `createSourceEngine` reads each
+  source when it is due (`poll`, which holds no timer of its own), judges what came back with
+  `evaluateCheck`, holds a steady status for it with a status monitor, keeps its latency over the
+  last reads and its changes of status, and raises a `SourceAlert` when the status changes. A live
+  read that comes back down shows the simulation and says so (`mode`, `fallback`); `setEnabled` and
+  `setLive` switch a source; `pauseHidden` leaves one with a budget unread while the page is hidden.
+  `snapshot` and `adopt` hand the whole state, or only the data that changed, to another window,
+  which can run on from it.
+- `/simulate` (tracking) gains simulated incidents, satellites and server answers, each in the shape
+  its real feed has: `simulateQuakes` (a USGS summary feed), `simulateDisasters` (a GDACS event
+  list) and `simulateWarnings` (MetAlerts, each warning with its area); `simulateOmmCsv` (a catalog
+  of twelve satellites as OMM in CSV, measured at `ORBIT_EPOCH`) and `simulateStation` (the
+  station's position as a position service answers); and `simulateAnswer` with `serverSpell`, a
+  server's answer to a health check after a latency that drifts, now and then slow and now and then
+  silent.
+- `@winterop-com/sokkel-ui-dhis2/checks`: `DHIS2_SAMPLE_ANSWERS`, what a server that is well answers
+  each check with, for an example, a story or a test with no server at hand.
+- `StatusWall` and `StatusTile` (`@winterop-com/sokkel-ui/StatusWall`): a wall of data sources for a
+  screen across a room. A tile says one source's status (`up`, `degraded`, `down`, `unknown`) as a
+  word with a dot, an edge and a glow in the status color (pulsing while down), one large figure
+  with its unit, a line of detail, its freshness, and its readings over time along the foot; with
+  `onSelect` or `href` the whole tile is one control. The wall fills each row with tiles no narrower
+  than `tile` (`sm`, `md`, `lg`) and wraps. Words: `statusWall.up`, `statusWall.degraded`,
+  `statusWall.down`, `statusWall.unknown`.
+- `AlertTicker` (`@winterop-com/sokkel-ui/AlertTicker`): the latest alerts in one strip, one at a
+  time, moving to the next every `interval` (5 s) with a short slide; it holds while `paused`, under
+  the pointer, with focus in it, where motion is reduced, and with fewer than two alerts. `index`,
+  `defaultIndex` and `onIndexChange` hold the alert shown from outside, and `onSelect` makes it a
+  button. Words: `alertTicker.empty`, `alertTicker.position`.
+- `Kiosk` (`@winterop-com/sokkel-ui/Kiosk`): the frame of a wall or kiosk view with no rail and no
+  top bar: a head (`mark`, `title`, `actions`, a large `clock`), a row of `figures`, the stage with
+  an `aside` beside it (`asideWidth`), and a `foot` strip. In a room narrower than 48rem it stacks
+  and scrolls down.
+- Example `examples/control`, Tidevann's control site: live feeds from many places, each a source
+  with its own checks, read by one engine and shown by a wall, an operator's console and a sources
+  page that read one state, kept in sync across windows and tabs (one window leads the reading, the
+  others follow and take over when it closes). Its live sources (USGS earthquakes, GDACS disasters,
+  MET Norway's weather warnings, CelesTrak's elements, wheretheiss.at, adsb.lol, the Norwegian
+  Coastal Administration's AIS stream and a public demo server's health) are read through a proxy
+  of its own with a fixed table of routes, caches and limits, and each falls back to its simulation.
+  Stories Apps/Control site (Wall, Operator, Sources), on the simulation alone.
 
 ## Changed
 
