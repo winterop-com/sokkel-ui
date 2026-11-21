@@ -1,0 +1,212 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "kiosk",
+    "kind": "pattern",
+    "status": "stable",
+    "renderers": {
+        "sokkel-ui": {
+            "state": "built",
+            "as_of": "f0e8943"
+        },
+        "sokkel-egui": {
+            "state": "missing",
+            "as_of": "5532f68",
+            "note": "Not built yet."
+        },
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "b99664f",
+            "note": "Not in sokkel-tui's reports as of b99664f."
+        }
+    },
+    "summary": "The frame of a wall or kiosk view, for a screen on a wall with nobody at a keyboard: no rail and no top bar, only a head (the mark, the title, quiet actions and a large clock), a row of counters, the stage with an aside beside it, and a strip along the bottom. It fills the height it is given on the app's background and the stage takes all the room the rest leaves. In a narrow room everything stacks and the frame scrolls down, never sideways.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/Kiosk.tsx"
+        ]
+    },
+    "anatomy": {
+        "frame": "The whole height it is given, on background in foreground, padded 12 with its pieces in a column 12 apart; 16 and 16 from a room 768 wide. What does not fit scrolls down inside it; nothing scrolls sideways. A region named by label.",
+        "head": "One row, centered, 12 apart, wrapping onto more lines 4 apart: the mark, the title taking the room left, then the actions and the clock at its end.",
+        "mark": "With mark: the app's mark before the title, at its own size.",
+        "title": "What the wall shows: the page's heading, text.page-title, cut to one line.",
+        "actions": "With actions: quiet buttons before the clock, 4 apart, in muted-foreground.",
+        "clock": "With clock: the time in tabular figures, never wrapping: text.page at 600 below 768 of the room, text.statistic from it.",
+        "figures": "With figures: a row of counters (parts/stat), 12 apart: as many equal columns as fit with none narrower than 144, each row filled to its ends, one column where the room is narrower.",
+        "stage": "All the room the rest leaves, never under 288 tall; what is put on it, such as a map, fills it edge to edge.",
+        "aside": "With aside: from 768 of the room, a column beside the stage at its end, 256, 320 or 384 wide and as tall as the stage, scrolling by itself; below it, under the stage at its own height.",
+        "foot": "With foot: a strip along the bottom, such as an alert ticker (parts/alert-ticker), never shrinking."
+    },
+    "standsOn": {
+        "default": "background"
+    },
+    "options": {
+        "mark": {
+            "type": "node",
+            "does": "The app's mark, before the title."
+        },
+        "title": {
+            "type": "node",
+            "does": "What the wall shows."
+        },
+        "clock": {
+            "type": "node",
+            "does": "The time, drawn large at the head's end."
+        },
+        "actions": {
+            "type": "node",
+            "does": "Quiet buttons at the head's end, before the clock."
+        },
+        "figures": {
+            "type": "node",
+            "does": "A row of counters under the head, each a stat."
+        },
+        "children": {
+            "type": "node",
+            "does": "The stage: what fills the room left, such as a map."
+        },
+        "aside": {
+            "type": "node",
+            "does": "Beside the stage in a wide room, under it in a narrow one."
+        },
+        "asideWidth": {
+            "values": [
+                "sm",
+                "md",
+                "lg"
+            ],
+            "default": "md",
+            "does": "The aside's width beside the stage: 256, 320 or 384."
+        },
+        "foot": {
+            "type": "node",
+            "does": "A strip along the bottom, such as an alert ticker."
+        },
+        "label": {
+            "type": "text",
+            "does": "Names the region for a screen reader."
+        }
+    },
+    "sizes": {
+        "frame": {
+            "padX": 12,
+            "padY": 12,
+            "gap": 12,
+            "note": "16, 16 and 16 from a room 768 wide."
+        },
+        "head": {
+            "gap": 12,
+            "text": "text.page-title"
+        },
+        "actions": {
+            "gap": 4
+        },
+        "clock": {
+            "text": "text.statistic",
+            "note": "text.page at 600 below 768 of the room."
+        },
+        "figures": {
+            "gap": 12
+        }
+    },
+    "layout": {
+        "wide": {
+            "value": 768,
+            "note": "The room's width, not the window's, from which the aside stands beside the stage."
+        },
+        "stageMinHeight": 288,
+        "figureMinWidth": 144,
+        "asideSm": 256,
+        "asideMd": 320,
+        "asideLg": 384,
+        "headRowGap": 4
+    },
+    "states": {
+        "rest": {
+            "means": "The frame drawn in a wide room: the aside beside the stage, the frame as tall as its room."
+        },
+        "stacked": {
+            "means": "Everything in one column, the frame scrolling down.",
+            "reached": "the room narrower than 768"
+        }
+    },
+    "pieces": {
+        "frame": {
+            "rest": {
+                "ground": "background",
+                "ink": "foreground"
+            }
+        },
+        "title": {
+            "rest": {
+                "text": "text.page-title"
+            }
+        },
+        "actions": {
+            "rest": {
+                "ink": "muted-foreground"
+            }
+        },
+        "clock": {
+            "rest": {
+                "text": "text.statistic"
+            },
+            "stacked": {
+                "text": "text.page",
+                "weight": 600
+            }
+        }
+    },
+    "breakpoints": {
+        "stacked": {
+            "width": "below 768",
+            "formFactors": [
+                "foldable folded 344",
+                "phone 360, 390, 430",
+                "foldable open 690"
+            ],
+            "does": [
+                "Measured on the frame's own room, not the window.",
+                "The aside goes under the stage at its own height, and the stage keeps at least 288 of height.",
+                "The frame's padding and gaps are 12 rather than 16, and the clock is text.page at 600.",
+                "The counters wrap to as many columns as fit at 144 each: two on a phone.",
+                "The frame scrolls down and never sideways."
+            ]
+        }
+    },
+    "keyboard": [
+        {
+            "keys": [
+                "Tab"
+            ],
+            "does": "Moves through the actions, then whatever the stage, the aside and the foot hold."
+        }
+    ],
+    "words": {},
+    "appText": {
+        "title": "The wall's title.",
+        "clock": "The time, as the app writes it.",
+        "label": "The region's name."
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The frame is a container (@container) and changes at @3xl, 48rem of its own width.",
+            "The stage's content is laid over the stage's box (absolute, inset 0) as a column whose children each take the room, so a map needs no height of its own.",
+            "The frame is h-full: its parent gives it a height, such as h-svh for a whole screen."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such pattern."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such pattern."
+        }
+    ]
+}
