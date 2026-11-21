@@ -33,6 +33,13 @@ release and empties it.
   light card.
 - After a route change, `Shell` (with `routeKey`) still moves the focus to the new page's heading, but
   shows no focus ring on it when the reader last pressed the pointer rather than a key.
+- A dark basemap in the light scheme, or a light one in the dark scheme, keeps its own place-name
+  colors, where they were inked in the page's colors and smeared over the map. `Basemap.tone` now
+  says whether a style basemap is light or dark; the library's basemaps say it.
+- A side panel's tabs stand as their icons, each named and with its label in a tooltip, when their
+  labels do not fit beside the panel's toggle, where they ran under it; tabs without icons scroll.
+- A status line keeps each fact whole but the last, which alone is cut short, where a short fact
+  could lose its value or run over the next on a narrow window.
 
 ## Added
 

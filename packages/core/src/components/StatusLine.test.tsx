@@ -34,4 +34,20 @@ describe('a status line', () => {
             /<div aria-hidden="true" class="h-shell-foot [^"]*bg-page-foot-ground[^"]* hidden md:flex md:peer-empty:hidden"><\/div>/,
         )
     })
+
+    it('keeps each fact whole but the last, which alone gives way, clipped inside its own box, when the strip is narrow', () => {
+        const html = renderToStaticMarkup(
+            <StatusLine note="Ready">
+                <StatusItem label="open alerts">3</StatusItem>
+                <StatusItem label="data">harbor, juniper, larkspur</StatusItem>
+            </StatusLine>,
+        )
+        const items = html.match(/<span class="[^"]*whitespace-nowrap[^"]*">/g) ?? []
+        expect(items).toHaveLength(2)
+        for (const item of items) {
+            expect(item).toContain(' shrink-0 ')
+            expect(item).toContain('last:shrink')
+            expect(item).toContain('overflow-hidden')
+        }
+    })
 })

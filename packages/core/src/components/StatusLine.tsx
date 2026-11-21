@@ -66,10 +66,14 @@ export interface StatusItemProps {
     code?: boolean
 }
 
-/** One fact at the foot strip's right end, an identifier in the code face when `code` is set. */
+/**
+ * One fact at the foot strip's right end, an identifier in the code face when `code` is set. Each
+ * fact keeps its whole width but the last, which alone gives way when the strip is narrow, its
+ * value cut short inside its own box, so no fact runs over the next.
+ */
 export function StatusItem({ label, children, code = false }: StatusItemProps) {
     return (
-        <span className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+        <span className="flex shrink-0 items-center gap-1.5 overflow-hidden whitespace-nowrap last:min-w-0 last:shrink">
             {label !== undefined && <span className="shrink-0 text-faint">{label}</span>}
             <span className={cn('min-w-0 truncate', code && 'font-mono text-foreground')}>{children}</span>
         </span>

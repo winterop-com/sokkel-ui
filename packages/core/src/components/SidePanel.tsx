@@ -1,19 +1,23 @@
 import { Tabs as TabsPrimitive } from '@base-ui/react/tabs'
 import type { LucideIcon } from 'lucide-react'
-import { useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 import { ShellDesktop, ShellPanelStrip } from './shell-context'
 import { GroupLabel } from './GroupLabel'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { useWords, type WordsPart } from '../lib/words'
 
 /** One tab of a side panel. */
 export interface SidePanelTab {
     id: string
     label: string
-    /** Drawn over the label in the shell's tab strip on a phone (`Shell`'s `panelStrip`). */
+    /**
+     * Drawn over the label in the shell's tab strip on a phone (`Shell`'s `panelStrip`), and in
+     * place of it in the header when the labels do not fit beside the header's toggle.
+     */
     icon?: LucideIcon
     content: ReactNode
 }
@@ -67,6 +71,10 @@ export interface SidePanelProps {
  *
  * The header lines up with the shell's top bar, so the panel reads as a column of the shell, not
  * as a card dropped beside the page.
+ *
+ * When the tabs' labels do not fit the header beside its toggle, tabs that each have an `icon`
+ * stand as their icons, each named by its label and showing it in a tooltip; tabs without icons
+ * keep their labels and scroll sideways. Either way a tab never runs under the toggle.
  *
  * Left to itself the panel holds which tab is shown, starting at `defaultActive` or the first tab;
  * `active` with `onActiveChange` holds it from outside.
@@ -125,6 +133,10 @@ export function SidePanel({
     }, [publish, signature, currentId])
     useEffect(() => (publish === undefined ? undefined : () => publish(null)), [publish])
     const panel = useRef<HTMLElement>(null)
+    const fits = useLabelsFit(
+        tabs.every((tab) => tab.icon !== undefined),
+        signature,
+    )
     const desktop = useContext(ShellDesktop)
     const held = usePanelSize({
         size,
@@ -170,24 +182,55 @@ export function SidePanel({
                             {current?.label}
                         </h2>
                     ) : (
-                        <TabsPrimitive.Root value={current?.id} onValueChange={(id) => choose(String(id))} className="flex min-w-0">
-                            <TabsPrimitive.List className="flex min-w-0 items-center gap-1">
-                                {tabs.map((tab) => (
-                                    <TabsPrimitive.Tab
-                                        key={tab.id}
-                                        value={tab.id}
-                                        id={tabId(tab.id)}
-                                        aria-controls={panelId}
-                                        className={cn(
-                                            'h-7 shrink-0 rounded-md px-2.5 text-sm outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid',
-                                            tab.id === current?.id
-                                                ? 'bg-secondary font-medium text-foreground'
-                                                : 'text-muted-foreground hover:bg-hover hover:text-foreground',
-                                        )}
-                                    >
-                                        {tab.label}
-                                    </TabsPrimitive.Tab>
-                                ))}
+                        <TabsPrimitive.Root
+                            ref={fits.room}
+                            data-slot="side-panel-tabs"
+                            value={current?.id}
+                            onValueChange={(id) => choose(String(id))}
+                            className="relative flex min-w-0 flex-1"
+                        >
+                            {fits.measured && (
+                                <div
+                                    ref={fits.measure}
+                                    aria-hidden
+                                    data-slot="side-panel-tabs-measure"
+                                    className="invisible absolute top-0 left-0 flex w-max items-center gap-1"
+                                >
+                                    {tabs.map((tab) => (
+                                        <span key={tab.id} className={cn(TAB_CLASS, 'inline-flex items-center')}>
+                                            {tab.label}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            <TabsPrimitive.List className={cn('flex min-w-0 items-center gap-1', !fits.measured && 'overflow-x-auto')}>
+                                {tabs.map((tab) => {
+                                    const Icon = tab.icon
+                                    const className = cn(
+                                        TAB_CLASS,
+                                        Icon !== undefined && !fits.labels && 'inline-flex w-8 items-center justify-center px-0',
+                                        tab.id === current?.id
+                                            ? 'bg-secondary font-medium text-foreground'
+                                            : 'text-muted-foreground hover:bg-hover hover:text-foreground',
+                                    )
+                                    const props = { value: tab.id, id: tabId(tab.id), 'aria-controls': panelId }
+                                    if (Icon === undefined || fits.labels)
+                                        return (
+                                            <TabsPrimitive.Tab key={tab.id} {...props} className={className}>
+                                                {tab.label}
+                                            </TabsPrimitive.Tab>
+                                        )
+                                    return (
+                                        <Tooltip key={tab.id}>
+                                            <TooltipTrigger
+                                                render={<TabsPrimitive.Tab {...props} aria-label={tab.label} className={className} />}
+                                            >
+                                                <Icon aria-hidden className="size-4" />
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom">{tab.label}</TooltipContent>
+                                        </Tooltip>
+                                    )
+                                })}
                             </TabsPrimitive.List>
                         </TabsPrimitive.Root>
                     )}
@@ -202,6 +245,30 @@ export function SidePanel({
             </aside>
         </>
     )
+}
+
+const TAB_CLASS =
+    'h-7 shrink-0 rounded-md px-2.5 text-sm whitespace-nowrap outline-none focus-visible:outline-focus focus-visible:outline-offset-focus focus-visible:outline-ring focus-visible:outline-solid'
+
+/**
+ * Whether a header's tabs show their labels: measured against the room the tabs have, from a hidden
+ * copy of the labelled tabs, and again as either changes or the labels do. Only tabs that can all
+ * stand as icons are measured; the others always keep their labels.
+ */
+function useLabelsFit(measured: boolean, labels: string) {
+    const [room, setRoom] = useState<HTMLElement | null>(null)
+    const [measure, setMeasure] = useState<HTMLElement | null>(null)
+    const [fit, setFit] = useState(true)
+    useLayoutEffect(() => {
+        if (!measured || room === null || measure === null) return
+        const check = () => setFit(measure.scrollWidth <= room.clientWidth + 0.5)
+        check()
+        const observer = new ResizeObserver(check)
+        observer.observe(room)
+        observer.observe(measure)
+        return () => observer.disconnect()
+    }, [measured, room, measure, labels])
+    return { measured, labels: !measured || fit, room: setRoom, measure: setMeasure }
 }
 
 export interface PanelSectionProps {
