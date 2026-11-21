@@ -582,6 +582,49 @@ describe('what the tree port found', () => {
         expect(find(parseMarkdown('a \\= ==b== \\=c'), 'highlight')).toHaveLength(1)
         expect(find(parseMarkdown('[[a\\=\\=b]] ==c=='), 'wikiLink')[0].target).not.toContain('\uFDD0')
     })
+
+    it('reads an escaped `[[`, `![[` and `#` as the words they are, wherever the escape stands', () => {
+        const shape = (tree: MarkdownTree) =>
+            (tree.children[0].children ?? []).map((node) => (node.type === 'text' ? node.value : `${node.type}:${node.target ?? ''}`))
+        expect(shape(parseMarkdown('\\[[old]] \\![[pic.png]] \\#hidden but [[real]]'))).toEqual([
+            '[[old]] !',
+            'wikiLink:pic.png',
+            ' #hidden but ',
+            'wikiLink:real',
+        ])
+        for (const text of [
+            '\\[[old]]',
+            '\\#hidden',
+            '\\![[pic.png]]',
+            '> \\[[old]] \\#hidden',
+            '- \\[[old]]\n- \\#hidden',
+            'a \\[[old]] b',
+        ]) {
+            const tree = parseMarkdown(text)
+            expect(find(tree, 'wikiLink'), text).toHaveLength(text.includes('![[') ? 1 : 0)
+            expect(find(tree, 'tag'), text).toHaveLength(0)
+            expect(find(tree, 'embed'), text).toHaveLength(0)
+            expect(
+                nodes(tree).some((node) => Object.values(node).some((field) => typeof field === 'string' && /[\uFDD0-\uFDD3]/.test(field))),
+                text,
+            ).toBe(false)
+        }
+        expect(find(parseMarkdown('\\#hidden'), 'text')[0].value).toBe('#hidden')
+        expect(find(parseMarkdown('- \\[[old]]'), 'text')[0].value).toBe('[[old]]')
+        expect(find(parseMarkdown('x \\#a #b'), 'tag').map((node) => node.tag)).toEqual(['b'])
+    })
+
+    it('keeps each node where it was written when an escape opens the text', () => {
+        const text = '\\[[old]] [[real]] \\#hidden #seen'
+        const tree = parseMarkdown(text, { positions: true })
+        const placed = (node: MarkdownNode) => {
+            const at = node.position as { start: { offset: number }; end: { offset: number } }
+            return text.slice(at.start.offset, at.end.offset)
+        }
+        expect(placed(find(tree, 'wikiLink')[0])).toBe('[[real]]')
+        expect(placed(find(tree, 'tag')[0])).toBe('#seen')
+        expect(placed(find(tree, 'text')[0])).toBe('\\[[old]] ')
+    })
 })
 
 describe('positions on the nodes notes add', () => {
