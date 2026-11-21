@@ -2,6 +2,9 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { renderToStaticMarkup } from 'react-dom/server'
+import remarkGfm from 'remark-gfm'
+import remarkParse from 'remark-parse'
+import { unified } from 'unified'
 import { describe, expect, it } from 'vitest'
 
 import { loadMath, Markdown } from '../components/Markdown'
@@ -17,24 +20,47 @@ function nodes(node: MarkdownNode | MarkdownTree): MarkdownNode[] {
 
 const find = (tree: MarkdownTree, type: string) => nodes(tree).filter((node) => node.type === type)
 
+/** The fastest of five runs of each, run in turn so a busy machine slows both alike. */
+function fastest(reads: (() => unknown)[]): number[] {
+    const best = reads.map(() => Number.POSITIVE_INFINITY)
+    for (let run = 0; run < 5; run += 1) {
+        reads.forEach((read, index) => {
+            const started = performance.now()
+            read()
+            best[index] = Math.min(best[index], performance.now() - started)
+        })
+    }
+    return best
+}
+
 /**
  * Fails when reading `n` repeats takes far more than eight times reading an eighth as many: in step
- * with the length it is about eight, while a reading that backtracks takes sixty-four and more. The two
- * are run in turn, five times each, and the fastest of each kept, so a busy machine slows both alike.
+ * with the length it is about eight, while a reading that backtracks takes sixty-four and more.
  */
 function expectInStep(read: (n: number) => unknown, n: number): void {
-    let short = Number.POSITIVE_INFINITY
-    let long = Number.POSITIVE_INFINITY
-    for (let run = 0; run < 5; run += 1) {
-        let started = performance.now()
-        read(Math.round(n / 8))
-        short = Math.min(short, performance.now() - started)
-        started = performance.now()
-        read(n)
-        long = Math.min(long, performance.now() - started)
-    }
+    const [short, long] = fastest([() => read(Math.round(n / 8)), () => read(n)])
     if (long < 200) return
     expect(long / Math.max(short, 1)).toBeLessThan(24)
+}
+
+const gfm = unified().use(remarkParse).use(remarkGfm)
+
+/**
+ * Fails when reading `n` repeats of `unit` grows far faster than the markdown parser under it reads
+ * them. One long paragraph of emphasis already grows faster than its length there, and more so on a
+ * slow machine, so the reading on top is held to the parser's own growth rather than to eight.
+ */
+function expectInStepWithParser(read: (text: string) => unknown, unit: string, n: number): void {
+    const small = unit.repeat(Math.round(n / 8))
+    const large = unit.repeat(n)
+    const [short, long, parserShort, parserLong] = fastest([
+        () => read(small),
+        () => read(large),
+        () => gfm.runSync(gfm.parse(small)),
+        () => gfm.runSync(gfm.parse(large)),
+    ])
+    if (long < 200) return
+    expect(long / Math.max(short, 1) / (parserLong / Math.max(parserShort, 1))).toBeLessThan(3)
 }
 
 const NOTE = `---
@@ -89,7 +115,12 @@ describe('parseMarkdown', () => {
         expect(tree.children[0]).toEqual({
             type: 'yaml',
             value: 'title: Nightly export\nowner: grace\nsteps: [fetch, transform, validate]\nreviewed: 2026-11-02',
-            properties: { title: 'Nightly export', owner: 'grace', steps: ['fetch', 'transform', 'validate'], reviewed: '2026-11-02' },
+            properties: {
+                title: 'Nightly export',
+                owner: 'grace',
+                steps: ['fetch', 'transform', 'validate'],
+                reviewed: '2026-11-02',
+            },
         })
         expect(frontmatterOf(tree)?.properties?.owner).toBe('grace')
         expect(frontmatterOf(parseMarkdown('# No frontmatter'))).toBeUndefined()
@@ -110,7 +141,11 @@ describe('parseMarkdown', () => {
                 label: 'the steps',
                 children: [{ type: 'text', value: 'the steps' }],
             },
-            { type: 'wikiLink', target: 'harbor', children: [{ type: 'text', value: 'harbor' }] },
+            {
+                type: 'wikiLink',
+                target: 'harbor',
+                children: [{ type: 'text', value: 'harbor' }],
+            },
         ])
         expect(find(tree, 'tag')).toEqual([{ type: 'tag', tag: 'runbook' }])
         expect(find(tree, 'embed')).toEqual([
@@ -121,8 +156,20 @@ describe('parseMarkdown', () => {
                 heading: 'Steps',
                 children: [{ type: 'text', value: 'Retry a run › Steps' }],
             },
-            { type: 'embed', kind: 'image', target: 'runs.png', alt: 'runs.png', width: 320, height: 200 },
-            { type: 'embed', kind: 'file', target: 'export.log', children: [{ type: 'text', value: 'export.log' }] },
+            {
+                type: 'embed',
+                kind: 'image',
+                target: 'runs.png',
+                alt: 'runs.png',
+                width: 320,
+                height: 200,
+            },
+            {
+                type: 'embed',
+                kind: 'file',
+                target: 'export.log',
+                children: [{ type: 'text', value: 'export.log' }],
+            },
         ])
         // A note embed alone in a paragraph stands as a block.
         expect(tree.children.some((node) => node.type === 'embed' && node.kind === 'note')).toBe(true)
@@ -133,15 +180,31 @@ describe('parseMarkdown', () => {
         expect(warning).toMatchObject({
             kind: 'warning',
             marker: 'warning',
-            children: [{ type: 'calloutTitle', children: [{ type: 'text', value: 'Before a rerun' }] }, { type: 'paragraph' }],
+            children: [
+                {
+                    type: 'calloutTitle',
+                    children: [{ type: 'text', value: 'Before a rerun' }],
+                },
+                { type: 'paragraph' },
+            ],
         })
         expect(warning.fold).toBeUndefined()
-        expect(todo).toMatchObject({ kind: 'note', marker: 'todo', fold: 'closed', children: [{ type: 'calloutTitle' }, { type: 'list' }] })
+        expect(todo).toMatchObject({
+            kind: 'note',
+            marker: 'todo',
+            fold: 'closed',
+            children: [{ type: 'calloutTitle' }, { type: 'list' }],
+        })
         expect(find(parseMarkdown('> [!NOTE]\n> Body'), 'calloutTitle')).toEqual([])
     })
 
     it('reads highlights, parts and math, and leaves comments out', () => {
-        expect(find(tree, 'highlight')).toEqual([{ type: 'highlight', children: [{ type: 'text', value: 'never writes back' }] }])
+        expect(find(tree, 'highlight')).toEqual([
+            {
+                type: 'highlight',
+                children: [{ type: 'text', value: 'never writes back' }],
+            },
+        ])
         expect(find(tree, 'part')).toEqual([{ type: 'part', id: 'state' }])
         expect(find(tree, 'inlineMath').map((node) => node.value)).toEqual(['f = n_\\text{failed}'])
         expect(find(tree, 'math').map((node) => node.value)).toEqual(['x^2'])
@@ -155,8 +218,13 @@ describe('parseMarkdown', () => {
     })
 
     it('keeps positions that point into the text as given, past the frontmatter', () => {
-        const placed = parseMarkdown('---\na: 1\n---\n# Steps', { positions: true })
-        expect(placed.children[0].position).toEqual({ start: { line: 1, column: 1, offset: 0 }, end: { line: 3, column: 4, offset: 12 } })
+        const placed = parseMarkdown('---\na: 1\n---\n# Steps', {
+            positions: true,
+        })
+        expect(placed.children[0].position).toEqual({
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 3, column: 4, offset: 12 },
+        })
         expect((placed.children[1].position as { start: { line: number } }).start.line).toBe(4)
     })
 
@@ -188,7 +256,10 @@ describe('parseMarkdown', () => {
     })
 
     it('reads less when asked', () => {
-        const plain = parseMarkdown('[[harbor]] #runbook $x$ ---', { wikiLinks: false, math: false })
+        const plain = parseMarkdown('[[harbor]] #runbook $x$ ---', {
+            wikiLinks: false,
+            math: false,
+        })
         expect(find(plain, 'wikiLink')).toEqual([])
         expect(find(plain, 'tag')).toEqual([])
         expect(find(plain, 'inlineMath')).toEqual([])
@@ -276,12 +347,22 @@ describe('what a review found', () => {
             children: [
                 {
                     type: 'paragraph',
-                    data: { hName: 'iframe', hProperties: { srcDoc: '<script>alert(1)</script>' } },
+                    data: {
+                        hName: 'iframe',
+                        hProperties: { srcDoc: '<script>alert(1)</script>' },
+                    },
                     children: [{ type: 'text', value: 'x' }],
                 },
                 {
                     type: 'paragraph',
-                    data: { hName: 'div', hProperties: { dangerouslySetInnerHTML: { __html: '<img src=x onerror=alert(2)>' } } },
+                    data: {
+                        hName: 'div',
+                        hProperties: {
+                            dangerouslySetInnerHTML: {
+                                __html: '<img src=x onerror=alert(2)>',
+                            },
+                        },
+                    },
                     children: [],
                 },
                 {
@@ -346,7 +427,11 @@ describe('what a review found', () => {
 
     it('keeps a link’s words whole, and highlights a link', () => {
         expect(find(parseMarkdown('[[a==b==c]]'), 'wikiLink')).toEqual([
-            { type: 'wikiLink', target: 'a==b==c', children: [{ type: 'text', value: 'a==b==c' }] },
+            {
+                type: 'wikiLink',
+                target: 'a==b==c',
+                children: [{ type: 'text', value: 'a==b==c' }],
+            },
         ])
         const [marked] = find(parseMarkdown('==[[harbor]]=='), 'highlight')
         expect(marked.children?.[0].type).toBe('wikiLink')
@@ -388,8 +473,9 @@ describe('what a second review found', () => {
 
     // Tried again on a spike of load: a reading that backtracks fails every try.
     it('reads many highlights opened across inline nodes in linear time', { retry: 3 }, () => {
-        expectInStep((n) => parseMarkdown('==a *b* '.repeat(n), { math: false }), 4_000)
-        expectInStep((n) => parseMarkdown('==a [[b]] '.repeat(n), { math: false }), 3_200)
+        const read = (text: string) => parseMarkdown(text, { math: false })
+        expectInStepWithParser(read, '==a *b* ', 4_000)
+        expectInStepWithParser(read, '==a [[b]] ', 3_200)
         expect(find(parseMarkdown('===a *b* c=='), 'highlight')).toHaveLength(1)
     })
 
@@ -401,15 +487,46 @@ describe('what a second review found', () => {
             { type: 'root', children: [null, 7, 'x'] },
             {
                 type: 'root',
-                children: [{ type: 'paragraph', children: [{ type: 'link', url: 5, children: [{ type: 'text', value: 'a' }] }] }],
+                children: [
+                    {
+                        type: 'paragraph',
+                        children: [
+                            {
+                                type: 'link',
+                                url: 5,
+                                children: [{ type: 'text', value: 'a' }],
+                            },
+                        ],
+                    },
+                ],
             },
             { type: 'root', children: [{ type: 'code', lang: 5, value: 'x' }] },
-            { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'wikiLink', target: { toString: 1 }, children: [] }] }] },
-            { type: 'root', children: [{ type: 'heading', depth: 99, children: [{ type: 'text', value: 'deep' }] }] },
+            {
+                type: 'root',
+                children: [
+                    {
+                        type: 'paragraph',
+                        children: [{ type: 'wikiLink', target: { toString: 1 }, children: [] }],
+                    },
+                ],
+            },
+            {
+                type: 'root',
+                children: [
+                    {
+                        type: 'heading',
+                        depth: 99,
+                        children: [{ type: 'text', value: 'deep' }],
+                    },
+                ],
+            },
         ]
         let deep: Record<string, unknown> = { type: 'text', value: 'bottom' }
         for (let level = 0; level < 5_000; level += 1) deep = { type: 'emphasis', children: [deep] }
-        trees.push({ type: 'root', children: [{ type: 'paragraph', children: [deep] }] })
+        trees.push({
+            type: 'root',
+            children: [{ type: 'paragraph', children: [deep] }],
+        })
         for (const tree of trees) {
             expect(() => renderToStaticMarkup(<PlainMarkdown tree={tree as MarkdownTree} links={LINKS} />)).not.toThrow()
         }
