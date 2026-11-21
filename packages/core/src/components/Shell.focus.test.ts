@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { awaitHeading, focusHeading, headingMarks } from './Shell'
+import { awaitHeading, focusHeading, headingMarks, watchInput } from './Shell'
 
 /** A heading as much as the helpers touch: whether it shows, its words, its tab index, focus and blur. */
 function heading({
@@ -22,6 +22,8 @@ function heading({
         closest: () => (hiddenBy ? {} : null),
         hasAttribute: (name: string) => attributes.has(name),
         removeAttribute: (name: string) => attributes.delete(name),
+        setAttribute: (name: string, value: string) => attributes.set(name, value),
+        getAttribute: (name: string) => attributes.get(name) ?? null,
         addEventListener: (_type: string, listener: () => void) => blurs.push(listener),
         focus: () => {
             node.focused = true
@@ -56,6 +58,31 @@ describe('focusHeading', () => {
     it('does nothing for a page without a heading, or before the page area is there', () => {
         expect(focusHeading(area())).toBe(false)
         expect(focusHeading(null)).toBe(false)
+    })
+})
+
+describe('focusHeading’s ring', () => {
+    // The page's input listeners, as `watchInput` adds them once.
+    const input = new Map<string, () => void>()
+    vi.stubGlobal('addEventListener', (type: string, listener: () => void) => input.set(type, listener))
+    watchInput()
+    vi.unstubAllGlobals()
+    const press = (type: string) => input.get(type)?.()
+
+    it('shows no ring when the route moved from the pointer, until the focus leaves', () => {
+        press('pointerdown')
+        const h1 = heading()
+        focusHeading(area(h1))
+        expect(h1.attributes.has('data-focus-quiet')).toBe(true)
+        h1.blur()
+        expect(h1.attributes.has('data-focus-quiet')).toBe(false)
+    })
+
+    it('shows the ring when the route moved from the keyboard', () => {
+        press('keydown')
+        const h1 = heading()
+        focusHeading(area(h1))
+        expect(h1.attributes.has('data-focus-quiet')).toBe(false)
     })
 })
 

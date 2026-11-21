@@ -1,23 +1,23 @@
 {
     "forms": {
         "engines": [],
-        "start": 197.3,
+        "start": 197.5,
         "lazy": 67.5,
         "css": 54
     },
     "forms-lean": {
         "engines": [],
-        "start": 197.3,
+        "start": 197.5,
         "lazy": 67.5,
         "css": 23.4
     },
     "dashboard": {
         "engines": ["echarts", "dnd-kit"],
-        "start": 213.9,
+        "start": 214.1,
         "lazy": 470.7,
         "css": 54.2,
         "first": {
-            "budget": 411.4,
+            "budget": 411.6,
             "fetches": [
                 "packages/charts/dist/engine.js",
                 "packages/charts/dist/kinds/categories.js",

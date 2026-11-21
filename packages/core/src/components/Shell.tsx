@@ -157,11 +157,27 @@ export type HeadingMarks = readonly (readonly [HTMLElement, string | null])[]
 export const headingMarks = (area: ParentNode | null): HeadingMarks =>
     [...(area?.querySelectorAll('h1') ?? [])].map((h) => [h, h.textContent])
 
+/** Whether the reader last pressed the pointer rather than a key. */
+let pointerLast = false
+let watching = false
+
+/**
+ * Starts noting whether the reader last pressed the pointer or a key, once for the page, so a heading
+ * a route focuses shows its ring only after a key.
+ */
+export function watchInput(): void {
+    if (watching || typeof addEventListener !== 'function') return
+    watching = true
+    addEventListener('pointerdown', () => (pointerLast = true), { capture: true, passive: true })
+    addEventListener('keydown', () => (pointerLast = false), { capture: true, passive: true })
+}
+
 /**
  * Moves the focus to the first `h1` in a page's area a reader can see (laid out, outside any inert
  * or `aria-hidden` part) that is none of `before`, the headings shown before the route changed,
- * unless its words changed. It is focusable only until the focus leaves it unless it was already;
- * false when the area has none.
+ * unless its words changed. It is focusable only until the focus leaves it unless it was already,
+ * and shows no ring when the reader last pressed the pointer (`watchInput`); false when the area
+ * has none.
  */
 export function focusHeading(area: ParentNode | null, before: HeadingMarks = []): boolean {
     const heading = headingMarks(area).find(
@@ -172,6 +188,11 @@ export function focusHeading(area: ParentNode | null, before: HeadingMarks = [])
     if (!heading.hasAttribute('tabindex')) {
         heading.tabIndex = -1
         heading.addEventListener('blur', () => heading.removeAttribute('tabindex'), { once: true })
+    }
+    // Moved there by the pointer, the heading shows no ring until the focus leaves it.
+    if (pointerLast) {
+        heading.setAttribute('data-focus-quiet', '')
+        heading.addEventListener('blur', () => heading.removeAttribute('data-focus-quiet'), { once: true })
     }
     heading.focus()
     return true
@@ -475,6 +496,7 @@ export function Shell({
     // The page's area, its head and its scroller, where its heading is looked for.
     const [page, setPage] = useState<HTMLElement | null>(null)
     // The headings shown as the route changes are read before the new page draws, so none is taken for the new one's.
+    useEffect(watchInput, [])
     const [moved, setMoved] = useState<[Key | undefined, HeadingMarks?]>([routeKey])
     if (moved[0] !== routeKey) setMoved([routeKey, headingMarks(page)])
     useEffect(() => (page && moved[1] ? awaitHeading(page, moved[1]) : undefined), [moved, page])
