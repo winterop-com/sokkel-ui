@@ -682,3 +682,49 @@ describe('positions on the nodes notes add', () => {
         expect(nodes(parseMarkdown(TEXT)).some((node) => node.position !== undefined)).toBe(false)
     })
 })
+
+describe('a %% comment', () => {
+    const paragraphs = (text: string) =>
+        find(parseMarkdown(text), 'paragraph').map((node) =>
+            nodes(node)
+                .filter((n) => n.type === 'text')
+                .map((n) => n.value)
+                .join(''),
+        )
+
+    it('is never drawn inline, as an HTML comment is not', () => {
+        expect(paragraphs('Before %%hidden%% after.')).toEqual(['Before  after.'])
+        expect(paragraphs('Before %% a [[note]] and #tag %% after.')).toEqual(['Before  after.'])
+        expect(find(parseMarkdown('Before %% a [[note]] and #tag %% after.'), 'wikiLink')).toHaveLength(0)
+    })
+
+    it('hides a block over several lines, blank ones and blocks inside it included', () => {
+        const tree = parseMarkdown('First.\n\n%%\nhidden\n\n- a list\n\n# a heading\n%%\n\nLast.')
+        expect(paragraphs('First.\n\n%%\nhidden\n\n- a list\n\n# a heading\n%%\n\nLast.')).toEqual(['First.', 'Last.'])
+        expect(find(tree, 'list')).toHaveLength(0)
+        expect(find(tree, 'heading')).toHaveLength(0)
+        expect(tree.children).toHaveLength(2)
+    })
+
+    it('is words inside code, written escaped, or left open', () => {
+        expect(find(parseMarkdown('Run `%%x%%` now.'), 'inlineCode')[0]?.value).toBe('%%x%%')
+        expect(find(parseMarkdown('```\n%% kept %%\n```'), 'code')[0]?.value).toBe('%% kept %%')
+        expect(paragraphs('A \\%%not hidden%% here.')).toEqual(['A %%not hidden%% here.'])
+        expect(paragraphs('Open %% and never closed.')).toEqual(['Open %% and never closed.'])
+    })
+
+    it('reads many comments between code spans in linear time', { retry: 3 }, () => {
+        const read = (text: string) => parseMarkdown(text, { math: false })
+        expectInStepWithParser(read, '%%a%% `b%%` ', 3_000)
+        expectInStepWithParser(read, '`a` %% ', 3_000)
+    })
+
+    it('keeps the place of what follows it', () => {
+        const text = 'A %%x%% [[note]] b'
+        const at = find(parseMarkdown(text, { positions: true }), 'wikiLink')[0]?.position as {
+            start: { offset: number }
+            end: { offset: number }
+        }
+        expect(text.slice(at.start.offset, at.end.offset)).toBe('[[note]]')
+    })
+})

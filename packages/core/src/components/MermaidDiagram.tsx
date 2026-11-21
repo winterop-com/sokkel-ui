@@ -5,7 +5,7 @@ import { useWords, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import { cssPixels } from '../lib/css-pixels'
 import { CopyButton } from './CopyButton'
-import { mermaidConfig } from './mermaid-config'
+import { mermaidConfig, plotVariables } from './mermaid-config'
 import { useWindowedPane, WindowedPane, WindowedPaneButton } from './WindowedPane'
 
 let count = 0
@@ -54,7 +54,7 @@ function tokenHex(name: string, probe: HTMLElement, context: CanvasRenderingCont
  * Mermaid's theme variables from the tokens and typeface where the diagram sits, so a theme or face
  * scoped to an element around it reaches it too. Its text is small text, `--text-xs`, in pixels.
  */
-function themeVariables(host: HTMLElement): Record<string, string> {
+function themeVariables(host: HTMLElement): Record<string, unknown> {
     const probe = document.createElement('span')
     probe.hidden = true
     host.append(probe)
@@ -94,6 +94,7 @@ function themeVariables(host: HTMLElement): Record<string, string> {
             actorTextColor: hex('foreground'),
             signalColor: hex('muted-foreground'),
             signalTextColor: hex('foreground'),
+            ...plotVariables(hex),
         }
     } finally {
         probe.remove()
