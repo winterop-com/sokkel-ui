@@ -4,9 +4,20 @@
     "kind": "part",
     "status": "preview",
     "renderers": {
-        "sokkel-ui": {"state": "built", "as_of": "f0e8943"},
-        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
-        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+        "sokkel-ui": {
+            "state": "built",
+            "as_of": "f0e8943"
+        },
+        "sokkel-egui": {
+            "state": "missing",
+            "as_of": "5532f68",
+            "note": "Not built yet."
+        },
+        "sokkel-tui": {
+            "state": "missing",
+            "as_of": "b99664f",
+            "note": "Not in sokkel-tui's reports as of b99664f."
+        }
     },
     "summary": "A wall of data sources for a screen across a room. Each tile is one source: its name under a quiet caption, its status as a word with a dot, one large figure with its unit, a line of detail, its freshness, and its readings over time faint along the foot. The status colors the tile's edge and a glow under it: good while up, warning while degraded, critical and slowly pulsing while down, no color and a hollow dot while unknown. The wall fills each row with as many tiles as fit and wraps, never scrolling sideways.",
     "sources": {
@@ -32,65 +43,169 @@
         "unit": "The figure's unit after its value, on one baseline: text.sm in muted-foreground.",
         "detail": "With detail: one line at text.help in muted-foreground, cut with an ellipsis.",
         "foot": "With updatedAt: the freshness (parts/freshness) at the end of a line pushed to the tile's foot.",
-        "series": "With series: the readings as a line across the tile's whole width, 32 tall, flush with its foot and sides: values spaced evenly, the lowest at the foot and the highest at the top, the line 1.5 thick in the status color at 70 percent over an area in it at 12 percent. Equal values, or one, are a level line through the middle."
+        "series": "With series: the readings as a line across the tile's whole width, 32 tall, flush with its foot and sides: values spaced evenly, the lowest 1 above the foot and the highest 1 below the top, inset by 1 so the stroke is never cut, the line 1.5 thick in the status color at 70 percent over an area in it at 12 percent. Equal values, or one, are a level line through the middle."
     },
-    "standsOn": {"default": "background", "tile": "card"},
+    "standsOn": {
+        "default": "background",
+        "tile": "card"
+    },
     "options": {
-        "label": {"type": "text", "does": "The wall: what it shows, for a screen reader."},
+        "label": {
+            "type": "text",
+            "does": "The wall: what it shows, for a screen reader."
+        },
         "tile": {
-            "values": ["sm", "md", "lg"],
+            "values": [
+                "sm",
+                "md",
+                "lg"
+            ],
             "default": "md",
             "does": "The wall: the narrowest a tile gets, 160, 224 or 288."
         },
-        "name": {"type": "node", "does": "The tile: the source's name."},
-        "status": {"values": ["up", "degraded", "down", "unknown"], "does": "The tile: how the source is doing."},
-        "caption": {"type": "node", "does": "The tile: a quiet line over the name, such as the source's kind."},
-        "icon": {"type": "node", "does": "The tile: drawn before the name."},
-        "value": {"type": "node", "does": "The tile's one figure, such as its latency."},
-        "unit": {"type": "node", "does": "The figure's unit."},
-        "detail": {"type": "node", "does": "The tile: one line under the figure, such as why it is degraded."},
-        "series": {"type": "rows", "does": "The tile: readings over time, oldest first, drawn along its foot."},
+        "name": {
+            "type": "node",
+            "does": "The tile: the source's name."
+        },
+        "status": {
+            "values": [
+                "up",
+                "degraded",
+                "down",
+                "unknown"
+            ],
+            "does": "The tile: how the source is doing."
+        },
+        "caption": {
+            "type": "node",
+            "does": "The tile: a quiet line over the name, such as the source's kind."
+        },
+        "icon": {
+            "type": "node",
+            "does": "The tile: drawn before the name."
+        },
+        "value": {
+            "type": "node",
+            "does": "The tile's one figure, such as its latency."
+        },
+        "unit": {
+            "type": "node",
+            "does": "The figure's unit."
+        },
+        "detail": {
+            "type": "node",
+            "does": "The tile: one line under the figure, such as why it is degraded."
+        },
+        "series": {
+            "type": "rows",
+            "does": "The tile: readings over time, oldest first, drawn along its foot."
+        },
         "seriesLabel": {
             "type": "text",
             "does": "What the series shows, for a screen reader; without it the series is decoration."
         },
-        "flag": {"type": "node", "does": "The tile: a small chip at the head's end, such as Simulated."},
+        "flag": {
+            "type": "node",
+            "does": "The tile: a small chip at the head's end, such as Simulated."
+        },
         "updatedAt": {
             "type": "number",
             "does": "The tile: when the source was last heard from, in milliseconds since the epoch, or none for never; the freshness is drawn only with it."
         },
-        "now": {"type": "number", "does": "The moment the freshness counts from; without it, the shared clock."},
-        "selected": {"type": "boolean", "default": false, "does": "Draws the tile as chosen."},
-        "onSelect": {"type": "callback", "does": "Makes the whole tile one button."},
-        "href": {"type": "text", "does": "Makes the whole tile one link."}
+        "now": {
+            "type": "number",
+            "does": "The moment the freshness counts from; without it, the shared clock."
+        },
+        "selected": {
+            "type": "boolean",
+            "default": false,
+            "does": "Draws the tile as chosen."
+        },
+        "onSelect": {
+            "type": "callback",
+            "does": "Makes the whole tile one button."
+        },
+        "href": {
+            "type": "text",
+            "does": "Makes the whole tile one link."
+        }
     },
     "sizes": {
-        "wall": {"gap": 12},
-        "tile": {"padX": 12, "padY": 12, "gap": 8, "radius": "radius-surface"},
-        "head": {"gap": 2, "icon": 16, "text": "text.label"},
-        "status": {"gap": 6, "icon": 10, "text": "text.label"},
-        "figure": {"gap": 6, "text": "text.statistic"},
-        "series": {"height": 32}
+        "wall": {
+            "gap": 12
+        },
+        "tile": {
+            "padX": 12,
+            "padY": 12,
+            "gap": 8,
+            "radius": "radius-surface"
+        },
+        "head": {
+            "gap": 2,
+            "icon": 16,
+            "text": "text.label"
+        },
+        "status": {
+            "gap": 6,
+            "icon": 10,
+            "text": "text.label"
+        },
+        "figure": {
+            "gap": 6,
+            "text": "text.statistic"
+        },
+        "series": {
+            "height": 32
+        }
     },
     "layout": {
-        "tileSm": {"value": 160, "note": "The narrowest a tile gets at tile sm."},
-        "tileMd": {"value": 224, "note": "At tile md, the default."},
-        "tileLg": {"value": 288, "note": "At tile lg."},
-        "topRule": {"value": 2, "note": "The rule in the status color along the tile's top."},
+        "tileSm": {
+            "value": 160,
+            "note": "The narrowest a tile gets at tile sm."
+        },
+        "tileMd": {
+            "value": 224,
+            "note": "At tile md, the default."
+        },
+        "tileLg": {
+            "value": 288,
+            "note": "At tile lg."
+        },
+        "topRule": {
+            "value": 2,
+            "note": "The rule in the status color along the tile's top."
+        },
         "glowHeight": 64,
         "seriesLine": 1.5
     },
     "states": {
-        "rest": {"means": "The tile drawn."},
-        "up": {"means": "The source answers: good.", "reached": "status up"},
-        "degraded": {"means": "The source answers badly: warning.", "reached": "status degraded"},
-        "down": {"means": "The source does not answer: critical, its dot and glow breathing.", "reached": "status down"},
-        "unknown": {"means": "Not known yet: no color, a dashed edge and a hollow dot.", "reached": "status unknown"},
+        "rest": {
+            "means": "The tile drawn."
+        },
+        "up": {
+            "means": "The source answers: good.",
+            "reached": "status up"
+        },
+        "degraded": {
+            "means": "The source answers badly: warning.",
+            "reached": "status degraded"
+        },
+        "down": {
+            "means": "The source does not answer: critical, its dot and glow breathing.",
+            "reached": "status down"
+        },
+        "unknown": {
+            "means": "Not known yet: no color, a dashed edge and a hollow dot.",
+            "reached": "status unknown"
+        },
         "hover": {
             "means": "The pointer over a tile that is a control: washed.",
             "reached": "pointer over, with onSelect or href"
         },
-        "selected": {"means": "The tile chosen: edged and ringed in primary.", "reached": "selected"},
+        "selected": {
+            "means": "The tile chosen: edged and ringed in primary.",
+            "reached": "selected"
+        },
         "focus": {
             "means": "Keyboard focus on the tile: the focus outline around it.",
             "reached": "Tab, with onSelect or href",
@@ -99,52 +214,174 @@
     },
     "pieces": {
         "tile": {
-            "rest": {"ground": "card", "ink": "card-foreground", "radius": "radius-surface"},
-            "up": {"edge": "mix-oklab(good 45%, border)", "rule": "good"},
-            "degraded": {"edge": "mix-oklab(warning 45%, border)", "rule": "warning"},
-            "down": {"edge": "mix-oklab(critical 45%, border)", "rule": "critical"},
-            "unknown": {"edge": "border-strong", "note": "Dashed, with no rule and no glow."},
-            "hover": {"ground": "hover"},
-            "selected": {"edge": "primary", "ring": {"color": "primary", "width": 1}},
-            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
+            "rest": {
+                "ground": "card",
+                "ink": "card-foreground",
+                "radius": "radius-surface"
+            },
+            "up": {
+                "edge": "mix-oklab(good 45%, border)",
+                "rule": "good"
+            },
+            "degraded": {
+                "edge": "mix-oklab(warning 45%, border)",
+                "rule": "warning"
+            },
+            "down": {
+                "edge": "mix-oklab(critical 45%, border)",
+                "rule": "critical"
+            },
+            "unknown": {
+                "edge": "border-strong",
+                "note": "Dashed, with no rule and no glow."
+            },
+            "hover": {
+                "ground": "hover"
+            },
+            "selected": {
+                "edge": "primary",
+                "ring": {
+                    "color": "primary",
+                    "width": 1
+                }
+            },
+            "focus": {
+                "ring": {
+                    "color": "ring",
+                    "width": "focus-ring-width",
+                    "offset": "focus-ring-offset"
+                }
+            }
         },
         "glow": {
-            "rest": {"note": "None while unknown; fades to nothing 64 down."},
-            "up": {"ground": "good/10"},
-            "degraded": {"ground": "warning/18"},
-            "down": {"ground": "critical/18", "note": "Breathes with the live pulse."}
+            "rest": {
+                "note": "None while unknown; fades to nothing 64 down."
+            },
+            "up": {
+                "ground": "good/10"
+            },
+            "degraded": {
+                "ground": "warning/18"
+            },
+            "down": {
+                "ground": "critical/18",
+                "note": "Breathes with the live pulse."
+            }
         },
-        "caption": {"rest": {"ink": "muted-foreground", "text": "text.xs"}},
-        "name": {"rest": {"text": "text.label"}},
+        "caption": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.xs"
+            }
+        },
+        "name": {
+            "rest": {
+                "text": "text.label"
+            }
+        },
         "status": {
-            "rest": {"text": "text.label"},
-            "up": {"ink": "good-ink", "mark": "good"},
-            "degraded": {"ink": "warning-ink", "mark": "warning"},
-            "down": {"ink": "critical-ink", "mark": "critical", "note": "The dot breathes with the live pulse."},
-            "unknown": {"ink": "muted-foreground", "mark": "faint", "note": "The dot hollow, edged in faint."}
+            "rest": {
+                "text": "text.label"
+            },
+            "up": {
+                "ink": "good-ink",
+                "mark": "good"
+            },
+            "degraded": {
+                "ink": "warning-ink",
+                "mark": "warning"
+            },
+            "down": {
+                "ink": "critical-ink",
+                "mark": "critical",
+                "note": "The dot breathes with the live pulse."
+            },
+            "unknown": {
+                "ink": "muted-foreground",
+                "mark": "faint",
+                "note": "The dot hollow, edged in faint."
+            }
         },
-        "value": {"rest": {"text": "text.statistic"}},
-        "unit": {"rest": {"ink": "muted-foreground", "text": "text.sm"}},
-        "detail": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
+        "value": {
+            "rest": {
+                "text": "text.statistic"
+            }
+        },
+        "unit": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.sm"
+            }
+        },
+        "detail": {
+            "rest": {
+                "ink": "muted-foreground",
+                "text": "text.help"
+            }
+        },
         "series": {
-            "rest": {"note": "The line at 70 percent of the status color, the area under it at 12 percent."},
-            "up": {"mark": "good"},
-            "degraded": {"mark": "warning"},
-            "down": {"mark": "critical"},
-            "unknown": {"mark": "faint"}
+            "rest": {
+                "note": "The line at 70 percent of the status color, the area under it at 12 percent."
+            },
+            "up": {
+                "mark": "good"
+            },
+            "degraded": {
+                "mark": "warning"
+            },
+            "down": {
+                "mark": "critical"
+            },
+            "unknown": {
+                "mark": "faint"
+            }
         }
     },
     "keyboard": [
-        {"keys": ["Tab"], "does": "Reaches each tile that is a control, in the wall's order."},
-        {"keys": ["Enter"], "does": "Calls onSelect, or follows href.", "when": "a tile has focus"},
-        {"keys": ["Space"], "does": "Calls onSelect.", "when": "a tile with onSelect has focus"}
+        {
+            "keys": [
+                "Tab"
+            ],
+            "does": "Reaches each tile that is a control, in the wall's order."
+        },
+        {
+            "keys": [
+                "Enter"
+            ],
+            "does": "Calls onSelect, or follows href.",
+            "when": "a tile has focus"
+        },
+        {
+            "keys": [
+                "Space"
+            ],
+            "does": "Calls onSelect.",
+            "when": "a tile with onSelect has focus"
+        }
     ],
-    "words": {"up": "Up", "degraded": "Degraded", "down": "Down", "unknown": "Unknown"},
+    "words": {
+        "up": "Up",
+        "degraded": "Degraded",
+        "down": "Down",
+        "unknown": "Unknown"
+    },
     "messages": {
-        "up": {"id": "statusWall.up", "en": "Up"},
-        "degraded": {"id": "statusWall.degraded", "en": "Degraded"},
-        "down": {"id": "statusWall.down", "en": "Down"},
-        "unknown": {"id": "statusWall.unknown", "en": "Unknown"}
+        "up": {
+            "id": "statusWall.up",
+            "en": "Up"
+        },
+        "degraded": {
+            "id": "statusWall.degraded",
+            "en": "Degraded"
+        },
+        "down": {
+            "id": "statusWall.down",
+            "en": "Down"
+        },
+        "unknown": {
+            "id": "statusWall.unknown",
+            "en": "Unknown"
+        }
     },
     "appText": {
         "label": "The wall's name.",
