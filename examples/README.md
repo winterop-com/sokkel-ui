@@ -91,6 +91,13 @@ examples/
                  country, a new process talking out, a rate spike) to acknowledge; simulated by
                  default, placed by GeoLite2 when the file is downloaded, and this machine's own
                  connections through lsof in the Electron shell (its README says how)
+  control/       a control site: live feeds from many places (earthquakes, disasters, weather
+                 warnings, vessels, flights, satellites, the space station, a server's health and a
+                 machine's connections), each a source with its own checks, read by one engine that
+                 raises an alert when a source's status changes; a wall for a screen nobody sits at,
+                 the operator's console and the sources, all reading one state kept in sync across
+                 windows and tabs; live through its own proxy, each source falling back to its
+                 simulation (its README says how)
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -127,7 +134,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195, Cut on 4196, Harbor watch on 4197, Flight watch on 4198, Network watch on 4199)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195, Cut on 4196, Harbor watch on 4197, Flight watch on 4198, Network watch on 4199, Control site on 4200)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
@@ -195,6 +202,16 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
   the JSON. The web and Tauri builds offer the simulation alone and say why. While live is on the
   foot strip and Settings carry adsb.lol's attribution under the ODbL; a read that fails leaves the
   simulation running with a banner saying why.
+- **The control site's live sources:** the other example that may reach public sources, as
+  `AGENTS.md` allows, and the one that does so by default. Its page asks a proxy of its own
+  (`examples/control/web/server/proxy.ts`), served beside the page by `vite dev` and `vite preview`
+  and held by the Electron shell's main process: a fixed table of routes, each with one upstream, a
+  cache and a limit that keep to the source's terms, never an open proxy. The AIS stream is a TCP
+  connection the proxy holds and hands the page as events. A statically hosted build and the Tauri
+  shell have no proxy: there the page reads the few sources that allow it directly, and the rest
+  show their simulation. Every source's status says whether it is live or simulated, and its
+  attribution is shown while it is live. `examples/control/README.md` lists the routes, the limits
+  and the licenses.
 - **Maps in the dev server:** an example that draws maps adds `mapsVite()` from
   `@winterop-com/sokkel-ui-maps/vite` to the plugins in its `vite.config.ts`, as any app does, since
   the dev server's prebundling cannot load the maps package's `?worker&url` import of maplibre's
