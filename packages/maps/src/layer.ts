@@ -56,7 +56,15 @@ export function prepareData(
     const features = readable.flatMap((feature, index) => {
         const id = featureId(feature, idProperty) ?? `#${index}`
         byId.set(id, feature)
-        const drawn: Feature = { ...feature, id: undefined, properties: { ...feature.properties, ...derive(feature), [ID_PROPERTY]: id } }
+        const drawn: Feature = {
+            ...feature,
+            id: undefined,
+            properties: {
+                ...feature.properties,
+                ...derive(feature),
+                [ID_PROPERTY]: id,
+            },
+        }
         return parts === undefined ? [drawn] : parts(drawn)
     })
     return {
@@ -139,25 +147,59 @@ export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { s
         latest.current = options
         latestColors.current = resolved
     })
+    // Drawing an image reads a canvas back, which is slow, and the style changes many times a second
+    // while anything on the map moves: each set of colors is drawn once.
+    const drawnImages = useRef<{
+        colors: Record<C, string>
+        images: Record<string, ImageData>
+    } | null>(null)
+    const imagesFor = (colors: Record<C, string>): Record<string, ImageData> => {
+        if (drawnImages.current?.colors !== colors)
+            drawnImages.current = {
+                colors,
+                images: latest.current.images?.(colors) ?? {},
+            }
+        return drawnImages.current.images
+    }
 
     useEffect(() => {
-        const { data, layers, images } = latest.current
-        for (const [name, image] of Object.entries(images?.(latestColors.current) ?? {})) {
+        const { data, layers } = latest.current
+        for (const [name, image] of Object.entries(imagesFor(latestColors.current))) {
             if (map.hasImage(name)) map.updateImage(name, image)
-            else map.addImage(name, image, { pixelRatio: 2, sdf: latest.current.sdf === true })
+            else
+                map.addImage(name, image, {
+                    pixelRatio: 2,
+                    sdf: latest.current.sdf === true,
+                })
         }
-        map.addSource(source, { type: 'geojson', data: data.collection, promoteId: ID_PROPERTY, ...latest.current.source })
+        map.addSource(source, {
+            type: 'geojson',
+            data: data.collection,
+            promoteId: ID_PROPERTY,
+            ...latest.current.source,
+        })
         added.current = data.collection
         const specs = layers(source, latestColors.current)
         const below = labelAnchor(map)
         const restore = () => {
-            for (const [name, image] of Object.entries(latest.current.images?.(latestColors.current) ?? {})) {
-                if (!map.hasImage(name)) map.addImage(name, image, { pixelRatio: 2, sdf: latest.current.sdf === true })
+            for (const [name, image] of Object.entries(imagesFor(latestColors.current))) {
+                if (!map.hasImage(name))
+                    map.addImage(name, image, {
+                        pixelRatio: 2,
+                        sdf: latest.current.sdf === true,
+                    })
             }
         }
         map.on('styledata', restore)
         const visibility = latest.current.visible ? 'visible' : 'none'
-        for (const spec of specs) map.addLayer({ ...spec, layout: { ...spec.layout, visibility } } as LayerSpecification, below)
+        for (const spec of specs)
+            map.addLayer(
+                {
+                    ...spec,
+                    layout: { ...spec.layout, visibility },
+                } as LayerSpecification,
+                below,
+            )
         return () => {
             map.off('styledata', restore)
             for (const spec of [...specs].reverse()) if (map.getLayer(spec.id) !== undefined) map.removeLayer(spec.id)
@@ -175,7 +217,7 @@ export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { s
 
     const paintKey = JSON.stringify(options.layers(source, resolved).map((spec) => ('paint' in spec ? spec.paint : null)))
     useEffect(() => {
-        for (const [name, image] of Object.entries(latest.current.images?.(resolved) ?? {})) {
+        for (const [name, image] of Object.entries(imagesFor(resolved))) {
             if (map.hasImage(name)) map.updateImage(name, image)
         }
         for (const spec of latest.current.layers(source, resolved)) {
@@ -334,7 +376,11 @@ export function useRenderedPoints(
                 const point = map.project([lng, lat])
                 // On a globe a point on the far side is found too, and lands on the near side's ground.
                 if (!facing(map.unproject([point.x, point.y]), lng, lat)) continue
-                seen.set(found.key, { ...found, x: Math.round(point.x), y: Math.round(point.y) })
+                seen.set(found.key, {
+                    ...found,
+                    x: Math.round(point.x),
+                    y: Math.round(point.y),
+                })
             }
             return [...seen.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
         }
