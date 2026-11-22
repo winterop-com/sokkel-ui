@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.33.5** is the latest release (2026-11-21): an escaped `\[[`, `\![[` and `\#` in markdown read
+- **0.33.6** is the latest release (2026-11-22): small (14px body text) is the default text size,
+  with smaller, small, regular and large in Settings; empty tree folders; Mermaid plots in the chart
+  colors; hidden `%%` comments; a map over a dark basemap wears the dark scheme; contract 0.33.6.
+- **0.33.5** (2026-11-21): an escaped `\[[`, `\![[` and `\#` in markdown read
   as their words; zone and boundary hatches drawn once; contract 0.33.5, with a preview status for
   parts new in their round and map layers specified by meaning.
 - **0.33.4** (2026-11-21): `MarkdownLinks.href`, so a note link carries a real
