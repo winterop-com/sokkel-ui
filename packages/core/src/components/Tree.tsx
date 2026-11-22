@@ -504,9 +504,10 @@ const TAIL_CHARS = 12
 export function labelTail(label: string): number {
     const at = Math.max(...TAIL_SEPARATORS.map((separator) => label.lastIndexOf(separator)))
     if (at > 0 && label.length - at <= TAIL_MAX) return at
-    // From the start of the word the last TAIL_CHARS characters begin in, so no word is split.
+    // From the start of the word the last TAIL_CHARS characters begin in, so no word is split; a
+    // shorter label keeps its last word, so a column cuts its rows alike. One word stays whole.
     const word = label.lastIndexOf(' ', label.length - TAIL_CHARS)
-    if (word <= 0) return 0
+    if (word <= 0) return Math.max(0, label.lastIndexOf(' '))
     return label.length - word <= TAIL_MAX ? word : label.length - TAIL_CHARS
 }
 
@@ -524,6 +525,7 @@ function MarkedPart({ text, from, to, query }: { text: string; from: number; to:
  */
 function TreeLabel({ label, query, cut, trail }: { label: string; query: string; cut: 'end' | 'middle'; trail?: string }) {
     const [ref, clamped] = useClamped<HTMLSpanElement>()
+    const [tailRef, tailClamped] = useClamped<HTMLSpanElement>()
     const [trailRef, trailClamped] = useClamped<HTMLSpanElement>()
     const tail = cut === 'middle' ? labelTail(label) : 0
     const whole = trail === undefined ? label : `${label} \u2014 ${trail}`
@@ -533,17 +535,18 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
                 <Marked text={label} query={query} />
             </span>
         ) : (
+            // The head gives way; the tail keeps its width up to two thirds of the room, past which it is cut too.
             <span className="flex min-w-0">
                 <span ref={ref} className="min-w-0 truncate">
                     <MarkedPart text={label} from={0} to={tail} query={query} />
                 </span>
-                <span className="shrink-0 whitespace-pre">
+                <span ref={tailRef} className="max-w-2/3 shrink-0 overflow-hidden text-ellipsis whitespace-pre">
                     <MarkedPart text={label} from={tail} to={label.length} query={query} />
                 </span>
             </span>
         )
     return (
-        <span title={clamped || trailClamped ? whole : undefined} className="flex min-w-0 flex-1 items-baseline gap-1.5">
+        <span title={clamped || tailClamped || trailClamped ? whole : undefined} className="flex min-w-0 flex-1 items-baseline gap-1.5">
             {trail === undefined ? text : <span className="flex max-w-2/3 min-w-0 shrink-0">{text}</span>}
             {trail !== undefined && (
                 <span ref={trailRef} className="min-w-0 truncate text-xs text-muted-foreground">

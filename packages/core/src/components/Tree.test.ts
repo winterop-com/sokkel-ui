@@ -300,9 +300,10 @@ describe('labelTail', () => {
         expect(label.slice(labelTail(label))).toBe('or-inventory')
     })
 
-    test('keeps a short label whole', () => {
+    test("keeps a short label's last word, and one word whole", () => {
+        expect(labelTail('Sync inventory')).toBe(4)
+        expect(labelTail('The Sandpiper')).toBe(3)
         expect(labelTail('Bergen')).toBe(0)
-        expect(labelTail('Sync inventory')).toBe(0)
         expect(labelTail('Oslo: 1')).toBe(4)
     })
 })
