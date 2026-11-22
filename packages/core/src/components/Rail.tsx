@@ -173,9 +173,9 @@ export interface RailProps {
     /** The app's name beside the mark; in a strip, the workspace tile's name. */
     name: string
     /**
-     * Where the mark leads, the app's home: the expanded rail's mark and name, and a strip's tile,
-     * are a link there. A collapsed rail's mark stays the control that
-     * expands it.
+     * Where the mark leads, the app's home: the expanded rail's mark and name, and a strip's tile, are
+     * a link there; with `collapseWith="mark"` the name alone, the mark being the toggle. A collapsed
+     * rail's mark stays the control that expands it.
      */
     markHref?: string
     groups: RailGroup[]
@@ -183,6 +183,12 @@ export interface RailProps {
     variant?: 'nav' | 'strip'
     collapsed?: boolean
     onCollapsedChange?: (collapsed: boolean) => void
+    /**
+     * What collapses the expanded rail: `button`, a control at the head's end, the mark and the name
+     * one link home; or `mark`, the mark's tile, the toggle in both states, with the name alone the
+     * link home. A rail with no mark, and the drawer's, keep the button.
+     */
+    collapseWith?: 'button' | 'mark'
     /** What stands in the rail's foot cell, normally the account control; in a strip, the items stacked at its foot. */
     foot?: ReactNode
     /** The expanded width in pixels, held from outside with `onSizeChange`. */
@@ -223,7 +229,9 @@ export interface RailProps {
  * Expanded, an entry is its icon and its label, with its `description` on a quieter line under the
  * label when it has one, and the active one wears a slim accent bar on its left edge over a faint wash. Collapsed, the rail is icons alone, each link named by
  * its entry's label and showing it in a tooltip at its right, the groups divided by a rule, and the
- * mark itself is the control that expands it.
+ * mark itself is the control that expands it. Expanded, a button at the head's end collapses it; with
+ * `collapseWith="mark"` the mark's tile does instead, the one toggle in both states, showing the
+ * panel's icon under the pointer, and the button is gone. A rail with no mark keeps the button.
  *
  * As a `strip`, it is the narrow column a team chat keeps on its far left, beside its own list of
  * channels: each entry an icon with its short label under it, the active one's icon on a soft
@@ -237,7 +245,8 @@ export interface RailProps {
  * its edge pulled outward expands it under the pointer, the width at release kept, and Enter, Space
  * or the right arrow on the edge expand it too.
  *
- * `markHref` makes the expanded rail's mark and name, and a strip's tile, a link to the app's home.
+ * `markHref` makes the expanded rail's mark and name, and a strip's tile, a link to the app's home;
+ * where the mark is the toggle, the name alone.
  *
  * In the shell's drawer on a narrow window the rail is drawn expanded, even where the app holds it
  * `collapsed`, its edge is not drawn, and the control at its head's end closes the drawer. Below
@@ -289,6 +298,7 @@ export function Rail({
     variant = 'nav',
     collapsed: kept = false,
     onCollapsedChange,
+    collapseWith = 'button',
     foot,
     size,
     onSizeChange,
@@ -414,24 +424,34 @@ export function Rail({
         )
     // Collapsed, the rail is narrower than the window's buttons: its mark stands under the strip.
     const under = collapsed && lights
-    const expand = (
-        <button
-            type="button"
-            aria-label={words.expand}
-            title={words.expand}
-            className={cn(
-                'group/mark relative mx-auto flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground',
-                FOCUS,
-            )}
-            onClick={() => setCollapsed(false)}
-        >
-            {mark !== undefined && <span className="group-hover/mark:opacity-0">{mark}</span>}
-            <PanelLeftOpen className={cn('absolute size-4', mark !== undefined && 'opacity-0 group-hover/mark:opacity-100')} aria-hidden />
-        </button>
-    )
+    // The mark's tile expands a collapsed rail and, with collapseWith="mark", collapses an expanded
+    // one, showing the panel's icon under the pointer.
+    const toggle = (open: boolean) => {
+        const Icon = open ? PanelLeftOpen : PanelLeftClose
+        const said = open ? words.expand : words.collapse
+        return (
+            <button
+                type="button"
+                aria-label={said}
+                title={said}
+                className={cn(
+                    'group/mark relative flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground',
+                    open && 'mx-auto',
+                    FOCUS,
+                )}
+                onClick={() => setCollapsed(!open)}
+            >
+                {mark !== undefined && <span className="group-hover/mark:opacity-0">{mark}</span>}
+                <Icon className={cn('absolute size-4', mark !== undefined && 'opacity-0 group-hover/mark:opacity-100')} aria-hidden />
+            </button>
+        )
+    }
+    const expand = toggle(true)
+    // With collapseWith="mark", expanded in the frame, the mark's tile collapses the rail and the name alone leads home.
+    const markToggles = collapseWith === 'mark' && drawer === undefined && collapsible && mark !== undefined
     const head = (
         <>
-            {mark !== undefined && (
+            {mark !== undefined && !markToggles && (
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
                     {mark}
                 </span>
@@ -462,6 +482,7 @@ export function Rail({
                         !under && expand
                     ) : (
                         <>
+                            {markToggles && toggle(false)}
                             {markHref === undefined
                                 ? head
                                 : renderLink(
@@ -470,7 +491,7 @@ export function Rail({
                                       cn('flex min-w-0 items-center gap-2 rounded-md pe-1.5', FOCUS),
                                   )}
                             {/* In the drawer it closes the drawer; in the frame it narrows the rail. */}
-                            {(drawer !== undefined || collapsible) && (
+                            {(drawer !== undefined || (collapsible && !markToggles)) && (
                                 <button
                                     type="button"
                                     aria-label={drawer?.label ?? words.collapse}

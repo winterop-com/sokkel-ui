@@ -17,7 +17,7 @@
         "lazy": 470.7,
         "css": 54.2,
         "first": {
-            "budget": 411.6,
+            "budget": 411.7,
             "fetches": [
                 "packages/charts/dist/engine.js",
                 "packages/charts/dist/kinds/categories.js",
@@ -28,7 +28,7 @@
     },
     "map": {
         "engines": ["maplibre"],
-        "start": 172.6,
+        "start": 172.8,
         "lazy": 335,
         "css": 64.4
     },

@@ -1856,6 +1856,7 @@ const RAIL_ADAPTER: Adapter = {
     options: {
         variant: propValues(RAIL, 'RailProps', 'variant'),
         view: propValues(RAIL, 'RailProps', 'view'),
+        collapseWith: propValues(RAIL, 'RailProps', 'collapseWith'),
     },
     size: (size, key) => {
         const { expanded, collapsed, strip } = RAILS()
