@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.34.1** is the latest release (2026-11-22): text one weight step lighter (medium 450, semibold
+- **0.34.2** is the latest release (2026-11-22): Rail `collapseWith="mark"`, the mark as the one
+  toggle in both states; contract 0.34.2.
+- **0.34.1** (2026-11-22): text one weight step lighter (medium 450, semibold
   500, bold 600), a text size kept under its 0.33 name read under its name now, AccountMenu's figure
   centered; contract 0.34.1, with the weight scale in the resolved tokens.
 - **0.34.0** (2026-11-22): the text sizes are small, normal, large and larger
