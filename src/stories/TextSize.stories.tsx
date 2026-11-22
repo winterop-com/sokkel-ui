@@ -26,20 +26,20 @@ import { TidevannMark } from './fixtures/TidevannMark'
 const meta: Meta = { title: 'Foundations/Text size', parameters: { frame: 'padded' } }
 export default meta
 
-const SIZES = ['smaller', 'small', 'regular', 'large'] as const
+const SIZES = ['small', 'normal', 'large', 'larger'] as const
 type Size = (typeof SIZES)[number]
 
 const STEPS = ['2xs', 'xs', 'sm', 'base', 'page'] as const
 
-/** A level's steps in px, size over line height, as tokens.json sets them; regular is the theme's own. */
+/** A level's steps in px, size over line height, as tokens.json sets them; large is the theme's own. */
 function stepsOf(size: Size): string {
     const level = tokens.textSize[size] as Record<string, string>
     const theme = tokens.theme as Record<string, string>
-    const px = (name: string) => String(Number.parseFloat((size === 'regular' ? theme : level)[name]) * 16)
+    const px = (name: string) => String(Number.parseFloat((size === 'large' ? theme : level)[name]) * 16)
     return STEPS.map((step) => `${step} ${px(`text-${step}`)}/${px(`text-${step}--line-height`)}`).join(', ')
 }
 
-const LABELS: Record<Size, string> = { smaller: 'Smaller', small: 'Small', regular: 'Regular, today', large: 'Large' }
+const LABELS: Record<Size, string> = { small: 'Small', normal: 'Normal, the default', large: 'Large', larger: 'Larger' }
 
 interface Run {
     id: string
@@ -177,7 +177,7 @@ export const Compare: StoryObj = {
 }
 
 /**
- * Today's weights beside one step lighter, at the regular and the small size: medium 500 to 450,
+ * Today's weights beside one step lighter, at the normal and the large size: medium 500 to 450,
  * semibold 600 to 500 and bold 700 to 600, Plex's variable face drawing any of them.
  */
 export const Weights: StoryObj = {
@@ -185,7 +185,7 @@ export const Weights: StoryObj = {
         <TooltipProvider>
             <style>{LIGHTER_CSS}</style>
             <Columns count={2} min="xl" rowGap="3xl">
-                {(['regular', 'small'] as const).flatMap((size) => [
+                {(['normal', 'large'] as const).flatMap((size) => [
                     <Level key={`${size}-today`} size={size} />,
                     <Level key={`${size}-lighter`} size={size} lighter />,
                 ])}

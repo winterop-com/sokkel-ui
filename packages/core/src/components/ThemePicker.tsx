@@ -23,9 +23,10 @@ export interface ThemePickerWords {
     regular: string
     compact: string
     textSize: string
-    smaller: string
     small: string
+    normal: string
     large: string
+    larger: string
     corners: string
     typeface: string
     motion: string
@@ -53,9 +54,10 @@ export const THEME_PICKER_WORDS: ThemePickerWords = {
     regular: 'Regular',
     compact: 'Compact',
     textSize: 'Text size',
-    smaller: 'Smaller',
     small: 'Small',
+    normal: 'Normal',
     large: 'Large',
+    larger: 'Larger',
     corners: 'Corners',
     typeface: 'Typeface',
     motion: 'Motion',
@@ -81,7 +83,7 @@ export interface ThemePickerProps {
     themes: readonly ThemeOption[]
     /** The density levels; regular and compact when not given, none when empty. */
     densities?: readonly ThemeOption[]
-    /** The text sizes; smaller, small, regular and large when not given, none when empty. */
+    /** The text sizes; small, normal, large and larger when not given, none when empty. */
     textSizes?: readonly ThemeOption[]
     /** The corner radii; the row shows only when given. */
     corners?: readonly ThemeOption[]
@@ -110,7 +112,7 @@ export interface ThemePickerProps {
  * the text size, the corners, the typeface and the motion. It holds no state and applies nothing; `onChange` answers with the
  * whole settings, and the app sets them where it keeps its look, as `useAppearance` keeps and wears them.
  *
- * The theme and scheme are always offered, the system's scheme as a third when `system` is set. Density offers regular and compact, and text size smaller, small, regular and large, unless given their
+ * The theme and scheme are always offered, the system's scheme as a third when `system` is set. Density offers regular and compact, and text size small, normal, large and larger, unless given their
  * own options; corners and typeface show only when given options. A theme marked `swatch` is
  * drawn as a small sample of its background, text and accent, and one with a `description` says
  * how it looks on a line under its name. `themeList` lists the themes as rows in place of a select,
@@ -178,10 +180,10 @@ function choices(
         { value: 'compact', label: words.compact },
     ]
     const sizes = textSizes ?? [
-        { value: 'smaller', label: words.smaller },
         { value: 'small', label: words.small },
-        { value: 'regular', label: words.regular },
+        { value: 'normal', label: words.normal },
         { value: 'large', label: words.large },
+        { value: 'larger', label: words.larger },
     ]
     const set = <K extends keyof ThemeSettings>(key: K, next: ThemeSettings[K]) => onChange({ ...value, [key]: next })
     const fill = !beside

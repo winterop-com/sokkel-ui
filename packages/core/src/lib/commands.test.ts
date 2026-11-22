@@ -76,7 +76,7 @@ describe('appearanceCommands', () => {
         const hinted = groups.flatMap((group) =>
             group.commands.filter((command) => command.hint !== undefined).map((command) => command.id),
         )
-        expect(hinted).toEqual(['scheme-system', 'density-regular', 'text-size-small', 'theme-paper'])
+        expect(hinted).toEqual(['scheme-system', 'density-regular', 'text-size-normal', 'theme-paper'])
     })
 
     it('answers with the whole settings, one part changed', () => {
@@ -90,17 +90,17 @@ describe('appearanceCommands', () => {
         expect(onChange).toHaveBeenLastCalledWith({ ...DEFAULT_APPEARANCE, theme: 'amber' })
     })
 
-    it('offers the text sizes from their parts, the one in use hinted, small when none is given', () => {
+    it('offers the text sizes from their parts, the one in use hinted, normal when none is given', () => {
         const onTextSizeChange = vi.fn()
         const [group] = appearanceCommands({ onTextSizeChange })
         expect(group?.commands.map((command) => [command.id, command.hint])).toEqual([
-            ['text-size-smaller', undefined],
-            ['text-size-small', 'in use'],
-            ['text-size-regular', undefined],
+            ['text-size-small', undefined],
+            ['text-size-normal', 'in use'],
             ['text-size-large', undefined],
+            ['text-size-larger', undefined],
         ])
         group?.commands[3]?.onSelect()
-        expect(onTextSizeChange).toHaveBeenCalledWith('large')
+        expect(onTextSizeChange).toHaveBeenCalledWith('larger')
     })
 })
 

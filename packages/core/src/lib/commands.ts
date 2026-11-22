@@ -199,9 +199,10 @@ export interface AppearanceCommandWords {
     regular: string
     compact: string
     textSize: string
-    smaller: string
     small: string
+    normal: string
     large: string
+    larger: string
     theme: string
     /** The hint on the choice in use. */
     current: string
@@ -218,9 +219,10 @@ export const APPEARANCE_COMMAND_WORDS: AppearanceCommandWords = {
     regular: 'Regular',
     compact: 'Compact',
     textSize: 'Text size',
-    smaller: 'Smaller',
     small: 'Small',
+    normal: 'Normal',
     large: 'Large',
+    larger: 'Larger',
     theme: 'Theme',
     current: 'in use',
     switch: 'Switch',
@@ -297,10 +299,10 @@ export function appearanceCommands(
         { value: 'compact', label: words.compact },
     ]
     const sizes = [
-        { value: 'smaller', label: words.smaller },
         { value: 'small', label: words.small },
-        { value: 'regular', label: words.regular },
+        { value: 'normal', label: words.normal },
         { value: 'large', label: words.large },
+        { value: 'larger', label: words.larger },
     ]
     const groups: PaletteGroup[] = []
     const { onSchemeChange, onDensityChange, onTextSizeChange, onThemeChange } = parts

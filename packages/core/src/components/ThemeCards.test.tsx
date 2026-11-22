@@ -103,14 +103,14 @@ describe('ThemePicker made of them', () => {
         expect(html).not.toContain('role="radiogroup"')
     })
 
-    it('offers the four text sizes after the density, regular chosen when the look names none, and none when given none', () => {
+    it('offers the four text sizes after the density, normal chosen when the look names none, and none when given none', () => {
         const html = renderToStaticMarkup(<ThemePicker value={value} onChange={() => undefined} themes={THEMES} />)
         expect(html).toContain('aria-label="Text size"')
         expect(html.indexOf('aria-label="Density"')).toBeLessThan(html.indexOf('aria-label="Text size"'))
         const row = html.slice(html.indexOf('aria-label="Text size"'))
-        for (const word of ['Smaller', 'Small', 'Regular', 'Large']) expect(row).toContain(`>${word}<`)
+        for (const word of ['Small', 'Normal', 'Large', 'Larger']) expect(row).toContain(`>${word}<`)
         const large = renderToStaticMarkup(
-            <ThemePicker value={{ ...value, textSize: 'large' }} onChange={() => undefined} themes={THEMES} />,
+            <ThemePicker value={{ ...value, textSize: 'larger' }} onChange={() => undefined} themes={THEMES} />,
         )
         expect(large).not.toBe(html)
         const without = renderToStaticMarkup(<ThemePicker value={value} onChange={() => undefined} themes={THEMES} textSizes={[]} />)

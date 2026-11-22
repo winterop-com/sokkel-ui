@@ -24,7 +24,7 @@ export interface ThemeSettings {
     theme: string
     scheme: Scheme
     density: string
-    /** How large the text is: `smaller`, `small`, `regular` (the theme's own sizes) or `large`; regular when not given. */
+    /** How large the text is: `small`, `normal`, `large` (the theme's own sizes) or `larger`; normal when not given. */
     textSize?: string
     corners: string
     typeface: string
@@ -87,7 +87,7 @@ export const TYPEFACES: readonly ThemeOption[] = [
 const BASE_THEME = 'tidevann'
 
 /** The text size before one is chosen: 14px body text from the md breakpoint up. */
-export const DEFAULT_TEXT_SIZE = 'small'
+export const DEFAULT_TEXT_SIZE = 'normal'
 
 /** The look before anything is chosen: tidevann, the base theme, following the system's scheme and motion. */
 export const DEFAULT_APPEARANCE: Readonly<ThemeSettings> = {
