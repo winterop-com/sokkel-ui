@@ -290,7 +290,7 @@
             "rest": {"ink": "muted-foreground", "radius": "radius-md", "text": "text.body"},
             "hover": {"ground": "hover"},
             "rowFocus": {"ring": {"color": "ring", "width": "focus-ring-width", "inset": "all"}},
-            "chosen": {"ground": "primary/12", "ink": "primary-ink", "weight": 500},
+            "chosen": {"ground": "primary/12", "ink": "primary-ink", "weight": 450},
             "chosen+hover": {"ground": "primary/18"}
         },
         "row": {
@@ -301,7 +301,7 @@
             },
             "hover": {"ground": "hover"},
             "rowFocus": {"ring": {"color": "ring", "width": "focus-ring-width", "inset": "all"}},
-            "chosen": {"ground": "primary/12", "ink": "primary-ink", "weight": 500},
+            "chosen": {"ground": "primary/12", "ink": "primary-ink", "weight": 450},
             "chosen+hover": {"ground": "primary/18"},
             "shut": {"ink": "muted-foreground"}
         },

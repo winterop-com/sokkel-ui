@@ -38,10 +38,10 @@
         "head": "The bar over the content, as tall as the shell's top bar (spacing-shell-top) and level with it, a rule in border-strong under it: the tabs, or the title. Its end keeps 48 of room for the shell's panel toggle (patterns/shell, panelToggle), which stands in its corner while the panel is a column and open; in the sheet it keeps 8. In a desktop window with its title bar hidden the head drags the window.",
         "title": "With one tab and soleTab title, or in the shell's sheet: an h2 naming the panel by the shown tab's label, cut short on one line. The panel is labelled by it.",
         "tabs": "With more than one tab, or soleTab tab: a tablist of the tabs, 4 apart, taking the head's room before the toggle's; the content is their tabpanel, labelled by the shown tab. When the tabs' labels do not fit that room and every tab has an icon, each tab stands as its icon, named by its label, which its tooltip shows below it; when a tab has no icon they keep their labels and scroll sideways. A tab never runs under the toggle.",
-        "tab": "One tab: a 28 tall button with the tab's label on one line, rounded radius-md, or as its icon a 32 wide square with the icon at 16; the shown one on the secondary ground at weight 500.",
+        "tab": "One tab: a 28 tall button with the tab's label on one line, rounded radius-md, or as its icon a 32 wide square with the icon at 16; the shown one on the secondary ground at weight 450.",
         "content": "The shown tab's content, filling the rest of the panel's height and scrolling within it.",
         "section": "PanelSection, the titled section a panel's tab holds (DetailPane and BoardItemPanel draw theirs with it): padded 16 across and 12 down and up, its pieces 8 apart, a 1px rule in border under it, none under the last. It is a piece of the panel here rather than a part of its own: it has no frame, words or keys of its own, and parts/detail-pane builds on it.",
-        "heading": "The section's title: an h3 in the small group heading's look every group shares (GroupLabel): text.xs at 500, uppercase, tracked wide, in faint.",
+        "heading": "The section's title: an h3 in the small group heading's look every group shares (GroupLabel): text.xs at 450, uppercase, tracked wide, in faint.",
         "headingRow": "With the section's actions: the heading and the actions on one row at least 28 tall, the actions at its end, 4 apart.",
         "sectionActions": "Small controls at the end of the heading's line that act on the whole section, such as Clear."
     },
@@ -259,7 +259,7 @@
             "rest": {
                 "ink": "sidebar-foreground",
                 "text": "text.sm",
-                "weight": 500,
+                "weight": 450,
                 "note": "The panel sets no ink of its own: the shell's foreground, which the shell's frame sets around it."
             }
         },
@@ -276,7 +276,7 @@
             "selected": {
                 "ground": "secondary",
                 "ink": "foreground",
-                "weight": 500
+                "weight": 450
             },
             "focus": {
                 "ring": {
@@ -312,7 +312,7 @@
             "rest": {
                 "ink": "faint",
                 "text": "text.xs",
-                "weight": 500,
+                "weight": 450,
                 "note": "Uppercase, tracking wide."
             }
         }

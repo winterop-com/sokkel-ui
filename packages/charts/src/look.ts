@@ -26,6 +26,8 @@ export interface ChartLook {
      * tooltips, a figure in a chart's middle, and that figure in a small chart, such as a gauge on a phone.
      */
     size: { label: number; small: number; body: number; stat: number; statSmall: number }
+    /** Font weights read from the weight tokens: medium for the chart's text, semibold for a figure or an emphasized label. */
+    weight: { medium: number; semibold: number }
     /** A mark's corner in pixels, such as a bar's top or a heatmap's cell: a share of the radius token, so a square theme draws square marks. */
     corner: number
     /** The categorical colors in order. */
@@ -186,6 +188,7 @@ export function readLook(key = readKey(), scope: HTMLElement | null = null): Cha
             stat: pixels('chart-stat-size', 24),
             statSmall: pixels('chart-stat-size-small', 18),
         },
+        weight: { medium: pixels('font-weight-medium', 450), semibold: pixels('font-weight-semibold', 500) },
         corner: Math.max(0, pixels('radius', 4.5) * 0.4),
         series: SERIES_ORDER.map(token),
         token,

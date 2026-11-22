@@ -103,7 +103,7 @@
             "on": "keyboard"
         },
         "chosen": {
-            "means": "The answer: raised on the track, on card with a 1px ring in border-strong (input in dark), at 500, with the node shadow in light.",
+            "means": "The answer: raised on the track, on card with a 1px ring in border-strong (input in dark), at 450, with the node shadow in light.",
             "reached": "value yes or no"
         },
         "disabled": {
@@ -138,7 +138,7 @@
             "chosen": {
                 "ground": "card",
                 "ink": "foreground",
-                "weight": 500,
+                "weight": 450,
                 "ring": {"color": "border-strong", "width": 1, "dark": {"color": "input"}},
                 "dark": {"ground": "input/70"}
             },

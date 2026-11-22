@@ -18,7 +18,7 @@
     },
     "anatomy": {
         "line": "From one end to the other: along the great circle, or straight on the map (the rhumb line); the width (1.5) in the tone, wider under the pointer and wider still selected in map-selection, dashed when dashed, round-capped, over a casing 2.5 wider in card at 80 percent.",
-        "chip": "Over the link's middle (along the great circle, or halfway along the straight line on the map), 8 above it: words.measured with the distance and the bearing, as the ruler's chip: text.xs at 500 in tabular figures on card, padded 6 across and 2 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent. A chip that would cover another is left out; the selected link's never is, and is placed first. Only chips whose middle is in view are written.",
+        "chip": "Over the link's middle (along the great circle, or halfway along the straight line on the map), 8 above it: words.measured with the distance and the bearing, as the ruler's chip: text.xs at 450 in tabular figures on card, padded 6 across and 2 down, rounded by radius-control, with the surface's elevation and a 1 ring of foreground at 10 percent. A chip that would cover another is left out; the selected link's never is, and is placed first. Only chips whose middle is in view are written.",
         "arc": "With arc, each link lifted off the line between its ends into an arc, highest at the middle and none at the ends, rising to the north side of the line, or to its west where the line runs due north or south. A measure is written at the arc's middle.",
         "flow": "With flow, light runs along each link from its start to its end in the tone (lighter at its head in the dark scheme): more at once, faster and brighter the higher the link's rate, each link starting at its own point drawn from its id. The other lines step back, with their casing, except the link under the pointer and the selected one. It holds still where motion is reduced (the look's motion setting, else the system's), and stops while the map is out of sight: the document hidden, or the map's element off the screen."
     },
@@ -94,7 +94,7 @@
                 "ground": "card",
                 "ink": "foreground",
                 "text": "text.xs",
-                "weight": 500,
+                "weight": 450,
                 "radius": "radius-control",
                 "ring": {"color": "foreground/10", "width": 1}
             }

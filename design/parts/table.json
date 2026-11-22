@@ -397,7 +397,7 @@
             "failed": {
                 "ink": "foreground",
                 "mark": "destructive",
-                "note": "Unframed, under the heads inside the table's own frame, padded density.panel-pad across and 12 down. The heading at 500; the diagnostic and each problem in text.help, muted-foreground; Try again as an outline sm button."
+                "note": "Unframed, under the heads inside the table's own frame, padded density.panel-pad across and 12 down. The heading at 450; the diagnostic and each problem in text.help, muted-foreground; Try again as an outline sm button."
             }
         },
         "dropLine": {"rest": {"ground": "primary", "note": "2 tall, where a dragged row lands."}}

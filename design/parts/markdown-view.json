@@ -28,7 +28,7 @@
         "body": "The prose: text.sm on relaxed lines in foreground. A block's first child has no space above it and its last none below. With measure, paragraphs, lists, quotes and headings stop at reading-measure while tables, code, diagrams, math and parts take the full width.",
         "heading": "h1 to h6, each in the text role its level takes at the view's scale (messageHeading1 to 4, documentHeading1 to 4); h5 and h6 in the body's text. With anchors each has the id its words make (lowercased, spaces as dashes, punctuation dropped), a repeated heading numbered -1, -2 after the first.",
         "messageHeading1": "An h1 at the message scale, in text.detail-title; 20 above and 8 below.",
-        "messageHeading2": "An h2 at the message scale, in text.section-title at weight 600; 16 above and 8 below.",
+        "messageHeading2": "An h2 at the message scale, in text.section-title at weight 500; 16 above and 8 below.",
         "messageHeading3": "An h3 at the message scale, in text.section-title; 12 above and 6 below.",
         "messageHeading4": "An h4 at the message scale, in text.head; 12 above and 4 below.",
         "documentHeading1": "An h1 at the document scale, in text.page-title; 24 above and 12 below.",
@@ -181,7 +181,7 @@
     "pieces": {
         "body": {"rest": {"text": "text.sm", "ink": "foreground"}},
         "messageHeading1": {"rest": {"text": "text.detail-title"}},
-        "messageHeading2": {"rest": {"text": "text.section-title", "weight": 600}},
+        "messageHeading2": {"rest": {"text": "text.section-title", "weight": 500}},
         "messageHeading3": {"rest": {"text": "text.section-title"}},
         "messageHeading4": {"rest": {"text": "text.head"}},
         "documentHeading1": {"rest": {"text": "text.page-title"}},

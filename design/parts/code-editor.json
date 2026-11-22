@@ -33,7 +33,7 @@
         "rangeMark": "A mark with a range or a path, and every problem the checks find: a wavy underline in the tone (critical, warning, info), skipping no ink, 0.2em under the text. With a message, a dot in its tone in the lint gutter and the message on hover.",
         "lintDot": "The lint gutter, 16 wide, shown while any mark carries a message or a schema checks the document: a 8 round dot in the tone on each line with a problem.",
         "tooltip": "Hover tooltips (a word's description, a schema key's type and description, a problem's message) and the completion list: popover ground and ink, a 1px border edge, radius-control, elevation-pop, the sans at text.xs. A problem's message starts with a 3 wide rule in its tone.",
-        "completion": "The words offered while typing, in the mono face, at most 256 tall, each row 8 across and 2 down with its kind's icon in muted-foreground, the matched letters at 600, its detail 12 after in muted-foreground; the chosen row on accent in accent-foreground. A deprecated one struck through in muted-foreground, saying words.deprecated. Its docs in a box beside the list.",
+        "completion": "The words offered while typing, in the mono face, at most 256 tall, each row 8 across and 2 down with its kind's icon in muted-foreground, the matched letters at 500, its detail 12 after in muted-foreground; the chosen row on accent in accent-foreground. A deprecated one struck through in muted-foreground, saying words.deprecated. Its docs in a box beside the list.",
         "foldGutter": "With folding: a gutter of fold marks beside the numbers, each padded 4, foreground under the pointer; a folded block's placeholder on muted in muted-foreground, radius-control, 6 across.",
         "foldPlaceholder": "A folded block's placeholder in the text: muted ground, muted-foreground ink, radius-control, 6 across.",
         "searchPanel": "With search: the find and replace bar over the text, on muted in foreground, the sans at text.xs, a 1px border rule under it; its fields on field with a 1px input edge and radius-control (ring edge on focus) and its buttons on background with a border edge (accent under the pointer). Matches washed warning at 24 percent, the current one at 48, corners half of radius.",
@@ -55,7 +55,7 @@
         "syntax-property": "Syntax tokens: property names and their definitions (JSON and YAML keys, and the keys of a markdown note's frontmatter), in code-property.",
         "syntax-tag": "Syntax tokens: tag names, in code-tag.",
         "syntax-attribute": "Syntax tokens: attribute names and labels, in code-attribute.",
-        "syntax-heading": "Syntax tokens: headings, at weight 600, in code-heading.",
+        "syntax-heading": "Syntax tokens: headings, at weight 500, in code-heading.",
         "syntax-link": "Syntax tokens: links and addresses, [[links]] and ![[embeds]] in markdown, in code-link; markdown #tags (labelName) are code-attribute.",
         "syntax-inserted": "Syntax tokens: inserted lines of a diff, and markdown ==highlights==, in code-inserted.",
         "syntax-deleted": "Syntax tokens: deleted lines of a diff, in code-deleted.",
@@ -385,7 +385,7 @@
         "completion": {
             "rest": {
                 "ink": "popover-foreground",
-                "note": "Rows in the mono face; the icon and the detail in muted-foreground (.cm-completionIcon, .cm-completionDetail); the matched letters at 600."
+                "note": "Rows in the mono face; the icon and the detail in muted-foreground (.cm-completionIcon, .cm-completionDetail); the matched letters at 500."
             },
             "selected": {"ground": "accent", "ink": "accent-foreground", "note": "li[aria-selected]."}
         },
@@ -439,7 +439,7 @@
         "syntax-property": {"rest": {"ink": "code-property"}},
         "syntax-tag": {"rest": {"ink": "code-tag"}},
         "syntax-attribute": {"rest": {"ink": "code-attribute"}},
-        "syntax-heading": {"rest": {"ink": "code-heading", "weight": 600}},
+        "syntax-heading": {"rest": {"ink": "code-heading", "weight": 500}},
         "syntax-link": {"rest": {"ink": "code-link"}},
         "syntax-inserted": {"rest": {"ink": "code-inserted"}},
         "syntax-deleted": {"rest": {"ink": "code-deleted"}},

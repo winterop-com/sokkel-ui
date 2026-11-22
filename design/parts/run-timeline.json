@@ -34,7 +34,7 @@
         "nowLabel": "words.now on the ruler, centered on the current time, in capitals: a small primary tab over the tick labels.",
         "lane": "One job's row: its name at the start and its track after it, ruled under (the last lane not). The chosen lane is washed accent; a total lane is ruled over in border-strong.",
         "name": "The lane's name and detail, nameWidth wide (nameWidthNarrow below 640), padded 12 across and 8 down, a 2 wide start edge that the chosen lane draws in primary. With onSelect it is a button that chooses the lane, the keyboard's way to it; a total lane's is not.",
-        "laneName": "The name, in the code face at weight 500, cut short with an ellipsis; a total lane's in the body face at 600.",
+        "laneName": "The name, in the code face at weight 450, cut short with an ellipsis; a total lane's in the body face at 500.",
         "laneDetail": "The line under the name (detail): its state or what it holds, cut short.",
         "track": "The rest of the lane, at least laneMinHeight tall, holding the grid lines, the now line and the runs. A press anywhere in another lane's track chooses that lane, as its name does.",
         "run": "A run where it fell: a mark at its start (4 wide) or a bar from its start to its end (at least 4), 16 tall, centered in the track, in its state's color; titled with its state and when (Nov 17, 14:00). A run after now is upcoming and drawn hollow. A run wholly outside the axis is not drawn.",
@@ -141,7 +141,7 @@
             "reached": "selected"
         },
         "total": {
-            "means": "A lane that adds up the others: ruled over in border-strong, its name in the body face at 600, never a button and never chosen.",
+            "means": "A lane that adds up the others: ruled over in border-strong, its name in the body face at 500, never a button and never chosen.",
             "reached": "total on a lane"
         },
         "upcoming": {
@@ -175,7 +175,7 @@
                 "ink": "primary-foreground",
                 "radius": "radius-mini",
                 "text": "text.2xs",
-                "weight": 600,
+                "weight": 500,
                 "note": "In the code face, in capitals, on a 16 line."
             }
         },
@@ -197,8 +197,8 @@
             }
         },
         "laneName": {
-            "rest": {"weight": 500, "note": "In the code face."},
-            "total": {"weight": 600, "note": "In the body face."}
+            "rest": {"weight": 450, "note": "In the code face."},
+            "total": {"weight": 500, "note": "In the body face."}
         },
         "laneDetail": {"rest": {"ink": "muted-foreground", "text": "text.help"}},
         "track": {"rest": {"note": "No ground of its own: the lane's shows."}, "hover": {"ground": "muted/50"}},

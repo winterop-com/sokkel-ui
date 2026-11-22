@@ -40,10 +40,10 @@
         "stepLine": "Each step of the spec's scale after the first, a dashed line 1 wide across the plot at its value in the step's color (muted-foreground when it names none), its figure written at its end over the line at chart-text-size-small.",
         "markLine": "Each of the spec's marks, a dashed line 1 wide down the plot at its category in the mark's color (muted-foreground when it names none), its label at its top at chart-text-size-small.",
         "axisPointer": "While the pointer is over the plot: a dashed line 1 wide in muted-foreground at the hovered category, or a shade of muted-foreground at 14 percent behind its bars.",
-        "tooltip": "The hovered category's figures on the popover's look: popover ground, a 1 wide border edge, radius-md, elevation-pop, padded 10 across and 6 down, text.xs. The category over its rows at weight 500; a row per series with a figure: its swatch, its name, its figure at the end.",
+        "tooltip": "The hovered category's figures on the popover's look: popover ground, a 1 wide border edge, radius-md, elevation-pop, padded 10 across and 6 down, text.xs. The category over its rows at weight 450; a row per series with a figure: its swatch, its name, its figure at the end.",
         "tooltipSwatch": "A row's swatch, 10 square, rounded radius-mini, in its series' color.",
         "tooltipLabel": "A row's series name, in muted-foreground.",
-        "tooltipValue": "A row's figure at its end, 16 after the name at least, in the code face at weight 500 with tabular figures, in popover-foreground.",
+        "tooltipValue": "A row's figure at its end, 16 after the name at least, in the code face at weight 450 with tabular figures, in popover-foreground.",
         "legend": "ChartLegend, beside the chart rather than in it: a wrapping row of entries 4 apart (list), or a list table of each series with its min, max, mean and current figure (table, parts/table's list variant, unframed).",
         "legendItem": "An entry: a button holding its swatch and label (and its figure with figures), 24 tall, padded 6 across, 6 between swatch and label, radius-md, text.xs in muted-foreground; a finger tall below md. A press, Enter or Space hides or shows its series; hover or focus emphasizes it.",
         "legendSwatch": "An entry's swatch, 10 square, rounded radius-mini, in its series' color; hollow (a 1 wide inset ring in the entry's ink) while its series is hidden.",
@@ -323,12 +323,12 @@
                 "ink": "popover-foreground",
                 "radius": "radius-md",
                 "text": "text.xs",
-                "note": "tooltipMarkup in look.ts; elevation-pop under it. The category at weight 500."
+                "note": "tooltipMarkup in look.ts; elevation-pop under it. The category at weight 450."
             }
         },
         "tooltipLabel": {"rest": {"ink": "muted-foreground"}},
         "tooltipValue": {
-            "rest": {"ink": "popover-foreground", "weight": 500, "note": "In the code face, tabular figures."}
+            "rest": {"ink": "popover-foreground", "weight": 450, "note": "In the code face, tabular figures."}
         },
         "tooltipSwatch": {"rest": {"radius": "radius-mini", "note": "In the series' color."}},
         "legendItem": {

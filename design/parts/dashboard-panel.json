@@ -27,7 +27,7 @@
     "anatomy": {
         "panel": "The box: card ground, a 1px border-strong edge, radius-surface corners, clipping its content. It takes its span's columns of the grid (DashboardGrid) and stretches to the height of its row.",
         "head": "The head row: at least 40 tall, 12 across and 6 down, a 1px border rule under it, its pieces 8 apart. With an arranged grid's tools it may wrap, the tools and actions taking a line of their own in a narrow panel.",
-        "title": "The panel's title, cut short at the end, in text.sm at weight 500, then the subtitle 8 after it on its baseline.",
+        "title": "The panel's title, cut short at the end, in text.sm at weight 450, then the subtitle 8 after it on its baseline.",
         "subtitle": "What the panel covers, such as its range, in text.xs and muted-foreground, cut short.",
         "stale": "With stale and not failed: a clock (12) and since when (stale's own words, else words.stale), in text.xs and warning-ink, cut short, its whole text on hover.",
         "actions": "The app's own controls in the head, after the stale mark.",
@@ -188,7 +188,7 @@
     "pieces": {
         "panel": {"rest": {"ground": "card", "edge": "border-strong", "radius": "radius-surface"}},
         "head": {"rest": {"rule": "border", "note": "1 wide under the head."}},
-        "title": {"rest": {"text": "text.sm", "weight": 500, "note": "In the ink of the card."}},
+        "title": {"rest": {"text": "text.sm", "weight": 450, "note": "In the ink of the card."}},
         "subtitle": {"rest": {"ink": "muted-foreground", "text": "text.xs"}},
         "stale": {"rest": {"ink": "warning-ink", "text": "text.xs"}},
         "tool": {

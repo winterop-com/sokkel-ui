@@ -85,7 +85,7 @@
                 "ink": "primary-foreground",
                 "radius": "radius-mini",
                 "text": "text.2xs",
-                "weight": 600,
+                "weight": 500,
                 "note": "In the code face, in capitals."
             }
         }

@@ -34,7 +34,7 @@
         "thresholdLine": "Each threshold after the first, a dashed line 1 wide across the chart at its value in its color token, its figure written at the line's end over it at chart-text-size-small: a target or a limit. The first threshold has no line; it colors what is below the second.",
         "mark": "With marks: a line across the chart at a value, such as a target or a limit: dashed, 1 wide, in its color, its label and value written short at its end above it; the value axis reaches it. parts/chart's targets.",
         "legend": "Under the chart (legend list): a wrapping row of parts/chart's legend entries; legend table: a list table of each series with legendStats (min, max, avg, current by default); legend none: no legend.",
-        "thresholdLegend": "ThresholdLegend, where the app puts it: the key to a threshold scale, as a list (each band a swatch, its name with labels, and the range it covers in muted-foreground, 16 apart across and 4 down) or a bar (the bands end to end in one strip 8 tall, 1 apart, rounded radius-mini, the values where they meet written under the joins and the bands' names under them). An optional title over it at weight 500; with noData, a hatched swatch for a missing value.",
+        "thresholdLegend": "ThresholdLegend, where the app puts it: the key to a threshold scale, as a list (each band a swatch, its name with labels, and the range it covers in muted-foreground, 16 apart across and 4 down) or a bar (the bands end to end in one strip 8 tall, 1 apart, rounded radius-mini, the values where they meet written under the joins and the bands' names under them). An optional title over it at weight 450; with noData, a hatched swatch for a missing value.",
         "thresholdSwatch": "A band's swatch in the list, 12 square, rounded radius-mini, in its color token, with a 1 wide inset ring in foreground at 15 percent; the missing value's is hatched in muted."
     },
     "standsOn": {"default": "card"},
@@ -168,7 +168,7 @@
             }
         },
         "thresholdLegend": {
-            "rest": {"text": "text.xs", "note": "The title, a figcaption, at weight 500."},
+            "rest": {"text": "text.xs", "note": "The title, a figcaption, at weight 450."},
             "noData": {"ink": "muted-foreground"}
         },
         "thresholdSwatch": {

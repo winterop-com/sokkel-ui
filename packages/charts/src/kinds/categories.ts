@@ -165,7 +165,7 @@ const slices =
                           left: 'center',
                           top: 'center',
                           itemGap: 2,
-                          textStyle: { fontSize: look.size.stat, fontWeight: 600, color: look.foreground },
+                          textStyle: { fontSize: look.size.stat, fontWeight: look.weight.semibold, color: look.foreground },
                           subtextStyle: { fontSize: look.size.label, color: look.muted },
                       },
                   }),

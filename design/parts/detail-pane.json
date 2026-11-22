@@ -50,7 +50,7 @@
     },
     "sizes": {
         "section": {"padX": 16, "padY": 12, "gap": 8},
-        "heading": {"note": "text.xs at weight 500, as its paint says; uppercase, tracked wide."},
+        "heading": {"note": "text.xs at weight 450, as its paint says; uppercase, tracked wide."},
         "headingRow": {"height": 28, "gap": 8, "note": "At least this tall, only with the section's actions."},
         "sectionActions": {"gap": 4},
         "summary": {"text": "text.sm"},
@@ -72,7 +72,7 @@
     "states": {"rest": {"means": "The sections drawn one under the other, then the verbs."}},
     "pieces": {
         "section": {"rest": {"rule": "border", "note": "1 wide under each section but the last."}},
-        "heading": {"rest": {"ink": "faint", "text": "text.xs", "weight": 500, "note": "Uppercase, tracking wide."}},
+        "heading": {"rest": {"ink": "faint", "text": "text.xs", "weight": 450, "note": "Uppercase, tracking wide."}},
         "summary": {"rest": {"text": "text.sm", "note": "In the ink of what it stands on."}},
         "term": {"rest": {"ink": "muted-foreground", "text": "text.xs"}},
         "value": {

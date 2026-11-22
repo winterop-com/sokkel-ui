@@ -348,11 +348,15 @@ for (const match of REGULAR_TEXT.matchAll(/--text-([a-z0-9]+(?:-[a-z0-9]+)*)(--l
     else entry.tracking = value
     TEXT.set(name, entry)
 }
+/** The weight each `font-*` class sets: normal is Tailwind's 400, the rest the weight tokens tokens.css writes. */
 const WEIGHTS: Record<string, number> = {
     'font-normal': 400,
-    'font-medium': 500,
-    'font-semibold': 600,
-    'font-bold': 700,
+    ...Object.fromEntries([...STYLES.matchAll(/--font-weight-([a-z]+): (\d+);/g)].map((match) => [`font-${match[1]}`, Number(match[2])])),
+}
+/** The `font-*` class a style's weight is: a number, or a weight token (`var(--font-weight-semibold)`). */
+const weightClass = (value: string) => {
+    const token = /^var\(--font-weight-([a-z]+)\)$/.exec(value)?.[1]
+    return token === undefined ? (Object.entries(WEIGHTS).find(([, weight]) => String(weight) === value)?.[0] ?? '') : `font-${token}`
 }
 
 // Drawing a component on the server, and finding its elements
@@ -6621,7 +6625,7 @@ function themeClasses(selector: string, text = CODE_EDITOR): string {
         else if (key === 'fontSize') {
             const size = /^var\(--text-([a-z0-9-]+)\)$/.exec(value)?.[1]
             if (size !== undefined) classes.push(`text-${size}`)
-        } else if (key === 'fontWeight') classes.push(Object.entries(WEIGHTS).find(([, weight]) => String(weight) === value)?.[0] ?? '')
+        } else if (key === 'fontWeight') classes.push(weightClass(value))
         else if (key === 'padding') classes.push(...paddingClasses(value))
         else if (key === 'width' && remStep(value) !== undefined) classes.push(`w-${remStep(value)}`)
         else if (key === 'minWidth' && remStep(value) !== undefined) classes.push(`min-w-${remStep(value)}`)
@@ -6646,10 +6650,8 @@ function themeClasses(selector: string, text = CODE_EDITOR): string {
 const highlightClasses = (token: string) => {
     const entry = new RegExp(`\\{ tag: [^\\n]*color: 'var\\(--${token}\\)'([^\\n]*)\\}`).exec(CODE_EDITOR)
     if (entry === null) return ''
-    const weight = /fontWeight: '(\d+)'/.exec(entry[1])?.[1]
-    return [`text-${token}`, weight === undefined ? '' : (Object.entries(WEIGHTS).find(([, one]) => String(one) === weight)?.[0] ?? '')]
-        .filter(Boolean)
-        .join(' ')
+    const weight = /fontWeight: '([^']+)'/.exec(entry[1])?.[1]
+    return [`text-${token}`, weight === undefined ? '' : weightClass(weight)].filter(Boolean).join(' ')
 }
 
 /** A piece of the editor drawn by its theme, its states laid in order over its rest. */

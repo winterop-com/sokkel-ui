@@ -216,7 +216,7 @@
                 "ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"},
                 "note": "A crumb that is a link."
             },
-            "current": {"ink": "foreground", "weight": 500}
+            "current": {"ink": "foreground", "weight": 450}
         },
         "chevron": {"rest": {"ink": "faint"}},
         "backChevron": {"rest": {"ink": "faint"}},

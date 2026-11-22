@@ -15,11 +15,11 @@
         "glow": "Under each symbol, a soft circle in the symbol's color fading from its middle, fainter on a light map and the more tracks there are, so a crowded map stays calm.",
         "trail": "The track's past positions, oldest first, as one 2 wide line that fades along its length from nothing at its oldest end to the color at its newest; then its head, a 2 wide line in the color on from the newest position to where the track is drawn, which moves with the track while the trail stays. With fade off, both are even. In the affiliation's color, or the band's for the first eight bands.",
         "label": "The track's label 0.75 of the drawn size plus 4 right of its point, centered on it: text.2xs on card at 80 percent, padded 4 across, rounded by radius-mini. A label that would cover another label or another track's symbol is left out, in the order the tracks are given; the selected track's never is, and is placed first.",
-        "ring": "Under the symbol, a circle 0.75 of the size in radius: none at rest; a 1.25 line in foreground mixed 55 percent into card at 80 percent under the pointer; for the selected track a 2 line in map-selection over a fill of map-selection at 18 percent, and its label at 500 weight on card, ringed 1 in map-selection.",
+        "ring": "Under the symbol, a circle 0.75 of the size in radius: none at rest; a 1.25 line in foreground mixed 55 percent into card at 80 percent under the pointer; for the selected track a 2 line in map-selection over a fill of map-selection at 18 percent, and its label at 450 weight on card, ringed 1 in map-selection.",
         "halo": "Around the selected track, under its ring: a soft circle in map-selection that breathes, growing and fading over 3.2 seconds and back. Still, at its smallest, with motion reduced.",
         "ripple": "Where a track first appears after the layer's own start: a ring in its color spreading out and fading over 1.8 seconds, once. None with motion reduced, nor while the page is hidden.",
         "pulse": "Under each hostile track, below its glow: a soft circle in track-hostile that swells and fades every 3.6 seconds, fainter on a light map and the more tracks there are. None with motion reduced.",
-        "cluster": "With cluster on, nearby tracks gather into a circle of their count: foreground mixed 78 percent into card, 12 across the radius under 10 tracks, 15 to 50, 18 to 150, 22 beyond, ringed 2 in card, or 3 in track-hostile when it holds a hostile track; the count in text.2xs at 500 in card, in tabular figures. A press zooms to where it falls apart."
+        "cluster": "With cluster on, nearby tracks gather into a circle of their count: foreground mixed 78 percent into card, 12 across the radius under 10 tracks, 15 to 50, 18 to 150, 22 beyond, ringed 2 in card, or 3 in track-hostile when it holds a hostile track; the count in text.2xs at 450 in card, in tabular figures. A press zooms to where it falls apart."
     },
     "standsOn": {"default": "card"},
     "options": {
@@ -125,7 +125,7 @@
         },
         "label": {
             "rest": {"ground": "card/80", "ink": "foreground", "text": "text.2xs", "radius": "radius-mini"},
-            "selected": {"ground": "card", "weight": 500, "ring": {"color": "map-selection", "width": 1}}
+            "selected": {"ground": "card", "weight": 450, "ring": {"color": "map-selection", "width": 1}}
         },
         "ring": {
             "rest": {"ground": "none", "edge": "none"},
@@ -163,7 +163,7 @@
                 "edge": "card",
                 "ink": "card",
                 "text": "text.2xs",
-                "weight": 500
+                "weight": 450
             }
         }
     },

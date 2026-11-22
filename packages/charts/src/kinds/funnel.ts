@@ -48,7 +48,7 @@ export const funnel: ChartBuilder = (spec, look) => {
                 },
                 labelLine: { show: false },
                 itemStyle: { borderColor: look.card, borderWidth: 1 },
-                emphasis: { label: { fontWeight: 600 } },
+                emphasis: { label: { fontWeight: look.weight.semibold } },
                 data: list.map((stage, index) => ({
                     name: stage.name,
                     value: stage.value,

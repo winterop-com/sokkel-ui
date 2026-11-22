@@ -221,7 +221,7 @@
         "childInsetText": {"value": 22, "note": "A child row's start pad in a rail of text."},
         "cornerCount": {
             "value": 16,
-            "note": "Tall and at least as wide, fully round, 11 text at 600; 4 above the icon's tile and 6 past its end; 99+ above 99."
+            "note": "Tall and at least as wide, fully round, 11 text at 500; 4 above the icon's tile and 6 past its end; 99+ above 99."
         },
         "unreadDot": {
             "value": 8,
@@ -371,10 +371,10 @@
                 "ground": "sidebar-accent",
                 "edge": "sidebar-primary",
                 "ink": "sidebar-accent-foreground",
-                "weight": 500
+                "weight": 450
             },
             "active+hover": {"ground": "sidebar-accent", "ink": "sidebar-accent-foreground"},
-            "holding": {"ink": "foreground", "weight": 500},
+            "holding": {"ink": "foreground", "weight": 450},
             "holding+hover": {"ground": "hover", "ink": "foreground"}
         },
         "description": {
@@ -384,15 +384,15 @@
         "count": {
             "rest": {
                 "ink": "foreground",
-                "weight": 600,
-                "note": "13/20 (text-xs) at 600 with tabular figures; no text role has that weight."
+                "weight": 500,
+                "note": "13/20 (text-xs) at 500 with tabular figures; no text role has that weight."
             }
         },
         "cornerCount": {
             "rest": {
                 "ground": "critical",
                 "ink": "critical-foreground",
-                "weight": 600,
+                "weight": 500,
                 "ring": {"color": "sidebar", "width": 2},
                 "note": "The ring cuts it out of the rail's ground."
             }
@@ -443,7 +443,7 @@
         "stripEntry": {
             "rest": {"ink": "muted-foreground"},
             "hover": {"ink": "foreground"},
-            "active": {"ink": "foreground", "weight": 500},
+            "active": {"ink": "foreground", "weight": 450},
             "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "offset": "focus-ring-offset"}}
         },
         "stripTile": {
@@ -543,7 +543,7 @@
         {
             "renderer": "sokkel-egui",
             "what": "count weight",
-            "spec": "An expanded row's count at 600.",
+            "spec": "An expanded row's count at 500.",
             "today": "TextRole::Badge, at 500."
         },
         {

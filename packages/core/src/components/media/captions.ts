@@ -148,7 +148,7 @@ export function captionCss(style: CaptionStyle): { text: CSSProperties; box: CSS
         text: {
             fontSize: `max(${token('caption-size-min')}, calc(${token('caption-size')} * ${String(style.size)}))`,
             lineHeight: 1.35,
-            fontWeight: 500,
+            fontWeight: 'var(--font-weight-medium)',
             color: token(`caption-${style.color}`),
             textShadow: shadowOf(style.edge),
         },

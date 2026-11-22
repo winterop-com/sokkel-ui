@@ -25,11 +25,11 @@
         "tile": "The box: at least 112 tall (144 with a target meter), radius-surface, a 1px border edge on card in card-foreground, clipping. Filled by its tone (colorMode background): the tone as a diagonal gradient, no edge, in on-fill. It takes its span's columns (parts/dashboard-panel), a sixth by default.",
         "spark": "With sparkline and a value: the values as an area under a line, stretched across the tile's foot, 45 percent of its height (a quarter with a target), behind everything, in the value's ink (muted-foreground, the tone when inked, on-fill when filled) faded: the line at 70 percent, the area from 32 to 4 percent.",
         "head": "The head row: at least 28 tall, 10 across, 4 over, its pieces 4 apart: the title, the change, info, the menu's button and an arranged grid's tools.",
-        "title": "The title in text.xs at weight 500, muted-foreground, at most two lines; one cut short gives its whole text on hover.",
-        "delta": "With delta and a value: an arrow (up unless the change starts with a minus, 14), the change in tabular figures at text.xs and 500, then what it is against (compared) at weight 400, cut short; titled with both. Its tone: good, critical when good is false, muted-foreground when good is not given.",
+        "title": "The title in text.xs at weight 450, muted-foreground, at most two lines; one cut short gives its whole text on hover.",
+        "delta": "With delta and a value: an arrow (up unless the change starts with a minus, 14), the change in tabular figures at text.xs and 450, then what it is against (compared) at weight 400, cut short; titled with both. Its tone: good, critical when good is false, muted-foreground when good is not given.",
         "tool": "info (a 12 info icon opening the tooltip with info, named words.info) and the menu's button (a 14 ellipsis, named and titled words.menu): 20 square, radius-md, in muted-foreground.",
-        "value": "The reading, centered in the room under the head, 10 across and 28 under: written by format, else with decimals and grouped thousands (en-US), in text.statistic with tabular figures; the unit 4 after it at text.sm and 500, in muted-foreground unless inked or filled. A null value says words.noData in text.detail-title and muted-foreground, with no unit.",
-        "unit": "With unit and a value: the unit 4 after the value on its baseline, at text.sm and weight 500, in muted-foreground unless inked or filled, when it takes the value's ink.",
+        "value": "The reading, centered in the room under the head, 10 across and 28 under: written by format, else with decimals and grouped thousands (en-US), in text.statistic with tabular figures; the unit 4 after it at text.sm and 450, in muted-foreground unless inked or filled. A null value says words.noData in text.detail-title and muted-foreground, with no unit.",
+        "unit": "With unit and a value: the unit 4 after the value on its baseline, at text.sm and weight 450, in muted-foreground unless inked or filled, when it takes the value's ink.",
         "note": "With note: a line under the value in text.xs, muted-foreground, cut short.",
         "stale": "With stale: parts/dashboard-panel's stale mark, under the value.",
         "meter": "With target and a value: a meter under the value, 8 below it and 12 above the tile's foot, at most 192 wide, its pieces 4 apart: the track, then the target written out.",
@@ -111,11 +111,11 @@
             "note": "At least 112; at least 144 with a target meter and a value."
         },
         "head": {"height": 28, "padX": 10, "gap": 4, "note": "At least 28 tall, 4 over its pieces."},
-        "title": {"note": "text.xs at weight 500, as its paint says; at most two lines."},
-        "delta": {"gap": 2, "icon": 14, "note": "text.xs at weight 500, as its paint says."},
+        "title": {"note": "text.xs at weight 450, as its paint says; at most two lines."},
+        "delta": {"gap": 2, "icon": 14, "note": "text.xs at weight 450, as its paint says."},
         "tool": {"height": 20, "width": 20, "radius": "radius-md", "note": "info's icon 12, the menu's 14."},
         "value": {"gap": 4, "padX": 10, "text": "text.statistic", "note": "28 under the value's room."},
-        "unit": {"note": "text.sm at weight 500, as its paint says."},
+        "unit": {"note": "text.sm at weight 450, as its paint says."},
         "note": {"text": "text.xs"},
         "meter": {"gap": 4, "note": "At most layout.meterMaxWidth wide."},
         "track": {"height": 6, "radius": "radius-mini"},
@@ -227,11 +227,11 @@
             }
         },
         "title": {
-            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 500},
+            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 450},
             "filled": {"ink": "on-fill/90"}
         },
         "delta": {
-            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 500},
+            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 450},
             "good": {"ink": "good"},
             "bad": {"ink": "critical"},
             "filled": {"ink": "on-fill/90"}
@@ -253,7 +253,7 @@
             "rest": {
                 "ink": "muted-foreground",
                 "text": "text.sm",
-                "weight": 500,
+                "weight": 450,
                 "note": "Inked or filled, the value's ink."
             }
         },
