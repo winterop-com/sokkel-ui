@@ -46,7 +46,7 @@
         "toggle": "Before a branch's label: a 20 square button with a chevron that points right while closed and down while open; a leaf keeps the room empty. A branch is a node given a list of children, even an empty one, or marked as having children to load; a leaf has neither.",
         "icon": "The node's icon before its label, 16, in the muted ink; an open branch shows its open icon.",
         "checkbox": "In multiple choice: a 16 checkbox before the label, ticked when chosen, a dash when the branch holds some choices but is not chosen itself; shut with the row.",
-        "label": "The node's label, cut short; the part a search matched marked.",
+        "label": "The node's label on one line, cut short with an ellipsis; once cut, its whole text (and a search result's trail after it) is its title, on hover. The part a search matched marked.",
         "match": "The part of a label a search matched: a wash of primary under the primary ink, corners radius-mini.",
         "trailPath": "On a search result from the app's search: the result's ancestors joined by ' / ' after its label, small and quiet.",
         "reason": "On a shut row: why it cannot be chosen, small and quiet, at most half the row, all of it in its title.",
