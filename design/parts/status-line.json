@@ -10,7 +10,8 @@
         },
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987"
+            "as_of": "ebeb584",
+            "note": "Each fact keeps its whole width but the last, whose value is cut short in its own box; the drift below is still open."
         },
         "sokkel-tui": {
             "state": "built",
