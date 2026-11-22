@@ -409,9 +409,8 @@ export const Searched: StoryObj = { name: 'Searched', render: () => <LazyPicker 
  */
 export const Files: StoryObj = { name: 'File tree', render: () => <FileTree /> }
 /**
- * Three hundred sheets named alike up to their numbers, in a rail's body: cut at the end, every row
- * reads the same and hover gives the whole name; `cut="middle"` keeps each sheet's number in view.
- * A search marks what it finds on either side of the cut.
+ * Three hundred sheets named alike up to their numbers, in a rail's body, cut at the end: every row
+ * reads the same, and hover gives the whole name. A search marks what it finds.
  */
 export const LongLabels: StoryObj = {
     name: 'Long labels',
@@ -420,6 +419,20 @@ export const LongLabels: StoryObj = {
         <TooltipProvider>
             <Row gap="none" align="stretch" className="h-svh bg-background">
                 <Sheets cut="end" />
+            </Row>
+        </TooltipProvider>
+    ),
+}
+/**
+ * The same sheets with `cut="middle"`: each sheet's number stays in view after the cut, and a search
+ * marks what it finds on either side of it.
+ */
+export const LongLabelsMiddle: StoryObj = {
+    name: 'Long labels, middle',
+    parameters: { frame: 'none' },
+    render: () => (
+        <TooltipProvider>
+            <Row gap="none" align="stretch" className="h-svh bg-background">
                 <Sheets cut="middle" />
             </Row>
         </TooltipProvider>
