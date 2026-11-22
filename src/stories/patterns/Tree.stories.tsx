@@ -7,7 +7,11 @@ import { Field } from '@winterop-com/sokkel-ui/Field'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { TreeSelect } from '@winterop-com/sokkel-ui/TreeSelect'
-import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Rail } from '@winterop-com/sokkel-ui/Rail'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { TidevannMark } from '../fixtures/TidevannMark'
 import { branchIds, GEOGRAPHY_TOP, geography, loadPlace, searchPlaces, SITE_COUNT, trailOf } from '../fixtures/geography'
 
 /** A hierarchy to open a level at a time, and the field that picks from one. */
@@ -322,6 +326,51 @@ function Large() {
     )
 }
 
+/** A survey's three hundred sheets, named alike up to their numbers. */
+const SHEETS: TreeNode[] = [
+    {
+        id: 'survey',
+        label: 'Harbor survey',
+        icon: Folder,
+        openIcon: FolderOpen,
+        children: Array.from({ length: 300 }, (_, index) => ({
+            id: `sheet-${String(index + 1)}`,
+            label: `Harbor survey of the northern coast, Norway, west approaches: Sheet ${String(index + 1)}`,
+            icon: FileText,
+        })),
+    },
+]
+
+/** The sheets in a rail's body, cut as `cut` says, with a search that marks what it finds. */
+function Sheets({ cut }: { cut: 'end' | 'middle' }) {
+    const [query, setQuery] = useState('')
+    const [sheet, setSheet] = useState('sheet-170')
+    return (
+        <Rail
+            mark={<TidevannMark />}
+            name="Tidevann"
+            groups={[{ id: 'work', entries: [{ id: 'sheets', label: 'Sheets', icon: FileText, href: '#sheets', active: true }] }]}
+            body={{
+                title: cut === 'middle' ? 'Cut in the middle' : 'Cut at the end',
+                search: <SearchField value={query} onChange={setQuery} />,
+                content: (
+                    <Tree
+                        label="Sheets"
+                        nodes={SHEETS}
+                        cut={cut}
+                        query={query}
+                        selected={[sheet]}
+                        onSelect={([id]) => {
+                            if (id !== undefined) setSheet(id)
+                        }}
+                        defaultExpanded={['survey']}
+                    />
+                ),
+            }}
+        />
+    )
+}
+
 const meta: Meta = { title: 'Patterns/Tree', parameters: { frame: 'padded' } }
 export default meta
 
@@ -359,5 +408,22 @@ export const Searched: StoryObj = { name: 'Searched', render: () => <LazyPicker 
  * a closed one opens it, and dragged beside a top-level row it moves to the top.
  */
 export const Files: StoryObj = { name: 'File tree', render: () => <FileTree /> }
+/**
+ * Three hundred sheets named alike up to their numbers, in a rail's body: cut at the end, every row
+ * reads the same and hover gives the whole name; `cut="middle"` keeps each sheet's number in view.
+ * A search marks what it finds on either side of the cut.
+ */
+export const LongLabels: StoryObj = {
+    name: 'Long labels',
+    parameters: { frame: 'none' },
+    render: () => (
+        <TooltipProvider>
+            <Row gap="none" align="stretch" className="h-svh bg-background">
+                <Sheets cut="end" />
+                <Sheets cut="middle" />
+            </Row>
+        </TooltipProvider>
+    ),
+}
 /** Every level of the geography open: over fifty thousand rows, drawn only while in view. */
 export const FiftyThousand: StoryObj = { name: 'Fifty thousand', parameters: { frame: 'none' }, render: () => <Large /> }

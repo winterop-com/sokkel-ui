@@ -4,6 +4,7 @@ import {
     canMoveTo,
     dropPart,
     isBranch,
+    labelTail,
     moveTreeNode,
     staleLoads,
     tabStop,
@@ -275,5 +276,23 @@ describe('children loaded at a version since moved on', () => {
     test('leaves a load still on its way', () => {
         const waiting = new Map<string, TreeLoad>([['juniper', { state: 'loading' }]])
         expect(staleLoads(visibleRows(lazy, new Set(), null, waiting), waiting, () => 9)).toEqual([])
+    })
+})
+
+describe('labelTail', () => {
+    test('keeps the part from the last separator when it is short', () => {
+        const label = 'Hours of Queen Isabella the Catholic, Queen of Spain: Fol. 170r'
+        expect(label.slice(labelTail(label))).toBe(': Fol. 170r')
+        expect('Meeting notes - 2026-11-22'.slice(labelTail('Meeting notes - 2026-11-22'))).toBe(' - 2026-11-22')
+    })
+
+    test('keeps the last characters when no separator leaves a short end', () => {
+        const label = 'an unbroken label with no separator in it at all'
+        expect(label.slice(labelTail(label))).toBe('in it at all')
+    })
+
+    test('keeps a short label whole', () => {
+        expect(labelTail('Bergen')).toBe(0)
+        expect(labelTail('Oslo: 1')).toBe(4)
     })
 })

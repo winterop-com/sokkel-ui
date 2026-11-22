@@ -23,6 +23,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Spinner } from './ui/spinner'
 import { Highlight } from './Highlight'
 import { literalRanges } from '../lib/search'
+import { useClamped } from '../hooks/use-clamped'
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 /** One node of a tree: what it answers with, what it is called, and what is under it. */
@@ -490,6 +491,66 @@ function Marked({ text, query }: { text: string; query: string }) {
     return <Highlight text={text} ranges={literalRanges(text, query)} />
 }
 
+/** The separators a label's end is kept from with `cut="middle"`, the last one found. */
+const TAIL_SEPARATORS = [': ', ' - ', ' \u2013 ', ' \u2014 ', ' / ', ', ', ' | ']
+/** The longest end kept whole from a separator; past it, the end keeps its last TAIL_CHARS characters. */
+const TAIL_MAX = 24
+const TAIL_CHARS = 12
+
+/**
+ * Where `cut="middle"` splits a label: the part from its last separator on, when that is short, as
+ * the ": Fol. 170r" that tells a series apart; else its last few characters. 0 keeps it whole.
+ */
+export function labelTail(label: string): number {
+    const at = Math.max(...TAIL_SEPARATORS.map((separator) => label.lastIndexOf(separator)))
+    if (at > 0 && label.length - at <= TAIL_MAX) return at
+    return label.length > TAIL_CHARS * 2 ? label.length - TAIL_CHARS : 0
+}
+
+/** Part of a label with the query's marks that fall in it. */
+function MarkedPart({ text, from, to, query }: { text: string; from: number; to: number; query: string }) {
+    const ranges = literalRanges(text, query)
+        .map((range) => ({ start: Math.max(range.start, from) - from, end: Math.min(range.end, to) - from }))
+        .filter((range) => range.end > range.start)
+    return <Highlight text={text.slice(from, to)} ranges={ranges} />
+}
+
+/**
+ * A row's label on one line, the query marked, cut with an ellipsis at its end or, with
+ * `middle`, before its tail; a label cut short gives its whole text, and a trail's, on hover.
+ */
+function TreeLabel({ label, query, cut, trail }: { label: string; query: string; cut: 'end' | 'middle'; trail?: string }) {
+    const [ref, clamped] = useClamped<HTMLSpanElement>()
+    const [trailRef, trailClamped] = useClamped<HTMLSpanElement>()
+    const tail = cut === 'middle' ? labelTail(label) : 0
+    const whole = trail === undefined ? label : `${label} \u2014 ${trail}`
+    const text =
+        tail === 0 ? (
+            <span ref={ref} className="min-w-0 truncate">
+                <Marked text={label} query={query} />
+            </span>
+        ) : (
+            <span className="flex min-w-0">
+                <span ref={ref} className="min-w-0 truncate">
+                    <MarkedPart text={label} from={0} to={tail} query={query} />
+                </span>
+                <span className="shrink-0 whitespace-pre">
+                    <MarkedPart text={label} from={tail} to={label.length} query={query} />
+                </span>
+            </span>
+        )
+    return (
+        <span title={clamped || trailClamped ? whole : undefined} className="flex min-w-0 flex-1 items-baseline gap-1.5">
+            {trail === undefined ? text : <span className="flex max-w-2/3 min-w-0 shrink-0">{text}</span>}
+            {trail !== undefined && (
+                <span ref={trailRef} className="min-w-0 truncate text-xs text-muted-foreground">
+                    {trail}
+                </span>
+            )}
+        </span>
+    )
+}
+
 type Found = { query: string; state: 'loading' | 'done' | 'failed'; trails: readonly TreeTrail[] }
 
 export interface TreeProps {
@@ -553,6 +614,13 @@ export interface TreeProps {
      * shows; its arrow still closes it. Off, a branch opens only by its arrow and the Right key.
      */
     openOnChoose?: boolean
+    /**
+     * Where a label too long for its row is cut: `end`, with an ellipsis at its end; or `middle`,
+     * before its tail, the part from its last separator (": ", " - ", " / ", ", ") or its last few
+     * characters, so a series ("Hours: Fol. 170r", "Hours: Fol. 95v") stays told apart. A label cut
+     * short gives its whole text on hover.
+     */
+    cut?: 'end' | 'middle'
     words?: Partial<TreeWords>
     /** What the tree is, for a screen reader. */
     label: string
@@ -592,6 +660,9 @@ export interface TreeProps {
  * outside what a form is assigned to; their branches still open to the rows under them.
  *
  * `openOnChoose` opens a closed branch as it is chosen, as a file tree opens the folder it shows.
+ *
+ * A label too long for its row is cut with an ellipsis, and gives its whole text on hover; `cut`
+ * set to `middle` keeps its tail in view instead, as a series of pages told apart at their ends needs.
  */
 export function Tree({
     nodes,
@@ -613,6 +684,7 @@ export function Tree({
     order,
     unavailable,
     openOnChoose = false,
+    cut = 'end',
     words: given,
     label,
     className,
@@ -1015,20 +1087,12 @@ export function Tree({
                         className="pointer-events-none"
                     />
                 )}
-                {row.trail === undefined ? (
-                    <span className="min-w-0 flex-1 truncate">
-                        <Marked text={row.node.label} query={needle} />
-                    </span>
-                ) : (
-                    <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
-                        <span className="max-w-2/3 shrink-0 truncate">
-                            <Marked text={row.node.label} query={needle} />
-                        </span>
-                        <span className="min-w-0 truncate text-xs text-muted-foreground">
-                            {row.trail.ancestors.map((ancestor) => ancestor.label).join(' / ')}
-                        </span>
-                    </span>
-                )}
+                <TreeLabel
+                    label={row.node.label}
+                    query={needle}
+                    cut={cut}
+                    trail={row.trail?.ancestors.map((ancestor) => ancestor.label).join(' / ')}
+                />
                 {shut !== undefined && (
                     <span title={shut} className="max-w-1/2 min-w-0 shrink truncate text-xs text-muted-foreground">
                         {shut}

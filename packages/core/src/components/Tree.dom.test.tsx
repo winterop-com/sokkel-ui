@@ -230,3 +230,32 @@ describe('a branch of many thousand rows', () => {
         },
     )
 })
+
+describe('a long label', () => {
+    const series: TreeNode[] = [
+        { id: 'a', label: 'Hours of Queen Isabella the Catholic, Queen of Spain: Fol. 170r' },
+        { id: 'b', label: 'Hours of Queen Isabella the Catholic, Queen of Spain: Fol. 95v' },
+    ]
+
+    it('keeps its tail apart with cut="middle", the query marked on both sides', async () => {
+        const at = await mount(<Tree nodes={series} label="Pages" cut="middle" query="queen" />)
+        const row = rowOf(at, 'a')
+        const tail = [...(row?.querySelectorAll('span.whitespace-pre') ?? [])].map((span) => span.textContent)
+        expect(tail).toEqual([': Fol. 170r'])
+        expect([...(row?.querySelectorAll('mark') ?? [])].map((mark) => mark.textContent)).toEqual(['Queen', 'Queen'])
+    })
+
+    it('gives its whole text on hover once it is cut short', async () => {
+        const wide = vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(400)
+        const narrow = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)
+        const at = await mount(<Tree nodes={series} label="Pages" />)
+        expect(rowOf(at, 'b')?.querySelector('[title]')?.getAttribute('title')).toBe(series[1].label)
+        wide.mockRestore()
+        narrow.mockRestore()
+    })
+
+    it('gives no hover text to a label that fits', async () => {
+        const at = await mount(<Tree nodes={series} label="Pages" />)
+        expect(rowOf(at, 'a')?.querySelector('[title]')).toBeNull()
+    })
+})

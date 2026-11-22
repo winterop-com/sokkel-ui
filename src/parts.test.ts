@@ -8397,7 +8397,7 @@ const TREE_SELECT_POPUP = {
     failed: literalAfter(TREE, 'key={`${row.node.id}:status`}', '<span className="size-5 shrink-0" aria-hidden />', '<span className='),
     retry: literalAfter(TREE, 'onClick={() => retry(row.node.id)}', 'className='),
     retryIcon: literalAfter(TREE, 'onClick={() => retry(row.node.id)}', '<RotateCw className='),
-    trailPath: literalAfter(TREE, '<span className="max-w-2/3 shrink-0 truncate">', '<span className='),
+    trailPath: literalAfter(TREE, '<span ref={trailRef}', 'className='),
     note: literalAfter(TREE, "note === 'searching' ? (", '<p className='),
 }
 const TREE_ON: Record<string, string[]> = {
