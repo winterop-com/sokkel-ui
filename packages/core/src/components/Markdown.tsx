@@ -122,9 +122,9 @@ function useMathEngine(needed: boolean): MathEngine | undefined {
  * word, and any other marker leaves a quote. `==words==` is drawn highlighted. With `links`,
  * `![[Note]]` embeds a note, drawn by `links.embed` or as a link in a frame, `![[chart.png|300]]`
  * draws an image 300 wide, and `![[file.pdf]]` links to the file. `resolveUrl` rewrites each image's
- * and link's address first, such as a relative path to the app's own server. Not read, and so shown
- * as typed: `%%comments%%`, inline footnotes `^[...]` and block ids `^id`; a single line break stays
- * a space, as CommonMark has it.
+ * and link's address first, such as a relative path to the app's own server. A `%% comment %%` is
+ * hidden, as an HTML comment is. Not read, and so shown as typed: inline footnotes `^[...]` and block
+ * ids `^id`; a single line break stays a space, as CommonMark has it.
  *
  * `measure` holds the prose to a reading measure in a wide pane, tables and code keeping the full width.
  */
