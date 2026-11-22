@@ -117,22 +117,24 @@ const levels = Object.keys(tokens.density).filter((key) => key !== 'default' && 
 const prefixed = (vars: Vars): Vars => Object.fromEntries(Object.entries(vars).map(([name, value]) => [`density-${name}`, value]))
 
 // Text size: every step of the text scale a level moves is written as a variable the utilities read,
-// not inlined, so a level answers on `html[data-text-size]` and on its own scope, from the md breakpoint up. `regular` is the
-// theme's own sizes. A scope also writes again every token named from a step, which `:root` would
+// not inlined, so a level answers on `html[data-text-size]` and on its own scope, from the md breakpoint up. The level that
+// sets no steps is the theme's own sizes. A scope also writes again every token named from a step, which `:root` would
 // otherwise have worked out already at the page's level.
 const sizes = Object.keys(tokens.textSize).filter((key) => key !== 'default' && !key.startsWith('$'))
-const sized = Object.keys(tokens.textSize.smaller as Vars)
-for (const size of sizes) {
-    const keys = Object.keys(tokens.textSize[size] as Vars)
-    if (size !== 'regular' && keys.join() !== sized.join())
-        throw new Error(`tokens.json's text size ${size} moves other steps than smaller`)
-    if (size === 'regular' && keys.length > 0) throw new Error("tokens.json's text size regular is the theme's own sizes, so it sets none")
-}
+const stepsOf = (size: string) => Object.keys(tokens.textSize[size] as Vars)
+const ownLevels = sizes.filter((size) => stepsOf(size).length === 0)
+if (ownLevels.length !== 1) throw new Error("tokens.json's text sizes need exactly one level that sets no steps, the theme's own sizes")
+const ownLevel = ownLevels[0] as string
+const moving = sizes.filter((size) => size !== ownLevel)
+const sized = stepsOf(moving[0] as string)
+for (const size of moving)
+    if (stepsOf(size).join() !== sized.join()) throw new Error(`tokens.json's text size ${size} moves other steps than ${moving[0]}`)
+if (!sizes.includes(tokens.textSize.default)) throw new Error(`tokens.json's default text size ${tokens.textSize.default} is not a level`)
 for (const key of sized) if (!(key in tokens.theme)) throw new Error(`tokens.json's theme has no ${key} for the text sizes to move`)
 const isSized = (name: string) => sized.includes(name)
 const pick = (vars: Vars, keep: (name: string) => boolean): Vars => Object.fromEntries(Object.entries(vars).filter(([name]) => keep(name)))
 const ownSizes = pick(tokens.theme, isSized)
-const sizeOf = (size: string): Vars => (size === 'regular' ? ownSizes : (tokens.textSize[size] as Vars))
+const sizeOf = (size: string): Vars => (size === ownLevel ? ownSizes : (tokens.textSize[size] as Vars))
 const namesASize = (value: string | ShadowLayer[]) => typeof value === 'string' && sized.some((name) => value.includes(`var(--${name})`))
 const fromSizes = pick(tokens.theme, (name) => !isSized(name) && namesASize(tokens.theme[name]))
 
@@ -162,7 +164,7 @@ files.set(
         // From the md breakpoint up only: a phone keeps the theme's sizes, so a field's 16px text never
         // drops under what makes iOS zoom in on focus.
         `@media (min-width: ${tokens.theme['breakpoint-md'] as string}) {\n${[
-            ...(tokens.textSize.default === 'regular' ? [] : [block([':root'], sizeOf(tokens.textSize.default))]),
+            ...(tokens.textSize.default === ownLevel ? [] : [block([':root'], sizeOf(tokens.textSize.default))]),
             ...sizes.map((size) => block([`html[data-text-size='${size}']`, `[data-text-size-scope='${size}']`], sizeOf(size))),
             block(['[data-text-size-scope]'], fromSizes),
         ]
