@@ -33,7 +33,7 @@ function fakeMap() {
     const told: Record<string, GeoJSONSourceDiff[]> = {}
     const states: { id: string; state: Record<string, number> }[] = []
     const heard = new Map<string, Set<() => void>>()
-    const settings = { drawsItself: true, center: 0 }
+    const settings = { drawsItself: true, center: 0, asked: 0 }
     const forgotten: string[] = []
     const fire = (type: string) => {
         for (const handler of heard.get(type) ?? []) handler()
@@ -92,6 +92,10 @@ function fakeMap() {
             repaint()
         },
         queryRenderedFeatures: () => [],
+        triggerRepaint: () => {
+            settings.asked += 1
+            repaint()
+        },
     }
     return { map: map as unknown as MapContextValue['map'], layers, sources, told, states, forgotten, settings, draw, rest }
 }
@@ -410,6 +414,36 @@ describe('a track layer on a map', () => {
         act(() => fake.draw())
         pass(48)
         expect(opacity()).not.toBe(first)
+    })
+
+    it('keeps a clean frame between two steps of the pulse on a map slow to draw, and asks a map that draws nothing for its frames', () => {
+        fake.settings.drawsItself = false
+        draw({ tracks: [{ ...SURVEY, affiliation: 'hostile' }] })
+        const opacity = () => fake.layers.get('wui-watch-pulse')?.paint?.['circle-opacity']
+        act(() => fake.draw())
+        act(() => fake.draw())
+        pass(100)
+        const first = opacity()
+        expect(Number(first)).toBeGreaterThan(0)
+        // A frame takes longer than the pulse would wait for a map that draws nothing: the one frame drawn since is not enough.
+        pass(600)
+        act(() => fake.draw())
+        pass(48)
+        expect(opacity()).toBe(first)
+        pass(600)
+        act(() => fake.draw())
+        pass(48)
+        const second = opacity()
+        expect(second).not.toBe(first)
+        // A map that draws nothing for a while is asked for the frames the pulse waits on, and the pulse holds till they are drawn.
+        const asked = fake.settings.asked
+        pass(700)
+        expect(fake.settings.asked).toBeGreaterThan(asked)
+        expect(opacity()).toBe(second)
+        act(() => fake.draw())
+        act(() => fake.draw())
+        pass(48)
+        expect(opacity()).not.toBe(second)
     })
 
     it("moves a trail's head with its track and leaves the trail itself until the next report", () => {

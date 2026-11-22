@@ -833,6 +833,8 @@ function trackStage(
     let frames = 0
     let pulsedAt = -2
     let pulsedWhen = 0
+    /** When the map last drew a frame. */
+    let drawnWhen = 0
     /** When the map last came to rest, shared with the map's other track layers, and this layer among those waiting for it to. */
     const rest = restClockOf(map)
     const self = {}
@@ -856,6 +858,7 @@ function trackStage(
      */
     const drawn = () => {
         frames += 1
+        drawnWhen = performance.now()
         if (wait === 'rest') {
             restless += 1
             if (restless > REST_FRAMES) unrested(performance.now())
@@ -909,9 +912,11 @@ function trackStage(
         const layer = `${source}-pulse`
         const pulsing = moving && now.pulse && hostile > 0 && map.getLayer(layer) !== undefined
         // A paint property set leaves the map's style changed for the frame it is drawn in, and a map is not at rest in such
-        // a frame: the pulse is stepped only once two frames are drawn since its last step, so the one between them is clean.
-        // A map that draws nothing is stepped all the same after a while, which makes it draw.
-        if (pulsing && due && (frames - pulsedAt >= 2 || time - pulsedWhen > PATIENCE / 2)) {
+        // a frame: the pulse is stepped only once two frames are drawn since its last step, so the one between them is clean,
+        // however long a frame takes. A map that has drawn nothing for a while is asked for the frames it owes.
+        const clean = frames - pulsedAt >= 2
+        if (pulsing && due && !clean && time - drawnWhen > PATIENCE / 2 && time - pulsedWhen > PATIENCE / 2) map.triggerRepaint()
+        if (pulsing && due && clean) {
             pulsedAt = frames
             pulsedWhen = time
             const beat = ((time - started) % PULSE) / PULSE

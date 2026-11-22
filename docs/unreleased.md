@@ -28,6 +28,9 @@ release and empties it.
 - The track layers on one map come to rest together, and the zone, coverage and link layers rework
   their geometry only when what they are given changes, not each time it is a new array. A map with
   several moving layers, such as a wall display fed every second, now goes idle between moves.
+- A hostile track's pulse leaves a clean frame between two of its steps however long a frame takes,
+  so a map drawn slowly, as without a graphics card, comes to rest; it stepped every frame once a
+  frame took longer than half a second.
 - A Mermaid pie's slices and an xychart's bars and lines take the chart colors (`--chart-1` to
   `--chart-5`, in order), where they were pale tints of the primary color that all but vanished on a
   light card.
