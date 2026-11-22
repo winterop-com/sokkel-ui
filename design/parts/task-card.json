@@ -19,7 +19,7 @@
     },
     "anatomy": {
         "container": "A column 8 apart on card with a border edge, rounded by radius-surface, padded 12, in card-foreground.",
-        "head": "The title at 500 cut with an ellipsis, the id in the code face at text.help in muted-foreground, the state as a status chip with its dot, 8 apart; the elapsed time at the line's end in the code face at text.help, muted-foreground, as a clock (4:07, 1:04:07).",
+        "head": "The title at 450 cut with an ellipsis, the id in the code face at text.help in muted-foreground, the state as a status chip with its dot, 8 apart; the elapsed time at the line's end in the code face at text.help, muted-foreground, as a clock (4:07, 1:04:07).",
         "line": "With from or to: each end's glyph and name, 6 apart, an arrow 14 square in muted-foreground between them, 8 apart.",
         "facts": "With facts: a description list in its row layout at size sm (parts/description-list).",
         "actions": "With actions: small buttons in a wrapping row, 8 apart, 4 more above it: outline, primary drawn filled, destructive in the destructive variant.",
@@ -69,7 +69,7 @@
             "rest": {"ground": "card", "edge": "border", "ink": "card-foreground", "radius": "radius-surface"},
             "selected": {"edge": "primary", "ring": {"color": "primary", "width": 1}}
         },
-        "title": {"rest": {"weight": 500, "text": "text.sm"}},
+        "title": {"rest": {"weight": 450, "text": "text.sm"}},
         "elapsed": {
             "rest": {"ink": "muted-foreground", "text": "text.help", "note": "In the code face, tabular figures."}
         }

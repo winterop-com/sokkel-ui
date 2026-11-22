@@ -165,7 +165,7 @@
             "rest": {
                 "ink": "section-head-ink",
                 "text": "text.head",
-                "note": "In typeface-heading; the compact head (13 / 20 at 600) with the table head's tracking, never its case (table-head-transform): the title keeps its own."
+                "note": "In typeface-heading; the compact head (13 / 20 at 500) with the table head's tracking, never its case (table-head-transform): the title keeps its own."
             }
         },
         "flatTitle": {"rest": {"ink": "section-head-ink", "text": "text.section-title", "note": "In typeface-heading."}},

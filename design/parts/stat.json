@@ -18,9 +18,9 @@
         "container": "A column, 4 apart. As a tile: on card with a border-strong edge, rounded by radius-surface, padded 16, in card-foreground; with href or onSelect the whole tile is one control under its pieces.",
         "label": "What it counts, cut to one line, after the dot (8 apart): plain, text.xs in muted-foreground; as a tile, text.label in foreground.",
         "dot": "With dot: the color the app gives (a status's), small in plain, large in a tile.",
-        "value": "The number in tabular figures, its unit and the change after it on one baseline, 8 apart; 4 more above it in a tile. plain: text.page at 600; tile: text.statistic; lg: text.statistic-hero.",
+        "value": "The number in tabular figures, its unit and the change after it on one baseline, 8 apart; 4 more above it in a tile. plain: text.page at 500; tile: text.statistic; lg: text.statistic-hero.",
         "unit": "With unit: text.sm in muted-foreground.",
-        "change": "With change: an arrow up and right (or down and right for a change written with a minus), 14, then the change, text.xs at 500 in tabular figures, 2 apart: muted-foreground when good is not given, good when good, critical when not.",
+        "change": "With change: an arrow up and right (or down and right for a change written with a minus), 14, then the change, text.xs at 450 in tabular figures, 2 apart: muted-foreground when good is not given, good when good, critical when not.",
         "note": "With note: under the number; plain, text.xs in faint; in a tile, text.help in muted-foreground, wrapping evenly.",
         "trend": "With trend: a small chart under the number, such as a sparkline, 8 below it in all: the column's gap of 4 and 4 more."
     },
@@ -62,7 +62,7 @@
         "label": {"gap": 8},
         "value": {"gap": 8},
         "change": {"gap": 2},
-        "md": {"text": "text.statistic", "note": "A tile's number; plain, text.page at 600."},
+        "md": {"text": "text.statistic", "note": "A tile's number; plain, text.page at 500."},
         "lg": {"text": "text.statistic-hero"}
     },
     "states": {
@@ -93,13 +93,13 @@
         "value": {
             "rest": {
                 "text": "text.page",
-                "weight": 600,
+                "weight": 500,
                 "note": "plain; a tile text.statistic, lg text.statistic-hero."
             }
         },
         "unit": {"rest": {"ink": "muted-foreground", "text": "text.sm"}},
         "change": {
-            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 500},
+            "rest": {"ink": "muted-foreground", "text": "text.xs", "weight": 450},
             "good": {"ink": "good"},
             "bad": {"ink": "critical"}
         },

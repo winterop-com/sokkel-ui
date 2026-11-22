@@ -32,7 +32,7 @@
         "clear": "With an optional field that holds text and can be changed: a frame button with an x, named and titled words.clear; it empties the field and puts focus back in the input.",
         "pick": "While the field can be changed: a frame button with a clock, named and titled words.pick, that opens the list under the frame.",
         "list": "The popup under the frame, lined up with its start, on the popup's look (parts/select's popup), named words.pick: the times of the day every step minutes from midnight that lie between min and max, scrolled to the chosen time, or the first after it, which takes focus.",
-        "time": "One time in the list, written on the field's clock without seconds; the chosen one on secondary at 500."
+        "time": "One time in the list, written on the field's clock without seconds; the chosen one on secondary at 450."
     },
     "standsOn": {
         "default": "background",
@@ -171,7 +171,7 @@
             "means": "The list is open: its button washed hover.",
             "reached": "a press on the pick button, Alt+ArrowDown in the input, or open"
         },
-        "chosen": {"means": "The chosen time in the list: on secondary at 500.", "reached": "the field's value"},
+        "chosen": {"means": "The chosen time in the list: on secondary at 450.", "reached": "the field's value"},
         "timeFocus": {
             "means": "The list's focused time: the focus outline in ring, focus-ring-width.",
             "reached": "the arrows, Home and End in the list, or the list opening on its time",
@@ -218,7 +218,7 @@
         "time": {
             "rest": {"radius": "radius-md", "text": "text.sm"},
             "hover": {"ground": "hover"},
-            "chosen": {"ground": "secondary", "weight": 500},
+            "chosen": {"ground": "secondary", "weight": 450},
             "timeFocus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
         }
     },

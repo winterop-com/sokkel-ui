@@ -30,9 +30,9 @@
         "chevron": "A chevron down, 16, in muted-foreground; not drawn with onPress or quiet.",
         "menu": "parts/dropdown-menu's popup at the face's end, 288 wide: the state's label with its icon, the info, the checks behind a separator, then Check again and the app's items behind a separator.",
         "stateLabel": "The menu's label: the state's icon (a plug while well, a crashed server while down, turning arrows while checking, an alert otherwise), then the state in words.",
-        "info": "Under the label, padded 8 across and 6 under, 4 apart, text.help in muted-foreground: the name at 500 in foreground, the environment after it, the version in the code face while quiet, then each fact on its own line.",
-        "checks": "Every check behind the state, one a line, 4 apart: its dot, its name at 500, its state's words and its detail, quieter; in the menu padded 8 across and 6 down, in the tooltip under its head.",
-        "tooltip": "With checks or checkedAt: parts/tooltip at the face's end, under it: the name at 500, the environment and the version, then words.checkedAt, then the checks."
+        "info": "Under the label, padded 8 across and 6 under, 4 apart, text.help in muted-foreground: the name at 450 in foreground, the environment after it, the version in the code face while quiet, then each fact on its own line.",
+        "checks": "Every check behind the state, one a line, 4 apart: its dot, its name at 450, its state's words and its detail, quieter; in the menu padded 8 across and 6 down, in the tooltip under its head.",
+        "tooltip": "With checks or checkedAt: parts/tooltip at the face's end, under it: the name at 450, the environment and the version, then words.checkedAt, then the checks."
     },
     "standsOn": {"default": "background", "menu": "popover", "info": "popover"},
     "options": {

@@ -31,7 +31,7 @@
         "mark": "With mark: the app's mark before the title, at its own size.",
         "title": "What the wall shows: the page's heading, text.page-title, cut to one line.",
         "actions": "With actions: quiet buttons before the clock, 4 apart, in muted-foreground.",
-        "clock": "With clock: the time in tabular figures, never wrapping: text.page at 600 below 768 of the room, text.statistic from it.",
+        "clock": "With clock: the time in tabular figures, never wrapping: text.page at 500 below 768 of the room, text.statistic from it.",
         "figures": "With figures: a row of counters (parts/stat), 12 apart: as many equal columns as fit with none narrower than 144, each row filled to its ends, one column where the room is narrower.",
         "stage": "All the room the rest leaves, never under 288 tall; what is put on it, such as a map, fills it edge to edge.",
         "aside": "With aside: from 768 of the room, a column beside the stage at its end, 256, 320 or 384 wide and as tall as the stage, scrolling by itself; below it, under the stage at its own height.",
@@ -103,7 +103,7 @@
         },
         "clock": {
             "text": "text.statistic",
-            "note": "text.page at 600 below 768 of the room."
+            "note": "text.page at 500 below 768 of the room."
         },
         "figures": {
             "gap": 12
@@ -153,7 +153,7 @@
             },
             "stacked": {
                 "text": "text.page",
-                "weight": 600
+                "weight": 500
             }
         }
     },
@@ -168,7 +168,7 @@
             "does": [
                 "Measured on the frame's own room, not the window.",
                 "The aside goes under the stage at its own height, and the stage keeps at least 288 of height.",
-                "The frame's padding and gaps are 12 rather than 16, and the clock is text.page at 600.",
+                "The frame's padding and gaps are 12 rather than 16, and the clock is text.page at 500.",
                 "The counters wrap to as many columns as fit at 144 each: two on a phone.",
                 "The frame scrolls down and never sideways."
             ]

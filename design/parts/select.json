@@ -305,7 +305,7 @@
                 "ink": "inherit",
                 "radius": "radius-control",
                 "text": "text.action",
-                "weight": 500,
+                "weight": 450,
                 "note": "The ink of what it stands on (inherit): foreground on the page, popover-foreground in a popup, sidebar-foreground on the rail."
             },
             "placeholder": {"ink": "muted-foreground"},

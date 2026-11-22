@@ -260,6 +260,8 @@
     --color-sidebar: var(--sidebar);
     --font-mono: var(--typeface-mono);
     --font-sans: var(--typeface-sans);
+    --font-weight-medium: 450;
+    --font-weight-semibold: 500;
     --leading-code: 1.5rem;
     --radius-md: var(--radius);
     --radius-node: var(--radius);

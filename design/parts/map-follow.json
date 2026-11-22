@@ -11,7 +11,7 @@
     "summary": "Keeps a map centered on one moving thing, such as the selected track, while it is drawn: each new position is eased to and the camera is held, and a banner in a corner says what is followed, with a button that lets it go. Dragging the map lets it go too.",
     "sources": {"sokkel-ui": ["packages/maps/src/MapFollow.tsx"]},
     "anatomy": {
-        "banner": "A chip in its corner, the top left by default: card at 95 percent, padded 8 before and 2 after, 2 down, rounded by radius-control, with the surface's elevation and a 1 ring in map-selection; a crosshair icon 14 square in map-selection, then words.following with the name in text.xs at 500, cut with an ellipsis, then an icon button (words.release, a cross) control-xs square, 6 apart."
+        "banner": "A chip in its corner, the top left by default: card at 95 percent, padded 8 before and 2 after, 2 down, rounded by radius-control, with the surface's elevation and a 1 ring in map-selection; a crosshair icon 14 square in map-selection, then words.following with the name in text.xs at 450, cut with an ellipsis, then an icon button (words.release, a cross) control-xs square, 6 apart."
     },
     "standsOn": {"default": "card"},
     "options": {
@@ -43,7 +43,7 @@
                 "ink": "card-foreground",
                 "mark": "map-selection",
                 "text": "text.xs",
-                "weight": 500,
+                "weight": 450,
                 "radius": "radius-control",
                 "ring": {"color": "map-selection", "width": 1}
             }

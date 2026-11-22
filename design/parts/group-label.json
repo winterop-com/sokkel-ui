@@ -14,14 +14,14 @@
     },
     "summary": "The small heading over a group of entries: a rail's group, a panel's section, a palette's kind, a table's run of rows. One look for all of them, in capitals, a little tracked, in the faint ink, so a theme or a change reaches every group at once.",
     "sources": {"sokkel-ui": ["packages/core/src/components/GroupLabel.tsx"]},
-    "anatomy": {"label": "The heading's words, in capitals, tracked wide, at text.xs and 500, in faint."},
+    "anatomy": {"label": "The heading's words, in capitals, tracked wide, at text.xs and 450, in faint."},
     "standsOn": {"default": "background"},
     "alsoStandsOn": {"default": ["sidebar", "card", "popover"]},
     "options": {"children": {"type": "node", "does": "The heading's words."}},
     "states": {"rest": {"means": "The heading drawn."}},
     "pieces": {
         "label": {
-            "rest": {"ink": "faint", "text": "text.xs", "weight": 500, "note": "Uppercase, tracking wide (0.025em)."}
+            "rest": {"ink": "faint", "text": "text.xs", "weight": 450, "note": "Uppercase, tracking wide (0.025em)."}
         }
     },
     "keyboard": [],

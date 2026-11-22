@@ -18,7 +18,7 @@
         "unfoldable": "The column: the row, then the summary while shut or the content while open, 8 apart.",
         "row": "The heading row, the whole of it the control while it unfolds (a button): the chevron, then the heading; padded 4 all round and reaching 4 past the column on each side, so its words line up with the text around it.",
         "chevron": "A chevron pointing at the heading, turned down while open; 14 square, in muted-foreground. While forced it is turned down in faint; a static row keeps its room empty.",
-        "heading": "The heading, text.sm at 500, cut to one line.",
+        "heading": "The heading, text.sm at 450, cut to one line.",
         "aside": "Facts at the row's end, outside the button's name, such as a count: text.xs in muted-foreground, 8 apart.",
         "summary": "While shut, a line under the heading saying what the folded part holds in short: text.xs in muted-foreground, under the heading's start (layout.indent), 6 up into the column's gap, one line unless wrapSummary.",
         "content": "While open, what it holds, under the heading's start (layout.indent)."
@@ -91,7 +91,7 @@
             "rest": {
                 "radius": "radius-md",
                 "text": "text.sm",
-                "weight": 500,
+                "weight": 450,
                 "note": "In the ink of what it stands on."
             },
             "hover": {"ground": "hover"},

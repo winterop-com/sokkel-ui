@@ -31,7 +31,7 @@
         "mode": "With preview: Write and Preview as a segmented choice named words.mode at the toolbar's end, from previewFrom wide; narrower, one Preview action that stays pressed while previewing.",
         "text": "The text, with no frame of its own, at least 40 tall, 12 across and 8 down on a 24 line, growing to textMaxHeight; words.placeholder in muted-foreground while empty. Hidden, keeping its height, while previewing.",
         "preview": "While previewing: the message drawn by the library's markdown as a sent message is, in the text's place, at least as tall as the text was, scrolling past previewMaxHeight; words.nothingToPreview in muted-foreground for a draft with no text.",
-        "alsoSend": "With alsoSendTo: a checkbox and words.alsoSend with the channel's name and mark, 12 in, in muted-foreground at the help role, the name in foreground at 500.",
+        "alsoSend": "With alsoSendTo: a checkbox and words.alsoSend with the channel's name and mark, 12 in, in muted-foreground at the help role, the name in foreground at 450.",
         "row": "The row under the text, 8 in and 6 under, 2 apart: add, the text style toggle, emoji, mention, the app's actions, More, then Send at the end.",
         "add": "words.attach, with onAttach: a 28 round button on secondary with a plus 16 in muted-foreground, 2 before the next.",
         "emoji": "words.emoji: an action that opens the emoji picker (parts/emoji-picker) over the composer, its pick going in at the caret; or, with onEmoji, the app's own.",

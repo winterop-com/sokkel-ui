@@ -72,7 +72,7 @@
         "stateChip": {"height": 20, "padX": 6, "gap": 4, "icon": 12, "radius": "radius-chip", "text": "text.badge"},
         "section": {"padX": 16, "padY": 12, "gap": 8},
         "heading": {
-            "note": "parts/detail-pane's heading: text.xs at weight 500, as its paint says; uppercase, tracked wide."
+            "note": "parts/detail-pane's heading: text.xs at weight 450, as its paint says; uppercase, tracked wide."
         },
         "description": {"text": "text.sm", "note": "On lines 24 tall."},
         "progress": {"height": 4},
@@ -122,7 +122,7 @@
             }
         },
         "section": {"rest": {"rule": "border", "note": "1 wide under each section but the last."}},
-        "heading": {"rest": {"ink": "faint", "text": "text.xs", "weight": 500, "note": "Uppercase, tracked wide."}},
+        "heading": {"rest": {"ink": "faint", "text": "text.xs", "weight": 450, "note": "Uppercase, tracked wide."}},
         "description": {"rest": {"text": "text.sm"}},
         "progress": {"rest": {"ground": "muted", "note": "The track, fully round."}},
         "fill": {"rest": {"ground": "primary"}},

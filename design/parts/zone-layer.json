@@ -19,7 +19,7 @@
     "anatomy": {
         "fill": "solid: the tone at 0.18 of full, 0.24 under the pointer, 0.3 selected. hatched: diagonal lines in the tone, 1 wide every 6, rising to the right, on nothing, at 0.7 of full, 0.95 under the pointer, full selected. none: nothing, though the inside still answers the pointer.",
         "edge": "Round the zone and its holes, 1.5 wide in the tone, 2 under the pointer, 2.5 selected in map-selection over a 5 wide halo in card; dashed 3 on 2 when the edge is dashed.",
-        "label": "The zone's label at the middle of its area (of its largest part's), centered on it: text.2xs at 500 on card at 80 percent, padded 4 across, rounded by radius-mini. A label that would cover another zone's is left out; the selected zone's never is, and is placed first, on card, ringed 1 in map-selection.",
+        "label": "The zone's label at the middle of its area (of its largest part's), centered on it: text.2xs at 450 on card at 80 percent, padded 4 across, rounded by radius-mini. A label that would cover another zone's is left out; the selected zone's never is, and is placed first, on card, ringed 1 in map-selection.",
         "glow": "With glow, under the edge: a soft blurred line round the zone just outside it, in the tone. Not animated."
     },
     "standsOn": {"default": "card"},
@@ -55,7 +55,7 @@
         "label": {
             "padX": 4,
             "radius": "radius-mini",
-            "note": "Centered on the zone's middle; text.2xs at 500, as its paint says."
+            "note": "Centered on the zone's middle; text.2xs at 450, as its paint says."
         }
     },
     "layout": {
@@ -92,7 +92,7 @@
                 "ground": "card/80",
                 "ink": "foreground",
                 "text": "text.2xs",
-                "weight": 500,
+                "weight": 450,
                 "radius": "radius-mini"
             },
             "selected": {"ground": "card", "ring": {"color": "map-selection", "width": 1}}

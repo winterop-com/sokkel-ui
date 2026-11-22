@@ -14,4 +14,5 @@ release and empties it.
 - Text is one weight step lighter: medium 450, semibold 500 and bold 600 (`--font-weight-medium`,
   `-semibold` and `-bold` in tokens.json), and every text role and the table head with them (500 to
   450, 600 to 500, 700 to 600). Charts read the medium and semibold weights from the tokens
-  (`ChartLook.weight`). The code face, which is not variable, draws 450 at 500.
+  (`ChartLook.weight`), and the code editor and captions the weight tokens. The code face, which is
+  not variable, draws 450 at 500.
