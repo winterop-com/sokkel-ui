@@ -14,12 +14,13 @@ export interface StoryClock {
 /**
  * The simulated clock a live story reads its feed at: it stands at `start` when the story is first
  * drawn, the same moment every time, and plays on from there once the story is on the page, `speed`
- * simulated seconds each second, a tick a second.
+ * simulated seconds each second, a tick a second. With `playing: false` it stands still at `start`
+ * until the reader plays it.
  */
-export function useSimClock(start: number, speed: number): StoryClock {
+export function useSimClock(start: number, speed: number, { playing = true }: { playing?: boolean } = {}): StoryClock {
     const clock = useMemo(() => createSimClock({ start, speed, playing: false }), [start, speed])
     const now = useSyncExternalStore(clock.subscribe, clock.get, clock.get)
-    const [running, setRunning] = useState(true)
+    const [running, setRunning] = useState(playing)
     useEffect(() => {
         if (running) clock.play()
         else clock.pause()

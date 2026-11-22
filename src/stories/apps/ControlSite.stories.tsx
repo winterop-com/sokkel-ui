@@ -141,8 +141,8 @@ interface Site extends StoryClock {
  * the forty minutes before the story's moment so the wall opens with a history, then read on as the
  * story's clock plays. It starts at the same moment every time, so the first frame is the same.
  */
-function useSite(picked: string | null = null): Site {
-    const clock = useSimClock(CONTROL_NOW, SPEED)
+function useSite(picked: string | null = null, { playing = true }: { playing?: boolean } = {}): Site {
+    const clock = useSimClock(CONTROL_NOW, SPEED, { playing })
     const engine: SourceEngine = useMemo(() => controlEngine(), [])
     useEffect(() => engine.poll(clock.now), [engine, clock.now])
     const state = useSyncExternalStore(engine.subscribe, engine.state, engine.state)
@@ -205,7 +205,9 @@ function SiteMap({
 }
 
 function WallPage() {
-    const site = useSite()
+    // The wall's globe draws a frame slower than a tick on a machine without a graphics card, so it
+    // opens held at its moment, the same every time, and plays on Resume.
+    const site = useSite(null, { playing: false })
     const { picture, state } = site
     const open = state.alerts.filter((alert) => !site.acknowledged.has(alert.id))
     const up = state.sources.filter((source) => source.status === 'up').length
@@ -699,10 +701,10 @@ export default meta
  * as they were strong, warned areas glowing, light running along a machine's connections), each
  * source's status as a tile with its latency over the last reads, the counts over the map and the
  * alerts along the foot. Every source is the tracking package's simulation, read by one engine that
- * judges each answer with the source's checks and raises an alert when a status changes; it starts
- * at the same moment every time and plays on at thirty times real time.
+ * judges each answer with the source's checks and raises an alert when a status changes; it opens
+ * held at the same moment every time, and Resume plays it on at thirty times real time.
  */
-export const Wall: StoryObj = { name: 'Wall', render: () => <WallPage /> }
+export const Wall: StoryObj = { name: 'Wall', tags: ['slow'], render: () => <WallPage /> }
 /**
  * The operator's console over the same state: the map with every layer and its tools, a satellite
  * picked with its path over the ground behind and ahead, its card and values in the side panel
