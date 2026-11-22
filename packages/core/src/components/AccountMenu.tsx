@@ -117,7 +117,9 @@ export function AccountMenu({
             )}
         >
             {!local && image !== undefined && <Avatar.Image src={image} alt="" className="size-full object-cover" />}
-            <Avatar.Fallback>{local ? <User className="size-[62%]" aria-hidden /> : initial}</Avatar.Fallback>
+            <Avatar.Fallback className="flex size-full items-center justify-center">
+                {local ? <User className="size-[62%]" aria-hidden /> : initial}
+            </Avatar.Fallback>
         </Avatar.Root>
     )
     const signedIn = !local && onSignOut !== undefined
