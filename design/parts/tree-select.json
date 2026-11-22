@@ -7,8 +7,8 @@
         "sokkel-ui": {"state": "built", "as_of": "eef59f4"},
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "d163191",
-            "note": "TreeSelect was built before this spec and has not been compared with it; single choice only."
+            "as_of": "2959f94",
+            "note": "TreeSelect was built before this spec and has not been compared with it; single choice only. A row's label cut short gives its whole text on hover; it has no trail, its search filtering the tree in place."
         },
         "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "No tree select yet."}
     },
