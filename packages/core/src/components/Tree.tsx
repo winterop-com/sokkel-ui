@@ -493,18 +493,21 @@ function Marked({ text, query }: { text: string; query: string }) {
 
 /** The separators a label's end is kept from with `cut="middle"`, the last one found. */
 const TAIL_SEPARATORS = [': ', ' - ', ' \u2013 ', ' \u2014 ', ' / ', ', ', ' | ']
-/** The longest end kept whole from a separator; past it, the end keeps its last TAIL_CHARS characters. */
+/** The longest end kept whole from a separator or a word; past it, the end keeps its last TAIL_CHARS characters. */
 const TAIL_MAX = 24
 const TAIL_CHARS = 12
 
 /**
  * Where `cut="middle"` splits a label: the part from its last separator on, when that is short, as
- * the ": Sheet 170" that tells a series apart; else its last few characters. 0 keeps it whole.
+ * the ": Sheet 170" that tells a series apart; else its last words. 0 keeps it whole.
  */
 export function labelTail(label: string): number {
     const at = Math.max(...TAIL_SEPARATORS.map((separator) => label.lastIndexOf(separator)))
     if (at > 0 && label.length - at <= TAIL_MAX) return at
-    return label.length > TAIL_CHARS * 2 ? label.length - TAIL_CHARS : 0
+    // From the start of the word the last TAIL_CHARS characters begin in, so no word is split.
+    const word = label.lastIndexOf(' ', label.length - TAIL_CHARS)
+    if (word <= 0) return 0
+    return label.length - word <= TAIL_MAX ? word : label.length - TAIL_CHARS
 }
 
 /** Part of a label with the query's marks that fall in it. */
@@ -616,8 +619,8 @@ export interface TreeProps {
     openOnChoose?: boolean
     /**
      * Where a label too long for its row is cut: `end`, with an ellipsis at its end; or `middle`,
-     * before its tail, the part from its last separator (": ", " - ", " / ", ", ") or its last few
-     * characters, so a series ("Survey: Sheet 170", "Survey: Sheet 95") stays told apart. A label cut
+     * before its tail, the part from its last separator (": ", " - ", " / ", ", ") or its last
+     * words, so a series ("Survey: Sheet 170", "Survey: Sheet 95") stays told apart. A label cut
      * short gives its whole text on hover.
      */
     cut?: 'end' | 'middle'

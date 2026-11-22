@@ -286,13 +286,23 @@ describe('labelTail', () => {
         expect('Meeting notes - 2026-11-22'.slice(labelTail('Meeting notes - 2026-11-22'))).toBe(' - 2026-11-22')
     })
 
-    test('keeps the last characters when no separator leaves a short end', () => {
-        const label = 'an unbroken label with no separator in it at all'
-        expect(label.slice(labelTail(label))).toBe('in it at all')
+    test('keeps the last words, never splitting one, when no separator leaves a short end', () => {
+        for (const [label, tail] of [
+            ['an unbroken label with no separator in it at all', ' in it at all'],
+            ['The import that came in from the cold', ' from the cold'],
+            ['The nightly export on the harbor', ' on the harbor'],
+        ])
+            expect(label.slice(labelTail(label))).toBe(tail)
+    })
+
+    test('keeps the end of a long last word by its characters', () => {
+        const label = 'An export named nightly-export-of-the-harbor-inventory'
+        expect(label.slice(labelTail(label))).toBe('or-inventory')
     })
 
     test('keeps a short label whole', () => {
         expect(labelTail('Bergen')).toBe(0)
+        expect(labelTail('Sync inventory')).toBe(0)
         expect(labelTail('Oslo: 1')).toBe(4)
     })
 })
