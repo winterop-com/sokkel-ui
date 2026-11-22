@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.34.0** is the latest release (2026-11-22): the text sizes are small, normal, large and larger
+- **0.34.1** is the latest release (2026-11-22): text one weight step lighter (medium 450, semibold
+  500, bold 600), a text size kept under its 0.33 name read under its name now, AccountMenu's figure
+  centered; contract 0.34.1, with the weight scale in the resolved tokens.
+- **0.34.0** (2026-11-22): the text sizes are small, normal, large and larger
   (body 13 to 16 px), normal the default; contract 0.34.0, with each role at every text size.
 - **0.33.6** (2026-11-22): small (14px body text) is the default text size,
   with smaller, small, regular and large in Settings; empty tree folders; Mermaid plots in the chart
