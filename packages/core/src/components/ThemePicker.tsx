@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import type { ThemeOption, ThemeSettings } from '../lib/appearance'
+import { DEFAULT_TEXT_SIZE, type ThemeOption, type ThemeSettings } from '../lib/appearance'
 import { cn } from '../lib/cn'
 import { ChoiceList } from './ChoiceList'
 import type { Setting } from './settings-parts'
@@ -264,7 +264,7 @@ function choices(
             control: (
                 <Segmented
                     label={words.textSize}
-                    value={value.textSize ?? 'regular'}
+                    value={value.textSize ?? DEFAULT_TEXT_SIZE}
                     options={sizes}
                     fill={fill}
                     onValueChange={(next) => set('textSize', next)}

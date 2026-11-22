@@ -18,6 +18,14 @@ release and empties it.
   at another level, as Foundations › Text size does side by side. The text steps (`--text-2xs` to
   `--text-display`) are now variables the classes read rather than values written into them.
 
+## Changed
+
+- The default text size is `small` (14px body text) from the md breakpoint up; phones keep the
+  theme's own sizes. `DEFAULT_APPEARANCE.textSize` is `small`, `:root` answers with its steps, and
+  `applyAppearance` and the first-paint script always write `data-text-size`, so `regular` (15px body
+  text) is a level an app or a person picks like any other. An app that shrank its own text to reach
+  the old default's smaller sizes should drop that.
+
 ## Fixed
 
 - A tree node given a list of children, even an empty one, is a branch, such as an empty folder:

@@ -149,7 +149,7 @@ describe('applyAppearance', () => {
         applyAppearance(LOOK, root)
         applyAppearance({ ...DEFAULT_APPEARANCE, scheme: 'light' }, root)
         expect(root.classes.has('dark')).toBe(false)
-        expect(Object.fromEntries(root.attributes)).toEqual({ 'data-density': 'regular' })
+        expect(Object.fromEntries(root.attributes)).toEqual({ 'data-density': 'regular', 'data-text-size': 'small' })
         expect(root.properties.size).toBe(0)
     })
 

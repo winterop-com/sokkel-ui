@@ -86,12 +86,15 @@ export const TYPEFACES: readonly ThemeOption[] = [
 /** The base theme, which `<html>` wears without a `data-theme`. */
 const BASE_THEME = 'tidevann'
 
+/** The text size before one is chosen: 14px body text from the md breakpoint up. */
+export const DEFAULT_TEXT_SIZE = 'small'
+
 /** The look before anything is chosen: tidevann, the base theme, following the system's scheme and motion. */
 export const DEFAULT_APPEARANCE: Readonly<ThemeSettings> = {
     theme: BASE_THEME,
     scheme: 'system',
     density: 'regular',
-    textSize: 'regular',
+    textSize: DEFAULT_TEXT_SIZE,
     corners: 'theme',
     typeface: 'theme',
     motion: 'system',
@@ -189,7 +192,7 @@ export function applyScheme(resolved: ResolvedScheme, root: AppearanceRoot | und
 
 /**
  * Writes the whole look on `<html>`: `.dark` for the scheme (the system's for `system`), `data-theme`
- * unless tidevann, the base theme, `data-density`, `data-text-size` unless regular, `data-motion` unless the system's, `--radius`
+ * unless tidevann, the base theme, `data-density`, `data-text-size`, `data-motion` unless the system's, `--radius`
  * unless the theme's, and the typeface's variables unless the theme's. Whatever it does not set it
  * clears, so the look before leaves nothing behind.
  */
@@ -206,7 +209,7 @@ export function applyAppearance(settings: ThemeSettings, root: AppearanceRoot | 
     if (worn.dark === dark && worn.theme === theme) recolor()
     else withoutTransitions(root, recolor)
     root.setAttribute('data-density', settings.density)
-    if (settings.textSize === undefined || settings.textSize === 'regular') root.removeAttribute('data-text-size')
+    if (settings.textSize === undefined) root.removeAttribute('data-text-size')
     else root.setAttribute('data-text-size', settings.textSize)
     if (settings.motion === undefined || settings.motion === 'system') root.removeAttribute('data-motion')
     else root.setAttribute('data-motion', settings.motion)
@@ -437,7 +440,7 @@ function scriptWith(defaults: string): string {
         "r.classList.toggle('dark',d);",
         `if(typeof a.theme==='string'&&a.theme!==${scriptJson(BASE_THEME)})r.setAttribute('data-theme',a.theme);`,
         "if(typeof a.density==='string')r.setAttribute('data-density',a.density);",
-        "if(typeof a.textSize==='string'&&a.textSize!=='regular')r.setAttribute('data-text-size',a.textSize);",
+        "if(typeof a.textSize==='string')r.setAttribute('data-text-size',a.textSize);",
         "if(a.motion==='on'||a.motion==='off')r.setAttribute('data-motion',a.motion);",
         "if(typeof a.corners==='string'&&a.corners!=='theme')r.style.setProperty('--radius',a.corners);",
         'var t=Object.prototype.hasOwnProperty.call(f,a.typeface)?f[a.typeface]:null;',
