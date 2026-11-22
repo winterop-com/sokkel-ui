@@ -233,16 +233,17 @@ describe('a branch of many thousand rows', () => {
 
 describe('a long label', () => {
     const series: TreeNode[] = [
-        { id: 'a', label: 'Hours of Queen Isabella the Catholic, Queen of Spain: Fol. 170r' },
-        { id: 'b', label: 'Hours of Queen Isabella the Catholic, Queen of Spain: Fol. 95v' },
+        { id: 'a', label: 'Harbor survey of the northern coast, Norway, west approaches: Sheet 170' },
+        { id: 'b', label: 'Harbor survey of the northern coast, Norway, west approaches: Sheet 95' },
     ]
 
     it('keeps its tail apart with cut="middle", the query marked on both sides', async () => {
-        const at = await mount(<Tree nodes={series} label="Pages" cut="middle" query="queen" />)
+        const at = await mount(<Tree nodes={series} label="Pages" cut="middle" query="he" />)
         const row = rowOf(at, 'a')
-        const tail = [...(row?.querySelectorAll('span.whitespace-pre') ?? [])].map((span) => span.textContent)
-        expect(tail).toEqual([': Fol. 170r'])
-        expect([...(row?.querySelectorAll('mark') ?? [])].map((mark) => mark.textContent)).toEqual(['Queen', 'Queen'])
+        const tail = row?.querySelector('span.whitespace-pre')
+        expect(tail?.textContent).toBe(': Sheet 170')
+        expect(tail?.querySelectorAll('mark')).toHaveLength(1)
+        expect(row?.querySelectorAll('mark').length).toBeGreaterThan(1)
     })
 
     it('gives its whole text on hover once it is cut short', async () => {
