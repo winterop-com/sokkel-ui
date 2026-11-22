@@ -106,6 +106,12 @@ export const SCHEME_KEY = 'sokkel-ui-scheme'
 /** The `localStorage` key the rest of the look is kept under, as JSON. */
 export const APPEARANCE_KEY = 'sokkel-ui-appearance'
 
+/** The kept look's `version`: 1 names the text sizes small, normal, large and larger. */
+export const APPEARANCE_VERSION = 1
+
+/** A text size kept without a `version`, under its earlier name, and the name it has now. */
+const EARLIER_TEXT_SIZES: Readonly<Record<string, string>> = { smaller: 'small', small: 'normal', regular: 'large', large: 'larger' }
+
 const DARK_QUERY = '(prefers-color-scheme: dark)'
 
 /** The parts of `<html>` the look is written to; the document's root element has them all. */
@@ -383,13 +389,16 @@ export function parseAppearance(text: string | null): Partial<Omit<ThemeSettings
         if (typeof field === 'string') out[key] = field
     }
     if (record.motion === 'system' || record.motion === 'on' || record.motion === 'off') out.motion = record.motion
+    if (record.version !== APPEARANCE_VERSION && out.textSize !== undefined && Object.hasOwn(EARLIER_TEXT_SIZES, out.textSize)) {
+        out.textSize = EARLIER_TEXT_SIZES[out.textSize]
+    }
     return out
 }
 
 /** Keeps the whole look, the scheme under its own key, in the app's storage when it gave one, and tells everyone following it. */
 export function storeAppearance(settings: ThemeSettings): void {
     const { scheme, ...rest } = settings
-    keep(APPEARANCE_KEY, JSON.stringify(rest))
+    keep(APPEARANCE_KEY, JSON.stringify({ ...rest, version: APPEARANCE_VERSION }))
     keep(SCHEME_KEY, scheme)
     notify()
 }
@@ -431,7 +440,8 @@ function scriptWith(defaults: string): string {
     return [
         '(function(){try{',
         `var r=document.documentElement,l=window.localStorage,o=${defaults}||{},`,
-        `a=Object.assign(${scriptJson(base)},o,JSON.parse(l.getItem(${scriptJson(APPEARANCE_KEY)})||'{}')),`,
+        `p=JSON.parse(l.getItem(${scriptJson(APPEARANCE_KEY)})||'{}')||{},a=Object.assign(${scriptJson(base)},o,p),`,
+        `m=${scriptJson(EARLIER_TEXT_SIZES)},`,
         `s=l.getItem(${scriptJson(SCHEME_KEY)})||o.scheme||'system',`,
         "k=typeof o.themes==='string'?o.themes.split(/\\s+/).filter(Boolean):o.themes,",
         `f=${scriptJson(FACES)},`,
@@ -440,6 +450,7 @@ function scriptWith(defaults: string): string {
         "r.classList.toggle('dark',d);",
         `if(typeof a.theme==='string'&&a.theme!==${scriptJson(BASE_THEME)})r.setAttribute('data-theme',a.theme);`,
         "if(typeof a.density==='string')r.setAttribute('data-density',a.density);",
+        `if(p.version!==${APPEARANCE_VERSION}&&typeof p.textSize==='string'&&Object.prototype.hasOwnProperty.call(m,p.textSize))a.textSize=m[p.textSize];`,
         "if(typeof a.textSize==='string')r.setAttribute('data-text-size',a.textSize);",
         "if(a.motion==='on'||a.motion==='off')r.setAttribute('data-motion',a.motion);",
         "if(typeof a.corners==='string'&&a.corners!=='theme')r.style.setProperty('--radius',a.corners);",

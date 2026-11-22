@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
     APPEARANCE_KEY,
+    APPEARANCE_VERSION,
     appearanceScript,
     appearanceScriptFile,
     applyAppearance,
@@ -193,13 +194,26 @@ describe('the kept look', () => {
         expect(readAppearance({ theme: 'amber' })).toEqual(LOOK)
     })
 
+    it('names a text size kept without a version by its name now, once', () => {
+        expect(parseAppearance('{"textSize":"smaller"}').textSize).toBe('small')
+        expect(parseAppearance('{"textSize":"small"}').textSize).toBe('normal')
+        expect(parseAppearance('{"textSize":"regular"}').textSize).toBe('large')
+        expect(parseAppearance('{"textSize":"large"}').textSize).toBe('larger')
+        expect(parseAppearance('{"textSize":"small","version":1}').textSize).toBe('small')
+        expect(parseAppearance('{"textSize":"constructor"}').textSize).toBe('constructor')
+        storage.setItem(APPEARANCE_KEY, '{"textSize":"small"}')
+        storeAppearance(readAppearance())
+        expect(JSON.parse(storage.items.get(APPEARANCE_KEY) ?? '')).toMatchObject({ textSize: 'normal', version: APPEARANCE_VERSION })
+        expect(readAppearance().textSize).toBe('normal')
+    })
+
     it('ignores what it cannot read', () => {
         storage.setItem(SCHEME_KEY, 'purple')
         expect(readStoredScheme()).toBeNull()
         expect(parseAppearance('not json')).toEqual({})
         expect(parseAppearance('null')).toEqual({})
         expect(parseAppearance('{"theme":3,"density":"compact","motion":"sometimes"}')).toEqual({ density: 'compact' })
-        expect(parseAppearance('{"textSize":"large"}')).toEqual({ textSize: 'large' })
+        expect(parseAppearance('{"textSize":"larger"}')).toEqual({ textSize: 'larger' })
         expect(parseAppearance('{"textSize":2}')).toEqual({})
     })
 
@@ -353,7 +367,7 @@ describe('setAppearanceStorage', () => {
 
     const keptText = (look: ThemeSettings): Record<string, string> => {
         const { scheme, ...rest } = look
-        return { [SCHEME_KEY]: scheme, [APPEARANCE_KEY]: JSON.stringify(rest) }
+        return { [SCHEME_KEY]: scheme, [APPEARANCE_KEY]: JSON.stringify({ ...rest, version: APPEARANCE_VERSION }) }
     }
 
     it('reads a storage that answers at once before anything draws', () => {
@@ -532,5 +546,26 @@ describe('an app offering some of the themes', () => {
         expect(run(appearanceScript({}, { themes: ['amber', 'paper'] }), 'paper')).toBe('paper')
         expect(run(appearanceScriptFile(), 'neon', { themes: 'amber paper' })).toBe('amber')
         expect(run(appearanceScriptFile(), 'neon', {})).toBe('neon')
+    })
+
+    it('has the script before paint name a text size kept without a version as readAppearance does', () => {
+        const run = (kept: Record<string, unknown>) => {
+            const attributes = new Map<string, string>()
+            const root = {
+                classList: { toggle: () => undefined },
+                setAttribute: (name: string, value: string) => attributes.set(name, value),
+                style: { setProperty: () => undefined },
+            }
+            const storage = { getItem: (key: string) => (key === APPEARANCE_KEY ? JSON.stringify(kept) : null) }
+            new Function('document', 'window', appearanceScript())(
+                { documentElement: root },
+                { localStorage: storage, matchMedia: () => ({ matches: false }) },
+            )
+            return attributes.get('data-text-size')
+        }
+        expect(run({ textSize: 'regular' })).toBe('large')
+        expect(run({ textSize: 'small' })).toBe('normal')
+        expect(run({ textSize: 'small', version: APPEARANCE_VERSION })).toBe('small')
+        expect(run({})).toBe('normal')
     })
 })
