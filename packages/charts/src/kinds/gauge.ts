@@ -88,7 +88,7 @@ function dial(
     }
     const figure = {
         fontSize: small ? look.size.statSmall : look.size.stat,
-        fontWeight: 600,
+        fontWeight: look.weight.semibold,
         fontFamily: look.font,
         color: tone,
         formatter: (shown: number) => (value === null ? '—' : write(shown)),

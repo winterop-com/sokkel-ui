@@ -63,7 +63,7 @@ export const rings: ChartBuilder = (spec, look, hidden) => {
                     detail: {
                         offsetCenter: [0, (index - (figures.length - 1) / 2) * line],
                         fontSize: single ? look.size.stat : look.size.body,
-                        fontWeight: 600,
+                        fontWeight: look.weight.semibold,
                         fontFamily: look.font,
                         color: figure.color,
                         formatter: () => written(spec, figure.value, figure.unit),

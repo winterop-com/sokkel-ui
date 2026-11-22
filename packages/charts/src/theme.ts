@@ -22,7 +22,7 @@ export function chartTheme(look: ChartLook): Record<string, unknown> {
         title: {
             left: 12,
             top: 10,
-            textStyle: { color: look.foreground, fontFamily: look.font, fontSize: look.size.body, fontWeight: 500 },
+            textStyle: { color: look.foreground, fontFamily: look.font, fontSize: look.size.body, fontWeight: look.weight.medium },
             subtextStyle: { color: look.muted, fontFamily: look.font, fontSize: look.size.label },
         },
         legend: {

@@ -92,40 +92,13 @@ const PROJECTS = [
     { value: 'larkspur', label: 'larkspur' },
 ]
 
-/** Each weight a role or a `font-*` class sets, and the one step lighter the Weights story tries. */
-const LIGHTER: Record<string, string> = { '500': '450', '600': '500', '700': '600' }
-
-/**
- * The lighter weights as a token set one column wears, on `data-weights='lighter'`: Tailwind's
- * medium, semibold and bold and the table head's weight one step lighter, and every role that sets
- * its own weight (an action, a label, a badge, the titles) too. It is the story's trial only; the
- * library's weights are unchanged until one is picked.
- */
-const LIGHTER_CSS = (() => {
-    const theme = tokens.theme as Record<string, string>
-    const scope = "[data-weights='lighter']"
-    const roles = Object.entries(theme)
-        .map(([name, value]) => [/^(text-(?:\w|-)+)--font-weight$/.exec(name)?.[1], LIGHTER[value]] as const)
-        .filter((role): role is readonly [string, string] => role[0] !== undefined && role[1] !== undefined)
-    return [
-        `${scope}{--font-weight-medium:450;--font-weight-semibold:500;--font-weight-bold:600;--table-head-weight:450}`,
-        ...roles.map(([role, weight]) => `${scope} .${role}{font-weight:var(--tw-font-weight,${weight})}`),
-    ].join('\n')
-})()
-
-/** One text size's page, its steps under its name; `lighter` wears the lighter weights. */
-function Level({ size, lighter = false }: { size: Size; lighter?: boolean }) {
+/** One text size's page, its steps under its name. */
+function Level({ size }: { size: Size }) {
     return (
-        <Stack gap="md" data-text-size-scope={size} data-weights={lighter ? 'lighter' : undefined} className="min-w-0">
+        <Stack gap="md" data-text-size-scope={size} className="min-w-0">
             <Stack gap="xs">
-                <span className="text-section-title">
-                    {LABELS[size]}
-                    {lighter ? ', lighter weights' : ''}
-                </span>
-                <span className="text-help text-muted-foreground">
-                    {stepsOf(size)}
-                    {lighter ? '; weights 500 to 450, 600 to 500, 700 to 600' : ''}
-                </span>
+                <span className="text-section-title">{LABELS[size]}</span>
+                <span className="text-help text-muted-foreground">{stepsOf(size)}</span>
             </Stack>
             <Row gap="none" align="stretch" className="h-80 overflow-hidden rounded-lg border">
                 <Rail mark={<TidevannMark />} name="Tidevann" groups={GROUPS} resizable={false} />
@@ -136,13 +109,8 @@ function Level({ size, lighter = false }: { size: Size; lighter?: boolean }) {
             </Row>
             <Section title="Schedule" variant="boxed">
                 <Stack gap="md">
-                    <TextField
-                        id={`${size}-${String(lighter)}-job`}
-                        label="Job"
-                        defaultValue="nightly-export"
-                        description="Runs at 02:00 UTC."
-                    />
-                    <SelectField id={`${size}-${String(lighter)}-project`} label="Project" options={PROJECTS} defaultValue="harbor" />
+                    <TextField id={`${size}-job`} label="Job" defaultValue="nightly-export" description="Runs at 02:00 UTC." />
+                    <SelectField id={`${size}-project`} label="Project" options={PROJECTS} defaultValue="harbor" />
                 </Stack>
             </Section>
             <Section title="Run 01a1a5c2" variant="boxed">
@@ -163,7 +131,7 @@ function Level({ size, lighter = false }: { size: Size; lighter?: boolean }) {
     )
 }
 
-/** Smaller, small, regular (the theme's own sizes, today's default) and large, side by side. */
+/** Small, normal (the default), large (the theme's own sizes) and larger, side by side. */
 export const Compare: StoryObj = {
     render: () => (
         <TooltipProvider>
@@ -171,24 +139,6 @@ export const Compare: StoryObj = {
                 {SIZES.map((size) => (
                     <Level key={size} size={size} />
                 ))}
-            </Columns>
-        </TooltipProvider>
-    ),
-}
-
-/**
- * Today's weights beside one step lighter, at the normal and the large size: medium 500 to 450,
- * semibold 600 to 500 and bold 700 to 600, Plex's variable face drawing any of them.
- */
-export const Weights: StoryObj = {
-    render: () => (
-        <TooltipProvider>
-            <style>{LIGHTER_CSS}</style>
-            <Columns count={2} min="xl" rowGap="3xl">
-                {(['normal', 'large'] as const).flatMap((size) => [
-                    <Level key={`${size}-today`} size={size} />,
-                    <Level key={`${size}-lighter`} size={size} lighter />,
-                ])}
             </Columns>
         </TooltipProvider>
     ),

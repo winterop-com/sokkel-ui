@@ -348,11 +348,10 @@ for (const match of REGULAR_TEXT.matchAll(/--text-([a-z0-9]+(?:-[a-z0-9]+)*)(--l
     else entry.tracking = value
     TEXT.set(name, entry)
 }
+/** The weight each `font-*` class sets: normal is Tailwind's 400, the rest the weight tokens tokens.css writes. */
 const WEIGHTS: Record<string, number> = {
     'font-normal': 400,
-    'font-medium': 500,
-    'font-semibold': 600,
-    'font-bold': 700,
+    ...Object.fromEntries([...STYLES.matchAll(/--font-weight-([a-z]+): (\d+);/g)].map((match) => [`font-${match[1]}`, Number(match[2])])),
 }
 
 // Drawing a component on the server, and finding its elements
