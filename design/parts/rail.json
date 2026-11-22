@@ -547,12 +547,6 @@
         },
         {
             "renderer": "sokkel-egui",
-            "what": "count weight",
-            "spec": "An expanded row's count at 500.",
-            "today": "TextRole::Badge, at 500."
-        },
-        {
-            "renderer": "sokkel-egui",
             "what": "collapsed group rule",
             "spec": "The rule keeps the title's room: 16 above, its 20 line, 6 below and 4 to the first entry (46 from the last entry before), the rule 26 down.",
             "today": "26 from the last entry before to the next group's first, the rule 20 down."
