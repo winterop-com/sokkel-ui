@@ -26,4 +26,10 @@ describe('AccountMenu', () => {
         expect(html).toMatch(/<span class="max-w-full shrink-0 truncate font-medium">grace<\/span>/)
         expect(html).toMatch(/<span class="[^"]*@max-\[13rem\]:hidden[^"]*">admin<\/span>/)
     })
+
+    it('centers the neutral figure and the initial in the circle', () => {
+        const centered = /<span class="flex size-full items-center justify-center">/
+        expect(renderToStaticMarkup(<AccountMenu name="grace" local />)).toMatch(centered)
+        expect(renderToStaticMarkup(<AccountMenu name="grace" />)).toMatch(centered)
+    })
 })

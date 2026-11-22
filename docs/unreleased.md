@@ -16,3 +16,8 @@ release and empties it.
   450, 600 to 500, 700 to 600). Charts read the medium and semibold weights from the tokens
   (`ChartLook.weight`), and the code editor and captions the weight tokens. The code face, which is
   not variable, draws 450 at 500.
+
+## Fixed
+
+- AccountMenu centers its neutral figure (`local`) and the initial in the avatar's circle; the
+  figure stood at the circle's top left.
