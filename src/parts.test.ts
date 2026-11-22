@@ -336,7 +336,7 @@ const COLORS = new Set([...STYLES.matchAll(/--color-([a-z0-9-]+):/g)].map((match
 const RAW_COLORS = new Set([...STYLES.matchAll(/^\s+--([a-z0-9-]+): #[0-9a-f]{3,8};/gm)].map((match) => match[1]))
 const SPACING = new Set([...STYLES.matchAll(/--spacing-([a-z0-9-]+):/g)].map((match) => match[1]))
 /** The styles without the text size levels, which move the steps from the md breakpoint up: a spec gives the regular sizes. */
-const REGULAR_TEXT = STYLES.replace(/^@media \(min-width: [^)]+\) \{\n {4}html\[data-text-size=[\s\S]*?\n\}\n/gm, '')
+const REGULAR_TEXT = STYLES.replace(/^@media \(min-width: [^)]+\) \{\n {4}(?::root|html\[data-text-size=)[\s\S]*?\n\}\n/gm, '')
 /** Each text size and role: its size, line height and weight as tokens.css writes them. */
 const TEXT = new Map<string, { size: string; leading?: string; weight?: string; tracking?: string }>()
 for (const match of REGULAR_TEXT.matchAll(/--text-([a-z0-9]+(?:-[a-z0-9]+)*)(--line-height|--font-weight|--letter-spacing)?: ([^;]+);/g)) {

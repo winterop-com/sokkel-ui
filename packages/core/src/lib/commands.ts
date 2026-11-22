@@ -2,7 +2,7 @@ import { ALargeSmall, Monitor, Moon, Palette, Rows3, Sun } from 'lucide-react'
 
 import type { PaletteCommand, PaletteGroup, PaletteRun } from '../components/CommandPalette'
 import type { RailEntry, RailGroup } from '../components/Rail'
-import { THEMES, type Scheme, type ThemeOption, type ThemeSettings } from './appearance'
+import { DEFAULT_TEXT_SIZE, THEMES, type Scheme, type ThemeOption, type ThemeSettings } from './appearance'
 import type { WordsPart } from './words'
 
 /**
@@ -279,7 +279,7 @@ export function appearanceCommands(
                   onSchemeChange: (scheme) => whole.onChange({ ...whole.settings, scheme }),
                   density: whole.settings.density,
                   onDensityChange: (density) => whole.onChange({ ...whole.settings, density }),
-                  textSize: whole.settings.textSize ?? 'regular',
+                  textSize: whole.settings.textSize ?? DEFAULT_TEXT_SIZE,
                   onTextSizeChange: (textSize) => whole.onChange({ ...whole.settings, textSize }),
                   theme: whole.settings.theme,
                   onThemeChange: (theme) => whole.onChange({ ...whole.settings, theme }),
@@ -338,7 +338,7 @@ export function appearanceCommands(
                 id: `text-size-${size.value}`,
                 label: size.label,
                 icon: ALargeSmall,
-                hint: hint((parts.textSize ?? 'regular') === size.value),
+                hint: hint((parts.textSize ?? DEFAULT_TEXT_SIZE) === size.value),
                 keywords: [words.textSize, 'font'],
                 onSelect: () => onTextSizeChange(size.value),
             })),

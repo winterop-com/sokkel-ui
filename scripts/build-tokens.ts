@@ -162,6 +162,7 @@ files.set(
         // From the md breakpoint up only: a phone keeps the theme's sizes, so a field's 16px text never
         // drops under what makes iOS zoom in on focus.
         `@media (min-width: ${tokens.theme['breakpoint-md'] as string}) {\n${[
+            ...(tokens.textSize.default === 'regular' ? [] : [block([':root'], sizeOf(tokens.textSize.default))]),
             ...sizes.map((size) => block([`html[data-text-size='${size}']`, `[data-text-size-scope='${size}']`], sizeOf(size))),
             block(['[data-text-size-scope]'], fromSizes),
         ]

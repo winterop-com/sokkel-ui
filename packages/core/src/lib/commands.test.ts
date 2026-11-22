@@ -76,7 +76,7 @@ describe('appearanceCommands', () => {
         const hinted = groups.flatMap((group) =>
             group.commands.filter((command) => command.hint !== undefined).map((command) => command.id),
         )
-        expect(hinted).toEqual(['scheme-system', 'density-regular', 'text-size-regular', 'theme-paper'])
+        expect(hinted).toEqual(['scheme-system', 'density-regular', 'text-size-small', 'theme-paper'])
     })
 
     it('answers with the whole settings, one part changed', () => {
@@ -84,19 +84,19 @@ describe('appearanceCommands', () => {
         const groups = appearanceCommands(DEFAULT_APPEARANCE, onChange)
         groups[0]?.commands.find((command) => command.id === 'scheme-dark')?.onSelect()
         expect(onChange).toHaveBeenLastCalledWith({ ...DEFAULT_APPEARANCE, scheme: 'dark' })
-        groups[2]?.commands.find((command) => command.id === 'text-size-small')?.onSelect()
-        expect(onChange).toHaveBeenLastCalledWith({ ...DEFAULT_APPEARANCE, textSize: 'small' })
+        groups[2]?.commands.find((command) => command.id === 'text-size-large')?.onSelect()
+        expect(onChange).toHaveBeenLastCalledWith({ ...DEFAULT_APPEARANCE, textSize: 'large' })
         groups[3]?.commands.find((command) => command.id === 'theme-amber')?.onSelect()
         expect(onChange).toHaveBeenLastCalledWith({ ...DEFAULT_APPEARANCE, theme: 'amber' })
     })
 
-    it('offers the text sizes from their parts, the one in use hinted, regular when none is given', () => {
+    it('offers the text sizes from their parts, the one in use hinted, small when none is given', () => {
         const onTextSizeChange = vi.fn()
         const [group] = appearanceCommands({ onTextSizeChange })
         expect(group?.commands.map((command) => [command.id, command.hint])).toEqual([
             ['text-size-smaller', undefined],
-            ['text-size-small', undefined],
-            ['text-size-regular', 'in use'],
+            ['text-size-small', 'in use'],
+            ['text-size-regular', undefined],
             ['text-size-large', undefined],
         ])
         group?.commands[3]?.onSelect()
