@@ -295,7 +295,7 @@ export const StripFlyout: StoryObj = {
 }
 
 /** The navigation, collapsing and expanding as it is asked to, its mark and name a link home. */
-function Navigation({ collapsed: start }: { collapsed: boolean }) {
+function Navigation({ collapsed: start, collapseWith }: { collapsed: boolean; collapseWith?: 'button' | 'mark' }) {
     const [collapsed, setCollapsed] = useState(start)
     return (
         <Frame>
@@ -306,6 +306,7 @@ function Navigation({ collapsed: start }: { collapsed: boolean }) {
                 groups={NAV}
                 collapsed={collapsed}
                 onCollapsedChange={setCollapsed}
+                collapseWith={collapseWith}
                 foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
             />
         </Frame>
@@ -325,6 +326,13 @@ export const Collapsed: StoryObj = { render: () => <Navigation collapsed /> }
  * the rows' ends and a dot on Jobs. The mark and the name are a link to the app's home.
  */
 export const Expanded: StoryObj = { render: () => <Navigation collapsed={false} /> }
+
+/**
+ * The mark as the one toggle (`collapseWith="mark"`): expanded, the mark collapses the rail and shows
+ * the collapse icon under the pointer, the name alone leads home, and no button stands at the head's
+ * end; collapsed, the mark expands it again.
+ */
+export const MarkToggle: StoryObj = { name: 'Mark toggle', render: () => <Navigation collapsed={false} collapseWith="mark" /> }
 
 /** Each place with a second line saying what it holds, Runs active with its count level with the label, and Services' line wrapping in a narrow rail. */
 export const Described: StoryObj = {

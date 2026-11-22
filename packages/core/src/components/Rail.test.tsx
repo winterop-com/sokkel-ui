@@ -166,3 +166,46 @@ describe('RAIL_SIZE', () => {
         expect(html).toContain(`${RAIL_SIZE.default}px`)
     })
 })
+
+describe("Rail's head", () => {
+    const head = (html: string) => /<div[^>]*h-shell-top[^>]*>([\s\S]*?)<\/div>/.exec(html)?.[1] ?? ''
+    const marked = (more: Record<string, unknown> = {}) => (
+        <Rail name="Tidevann" mark="T" markHref="#/" groups={GROUPS} onCollapsedChange={() => undefined} collapseWith="mark" {...more} />
+    )
+
+    it('makes the mark the toggle that collapses an expanded rail, the name alone leading home', () => {
+        const html = head(renderToStaticMarkup(marked()))
+        expect(html.match(/<button/g)).toHaveLength(1)
+        expect(html).toMatch(/<button[^>]*aria-label="Collapse the navigation"[^>]*>\s*<span[^>]*>T<\/span>/)
+        expect(html).toMatch(/<a[^>]*href="#\/"[^>]*><span[^>]*>Tidevann<\/span><\/a>/)
+    })
+
+    it('makes the mark the toggle that expands a collapsed rail', () => {
+        const html = head(renderToStaticMarkup(marked({ collapsed: true })))
+        expect(html).toMatch(/<button[^>]*aria-label="Expand the navigation"/)
+        expect(html).not.toContain('href="#/"')
+    })
+
+    it("collapses from a control at the head's end by default, the mark and the name one link home", () => {
+        const html = head(renderToStaticMarkup(marked({ collapseWith: undefined })))
+        expect(html).toMatch(
+            /<a[^>]*href="#\/"[^>]*><span[^>]*>T<\/span><span[^>]*>Tidevann<\/span><\/a><button[^>]*aria-label="Collapse the navigation"/,
+        )
+    })
+
+    it('keeps the collapse control at the end of a head with no mark', () => {
+        const html = head(renderToStaticMarkup(<Rail name="Tidevann" groups={GROUPS} onCollapsedChange={() => undefined} />))
+        expect(html).toMatch(/<span[^>]*>Tidevann<\/span><button[^>]*aria-label="Collapse the navigation"/)
+    })
+
+    it('links the mark with the name home where the rail never collapses, and in the drawer', () => {
+        const fixed = head(renderToStaticMarkup(<Rail name="Tidevann" mark="T" markHref="#/" groups={GROUPS} />))
+        expect(fixed).toMatch(/<a[^>]*href="#\/"[^>]*><span[^>]*>T<\/span><span[^>]*>Tidevann<\/span><\/a>/)
+        expect(fixed).not.toContain('<button')
+        const drawn = head(
+            renderToStaticMarkup(<ShellDrawer value={{ close: () => undefined, label: 'Close the navigation' }}>{marked()}</ShellDrawer>),
+        )
+        expect(drawn).toMatch(/<a[^>]*href="#\/"[^>]*><span[^>]*>T<\/span>/)
+        expect(drawn).toMatch(/<button[^>]*aria-label="Close the navigation"/)
+    })
+})
