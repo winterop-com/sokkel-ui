@@ -535,12 +535,12 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
                 <Marked text={label} query={query} />
             </span>
         ) : (
-            // The head gives way; the tail keeps its width up to two thirds of the room, past which it is cut too.
+            // The head gives way down to a letter and its ellipsis; the tail keeps its width up to the rest, past which it is cut too.
             <span className="flex min-w-0">
                 <span ref={ref} className="min-w-0 truncate">
                     <MarkedPart text={label} from={0} to={tail} query={query} />
                 </span>
-                <span ref={tailRef} className="max-w-2/3 shrink-0 overflow-hidden text-ellipsis whitespace-pre">
+                <span ref={tailRef} className="max-w-[calc(100%-(--spacing(6)))] shrink-0 overflow-hidden text-ellipsis whitespace-pre">
                     <MarkedPart text={label} from={tail} to={label.length} query={query} />
                 </span>
             </span>
