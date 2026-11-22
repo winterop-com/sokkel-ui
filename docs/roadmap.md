@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.34.3** is the latest release (2026-11-22): a Tree row's cut label gives its whole text on
+- **0.34.4** is the latest release (2026-11-22): Tree `cut="middle"` keeps a label's last words,
+  never splitting one, and cuts every long label alike; contract 0.34.4.
+- **0.34.3** (2026-11-22): a Tree row's cut label gives its whole text on
   hover, and Tree `cut="middle"` keeps a label's tail in view; contract 0.34.3.
 - **0.34.2** (2026-11-22): Rail `collapseWith="mark"`, the mark as the one
   toggle in both states; contract 0.34.2.
