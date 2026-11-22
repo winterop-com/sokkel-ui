@@ -10,8 +10,8 @@
         },
         "sokkel-egui": {
             "state": "partial",
-            "as_of": "1a87987",
-            "note": "SidePanel and the Shell's panel, PanelSection and GroupLabel built before this spec, not yet compared with it."
+            "as_of": "ebeb584",
+            "note": "SidePanel and the Shell's panel, PanelSection and GroupLabel built before this spec, not yet compared with it. The tabs follow it: when the labels do not fit beside the toggle and every tab has an icon, each stands as its 32 wide icon with its label in a tooltip; tabs without icons scroll."
         },
         "sokkel-tui": {
             "state": "partial",
