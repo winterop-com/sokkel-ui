@@ -499,7 +499,7 @@ const TAIL_CHARS = 12
 
 /**
  * Where `cut="middle"` splits a label: the part from its last separator on, when that is short, as
- * the ": Fol. 170r" that tells a series apart; else its last few characters. 0 keeps it whole.
+ * the ": Sheet 170" that tells a series apart; else its last few characters. 0 keeps it whole.
  */
 export function labelTail(label: string): number {
     const at = Math.max(...TAIL_SEPARATORS.map((separator) => label.lastIndexOf(separator)))
@@ -617,7 +617,7 @@ export interface TreeProps {
     /**
      * Where a label too long for its row is cut: `end`, with an ellipsis at its end; or `middle`,
      * before its tail, the part from its last separator (": ", " - ", " / ", ", ") or its last few
-     * characters, so a series ("Hours: Fol. 170r", "Hours: Fol. 95v") stays told apart. A label cut
+     * characters, so a series ("Survey: Sheet 170", "Survey: Sheet 95") stays told apart. A label cut
      * short gives its whole text on hover.
      */
     cut?: 'end' | 'middle'

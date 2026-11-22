@@ -281,8 +281,8 @@ describe('children loaded at a version since moved on', () => {
 
 describe('labelTail', () => {
     test('keeps the part from the last separator when it is short', () => {
-        const label = 'Hours of Queen Isabella the Catholic, Queen of Spain: Fol. 170r'
-        expect(label.slice(labelTail(label))).toBe(': Fol. 170r')
+        const label = 'Harbor survey of the northern coast, Norway, west approaches: Sheet 170'
+        expect(label.slice(labelTail(label))).toBe(': Sheet 170')
         expect('Meeting notes - 2026-11-22'.slice(labelTail('Meeting notes - 2026-11-22'))).toBe(' - 2026-11-22')
     })
 
