@@ -519,13 +519,46 @@ function MarkedPart({ text, from, to, query }: { text: string; from: number; to:
     return <Highlight text={text.slice(from, to)} ranges={ranges} />
 }
 
-/** The head's least room in a middle cut, in spacing steps: the tail's `max-w` leaves it, and a row too narrow to keep the whole tail beside it cuts at the end. */
+/** The head's least room in a middle cut, in spacing steps: a row too narrow to keep the whole tail beside it cuts at the end. */
 const HEAD_MIN_STEPS = 6
 
 function headMin(): number {
     const root = getComputedStyle(document.documentElement)
     const step = Number.parseFloat(root.getPropertyValue('--spacing')) * (Number.parseFloat(root.fontSize) || 16)
     return (Number.isFinite(step) && step > 0 ? step : 4) * HEAD_MIN_STEPS
+}
+
+let measuring: CanvasRenderingContext2D | null | undefined
+
+/** A text's width in an element's font, or undefined where nothing can measure it. */
+function textWidth(text: string, like: HTMLElement): number | undefined {
+    if (measuring === undefined) {
+        try {
+            measuring = document.createElement('canvas').getContext('2d')
+        } catch {
+            measuring = null
+        }
+    }
+    if (measuring === null) return undefined
+    const style = getComputedStyle(like)
+    measuring.font = style.font
+    if ('letterSpacing' in measuring) measuring.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing
+    return measuring.measureText(text).width
+}
+
+/** The most of a head, cut before its trailing spaces and given an ellipsis, that fits a width; undefined when the whole head fits or nothing can measure it. */
+function headCut(head: string, room: number, like: HTMLElement): number | undefined {
+    const whole = textWidth(head, like)
+    if (whole === undefined || whole <= room) return undefined
+    let fits = 1
+    let over = head.length
+    while (over - fits > 1) {
+        const at = (fits + over) >> 1
+        const width = textWidth(`${head.slice(0, at).trimEnd()}\u2026`, like)
+        if (width !== undefined && width <= room) fits = at
+        else over = at
+    }
+    return head.slice(0, fits).trimEnd().length || 1
 }
 
 /**
@@ -535,11 +568,14 @@ function headMin(): number {
  */
 function TreeLabel({ label, query, cut, trail }: { label: string; query: string; cut: 'end' | 'middle'; trail?: string }) {
     const [ref, clamped] = useClamped<HTMLSpanElement>()
-    const [tailRef, tailClamped] = useClamped<HTMLSpanElement>()
     const [trailRef, trailClamped] = useClamped<HTMLSpanElement>()
     const tail = cut === 'middle' ? labelTail(label) : 0
     const [endCut, setEndCut] = useState(false)
+    // Where the head is cut before its ellipsis, so the tail follows the ellipsis with no gap.
+    const [headEnd, setHeadEnd] = useState<number | undefined>(undefined)
+    const box = useRef<HTMLSpanElement>(null)
     const wrap = useRef<HTMLSpanElement | null>(null)
+    const head = useRef<HTMLSpanElement | null>(null)
     const tailText = useRef<HTMLSpanElement>(null)
     const setWrap = useCallback(
         (node: HTMLSpanElement | null) => {
@@ -548,21 +584,34 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
         },
         [endCut, ref],
     )
+    const setHead = useCallback(
+        (node: HTMLSpanElement | null) => {
+            head.current = node
+            ref(node)
+        },
+        [ref],
+    )
     useLayoutEffect(() => {
-        const node = wrap.current
+        const outer = box.current
         const tailNode = tailText.current
-        if (tail === 0 || node === null || tailNode === null) return
+        if (tail === 0 || outer === null || tailNode === null) return
         const measure = () => {
-            const room = node.clientWidth
+            // The room the label has, from the row and not from the label, which the cut narrows.
+            const room = outer.clientWidth * (trail === undefined ? 1 : 2 / 3)
             if (room === 0) return
-            setEndCut(room < tailNode.getBoundingClientRect().width + headMin())
+            const tailWidth = tailNode.getBoundingClientRect().width
+            const narrow = room < tailWidth + headMin()
+            setEndCut(narrow)
+            const headNode = head.current
+            setHeadEnd(narrow || headNode === null ? undefined : headCut(label.slice(0, tail), room - tailWidth - 0.5, headNode))
         }
         measure()
+        void document.fonts?.ready.then(measure)
         if (typeof ResizeObserver === 'undefined') return
         const observer = new ResizeObserver(measure)
-        observer.observe(node)
+        observer.observe(outer)
         return () => observer.disconnect()
-    }, [tail, label, endCut])
+    }, [tail, label, endCut, trail])
     const whole = trail === undefined ? label : `${label} \u2014 ${trail}`
     const tailPart = (
         <span ref={tailText}>
@@ -580,19 +629,19 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
                 <span className="whitespace-pre">{tailPart}</span>
             </span>
         ) : (
-            // The head gives way down to a letter and its ellipsis; the tail keeps its width up to the rest, past which it is cut too.
+            // The head is cut to the room the whole tail leaves it, its ellipsis right before the tail.
             <span ref={setWrap} className="flex min-w-0">
-                <span ref={ref} className="min-w-0 truncate">
-                    <MarkedPart text={label} from={0} to={tail} query={query} />
+                <span ref={setHead} className="min-w-0 truncate">
+                    <MarkedPart text={label} from={0} to={headEnd ?? tail} query={query} />
+                    {headEnd !== undefined && '\u2026'}
                 </span>
-                <span ref={tailRef} className="max-w-[calc(100%-(--spacing(6)))] shrink-0 overflow-hidden text-ellipsis whitespace-pre">
-                    {tailPart}
-                </span>
+                <span className="shrink-0 whitespace-pre">{tailPart}</span>
             </span>
         )
     return (
         <span
-            title={clamped || (tailClamped && !endCut) || trailClamped ? whole : undefined}
+            ref={box}
+            title={clamped || headEnd !== undefined || trailClamped ? whole : undefined}
             className="flex min-w-0 flex-1 items-baseline gap-1.5"
         >
             {trail === undefined ? text : <span className="flex max-w-2/3 min-w-0 shrink-0">{text}</span>}
