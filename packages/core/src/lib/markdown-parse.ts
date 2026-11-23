@@ -86,7 +86,7 @@ const FRONTMATTER = /^---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\
  * A YAML properties line: blank, a comment, indented, a list item, or a key and a colon. A key is
  * up to four words of letters, digits, `_`, `.` and `-` in any script, or quoted.
  */
-export const PROPERTY_LINE = /^(\s|#|- |-$|[\p{L}\p{N}_.-]+(?: [\p{L}\p{N}_.-]+){0,3}:(\s|$)|"[^"\n]*":(\s|$)|'[^'\n]*':(\s|$))/u
+export const PROPERTY_LINE = /^(\s|#|- |-$|[\p{L}\p{M}\p{N}_.-]+(?: [\p{L}\p{M}\p{N}_.-]+){0,3}:(\s|$)|"[^"\n]*":(\s|$)|'[^'\n]*':(\s|$))/u
 
 /**
  * Whether a block reads as YAML properties: each line blank, a comment, indented under the line
@@ -133,14 +133,15 @@ const COMMENT = /^<!--(?:(?!-->)[\s\S])*-->$/
 function markedRanges(value: string): { from: number; to: number }[] {
     const out: { from: number; to: number }[] = []
     let open = -1
-    let lineEnd = -1
+    // The end of the open highlight's line, searched for again only once past it; -1 when no line ends ahead.
+    let lineEnd = -2
     for (let at = value.indexOf('=='); at >= 0;) {
         if (open >= 0 && lineEnd >= 0 && at > lineEnd) open = -1
         if (open < 0) {
             const next = value[at + 2] as string | undefined
             if (next !== undefined && !/[\s=]/.test(next)) {
                 open = at
-                lineEnd = value.indexOf('\n', at)
+                if (lineEnd !== -1 && lineEnd < at) lineEnd = value.indexOf('\n', at)
                 at = value.indexOf('==', at + 2)
             } else at = value.indexOf('==', at + 1)
             continue

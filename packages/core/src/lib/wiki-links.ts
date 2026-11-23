@@ -23,7 +23,7 @@ export interface WikiLink {
 const LINK = /\[\[([^[\]\n]+?)\]\]/g
 
 /** A `#tag`: after the start or a space or an opening mark, letters, digits, `_`, `-` and `/`, at least one of them not a digit. */
-const TAG = /(^|[\s([{"'“‘])#([\p{L}\p{N}_/-]*[\p{L}_][\p{L}\p{N}_/-]*)/gu
+const TAG = /(^|[\s([{"'“‘])#([\p{L}\p{M}\p{N}_/-]*[\p{L}_][\p{L}\p{M}\p{N}_/-]*)/gu
 
 const blank = (part: string) => ' '.repeat(part.length)
 
@@ -127,7 +127,7 @@ export function mentionsOf(text: string, name: string): { from: number; to: numb
     if (needle === '') return []
     const plain = withoutCode(text).replace(LINK, blank).toLowerCase()
     const found: { from: number; to: number }[] = []
-    const word = /[\p{L}\p{N}_]/u
+    const word = /[\p{L}\p{M}\p{N}_]/u
     for (let at = plain.indexOf(needle); at !== -1; at = plain.indexOf(needle, at + needle.length)) {
         const before = plain[at - 1]
         const after = plain[at + needle.length]

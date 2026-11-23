@@ -17,7 +17,7 @@ export interface MentionPerson {
 }
 
 /** The characters a handle is made of. */
-const HANDLE = /[\p{L}\p{N}._-]/u
+const HANDLE = /[\p{L}\p{M}\p{N}._-]/u
 /** The longest handle a query reads before it gives up on the `@`. */
 const LONGEST = 48
 
@@ -65,7 +65,7 @@ export function insertMention(text: string, start: number, caret: number, handle
 export function mentionsIn(text: string, people: readonly Pick<MentionPerson, 'id' | 'handle'>[]): string[] {
     const byHandle = new Map(people.map((person) => [handleOf(person).toLowerCase(), person.id]))
     const found: string[] = []
-    for (const match of text.matchAll(/@([\p{L}\p{N}._-]+)/gu)) {
+    for (const match of text.matchAll(/@([\p{L}\p{M}\p{N}._-]+)/gu)) {
         const at = match.index
         if (!opens(text[at - 1])) continue
         // A sentence's full stop or a dash after a handle is not part of it.

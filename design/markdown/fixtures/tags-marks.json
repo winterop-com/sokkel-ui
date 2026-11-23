@@ -1,0 +1,38 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "yaml",
+      "value": "शीर्षक: नमूना\nชื่อ: ตัวอย่าง",
+      "properties": {
+        "शीर्षक": "नमूना",
+        "ชื่อ": "ตัวอย่าง"
+      }
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "Tags: "
+        },
+        {
+          "type": "tag",
+          "tag": "हिंदी"
+        },
+        {
+          "type": "text",
+          "value": " and "
+        },
+        {
+          "type": "tag",
+          "tag": "ภาษาไทย"
+        },
+        {
+          "type": "text",
+          "value": "."
+        }
+      ]
+    }
+  ]
+}
