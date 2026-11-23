@@ -255,6 +255,23 @@ describe('a long label', () => {
         tailWidth.mockRestore()
     })
 
+    it('cuts the head with cut="middle" to the room the tail leaves it, its ellipsis right before the tail', async () => {
+        const width = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(100)
+        const tailWidth = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 32, 16))
+        const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+            font: '',
+            measureText: (text: string) => ({ width: text.length * 8 }),
+        } as unknown as CanvasRenderingContext2D)
+        const at = await mount(<Tree nodes={[{ id: 'a', label: 'The Satan Bug' }]} label="Pages" cut="middle" />)
+        const row = rowOf(at, 'a')
+        expect(row?.querySelector('span.truncate')?.textContent).toBe('The Sat\u2026')
+        expect(row?.querySelector('span.whitespace-pre')?.textContent).toBe(' Bug')
+        expect(row?.querySelector('[title]')?.getAttribute('title')).toBe('The Satan Bug')
+        width.mockRestore()
+        tailWidth.mockRestore()
+        canvas.mockRestore()
+    })
+
     it('gives its whole text on hover once it is cut short', async () => {
         const wide = vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(400)
         const narrow = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)
