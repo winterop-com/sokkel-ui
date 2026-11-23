@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui-tracking",
-    "version": "0.34.4",
+    "version": "0.34.5",
     "description": "Tracks for map tracking consoles, read from flight, AIS, orbit and network connection data, incidents read from earthquake, disaster and weather warning feeds, and server health checks, with the geodesy and the grid references they need, for sokkel-ui.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
