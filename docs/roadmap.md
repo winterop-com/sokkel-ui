@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.34.5** is the latest release (2026-11-23): Tree `cut="middle"` in a narrow row keeps the
+- **0.34.6** is the latest release (2026-11-23): Tree `cut="middle"` cuts at the end in a row too
+  narrow to keep the whole tail beside a letter of the head; contract 0.34.6.
+- **0.34.5** (2026-11-23): Tree `cut="middle"` in a narrow row keeps the
   head in view and the whole tail while the row has room for it, and never overflows; contract 0.34.5.
 - **0.34.4** (2026-11-22): Tree `cut="middle"` keeps a label's last words,
   never splitting one, and cuts every long label alike; contract 0.34.4.
