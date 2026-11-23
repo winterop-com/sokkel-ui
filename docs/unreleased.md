@@ -5,6 +5,7 @@ release and empties it.
 
 ## Fixed
 
-- Tree `cut="middle"` cuts at the end instead in a row too narrow for the whole tail and a few
-  letters of the head, so a deep or narrow row reads "Harbor survey…" rather than "H… : Sheet…".
-  It goes back to the middle cut as the row widens.
+- Tree `cut="middle"` cuts at the end instead in a row too narrow to keep the whole tail beside a
+  letter of the head, so such a row reads "Harbor survey…" rather than "H… : Sh…". A row that keeps
+  the whole tail keeps the middle cut ("Ha… : Sheet 170" at the rail's narrowest), and a row goes
+  back to the middle cut as it widens.

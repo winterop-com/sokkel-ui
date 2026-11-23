@@ -246,7 +246,7 @@ describe('a long label', () => {
         expect(row?.querySelectorAll('mark').length).toBeGreaterThan(1)
     })
 
-    it('cuts at the end with cut="middle" in a row too narrow for the whole tail and a few letters', async () => {
+    it('cuts at the end with cut="middle" in a row too narrow to keep the whole tail beside a letter of the head', async () => {
         const narrow = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(90)
         const tailWidth = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 80, 16))
         const at = await mount(<Tree nodes={series} label="Pages" cut="middle" />)

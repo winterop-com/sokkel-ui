@@ -519,12 +519,18 @@ function MarkedPart({ text, from, to, query }: { text: string; from: number; to:
     return <Highlight text={text.slice(from, to)} ranges={ranges} />
 }
 
-/** How much of a label's head, in ems, a middle cut keeps beside the whole tail before it cuts at the end instead. */
-const HEAD_MIN_EMS = 3
+/** The head's least room in a middle cut, in spacing steps: the tail's `max-w` leaves it, and a row too narrow to keep the whole tail beside it cuts at the end. */
+const HEAD_MIN_STEPS = 6
+
+function headMin(): number {
+    const root = getComputedStyle(document.documentElement)
+    const step = Number.parseFloat(root.getPropertyValue('--spacing')) * (Number.parseFloat(root.fontSize) || 16)
+    return (Number.isFinite(step) && step > 0 ? step : 4) * HEAD_MIN_STEPS
+}
 
 /**
  * A row's label on one line, the query marked, cut with an ellipsis at its end or, with
- * `middle`, before its tail; a row too narrow for the whole tail and a few letters of the head
+ * `middle`, before its tail; a row too narrow to keep the whole tail beside a letter of the head
  * cuts at the end. A label cut short gives its whole text, and a trail's, on hover.
  */
 function TreeLabel({ label, query, cut, trail }: { label: string; query: string; cut: 'end' | 'middle'; trail?: string }) {
@@ -549,8 +555,7 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
         const measure = () => {
             const room = node.clientWidth
             if (room === 0) return
-            const em = Number.parseFloat(getComputedStyle(node).fontSize) || 16
-            setEndCut(room < tailNode.getBoundingClientRect().width + em * HEAD_MIN_EMS)
+            setEndCut(room < tailNode.getBoundingClientRect().width + headMin())
         }
         measure()
         if (typeof ResizeObserver === 'undefined') return
@@ -575,7 +580,7 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
                 <span className="whitespace-pre">{tailPart}</span>
             </span>
         ) : (
-            // The head gives way down to a few letters and its ellipsis; the tail keeps its width up to the rest, past which it is cut too.
+            // The head gives way down to a letter and its ellipsis; the tail keeps its width up to the rest, past which it is cut too.
             <span ref={setWrap} className="flex min-w-0">
                 <span ref={ref} className="min-w-0 truncate">
                     <MarkedPart text={label} from={0} to={tail} query={query} />
