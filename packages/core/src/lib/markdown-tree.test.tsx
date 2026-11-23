@@ -247,6 +247,23 @@ describe('parseMarkdown', () => {
         expect(words('`==x==`')).not.toContain('highlight')
     })
 
+    it('reads a long line of highlights in time that grows with its length', () => {
+        const time = (count: number) => {
+            const start = performance.now()
+            parseMarkdown('==a=='.repeat(count))
+            return performance.now() - start
+        }
+        time(1_000)
+        const short = Math.min(time(10_000), time(10_000))
+        const long = Math.min(time(100_000), time(100_000))
+        if (long < 50) return
+        expect(long / Math.max(short, 1)).toBeLessThan(30)
+    })
+
+    it('reads a highlight in each of several lines', () => {
+        expect(find(parseMarkdown('==a== and ==b==\n==c=='), 'highlight')).toHaveLength(3)
+    })
+
     it('reads frontmatter written with CRLF line ends as LF', () => {
         expect(parseMarkdown('---\r\na: 1\r\nb: 2\r\n---\r\n# T').children[0]).toEqual({
             type: 'yaml',

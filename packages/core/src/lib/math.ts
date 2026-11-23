@@ -14,45 +14,88 @@ function closes(text: string, index: number): boolean {
     return before !== undefined && !/\s/.test(before) && before !== '$' && (after === undefined || !/[\d$]/.test(after))
 }
 
-/** The index of the closing `$` for the one opening at `start`, on the same line, or -1. */
-function closing(text: string, start: number): number {
+/**
+ * The index of the closing `$` for the one opening at `start`, on the same line, or, when none
+ * closes it, -1 and where the search stopped: no `$` opening before that point closes either.
+ */
+function closing(text: string, start: number): { end: number; stop: number } {
     for (let index = start + 1; index < text.length; index++) {
         const char = text[index]
-        if (char === '\n') return -1
+        if (char === '\n') return { end: -1, stop: index }
         if (char === '\\') {
             index++
             continue
         }
         if (char === '$') {
-            if (text[index + 1] === '$') return -1
-            if (closes(text, index)) return index
+            if (text[index + 1] === '$') return { end: -1, stop: index }
+            if (closes(text, index)) return { end: index, stop: index }
         }
     }
-    return -1
+    return { end: -1, stop: text.length }
 }
 
-/** The start of the line `index` is on, and whether only white space comes before it there. */
+/** A search through the text that remembers its last answer, so openers that share a closer find it once. */
+function searcher(find: (from: number) => number): (from: number) => number {
+    let found = -2
+    return (from) => {
+        if (found === -1 || (found >= from && found !== -2)) return found
+        found = find(from)
+        return found
+    }
+}
+
+/** A quote's markers before a line's text: `> `, `>> `, or none. */
+const QUOTE = /^[ \t]*(?:>[ \t]?)*/
+/** Raw HTML a backslash would stay literal in: an autolink, or an opening, closing or empty tag. */
+const RAW = /^(?:<[A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s<>]*>|<[^\s@<>\\]+@[^\s@<>\\]+>|<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*)?\/?>)/
+
+/** The start of the line `index` is on, and whether only white space and a quote's markers come before it there. */
 function lineStart(text: string, index: number): { start: number; alone: boolean } {
     const start = text.lastIndexOf('\n', index - 1) + 1
-    return { start, alone: text.slice(start, index).trim() === '' }
+    const before = text.slice(start, index)
+    return { start, alone: QUOTE.exec(before)?.[0].length === before.length }
 }
 
 /** Rewrites the math of one stretch of prose, with no code in it. */
 function prose(text: string): string {
     let out = ''
     let index = 0
+    // Each search remembers its last answer, so a line of openers that never close is read once.
+    const parens = searcher((from) => text.indexOf('\\)', from))
+    const brackets = searcher((from) => text.indexOf('\\]', from))
+    const blank = searcher((from) => {
+        const match = /\n[ \t>]*\n/g
+        match.lastIndex = from
+        return match.exec(text)?.index ?? -1
+    })
+    let unclosed = -1
     while (index < text.length) {
         const char = text[index]
         const next = text[index + 1]
+        if (char === '<') {
+            const raw = RAW.exec(text.slice(index, index + 2048))
+            if (raw !== null) {
+                out += raw[0]
+                index += raw[0].length
+                continue
+            }
+        }
         if (char === '\\' && (next === '(' || next === '[')) {
-            const close = next === '(' ? '\\)' : '\\]'
-            const end = text.indexOf(close, index + 2)
-            const inner = end === -1 ? '' : text.slice(index + 2, end)
-            if (end !== -1 && inner.trim() !== '' && !/\n\s*\n/.test(inner)) {
-                const value = inner.trim()
+            const end = (next === '(' ? parens : brackets)(index + 2)
+            const gap = end === -1 ? -1 : blank(index + 2)
+            if (end !== -1 && (gap === -1 || gap >= end)) {
                 const { start, alone } = lineStart(text, index)
+                // Inside a quote each line of the formula starts with the quote's markers, which are not math.
+                const quote = QUOTE.exec(text.slice(start, index))?.[0] ?? ''
+                const inner = text.slice(index + 2, end)
+                const value = (quote.includes('>') ? inner.replace(/\n[ \t]*(?:>[ \t]?)*/g, '\n') : inner).trim()
                 const after = text.indexOf('\n', end)
                 const rest = text.slice(end + 2, after === -1 ? text.length : after)
+                if (value === '') {
+                    out += char + next
+                    index += 2
+                    continue
+                }
                 if (next === '[' && alone && rest.trim() === '') {
                     // A display formula on lines of its own: a `$$` block at the same indent.
                     const indent = text.slice(start, index)
@@ -85,7 +128,12 @@ function prose(text: string): string {
                 index += run
                 continue
             }
-            const end = opens(text, index) ? closing(text, index) : -1
+            let end = -1
+            if (index >= unclosed && opens(text, index)) {
+                const found = closing(text, index)
+                end = found.end
+                if (end === -1) unclosed = found.stop
+            }
             if (end === -1) {
                 // A dollar that pairs with none, as in a price, stays a dollar.
                 out += '\\$'

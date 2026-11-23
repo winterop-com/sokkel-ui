@@ -12,10 +12,10 @@ interface MarkdownState {
 }
 
 /** A frontmatter line that reads as properties: blank, a comment, indented, a list item, or a key and a colon. */
-const PROPERTY_LINE = /^(\s|#|- |-$|[\p{L}\p{N}_.-]+(?: [\p{L}\p{N}_.-]+){0,3}:(\s|$)|"[^"\n]*":(\s|$)|'[^'\n]*':(\s|$))/u
+const PROPERTY_LINE = /^(\s|#|- |-$|[\p{L}\p{M}\p{N}_.-]+(?: [\p{L}\p{M}\p{N}_.-]+){0,3}:(\s|$)|"[^"\n]*":(\s|$)|'[^'\n]*':(\s|$))/u
 
 /** A property's key at a frontmatter line's start. */
-const PROPERTY_KEY = /^(?:[\p{L}\p{N}_.-]+(?: [\p{L}\p{N}_.-]+){0,3}|"[^"\n]*"|'[^'\n]*')(?=:(\s|$))/u
+const PROPERTY_KEY = /^(?:[\p{L}\p{M}\p{N}_.-]+(?: [\p{L}\p{M}\p{N}_.-]+){0,3}|"[^"\n]*"|'[^'\n]*')(?=:(\s|$))/u
 
 /**
  * A line of the frontmatter, the YAML between a `---` on the document's first line and the next
@@ -64,7 +64,7 @@ function comment(stream: StringStream, state: MarkdownState, closer?: '-->' | '%
 }
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})/
-const TAG = /^#[\p{L}\p{N}_/-]*[\p{L}_][\p{L}\p{N}_/-]*/u
+const TAG = /^#[\p{L}\p{M}\p{N}_/-]*[\p{L}_][\p{L}\p{M}\p{N}_/-]*/u
 
 /** What a line starts with: a fence, a heading, a rule, a quote or a list item. */
 function lineStart(stream: StringStream, state: MarkdownState): string | null | undefined {
@@ -160,8 +160,8 @@ function inline(stream: StringStream, state: MarkdownState): string | null {
     if (address && stream.match(/^\([^)\s]*(?:\s+"[^"]*")?\)/)) return 'url'
     const before = stream.pos === 0 ? '' : stream.string[stream.pos - 1]
     // An underscore inside a word, as in a job's name, starts no emphasis.
-    if (stream.peek() === '_' && /[\p{L}\p{N}]/u.test(before)) {
-        stream.eatWhile(/[\p{L}\p{N}_]/u)
+    if (stream.peek() === '_' && /[\p{L}\p{M}\p{N}]/u.test(before)) {
+        stream.eatWhile(/[\p{L}\p{M}\p{N}_]/u)
         return null
     }
     if (stream.match(/^!?\[\[[^[\]\n]+\]\]/)) return 'link'

@@ -60,7 +60,7 @@ export function headingId(text: string): string {
     return text
         .toLowerCase()
         .trim()
-        .replace(/[^\p{L}\p{N}\s-]/gu, '')
+        .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, '')
         .replace(/\s+/g, '-')
 }
 

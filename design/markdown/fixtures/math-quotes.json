@@ -1,0 +1,79 @@
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "callout",
+      "kind": "note",
+      "marker": "note",
+      "children": [
+        {
+          "type": "math",
+          "meta": null,
+          "value": "E = mc^2"
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "A sum, "
+            },
+            {
+              "type": "inlineMath",
+              "value": "a + b"
+            },
+            {
+              "type": "text",
+              "value": ", inside a quote."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "See "
+        },
+        {
+          "type": "link",
+          "title": null,
+          "url": "https://example.org/?run=$id",
+          "children": [
+            {
+              "type": "text",
+              "value": "https://example.org/?run=$id"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " and "
+        },
+        {
+          "type": "html",
+          "value": "<span title=\"from $a\">"
+        },
+        {
+          "type": "text",
+          "value": "the run"
+        },
+        {
+          "type": "html",
+          "value": "</span>"
+        },
+        {
+          "type": "text",
+          "value": ", which costs $5."
+        }
+      ]
+    }
+  ]
+}

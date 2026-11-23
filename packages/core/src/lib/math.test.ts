@@ -61,6 +61,34 @@ describe('normalizeMath', () => {
         expect(normalizeMath(source, { streaming: true })).toBe(source)
     })
 
+    it('turns \\[…\\] on lines of its own in a quote into a $$ block inside the quote', () => {
+        expect(normalizeMath('> [!note]\n> \\[\n> E = mc^2\n> \\]')).toBe('> [!note]\n> $$\n> E = mc^2\n> $$')
+    })
+
+    it("leaves a quote's markers out of inline math over several lines", () => {
+        expect(normalizeMath('> \\( x\n> + y \\)')).toBe('> $x + y$')
+    })
+
+    it('leaves dollars in autolinks and raw HTML alone', () => {
+        expect(normalizeMath('<https://e.example/?a=$b>')).toBe('<https://e.example/?a=$b>')
+        expect(normalizeMath('<a href="x?$y">z</a> costs $5')).toBe('<a href="x?$y">z</a> costs \\$5')
+    })
+
+    it('reads a long line of openers that never close in time that grows with its length', () => {
+        const time = (source: string) => {
+            const start = performance.now()
+            normalizeMath(source)
+            return performance.now() - start
+        }
+        for (const piece of ['$a ', '\\( ', '\\[ ']) {
+            time(piece.repeat(1_000))
+            const short = Math.min(time(piece.repeat(10_000)), time(piece.repeat(10_000)))
+            const long = Math.min(time(piece.repeat(100_000)), time(piece.repeat(100_000)))
+            if (long < 50) continue
+            expect(long / Math.max(short, 1)).toBeLessThan(30)
+        }
+    })
+
     it('leaves text with no math as it is', () => {
         expect(normalizeMath('Nothing to see (here) [or there].')).toBe('Nothing to see (here) [or there].')
     })

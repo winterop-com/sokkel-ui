@@ -31,7 +31,7 @@ export function download(name: string, content: DownloadContent, type = 'text/pl
 export function fileName(title: string, extension: string, fallback = 'file'): string {
     const slug = title
         .toLowerCase()
-        .replace(/[^\p{L}\p{N}]+/gu, '-')
+        .replace(/[^\p{L}\p{M}\p{N}]+/gu, '-')
         .replace(/^-|-$/g, '')
     return `${slug === '' ? fallback : slug}.${extension.replace(/^\./, '')}`
 }
