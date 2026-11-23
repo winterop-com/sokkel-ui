@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.34.7** is the latest release (2026-11-23): Tree `cut="middle"` puts the ellipsis right before
+- **0.34.8** is the latest release (2026-11-23): the markdown reader reads display math in quotes,
+  leaves raw HTML's dollars, reads long unclosed lines in linear time and reads combining marks in
+  words; contract 0.34.8.
+- **0.34.7** (2026-11-23): Tree `cut="middle"` puts the ellipsis right before
   the tail, with no gap; contract 0.34.7.
 - **0.34.6** (2026-11-23): Tree `cut="middle"` cuts at the end in a row too
   narrow to keep the whole tail beside a letter of the head; contract 0.34.6.
