@@ -246,6 +246,15 @@ describe('a long label', () => {
         expect(row?.querySelectorAll('mark').length).toBeGreaterThan(1)
     })
 
+    it('cuts at the end with cut="middle" in a row too narrow for the whole tail and a few letters', async () => {
+        const narrow = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(90)
+        const tailWidth = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 80, 16))
+        const at = await mount(<Tree nodes={series} label="Pages" cut="middle" />)
+        expect(rowOf(at, 'a')?.querySelector('span.truncate')?.textContent).toBe(series[0].label)
+        narrow.mockRestore()
+        tailWidth.mockRestore()
+    })
+
     it('gives its whole text on hover once it is cut short', async () => {
         const wide = vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(400)
         const narrow = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)

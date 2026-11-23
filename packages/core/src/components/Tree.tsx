@@ -519,34 +519,77 @@ function MarkedPart({ text, from, to, query }: { text: string; from: number; to:
     return <Highlight text={text.slice(from, to)} ranges={ranges} />
 }
 
+/** How much of a label's head, in ems, a middle cut keeps beside the whole tail before it cuts at the end instead. */
+const HEAD_MIN_EMS = 3
+
 /**
  * A row's label on one line, the query marked, cut with an ellipsis at its end or, with
- * `middle`, before its tail; a label cut short gives its whole text, and a trail's, on hover.
+ * `middle`, before its tail; a row too narrow for the whole tail and a few letters of the head
+ * cuts at the end. A label cut short gives its whole text, and a trail's, on hover.
  */
 function TreeLabel({ label, query, cut, trail }: { label: string; query: string; cut: 'end' | 'middle'; trail?: string }) {
     const [ref, clamped] = useClamped<HTMLSpanElement>()
     const [tailRef, tailClamped] = useClamped<HTMLSpanElement>()
     const [trailRef, trailClamped] = useClamped<HTMLSpanElement>()
     const tail = cut === 'middle' ? labelTail(label) : 0
+    const [endCut, setEndCut] = useState(false)
+    const wrap = useRef<HTMLSpanElement | null>(null)
+    const tailText = useRef<HTMLSpanElement>(null)
+    const setWrap = useCallback(
+        (node: HTMLSpanElement | null) => {
+            wrap.current = node
+            if (endCut) ref(node)
+        },
+        [endCut, ref],
+    )
+    useLayoutEffect(() => {
+        const node = wrap.current
+        const tailNode = tailText.current
+        if (tail === 0 || node === null || tailNode === null) return
+        const measure = () => {
+            const room = node.clientWidth
+            if (room === 0) return
+            const em = Number.parseFloat(getComputedStyle(node).fontSize) || 16
+            setEndCut(room < tailNode.getBoundingClientRect().width + em * HEAD_MIN_EMS)
+        }
+        measure()
+        if (typeof ResizeObserver === 'undefined') return
+        const observer = new ResizeObserver(measure)
+        observer.observe(node)
+        return () => observer.disconnect()
+    }, [tail, label, endCut])
     const whole = trail === undefined ? label : `${label} \u2014 ${trail}`
+    const tailPart = (
+        <span ref={tailText}>
+            <MarkedPart text={label} from={tail} to={label.length} query={query} />
+        </span>
+    )
     const text =
         tail === 0 ? (
             <span ref={ref} className="min-w-0 truncate">
                 <Marked text={label} query={query} />
             </span>
+        ) : endCut ? (
+            <span ref={setWrap} className="min-w-0 truncate">
+                <MarkedPart text={label} from={0} to={tail} query={query} />
+                <span className="whitespace-pre">{tailPart}</span>
+            </span>
         ) : (
-            // The head gives way down to a letter and its ellipsis; the tail keeps its width up to the rest, past which it is cut too.
-            <span className="flex min-w-0">
+            // The head gives way down to a few letters and its ellipsis; the tail keeps its width up to the rest, past which it is cut too.
+            <span ref={setWrap} className="flex min-w-0">
                 <span ref={ref} className="min-w-0 truncate">
                     <MarkedPart text={label} from={0} to={tail} query={query} />
                 </span>
                 <span ref={tailRef} className="max-w-[calc(100%-(--spacing(6)))] shrink-0 overflow-hidden text-ellipsis whitespace-pre">
-                    <MarkedPart text={label} from={tail} to={label.length} query={query} />
+                    {tailPart}
                 </span>
             </span>
         )
     return (
-        <span title={clamped || tailClamped || trailClamped ? whole : undefined} className="flex min-w-0 flex-1 items-baseline gap-1.5">
+        <span
+            title={clamped || (tailClamped && !endCut) || trailClamped ? whole : undefined}
+            className="flex min-w-0 flex-1 items-baseline gap-1.5"
+        >
             {trail === undefined ? text : <span className="flex max-w-2/3 min-w-0 shrink-0">{text}</span>}
             {trail !== undefined && (
                 <span ref={trailRef} className="min-w-0 truncate text-xs text-muted-foreground">
