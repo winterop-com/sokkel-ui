@@ -23,13 +23,13 @@ const EXAMPLES = join(ROOT, 'examples')
 /** How long a shell has to show its window, in milliseconds. */
 const WINDOW_TIMEOUT = 60_000
 /** How long a page draws after its window shows before the still is taken, in milliseconds. */
-const SETTLE = 8_000
+const SETTLE = 5_000
 /** A still with fewer colors than this has nothing drawn in it. */
 const FEWEST_COLORS = 8
 /** A line a shell prints that is worth a warning on the run. */
 const WARNING = /error|panic|uncaught/i
-/** What a shell prints on any virtual display without a GPU, a session bus or a network, and says nothing of the app. */
-const NOISE = /dbus|DRI3|libEGL|gpu|viz_main|network_service|ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED/i
+/** What a shell prints on any virtual display without a GPU, a sound card or a network, and says nothing of the app. */
+const NOISE = /dbus|ALSA|alsa_util|DRI3|libEGL|gpu|viz_main|network_service|ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED/i
 
 type Kind = 'electron' | 'tauri'
 
