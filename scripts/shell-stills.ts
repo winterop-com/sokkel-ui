@@ -124,6 +124,10 @@ async function still(id: string, kind: Kind, out: string): Promise<Outcome> {
     const launch = kind === 'electron' ? electronLaunch(id) : tauriLaunch(id)
     if (typeof launch === 'string') return { ...outcome, problem: launch }
 
+    // The pointer waits in the display's far corner (X keeps it on screen), outside the window: one
+    // resting on the page hovers a part, and the hover's popup is a window of its own that the still
+    // shows as black.
+    tool('xdotool', ['mousemove', '10000', '10000'])
     const child = spawn(launch.command, launch.args, {
         cwd: launch.cwd,
         env: { ...process.env, NO_AT_BRIDGE: '1', ...launch.env },

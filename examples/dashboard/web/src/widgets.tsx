@@ -14,6 +14,7 @@ import { MapPopup } from '@winterop-com/sokkel-ui-maps/MapPopup'
 import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
 import { PointLayer } from '@winterop-com/sokkel-ui-maps/PointLayer'
 import { categoricalScale, classCounts } from '@winterop-com/sokkel-ui-maps/scale'
+import { WORLD_BASEMAP } from '@winterop-com/sokkel-ui-maps/world'
 import { ActivityList, type ActivityItem } from '@winterop-com/sokkel-ui/ActivityList'
 import { BarList } from '@winterop-com/sokkel-ui/BarList'
 import { CheckboxField } from '@winterop-com/sokkel-ui/CheckboxField'
@@ -520,7 +521,14 @@ function SitesMap({ sites, className }: { sites: readonly Site[]; className?: st
     const site = sites.find((one) => one.id === selected)
     const feature = data.features.find((one) => one.id === selected)
     return (
-        <MapView label="Sites by state" framed={false} selected={selected} onSelectedChange={(id) => setSelected(id)} className={className}>
+        <MapView
+            label="Sites by state"
+            framed={false}
+            fallbackBasemap={WORLD_BASEMAP}
+            selected={selected}
+            onSelectedChange={(id) => setSelected(id)}
+            className={className}
+        >
             <PointLayer id="sites" data={data} scale={SCALE} value={stateOfPoint} radius={7} />
             <MapOverlay corner="bottom-left">
                 <MapLegend title="Sites" description={`${String(sites.length)} cities`} scale={SCALE} shape="point" counts={tally.counts} />
