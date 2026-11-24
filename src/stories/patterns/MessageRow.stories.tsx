@@ -5,8 +5,8 @@ import { MessageRow, type MessageLabel } from '@winterop-com/sokkel-ui/MessageRo
 import { Surface } from '@winterop-com/sokkel-ui/Section'
 
 /** A row of a message list, alone and in a list column with every mark it carries. */
-const HARBOR: MessageLabel = { id: 'harbor', label: 'harbor', color: 'var(--color-kind-blue)' }
-const JUNIPER: MessageLabel = { id: 'juniper', label: 'juniper', color: 'var(--color-kind-green)' }
+const HARBOR: MessageLabel = { id: 'harbor', label: 'harbor', color: 'var(--kind-blue)' }
+const JUNIPER: MessageLabel = { id: 'juniper', label: 'juniper', color: 'var(--kind-green)' }
 
 function Column({ children }: { children: React.ReactNode }) {
     return <Surface className="mx-auto w-full max-w-md">{children}</Surface>
