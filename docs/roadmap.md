@@ -509,8 +509,8 @@ to `plan.md` when it ships.
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
   214.1 kB and forms at 197.5 kB start and 67.5 kB lazy; both are full. A change trims what it adds
   itself; when it is worth its size, its PR raises the budget it needs with the reason, rather than
-  reworking unrelated parts to fit. A loader that lets `DataTable` register itself when it loads
-  may win back the 2.3 kB `ChartFrame`'s data view split into the dashboard's start chunks.
+  reworking unrelated parts to fit. `ChartFrame`'s data view no longer costs the dashboard's start
+  anything worth a loader: built without it, the start is 214.0 kB against 214.1 (2026-11-24).
 - **Smaller start bundles, where it stands.** Every library only some parts need is an optional
   peer, and the heavy ones, Base UI's menu among them, load on first use. The palette's list is the
   library's own (cmdk without its dialog and Radix), `DataTable` loads its pager select and row
