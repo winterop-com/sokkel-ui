@@ -477,12 +477,9 @@ to `plan.md` when it ships.
 - **CI starts each shell once (2026-11-24).** The examples workflow starts all 42 shells (21
   Electron, 21 Tauri) on Linux under Xvfb with no network, and keeps a still of each window
   (`scripts/shell-stills.ts`, the `shell-stills` artifact); a shell that exits, shows no window or
-  draws nothing fails the run. What the first stills showed, still open:
-    - The video home page's "Crossing the high desert by night train" thumbnail had a black band
-      over it, and one album cover in music was black in one run; likely caught mid-draw, worth a
-      look.
-    - The status dashboard's Sites map showed its dots with no land in some stills, five seconds
-      after the window opened.
+  draws nothing fails the run. The pointer waits outside the window, so no hover popup shows as a
+  black box in a still. A Tauri still shows no map: WebKitGTK draws no WebGL with compositing off,
+  which a virtual display needs.
 
 ## Next
 

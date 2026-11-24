@@ -4,6 +4,7 @@ import { MapPopup } from '@winterop-com/sokkel-ui-maps/MapPopup'
 import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
 import { PointLayer } from '@winterop-com/sokkel-ui-maps/PointLayer'
 import { categoricalScale, classCounts } from '@winterop-com/sokkel-ui-maps/scale'
+import { WORLD_BASEMAP } from '@winterop-com/sokkel-ui-maps/world'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import { useMemo } from 'react'
 
@@ -73,6 +74,7 @@ export function SitesMap({
             label="Sites by state"
             framed={false}
             bounds={bounds}
+            fallbackBasemap={WORLD_BASEMAP}
             selected={selected}
             onSelectedChange={(id) => onSelectedChange(id)}
             className={className}
