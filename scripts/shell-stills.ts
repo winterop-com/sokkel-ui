@@ -26,6 +26,10 @@ const WINDOW_TIMEOUT = 60_000
 const SETTLE = 8_000
 /** A still with fewer colors than this has nothing drawn in it. */
 const FEWEST_COLORS = 8
+/** A line a shell prints that is worth a warning on the run. */
+const WARNING = /error|panic|uncaught/i
+/** What a shell prints on any virtual display without a GPU, a session bus or a network, and says nothing of the app. */
+const NOISE = /dbus|DRI3|libEGL|gpu|viz_main|network_service|ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED/i
 
 type Kind = 'electron' | 'tauri'
 
@@ -33,6 +37,8 @@ interface Outcome {
     id: string
     kind: Kind
     problem?: string
+    /** How long its window took to show, in milliseconds. */
+    shown?: number
     warnings: string[]
 }
 
@@ -74,8 +80,10 @@ function electronLaunch(id: string): Launch | string {
     const pathFile = join(electron, 'path.txt')
     const binary = existsSync(pathFile) ? join(electron, 'dist', readFileSync(pathFile, 'utf8').trim()) : undefined
     if (binary === undefined || !existsSync(binary)) return 'its install fetched no Electron binary'
-    // Chromium's sandbox needs a setuid helper or user namespaces, which a CI runner has neither of.
-    return { command: binary, args: ['--no-sandbox', '.'], cwd: dir, env: {} }
+    // Chromium's sandbox needs a setuid helper or user namespaces, which a CI runner has neither of;
+    // and with no GPU, WebGL (the maps) draws only on SwiftShader, which Chromium blocks unless asked.
+    const flags = ['--no-sandbox', '--ignore-gpu-blocklist', '--enable-unsafe-swiftshader']
+    return { command: binary, args: [...flags, '.'], cwd: dir, env: {} }
 }
 
 /** The Cargo target folder the Tauri shells are built into, as example.mk names it. */
@@ -147,13 +155,14 @@ async function still(id: string, kind: Kind, out: string): Promise<Outcome> {
             if (window === undefined) await wait(500)
         }
         if (window === undefined) return { ...outcome, problem: `it showed no window in ${String(WINDOW_TIMEOUT / 1000)}s${lastWords()}` }
+        outcome.shown = Date.now() - started
         await wait(SETTLE)
         const crashed = exited()
         if (crashed !== undefined) return { ...outcome, problem: crashed + lastWords() }
         const file = join(out, `${id}-${kind}.png`)
         if (tool('import', ['-window', window, file]) === undefined)
             return { ...outcome, problem: 'ImageMagick could not take a still of its window' }
-        return { ...outcome, problem: blank(file), warnings: said.filter((line) => /error|panic|uncaught/i.test(line)).slice(0, 10) }
+        return { ...outcome, problem: blank(file), warnings: said.filter((line) => WARNING.test(line) && !NOISE.test(line)).slice(0, 10) }
     } finally {
         await end(child)
     }
@@ -184,8 +193,11 @@ async function main(args: readonly string[]): Promise<void> {
             const started = Date.now()
             const outcome = await still(id, kind, out)
             outcomes.push(outcome)
-            const took = `${((Date.now() - started) / 1000).toFixed(1)}s`
-            console.log(`${kind} ${id}: ${outcome.problem === undefined ? 'still taken' : 'failed'} (${took})`)
+            const seconds = (ms: number) => `${(ms / 1000).toFixed(1)}s`
+            const shown = outcome.shown === undefined ? '' : `, window after ${seconds(outcome.shown)}`
+            console.log(
+                `${kind} ${id}: ${outcome.problem === undefined ? 'still taken' : 'failed'} (${seconds(Date.now() - started)}${shown})`,
+            )
             for (const warning of outcome.warnings) say('warning', `${id} (${kind}): ${warning}`)
         }
     }

@@ -43,7 +43,7 @@ jobs:
             - name: Tauri system libraries
               run: |
                   sudo apt-get update
-                  sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev xvfb xdotool imagemagick
+                  sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev xvfb xdotool imagemagick dbus
             - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
               with:
                   toolchain: stable
@@ -55,13 +55,14 @@ jobs:
                   for shell in examples/*/tauri/src-tauri; do
                       (cd "$shell" && cargo build --locked) || exit 1
                   done
-            # Each shell started once on a virtual display, in a network namespace with only loopback,
-            # so no shell reaches a public source; scripts/shell-stills.ts says what fails a shell.
+            # Each shell started once on a virtual display with a session bus of its own, in a network
+            # namespace with only loopback, so no shell reaches a public source; scripts/shell-stills.ts
+            # says what fails a shell.
             - name: Start each shell
               run: >-
                   sudo unshare --net -- sh -c 'ip link set lo up &&
                   exec sudo -u "$1" env PATH="$2" HOME="$3" CARGO_TARGET_DIR="$4" GITHUB_ACTIONS="$5"
-                  xvfb-run -a -s "-screen 0 1920x1080x24" bun scripts/shell-stills.ts --out shell-stills'
+                  dbus-run-session -- xvfb-run -a -s "-screen 0 1920x1080x24" bun scripts/shell-stills.ts --out shell-stills'
                   sh "$(id -un)" "$PATH" "$HOME" "$CARGO_TARGET_DIR" "$GITHUB_ACTIONS"
             - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               if: ${{ !cancelled() }}
