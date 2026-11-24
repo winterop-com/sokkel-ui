@@ -6,6 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
+- **On main, unreleased (2026-11-24):** `styles.css` leaves out the primitives no part draws
+  (breaking: the next release is 0.35.0); `EditPreview`'s pane variant shows one pane at a time
+  behind a switch on a phone; a color given as a value takes the raw token, never a `--color-*`
+  name, and a rule holds it; CI starts every example's shell once and keeps a still.
 - **0.34.9** is the latest release (2026-11-24): GraphCanvas keeps a dropped box where it was let
   go until the app moves it; the examples build only what changed and `make apps` bundles the Tauri
   shells; contract 0.34.9.
@@ -464,17 +468,23 @@ to `plan.md` when it ships.
 
 ## Example apps
 
-- **The examples.** Sixteen apps in `examples/<name>/{web,electron,tauri}`, each a Tidevann product
-  built only on the packages' public exports, with a fake backend kept per app
-  (`tidevann-shared`). They are tasks; runs, a jobs console; records; four live dashboards
-  (metrics, status, analytics and dashboard); notes; dataviz; models, with chat and compare; music;
-  podcast; video; studio, an editor for pipelines, schemas and queries; and two workbenches on the
-  domain add-ons, fhir and dhis2. `examples/README.md` says what each holds. Each passed a scripted click-through of every page and control. `make examples`
-  builds them all, `make <name>-web|-electron|-tauri` runs one, and Pages publishes them at
-  `/sokkel-ui/examples/` beside Storybook.
-- **CI starts each shell once.** CI builds every web app and checks every shell but never starts
-  one: start Electron under Playwright with a virtual display and Tauri as a built binary, and
-  take a still of each.
+- **The examples.** Twenty-one apps in `examples/<name>/{web,electron,tauri}`, each a Tidevann
+  product built only on the packages' public exports, with a fake backend kept per app
+  (`tidevann-shared`); `examples/README.md` says what each holds. Each passed a scripted
+  click-through of every page and control. `make examples` builds them all, `make <name>-web|-dev|-electron|-tauri`
+  runs one, building only what changed since the last run, `make apps` bundles every Tauri shell
+  into `dist/apps/`, and Pages publishes the web apps at `/sokkel-ui/examples/` beside Storybook.
+- **CI starts each shell once (2026-11-24).** The examples workflow starts all 42 shells (21
+  Electron, 21 Tauri) on Linux under Xvfb with no network, and keeps a still of each window
+  (`scripts/shell-stills.ts`, the `shell-stills` artifact); a shell that exits, shows no window or
+  draws nothing fails the run. What the first stills showed, still open:
+    - Electron on Linux shows its native menu bar (File, Edit, View, Window) above the app's own top
+      strip; the shells hide the title bar on macOS only. Linux and Windows want it hidden too.
+    - The video home page's "Crossing the high desert by night train" thumbnail had a black band
+      over it, and one album cover in music was black in one run; likely caught mid-draw, worth a
+      look.
+    - The status dashboard's Sites map showed its dots with no land in some stills, five seconds
+      after the window opened.
 
 ## Next
 
@@ -482,8 +492,11 @@ to `plan.md` when it ships.
   sokkel-egui (egui) and sokkel-tui (ratatui, started 2026-11-17). Each part's spec says how far
   each renderer has drawn it, in a field a script reads (`renderers.<name>.state`: missing, partial
   or built, with the commit it was checked at), so a renderer can check its own coverage.
-- **The Cut example's desktop shells on screen.** `make check` builds its Electron and Tauri shells
-  (2026-11-17); neither window has been opened.
+- **The desktop windows on macOS.** CI has seen every shell's window on Linux, where Tauri draws
+  with WebKitGTK; on macOS Tauri draws with WebKit and both shells overlay the title bar with the
+  window buttons set in, which no still shows. Open each of the `.app` files `make apps` builds,
+  and each Electron shell, on a Mac and look at the top strip, the window buttons and a page or
+  two. Windows is not checked at all.
 
 - **The reviews of 2026-11-09.** A visual review of the published catalog and a review of the
   twelve example apps on the web; every round of fixes from them shipped in 0.10.13 to 0.10.16.
@@ -496,30 +509,27 @@ to `plan.md` when it ships.
       (WebKit reports it as an uncaught error, Chromium only to `window.onerror`), and KaTeX's
       MathML for `t_{\max}` (an `msub` with three children, which Firefox logs; the drawn formula is
       KaTeX's HTML). `make layout-engines` runs the layout check in both; CI runs Chromium only.
-    - **Not covered yet:** the Electron and Tauri windows on screen, and real touch devices. Run
-      that pass before calling the examples checked on every platform.
+    - **Not covered yet:** the desktop windows on macOS and Windows (above), and real touch
+      devices. Run that pass before calling the examples checked on every platform.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
-  210.5 kB and forms at 197 kB start and 67.4 kB lazy (2026-11-17); the forms start one is full. A
-  change trims what it adds itself; when it is worth its size, its PR raises the budget it needs
-  with the reason, rather than reworking unrelated parts to fit. A loader that lets `DataTable`
-  register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the
-  dashboard's start chunks.
-
-- **The dashboard's 1.3 kB for lazy time fields.** `TimeRangePicker`'s `times` fields load with the
-  calendar, yet splitting them into a chunk of their own added about 1.3 kB of shared-chunk
-  overhead to the dashboard's start (2026-11-17); find the split that costs nothing.
-- **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
-  and the heavy ones, Base UI's menu among them, load on first use. The palette's list is the
+  214.1 kB and forms at 197.5 kB start and 67.5 kB lazy; both are full. A change trims what it adds
+  itself; when it is worth its size, its PR raises the budget it needs with the reason, rather than
+  reworking unrelated parts to fit. A loader that lets `DataTable` register itself when it loads
+  may win back the 2.3 kB `ChartFrame`'s data view split into the dashboard's start chunks.
+- **Smaller start bundles, where it stands.** Every library only some parts need is an optional
+  peer, and the heavy ones, Base UI's menu among them, load on first use. The palette's list is the
   library's own (cmdk without its dialog and Radix), `DataTable` loads its pager select and row
-  menus when a table draws one, and `sokkelStyles()` writes an app's `@source` list
-  from its imports. Left:
-    - `SelectionBar` stays in every `DataTable`'s start, since a selection the app holds when the
-      table first draws, on the server too, shows its bar at once. A stand-in drawn until it loads
-      would take it off a plain table's start.
-    - `styles.css` without the plugin still holds every component's classes, so each new part adds
-      to the stylesheet of every app not on the plugin. Leaving out the primitives no part uses
-      would trim that path too.
+  menus when a table draws one, `sokkelStyles()` writes an app's `@source` list from its imports,
+  and `styles.css` leaves out the primitives no part draws (about 9 kB of CSS gzipped, 2026-11-24).
+  Tried and dropped on 2026-11-24, with the numbers in #829:
+    - Lazy time fields for `TimeRangePicker` cost the dashboard about 0.9 kB of start: Base UI's
+      scroll lock, backdrop and composite stay in a start chunk of their own, since Rolldown 1.2
+      will not fold modules shared by the entry and two dynamic entries. Loading the calendar and
+      the time fields as one module saves 0.56 kB of start but adds 4.7 kB to a picker without
+      times on first hover. Look again when the bundler changes.
+    - A stand-in for `SelectionBar`: the whole bar is 188 bytes of the dashboard start, and a
+      stand-in that looks the same on first paint with a selection held is the same code.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit. The
@@ -535,15 +545,6 @@ to `plan.md` when it ships.
   blog post yet; stable Tauri is 2.12 on the system webview. Next: once Tauri 3 reaches beta, add
   an `examples/tauri-cef` shell on `tauri-runtime-cef` beside the examples' Tauri shells, built by the
   examples workflow; until then, nothing to build.
-
-- **The records app's conversion.** `examples/records/GAPS.md` maps every screen of the records app
-  onto the library; every item in it is closed. One question is left: a `--color-*` name exists
-  only once a class uses it, so a prop that takes a CSS color takes the raw token
-  (`var(--status-running)`); decide whether every color is emitted.
-
-- **Gaps the examples found (2026-11-09)**, still open:
-    - **Dashboards:**
-        - a phone layout for an editor beside its live preview
 
 ## 1.0
 
