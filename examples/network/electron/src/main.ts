@@ -93,6 +93,8 @@ function open(): void {
         title: 'Network watch',
         // The page draws the title strip itself; macOS keeps its window buttons over it.
         titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+        // Linux and Windows keep the menu bar out of sight over the page's own strip; Alt shows it.
+        autoHideMenuBar: true,
         // The buttons centered on the page's 46px top strip, as the Tauri shell has them.
         trafficLightPosition: { x: 12, y: 16 },
         // The preload tells the page when the window enters or leaves full screen, and bridges the network watch.
