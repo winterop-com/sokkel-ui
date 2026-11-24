@@ -360,6 +360,24 @@ export function edgesWhileDragged<E extends Edge>(edges: readonly E[], dragged: 
     })
 }
 
+/**
+ * The boxes let go whose drop the app has answered: each is gone from `nodes` or stands somewhere
+ * other than where it stood when it was let go. `waiting` holds that earlier place by node id.
+ */
+export function answeredDrops(
+    nodes: readonly { id: string; position: { x: number; y: number } }[],
+    waiting: Readonly<Record<string, { x: number; y: number }>>,
+): string[] {
+    const at = new Map(nodes.map((node) => [node.id, node.position]))
+    return Object.keys(waiting).filter((id) => {
+        const now = at.get(id)
+        return now === undefined || now.x !== waiting[id].x || now.y !== waiting[id].y
+    })
+}
+
+/** How long a box let go stays where it was dropped when the app does not move it, as when the app refuses the move. */
+const DROP_WAIT = 1500
+
 /** The words, kept as the same object while each says the same, so words written inline do not draw every node and edge again. */
 function useKeptWords(words: Partial<GraphWords> | undefined): GraphWords {
     const given = useWords(GRAPH_PART, words)
@@ -526,6 +544,21 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     }
     const editable = editing !== undefined
     const [dragged, setDragged] = useState<Record<string, { x: number; y: number }>>({})
+    // The boxes let go and not yet answered, with where `nodes` had each when it was let go.
+    const waiting = useRef<Record<string, { x: number; y: number }>>({})
+    const waitTimer = useRef<number | undefined>(undefined)
+    const release = useCallback((ids: readonly string[]) => {
+        if (ids.length === 0) return
+        for (const id of ids) delete waiting.current[id]
+        setDragged((held) => {
+            const next = { ...held }
+            for (const id of ids) delete next[id]
+            return next
+        })
+    }, [])
+    // A drop is answered when the app moves the box; until then it stands where it was let go.
+    useEffect(() => release(answeredDrops(nodes, waiting.current)), [nodes, release])
+    useEffect(() => () => window.clearTimeout(waitTimer.current), [])
     const [chosenEdge, setChosenEdge] = useState<string | null>(null)
     const [connecting, setConnecting] = useState(false)
     const [dropping, setDropping] = useState(false)
@@ -763,8 +796,9 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 }
                                 onNodeDragStart={
                                     editable || onNodeDrag !== undefined
-                                        ? (_, node) => {
+                                        ? (_, node, all) => {
                                               setMoved(true)
+                                              for (const each of all.length > 0 ? all : [node]) delete waiting.current[each.id]
                                               if (!editable) onNodeDrag?.(node.id, node.position, 'start')
                                           }
                                         : undefined
@@ -780,12 +814,23 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                         : editable
                                           ? (_, node, moved) => {
                                                 const all = moved.length > 0 ? moved : [node]
-                                                for (const each of all) editing.onMove?.(each.id, each.position)
-                                                setDragged((held) => {
-                                                    const next = { ...held }
-                                                    for (const each of all) delete next[each.id]
-                                                    return next
-                                                })
+                                                const ids = all.map((each) => each.id)
+                                                if (editing.onMove === undefined) {
+                                                    release(ids)
+                                                    return
+                                                }
+                                                for (const id of ids) {
+                                                    const before = nodes.find((each) => each.id === id)?.position
+                                                    if (before !== undefined) waiting.current[id] = before
+                                                }
+                                                for (const each of all) editing.onMove(each.id, each.position)
+                                                window.clearTimeout(waitTimer.current)
+                                                waitTimer.current = window.setTimeout(
+                                                    () => release(Object.keys(waiting.current)),
+                                                    DROP_WAIT,
+                                                )
+                                                // A node missing from `nodes` has no place to wait for.
+                                                release(ids.filter((id) => waiting.current[id] === undefined))
                                             }
                                           : undefined
                                 }
