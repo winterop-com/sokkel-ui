@@ -478,8 +478,6 @@ to `plan.md` when it ships.
   Electron, 21 Tauri) on Linux under Xvfb with no network, and keeps a still of each window
   (`scripts/shell-stills.ts`, the `shell-stills` artifact); a shell that exits, shows no window or
   draws nothing fails the run. What the first stills showed, still open:
-    - Electron on Linux shows its native menu bar (File, Edit, View, Window) above the app's own top
-      strip; the shells hide the title bar on macOS only. Linux and Windows want it hidden too.
     - The video home page's "Crossing the high desert by night train" thumbnail had a black band
       over it, and one album cover in music was black in one run; likely caught mid-draw, worth a
       look.
