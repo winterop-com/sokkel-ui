@@ -3,7 +3,8 @@ import { useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { PaneHeader } from './PaneHeader'
 import { Segmented } from './Segmented'
-import { SplitPane } from './SplitPane'
+import { SplitPane, useSplitPane } from './SplitPane'
+import { Toolbar } from './Toolbar'
 import { useWords, type WordsPart } from '../lib/words'
 
 export type EditPreviewPane = 'edit' | 'preview'
@@ -37,7 +38,7 @@ export interface EditPreviewProps {
     edit: ReactNode
     /** What the source makes, padded in its pane. */
     preview: ReactNode
-    /** Controls at the editing pane's head, such as a format menu. */
+    /** Controls at the editing pane's head, such as a format menu; in the `pane` variant they stand beside the switch while it shows the editor. */
     editActions?: ReactNode
     previewActions?: ReactNode
     pane?: EditPreviewPane
@@ -45,7 +46,7 @@ export interface EditPreviewProps {
     onPaneChange?: (pane: EditPreviewPane) => void
     /** Which panes stand where the box is wide: both (the default), or the editor or the preview alone, as a reader chooses. */
     view?: EditPreviewView
-    /** `cards` frames each pane under its title; `pane` sets the two edge to edge with a rule that drags between them, filling a pane of the app's. */
+    /** `cards` frames each pane under its title; `pane` sets the two edge to edge with a rule that drags between them, filling a pane of the app's, such as a note's body or a panel's options beside the panel. */
     variant?: 'cards' | 'pane'
     /** Remembers the share the panes are dragged to under this name in the browser's storage, in the `pane` variant. */
     id?: string
@@ -66,9 +67,10 @@ export interface EditPreviewProps {
  * `onPaneChange`. Both panes stay mounted while hidden, so the editor keeps its place and undo.
  *
  * `view` shows the editor or the preview alone at every width, for a reader who turns the other
- * off. `variant="pane"` fills a pane of the app's, such as a note's body under its header: the two
- * stand edge to edge with no titles, the rule between them drags (`SplitPane`, the share kept under
- * `id`), and narrower than 40rem they stack, the editor over the preview.
+ * off. `variant="pane"` fills a pane of the app's, such as a note's body under its header or a
+ * panel's options beside the panel: the two stand edge to edge with no titles and the rule between
+ * them drags (`SplitPane`, the share kept under `id`). Narrower than 40rem it shows one at a time
+ * too, the switch in a strip across the top of the pane shown, with that pane's actions at its end.
  */
 export function EditPreview({
     edit,
@@ -92,17 +94,39 @@ export function EditPreview({
         if (paneValue === undefined) setOwn(next)
         onPaneChange?.(next)
     }
-    if (variant === 'pane')
+    if (variant === 'pane') {
+        const strip = (name: EditPreviewPane, body: ReactNode) => (
+            <PaneWithSwitch
+                switchable={view === 'both'}
+                bar={
+                    <Toolbar variant="pane" end={name === 'edit' ? editActions : previewActions}>
+                        <Segmented
+                            label={words.switch}
+                            value={pane}
+                            options={[
+                                { value: 'edit', label: words.edit },
+                                { value: 'preview', label: words.preview },
+                            ]}
+                            onValueChange={choose}
+                        />
+                    </Toolbar>
+                }
+            >
+                {body}
+            </PaneWithSwitch>
+        )
         return (
             <SplitPane
                 id={id}
                 className={cn('min-h-80', className)}
-                first={edit}
-                second={<div className={cn(!flushPreview && 'p-(--density-panel-pad)')}>{preview}</div>}
+                first={strip('edit', edit)}
+                second={strip('preview', <div className={cn(!flushPreview && 'p-(--density-panel-pad)')}>{preview}</div>)}
+                narrow={pane === 'edit' ? 'first' : 'second'}
                 only={view === 'edit' ? 'first' : view === 'preview' ? 'second' : undefined}
                 words={{ resize: words.resize }}
             />
         )
+    }
     const box = (name: EditPreviewPane, title: string, actions: ReactNode, flush: boolean, body: ReactNode) => (
         <section
             data-pane={pane === name ? 'shown' : 'hidden'}
@@ -135,6 +159,21 @@ export function EditPreview({
                 {box('edit', words.edit, editActions, true, edit)}
                 {box('preview', words.preview, previewActions, flushPreview, preview)}
             </div>
+        </div>
+    )
+}
+
+/**
+ * A pane of the `pane` variant: its content, under the switch while the split is narrow and shows it
+ * alone. The content stays in the same place in the tree either way, so an editor keeps its undo as
+ * the split narrows and widens.
+ */
+function PaneWithSwitch({ switchable, bar, children }: { switchable: boolean; bar: ReactNode; children: ReactNode }) {
+    const split = useSplitPane()
+    return (
+        <div className="flex min-h-0 flex-col">
+            {switchable && split?.narrow === true && bar}
+            <div className="flex min-h-0 flex-1 flex-col overflow-auto [&>:only-child]:min-h-0 [&>:only-child]:flex-1">{children}</div>
         </div>
     )
 }
