@@ -82,6 +82,6 @@ export const PreviewFirst: StoryObj = { name: 'Preview first', render: () => <Ed
 /**
  * Filling a note's pane: the two edge to edge, the rule between them dragged and the share kept
  * across reloads, and the header's switch showing the editor, both or the preview alone, the hidden
- * one kept as it was. Narrow, the editor stands over the preview.
+ * one kept as it was. Narrow, the switch at the top of the pane shows the editor or the preview.
  */
 export const InAPane: StoryObj = { name: 'In a pane', render: () => <NotePane /> }

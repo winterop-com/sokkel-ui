@@ -13,3 +13,12 @@ release and empties it.
   its list after `styles.css`, as `@import '@winterop-com/sokkel-ui/sources/primitives/<name>.css';`,
   or its classes are missing. An app on `sokkelStyles()` or `styles-base.css` changes nothing. The
   size apps on `styles.css` drop about 9 kB of CSS gzipped (forms 53.9 to 44.8 kB).
+
+## Changed
+
+- `EditPreview`'s `pane` variant shows one pane at a time below 40rem, with an Edit and Preview
+  switch in a strip across the top of the pane shown (and that pane's `editActions` or
+  `previewActions` beside it), as the `cards` variant does below 48rem. It stacked the editor over
+  the preview before. `pane`, `defaultPane` and `onPaneChange` now hold the pane shown in this
+  variant too. An editor's options beside a live preview (a dashboard panel's, a chart's) are this
+  variant, so they take the switch on a phone.

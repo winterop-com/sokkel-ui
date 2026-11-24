@@ -1,3 +1,4 @@
+import { EditPreview } from '@winterop-com/sokkel-ui/EditPreview'
 import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { FormBar } from '@winterop-com/sokkel-ui/FormBar'
@@ -10,7 +11,6 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
-import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { SwitchField } from '@winterop-com/sokkel-ui/SwitchField'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
@@ -444,15 +444,14 @@ export function EditorPage({
     return (
         <Page className="h-full">
             <PageHeader title={original === undefined ? 'New panel' : `Edit ${original.title}`} onBack={leave} />
-            <SplitPane
+            <EditPreview
+                variant="pane"
                 className="min-h-0 flex-1"
                 id="metrics-editor"
-                defaultShare={0.6}
-                minShare={0.35}
-                maxShare={0.75}
-                narrow="stack"
-                first={preview}
-                second={options}
+                edit={options}
+                preview={preview}
+                flushPreview
+                words={{ edit: 'Options' }}
             />
             <FormBar note={original === undefined ? 'A new panel, not yet on the dashboard' : dirty ? 'Unsaved changes' : 'No changes'}>
                 <Button variant="outline" size="sm" onClick={leave}>

@@ -83,10 +83,10 @@ const PEOPLE = {
 } satisfies Record<string, Person>
 
 const LABELS: Record<string, MessageLabel> = {
-    harbor: { id: 'harbor', label: 'harbor', color: 'var(--color-kind-blue)' },
-    juniper: { id: 'juniper', label: 'juniper', color: 'var(--color-kind-green)' },
-    larkspur: { id: 'larkspur', label: 'larkspur', color: 'var(--color-kind-violet)' },
-    alerts: { id: 'alerts', label: 'alerts', color: 'var(--color-kind-pink)' },
+    harbor: { id: 'harbor', label: 'harbor', color: 'var(--kind-blue)' },
+    juniper: { id: 'juniper', label: 'juniper', color: 'var(--kind-green)' },
+    larkspur: { id: 'larkspur', label: 'larkspur', color: 'var(--kind-violet)' },
+    alerts: { id: 'alerts', label: 'alerts', color: 'var(--kind-pink)' },
 }
 
 interface Conversation {

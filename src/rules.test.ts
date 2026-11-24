@@ -64,7 +64,20 @@ interface Rule {
 const picture = (line: string, file: string) =>
     file.startsWith('src/') && /data:|<svg|<rect|<circle|<path|<g |<text |<line|<polyline|stop-color|fill=|stroke=/.test(line)
 
+/**
+ * The `--color-*` names every stylesheet carries: those in tokens.css's static theme blocks. Any
+ * other exists only once a class uses it, so a CSS color given as a value takes the raw token.
+ */
+const KEPT_COLORS = [...text(join(ROOT, 'packages/core/src/styles/tokens.css')).matchAll(/@theme[^{]*\bstatic\s*\{([^}]*)\}/g)].flatMap(
+    (block) => [...block[1].matchAll(/--color-([\w-]+):/g)].map((name) => name[1]),
+)
+
 const RULES: Rule[] = [
+    {
+        name: 'a `--color-*` name given as a color, which exists only once a class uses it, instead of the raw token',
+        pattern: new RegExp(`var\\(--color-(?!(?:${KEPT_COLORS.join('|')})\\))`),
+        in: ALL,
+    },
     { name: 'a text size set by hand instead of a text token', pattern: /text-\[[0-9.]+(px|rem|em)\]/, in: ALL },
     { name: 'a font size set by hand', pattern: /fontSize:\s*['"`]?[0-9]/, in: ALL },
     {
