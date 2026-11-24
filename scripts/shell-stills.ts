@@ -5,20 +5,17 @@
  *   xvfb-run -a -s '-screen 0 1920x1080x24' bun scripts/shell-stills.ts [--out <folder>] [--electron | --tauri] [example ...]
  *
  * It runs on Linux only, under a display of its own (Xvfb), and never on a desktop: the windows
- * it opens are real. It needs each example's web build and Electron main file (`bun run build:main`),
- * the Tauri shells built with `cargo build` into the shared Cargo target folder (`CARGO_TARGET_DIR`,
- * or the one example.mk uses), and xdotool and ImageMagick. An example's Electron shell runs its own
- * Electron binary, or, when its install skipped the download, another example's of the same
- * version. The stills go to `shell-stills/` unless `--out` names another folder, as
- * `<example>-electron.png` and `<example>-tauri.png`. CI runs it in a network namespace with no
- * network, so no shell reaches a public source.
+ * it opens are real. It needs each example's web build, its Electron main file (`bun run build:main`)
+ * and the Electron binary its install fetched, the Tauri shells built with `cargo build` into the
+ * shared Cargo target folder (`CARGO_TARGET_DIR`, or the one example.mk uses), and xdotool and
+ * ImageMagick, which find each shell's window and take its still. The stills go to `shell-stills/`
+ * unless `--out` names another folder, as `<example>-electron.png` and `<example>-tauri.png`. CI runs
+ * it in a network namespace with no network, so no shell reaches a public source.
  */
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
-
-import { _electron } from '@playwright/test'
 
 const ROOT = join(import.meta.dirname, '..')
 const EXAMPLES = join(ROOT, 'examples')
@@ -26,7 +23,7 @@ const EXAMPLES = join(ROOT, 'examples')
 /** How long a shell has to show its window, in milliseconds. */
 const WINDOW_TIMEOUT = 60_000
 /** How long a page draws after its window shows before the still is taken, in milliseconds. */
-const SETTLE = { electron: 4_000, tauri: 8_000 }
+const SETTLE = 8_000
 /** A still with fewer colors than this has nothing drawn in it. */
 const FEWEST_COLORS = 8
 
@@ -37,6 +34,14 @@ interface Outcome {
     kind: Kind
     problem?: string
     warnings: string[]
+}
+
+/** How a shell is started: its program, its arguments, where and with what added to the environment. */
+interface Launch {
+    command: string
+    args: string[]
+    cwd: string
+    env: Record<string, string>
 }
 
 /** Prints an error or a warning, as an annotation on the run when it runs in GitHub Actions. */
@@ -51,69 +56,26 @@ function tool(command: string, args: readonly string[]): string | undefined {
     return result.status === 0 ? result.stdout : undefined
 }
 
-/** How many colors a still holds, by ImageMagick. */
-function colors(file: string): number {
-    const out = tool('identify', ['-format', '%k', file])
-    if (out === undefined) throw new Error(`ImageMagick could not read ${file}`)
-    return Number(out.trim())
-}
+const wait = (ms: number) => new Promise((done) => setTimeout(done, ms))
 
 /** Why a still shows nothing drawn, or undefined when it shows something. */
 function blank(file: string): string | undefined {
-    const count = colors(file)
+    const out = tool('identify', ['-format', '%k', file])
+    if (out === undefined) return `ImageMagick could not read ${file}`
+    const count = Number(out.trim())
     return count < FEWEST_COLORS ? `its window shows nothing drawn (${String(count)} colors)` : undefined
 }
 
-const wait = (ms: number) => new Promise((done) => setTimeout(done, ms))
-
-/** The Electron binary under an example's electron/, when its install fetched one, and the version it installed. */
-function electronOf(id: string): { version: string; binary?: string } {
-    const at = join(EXAMPLES, id, 'electron', 'node_modules', 'electron')
-    const { version } = JSON.parse(readFileSync(join(at, 'package.json'), 'utf8')) as { version: string }
-    const pathFile = join(at, 'path.txt')
-    const binary = existsSync(pathFile) ? join(at, 'dist', readFileSync(pathFile, 'utf8').trim()) : undefined
-    return { version, binary: binary !== undefined && existsSync(binary) ? binary : undefined }
-}
-
-/** The binary each Electron version runs on: the first example's that has one. */
-function electronBinaries(ids: readonly string[]): Map<string, string> {
-    const binaries = new Map<string, string>()
-    for (const id of ids) {
-        const { version, binary } = electronOf(id)
-        if (binary !== undefined && !binaries.has(version)) binaries.set(version, binary)
-    }
-    return binaries
-}
-
-async function electronStill(id: string, out: string, binaries: Map<string, string>): Promise<Outcome> {
-    const outcome: Outcome = { id, kind: 'electron', warnings: [] }
+/** How an example's Electron shell starts: its own Electron binary on its built main file. */
+function electronLaunch(id: string): Launch | string {
     const dir = join(EXAMPLES, id, 'electron')
-    if (!existsSync(join(dir, 'dist', 'main.js'))) return { ...outcome, problem: 'its main file is not built (bun run build:main)' }
-    const { version, binary } = electronOf(id)
-    const executablePath = binary ?? binaries.get(version)
-    if (executablePath === undefined) return { ...outcome, problem: `no Electron ${version} binary is installed in any example` }
-
-    const app = await _electron.launch({ executablePath, args: ['.'], cwd: dir, timeout: WINDOW_TIMEOUT })
-    let exit: string | undefined
-    app.process().once('exit', (code, signal) => (exit = `it exited (${signal ?? `code ${String(code)}`})`))
-    try {
-        const page = await app.firstWindow({ timeout: WINDOW_TIMEOUT })
-        page.on('pageerror', (error) => outcome.warnings.push(`page error: ${error.message}`))
-        page.on('console', (message) => {
-            if (message.type() === 'error') outcome.warnings.push(`console: ${message.text()}`)
-        })
-        await page.waitForLoadState('load', { timeout: WINDOW_TIMEOUT })
-        await wait(SETTLE.electron)
-        if (exit !== undefined) return { ...outcome, problem: exit }
-        const file = join(out, `${id}-electron.png`)
-        await page.screenshot({ path: file })
-        return { ...outcome, problem: blank(file) }
-    } catch (error) {
-        return { ...outcome, problem: exit ?? (error instanceof Error ? error.message.split('\n')[0] : String(error)) }
-    } finally {
-        await Promise.race([app.close(), wait(10_000)]).catch(() => undefined)
-        if (app.process().exitCode === null) app.process().kill('SIGKILL')
-    }
+    if (!existsSync(join(dir, 'dist', 'main.js'))) return 'its main file is not built (bun run build:main)'
+    const electron = join(dir, 'node_modules', 'electron')
+    const pathFile = join(electron, 'path.txt')
+    const binary = existsSync(pathFile) ? join(electron, 'dist', readFileSync(pathFile, 'utf8').trim()) : undefined
+    if (binary === undefined || !existsSync(binary)) return 'its install fetched no Electron binary'
+    // Chromium's sandbox needs a setuid helper or user namespaces, which a CI runner has neither of.
+    return { command: binary, args: ['--no-sandbox', '.'], cwd: dir, env: {} }
 }
 
 /** The Cargo target folder the Tauri shells are built into, as example.mk names it. */
@@ -123,12 +85,15 @@ function cargoTarget(): string {
     )
 }
 
-/** The name of an example's Tauri crate, which is its binary's. */
-function crateOf(id: string): string {
-    const manifest = readFileSync(join(EXAMPLES, id, 'tauri', 'src-tauri', 'Cargo.toml'), 'utf8')
-    const name = /^name\s*=\s*"([^"]+)"/m.exec(manifest)?.[1]
-    if (name === undefined) throw new Error(`examples/${id}/tauri/src-tauri/Cargo.toml names no crate`)
-    return name
+/** How an example's Tauri shell starts: its debug binary, named for its crate. */
+function tauriLaunch(id: string): Launch | string {
+    const dir = join(EXAMPLES, id, 'tauri', 'src-tauri')
+    const crate = /^name\s*=\s*"([^"]+)"/m.exec(readFileSync(join(dir, 'Cargo.toml'), 'utf8'))?.[1]
+    if (crate === undefined) return 'its Cargo.toml names no crate'
+    const binary = join(cargoTarget(), 'debug', crate)
+    if (!existsSync(binary)) return `its binary is not built (${binary})`
+    // WebKitGTK draws without a GPU on a virtual display only with compositing and DMA-BUF off.
+    return { command: binary, args: [], cwd: dir, env: { WEBKIT_DISABLE_COMPOSITING_MODE: '1', WEBKIT_DISABLE_DMABUF_RENDERER: '1' } }
 }
 
 /** The visible windows a process shows, by xdotool. */
@@ -145,14 +110,17 @@ async function end(child: ChildProcess): Promise<void> {
     if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')
 }
 
-async function tauriStill(id: string, out: string, profile: string): Promise<Outcome> {
-    const outcome: Outcome = { id, kind: 'tauri', warnings: [] }
-    const binary = join(cargoTarget(), profile, crateOf(id))
-    if (!existsSync(binary)) return { ...outcome, problem: `its binary is not built (${binary})` }
+/** Starts one shell, waits for its window, lets the page draw, takes the still and closes the shell. */
+async function still(id: string, kind: Kind, out: string): Promise<Outcome> {
+    const outcome: Outcome = { id, kind, warnings: [] }
+    const launch = kind === 'electron' ? electronLaunch(id) : tauriLaunch(id)
+    if (typeof launch === 'string') return { ...outcome, problem: launch }
 
-    // WebKitGTK draws without a GPU on a virtual display only with compositing and DMA-BUF off.
-    const env = { ...process.env, WEBKIT_DISABLE_COMPOSITING_MODE: '1', WEBKIT_DISABLE_DMABUF_RENDERER: '1', NO_AT_BRIDGE: '1' }
-    const child = spawn(binary, [], { env, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(launch.command, launch.args, {
+        cwd: launch.cwd,
+        env: { ...process.env, NO_AT_BRIDGE: '1', ...launch.env },
+        stdio: ['ignore', 'pipe', 'pipe'],
+    })
     const said: string[] = []
     const hear = (chunk: Buffer) =>
         said.push(
@@ -179,13 +147,13 @@ async function tauriStill(id: string, out: string, profile: string): Promise<Out
             if (window === undefined) await wait(500)
         }
         if (window === undefined) return { ...outcome, problem: `it showed no window in ${String(WINDOW_TIMEOUT / 1000)}s${lastWords()}` }
-        await wait(SETTLE.tauri)
+        await wait(SETTLE)
         const crashed = exited()
         if (crashed !== undefined) return { ...outcome, problem: crashed + lastWords() }
-        const file = join(out, `${id}-tauri.png`)
+        const file = join(out, `${id}-${kind}.png`)
         if (tool('import', ['-window', window, file]) === undefined)
             return { ...outcome, problem: 'ImageMagick could not take a still of its window' }
-        return { ...outcome, problem: blank(file), warnings: said.filter((line) => /error|panic/i.test(line)).slice(0, 10) }
+        return { ...outcome, problem: blank(file), warnings: said.filter((line) => /error|panic|uncaught/i.test(line)).slice(0, 10) }
     } finally {
         await end(child)
     }
@@ -211,11 +179,10 @@ async function main(args: readonly string[]): Promise<void> {
     mkdirSync(out, { recursive: true })
 
     const outcomes: Outcome[] = []
-    const binaries = kinds.includes('electron') ? electronBinaries(all) : new Map<string, string>()
     for (const kind of kinds) {
         for (const id of ids) {
             const started = Date.now()
-            const outcome = kind === 'electron' ? await electronStill(id, out, binaries) : await tauriStill(id, out, 'debug')
+            const outcome = await still(id, kind, out)
             outcomes.push(outcome)
             const took = `${((Date.now() - started) / 1000).toFixed(1)}s`
             console.log(`${kind} ${id}: ${outcome.problem === undefined ? 'still taken' : 'failed'} (${took})`)

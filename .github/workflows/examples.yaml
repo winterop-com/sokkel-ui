@@ -21,8 +21,6 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 60
         env:
-            # The shells all lock one Electron, so its binary is fetched once (below), not in every install.
-            ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
             # One Cargo target folder for every example's Tauri shell, as the Makefiles use.
             CARGO_TARGET_DIR: ${{ github.workspace }}/examples/.cargo-target
             # The Tauri shells are built to be started, not debugged: without debug info they stay small and link fast.
@@ -42,9 +40,6 @@ jobs:
                   for shell in examples/*/electron; do
                       (cd "$shell" && bun install --frozen-lockfile && bun run build:main) || exit 1
                   done
-            - name: Electron binary
-              working-directory: examples/tasks/electron
-              run: env -u ELECTRON_SKIP_BINARY_DOWNLOAD bun node_modules/electron/install.js
             - name: Tauri system libraries
               run: |
                   sudo apt-get update
