@@ -295,6 +295,51 @@ describe('the packages', () => {
     })
 })
 
+describe("the core's styles.css", () => {
+    /** Primitives no part draws that styles.css still carries, each with the reason. */
+    const KEPT: Record<string, string> = { 'toast.tsx': 'every app mounts the toaster for its notices' }
+
+    it('leaves out the primitives no part draws, and only those', () => {
+        const ui = join(ROOT, 'packages/core/src/components/ui')
+        const code = (path: string) => !/\.test\.tsx?$/.test(path) && !path.endsWith('.d.ts')
+        const near = (from: string, spec: string) => {
+            const base = resolve(dirname(from), spec)
+            return [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`].find(
+                (path) => existsSync(path) && statSync(path).isFile(),
+            )
+        }
+        // Every module of the core but the primitives, and every primitive an add-on imports by name.
+        const queue = SOURCES[CORE].filter((path) => code(path) && !path.startsWith(`${ui}/`))
+        for (const name of ADDONS)
+            for (const path of SOURCES[name].filter(code))
+                for (const [, primitive] of text(path).matchAll(/['"]@winterop-com\/sokkel-ui\/primitives\/([\w-]+)['"]/g)) {
+                    const found = near(join(ui, 'index'), `./${primitive}`)
+                    if (found !== undefined) queue.push(found)
+                }
+        const drawn = new Set<string>()
+        while (queue.length > 0) {
+            const path = queue.pop() as string
+            if (drawn.has(path)) continue
+            drawn.add(path)
+            for (const [, spec] of text(path).matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)['"](\.{1,2}\/[^'"?]+)['"]/g)) {
+                const found = near(path, spec)
+                if (found !== undefined) queue.push(found)
+            }
+        }
+        const undrawn = SOURCES[CORE]
+            .filter((path) => code(path) && path.startsWith(`${ui}/`) && !drawn.has(path))
+            .map((path) => relative(ui, path))
+            .filter((name) => !(name in KEPT))
+            .sort()
+        const left = [
+            ...text(join(ROOT, 'packages/core/src/styles/index.css')).matchAll(/^@source not '\.\.\/components\/ui\/([^']+)';$/gm),
+        ]
+            .map((match) => match[1])
+            .sort()
+        expect(left).toEqual(undrawn)
+    })
+})
+
 describe('the exports maps', () => {
     it('export every module that is not private, and no private one', () => {
         const problems = exportProblems()

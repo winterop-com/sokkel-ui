@@ -1,7 +1,36 @@
-/* base.css with Tailwind pointed at the whole core: every component, hook and helper, never their tests or the stories. */
+/* base.css with Tailwind pointed at the core: every part, hook and helper and the primitives they draw on, never their tests or the stories. */
 @import './base.css';
 
 @source '../components';
 @source '../hooks';
 @source '../lib';
 @source not '../**/*.test.*';
+
+/*
+ * Not the primitives no part draws, save the toast every app mounts. An app that imports one of these
+ * itself adds its list after this stylesheet: `@winterop-com/sokkel-ui/sources/primitives/<name>.css`.
+ */
+@source not '../components/ui/accordion.tsx';
+@source not '../components/ui/alert-dialog.tsx';
+@source not '../components/ui/aspect-ratio.tsx';
+@source not '../components/ui/breadcrumb.tsx';
+@source not '../components/ui/bubble.tsx';
+@source not '../components/ui/carousel.tsx';
+@source not '../components/ui/direction.tsx';
+@source not '../components/ui/drawer.tsx';
+@source not '../components/ui/field.tsx';
+@source not '../components/ui/hover-card.tsx';
+@source not '../components/ui/input-otp.tsx';
+@source not '../components/ui/item.tsx';
+@source not '../components/ui/menubar.tsx';
+@source not '../components/ui/message-scroller.tsx';
+@source not '../components/ui/navigation-menu.tsx';
+@source not '../components/ui/pagination.tsx';
+@source not '../components/ui/questionnaire.tsx';
+@source not '../components/ui/resizable.tsx';
+@source not '../components/ui/scroll-area.tsx';
+@source not '../components/ui/sidebar.tsx';
+@source not '../components/ui/sonner.tsx';
+@source not '../components/ui/table.tsx';
+@source not '../components/ui/toggle-group.tsx';
+@source not '../components/ui/toggle.tsx';
