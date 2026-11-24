@@ -152,7 +152,9 @@ when they were rebuilt since the last copy, and builds the web app when a file o
 `beforeDevCommand` and `beforeBuildCommand` are dropped when make runs them. The Tauri shells share
 one Cargo target folder in every checkout and worktree, `~/.cache/sokkel-ui/examples-cargo-target`
 (under `$XDG_CACHE_HOME` when set; `CARGO_TARGET_DIR` overrides it), so Rust builds its crates once
-for all of them. Tauri needs Rust and, on
+for all of them. Builds in two worktrees at once wait on Cargo's lock, and both write an example's
+binary to the same place, so a worktree that builds the shells beside another sets a
+`CARGO_TARGET_DIR` of its own. Tauri needs Rust and, on
 Linux, the system libraries it lists (webkit2gtk 4.1 and others; see the workflow). Electron's
 binary is fetched in its `postinstall`.
 
