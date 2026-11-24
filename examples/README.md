@@ -111,9 +111,13 @@ and inside each example:
   Makefile
 ```
 
-`.github/workflows/examples.yaml` builds every web app and checks every shell on each pull request
-that touches them and every night against main, and `examples-web.yaml` builds the web apps on each
-pull request that changes the packages. The size budget's apps are not examples; they live in `size/` at the root.
+`.github/workflows/examples.yaml` runs on each pull request that touches them and every night
+against main. It builds every web app, bundles every Electron main file and builds every Tauri shell,
+then starts each shell once on Linux, on a virtual display (Xvfb) and with no network, and takes a
+still of its window (`scripts/shell-stills.ts`). A shell that crashes, shows no window or shows one
+with nothing drawn fails the run; the stills are the run's `shell-stills` artifact. The script runs
+on Linux alone, under `xvfb-run`, since its windows are real. `examples-web.yaml` builds the web
+apps on each pull request that changes the packages. The size budget's apps are not examples; they live in `size/` at the root.
 
 Every web app is published beside the Storybook at
 **https://winterop-com.github.io/sokkel-ui/examples/**, under its folder's name, with an index that
