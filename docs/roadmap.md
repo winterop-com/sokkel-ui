@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.34.8** is the latest release (2026-11-23): the markdown reader reads display math in quotes,
+- **0.34.9** is the latest release (2026-11-24): GraphCanvas keeps a dropped box where it was let
+  go until the app moves it; the examples build only what changed and `make apps` bundles the Tauri
+  shells; contract 0.34.9.
+- **0.34.8** (2026-11-23): the markdown reader reads display math in quotes,
   leaves raw HTML's dollars, reads long unclosed lines in linear time and reads combining marks in
   words; contract 0.34.8.
 - **0.34.7** (2026-11-23): Tree `cut="middle"` puts the ellipsis right before

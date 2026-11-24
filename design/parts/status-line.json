@@ -4,19 +4,13 @@
     "kind": "part",
     "status": "stable",
     "renderers": {
-        "sokkel-ui": {
-            "state": "built",
-            "as_of": "2e58070"
-        },
+        "sokkel-ui": {"state": "built", "as_of": "2e58070"},
         "sokkel-egui": {
             "state": "partial",
             "as_of": "ebeb584",
             "note": "Each fact keeps its whole width but the last, whose value is cut short in its own box; the drift below is still open."
         },
-        "sokkel-tui": {
-            "state": "built",
-            "as_of": "64f4b19"
-        }
+        "sokkel-tui": {"state": "built", "as_of": "64f4b19"}
     },
     "summary": "The foot strip across the window's bottom edge: a short note at its start in its tone, short facts at its end, on one row of fixed height that never grows. Level with the rail's foot cell, so the account and the status read as one bar.",
     "sources": {
@@ -38,22 +32,11 @@
         "item": "One fact: an optional label, then its value; an identifier in the code face.",
         "itemLabel": "A fact's label before its value."
     },
-    "standsOn": {
-        "default": "page-foot-ground",
-        "strip": "background"
-    },
+    "standsOn": {"default": "page-foot-ground", "strip": "background"},
     "options": {
-        "note": {
-            "type": "node",
-            "does": "The short note at the start: never a sentence that wraps."
-        },
+        "note": {"type": "node", "does": "The short note at the start: never a sentence that wraps."},
         "tone": {
-            "values": [
-                "quiet",
-                "live",
-                "warn",
-                "error"
-            ],
+            "values": ["quiet", "live", "warn", "error"],
             "default": "quiet",
             "does": "How the note is inked: quiet in the foot's own ink, live (something going now, information rather than a warning), warn, error."
         },
@@ -76,21 +59,10 @@
             "text": "text.help",
             "note": "One row the strip's height: the note, the room between and the facts, 12 apart."
         },
-        "note": {
-            "gap": 8,
-            "note": "Between the live dot and the words."
-        },
-        "liveDot": {
-            "height": 8,
-            "width": 8
-        },
-        "facts": {
-            "gap": 12,
-            "note": "At most 70 percent of the row."
-        },
-        "item": {
-            "gap": 6
-        }
+        "note": {"gap": 8, "note": "Between the live dot and the words."},
+        "liveDot": {"height": 8, "width": 8},
+        "facts": {"gap": 12, "note": "At most 70 percent of the row."},
+        "item": {"gap": 6}
     },
     "cells": {
         "rows": 1,
@@ -103,40 +75,17 @@
                 "gap": 1,
                 "note": "The live dot, a gap, the words. A tooltip's words and a disabled control's reason take the note's place while their control has focus (principle 23)."
             },
-            "item": {
-                "gap": 1
-            }
+            "item": {"gap": 1}
         },
-        "glyphs": [
-            "status-dot",
-            "rule",
-            "ellipsis"
-        ]
+        "glyphs": ["status-dot", "rule", "ellipsis"]
     },
     "states": {
-        "rest": {
-            "means": "A quiet note: the foot's own ink."
-        },
-        "toneLive": {
-            "means": "Something going now, said as information.",
-            "reached": "tone live"
-        },
-        "toneWarn": {
-            "means": "Something to look at.",
-            "reached": "tone warn"
-        },
-        "toneError": {
-            "means": "Something failed, such as the server not answering.",
-            "reached": "tone error"
-        },
-        "live": {
-            "means": "The dot before the note pulses.",
-            "reached": "live"
-        },
-        "code": {
-            "means": "A fact that is an identifier.",
-            "reached": "an item's code"
-        }
+        "rest": {"means": "A quiet note: the foot's own ink."},
+        "toneLive": {"means": "Something going now, said as information.", "reached": "tone live"},
+        "toneWarn": {"means": "Something to look at.", "reached": "tone warn"},
+        "toneError": {"means": "Something failed, such as the server not answering.", "reached": "tone error"},
+        "live": {"means": "The dot before the note pulses.", "reached": "live"},
+        "code": {"means": "A fact that is an identifier.", "reached": "an item's code"}
     },
     "pieces": {
         "strip": {
@@ -148,48 +97,24 @@
             }
         },
         "note": {
-            "rest": {
-                "ink": "page-foot-ink"
-            },
-            "toneLive": {
-                "ink": "info"
-            },
-            "toneWarn": {
-                "ink": "warning"
-            },
-            "toneError": {
-                "ink": "destructive"
-            }
+            "rest": {"ink": "page-foot-ink"},
+            "toneLive": {"ink": "info"},
+            "toneWarn": {"ink": "warning"},
+            "toneError": {"ink": "destructive"}
         },
         "liveDot": {
-            "rest": {
-                "note": "Not drawn."
-            },
+            "rest": {"note": "Not drawn."},
             "live": {
                 "ground": "inherit",
                 "note": "Round, in the ink of the note it stands in (inherit: page-foot-ink, or the tone's info, warning or destructive); a second dot of the same size at half opacity pulses out from it (animate-ping), still when motion is reduced."
             }
         },
-        "facts": {
-            "rest": {
-                "ink": "page-foot-ink"
-            }
-        },
+        "facts": {"rest": {"ink": "page-foot-ink"}},
         "item": {
-            "rest": {
-                "ink": "page-foot-ink",
-                "note": "One line, never wrapped; a long value is cut short."
-            },
-            "code": {
-                "ink": "foreground",
-                "note": "In the code face."
-            }
+            "rest": {"ink": "page-foot-ink", "note": "One line, never wrapped; a long value is cut short."},
+            "code": {"ink": "foreground", "note": "In the code face."}
         },
-        "itemLabel": {
-            "rest": {
-                "ink": "faint"
-            }
-        }
+        "itemLabel": {"rest": {"ink": "faint"}}
     },
     "keyboard": [],
     "words": {},
