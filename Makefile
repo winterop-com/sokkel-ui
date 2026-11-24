@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens messages storybook build size typecheck lint fmt fmt-check test check generated-check storybook-build baselines visual visual-update screenshots-ci layout layout-engines examples examples-web examples-list examples-site clean
+.PHONY: help install tokens messages storybook build packages size typecheck lint fmt fmt-check test check generated-check storybook-build baselines visual visual-update screenshots-ci layout layout-engines examples examples-web examples-list examples-site apps clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -20,6 +20,9 @@ storybook: ## Run the Storybook dev server on port 6106
 
 build: ## Build every package into its dist/
 	bun run build
+
+packages: ## Build the packages when their sources changed since the last build
+	@bun scripts/build-packages.ts --if-changed
 
 size: build ## Build the size apps against the packages and hold each to its budget
 	bun run size
@@ -72,7 +75,7 @@ layout-engines: storybook-build ## The layout check in WebKit and Firefox, which
 
 # Every folder in examples/ with a Makefile is an example: a web app and its Electron and Tauri shells.
 EXAMPLES := $(sort $(patsubst examples/%/Makefile,%,$(wildcard examples/*/Makefile)))
-EXAMPLE_TARGETS := web dev electron tauri tauri-build
+EXAMPLE_TARGETS := web dev electron tauri tauri-build tauri-app
 
 examples: build ## Build every example's web app and check its desktop shells, as CI does
 	@for name in $(EXAMPLES); do $(MAKE) -C examples/$$name check PACKAGES_BUILT=1 || exit 1; done
@@ -87,11 +90,15 @@ examples-web: build ## Build every example's web app against the packages as the
 examples-site: build ## Build every example's web app into examples-static/, with an index and their stills, as Pages publishes them
 	bun scripts/examples-site.ts --shots
 
+apps: packages ## Build every example's Tauri app into dist/apps/ (.app bundles on macOS)
+	@for name in $(EXAMPLES); do $(MAKE) --no-print-directory -C examples/$$name tauri-app PACKAGES_BUILT=1 || exit 1; done
+
 examples-list: ## List the examples and what make runs for each, e.g. make tasks-tauri
 	@for name in $(EXAMPLES); do printf '  %-10s make %s-{%s}\n' $$name $$name "$$(echo $(EXAMPLE_TARGETS) | tr ' ' ,)"; done
 
-# make <example>-<target>, e.g. make tasks-web or make runs-tauri-build, after building the packages.
-$(foreach target,$(EXAMPLE_TARGETS),$(addsuffix -$(target),$(EXAMPLES))): build
+# make <example>-<target>, e.g. make tasks-web or make runs-tauri-build, after building the packages
+# when they changed.
+$(foreach target,$(EXAMPLE_TARGETS),$(addsuffix -$(target),$(EXAMPLES))): packages
 	$(MAKE) -C examples/$(firstword $(subst -, ,$@)) PACKAGES_BUILT=1 $(patsubst $(firstword $(subst -, ,$@))-%,%,$@)
 
 clean: ## Remove what the builds made

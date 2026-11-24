@@ -130,8 +130,8 @@ named.
 
 ## Running one
 
-From the repository root, after `make build` builds the packages, every example has the same
-targets as `make <example>-<target>`; `make examples-list` names them:
+From the repository root, every example has the same targets as `make <example>-<target>`;
+`make examples-list` names them:
 
 ```sh
 make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192, FHIR Workbench on 4193, DHIS2 Workbench on 4194, Dashboard on 4195, Cut on 4196, Harbor watch on 4197, Flight watch on 4198, Network watch on 4199, Control site on 4200)
@@ -139,13 +139,20 @@ make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
 make tasks-tauri-build  # a Tauri release binary, without installers
+make tasks-tauri-app    # the Tauri app in dist/apps/: Tasks.app on macOS, the binary elsewhere
+make apps               # every example's Tauri app in dist/apps/
 make examples           # build every web app and check every shell, as CI does
 ```
 
 Inside an example's folder, the same targets run without the prefix: `make tauri`, `make web`.
-Each builds the packages and takes a fresh copy of them first, then runs `bun install` in its
-folder. The Tauri shells share one Cargo target folder,
-`examples/.cargo-target/`, so Rust builds its crates once for all of them. Tauri needs Rust and, on
+Each does only the work that is out of date: it builds the packages when a package source is newer
+than their last build (`make packages`; `make build` always builds them), takes a fresh copy of them
+when they were rebuilt since the last copy, and builds the web app when a file of its own, of
+`examples/shared` or that copy is newer than its `dist/`. The shells use that build, so Tauri's
+`beforeDevCommand` and `beforeBuildCommand` are dropped when make runs them. The Tauri shells share
+one Cargo target folder in every checkout and worktree, `~/.cache/sokkel-ui/examples-cargo-target`
+(under `$XDG_CACHE_HOME` when set; `CARGO_TARGET_DIR` overrides it), so Rust builds its crates once
+for all of them. Tauri needs Rust and, on
 Linux, the system libraries it lists (webkit2gtk 4.1 and others; see the workflow). Electron's
 binary is fetched in its `postinstall`.
 
