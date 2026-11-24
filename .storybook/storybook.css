@@ -1,5 +1,12 @@
-/* Every package's styles, with the stories as a source too, so Storybook gets every class a story uses. */
-@import '../packages/core/src/styles/index.css';
+/*
+ * Every package's styles, with the stories as a source too, so Storybook gets every class a story uses.
+ * The core's is its base pointed at the whole core, since styles.css leaves out the primitives no part draws.
+ */
+@import '../packages/core/src/styles/base.css';
+@source '../packages/core/src/components';
+@source '../packages/core/src/hooks';
+@source '../packages/core/src/lib';
+@source not '../packages/core/src/**/*.test.*';
 /* Every theme, as an app that offers them all imports them, for the toolbar and the theme stories. */
 @import '../packages/core/src/styles/themes.css';
 @import '../packages/charts/src/styles.css';

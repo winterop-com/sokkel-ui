@@ -98,7 +98,8 @@ component without its `<Component>Props`.
 Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
 also its tokens), with no stories, story fixtures or tests. Each package's `styles.css` (every
 package but the domain add-ons, which draw no components and have none) is Tailwind source that
-scans only that package's components: the core's also carries Tailwind, the fonts, the
+scans only that package's components (the core's leaves out the primitives no part draws, whose
+lists an app that draws one adds itself): the core's also carries Tailwind, the fonts, the
 tokens and the base styles, and an add-on's is imported after it in the same stylesheet. An app's
 CSS so carries the classes of the packages it uses and none of the stories'; every app runs Tailwind
 4.1 or later itself. For an app that wants the classes of its own imports alone, the core also
