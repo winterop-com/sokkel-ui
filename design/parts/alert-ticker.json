@@ -4,28 +4,12 @@
     "kind": "part",
     "status": "preview",
     "renderers": {
-        "sokkel-ui": {
-            "state": "built",
-            "as_of": "f0e8943"
-        },
-        "sokkel-egui": {
-            "state": "missing",
-            "as_of": "5532f68",
-            "note": "Not built yet."
-        },
-        "sokkel-tui": {
-            "state": "missing",
-            "as_of": "b99664f",
-            "note": "Not in sokkel-tui's reports as of b99664f."
-        }
+        "sokkel-ui": {"state": "built", "as_of": "f0e8943"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
     },
     "summary": "The latest alerts in one strip, one row tall, one at a time: a dot in the alert's tone, its words cut with an ellipsis, when it happened, and its place among the alerts at the end. It moves to the next alert every interval, the new one sliding in, and starts over after the last. It holds still while paused, under the pointer, with focus in it, where motion is reduced, and with one alert or none.",
-    "sources": {
-        "sokkel-ui": [
-            "packages/core/src/components/AlertTicker.tsx",
-            "packages/core/src/components/Dot.tsx"
-        ]
-    },
+    "sources": {"sokkel-ui": ["packages/core/src/components/AlertTicker.tsx", "packages/core/src/components/Dot.tsx"]},
     "anatomy": {
         "container": "One row 40 tall on card with a border-strong edge, rounded by radius-surface, padded 12 at its sides, text.sm in card-foreground, its pieces 12 apart and centered, clipping what leaves it. A region named by label.",
         "item": "The alert shown, taking the room left: its dot, its icon and its words, 8 apart. With onSelect it is a button as tall as the strip.",
@@ -36,81 +20,35 @@
         "position": "With two alerts or more: the shown alert's place and the count, 2 of 5, at the strip's end, text.xs in faint in tabular figures, never cut.",
         "empty": "With no alerts: No alerts in muted-foreground, in the item's place."
     },
-    "standsOn": {
-        "default": "background"
-    },
+    "standsOn": {"default": "background"},
     "options": {
         "items": {
             "type": "rows",
             "does": "The alerts, the latest first: each an id, its text, and optionally a tone (critical, warning, good, info, quiet), when it happened and an icon."
         },
-        "label": {
-            "type": "text",
-            "does": "What the strip shows, for a screen reader."
-        },
-        "interval": {
-            "type": "number",
-            "default": 5000,
-            "does": "How long each alert is shown, in milliseconds."
-        },
-        "paused": {
-            "type": "boolean",
-            "default": false,
-            "does": "Holds the alert shown."
-        },
-        "index": {
-            "type": "number",
-            "does": "The alert shown, held by the app, counted from zero."
-        },
-        "defaultIndex": {
-            "type": "number",
-            "default": 0,
-            "does": "The alert shown first, counted from zero."
-        },
+        "label": {"type": "text", "does": "What the strip shows, for a screen reader."},
+        "interval": {"type": "number", "default": 5000, "does": "How long each alert is shown, in milliseconds."},
+        "paused": {"type": "boolean", "default": false, "does": "Holds the alert shown."},
+        "index": {"type": "number", "does": "The alert shown, held by the app, counted from zero."},
+        "defaultIndex": {"type": "number", "default": 0, "does": "The alert shown first, counted from zero."},
         "onIndexChange": {
             "type": "callback",
             "does": "Called with the next alert's index each time the ticker moves on."
         },
-        "onSelect": {
-            "type": "callback",
-            "does": "Makes the alert shown a button, called with its id."
-        }
+        "onSelect": {"type": "callback", "does": "Makes the alert shown a button, called with its id."}
     },
     "sizes": {
-        "container": {
-            "height": 40,
-            "padX": 12,
-            "gap": 12,
-            "radius": "radius-surface",
-            "text": "text.sm"
-        },
-        "item": {
-            "gap": 8,
-            "icon": 16
-        },
-        "dot": {
-            "width": 8,
-            "height": 8
-        }
+        "container": {"height": 40, "padX": 12, "gap": 12, "radius": "radius-surface", "text": "text.sm"},
+        "item": {"gap": 8, "icon": 16},
+        "dot": {"width": 8, "height": 8}
     },
     "layout": {
-        "interval": {
-            "value": 5000,
-            "note": "How long an alert is shown by default, in ms."
-        },
-        "slide": {
-            "value": "motion-base",
-            "note": "How long the next alert takes to slide in, eased by motion-ease."
-        },
-        "slideFrom": {
-            "value": 8,
-            "note": "How far below its place the next alert starts, fading in from nothing."
-        }
+        "interval": {"value": 5000, "note": "How long an alert is shown by default, in ms."},
+        "slide": {"value": "motion-base", "note": "How long the next alert takes to slide in, eased by motion-ease."},
+        "slideFrom": {"value": 8, "note": "How far below its place the next alert starts, fading in from nothing."}
     },
     "states": {
-        "rest": {
-            "means": "An alert shown, standing still: the first frame always is."
-        },
+        "rest": {"means": "An alert shown, standing still: the first frame always is."},
         "moving": {
             "means": "A new alert sliding in from below, fading in.",
             "reached": "the interval passing, the app's index changing, or a new alert taking the shown one's place"
@@ -119,35 +57,17 @@
             "means": "The ticker holding the alert shown.",
             "reached": "paused, the pointer over the strip, focus in it, motion reduced, fewer than two alerts, or an interval of 0 or less"
         },
-        "empty": {
-            "means": "No alerts: the strip keeps its height and says so.",
-            "reached": "no items"
-        },
-        "hover": {
-            "means": "The pointer over an alert that is a button.",
-            "reached": "pointer over, with onSelect"
-        },
+        "empty": {"means": "No alerts: the strip keeps its height and says so.", "reached": "no items"},
+        "hover": {"means": "The pointer over an alert that is a button.", "reached": "pointer over, with onSelect"},
         "focus": {
             "means": "Keyboard focus on the alert shown: the focus outline inside the strip.",
             "reached": "Tab, with onSelect",
             "on": "keyboard"
         },
-        "critical": {
-            "means": "The alert shown is critical.",
-            "reached": "the alert shown has the critical tone"
-        },
-        "warning": {
-            "means": "The alert shown is a warning.",
-            "reached": "the alert shown has the warning tone"
-        },
-        "good": {
-            "means": "The alert shown is good news.",
-            "reached": "the alert shown has the good tone"
-        },
-        "quiet": {
-            "means": "The alert shown is quiet, of no weight.",
-            "reached": "the alert shown has the quiet tone"
-        }
+        "critical": {"means": "The alert shown is critical.", "reached": "the alert shown has the critical tone"},
+        "warning": {"means": "The alert shown is a warning.", "reached": "the alert shown has the warning tone"},
+        "good": {"means": "The alert shown is good news.", "reached": "the alert shown has the good tone"},
+        "quiet": {"means": "The alert shown is quiet, of no weight.", "reached": "the alert shown has the quiet tone"}
     },
     "pieces": {
         "container": {
@@ -160,101 +80,32 @@
             }
         },
         "item": {
-            "rest": {
-                "text": "text.sm"
-            },
-            "hover": {
-                "ink": "foreground"
-            },
-            "focus": {
-                "ring": {
-                    "color": "ring",
-                    "width": "focus-ring-width",
-                    "inset": "all"
-                },
-                "radius": "radius-chip"
-            }
+            "rest": {"text": "text.sm"},
+            "hover": {"ink": "foreground"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width", "inset": "all"}, "radius": "radius-chip"}
         },
         "dot": {
-            "rest": {
-                "mark": "info",
-                "note": "info, and an alert with no tone."
-            },
-            "critical": {
-                "mark": "critical",
-                "note": "Breathes with the live pulse."
-            },
-            "warning": {
-                "mark": "warning"
-            },
-            "good": {
-                "mark": "good"
-            },
-            "quiet": {
-                "edge": "faint",
-                "note": "Hollow."
-            }
+            "rest": {"mark": "info", "note": "info, and an alert with no tone."},
+            "critical": {"mark": "critical", "note": "Breathes with the live pulse."},
+            "warning": {"mark": "warning"},
+            "good": {"mark": "good"},
+            "quiet": {"edge": "faint", "note": "Hollow."}
         },
-        "when": {
-            "rest": {
-                "ink": "muted-foreground",
-                "text": "text.xs"
-            }
-        },
-        "position": {
-            "rest": {
-                "ink": "faint",
-                "text": "text.xs"
-            }
-        },
-        "empty": {
-            "rest": {
-                "ink": "muted-foreground",
-                "text": "text.sm"
-            }
-        }
+        "when": {"rest": {"ink": "muted-foreground", "text": "text.xs"}},
+        "position": {"rest": {"ink": "faint", "text": "text.xs"}},
+        "empty": {"rest": {"ink": "muted-foreground", "text": "text.sm"}}
     },
     "keyboard": [
-        {
-            "keys": [
-                "Tab"
-            ],
-            "does": "Reaches the alert shown when it is a button, which holds the ticker."
-        },
-        {
-            "keys": [
-                "Enter"
-            ],
-            "does": "Calls onSelect with the shown alert's id.",
-            "when": "the alert has focus"
-        },
-        {
-            "keys": [
-                "Space"
-            ],
-            "does": "Calls onSelect with the shown alert's id.",
-            "when": "the alert has focus"
-        }
+        {"keys": ["Tab"], "does": "Reaches the alert shown when it is a button, which holds the ticker."},
+        {"keys": ["Enter"], "does": "Calls onSelect with the shown alert's id.", "when": "the alert has focus"},
+        {"keys": ["Space"], "does": "Calls onSelect with the shown alert's id.", "when": "the alert has focus"}
     ],
-    "words": {
-        "empty": "No alerts",
-        "position": "{index} of {count}"
-    },
+    "words": {"empty": "No alerts", "position": "{index} of {count}"},
     "messages": {
-        "empty": {
-            "id": "alertTicker.empty",
-            "en": "No alerts"
-        },
-        "position": {
-            "id": "alertTicker.position",
-            "en": "{index, number} of {count, number}"
-        }
+        "empty": {"id": "alertTicker.empty", "en": "No alerts"},
+        "position": {"id": "alertTicker.position", "en": "{index, number} of {count, number}"}
     },
-    "appText": {
-        "label": "The strip's name.",
-        "text": "What happened.",
-        "when": "When it happened."
-    },
+    "appText": {"label": "The strip's name.", "text": "What happened.", "when": "When it happened."},
     "rendererSpecific": {
         "sokkel-ui": [
             "One timeout per alert shown, none while held; the pure steps are alertTickerShown and alertTickerNext.",
@@ -278,20 +129,8 @@
     ],
     "samples": {
         "position": [
-            {
-                "with": {
-                    "index": 2,
-                    "count": 5
-                },
-                "says": "2 of 5"
-            },
-            {
-                "with": {
-                    "index": 1200,
-                    "count": 3400
-                },
-                "says": "1,200 of 3,400"
-            }
+            {"with": {"index": 2, "count": 5}, "says": "2 of 5"},
+            {"with": {"index": 1200, "count": 3400}, "says": "1,200 of 3,400"}
         ]
     }
 }
