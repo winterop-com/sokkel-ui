@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import { GraphEditingContext } from './context'
-import { boxInView, edgeClickAlone, GraphCanvas, type GraphEditing } from './GraphCanvas'
+import { answeredDrops, boxInView, edgeClickAlone, GraphCanvas, type GraphEditing } from './GraphCanvas'
 
 declare global {
     var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
@@ -70,6 +70,19 @@ describe('boxInView', () => {
     })
     it('measures under the view zoom', () => {
         expect(boxInView({ ...box, y: 700 }, { x: 0, y: 0, zoom: 0.5 }, { width: 1024, height: 720 })).toBe(true)
+    })
+})
+
+describe('answeredDrops', () => {
+    const before = { x: 10, y: 20 }
+    it('keeps a box waiting while the app still has it where it was', () => {
+        expect(answeredDrops([{ id: 'fetch', position: { x: 10, y: 20 } }], { fetch: before })).toEqual([])
+    })
+    it('lets a box go once the app has moved it', () => {
+        expect(answeredDrops([{ id: 'fetch', position: { x: 200, y: 20 } }], { fetch: before })).toEqual(['fetch'])
+    })
+    it('lets a box go once the app has removed it', () => {
+        expect(answeredDrops([], { fetch: before })).toEqual(['fetch'])
     })
 })
 
