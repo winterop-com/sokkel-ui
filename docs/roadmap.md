@@ -6,11 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **On main, unreleased (2026-11-24):** `styles.css` leaves out the primitives no part draws
-  (breaking: the next release is 0.35.0); `EditPreview`'s pane variant shows one pane at a time
-  behind a switch on a phone; a color given as a value takes the raw token, never a `--color-*`
-  name, and a rule holds it; CI starts every example's shell once and keeps a still.
-- **0.34.9** is the latest release (2026-11-24): GraphCanvas keeps a dropped box where it was let
+- **0.35.0** is the latest release (2026-11-24): `styles.css` leaves out the primitives no part
+  draws (breaking); `EditPreview`'s pane variant shows one pane at a time behind a switch on a
+  phone; a color given as a value takes the raw token, never a `--color-*` name, and a rule holds
+  it; CI starts every example's shell once and keeps a still; contract 0.35.0.
+- **0.34.9** (2026-11-24): GraphCanvas keeps a dropped box where it was let
   go until the app moves it; the examples build only what changed and `make apps` bundles the Tauri
   shells; contract 0.34.9.
 - **0.34.8** (2026-11-23): the markdown reader reads display math in quotes,
