@@ -487,12 +487,6 @@ to `plan.md` when it ships.
   sokkel-egui (egui) and sokkel-tui (ratatui, started 2026-11-17). Each part's spec says how far
   each renderer has drawn it, in a field a script reads (`renderers.<name>.state`: missing, partial
   or built, with the commit it was checked at), so a renderer can check its own coverage.
-- **The desktop windows on macOS.** CI has seen every shell's window on Linux, where Tauri draws
-  with WebKitGTK; on macOS Tauri draws with WebKit and both shells overlay the title bar with the
-  window buttons set in, which no still shows. Open each of the `.app` files `make apps` builds,
-  and each Electron shell, on a Mac and look at the top strip, the window buttons and a page or
-  two. Windows is not checked at all.
-
 - **The reviews of 2026-11-09.** A visual review of the published catalog and a review of the
   twelve example apps on the web; every round of fixes from them shipped in 0.10.13 to 0.10.16.
     - **WebKit and Firefox (2026-11-17):** every story at 390 and 1440, dark and light, and every
@@ -504,8 +498,13 @@ to `plan.md` when it ships.
       (WebKit reports it as an uncaught error, Chromium only to `window.onerror`), and KaTeX's
       MathML for `t_{\max}` (an `msub` with three children, which Firefox logs; the drawn formula is
       KaTeX's HTML). `make layout-engines` runs the layout check in both; CI runs Chromium only.
-    - **Not covered yet:** the desktop windows on macOS and Windows (above), and real touch
-      devices. Run that pass before calling the examples checked on every platform.
+    - **macOS windows (2026-11-24):** all 42 shells (21 Tauri bundles from `make apps`, 21
+      Electron shells) opened on a Mac: the window buttons sit in the page's top strip beside the
+      mark, every first page draws, and the maps have their land. One look to decide: beside the
+      window buttons the rail head has room for about 12 characters of the product name, so "DHIS2
+      Workbench" and "FHIR Workbench" end in an ellipsis there.
+    - **Not covered yet:** the desktop windows on Windows, and real touch devices. Run that pass
+      before calling the examples checked on every platform.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
   214.1 kB and forms at 197.5 kB start and 67.5 kB lazy; both are full. A change trims what it adds
