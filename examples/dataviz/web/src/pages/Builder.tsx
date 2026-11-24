@@ -1,3 +1,4 @@
+import { EditPreview } from '@winterop-com/sokkel-ui/EditPreview'
 import { SelectField } from '@winterop-com/sokkel-ui/SelectField'
 import { download } from '@winterop-com/sokkel-ui/lib/download'
 import { Field } from '@winterop-com/sokkel-ui/Field'
@@ -21,7 +22,6 @@ import { ToggleGroup, ToggleGroupItem } from '@winterop-com/sokkel-ui/primitives
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
-import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { SwitchField } from '@winterop-com/sokkel-ui/SwitchField'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useUnsavedChanges } from '@winterop-com/sokkel-ui/UnsavedChanges'
@@ -595,15 +595,14 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
                     </>
                 }
             />
-            <SplitPane
+            <EditPreview
+                variant="pane"
                 className="min-h-0 flex-1"
                 id="dataviz-builder"
-                defaultShare={0.62}
-                minShare={0.4}
-                maxShare={0.75}
-                narrow="stack"
-                first={preview}
-                second={options}
+                edit={options}
+                preview={preview}
+                flushPreview
+                words={{ edit: 'Options' }}
             />
             <FormBar note={chart === undefined ? 'A new chart, not saved yet' : dirty ? 'Unsaved changes' : 'Saved'}>
                 {chart !== undefined && (

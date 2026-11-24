@@ -31,7 +31,8 @@ bun run size      # typecheck the apps, build them and compare each with its bud
 ```
 
 Five-sixths of the CSS on `styles.css` is Tailwind's utilities: a rule for every class any core
-module names, whether the app draws that module or not, so a part's classes reach every app on
+module names, whether the app draws that module or not (save the primitives no part draws, which it
+leaves out), so a part's classes reach every app on
 `styles.css` (forms and music) and only the apps that import it on `styles-base.css` or with the plugin. Tailwind
 reads every word of a module, comments and strings too, so a comment that names a utility
 (`shimmer`, `lowercase`) writes that utility. A class spelled two ways (`data-[highlighted]:` and

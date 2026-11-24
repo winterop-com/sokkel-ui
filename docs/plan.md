@@ -98,7 +98,8 @@ component without its `<Component>Props`.
 Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
 also its tokens), with no stories, story fixtures or tests. Each package's `styles.css` (every
 package but the domain add-ons, which draw no components and have none) is Tailwind source that
-scans only that package's components: the core's also carries Tailwind, the fonts, the
+scans only that package's components (the core's leaves out the primitives no part draws, whose
+lists an app that draws one adds itself): the core's also carries Tailwind, the fonts, the
 tokens and the base styles, and an add-on's is imported after it in the same stylesheet. An app's
 CSS so carries the classes of the packages it uses and none of the stories'; every app runs Tailwind
 4.1 or later itself. For an app that wants the classes of its own imports alone, the core also
@@ -968,7 +969,8 @@ container. `ExampleList` fills one with runnable examples under headings, in tab
 and `ApiPlayground`'s presets are one.
 Mail's list beside its reading pane, the query workbench and a chat's history are split by it, and so
 is `EditPreview`'s `pane` variant: an editor and its live preview edge to edge in a pane of the
-app's, the share kept by `id`, with `view` showing both or either alone. `DocumentTabs` is the strip
+app's, the share kept by `id`, with `view` showing both or either alone and, narrow, a switch
+showing one at a time, as a panel's options beside its live preview take on a phone. `DocumentTabs` is the strip
 of documents open in a work area over such a pane: a tab each with its icon, its name cut short and
 a close button (a dot while unsaved), the shown one joined to the content, a middle click closing,
 the arrows moving along it, and the strip scrolling sideways past its room with `end` held at its end.

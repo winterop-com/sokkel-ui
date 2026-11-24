@@ -64,7 +64,20 @@ interface Rule {
 const picture = (line: string, file: string) =>
     file.startsWith('src/') && /data:|<svg|<rect|<circle|<path|<g |<text |<line|<polyline|stop-color|fill=|stroke=/.test(line)
 
+/**
+ * The `--color-*` names every stylesheet carries: those in tokens.css's static theme blocks. Any
+ * other exists only once a class uses it, so a CSS color given as a value takes the raw token.
+ */
+const KEPT_COLORS = [...text(join(ROOT, 'packages/core/src/styles/tokens.css')).matchAll(/@theme[^{]*\bstatic\s*\{([^}]*)\}/g)].flatMap(
+    (block) => [...block[1].matchAll(/--color-([\w-]+):/g)].map((name) => name[1]),
+)
+
 const RULES: Rule[] = [
+    {
+        name: 'a `--color-*` name given as a color, which exists only once a class uses it, instead of the raw token',
+        pattern: new RegExp(`var\\(--color-(?!(?:${KEPT_COLORS.join('|')})\\))`),
+        in: ALL,
+    },
     { name: 'a text size set by hand instead of a text token', pattern: /text-\[[0-9.]+(px|rem|em)\]/, in: ALL },
     { name: 'a font size set by hand', pattern: /fontSize:\s*['"`]?[0-9]/, in: ALL },
     {
@@ -292,6 +305,51 @@ describe('the packages', () => {
             }
         }
         expect(found, found.join('\n')).toEqual([])
+    })
+})
+
+describe("the core's styles.css", () => {
+    /** Primitives no part draws that styles.css still carries, each with the reason. */
+    const KEPT: Record<string, string> = { 'toast.tsx': 'every app mounts the toaster for its notices' }
+
+    it('leaves out the primitives no part draws, and only those', () => {
+        const ui = join(ROOT, 'packages/core/src/components/ui')
+        const code = (path: string) => !/\.test\.tsx?$/.test(path) && !path.endsWith('.d.ts')
+        const near = (from: string, spec: string) => {
+            const base = resolve(dirname(from), spec)
+            return [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`].find(
+                (path) => existsSync(path) && statSync(path).isFile(),
+            )
+        }
+        // Every module of the core but the primitives, and every primitive an add-on imports by name.
+        const queue = SOURCES[CORE].filter((path) => code(path) && !path.startsWith(`${ui}/`))
+        for (const name of ADDONS)
+            for (const path of SOURCES[name].filter(code))
+                for (const [, primitive] of text(path).matchAll(/['"]@winterop-com\/sokkel-ui\/primitives\/([\w-]+)['"]/g)) {
+                    const found = near(join(ui, 'index'), `./${primitive}`)
+                    if (found !== undefined) queue.push(found)
+                }
+        const drawn = new Set<string>()
+        while (queue.length > 0) {
+            const path = queue.pop() as string
+            if (drawn.has(path)) continue
+            drawn.add(path)
+            for (const [, spec] of text(path).matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)['"](\.{1,2}\/[^'"?]+)['"]/g)) {
+                const found = near(path, spec)
+                if (found !== undefined) queue.push(found)
+            }
+        }
+        const undrawn = SOURCES[CORE]
+            .filter((path) => code(path) && path.startsWith(`${ui}/`) && !drawn.has(path))
+            .map((path) => relative(ui, path))
+            .filter((name) => !(name in KEPT))
+            .sort()
+        const left = [
+            ...text(join(ROOT, 'packages/core/src/styles/index.css')).matchAll(/^@source not '\.\.\/components\/ui\/([^']+)';$/gm),
+        ]
+            .map((match) => match[1])
+            .sort()
+        expect(left).toEqual(undrawn)
     })
 })
 

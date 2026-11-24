@@ -1,5 +1,7 @@
 @import '@winterop-com/sokkel-ui/styles.css';
 @import '@winterop-com/sokkel-ui-maps/styles.css';
+/* The primitives the app draws itself, which styles.css leaves out. */
+@import '@winterop-com/sokkel-ui/sources/primitives/toggle.css';
 @import '@winterop-com/sokkel-ui/themes/indigo.css';
 @import '@winterop-com/sokkel-ui/themes/paper.css';
 @import '@winterop-com/sokkel-ui/themes/contrast.css';

@@ -221,8 +221,12 @@ An app without a provider pays only for the hook that asks for one; the catalog 
 
 ### Only the classes an app uses
 
-`styles.css` points Tailwind at every module of the core, so an app's CSS carries the classes of
-components it never imports: the forms page in `size/` ships 52 kB of CSS gzipped on it.
+`styles.css` points Tailwind at every module of the core but the primitives no part draws, so an
+app's CSS carries the classes of components it never imports: the forms page in `size/` ships 45 kB
+of CSS gzipped on it. A primitive no part draws (`primitives/item`, `primitives/toggle-group`,
+`primitives/sidebar` and the rest `styles.css` names with `@source not`; `primitives/toast` stays in)
+needs its list after it when the app imports it itself:
+`@import '@winterop-com/sokkel-ui/sources/primitives/item.css'`.
 
 The core's Vite plugin gives an app the lean stylesheet with no list to keep. Put `sokkelStyles()`
 before `tailwindcss()` and keep importing `styles.css`, from the stylesheet or the code:
@@ -242,8 +246,8 @@ depends on the library, such as an app's own shared package. It then puts `style
 those modules' lists of sources in the place of the core's `styles.css`, and drops the add-ons'
 `styles.css`, whose lists the modules' lists bring. In the dev server, an import added or dropped
 writes the stylesheet again. The forms page built this way, `size/forms-lean`, ships 22 kB of CSS
-gzipped; the dashboard, map and music pages in `size/` drop from 52, 63 and 53 kB to 23, 30 and 21 kB.
-An app on `styles.css` without the plugin gets every class, as before.
+gzipped; the dashboard, map and music pages in `size/` drop from 45, 55 and 46 kB to 23, 30 and 21 kB.
+An app on `styles.css` without the plugin gets every class but those primitives'.
 
 By hand, an app that wants only its own imports `styles-base.css` instead, which is `styles.css` pointed at
 no module, and after it the list of sources of each module it imports, `sources/<module>.css`

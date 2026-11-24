@@ -1,5 +1,7 @@
 @import '@winterop-com/sokkel-ui/styles.css';
 @import '@winterop-com/sokkel-ui-media/styles.css';
+/* The primitives the app draws itself, which styles.css leaves out. */
+@import '@winterop-com/sokkel-ui/sources/primitives/aspect-ratio.css';
 
 /* The themes the settings offer beside the base one. */
 @import '@winterop-com/sokkel-ui/themes/paper.css';
