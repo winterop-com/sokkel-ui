@@ -231,6 +231,20 @@ describe('a branch of many thousand rows', () => {
     )
 })
 
+/** The tooltip a row shows once it has the focus, or undefined when none shows. */
+async function tipOf(row: Element | null | undefined): Promise<string | undefined> {
+    await act(async () => {
+        ;(row as HTMLElement | null | undefined)?.focus()
+        await Promise.resolve()
+    })
+    const tip = document.querySelector('[data-slot="tooltip-content"]')?.textContent ?? undefined
+    await act(async () => {
+        ;(row as HTMLElement | null | undefined)?.blur()
+        await Promise.resolve()
+    })
+    return tip
+}
+
 describe('a long label', () => {
     const series: TreeNode[] = [
         { id: 'a', label: 'Harbor survey of the northern coast, Norway, west approaches: Sheet 170' },
@@ -266,23 +280,39 @@ describe('a long label', () => {
         const row = rowOf(at, 'a')
         expect(row?.querySelector('span.truncate')?.textContent).toBe('The Sat\u2026')
         expect(row?.querySelector('span.whitespace-pre')?.textContent).toBe(' Bug')
-        expect(row?.querySelector('[title]')?.getAttribute('title')).toBe('The Satan Bug')
+        expect(await tipOf(row)).toBe('The Satan Bug')
         width.mockRestore()
         tailWidth.mockRestore()
         canvas.mockRestore()
     })
 
-    it('gives its whole text on hover once it is cut short', async () => {
+    it('cuts at the end with cut="middle" where the head would keep fewer than four letters', async () => {
+        const width = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(110)
+        const tailWidth = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 80, 16))
+        const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+            font: '',
+            measureText: (text: string) => ({ width: text.length * 8 }),
+        } as unknown as CanvasRenderingContext2D)
+        const at = await mount(<Tree nodes={[{ id: 'a', label: 'Schr\u00f6dinger equation' }]} label="Pages" cut="middle" />)
+        expect(rowOf(at, 'a')?.querySelector('span.truncate')?.textContent).toBe('Schr\u00f6dinger equation')
+        expect(rowOf(at, 'a')?.textContent).not.toContain('\u2026')
+        width.mockRestore()
+        tailWidth.mockRestore()
+        canvas.mockRestore()
+    })
+
+    it('gives its whole text in a tooltip on keyboard focus once it is cut short', async () => {
         const wide = vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(400)
         const narrow = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)
         const at = await mount(<Tree nodes={series} label="Pages" />)
-        expect(rowOf(at, 'b')?.querySelector('[title]')?.getAttribute('title')).toBe(series[1].label)
+        expect(await tipOf(rowOf(at, 'b'))).toBe(series[1].label)
+        expect(rowOf(at, 'b')?.querySelector('[title]')).toBeNull()
         wide.mockRestore()
         narrow.mockRestore()
     })
 
-    it('gives no hover text to a label that fits', async () => {
+    it('gives no tooltip to a label that fits', async () => {
         const at = await mount(<Tree nodes={series} label="Pages" />)
-        expect(rowOf(at, 'a')?.querySelector('[title]')).toBeNull()
+        expect(await tipOf(rowOf(at, 'a'))).toBeUndefined()
     })
 })

@@ -378,7 +378,8 @@ export function Rail({
                 )}
                 {body.search !== undefined && <div className="pt-1">{body.search}</div>}
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">{body.content}</div>
+            {/* Positioned, so a tall list inside counts in this box's overflow and not in the shell's. */}
+            <div className="relative min-h-0 flex-1 overflow-y-auto px-2 pb-3">{body.content}</div>
         </div>
     )
     const lights = useTrafficLights(desktop)

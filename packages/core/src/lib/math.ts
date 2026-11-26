@@ -57,7 +57,7 @@ function lineStart(text: string, index: number): { start: number; alone: boolean
 }
 
 /** Rewrites the math of one stretch of prose, with no code in it. */
-function prose(text: string): string {
+function prose(text: string, inlineBrackets: boolean): string {
     let out = ''
     let index = 0
     // Each search remembers its last answer, so a line of openers that never close is read once.
@@ -107,7 +107,14 @@ function prose(text: string): string {
                     index = end + 2
                     continue
                 }
-                out += next === '(' ? `$${value.replace(/\s*\n\s*/g, ' ')}$` : `$$${value.replace(/\s*\n\s*/g, ' ')}$$`
+                if (next === '[' && !inlineBrackets) {
+                    // Inside a sentence `\[` is an escaped bracket, as in a citation's "\[45\]".
+                    out += char + next
+                    index += 2
+                    continue
+                }
+                const line = value.replace(/\s*\n\s*/g, ' ')
+                out += next === '(' ? `$${line}$` : `$$${line}$$`
                 index = end + 2
                 continue
             }
@@ -151,7 +158,7 @@ function prose(text: string): string {
 }
 
 /** Rewrites a stretch of text outside fences, leaving its inline code alone. */
-function outsideFences(text: string): string {
+function outsideFences(text: string, inlineBrackets: boolean): string {
     let out = ''
     let from = 0
     let index = 0
@@ -177,30 +184,35 @@ function outsideFences(text: string): string {
             index += run
             continue
         }
-        out += prose(text.slice(from, index)) + text.slice(index, end + run)
+        out += prose(text.slice(from, index), inlineBrackets) + text.slice(index, end + run)
         index = end + run
         from = index
     }
-    return out + prose(text.slice(from))
+    return out + prose(text.slice(from), inlineBrackets)
 }
 
 /**
- * Markdown with its math in the form remark-math reads: `\(…\)` becomes `$…$`, `\[…\]` becomes a
- * `$$` block (or inline `$$…$$` inside a sentence), and a single `$` that cannot pair as math is
+ * Markdown with its math in the form remark-math reads: `\(…\)` becomes `$…$`, `\[…\]` on lines of
+ * its own becomes a `$$` block (inside a sentence it stays escaped brackets), and a single `$` that cannot pair as math is
  * escaped. A single dollar opens math when a non-space follows it and closes it when a non-space
  * comes before it and no digit after it, on the same line, as Pandoc reads them, so "costs $5 and
  * $10" stays prices. Fenced code, `$$` blocks, inline code and escapes are left as they are.
  *
+ * With `inlineBrackets`, `\[…\]` inside a sentence is inline `$$…$$` math too, as chat models write it.
+ *
  * With `streaming`, a `$$` block still being written (opened and not yet closed) becomes a `latex`
  * fence, so it shows as its source until its closing `$$` lands rather than as an error each token.
  */
-export function normalizeMath(source: string, { streaming = false }: { streaming?: boolean } = {}): string {
+export function normalizeMath(
+    source: string,
+    { streaming = false, inlineBrackets = false }: { streaming?: boolean; inlineBrackets?: boolean } = {},
+): string {
     if (!/[$\\]/.test(source)) return source
     const lines = source.split('\n')
     const out: string[] = []
     let pending: string[] = []
     const flush = () => {
-        if (pending.length > 0) out.push(outsideFences(pending.join('\n')))
+        if (pending.length > 0) out.push(outsideFences(pending.join('\n'), inlineBrackets))
         pending = []
     }
     let index = 0
@@ -238,9 +250,9 @@ export function normalizeMath(source: string, { streaming = false }: { streaming
 }
 
 /** Whether markdown holds math once `normalizeMath` has read it: a `math` fence, or a dollar left unescaped. */
-export function hasMath(source: string): boolean {
+export function hasMath(source: string, { inlineBrackets = false }: { inlineBrackets?: boolean } = {}): boolean {
     if (/^\s*(`{3,}|~{3,})\s*math\s*$/im.test(source)) return true
-    const normalized = normalizeMath(source)
+    const normalized = normalizeMath(source, { inlineBrackets })
     let fenced = false
     for (const line of normalized.split('\n')) {
         if (FENCE.test(line)) fenced = !fenced

@@ -740,6 +740,8 @@ const PROSE = cn(
     '[&_.katex-display]:my-3 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:py-1',
     '[&_.katex-error]:font-mono',
     '[&_[id]]:scroll-mt-4',
+    // Footnote references side by side ("[^2][^3]") keep a gap, so they read as 2 3 and not 23.
+    '[&_sup+sup]:ms-1',
     '[&_mark[data-marked]]:rounded-mini [&_mark[data-marked]]:bg-warning/25 [&_mark[data-marked]]:box-decoration-clone [&_mark[data-marked]]:text-inherit',
 )
 
@@ -831,6 +833,11 @@ export interface MarkdownProps {
     caret?: boolean
     /** Draws LaTeX math with KaTeX, loaded the first time a message holds math. On by default. */
     math?: boolean
+    /**
+     * Reads `\[...\]` inside a sentence as math, as chat models write it. Off by default, where it
+     * is escaped brackets as in CommonMark and only `\[...\]` on lines of its own is display math.
+     */
+    inlineBracketMath?: boolean
     /** Heading sizes: within a message (the default), or a document's from a page title down. */
     scale?: 'message' | 'document'
     /**
@@ -1181,6 +1188,7 @@ export const MarkdownView = memo(function MarkdownView({
     inlineCode = 'chip',
     caret = false,
     math = true,
+    inlineBracketMath = false,
     scale = 'message',
     measure = false,
     parts,
@@ -1209,7 +1217,10 @@ export const MarkdownView = memo(function MarkdownView({
     const deferred = useDeferredValue(content)
     const given = streaming ? deferred : content
     const needsMath = useMemo(
-        () => math && useMath !== undefined && (tree === undefined ? hasMath(given) : treeHasMath(tree)),
+        () =>
+            math &&
+            useMath !== undefined &&
+            (tree === undefined ? hasMath(given, { inlineBrackets: inlineBracketMath }) : treeHasMath(tree)),
         [math, useMath, tree, given],
     )
     // The same hook every render of a view: `Markdown` always passes one, `PlainMarkdown` never does.
@@ -1226,6 +1237,7 @@ export const MarkdownView = memo(function MarkdownView({
             parseTree(given, {
                 math: reader,
                 normalizeMath: math && useMath !== undefined,
+                inlineBrackets: inlineBracketMath,
                 streaming,
                 frontmatter: frontmatter !== 'markdown',
                 wikiLinks: linked,
@@ -1233,7 +1245,7 @@ export const MarkdownView = memo(function MarkdownView({
                 partMarker: word,
                 positions: false,
             }),
-        [tree, given, reader, math, useMath, streaming, frontmatter, linked, tagged, word],
+        [tree, given, reader, math, useMath, inlineBracketMath, streaming, frontmatter, linked, tagged, word],
     )
     // A tree given from elsewhere is rebuilt from what a node may hold; one read here is that already.
     const safe = useMemo(() => (tree === undefined ? parsed : cleanTree(parsed)), [tree, parsed])
@@ -1256,7 +1268,10 @@ export const MarkdownView = memo(function MarkdownView({
             plugins.push(htmlEngine.rehypeRaw, [htmlEngine.rehypeSanitize, htmlEngine.schemaWithSchemes(schemes)])
         }
         // After sanitizing, so KaTeX's own markup is kept.
-        if (katex !== undefined && math) plugins.push([katex.rehypeKatex, { throwOnError: false, errorColor: 'var(--status-failed-ink)' }])
+        // Strict off: a character KaTeX has no metrics for (a dash, an IPA letter) is drawn without a warning.
+        if (katex !== undefined && math) {
+            plugins.push([katex.rehypeKatex, { throwOnError: false, errorColor: 'var(--status-failed-ink)', strict: 'ignore' }])
+        }
         plugins.push(rehypeText({ images, schemes, inline, headingOffset: offset, live, resolveUrl }))
         plugins.push(rehypeDocument(anchors))
         if (highlight.trim() !== '') plugins.push(rehypeHighlight(highlight))

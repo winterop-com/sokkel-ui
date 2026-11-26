@@ -63,6 +63,12 @@ export interface TagChipsProps {
      * pressed too.
      */
     onSelect?: (tag: string, index: number) => void
+    /**
+     * Makes each tag a link to the address it gives, drawn through the app's `LinkProvider`, and the
+     * +N chip a menu of the tags left out as links, so a modified or middle click opens one in a new
+     * tab. A tag it gives no address for falls back to `onSelect`.
+     */
+    href?: (tag: string, index: number) => string | undefined
     className?: string
     words?: Partial<TagChipsWords>
 }
@@ -74,9 +80,9 @@ export interface TagChipsProps {
  * whenever that width changes. In a `DataTable` cell it fits its column's room, and on a stacked
  * card it wraps onto more lines and shows every tag. `max` caps how many show even when more would
  * fit. With `onSelect` each tag is a button and the +N chip opens a menu of the rest, drawn as
- * chips and each one pressable as the shown tags are.
+ * chips and each one pressable as the shown tags are; with `href` each is a link instead.
  */
-export function TagChips({ tags, max, variant = 'secondary', mono = true, onSelect, className, words: given }: TagChipsProps) {
+export function TagChips({ tags, max, variant = 'secondary', mono = true, onSelect, href, className, words: given }: TagChipsProps) {
     const words = useWords(TAG_CHIPS_PART, given)
     const tone: ChipTone = variant === 'outline' ? 'outline' : 'neutral'
     const cell = useTableCell()
@@ -113,6 +119,7 @@ export function TagChips({ tags, max, variant = 'secondary', mono = true, onSele
         return () => observer.disconnect()
     }, [tags, cap, stacked, column])
 
+    const pressable = onSelect !== undefined || href !== undefined
     const rest = tags.slice(shown)
     const restName = words.rest(rest)
     return (
@@ -132,24 +139,28 @@ export function TagChips({ tags, max, variant = 'secondary', mono = true, onSele
                     <Chip mono={mono} tone="outline">
                         {words.more(tags.length)}
                         {/* The menu chip's chevron, after the words' gap. */}
-                        {onSelect !== undefined && <ChevronDown className="ms-1 inline" />}
+                        {pressable && <ChevronDown className="ms-1 inline" />}
                     </Chip>
                 </div>
             )}
-            {tags.slice(0, shown).map((tag, index) => (
-                <Chip
-                    key={index}
-                    mono={mono}
-                    tone={tone}
-                    onSelect={onSelect === undefined ? undefined : () => onSelect(tag, index)}
-                    selectLabel={onSelect === undefined ? undefined : words.select?.(tag)}
-                    className="shrink"
-                >
-                    {tag}
-                </Chip>
-            ))}
+            {tags.slice(0, shown).map((tag, index) => {
+                const address = href?.(tag, index)
+                return (
+                    <Chip
+                        key={index}
+                        mono={mono}
+                        tone={tone}
+                        href={address}
+                        onSelect={onSelect === undefined ? undefined : () => onSelect(tag, index)}
+                        selectLabel={address === undefined && onSelect === undefined ? undefined : words.select?.(tag)}
+                        className="shrink"
+                    >
+                        {tag}
+                    </Chip>
+                )
+            })}
             {rest.length > 0 &&
-                (onSelect === undefined ? (
+                (!pressable ? (
                     <Tooltip>
                         <TooltipTrigger render={<span tabIndex={0} aria-label={restName} className={cn('inline-flex shrink-0', RING)} />}>
                             <Chip mono={mono} tone="outline" className="text-muted-foreground">
@@ -170,7 +181,8 @@ export function TagChips({ tags, max, variant = 'secondary', mono = true, onSele
                                     {tag}
                                 </Chip>
                             ),
-                            onSelect: () => onSelect(tag, shown + index),
+                            href: href?.(tag, shown + index),
+                            onSelect: onSelect === undefined ? undefined : () => onSelect(tag, shown + index),
                         }))}
                         className="text-muted-foreground"
                     >

@@ -128,6 +128,32 @@ function DropdownMenuItem({ className, inset, variant = 'default', ...props }: D
     )
 }
 
+export type DropdownMenuLinkItemProps = BaseMenu.LinkItem.Props & {
+    inset?: boolean
+}
+
+/**
+ * A menu row that is a link: an anchor, so a modified or middle click opens it in a new tab and the
+ * browser's link menu is there. Give the app's link as `render` to route it; a press closes the menu.
+ * It looks as a `DropdownMenuItem` does.
+ */
+function DropdownMenuLinkItem({ className, inset, closeOnClick = true, ...props }: DropdownMenuLinkItemProps) {
+    return (
+        <MenuPrimitive.LinkItem
+            data-slot="dropdown-menu-item"
+            data-menu-row=""
+            data-inset={inset || undefined}
+            closeOnClick={closeOnClick}
+            className={cn(
+                ROW_HEIGHT,
+                "group/dropdown-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-0.5 text-sm text-popover-foreground outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                className,
+            )}
+            {...props}
+        />
+    )
+}
+
 export type DropdownMenuSubProps = BaseMenu.SubmenuRoot.Props
 
 function DropdownMenuSub({ loopFocus = false, ...props }: DropdownMenuSubProps) {
@@ -274,6 +300,7 @@ export {
     DropdownMenuGroup,
     DropdownMenuLabel,
     DropdownMenuItem,
+    DropdownMenuLinkItem,
     DropdownMenuCheckboxItem,
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,

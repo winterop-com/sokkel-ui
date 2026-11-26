@@ -23,8 +23,21 @@ describe('normalizeMath', () => {
         expect(normalizeMath('- Sum:\n  \\[\n  a + b\n  = c\n  \\]')).toBe('- Sum:\n  $$\n  a + b\n  = c\n  $$')
     })
 
-    it('keeps \\[…\\] inside a sentence inline', () => {
-        expect(normalizeMath('So \\[a+b\\] holds.')).toBe('So $$a+b$$ holds.')
+    it('leaves \\[…\\] inside a sentence as escaped brackets', () => {
+        for (const text of [
+            'So \\[a+b\\] holds.',
+            'Cited \\[45 & 48–9\\].',
+            'History\\[edit\\]',
+            '19 January \\[[[dates|O.S.]] 6 January\\]',
+        ]) {
+            expect(normalizeMath(text)).toBe(text)
+        }
+    })
+
+    it('reads \\[…\\] inside a sentence as inline math with inlineBrackets, as chat models write it', () => {
+        expect(normalizeMath('So \\[a+b\\] holds.', { inlineBrackets: true })).toBe('So $$a+b$$ holds.')
+        expect(hasMath('So \\[a+b\\] holds.', { inlineBrackets: true })).toBe(true)
+        expect(hasMath('So \\[a+b\\] holds.')).toBe(false)
     })
 
     it('leaves inline code and fenced code alone', () => {

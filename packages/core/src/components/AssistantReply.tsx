@@ -352,6 +352,7 @@ export const AssistantReply = memo(function AssistantReply({
                     streaming={streaming}
                     caret={streaming}
                     math={math}
+                    inlineBracketMath
                     images={images}
                     linkSchemes={linkSchemes}
                     onLink={onLink}

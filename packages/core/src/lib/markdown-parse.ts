@@ -752,6 +752,8 @@ export interface ParseRules {
     math?: Pluggable
     /** Rewrites the text's math for the reader first: `\\(...\\)` and `\\[...\\]` as dollars, and a lone `$` read as Pandoc reads it. */
     normalizeMath: boolean
+    /** Reads `\\[...\\]` inside a sentence as inline math, as chat models write it; off, it is escaped brackets. */
+    inlineBrackets?: boolean
     /** The text is still arriving: an unclosed `$$` block stays its source. */
     streaming?: boolean
     /** Reads a frontmatter block at the top as a `yaml` node; off, it is read as markdown. */
@@ -774,7 +776,8 @@ export function parseTree(content: string, rules: ParseRules): MarkdownTree {
     placing = undefined
     const front = rules.frontmatter ? frontmatterIn(content) : undefined
     let text = front === undefined ? content : content.slice(0, front.length).replace(/[^\r\n]/g, ' ') + content.slice(front.length)
-    if (rules.normalizeMath) text = normalizeMath(text, { streaming: rules.streaming ?? false })
+    if (rules.normalizeMath)
+        text = normalizeMath(text, { streaming: rules.streaming ?? false, inlineBrackets: rules.inlineBrackets ?? false })
     const processor = unified()
         .use(remarkParse)
         .use(remarkGfm)

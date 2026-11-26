@@ -13,6 +13,7 @@ export const Menu = {
     Group: Parts.Group,
     GroupLabel: Parts.GroupLabel,
     Item: Parts.Item,
+    LinkItem: Parts.LinkItem,
     CheckboxItem: Parts.CheckboxItem,
     CheckboxItemIndicator: Parts.CheckboxItemIndicator,
     RadioGroup: Parts.RadioGroup,
