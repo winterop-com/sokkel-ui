@@ -23,3 +23,7 @@ updates:
           # CI runs in Playwright's image pinned by tag and digest; the package moves with it, by hand
           # (src/rules.test.ts fails when they differ).
           - dependency-name: '@playwright/test'
+          # satellite.js 7 starts its WASM worker from its main entry, which no app on Vite's default
+          # worker format can build; docs/roadmap.md says what moves it.
+          - dependency-name: 'satellite.js'
+            update-types: ['version-update:semver-major']
