@@ -268,9 +268,10 @@ export interface RailProps {
  * widen it for the reader until the ask changes, and the app's own `collapsed` is left as it was.
  *
  * In a `Shell` with `desktop`, the rail's head is part of the window's title strip and drags the
- * window. With `trafficLights` the head leaves room at its start for the window's buttons; a
- * collapsed rail or a strip, narrower than that room, keeps its head empty under the buttons, its
- * mark just below it and its edge undrawn between them.
+ * window. With `trafficLights` the head leaves room at its start for the window's buttons and holds
+ * only its end control, the mark and name standing in a row just below it, so a long name keeps the
+ * rail's width; a collapsed rail or a strip, narrower than that room, keeps its head empty under the
+ * buttons, its mark just below it and its edge undrawn between them.
  *
  * With a `body`, the expanded rail holds the app's own content in place of its groups, such as a
  * music library's tree of artists and albums, keeping its head, width, edge and foot: a row at the
@@ -459,6 +460,30 @@ export function Rail({
             <span className="truncate text-title font-semibold tracking-tight">{name}</span>
         </>
     )
+    const brand = (
+        <>
+            {markToggles && toggle(false)}
+            {markHref === undefined
+                ? head
+                : renderLink(
+                      { id: 'home', label: name, href: markHref },
+                      head,
+                      cn('flex min-w-0 items-center gap-2 rounded-md pe-1.5', FOCUS),
+                  )}
+        </>
+    )
+    // In the drawer it closes the drawer; in the frame it narrows the rail.
+    const end = (drawer !== undefined || (collapsible && !markToggles)) && (
+        <button
+            type="button"
+            aria-label={drawer?.label ?? words.collapse}
+            title={drawer?.label ?? words.collapse}
+            className={HEAD_BUTTON}
+            onClick={drawer?.close ?? (() => setCollapsed(true))}
+        >
+            {drawer ? <X className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
+        </button>
+    )
     return (
         <RailCollapsed value={narrowed ? collapsed : undefined}>
             <aside
@@ -482,30 +507,13 @@ export function Rail({
                         !under && expand
                     ) : (
                         <>
-                            {markToggles && toggle(false)}
-                            {markHref === undefined
-                                ? head
-                                : renderLink(
-                                      { id: 'home', label: name, href: markHref },
-                                      head,
-                                      cn('flex min-w-0 items-center gap-2 rounded-md pe-1.5', FOCUS),
-                                  )}
-                            {/* In the drawer it closes the drawer; in the frame it narrows the rail. */}
-                            {(drawer !== undefined || (collapsible && !markToggles)) && (
-                                <button
-                                    type="button"
-                                    aria-label={drawer?.label ?? words.collapse}
-                                    title={drawer?.label ?? words.collapse}
-                                    className={HEAD_BUTTON}
-                                    onClick={drawer?.close ?? (() => setCollapsed(true))}
-                                >
-                                    {drawer ? <X className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
-                                </button>
-                            )}
+                            {!lights && brand}
+                            {end}
                         </>
                     )}
                 </div>
                 {under && <div className="flex shrink-0 justify-center py-1">{expand}</div>}
+                {lights && !collapsed && <div className="flex shrink-0 items-center gap-2 px-3 py-1">{brand}</div>}
                 {!above && bodyView}
                 <div
                     ref={places}
