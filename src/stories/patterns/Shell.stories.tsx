@@ -598,7 +598,8 @@ function DesktopFrame({ collapsed: start = false, player = false }: { collapsed?
  * buttons where macOS puts them and outlines the strip that moves the window: the rail's head and
  * the top bar. Pressing the strip outside its controls counts a move in the status line, as
  * `onWindowDrag` would start one, and a double click counts a zoom. The expanded rail's head
- * leaves room for the window's buttons before the mark.
+ * leaves room for the window's buttons and holds only its collapse button, the mark and name just
+ * below it, where the collapsed rail's mark stands too.
  */
 export const Desktop: StoryObj = { parameters: { desktopWindow: true }, render: () => <DesktopFrame /> }
 

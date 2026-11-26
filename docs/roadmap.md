@@ -500,9 +500,10 @@ to `plan.md` when it ships.
       KaTeX's HTML). `make layout-engines` runs the layout check in both; CI runs Chromium only.
     - **macOS windows (2026-11-24):** all 42 shells (21 Tauri bundles from `make apps`, 21
       Electron shells) opened on a Mac: the window buttons sit in the page's top strip beside the
-      mark, every first page draws, and the maps have their land. One look to decide: beside the
-      window buttons the rail head has room for about 12 characters of the product name, so "DHIS2
-      Workbench" and "FHIR Workbench" end in an ellipsis there.
+      mark, every first page draws, and the maps have their land. Beside the window buttons the
+      rail head had room for about 12 characters of the product name, so "DHIS2 Workbench" and
+      "FHIR Workbench" ended in an ellipsis; since 2026-11-26 the mark and name stand in a row under
+      the buttons, at the rail's full width.
     - **Not covered yet:** the desktop windows on Windows, and real touch devices. Run that pass
       before calling the examples checked on every platform.
 

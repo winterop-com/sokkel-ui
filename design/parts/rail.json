@@ -31,7 +31,7 @@
     },
     "anatomy": {
         "frame": "The rail's column, the window's full height: the sidebar ground and a 1px edge at its end.",
-        "head": "As tall as the top bar, so the top bar's rule ends level with it; it draws no rule of its own, in the frame or in the drawer. Expanded: the mark and the name (a link home with markHref), and at its end the collapse control, or in the shell's drawer the control that closes the drawer. With collapseWith mark, the mark collapses the rail instead, the name alone is the link home, and the control at the end is gone (in the drawer, and with no mark, the head is as without it). Collapsed: the mark alone, which is the control that expands the rail.",
+        "head": "As tall as the top bar, so the top bar's rule ends level with it; it draws no rule of its own, in the frame or in the drawer. Expanded: the mark and the name (a link home with markHref), and at its end the collapse control, or in the shell's drawer the control that closes the drawer. With trafficLights the head holds only that end control, and the mark and the name stand in a row just below it. With collapseWith mark, the mark collapses the rail instead, the name alone is the link home, and the control at the end is gone (in the drawer, and with no mark, the head is as without it). Collapsed: the mark alone, which is the control that expands the rail.",
         "mark": "The app's mark on a square tile. Collapsed, under the pointer the expand icon shows in the mark's place; with collapseWith mark, expanded, the collapse icon does.",
         "name": "The app's name beside the mark, cut short with an ellipsis.",
         "home": "The mark and the name as one link to the app's home, given markHref; with collapseWith mark, the name alone.",
@@ -139,7 +139,7 @@
         "trafficLights": {
             "type": "boolean",
             "default": false,
-            "does": "In a desktop window with its title bar hidden: the head is the window's drag region and leaves spacing-traffic-lights at its start for the window's buttons; a collapsed rail or a strip, narrower than that room, keeps its head empty and its mark just below it.",
+            "does": "In a desktop window with its title bar hidden: the head is the window's drag region and leaves spacing-traffic-lights at its start for the window's buttons, holding only its end control; the expanded rail's mark and name stand in a row just below it, at the rail's full width, so a long name is not cut beside the buttons. A collapsed rail or a strip, narrower than that room, keeps its head empty and its mark just below it.",
             "context": "ShellDesktop from Shell"
         }
     },
@@ -251,7 +251,7 @@
         },
         "trafficLights": {
             "value": "spacing-traffic-lights",
-            "note": "The head's start pad in a desktop window with its title bar hidden."
+            "note": "The head's start pad in a desktop window with its title bar hidden. The row under it that holds the expanded rail's mark and name pads 4 above and below and 12 across, its gap 8 as the head's."
         },
         "widthEase": {
             "value": "motion-base",
