@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.36.0** is the latest release (2026-11-26): the graph package runs on React Flow 13
+- **0.37.0** is the latest release (2026-11-26): `\[...\]` inside a sentence is escaped brackets
+  (breaking; `inlineBracketMath` keeps math for chat replies); a cut tree label shows a tooltip on
+  hover and focus, and a row's actions button stands over its end; TagChips tags can be links; the
+  rail's scroll box no longer lets the shell slide; contract 0.37.0.
+- **0.36.0** (2026-11-26): the graph package runs on React Flow 13
   (breaking for an app that imports it too); in a desktop window the rail's mark and name stand
   under the window's buttons; tailwind-merge 3.7.1; satellite.js held on 6; contract 0.36.0.
 - **0.35.0** (2026-11-24): `styles.css` leaves out the primitives no part
