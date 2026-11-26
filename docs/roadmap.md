@@ -504,8 +504,7 @@ to `plan.md` when it ships.
       rail head had room for about 12 characters of the product name, so "DHIS2 Workbench" and
       "FHIR Workbench" ended in an ellipsis; since 2026-11-26 the mark and name stand in a row under
       the buttons, at the rail's full width.
-    - **Not covered yet:** the desktop windows on Windows, and real touch devices. Run that pass
-      before calling the examples checked on every platform.
+    - **Not covered yet:** real touch devices.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
   214.6 kB and forms at 198.0 kB start and 67.5 kB lazy; both are full (tailwind-merge 3.7.1 added
@@ -596,6 +595,7 @@ Should:
 ## Not planned
 
 - Accessibility audits, axe gates in CI and contrast scoring.
+- Checking or tuning the desktop shells on Windows. They build there, and nothing more is done for it.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
   React Flow every interactive graph, xterm.js every terminal, hls.js every HTTP live stream, Mermaid every diagram written as text, KaTeX every formula,
   dnd-kit every drag and drop.
