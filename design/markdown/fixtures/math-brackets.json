@@ -1,0 +1,30 @@
+{
+    "type": "root",
+    "children": [
+        {
+            "type": "paragraph",
+            "children": [
+                {
+                    "type": "text",
+                    "value": "A note [1] and a range [45 & 48–9] stay brackets inside a sentence, as does Harbor[edit]."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "children": [
+                {"type": "text", "value": "On 19 January ["},
+                {
+                    "type": "wikiLink",
+                    "target": "calendars",
+                    "label": "O.S.",
+                    "children": [{"type": "text", "value": "O.S."}]
+                },
+                {"type": "text", "value": " 6 January] the harbor opened, and "},
+                {"type": "inlineMath", "value": "x^2"},
+                {"type": "text", "value": " is still inline math."}
+            ]
+        },
+        {"type": "math", "meta": null, "value": "\\sigma^2"}
+    ]
+}

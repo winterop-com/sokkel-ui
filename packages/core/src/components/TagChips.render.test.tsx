@@ -14,6 +14,20 @@ describe('TagChips', () => {
         expect(html).toContain('aria-label="Filter by harbor"')
     })
 
+    it('draws each tag as a link with href, falling back to onSelect where it gives no address', () => {
+        const html = renderToStaticMarkup(
+            <TagChips
+                tags={['nightly', 'harbor']}
+                href={(tag) => (tag === 'harbor' ? `#/tags/${tag}` : undefined)}
+                onSelect={() => undefined}
+            />,
+        )
+        expect(html).toMatch(/<a[^>]*href="#\/tags\/harbor"[^>]*data-slot="chip-link"/)
+        expect(html.match(/<button type="button"/g)).toHaveLength(1)
+        const menu = renderToStaticMarkup(<TagChips tags={['nightly', 'harbor', 'csv']} max={1} href={(tag) => `#/tags/${tag}`} />)
+        expect(menu).toContain('aria-haspopup="menu"')
+    })
+
     it('draws its tags as mono chips, in the outline tone for the outline variant', () => {
         const html = renderToStaticMarkup(<TagChips tags={['nightly']} variant="outline" />)
         expect(html).toContain('data-slot="chip"')

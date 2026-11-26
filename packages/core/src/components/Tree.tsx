@@ -21,6 +21,7 @@ import { Checkbox } from './ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from './ui/context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Spinner } from './ui/spinner'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Highlight } from './Highlight'
 import { literalRanges } from '../lib/search'
 import { useClamped } from '../hooks/use-clamped'
@@ -521,6 +522,8 @@ function MarkedPart({ text, from, to, query }: { text: string; from: number; to:
 
 /** The head's least room in a middle cut, in spacing steps: a row too narrow to keep the whole tail beside it cuts at the end. */
 const HEAD_MIN_STEPS = 6
+/** The fewest characters of the head a middle cut keeps; one that would keep fewer cuts at the end, so "Sc… field" never stands for several labels. */
+const HEAD_MIN_CHARS = 4
 
 function headMin(): number {
     const root = getComputedStyle(document.documentElement)
@@ -563,8 +566,9 @@ function headCut(head: string, room: number, like: HTMLElement): number | undefi
 
 /**
  * A row's label on one line, the query marked, cut with an ellipsis at its end or, with
- * `middle`, before its tail; a row too narrow to keep the whole tail beside a letter of the head
- * cuts at the end. A label cut short gives its whole text, and a trail's, on hover.
+ * `middle`, before its tail; a row too narrow to keep the whole tail beside `HEAD_MIN_CHARS` of the
+ * head cuts at the end. A label cut short gives its whole text, and a trail's, in a tooltip under a
+ * resting pointer and while its row has keyboard focus.
  */
 function TreeLabel({ label, query, cut, trail }: { label: string; query: string; cut: 'end' | 'middle'; trail?: string }) {
     const [ref, clamped] = useClamped<HTMLSpanElement>()
@@ -575,7 +579,6 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
     const [headEnd, setHeadEnd] = useState<number | undefined>(undefined)
     const box = useRef<HTMLSpanElement>(null)
     const wrap = useRef<HTMLSpanElement | null>(null)
-    const head = useRef<HTMLSpanElement | null>(null)
     const tailText = useRef<HTMLSpanElement>(null)
     const setWrap = useCallback(
         (node: HTMLSpanElement | null) => {
@@ -583,13 +586,6 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
             if (endCut) ref(node)
         },
         [endCut, ref],
-    )
-    const setHead = useCallback(
-        (node: HTMLSpanElement | null) => {
-            head.current = node
-            ref(node)
-        },
-        [ref],
     )
     useLayoutEffect(() => {
         const outer = box.current
@@ -600,10 +596,11 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
             const room = outer.clientWidth * (trail === undefined ? 1 : 2 / 3)
             if (room === 0) return
             const tailWidth = tailNode.getBoundingClientRect().width
-            const narrow = room < tailWidth + headMin()
+            // Measured in the tail's font, which the head shares, so the answer holds whichever cut is drawn.
+            const kept = room < tailWidth + headMin() ? undefined : headCut(label.slice(0, tail), room - tailWidth - 0.5, tailNode)
+            const narrow = room < tailWidth + headMin() || (kept !== undefined && kept < HEAD_MIN_CHARS)
             setEndCut(narrow)
-            const headNode = head.current
-            setHeadEnd(narrow || headNode === null ? undefined : headCut(label.slice(0, tail), room - tailWidth - 0.5, headNode))
+            setHeadEnd(narrow ? undefined : kept)
         }
         measure()
         void document.fonts?.ready.then(measure)
@@ -613,6 +610,29 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
         return () => observer.disconnect()
     }, [tail, label, endCut, trail])
     const whole = trail === undefined ? label : `${label} \u2014 ${trail}`
+    const cutShort = clamped || headEnd !== undefined || trailClamped
+    const [hovered, setHovered] = useState(false)
+    const [keyed, setKeyed] = useState(false)
+    // The row, not the label, takes the focus: its tooltip shows while the row has it from the keyboard.
+    useEffect(() => {
+        const row = box.current?.closest<HTMLElement>('[role="treeitem"]')
+        if (row === null || row === undefined) return
+        const visible = () => {
+            try {
+                return row.matches(':focus-visible')
+            } catch {
+                return false
+            }
+        }
+        const focus = () => setKeyed(visible())
+        const blur = () => setKeyed(false)
+        row.addEventListener('focus', focus)
+        row.addEventListener('blur', blur)
+        return () => {
+            row.removeEventListener('focus', focus)
+            row.removeEventListener('blur', blur)
+        }
+    }, [])
     const tailPart = (
         <span ref={tailText}>
             <MarkedPart text={label} from={tail} to={label.length} query={query} />
@@ -631,7 +651,7 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
         ) : (
             // The head is cut to the room the whole tail leaves it, its ellipsis right before the tail.
             <span ref={setWrap} className="flex min-w-0">
-                <span ref={setHead} className="min-w-0 truncate">
+                <span ref={ref} className="min-w-0 truncate">
                     <MarkedPart text={label} from={0} to={headEnd ?? tail} query={query} />
                     {headEnd !== undefined && '\u2026'}
                 </span>
@@ -639,18 +659,25 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
             </span>
         )
     return (
-        <span
-            ref={box}
-            title={clamped || headEnd !== undefined || trailClamped ? whole : undefined}
-            className="flex min-w-0 flex-1 items-baseline gap-1.5"
+        <Tooltip
+            disabled={!cutShort}
+            open={cutShort && (hovered || keyed)}
+            onOpenChange={(next) => {
+                setHovered(next)
+                if (!next) setKeyed(false)
+            }}
         >
-            {trail === undefined ? text : <span className="flex max-w-2/3 min-w-0 shrink-0">{text}</span>}
-            {trail !== undefined && (
-                <span ref={trailRef} className="min-w-0 truncate text-xs text-muted-foreground">
-                    {trail}
-                </span>
-            )}
-        </span>
+            {/* `static` keeps the trigger's finger hit area off: the row is the target. */}
+            <TooltipTrigger render={<span ref={box} className="static flex min-w-0 flex-1 items-baseline gap-1.5" />}>
+                {trail === undefined ? text : <span className="flex max-w-2/3 min-w-0 shrink-0">{text}</span>}
+                {trail !== undefined && (
+                    <span ref={trailRef} className="min-w-0 truncate text-xs text-muted-foreground">
+                        {trail}
+                    </span>
+                )}
+            </TooltipTrigger>
+            <TooltipContent>{whole}</TooltipContent>
+        </Tooltip>
     )
 }
 

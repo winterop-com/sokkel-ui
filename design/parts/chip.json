@@ -56,7 +56,7 @@
         },
         "menu": {
             "type": "rows",
-            "does": "Makes the face a menu's trigger, with a chevron after the words; a press opens the items (label, icon, onSelect, disabled, destructive) in parts/dropdown-menu's menu under the chip. It takes the place of onSelect and href."
+            "does": "Makes the face a menu's trigger, with a chevron after the words; a press opens the items (label, icon, onSelect, disabled, destructive) in parts/dropdown-menu's menu under the chip; an item with href is a link instead of onSelect, so a modified or middle click opens it in a new tab. It takes the place of onSelect and href."
         },
         "menuAlign": {
             "values": ["start", "center", "end"],

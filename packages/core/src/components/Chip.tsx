@@ -5,7 +5,7 @@ import { cn } from '../lib/cn'
 import { KIND_CHIP, type KindColor } from '../lib/kind'
 import { useWords, type WordsPart } from '../lib/words'
 import { Link } from './Link'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLinkItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 
 /**
  * A chip's tone: neutral, a semantic color drawn as a faint wash with its own ink, `outline`, a
@@ -95,7 +95,10 @@ function holdPress(event: MouseEvent<HTMLElement>) {
 export interface ChipMenuItem {
     label: ReactNode
     icon?: ReactNode
-    onSelect: () => void
+    /** What a press does, for an item that is not a link. */
+    onSelect?: () => void
+    /** Makes the item a link, drawn through the app's `LinkProvider`, so it opens in a new tab as a link does. */
+    href?: string
     disabled?: boolean
     destructive?: boolean
 }
@@ -242,17 +245,24 @@ export function Chip({
                         <ChevronDown aria-hidden className="opacity-70" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align={menuAlign} className="w-auto" onClick={holdPress} onKeyDown={holdKeys}>
-                        {menu.map((item, index) => (
-                            <DropdownMenuItem
-                                key={index}
-                                disabled={item.disabled}
-                                variant={item.destructive === true ? 'destructive' : 'default'}
-                                onClick={item.onSelect}
-                            >
-                                {item.icon}
-                                {item.label}
-                            </DropdownMenuItem>
-                        ))}
+                        {menu.map((item, index) =>
+                            item.href !== undefined && item.disabled !== true ? (
+                                <DropdownMenuLinkItem key={index} render={<Link href={item.href} />}>
+                                    {item.icon}
+                                    {item.label}
+                                </DropdownMenuLinkItem>
+                            ) : (
+                                <DropdownMenuItem
+                                    key={index}
+                                    disabled={item.disabled}
+                                    variant={item.destructive === true ? 'destructive' : 'default'}
+                                    onClick={item.onSelect}
+                                >
+                                    {item.icon}
+                                    {item.label}
+                                </DropdownMenuItem>
+                            ),
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             ) : href !== undefined ? (

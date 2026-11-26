@@ -22,7 +22,7 @@ export interface PaneHeaderProps {
     headingId?: string
     /** A count or a short fact beside the title, drawn quieter than it, as a page header's count is: the body face, tabular figures. */
     meta?: ReactNode
-    /** A sentence under the title: what the pane holds. */
+    /** A sentence under the title: what the pane holds. Drawn in a `<p>`, so it takes phrasing content only (text, links, inline marks); chips or a row go in `children`. */
     description?: ReactNode
     /** An addressable code over the title, in the code face. */
     code?: ReactNode

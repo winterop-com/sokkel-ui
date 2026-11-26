@@ -355,6 +355,7 @@ export const menu = {
     Group: /* @__PURE__ */ loadedPart(useMenuPartsHere, 'Group'),
     GroupLabel: /* @__PURE__ */ loadedPart(useMenuPartsHere, 'GroupLabel'),
     Item: /* @__PURE__ */ loadedPart(useMenuPartsHere, 'Item'),
+    LinkItem: /* @__PURE__ */ loadedPart(useMenuPartsHere, 'LinkItem'),
     CheckboxItem: /* @__PURE__ */ loadedPart(useMenuPartsHere, 'CheckboxItem'),
     CheckboxItemIndicator: /* @__PURE__ */ loadedPart(useMenuPartsHere, 'CheckboxItemIndicator'),
     RadioGroup: /* @__PURE__ */ loadedPart(useMenuPartsHere, 'RadioGroup'),
