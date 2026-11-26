@@ -595,7 +595,7 @@ Should:
 ## Not planned
 
 - Accessibility audits, axe gates in CI and contrast scoring.
-- Checking or tuning the desktop shells on Windows. They build there, and nothing more is done for it.
+- Checking or tuning the desktop shells on Windows.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
   React Flow every interactive graph, xterm.js every terminal, hls.js every HTTP live stream, Mermaid every diagram written as text, KaTeX every formula,
   dnd-kit every drag and drop.
