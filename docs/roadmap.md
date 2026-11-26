@@ -507,7 +507,8 @@ to `plan.md` when it ships.
       before calling the examples checked on every platform.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
-  214.1 kB and forms at 197.5 kB start and 67.5 kB lazy; both are full. A change trims what it adds
+  214.6 kB and forms at 198.0 kB start and 67.5 kB lazy; both are full (tailwind-merge 3.7.1 added
+  about 0.4 kB to each start, 2026-11-26). A change trims what it adds
   itself; when it is worth its size, its PR raises the budget it needs with the reason, rather than
   reworking unrelated parts to fit. `ChartFrame`'s data view no longer costs the dashboard's start
   anything worth a loader: built without it, the start is 214.0 kB against 214.1 (2026-11-24).
@@ -524,6 +525,13 @@ to `plan.md` when it ships.
       times on first hover. Look again when the bundler changes.
     - A stand-in for `SelectionBar`: the whole bar is 188 bytes of the dashboard start, and a
       stand-in that looks the same on first paint with a selection held is the same code.
+- **satellite.js 7, on hold.** The tracking package stays on 6. Version 7's main entry re-exports
+  its WASM bulk propagator, whose multi-thread build starts a worker with top-level await, so a Vite
+  app on the default worker format (`iife`) fails to build, Storybook and the flights example
+  included (#806). What 7 fixes barely touches the orbits drawn here (a height on the Earth's axis,
+  epochs below a millisecond). Move once satellite.js keeps the WASM out of its main entry or offers
+  an entry without it, or once every app's Vite config sets `worker.format: 'es'` on purpose.
+  Dependabot skips its majors until then.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit. The
