@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.35.0** is the latest release (2026-11-24): `styles.css` leaves out the primitives no part
+- **0.36.0** is the latest release (2026-11-26): the graph package runs on React Flow 13
+  (breaking for an app that imports it too); in a desktop window the rail's mark and name stand
+  under the window's buttons; tailwind-merge 3.7.1; satellite.js held on 6; contract 0.36.0.
+- **0.35.0** (2026-11-24): `styles.css` leaves out the primitives no part
   draws (breaking); `EditPreview`'s pane variant shows one pane at a time behind a switch on a
   phone; a color given as a value takes the raw token, never a `--color-*` name, and a rule holds
   it; CI starts every example's shell once and keeps a still; contract 0.35.0.
