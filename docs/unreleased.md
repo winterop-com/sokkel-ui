@@ -21,6 +21,9 @@ release and empties it.
 - Chip: a menu item may have `href`, drawn as a link item; `onSelect` is optional on `ChipMenuItem`.
 - `DropdownMenuLinkItem` (`components/ui/dropdown-menu`): a menu row that is an anchor.
 
+- Tree: a row's actions button no longer takes the label's room. It is drawn over the row's end while
+  the row is hovered, has keyboard focus or has its menu open, and the row's words fade out under it.
+
 ## Fixed
 
 - Rail: its body's scroll box is positioned, so a tall virtual list inside (a Tree) no longer counts
