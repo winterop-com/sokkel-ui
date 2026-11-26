@@ -7,13 +7,14 @@ import {
     ReactFlow,
     useConnection,
     useReactFlow,
-    useStoreApi,
+    useReactFlowStoreApi,
     useUpdateNodeInternals,
     useViewport,
     type Edge,
     type EdgeTypes,
     type Node,
     type NodeChange,
+    type NodeChangeset,
     type NodeTypes,
     type ReactFlowInstance,
     type Viewport,
@@ -45,6 +46,7 @@ import {
     FIT_MAX_ZOOM,
     FIT_MIN_ZOOM,
     FIT_PADDING,
+    FIT_PADDING_SIDE,
     FITTED_GROUND,
     fitLeast,
     fittedHeight,
@@ -275,6 +277,9 @@ const THEME = {
     '--xy-handle-border-color': 'transparent',
 } as CSSProperties
 
+/** React Flow takes its light or dark from the page rather than the system. */
+const FLOW_STYLE: CSSProperties = { colorScheme: 'inherit' }
+
 /** The height the zoom buttons take in a fitted frame, laid out in a row. */
 const BUTTON_ROW = 36
 
@@ -310,7 +315,7 @@ async function fitGraph(
     // tall graph then reads down and scrolls rather than hanging off the side. A drawing only too
     // tall goes under the least zoom, to `tallFit`, to be seen whole.
     const least = fitLeast(canvas, drawing, minZoom, narrowFit, tallFit)
-    const padding = fitted ? { x: FIT_PADDING, y: `${FITTED_GROUND / 2}px` as const } : FIT_PADDING
+    const padding = fitted ? { x: FIT_PADDING_SIDE, y: `${FITTED_GROUND / 2}px` as const } : FIT_PADDING_SIDE
     const view = getViewportForBounds(drawing, canvas.width, canvas.height, least, FIT_MAX_ZOOM, padding)
     const placed = startOfOverflow(view, drawing, canvas)
     await flow.setViewport({ ...placed, y: placed.y + top }, { duration: 0 })
@@ -652,7 +657,8 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     const floor = filled && !empty && width > 0 ? Math.min(fittedTall, fillFloor) : undefined
     const ground = fitted || filled
 
-    const onNodesChange = (changes: NodeChange<N>[]) => {
+    const onNodesChange = (changeset: NodeChangeset<N>) => {
+        const changes = changeset.toArray()
         if (editable) {
             const moves = changes.filter((change) => change.type === 'position' && change.position !== undefined)
             if (moves.length > 0)
@@ -713,6 +719,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                             )}
                         >
                             <ReactFlow<N, E>
+                                style={FLOW_STYLE}
                                 nodes={drawn}
                                 edges={lines}
                                 onInit={(instance) => {
@@ -741,7 +748,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 onEdgesChange={
                                     editable
                                         ? (changes) => {
-                                              const chosen = changes.filter((change) => change.type === 'select')
+                                              const chosen = changes.getByType('select')
                                               if (chosen.length > 0) setChosenEdge(chosen.find((change) => change.selected)?.id ?? null)
                                           }
                                         : undefined
@@ -996,7 +1003,7 @@ function ViewControls({
     children: ReactNode
 }) {
     const flow = useReactFlow()
-    const store = useStoreApi()
+    const { viewportStore: store } = useReactFlowStoreApi()
     const direction = useGraphDirection()
     const controls = useMemo<GraphControls>(() => {
         const step = (way: 'in' | 'out') => () => {
@@ -1085,7 +1092,7 @@ function FitToGraph({
     onFitted: (placement: string) => void
 }) {
     const flow = useReactFlow()
-    const store = useStoreApi()
+    const { viewportStore: store } = useReactFlowStoreApi()
     const updateInternals = useUpdateNodeInternals()
     const done = useRef(onFitted)
     useEffect(() => {
@@ -1157,7 +1164,7 @@ function FitToGraph({
  */
 function StepWheel({ onZoomed }: { onZoomed: () => void }) {
     const flow = useReactFlow()
-    const store = useStoreApi()
+    const { optionsStore: store } = useReactFlowStoreApi()
     const zoomed = useRef(onZoomed)
     useEffect(() => {
         zoomed.current = onZoomed
@@ -1199,7 +1206,7 @@ function StepWheel({ onZoomed }: { onZoomed: () => void }) {
  */
 function ModifierWheel({ onZoomed }: { onZoomed: () => void }) {
     const flow = useReactFlow()
-    const store = useStoreApi()
+    const { optionsStore: store } = useReactFlowStoreApi()
     const zoomed = useRef(onZoomed)
     useEffect(() => {
         zoomed.current = onZoomed
