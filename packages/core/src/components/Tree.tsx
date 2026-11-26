@@ -681,6 +681,13 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
     )
 }
 
+/**
+ * The row's words fading out at its end, under the actions button, while the button shows: on hover,
+ * on keyboard focus and while its menu is open.
+ */
+const ACTIONS_FADE =
+    'group-hover/row:mask-r-from-[calc(100%-var(--spacing)*12)] group-hover/row:mask-r-to-[calc(100%-var(--spacing)*7)] group-focus-visible/row:mask-r-from-[calc(100%-var(--spacing)*12)] group-focus-visible/row:mask-r-to-[calc(100%-var(--spacing)*7)] group-has-data-popup-open/row:mask-r-from-[calc(100%-var(--spacing)*12)] group-has-data-popup-open/row:mask-r-to-[calc(100%-var(--spacing)*7)]'
+
 type Found = { query: string; state: 'loading' | 'done' | 'failed'; trails: readonly TreeTrail[] }
 
 export interface TreeProps {
@@ -1176,7 +1183,6 @@ export function Tree({
                     selection === 'single' && isChosen && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
                     at === 'inside' && 'ring-2 ring-ring ring-inset',
                     dragProps['data-dragging'] === true && 'opacity-40',
-                    menu !== undefined && 'pr-1',
                     shut !== undefined && !isChosen && 'text-muted-foreground',
                 )}
             >
@@ -1217,20 +1223,23 @@ export function Tree({
                         className="pointer-events-none"
                     />
                 )}
-                <TreeLabel
-                    label={row.node.label}
-                    query={needle}
-                    cut={cut}
-                    trail={row.trail?.ancestors.map((ancestor) => ancestor.label).join(' / ')}
-                />
-                {shut !== undefined && (
-                    <span title={shut} className="max-w-1/2 min-w-0 shrink truncate text-xs text-muted-foreground">
-                        {shut}
-                    </span>
-                )}
-                {row.node.meta !== undefined && (
-                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{row.node.meta}</span>
-                )}
+                {/* With actions, the row's end fades out under the menu button while it shows, so the label keeps the whole width otherwise. */}
+                <span className={cn('flex min-w-0 flex-1 items-center gap-1.5', menu !== undefined && ACTIONS_FADE)}>
+                    <TreeLabel
+                        label={row.node.label}
+                        query={needle}
+                        cut={cut}
+                        trail={row.trail?.ancestors.map((ancestor) => ancestor.label).join(' / ')}
+                    />
+                    {shut !== undefined && (
+                        <span title={shut} className="max-w-1/2 min-w-0 shrink truncate text-xs text-muted-foreground">
+                            {shut}
+                        </span>
+                    )}
+                    {row.node.meta !== undefined && (
+                        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{row.node.meta}</span>
+                    )}
+                </span>
                 {menu !== undefined && (
                     <DropdownMenu>
                         <DropdownMenuTrigger
@@ -1241,7 +1250,7 @@ export function Tree({
                                     tabIndex={-1}
                                     data-no-drag
                                     aria-label={words.actions}
-                                    className="shrink-0 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100"
+                                    className="pointer-events-none absolute right-1 opacity-0 group-hover/row:pointer-events-auto group-hover/row:opacity-100 group-focus-visible/row:pointer-events-auto group-focus-visible/row:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 data-popup-open:pointer-events-auto data-popup-open:opacity-100"
                                 />
                             }
                             onClick={(event) => event.stopPropagation()}
