@@ -750,6 +750,9 @@ export function midpointOf(points: readonly GraphPoint[]): GraphPoint | undefine
 /** Room left around a fitted graph, as a fraction of the canvas. */
 export const FIT_PADDING = 0.12
 
+/** FIT_PADDING as the share of the canvas React Flow leaves on each side, which fits the drawing to the same zoom. */
+export const FIT_PADDING_SIDE = `${(FIT_PADDING / (2 * (1 + FIT_PADDING))) * 100}%` as `${number}%`
+
 /** A fit never magnifies a graph past its own size, and never shrinks one below a size its words can be read at. */
 export const FIT_MAX_ZOOM = 1
 export const FIT_MIN_ZOOM = 0.75

@@ -1,4 +1,14 @@
-import { Panel, useStore, useViewport, type InternalNode, type ReactFlowState } from '@xyflow/react'
+import {
+    Panel,
+    useEdgesStore,
+    useEqualSelector,
+    useNodesStore,
+    useOptionsStore,
+    useViewport,
+    useViewportStore,
+    type InternalNode,
+    type NodesStore,
+} from '@xyflow/react'
 import { CircleAlert, Info, X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 
@@ -45,19 +55,36 @@ function onScreen(anchor: GraphAnchor): anchor is Exclude<GraphAnchor, GraphPoin
     return anchor === 'center' || 'clientX' in anchor || 'element' in anchor || 'rect' in anchor
 }
 
+/** The two nodes an edge anchor's edge joins, or null for another anchor or while that edge is not drawn. */
+function endsOf(edges: readonly { id: string; source: string; target: string }[], anchor: GraphAnchor): GraphEnds | null {
+    if (onScreen(anchor) || !('edge' in anchor)) return null
+    const edge = edges.find((each) => each.id === anchor.edge)
+    return edge === undefined ? null : { source: edge.source, target: edge.target }
+}
+
+/** The nodes an edge joins. */
+interface GraphEnds {
+    source: string
+    target: string
+}
+
 /** An anchor in the graph as a point in the graph's coordinates, or null while what it names is not drawn, or for one on the screen. */
-function pointOf(state: ReactFlowState, anchor: GraphAnchor, direction: GraphDirection): GraphPoint | null {
+function pointOf(
+    nodes: NodesStore['nodeLookup'],
+    ends: GraphEnds | null,
+    anchor: GraphAnchor,
+    direction: GraphDirection,
+): GraphPoint | null {
     if (onScreen(anchor)) return null
     if ('x' in anchor) return anchor
     if ('node' in anchor) {
-        const node = state.nodeLookup.get(anchor.node)
+        const node = nodes.get(anchor.node)
         if (node === undefined) return null
         const port = portOf(node, direction, 'out')
         return { x: port.x + (anchor.dx ?? 0), y: port.y + (anchor.dy ?? 0) }
     }
-    const edge = state.edges.find((each) => each.id === anchor.edge)
-    const from = edge === undefined ? undefined : state.nodeLookup.get(edge.source)
-    const to = edge === undefined ? undefined : state.nodeLookup.get(edge.target)
+    const from = ends === null ? undefined : nodes.get(ends.source)
+    const to = ends === null ? undefined : nodes.get(ends.target)
     if (from === undefined || to === undefined) return null
     const a = portOf(from, direction, 'out')
     const b = portOf(to, direction, 'in')
@@ -165,13 +192,16 @@ export function GraphOverlay({ at, link, onClose, ignore, children, className }:
     const direction = useGraphDirection()
     const bend = useGraphBend()
     const view = useViewport()
-    const point = useStore((state) => pointOf(state, at, direction), samePoint)
-    const from = useStore((state) => {
-        const node = link === undefined ? undefined : state.nodeLookup.get(link)
-        return node === undefined ? null : portOf(node, direction, 'out')
-    }, samePoint)
-    const canvas = useStore((state) => ({ width: state.width, height: state.height }), sameSize)
-    const frame = useStore((state) => state.domNode)
+    const ends = useEdgesStore(useEqualSelector((state) => endsOf(state.edges, at), sameEnds))
+    const point = useNodesStore(useEqualSelector((state) => pointOf(state.nodeLookup, ends, at, direction), samePoint))
+    const from = useNodesStore(
+        useEqualSelector((state) => {
+            const node = link === undefined ? undefined : state.nodeLookup.get(link)
+            return node === undefined ? null : portOf(node, direction, 'out')
+        }, samePoint),
+    )
+    const canvas = useViewportStore(useEqualSelector((state) => ({ width: state.width, height: state.height }), sameSize))
+    const frame = useOptionsStore((state) => state.domNode)
     const box = useRef<HTMLDivElement | null>(null)
     const [drawn, setDrawn] = useState<HTMLDivElement | null>(null)
     const [size, setSize] = useState({ width: 0, height: 0 })
@@ -294,6 +324,10 @@ export function GraphOverlay({ at, link, onClose, ignore, children, className }:
 
 function samePoint(a: GraphPoint | null, b: GraphPoint | null): boolean {
     return a === b || (a !== null && b !== null && a.x === b.x && a.y === b.y)
+}
+
+function sameEnds(a: GraphEnds | null, b: GraphEnds | null): boolean {
+    return a === b || (a !== null && b !== null && a.source === b.source && a.target === b.target)
 }
 
 function sameSize(a: { width: number; height: number }, b: { width: number; height: number }): boolean {
