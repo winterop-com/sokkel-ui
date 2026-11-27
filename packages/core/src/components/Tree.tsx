@@ -686,7 +686,7 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
  * on keyboard focus and while its menu is open.
  */
 const ACTIONS_FADE =
-    'group-hover/row:mask-r-from-[calc(100%-var(--spacing)*12)] group-hover/row:mask-r-to-[calc(100%-var(--spacing)*7)] group-focus-visible/row:mask-r-from-[calc(100%-var(--spacing)*12)] group-focus-visible/row:mask-r-to-[calc(100%-var(--spacing)*7)] group-has-data-popup-open/row:mask-r-from-[calc(100%-var(--spacing)*12)] group-has-data-popup-open/row:mask-r-to-[calc(100%-var(--spacing)*7)]'
+    'in-[[role=treeitem]:is(:hover,:focus-visible,:has([data-popup-open]))]:[mask-image:linear-gradient(to_right,black_calc(100%-var(--spacing)*12),transparent_calc(100%-var(--spacing)*7))]'
 
 type Found = { query: string; state: 'loading' | 'done' | 'failed'; trails: readonly TreeTrail[] }
 
