@@ -66,7 +66,9 @@ export interface TagChipsProps {
     /**
      * Makes each tag a link to the address it gives, drawn through the app's `LinkProvider`, and the
      * +N chip a menu of the tags left out as links, so a modified or middle click opens one in a new
-     * tab. A tag it gives no address for falls back to `onSelect`.
+     * tab. A tag it gives no address for falls back to `onSelect`. As with `Chip`'s `href`, a press
+     * stops at the link, so an app that routes from a click listener on the document routes these
+     * through a `LinkProvider`.
      */
     href?: (tag: string, index: number) => string | undefined
     className?: string

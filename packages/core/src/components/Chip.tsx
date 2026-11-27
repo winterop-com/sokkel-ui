@@ -145,7 +145,10 @@ export interface ChipProps extends Omit<ComponentProps<'span'>, 'children' | 'ti
     menuAlign?: ChipMenuAlign
     /**
      * Makes the chip a link to what it names, drawn through the app's `LinkProvider`. It takes the
-     * place of `onSelect`; `menu` takes the place of it.
+     * place of `onSelect`; `menu` takes the place of it. A press on it stops there, so a row or card
+     * around it is not pressed too: an app that routes plain anchors from a click listener on the
+     * document never hears it, and routes it through a `LinkProvider` whose `render` calls the
+     * `onClick` it is given, then routes.
      */
     href?: string
     /** Opens `href` in a new tab, safely, with a trailing mark and words saying so, as `TextLink` does. */
