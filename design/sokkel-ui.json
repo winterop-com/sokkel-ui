@@ -1,5 +1,5 @@
 {
     "$description": "The sokkel-ui commit whose packages/core/tokens/tokens.json the contract reads. Move it with `bun scripts/resolve.ts --ref <ref>`; tokens/tokens.resolved.json is made from it.",
     "repo": "https://github.com/winterop-com/sokkel-ui",
-    "commit": "81c49d39478b3c453a32a3f09157f4ac75b313e0"
+    "commit": "7a48eef335d252b731e1414053631bf740134a48"
 }
