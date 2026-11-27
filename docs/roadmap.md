@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.37.0** is the latest release (2026-11-26): `\[...\]` inside a sentence is escaped brackets
+- **0.37.1** is the latest release (2026-11-27): 0.37.0 as it was meant to ship, which stopped at
+  its size check and published nothing; the tree row's fade is one mask rule; contract 0.37.1.
+- **0.37.0** (2026-11-26, not published): `\[...\]` inside a sentence is escaped brackets
   (breaking; `inlineBracketMath` keeps math for chat replies); a cut tree label shows a tooltip on
   hover and focus, and a row's actions button stands over its end; TagChips tags can be links; the
   rail's scroll box no longer lets the shell slide; contract 0.37.0.
