@@ -3,7 +3,7 @@
         "engines": [],
         "start": 198.1,
         "lazy": 67.6,
-        "css": 45.1
+        "css": 45.4
     },
     "forms-lean": {
         "engines": [],
@@ -15,7 +15,7 @@
         "engines": ["echarts", "dnd-kit"],
         "start": 214.6,
         "lazy": 471.1,
-        "css": 45.3,
+        "css": 45.6,
         "first": {
             "budget": 412.2,
             "fetches": [
@@ -30,12 +30,12 @@
         "engines": ["maplibre"],
         "start": 173.2,
         "lazy": 335.2,
-        "css": 55.6
+        "css": 55.9
     },
     "music": {
         "engines": [],
         "start": 176.1,
         "lazy": 34.4,
-        "css": 46.3
+        "css": 46.6
     }
 }
