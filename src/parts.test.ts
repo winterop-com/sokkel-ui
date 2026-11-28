@@ -122,6 +122,7 @@ import { CAMERA_WALL_WORDS, CameraWall, type CameraWallProps } from '@winterop-c
 import { DETECTION_TIMELINE_WORDS, DetectionTimeline, type DetectionTimelineProps } from '@winterop-com/sokkel-ui/DetectionTimeline'
 import { DETECTION_GALLERY_WORDS, DetectionGallery, type DetectionGalleryProps } from '@winterop-com/sokkel-ui/DetectionGallery'
 import { PICTURE_ZONES_WORDS, PictureZones, type PictureZone, type PictureZonesProps } from '@winterop-com/sokkel-ui/PictureZones'
+import { CAMERA_CONTROL_WORDS, CameraControl, type CameraControlProps, type CameraMove } from '@winterop-com/sokkel-ui/CameraControl'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11526,6 +11527,58 @@ const PICTURE_ZONES_ADAPTER: Adapter = {
     },
 }
 
+// Camera control
+
+const CAMERA_CONTROL_PROPS: CameraControlProps = {
+    onMove: noop,
+    onZoom: noop,
+    onHome: noop,
+    presets: [
+        { id: 'gate', name: 'Gate' },
+        { id: 'quay', name: 'Quay' },
+    ],
+    preset: 'gate',
+    onPreset: noop,
+}
+
+const CAMERA_CONTROL_ADAPTER: Adapter = {
+    wordObjects: { CAMERA_CONTROL_WORDS },
+    complete: ['CAMERA_CONTROL_WORDS'],
+    words: Object.fromEntries(Object.keys(CAMERA_CONTROL_WORDS).map((key) => [key, `CAMERA_CONTROL_WORDS.${key}`])),
+    options: {},
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the camera control states no effects'),
+    keys: {
+        Tab: () => {
+            const drawn = draw(CameraControl, CAMERA_CONTROL_PROPS)
+            const pad = drawn.find((element) => element.attrs['data-slot'] === 'camera-pad')
+            if (pad?.attrs.tabindex !== '0') return 'the pad is not a stop'
+            const stops = drawn
+                .filter((element) => element.tag === 'button' && focusable(element))
+                .map((element) => element.attrs['aria-label'] ?? element.text)
+            return stops.join(', ') === 'Home, Zoom in, Zoom out, Gate, Quay'
+                ? true
+                : `the buttons in the tab order are ${stops.join(', ')}`
+        },
+        'ArrowUp, ArrowDown, ArrowLeft, ArrowRight (the pad has focus)': () => {
+            const told: (CameraMove | null)[] = []
+            return live(createElement(CameraControl, { ...CAMERA_CONTROL_PROPS, onMove: (move) => told.push(move) }), (box) => {
+                const pad = box.querySelector<HTMLElement>('[data-slot="camera-pad"]')
+                if (pad === null) return 'there is no pad'
+                act(() => {
+                    pad.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
+                })
+                act(() => {
+                    pad.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft', bubbles: true }))
+                })
+                const said = told.map((move) => (move === null ? 'stop' : `${String(move.pan)} ${String(move.tilt)}`)).join(', ')
+                return said === '-1 0, stop' ? true : `holding and letting go of ArrowLeft told ${said}`
+            })
+        },
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12580,6 +12633,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'detection-timeline': DETECTION_TIMELINE_ADAPTER,
     'detection-gallery': DETECTION_GALLERY_ADAPTER,
     'picture-zones': PICTURE_ZONES_ADAPTER,
+    'camera-control': CAMERA_CONTROL_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,

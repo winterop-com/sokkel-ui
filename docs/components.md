@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 291 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 292 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -285,6 +285,7 @@ in (`geo`).
 | **AlertTicker** | `@winterop-com/sokkel-ui/AlertTicker` | The latest alerts in one strip, one row tall, one at a time: a dot in the alert's tone (pulsing for a critical one), its words cut with an ellipsis, when it happened, and its place among the alerts at the end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-alert-ticker--one) |
 | **ApiLink** | `@winterop-com/sokkel-ui/ApiLink` | A small chip naming the request behind a screen, its method and path: `GET /api/jobs/nightly-export`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-api-link--methods) |
 | **BarList** | `@winterop-com/sokkel-ui/BarList` | Labeled bars, each a share from 0 to 1, such as how likely each class is, with the chosen one in the accent and the rest quiet. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-bar-list--short) |
+| **CameraControl** | `@winterop-com/sokkel-ui/CameraControl` | The controls of a camera that turns and zooms: a pad of eight directions around a home button, a zoom in and out beside it, and the camera's presets under them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-camera-control--control) |
 | **CameraWall** | `@winterop-com/sokkel-ui/CameraWall` | Cameras side by side, as a watch room shows them: each feed in a tile of the video's shape on the dark of a picture, its name at its foot, its state at its top (live, recording with a red dot, offline with no picture, connecting with a spinner), how many things the finder sees in it now, and a critical ring on one that calls for a look. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-camera-wall--wall) |
 | **CheckList** | `@winterop-com/sokkel-ui/CheckList` | A health report: each check with its verdict as a dot, its finding, and a hint when it needs attention. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **Chip** | `@winterop-com/sokkel-ui/Chip` | A short value as a chip: a tag on a job, a state that has no run color, a value that is absent. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-chip--tones) |
