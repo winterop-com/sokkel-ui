@@ -518,9 +518,8 @@ to `plan.md` when it ships.
 - **Tracks on video, and the parts other libraries have.** Found missing on 2026-11-28 against
   shadcn/ui, Base UI and Mantine, and against what video tracking consoles show. Each is one round,
   its own PR and its spec. `DetectionOverlay`, `VideoFollow`, `CameraWall`, `DetectionTimeline`,
-  `DetectionGallery`, `PictureZones` and `CameraControl` are in (2026-11-28); still to come:
-    - a color field and picker, a tags input, a meter, a rating, a guided tour, and a notification
-      inbox.
+  `DetectionGallery`, `PictureZones`, `CameraControl` and `ColorField` are in (2026-11-28); still to come:
+    - a tags input, a meter, a rating, a guided tour, and a notification inbox.
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
   214.6 kB and forms at 198.0 kB start and 67.5 kB lazy; both are full (tailwind-merge 3.7.1 added
   about 0.4 kB to each start, 2026-11-26). A change trims what it adds

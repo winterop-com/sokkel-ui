@@ -1414,6 +1414,11 @@ home button, each acting for as long as it is held (`onMove` with the direction,
 arrow keys doing the same while the pad has focus; a zoom in and out held the same way; and the
 places the camera keeps as presets. The library sends nothing to a camera; the app does.
 
+`ColorField` is a color typed or picked: six or three hex digits after `#`, or `rgb(r, g, b)`, kept
+as `#rrggbb` (`lib/color-value` reads and converts), a swatch of it at the frame's end opening a
+`ColorPicker`: an area of saturation and brightness in the hue (arrow keys move its mark), a hue
+strip, and the app's swatches. The hue holds while the color is gray, so dragging through gray keeps it.
+
 ## Graphs
 
 Their own package, `@winterop-com/sokkel-ui-graph`, so an app that draws no graph installs neither

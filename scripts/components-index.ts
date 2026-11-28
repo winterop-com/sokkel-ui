@@ -356,6 +356,7 @@ const CORE_AREAS: Record<string, string> = {
     SwitchField: 'Forms and inputs',
     TextField: 'Forms and inputs',
     TimeField: 'Forms and inputs',
+    ColorField: 'Forms and inputs',
     TreeSelect: 'Forms and inputs',
     UnsavedChanges: 'Forms and inputs',
     SignIn: 'Forms and inputs',

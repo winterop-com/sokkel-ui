@@ -360,6 +360,10 @@
             "types": "./dist/components/CameraControl.d.ts",
             "import": "./dist/components/CameraControl.js"
         },
+        "./ColorField": {
+            "types": "./dist/components/ColorField.d.ts",
+            "import": "./dist/components/ColorField.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"
@@ -1495,6 +1499,10 @@
         "./lib/tracks": {
             "types": "./dist/lib/tracks.d.ts",
             "import": "./dist/lib/tracks.js"
+        },
+        "./lib/color-value": {
+            "types": "./dist/lib/color-value.d.ts",
+            "import": "./dist/lib/color-value.js"
         },
         "./lib/detections": {
             "types": "./dist/lib/detections.d.ts",
