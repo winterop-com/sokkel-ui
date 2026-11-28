@@ -259,7 +259,7 @@ option lists a picker offers (`THEMES`, made from the tokens by `scripts/build-t
 `CORNERS`, `TYPEFACES` and `FACES`) are in `lib/appearance`.
 
 Every app has the same frame: `Shell` with a `Rail` of its places, the command palette on ⌘K or
-Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local` until the app has
+Ctrl K through `Shell`'s `palette` (as wide as `paletteWidth` says), an `AccountMenu` in the rail's foot, `local` until the app has
 sign-in, and a `StatusLine` as the shell's `foot`, which draws the foot strip itself in the room the
 shell gives it and which the account sits level with as one bar across the window's bottom edge.
 Light and dark are a setting: the scheme is chosen only in Settings › Appearance (`useThemeSettings`,
@@ -1076,7 +1076,10 @@ mixed with initials as a real team is.
 A team chat is built from Rail's `strip` (labeled icons with counts or an unread dot at the
 icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the columns of a
 conversation and of a thread), ConversationStart, ChatMessage with ChatDay, and MessageComposer.
-An app's own navigation strip is the library's `Rail`, with no hand-drawn badge.
+An app's own navigation strip is the library's `Rail`, with no hand-drawn badge. An entry with `onSelect` in place
+of `href` is a press, not a place: a button with the entry's face and tooltip, pressed while
+`active`, that changes no address, so a strip works as an editor's ribbon switching the column
+beside it; `placeCommands` runs it from the palette.
 
 Reactions are emoji. `ReactionBar` is the short list, round buttons with the emoji large and a
 more button that opens `EmojiPicker`, the full list: a search over names and keywords, the grid

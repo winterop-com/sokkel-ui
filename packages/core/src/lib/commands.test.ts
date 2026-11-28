@@ -44,6 +44,15 @@ describe('placeCommands', () => {
         expect(navigate).toHaveBeenCalledWith('/projects/harbor', expect.objectContaining({ id: 'harbor' }))
     })
 
+    it('runs a press entry where a place would be followed', () => {
+        const navigate = vi.fn()
+        const onSelect = vi.fn()
+        const [group] = placeCommands([{ id: 'columns', entries: [{ id: 'starred', label: 'Starred', onSelect }] }], navigate)
+        group?.commands[0]?.onSelect()
+        expect(onSelect).toHaveBeenCalledOnce()
+        expect(navigate).not.toHaveBeenCalled()
+    })
+
     it("hints a place by its description before its parent's label", () => {
         const [group] = placeCommands(
             [

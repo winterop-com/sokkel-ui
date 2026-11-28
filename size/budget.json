@@ -1,19 +1,19 @@
 {
     "forms": {
         "engines": [],
-        "start": 198.1,
+        "start": 198.3,
         "lazy": 67.6,
         "css": 45.7
     },
     "forms-lean": {
         "engines": [],
-        "start": 198.1,
+        "start": 198.3,
         "lazy": 67.6,
         "css": 23.4
     },
     "dashboard": {
         "engines": ["echarts", "dnd-kit"],
-        "start": 214.6,
+        "start": 214.8,
         "lazy": 471.1,
         "css": 45.9,
         "first": {
@@ -28,13 +28,13 @@
     },
     "map": {
         "engines": ["maplibre"],
-        "start": 173.2,
+        "start": 173.4,
         "lazy": 335.2,
         "css": 56.2
     },
     "music": {
         "engines": [],
-        "start": 176.1,
+        "start": 176.3,
         "lazy": 34.4,
         "css": 46.9
     }
