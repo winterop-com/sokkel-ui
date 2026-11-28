@@ -296,6 +296,7 @@
         {"id": "video-follow", "file": "parts/video-follow.json", "status": "preview"},
         {"id": "camera-wall", "file": "parts/camera-wall.json", "status": "preview"},
         {"id": "detection-timeline", "file": "parts/detection-timeline.json", "status": "preview"},
+        {"id": "detection-gallery", "file": "parts/detection-gallery.json", "status": "preview"},
         {"id": "zone-layer", "file": "parts/zone-layer.json", "status": "preview"},
         {"id": "letter", "file": "parts/letter.json", "status": "stable"},
         {"id": "detail-pane", "file": "parts/detail-pane.json", "status": "stable"},

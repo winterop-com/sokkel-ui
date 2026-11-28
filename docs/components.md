@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 289 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 290 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -293,6 +293,7 @@ in (`geo`).
 | **Count** | `@winterop-com/sokkel-ui/Count` | A count of what is waiting, such as unread messages, on the critical color, or with `tone="quiet"` how many entries a group holds. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-marks--counts) |
 | **DataTable**, TableCellFill, DataTableGroup | `@winterop-com/sokkel-ui/DataTable` | A table for rows of any number: sorting, selection with a bulk bar, a column menu, child rows, column widths, and the keyboard. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data-table--short-list) |
 | **DescriptionList**, DescriptionListGroup | `@winterop-com/sokkel-ui/DescriptionList` | Facts about one thing as terms and values: a run's state and duration, a service's base URL. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-inline-code--in-text) |
+| **DetectionGallery** | `@winterop-com/sokkel-ui/DetectionGallery` | Each time something was seen, as a tile: a square crop of the frame around it, taken in the browser from the frame and the box the app hands in, with how sure the finder was over its corner, and under it what it is (a dot in its affiliation's color), where and when. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detection-gallery--gallery) |
 | **DetectionOverlay** | `@winterop-com/sokkel-ui/DetectionOverlay` | What a finder sees in a video, drawn over the picture: each detection's box at the moment shown, with a tag at its top edge saying what it is and how sure the finder was, in the color of its affiliation as a map draws its track (the primary color without one). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detection-overlay--looks) |
 | **DetectionTimeline** | `@winterop-com/sokkel-ui/DetectionTimeline` | Where things were seen over a video, as a playback bar marked with them: a lane for the spans that call for a look, in the critical color, then a lane per kind of thing (each label), each span in its affiliation's track color, a playhead at the moment shown, and the time along the foot. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detection-timeline--timeline) |
 | **Dot** | `@winterop-com/sokkel-ui/Dot` | A small round mark for a label, a calendar, a legend entry or a state: filled in a kind color, any CSS color or a state's color from the status map, or hollow, a ring in the tone's ink for a state not known (or in the strong border, with no tone, for something not started). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-marks--counts) |

@@ -1399,6 +1399,11 @@ look on a lane of their own in the critical color, then a lane per label, each s
 affiliation's track color, a playhead and the video's time along the foot; a press on a span seeks to
 its start and a press on a lane to that moment. `detectionSpans` (`lib/detections`) makes the spans
 of detections, split where the finder lost one for longer than the gap.
+`DetectionGallery` shows each sighting as a tile: a square crop of its frame around what was found,
+taken in the browser from the frame and the box the app hands in (`cropAround` and `cropBackground`
+in `lib/detections`), so the app needs no crops of its own; how sure the finder was over its corner,
+what it is, where and when under it, a short preview played while the pointer rests on it, and an
+alert ring. With `onSelect` a tile is a button, such as to seek the player to the moment.
 
 ## Graphs
 
