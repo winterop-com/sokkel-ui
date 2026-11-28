@@ -1389,6 +1389,11 @@ in on the part of the picture around it (`room` times its size, never closer tha
 picture) through the view the picture context offers (`useVideoView`), eased and moving with it, the
 picture layer moving with the picture; while the finder has lost it the view holds where it was last
 seen and the banner says so.
+`CameraWall` lays cameras side by side as a watch room shows them: each feed in a tile of the
+video's shape with its name, its state (live, recording, offline, connecting), how many things the
+finder sees in it and a critical ring on one that calls for a look, as many columns as fit; the
+focused camera comes first, two tiles across and two down where there is the room. A tile plays its
+`src` muted, or draws the app's `picture`, such as a player with a `DetectionOverlay`.
 
 ## Graphs
 

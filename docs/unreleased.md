@@ -17,3 +17,6 @@ release and empties it.
   it and moving with it, with a banner that says what is followed (or that it is lost) and lets it
   go. Through `useVideoView` (`media/video-picture`) any part drawn over the picture can frame part
   of it.
+- `CameraWall`: cameras side by side, each with its name, state, detection count and an alert ring;
+  the focused one first and two tiles across. A tile plays `src` muted or draws the app's
+  `picture`.

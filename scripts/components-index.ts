@@ -410,6 +410,7 @@ const CORE_AREAS: Record<string, string> = {
     TrackRoster: 'Data display',
     DetectionOverlay: 'Data display',
     VideoFollow: 'Data display',
+    CameraWall: 'Data display',
     TaskCard: 'Data display',
     UptimeBar: 'Data display',
     StatusWall: 'Data display',

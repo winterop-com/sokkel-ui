@@ -340,6 +340,10 @@
             "types": "./dist/components/VideoFollow.d.ts",
             "import": "./dist/components/VideoFollow.js"
         },
+        "./CameraWall": {
+            "types": "./dist/components/CameraWall.d.ts",
+            "import": "./dist/components/CameraWall.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"
