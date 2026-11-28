@@ -1426,6 +1426,9 @@ The `meter` primitive (Base UI's Meter) is how much of something there is on a k
 `Progress` for work under way: with `low` and `high` its bar is good, in the warning tone or
 critical (`meterTone`), turned around with `optimum="high"` for a scale whose full end is good, and
 its value said as a whole percent unless the app writes it.
+`Rating` is a rating in stars: with `onValueChange` a radio group the arrow keys move along, lit up
+to the star under the pointer, and pressing the stars given takes it back to none; without it a
+rating shown, filled to the fraction an average has and said as one image.
 
 ## Graphs
 

@@ -358,6 +358,7 @@ const CORE_AREAS: Record<string, string> = {
     TimeField: 'Forms and inputs',
     ColorField: 'Forms and inputs',
     TagsField: 'Forms and inputs',
+    Rating: 'Forms and inputs',
     TreeSelect: 'Forms and inputs',
     UnsavedChanges: 'Forms and inputs',
     SignIn: 'Forms and inputs',
