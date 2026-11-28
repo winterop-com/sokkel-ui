@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.37.2** is the latest release (2026-11-28): thirteen new parts in preview, for tracks on
+- **0.37.3** is the latest release (2026-11-28): the shell focuses a new page's heading without
+  scrolling to it, so a page `useScrollMemory` restores on Back keeps its place; contract 0.37.3.
+- **0.37.2** (2026-11-28): thirteen new parts in preview, for tracks on
   video (`DetectionOverlay`, `VideoFollow`, `CameraWall`, `DetectionTimeline`, `DetectionGallery`,
   `PictureZones`, `CameraControl`) and the gaps against other libraries (`ColorField`,
   `TagsField`, the meter, `Rating`, `Tour`, `NotificationInbox`); a rail entry that is a press,
