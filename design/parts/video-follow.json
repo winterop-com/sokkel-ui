@@ -1,0 +1,115 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "video-follow",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "df38670"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Keeps a video's view on one detection, as map-follow keeps a map on one track: the player comes in on the part of the picture around it and moves with it, and a banner in a corner says what is followed, or that the finder has lost it, with a button that lets it go.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/VideoFollow.tsx",
+            "packages/core/src/components/media/video-picture.tsx",
+            "packages/core/src/components/media/VideoPlayer.tsx"
+        ]
+    },
+    "anatomy": {
+        "container": "The banner, in the player's top corner over the picture: a row 6 apart, padded 8 at its start, 2 at its end and 2 down, on terminal/80 with a blur behind, rounded by radius-control, in terminal-foreground at text.xs.",
+        "mark": "A crosshair 14 square in the detection's color (track-<affiliation>, or primary without one), at half strength while it is lost.",
+        "name": "Following and its name (its label and id, or its id alone) at 500, cut with an ellipsis; Lost and its name while the finder has lost it.",
+        "release": "An icon button (extra small) with an X that lets it go, named by its word.",
+        "view": "The picture, with what the picture layer draws, scaled about its corner so the region around the detection fills the player: room times the detection's larger side, never less than a fifth of the picture or more than all of it, centered on the detection and kept inside the picture; the picture never leaves bare an edge of the player it covered. Each step is eased. Let go, the whole picture again."
+    },
+    "standsOn": {"default": "terminal"},
+    "options": {
+        "detection": {
+            "type": "rows",
+            "does": "The detection followed: its id, label, affiliation and samples, as detection-overlay takes them."
+        },
+        "onRelease": {"type": "callback", "does": "Called when the viewer lets it go by the banner's button."},
+        "room": {
+            "type": "number",
+            "default": 3,
+            "does": "How many of the detection's own sizes the view holds around it."
+        },
+        "time": {
+            "type": "number",
+            "does": "The moment followed; inside a video player it follows the video without it."
+        },
+        "offset": {"type": "number", "default": 0, "does": "Seconds added to the time before the samples are read."},
+        "hold": {
+            "type": "number",
+            "default": 0.5,
+            "does": "How long it counts as seen after its last sample, in seconds."
+        },
+        "gap": {
+            "type": "number",
+            "default": 1,
+            "does": "The longest gap between two samples it glides across, in seconds."
+        }
+    },
+    "sizes": {
+        "container": {"padX": 8, "gap": 6, "text": "text.xs", "radius": "radius-control"},
+        "mark": {"width": 14, "height": 14}
+    },
+    "states": {
+        "rest": {"means": "Following: the view on the detection, the banner naming it."},
+        "lost": {
+            "means": "The finder has lost it: the view held where it was last seen, the banner saying Lost, its mark at half strength.",
+            "reached": "no sample within hold of the moment"
+        },
+        "focus": {
+            "means": "Keyboard focus on the release button: the focus ring around it.",
+            "reached": "Tab",
+            "on": "keyboard"
+        }
+    },
+    "pieces": {
+        "container": {
+            "rest": {
+                "ground": "terminal/80",
+                "ink": "terminal-foreground",
+                "text": "text.xs",
+                "radius": "radius-control"
+            }
+        },
+        "name": {"rest": {"weight": 500}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the release button."},
+        {"keys": ["Enter"], "does": "Lets it go.", "when": "the release button has focus"}
+    ],
+    "words": {"following": "Following {name}", "lost": "Lost {name}", "release": "Stop following"},
+    "messages": {
+        "following": {"id": "videoFollow.following", "en": "Following {name}"},
+        "lost": {"id": "videoFollow.lost", "en": "Lost {name}"},
+        "release": {"id": "videoFollow.release", "en": "Stop following"}
+    },
+    "samples": {
+        "following": [{"with": {"name": "person p-23"}, "says": "Following person p-23"}],
+        "lost": [{"with": {"name": "person p-23"}, "says": "Lost person p-23"}]
+    },
+    "rendererSpecific": {
+        "sokkel-ui": [
+            "The view is a CSS transform on the box that holds the video and the picture layer, set through the picture context's setView (useVideoView) and eased by a transition, so following moves no React state per frame in the player.",
+            "While zoomed, what the picture layer draws scales with the picture, its tags included."
+        ]
+    },
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

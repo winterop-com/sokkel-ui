@@ -13,3 +13,7 @@ release and empties it.
 - VideoPlayer: `picture`, a layer over the area the video is drawn in, kept in full screen; what it
   holds reads the video through `useVideoPicture` and its time through `useVideoTime`
   (`media/video-picture`).
+- `VideoFollow`: keeps a video's view on one detection, coming in on the part of the picture around
+  it and moving with it, with a banner that says what is followed (or that it is lost) and lets it
+  go. Through `useVideoView` (`media/video-picture`) any part drawn over the picture can frame part
+  of it.
