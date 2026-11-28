@@ -11,7 +11,7 @@ export interface TagsFieldWords extends FieldWords {
     /** Said when a tag typed is in already, by the tag. */
     duplicate: (tag: string) => string
     /** Said when the field holds as many tags as it takes, by how many. */
-    full: (max: number) => string
+    full: (count: number) => string
     /** The list of suggestions under the input. */
     suggestions: string
 }
@@ -20,7 +20,7 @@ export const TAGS_FIELD_WORDS: TagsFieldWords = {
     ...FIELD_WORDS,
     remove: (tag) => `Remove ${tag}`,
     duplicate: (tag) => `${tag} is in already`,
-    full: (max) => `Up to ${max.toLocaleString('en-US')} tags`,
+    full: (count) => `Up to ${count.toLocaleString('en-US')} tags`,
     suggestions: 'Suggestions',
 }
 
@@ -28,7 +28,7 @@ export const TAGS_FIELD_WORDS: TagsFieldWords = {
 export const TAGS_FIELD_PART: WordsPart<TagsFieldWords> = {
     id: 'tagsField',
     words: TAGS_FIELD_WORDS,
-    args: { remove: 'tag', duplicate: 'tag', full: 'max' },
+    args: { remove: 'tag', duplicate: 'tag', full: 'count' },
     from: [FIELD_PART],
 }
 
@@ -36,7 +36,7 @@ export const TAGS_FIELD_PART: WordsPart<TagsFieldWords> = {
 export const TAGS_FIELD_MESSAGES: WordMessages<TagsFieldWords> = {
     remove: 'Remove {tag}',
     duplicate: '{tag} is in already',
-    full: 'Up to {max, number} tags',
+    full: 'Up to {count, number} tags',
 }
 
 export interface TagsFieldProps extends Omit<FieldProps, 'children' | 'words'> {

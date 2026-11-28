@@ -1013,7 +1013,7 @@
     "tableOfContents.title": "On this page",
     "tagChips.more": "+{count, number}",
     "tagsField.duplicate": "{tag} is in already",
-    "tagsField.full": "Up to {max, number} tags",
+    "tagsField.full": "Up to {count, number} tags",
     "tagsField.remove": "Remove {tag}",
     "tagsField.suggestions": "Suggestions",
     "taskCard.done": "done",
