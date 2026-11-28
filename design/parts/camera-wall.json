@@ -1,0 +1,114 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "camera-wall",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "9bb3e9e"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Cameras side by side, as a watch room shows them: each feed in a tile of the video's shape with its name, its state, how many things the finder sees in it and a critical ring on one that calls for a look; the focused camera first and two tiles across, so one feed is watched closely with the rest in view.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/CameraWall.tsx", "packages/core/src/components/Layout.tsx"]},
+    "anatomy": {
+        "container": "A grid of equal columns (parts' Columns, fill), as many as fit with no tile narrower than min, 8 apart, rows packed dense.",
+        "tile": "16:9, on terminal, rounded by radius-surface, its picture clipped to it, in terminal-foreground. With alert: ringed 2 wide in critical. Focused: first in the grid, and two columns wide and two rows tall once the wall is 42rem wide.",
+        "picture": "The feed contained in the tile: the camera's src played muted and looping (playing on by default), its poster without one, or the app's picture. Offline: no picture, a camera-off icon 24 square in terminal-foreground at 50 percent in the middle.",
+        "state": "At the top start, 8 in: a chip on terminal/70, padded 6 across and 2 down, rounded by radius-mini, at text.2xs 500: a dot 6 across (live good; recording critical, breathing; offline faint; connecting a spinner 12 square in its place) then the state's word.",
+        "detections": "At the top end with more than none and not offline: a chip like the state's with an eye-scan icon 12 square and the count's phrase.",
+        "enlarge": "With onFocusChange on a tile that draws the app's picture: an icon button (extra small) at the top end on terminal/70 with an enlarge or shrink icon, named by enlarge.",
+        "name": "At the foot: the camera's name at text.xs 500, cut with an ellipsis, padded 8 across, 16 above and 6 below, on a fade from terminal/85 up to nothing."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "cameras": {
+            "type": "rows",
+            "does": "Each camera: its id, name, state, and its src, poster or picture, with a detection count and alert."
+        },
+        "focused": {"type": "text", "does": "The camera taken large."},
+        "onFocusChange": {
+            "type": "callback",
+            "does": "Makes each tile a button that takes it large, or puts the large one back."
+        },
+        "playing": {"type": "boolean", "default": true, "does": "Whether the tiles' own videos play."},
+        "min": {
+            "values": ["xs", "sm", "md", "lg"],
+            "default": "sm",
+            "does": "The narrowest a tile gets before a column goes: 7.5, 10, 14 or 18rem."
+        }
+    },
+    "sizes": {
+        "container": {"gap": 8},
+        "state": {"padX": 6, "padY": 2, "text": "text.2xs", "radius": "radius-mini"},
+        "name": {"padX": 8, "text": "text.xs"}
+    },
+    "states": {
+        "rest": {"means": "Each camera's tile in its state."},
+        "hover": {
+            "means": "The pointer over a tile that is a button: washed in terminal-foreground at 5 percent.",
+            "reached": "pointer over, with onFocusChange"
+        },
+        "focused": {
+            "means": "The camera taken large: first, two tiles across and two down where there is the room.",
+            "reached": "focused"
+        },
+        "alert": {"means": "A camera that calls for a look: ringed in critical.", "reached": "alert on the camera"},
+        "focus": {
+            "means": "Keyboard focus on a tile's button: the focus ring inside its edge.",
+            "reached": "Tab, with onFocusChange",
+            "on": "keyboard"
+        }
+    },
+    "pieces": {
+        "tile": {
+            "rest": {"ground": "terminal", "ink": "terminal-foreground", "radius": "radius-surface"},
+            "hover": {"ground": "terminal-foreground/5"},
+            "alert": {"ring": {"color": "critical", "width": 2}},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
+        },
+        "state": {"rest": {"ground": "terminal/70", "text": "text.2xs", "weight": 500, "radius": "radius-mini"}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches each tile's button in turn when the wall has onFocusChange."},
+        {
+            "keys": ["Enter"],
+            "does": "Takes the tile large, or puts the large one back.",
+            "when": "a tile's button has focus"
+        }
+    ],
+    "words": {
+        "live": "Live",
+        "recording": "Recording",
+        "offline": "Offline",
+        "connecting": "Connecting",
+        "detections": {"one": "{count} detection", "other": "{count} detections"},
+        "enlarge": "Show {name} large"
+    },
+    "messages": {
+        "live": {"id": "cameraWall.live", "en": "Live"},
+        "recording": {"id": "cameraWall.recording", "en": "Recording"},
+        "offline": {"id": "cameraWall.offline", "en": "Offline"},
+        "connecting": {"id": "cameraWall.connecting", "en": "Connecting"},
+        "detections": {"id": "cameraWall.detections", "en": "{count, plural, one {# detection} other {# detections}}"},
+        "enlarge": {"id": "cameraWall.enlarge", "en": "Show {name} large"}
+    },
+    "samples": {
+        "detections": [{"with": {"count": 1}, "says": "1 detection"}, {"with": {"count": 3}, "says": "3 detections"}],
+        "enlarge": [{"with": {"name": "Harbor gate"}, "says": "Show Harbor gate large"}]
+    },
+    "appText": {"name": "The camera's name."},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

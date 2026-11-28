@@ -118,6 +118,7 @@ import { TASK_CARD_WORDS, TASK_STATES, TaskCard, taskStatuses, type TaskCardProp
 import { TRACK_CARD_WORDS, TrackCard, type TrackCardProps } from '@winterop-com/sokkel-ui/TrackCard'
 import { DETECTION_OVERLAY_WORDS, DetectionOverlay, type DetectionOverlayProps } from '@winterop-com/sokkel-ui/DetectionOverlay'
 import { VIDEO_FOLLOW_WORDS, VideoFollow, type VideoFollowProps } from '@winterop-com/sokkel-ui/VideoFollow'
+import { CAMERA_WALL_WORDS, CameraWall, type CameraWallProps } from '@winterop-com/sokkel-ui/CameraWall'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11209,6 +11210,86 @@ const VIDEO_FOLLOW_ADAPTER: Adapter = {
     },
 }
 
+// Camera wall
+
+const CAMERA_WALL = source('components/CameraWall.tsx')
+const CAMERA_WALL_PROPS: CameraWallProps = {
+    playing: false,
+    cameras: [
+        { id: 'gate', name: 'Harbor gate', state: 'recording', src: 'gate.webm', detections: 3, alert: true },
+        { id: 'quay', name: 'Harbor quay', state: 'live', src: 'quay.webm' },
+        { id: 'dock', name: 'Juniper dock', state: 'offline' },
+    ],
+}
+const cameraWall = (props: Partial<CameraWallProps> = {}) => draw(CameraWall, { ...CAMERA_WALL_PROPS, ...props })
+const cameraPresses = (elements: El[]) => elements.filter((element) => element.attrs['data-slot'] === 'camera-tile-press')
+
+const CAMERA_WALL_ADAPTER: Adapter = {
+    wordObjects: { CAMERA_WALL_WORDS },
+    complete: ['CAMERA_WALL_WORDS'],
+    words: {
+        live: 'CAMERA_WALL_WORDS.live',
+        recording: 'CAMERA_WALL_WORDS.recording',
+        offline: 'CAMERA_WALL_WORDS.offline',
+        connecting: 'CAMERA_WALL_WORDS.connecting',
+        detections: ['CAMERA_WALL_WORDS.detections', (said: (count: number) => string, fill) => said(Number(fill.count))],
+        enlarge: ['CAMERA_WALL_WORDS.enlarge', (said: (name: string) => string, fill) => said(String(fill.name))],
+    },
+    options: { min: propValues(CAMERA_WALL, 'CameraWallProps', 'min') },
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the camera wall states no effects'),
+    keys: {
+        Tab: () => {
+            const presses = cameraPresses(cameraWall({ onFocusChange: noop }))
+            if (presses.length !== 3 || !presses.every((press) => press.tag === 'button' && focusable(press)))
+                return 'each tile is not a button in the tab order with onFocusChange'
+            return cameraPresses(cameraWall()).length === 0 ? true : 'a tile takes focus with no onFocusChange'
+        },
+        "Enter (a tile's button has focus)": () => {
+            const chosen: (string | undefined)[] = []
+            return live(
+                createElement(CameraWall, { ...CAMERA_WALL_PROPS, focused: 'quay', onFocusChange: (id) => chosen.push(id) }),
+                (box) => {
+                    const presses = [...box.querySelectorAll<HTMLElement>('[data-slot="camera-tile-press"]')]
+                    // A native button: a browser presses it on Enter, and the press is a click.
+                    if (presses.some((press) => press.tagName !== 'BUTTON'))
+                        return "a tile's press is not a native button, which Enter presses"
+                    act(() => presses[0].click())
+                    act(() => presses[1].click())
+                    return chosen.join(' ') === 'gate '
+                        ? true
+                        : `pressing a tile, then the large one, chose ${chosen.map(String).join(', ')}`
+                },
+            )
+        },
+    },
+    more: () => {
+        const tiles = cameraWall({ focused: 'quay' }).filter((element) => element.attrs['data-slot'] === 'camera-tile')
+        return [
+            check(
+                'states.focused (the focused tile is drawn large)',
+                'quay',
+                tiles.find((tile) => tile.attrs['data-large'] !== undefined)?.attrs['data-state'] === 'live' ? 'quay' : 'none',
+            ),
+            check(
+                'states.alert (an alert tile is ringed)',
+                'recording',
+                tiles.find((tile) => tile.attrs['data-alert'] !== undefined)?.attrs['data-state'],
+            ),
+            check(
+                'anatomy.picture (offline draws no picture)',
+                'none',
+                cameraWall({ cameras: [{ id: 'dock', name: 'Juniper dock', state: 'offline', src: 'dock.webm' }] }).some(
+                    (element) => element.tag === 'video',
+                )
+                    ? 'a video'
+                    : 'none',
+            ),
+        ]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12259,6 +12340,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'track-roster': TRACK_ROSTER_ADAPTER,
     'detection-overlay': DETECTION_OVERLAY_ADAPTER,
     'video-follow': VIDEO_FOLLOW_ADAPTER,
+    'camera-wall': CAMERA_WALL_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,
