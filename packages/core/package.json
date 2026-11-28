@@ -348,6 +348,10 @@
             "types": "./dist/components/DetectionTimeline.d.ts",
             "import": "./dist/components/DetectionTimeline.js"
         },
+        "./DetectionGallery": {
+            "types": "./dist/components/DetectionGallery.d.ts",
+            "import": "./dist/components/DetectionGallery.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"

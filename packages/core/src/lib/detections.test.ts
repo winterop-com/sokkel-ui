@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { detectionAt, detectionSpans, detectionTrail, type Detection } from './detections'
+import { cropAround, cropBackground, detectionAt, detectionSpans, detectionTrail, type Detection } from './detections'
 
 const WALKER: Detection = {
     id: 'p-1',
@@ -64,5 +64,31 @@ describe('detectionSpans', () => {
     it('orders the stretches of several detections by their start', () => {
         const other: Detection = { id: 'v-2', samples: [{ t: 2.5, x: 0, y: 0, w: 0.1, h: 0.1 }] }
         expect(detectionSpans([WALKER, other]).map((span) => `${span.id}@${String(span.start)}`)).toEqual(['p-1@1', 'v-2@2.5', 'p-1@4'])
+    })
+})
+
+describe('cropAround', () => {
+    it('takes a square of the picture around the box, with room', () => {
+        const crop = cropAround({ x: 0.45, y: 0.4, w: 0.05, h: 0.2 }, 16 / 9, 1.5)
+        expect(crop.h).toBeCloseTo(0.3)
+        expect(crop.w).toBeCloseTo(0.16875)
+        expect(crop.x + crop.w / 2).toBeCloseTo(0.475)
+        expect(crop.y + crop.h / 2).toBeCloseTo(0.5)
+    })
+
+    it('stays inside the picture', () => {
+        const crop = cropAround({ x: 0, y: 0.9, w: 0.05, h: 0.1 }, 1)
+        expect(crop.x).toBe(0)
+        expect(crop.y + crop.h).toBeCloseTo(1)
+    })
+})
+
+describe('cropBackground', () => {
+    it('scales and places the picture so the crop fills the box', () => {
+        expect(cropBackground({ x: 0.25, y: 0.5, w: 0.5, h: 0.5 })).toEqual({ backgroundSize: '200% 200%', backgroundPosition: '50% 100%' })
+    })
+
+    it('shows the whole picture for a crop of all of it', () => {
+        expect(cropBackground({ x: 0, y: 0, w: 1, h: 1 })).toEqual({ backgroundSize: '100% 100%', backgroundPosition: '0% 0%' })
     })
 })

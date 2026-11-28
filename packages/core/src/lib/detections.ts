@@ -142,3 +142,24 @@ export function detectionSpans(detections: readonly Detection[], timing: Detecti
     }
     return spans.sort((a, b) => a.start - b.start)
 }
+
+/**
+ * The square part of a picture `aspect` wide for each unit tall that holds a box with `room` of it
+ * around, in shares of the picture (as the box is), centered on the box and kept inside the picture.
+ */
+export function cropAround(box: DetectionBox, aspect: number, room = 1.4): DetectionBox {
+    const side = Math.min(1, Math.max(box.w * aspect, box.h) * room)
+    const w = Math.min(1, side / aspect)
+    const h = side
+    const inside = (middle: number, size: number) => Math.min(1 - size, Math.max(0, middle - size / 2))
+    return { x: inside(box.x + box.w / 2, w), y: inside(box.y + box.h / 2, h), w, h }
+}
+
+/** The CSS background size and position that show `crop` of a picture filling its box. */
+export function cropBackground(crop: DetectionBox): { backgroundSize: string; backgroundPosition: string } {
+    const at = (start: number, size: number) => (size >= 1 ? 0 : (start / (1 - size)) * 100)
+    return {
+        backgroundSize: `${String(100 / crop.w)}% ${String(100 / crop.h)}%`,
+        backgroundPosition: `${String(at(crop.x, crop.w))}% ${String(at(crop.y, crop.h))}%`,
+    }
+}

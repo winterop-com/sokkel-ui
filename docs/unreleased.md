@@ -23,3 +23,6 @@ release and empties it.
 - `DetectionTimeline`: where things were seen over a video, alerts on a lane of their own and a lane
   per label, with a playhead and presses that seek; `detectionSpans` (`lib/detections`) makes its
   spans of detections.
+- `DetectionGallery`: each sighting as a tile cropped from its frame around what was found, with its
+  confidence, label, place and time, a preview on hover and an alert ring; `cropAround` and
+  `cropBackground` (`lib/detections`) do the cropping.
