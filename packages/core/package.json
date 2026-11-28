@@ -364,6 +364,10 @@
             "types": "./dist/components/ColorField.d.ts",
             "import": "./dist/components/ColorField.js"
         },
+        "./TagsField": {
+            "types": "./dist/components/TagsField.d.ts",
+            "import": "./dist/components/TagsField.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"

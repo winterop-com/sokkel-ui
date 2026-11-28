@@ -33,3 +33,5 @@ release and empties it.
 - `ColorField` and `ColorPicker`: a color typed as hex or `rgb()` or picked from an area of
   saturation and brightness, a hue strip and swatches, kept as `#rrggbb`; `lib/color-value` reads
   and converts colors.
+- `TagsField`: several short values as chips in one field, added with Enter or a comma, with
+  suggestions as the viewer types, a `max`, and duplicates refused.

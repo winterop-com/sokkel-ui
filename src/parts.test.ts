@@ -124,6 +124,7 @@ import { DETECTION_GALLERY_WORDS, DetectionGallery, type DetectionGalleryProps }
 import { PICTURE_ZONES_WORDS, PictureZones, type PictureZone, type PictureZonesProps } from '@winterop-com/sokkel-ui/PictureZones'
 import { CAMERA_CONTROL_WORDS, CameraControl, type CameraControlProps, type CameraMove } from '@winterop-com/sokkel-ui/CameraControl'
 import { COLOR_FIELD_WORDS, COLOR_PICKER_WORDS, ColorField, ColorPicker } from '@winterop-com/sokkel-ui/ColorField'
+import { TAGS_FIELD_WORDS, TagsField, type TagsFieldProps } from '@winterop-com/sokkel-ui/TagsField'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11644,6 +11645,87 @@ const COLOR_FIELD_ADAPTER: Adapter = {
     },
 }
 
+// Tags field
+
+const TAGS_FIELD_PROPS: TagsFieldProps = { id: 'tags', label: 'Labels', defaultValue: ['harbor'], suggestions: ['juniper', 'larkspur'] }
+/** A tags field drawn in the page, a key pressed in its input after typing `text`, and the tags it told. */
+const tagsAfter = (text: string, key: string, props: Partial<TagsFieldProps> = {}) => {
+    let told: string[] | undefined
+    return live(createElement(TagsField, { ...TAGS_FIELD_PROPS, ...props, onValueChange: (tags) => (told = tags) }), (box) => {
+        const input = box.querySelector<HTMLInputElement>('input')
+        if (input === null) return 'no input'
+        if (text !== '')
+            act(() => {
+                const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+                set?.call(input, text)
+                input.dispatchEvent(new Event('input', { bubbles: true }))
+            })
+        act(() => {
+            input.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+        })
+        return told === undefined ? 'nothing' : told.join(' ')
+    })
+}
+
+const TAGS_FIELD_ADAPTER: Adapter = {
+    wordObjects: { TAGS_FIELD_WORDS },
+    complete: [],
+    words: {
+        remove: ['TAGS_FIELD_WORDS.remove', (said: (tag: string) => string, fill) => said(String(fill.tag))],
+        duplicate: ['TAGS_FIELD_WORDS.duplicate', (said: (tag: string) => string, fill) => said(String(fill.tag))],
+        full: ['TAGS_FIELD_WORDS.full', (said: (count: number) => string, fill) => said(Number(fill.count))],
+        suggestions: 'TAGS_FIELD_WORDS.suggestions',
+    },
+    options: {},
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the tags field states no effects'),
+    keys: {
+        'Enter (the input has focus)': () => {
+            const said = tagsAfter('orders', 'Enter')
+            return said === 'harbor orders' ? true : `typing orders and Enter told ${said}`
+        },
+        ', (the input has focus)': () => {
+            const said = tagsAfter('orders', ',')
+            return said === 'harbor orders' ? true : `typing orders and a comma told ${said}`
+        },
+        'Backspace (the input is empty)': () => {
+            const said = tagsAfter('', 'Backspace')
+            return said === '' ? true : `Backspace in the empty input told ${said}`
+        },
+        'ArrowDown, ArrowUp (suggestions are open)': () => {
+            const said = live(createElement(TagsField, { ...TAGS_FIELD_PROPS }), (box) => {
+                const input = box.querySelector<HTMLInputElement>('input')
+                if (input === null) return 'no input'
+                act(() => {
+                    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, 'r')
+                    input.dispatchEvent(new Event('input', { bubbles: true }))
+                })
+                act(() => {
+                    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+                })
+                return box.querySelector('[role="option"][aria-selected="true"]')?.textContent ?? 'none'
+            })
+            return said === 'juniper' ? true : `ArrowDown marked ${said}`
+        },
+        'Escape (suggestions are open)': () => {
+            const said = live(createElement(TagsField, { ...TAGS_FIELD_PROPS }), (box) => {
+                const input = box.querySelector<HTMLInputElement>('input')
+                if (input === null) return 'no input'
+                act(() => {
+                    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, 'jun')
+                    input.dispatchEvent(new Event('input', { bubbles: true }))
+                })
+                act(() => {
+                    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+                })
+                return box.querySelector('[role="listbox"]') === null ? 'closed' : 'open'
+            })
+            return said === 'closed' ? true : 'Escape left the suggestions open'
+        },
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12700,6 +12782,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'picture-zones': PICTURE_ZONES_ADAPTER,
     'camera-control': CAMERA_CONTROL_ADAPTER,
     'color-field': COLOR_FIELD_ADAPTER,
+    'tags-field': TAGS_FIELD_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,

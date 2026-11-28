@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 293 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 294 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -272,6 +272,7 @@ in (`geo`).
 | **SignIn** | `@winterop-com/sokkel-ui/SignIn` | A sign-in screen in two panes the window's height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
 | **SliderField** | `@winterop-com/sokkel-ui/SliderField` | A number chosen on a slider, its value written out in figures so the setting reads without dragging. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
 | **SwitchField** | `@winterop-com/sokkel-ui/SwitchField` | An on/off setting: its label and the switch at the row's right edge. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-switch-field--plain) |
+| **TagsField** | `@winterop-com/sokkel-ui/TagsField` | Several short values typed into one field, each a chip: Enter or a comma turns what is typed into a tag, Backspace in an empty input takes the last one off, and each chip has its own remove button. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-tags-field--plain) |
 | **TextField** | `@winterop-com/sokkel-ui/TextField` | A labeled text input: a `Field` with its input inside, wired together. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-text-field--plain) |
 | **TimeField** | `@winterop-com/sokkel-ui/TimeField` | A time of day typed on a 24 or a 12-hour clock, with a list of times beside it to pick from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-time-field--plain) |
 | **TreeSelect** | `@winterop-com/sokkel-ui/TreeSelect` | A field that picks from a hierarchy: the trigger reads like a select and names the choice with its path, and the popover holds a search over a tree. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |

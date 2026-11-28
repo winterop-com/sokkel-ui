@@ -1,0 +1,99 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "tags-field",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "cd072bd"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Several short values typed into one field, each a chip: Enter or a comma adds one, Backspace in an empty input takes the last off, and suggestions are offered as the viewer types.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/TagsField.tsx",
+            "packages/core/src/components/Chip.tsx",
+            "packages/core/src/components/Field.tsx"
+        ]
+    },
+    "anatomy": {
+        "container": "A field (parts' Field: label, hint, description, help, issue mark) around the frame.",
+        "frame": "At least the control's height, wrapping, 4 apart, padded 6 across and 4 down, on field, edged in input, rounded by radius-control: the chips, then the input taking the rest of the line, never narrower than 96. Focused, edged and ringed 1 in ring; with an issue, edged in critical at 80 percent.",
+        "chip": "Each tag as parts/chip with its remove button, named by remove.",
+        "input": "24 tall, padded 4 across, at text.sm, no frame of its own; the placeholder only while there are no tags.",
+        "suggestions": "While the text matches suggestions not in already: a list under the frame, 4 below it, of up to six, padded 4, on popover, edged in border, rounded by radius-control, with a pop shadow; each padded 8 across and 4 down, the marked one on hover."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "value": {"type": "rows", "does": "The tags."},
+        "onValueChange": {"type": "callback", "does": "Called with the tags after each one added or removed."},
+        "suggestions": {"type": "rows", "does": "Tags offered as the viewer types."},
+        "max": {"type": "number", "does": "The most tags it takes."},
+        "normalize": {"type": "callback", "does": "Turns what is typed into a tag; trimmed by default."},
+        "disabled": {"type": "boolean", "default": false, "does": "Turns it off: no input and no remove buttons."}
+    },
+    "sizes": {
+        "frame": {"padX": 6, "padY": 4, "gap": 4, "radius": "radius-control"},
+        "input": {"height": 24, "text": "text.sm"}
+    },
+    "states": {
+        "rest": {"means": "The tags and the input."},
+        "focus": {"means": "The input focused: the frame edged and ringed in ring.", "reached": "Tab", "on": "keyboard"},
+        "suggesting": {"means": "Suggestions open under the frame.", "reached": "typing text a suggestion holds"},
+        "refused": {
+            "means": "A tag in already or past max: not added, the issue said.",
+            "reached": "adding a duplicate, or a tag when full"
+        },
+        "disabled": {"means": "Turned off.", "reached": "disabled"}
+    },
+    "pieces": {
+        "frame": {
+            "rest": {"ground": "field", "edge": "input", "radius": "radius-control"},
+            "focus": {"edge": "ring", "ring": {"color": "ring", "width": 1}}
+        },
+        "suggestions": {"rest": {"ground": "popover", "edge": "border", "radius": "radius-control"}}
+    },
+    "keyboard": [
+        {"keys": ["Enter"], "does": "Adds what is typed, or the marked suggestion.", "when": "the input has focus"},
+        {"keys": [","], "does": "Adds what is typed.", "when": "the input has focus"},
+        {"keys": ["Backspace"], "does": "Takes the last tag off.", "when": "the input is empty"},
+        {
+            "keys": ["ArrowDown", "ArrowUp"],
+            "does": "Marks the next or the previous suggestion.",
+            "when": "suggestions are open"
+        },
+        {"keys": ["Escape"], "does": "Clears what is typed, closing the suggestions.", "when": "suggestions are open"}
+    ],
+    "words": {
+        "remove": "Remove {tag}",
+        "duplicate": "{tag} is in already",
+        "full": "Up to {count} tags",
+        "suggestions": "Suggestions"
+    },
+    "messages": {
+        "remove": {"id": "tagsField.remove", "en": "Remove {tag}"},
+        "duplicate": {"id": "tagsField.duplicate", "en": "{tag} is in already"},
+        "full": {"id": "tagsField.full", "en": "Up to {count, number} tags"},
+        "suggestions": {"id": "tagsField.suggestions", "en": "Suggestions"}
+    },
+    "samples": {
+        "remove": [{"with": {"tag": "harbor"}, "says": "Remove harbor"}],
+        "duplicate": [{"with": {"tag": "harbor"}, "says": "harbor is in already"}],
+        "full": [{"with": {"count": 3}, "says": "Up to 3 tags"}]
+    },
+    "appText": {"label": "The field's label.", "tag": "Each tag."},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}
