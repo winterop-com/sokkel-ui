@@ -332,6 +332,10 @@
             "types": "./dist/components/ImageAnnotations.d.ts",
             "import": "./dist/components/ImageAnnotations.js"
         },
+        "./DetectionOverlay": {
+            "types": "./dist/components/DetectionOverlay.d.ts",
+            "import": "./dist/components/DetectionOverlay.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"
@@ -944,6 +948,10 @@
             "types": "./dist/components/media/video-source.d.ts",
             "import": "./dist/components/media/video-source.js"
         },
+        "./media/video-picture": {
+            "types": "./dist/components/media/video-picture.d.ts",
+            "import": "./dist/components/media/video-picture.js"
+        },
         "./media/video-stats": {
             "types": "./dist/components/media/video-stats.d.ts",
             "import": "./dist/components/media/video-stats.js"
@@ -1463,6 +1471,10 @@
         "./lib/tracks": {
             "types": "./dist/lib/tracks.d.ts",
             "import": "./dist/lib/tracks.js"
+        },
+        "./lib/detections": {
+            "types": "./dist/lib/detections.d.ts",
+            "import": "./dist/lib/detections.js"
         },
         "./lib/wiki-links": {
             "types": "./dist/lib/wiki-links.d.ts",

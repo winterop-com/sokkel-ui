@@ -419,6 +419,8 @@
     "dayStrip.weekday": "{date, date, ::EEEEE}",
     "detailSheet.close": "Close",
     "detailSheet.resize": "Resize the sheet",
+    "detectionOverlay.detection": "Detection",
+    "detectionOverlay.detections": "Detections",
     "dialogShell.back": "Back",
     "dialogShell.cancel": "Cancel",
     "dialogShell.close": "Close",

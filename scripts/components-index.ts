@@ -408,6 +408,7 @@ const CORE_AREAS: Record<string, string> = {
     TrackGlyph: 'Data display',
     TrackCard: 'Data display',
     TrackRoster: 'Data display',
+    DetectionOverlay: 'Data display',
     TaskCard: 'Data display',
     UptimeBar: 'Data display',
     StatusWall: 'Data display',
