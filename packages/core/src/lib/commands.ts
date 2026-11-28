@@ -175,14 +175,15 @@ export function placeCommands(
     const commands: PaletteCommand[] = []
     const add = (entry: RailEntry, parent?: RailEntry) => {
         const href = entry.href
-        if (href !== undefined)
+        const select = href !== undefined ? () => navigate(href, entry) : entry.onSelect
+        if (select !== undefined)
             commands.push({
                 id: `place-${entry.id}`,
                 label: entry.label,
                 icon: entry.icon ?? parent?.icon,
                 hint: entry.description ?? parent?.label,
                 ...(entry.keywords === undefined ? {} : { keywords: entry.keywords }),
-                onSelect: () => navigate(href, entry),
+                onSelect: select,
             })
         for (const child of entry.entries ?? []) add(child, entry)
     }

@@ -10,11 +10,14 @@ import {
     Files,
     FlaskConical,
     House,
+    Link2,
     LayoutDashboard,
     MessagesSquare,
     Play,
     Plus,
+    Search,
     Server,
+    Star,
     Webhook,
     Workflow,
 } from 'lucide-react'
@@ -26,6 +29,7 @@ import { Rail, type RailEntry, type RailGroup } from '@winterop-com/sokkel-ui/Ra
 import { RailDrops } from '@winterop-com/sokkel-ui/RailDrops'
 import { moveItem } from '@winterop-com/sokkel-ui/lib/reorder'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { routerLink } from '../fixtures/router'
@@ -293,6 +297,48 @@ export const StripFlyout: StoryObj = {
         </Frame>
     ),
 }
+
+/** The columns a ribbon switches between, each listing a few of the project's documents. */
+const RIBBON = [
+    { id: 'files', label: 'Files', icon: Files, items: ['harbor', 'juniper', 'larkspur'] },
+    { id: 'search', label: 'Search', icon: Search, items: ['nightly-export', 'sync-inventory'] },
+    { id: 'starred', label: 'Starred', icon: Star, items: ['rebuild-index'] },
+    { id: 'links', label: 'Links', icon: Link2, items: ['send-digest', 'import-orders'] },
+] as const
+
+function RibbonRail() {
+    const [shown, setShown] = useState<string | null>('files')
+    const column = RIBBON.find((one) => one.id === shown)
+    const groups: RailGroup[] = [
+        {
+            id: 'columns',
+            entries: RIBBON.map(({ id, label, icon }) => ({
+                id,
+                label,
+                icon,
+                active: id === shown,
+                onSelect: () => setShown(id === shown ? null : id),
+            })),
+        },
+    ]
+    return (
+        <Frame>
+            <Rail variant="strip" mark={<TidevannMark className="size-5" />} name="Tidevann" groups={groups} />
+            {column !== undefined && (
+                <SubNav title={column.label}>
+                    <Tree label={column.label} nodes={column.items.map((item) => ({ id: item, label: item }))} />
+                </SubNav>
+            )}
+        </Frame>
+    )
+}
+
+/**
+ * The strip as an editor's ribbon: each entry a press, not a place, that shows its column beside the
+ * strip without changing the address, pressed while its column is shown; pressing the shown one
+ * again folds the column away.
+ */
+export const Ribbon: StoryObj = { render: () => <RibbonRail /> }
 
 /** The navigation, collapsing and expanding as it is asked to, its mark and name a link home. */
 function Navigation({ collapsed: start, collapseWith }: { collapsed: boolean; collapseWith?: 'button' | 'mark' }) {

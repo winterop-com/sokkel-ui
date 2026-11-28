@@ -43,3 +43,7 @@ release and empties it.
   dimmed page.
 - `NotificationInbox`: a bell that counts the unread and opens the list of notices, with Mark all as
   read.
+- Rail: an entry with `onSelect` in place of `href` is a press: drawn as a button, pressed while
+  `active`, changing no address, in the strip and the collapsed and expanded rail; `placeCommands`
+  runs it.
+- Shell: `paletteWidth` (`sm`, `md`, `lg`) passes a width to its command palette, `sm` by default.

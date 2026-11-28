@@ -53,6 +53,12 @@ export interface RailEntry {
     icon?: LucideIcon
     /** Where the entry leads. A parent may have none; then its row folds and unfolds its entries. */
     href?: string
+    /**
+     * Makes the entry a press instead of a place: drawn as a button with the entry's face and
+     * tooltip, pressed (`aria-pressed`) while `active`, that changes no address, such as an editor's
+     * ribbon switching the column beside it. Give it in place of `href`; `placeCommands` runs it.
+     */
+    onSelect?: () => void
     active?: boolean
     /** How many wait there, such as unread messages: at the row's end, or over the icon when the rail is collapsed or a strip. */
     count?: number
@@ -608,9 +614,15 @@ export function Rail({
 /** An entry's link, holding `children`. */
 const renderLink = (entry: RailEntry, children: ReactNode, className: string) => (
     <Droppable entry={entry}>
-        <Link href={entry.href} className={className} aria-current={entry.active ? 'page' : undefined}>
-            {children}
-        </Link>
+        {entry.onSelect !== undefined && entry.href === undefined ? (
+            <button type="button" onClick={entry.onSelect} aria-pressed={entry.active === true} className={className}>
+                {children}
+            </button>
+        ) : (
+            <Link href={entry.href} className={className} aria-current={entry.active ? 'page' : undefined}>
+                {children}
+            </Link>
+        )}
     </Droppable>
 )
 
@@ -1034,16 +1046,30 @@ function RailLink({ entry, collapsed, unread }: { entry: RailEntry; collapsed: b
                 <TooltipTrigger
                     render={(props) => (
                         <Droppable entry={entry}>
-                            <Link
-                                {...(props as LinkProps)}
-                                href={entry.href}
-                                aria-label={entry.label}
-                                aria-current={entry.active ? 'page' : undefined}
-                                className={iconClass(entry.active === true)}
-                            >
-                                <EntryMark entry={entry} initial />
-                                <Corner entry={entry} unread={unread} />
-                            </Link>
+                            {entry.onSelect !== undefined && entry.href === undefined ? (
+                                <button
+                                    {...(props as ComponentPropsWithRef<'button'>)}
+                                    type="button"
+                                    onClick={entry.onSelect}
+                                    aria-label={entry.label}
+                                    aria-pressed={entry.active === true}
+                                    className={iconClass(entry.active === true)}
+                                >
+                                    <EntryMark entry={entry} initial />
+                                    <Corner entry={entry} unread={unread} />
+                                </button>
+                            ) : (
+                                <Link
+                                    {...(props as LinkProps)}
+                                    href={entry.href}
+                                    aria-label={entry.label}
+                                    aria-current={entry.active ? 'page' : undefined}
+                                    className={iconClass(entry.active === true)}
+                                >
+                                    <EntryMark entry={entry} initial />
+                                    <Corner entry={entry} unread={unread} />
+                                </Link>
+                            )}
                         </Droppable>
                     )}
                 />

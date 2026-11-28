@@ -29,7 +29,7 @@ import { createShortcutRegistry, paletteMayOpen, type KeyBinding } from '../lib/
 
 export { overSearch } from '../lib/shortcuts'
 import { ErrorBoundary, type ErrorBoundaryWords } from './ErrorBoundary'
-import type { CommandPaletteWords, PaletteFilter, PaletteFoot, PaletteGroup, PaletteSearch } from './CommandPalette'
+import type { CommandPaletteWords, PaletteFilter, PaletteFoot, PaletteGroup, PaletteSearch, PaletteWidth } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
 import { PanelTabStrip, type PanelStrip, type PanelTabs } from './panel-strip'
 import { STATUS_STRIP } from './StatusLine'
@@ -120,6 +120,8 @@ export interface ShellProps {
     paletteFilter?: PaletteFilter
     /** The strip at the palette's foot, with the app's mark and name and the keys it answers, as `CommandPalette`'s `foot`. */
     paletteFoot?: PaletteFoot
+    /** How wide the palette opens, as `CommandPalette`'s `width`: `sm` by default, wider for rows that say more than a command's name. */
+    paletteWidth?: PaletteWidth
     /**
      * The keys the app answers itself, listed in the shortcuts dialog after the keys bound with
      * `useShortcuts`; given, even empty, the shell holds the dialog and opens it on `?`.
@@ -326,6 +328,7 @@ export function Shell({
     paletteSearch,
     paletteFilter,
     paletteFoot,
+    paletteWidth,
     shortcuts,
     shortcutsOpen,
     defaultShortcutsOpen = false,
@@ -440,6 +443,7 @@ export function Shell({
                 search={paletteSearch}
                 filter={paletteFilter}
                 foot={paletteFoot}
+                width={paletteWidth}
                 words={paletteWords}
             />
         </Suspense>
