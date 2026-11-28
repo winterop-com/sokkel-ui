@@ -226,6 +226,30 @@ function Measured() {
     )
 }
 
+const JOBS_TABLE = `## The jobs on harbor
+
+Each job runs on its own schedule. The table below says which service runs it, what it is called in the
+scheduler, and what to know before you start it again by hand.
+
+| Job | Scheduled as | Service | Notes |
+| --- | --- | --- | --- |
+| Nightly export | \`nightly-export-v2\` | worker | Writes the day's orders to the archive; a rerun appends, so move the rejected rows aside first. |
+| Inventory sync | \`sync-inventory-v3\` | worker | Reads the stock from every site and settles the counts; safe to run again at any time. |
+| Index rebuild | \`rebuild-index-v1\` | scheduler | Rebuilds the search index from scratch; searches answer from the old index until it is done. |
+| Daily digest | \`send-digest-v4\` | api | Mails the owners what failed overnight; a rerun mails them again. |
+
+The scheduler keeps a run's log for thirty days.
+`
+
+/** The same pane centered: the prose in a reading column in the middle, the table centered and as wide as its notes ask. */
+function MeasuredCenter() {
+    return (
+        <div className="p-6">
+            <Markdown content={JOBS_TABLE} scale="document" measure measureAlign="center" />
+        </div>
+    )
+}
+
 const NOTE = `## Nightly export
 
 The [[Nightly export]] job runs at 02:00 on the worker. When it fails, follow [[Runbooks/Retry a run|the retry runbook]] and
@@ -677,6 +701,13 @@ export const Parts: StoryObj = { name: 'Embedded parts', render: () => <Runbook 
  * reading measure (`--reading-measure`), while the table and the code block run the pane's width.
  */
 export const Measure: StoryObj = { name: 'Reading measure', render: () => <Measured /> }
+
+/**
+ * `measureAlign="center"`: the prose stands in a reading column in the middle of the pane, while the
+ * table grows past it, centered, to the pane's width, so its notes wrap less and it runs shorter. The
+ * scheduler's names in the table stay whole, each on one line, the notes beside them wrapping instead.
+ */
+export const MeasureCenter: StoryObj = { name: 'Reading measure, centered', render: () => <MeasuredCenter /> }
 
 /**
  * Links between notes and tags: `[[Note]]`, `[[Note|words]]` and `[[Note#Heading]]` are links the

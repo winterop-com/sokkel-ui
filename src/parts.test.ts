@@ -9460,6 +9460,9 @@ const MARKDOWN_VIEW_ADAPTER: Adapter = {
     },
     options: {
         scale: propValues(MARKDOWN_VIEW, 'MarkdownProps', 'scale'),
+        measureAlign: [...(/export type MarkdownMeasureAlign = ([^\n]+)/.exec(MARKDOWN_VIEW)?.[1] ?? '').matchAll(/'([^']+)'/g)].map(
+            (match) => match[1],
+        ),
         inlineCode: [...(/export type MarkdownInlineCode = ([^\n]+)/.exec(MARKDOWN_VIEW)?.[1] ?? '').matchAll(/'([^']+)'/g)].map(
             (match) => match[1],
         ),

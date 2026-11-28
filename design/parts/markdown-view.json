@@ -25,7 +25,7 @@
         ]
     },
     "anatomy": {
-        "body": "The prose: text.sm on relaxed lines in foreground. A block's first child has no space above it and its last none below. With measure, paragraphs, lists, quotes and headings stop at reading-measure while tables, code, diagrams, math and parts take the full width.",
+        "body": "The prose: text.sm on relaxed lines in foreground. A block's first child has no space above it and its last none below. With measure, paragraphs, lists, quotes and headings stop at reading-measure while tables, code, diagrams, math and parts take the full width. With measureAlign center, the column (reading-measure at the body's size, so headings in a larger face center on it too) is in the middle of the pane, and a table is centered, as wide as its columns ask up to the pane.",
         "heading": "h1 to h6, each in the text role its level takes at the view's scale (messageHeading1 to 4, documentHeading1 to 4); h5 and h6 in the body's text. With anchors each has the id its words make (lowercased, spaces as dashes, punctuation dropped), a repeated heading numbered -1, -2 after the first.",
         "messageHeading1": "An h1 at the message scale, in text.detail-title; 20 above and 8 below.",
         "messageHeading2": "An h2 at the message scale, in text.section-title at weight 500; 16 above and 8 below.",
@@ -39,7 +39,7 @@
         "list": "Bullets (disc) and numbers (decimal), 20 in, 8 above and below, each item 2 apart; a task item has a checkbox, read only.",
         "quote": "A quote: a 2 wide border-strong rule at its start, 12 in, in muted-foreground.",
         "rule": "A thematic break: a 1px border rule, 16 above and below.",
-        "table": "A table, scrolled sideways inside itself when wider than the view. Cells have a 1px border edge, 10 across and 4 down; the head row is on muted, its text as a table's column head (one step above the cells). A head row whose cells are all empty is left out.",
+        "table": "A table, scrolled sideways inside itself when wider than the view. Cells have a 1px border edge, 10 across and 4 down; the head row is on muted, its text as a table's column head (one step above the cells). A head row whose cells are all empty is left out. Code in a cell stays on one line; the cells' prose wraps instead.",
         "tableCell": "A body cell: a 1px border edge, layout.cellPadX across and layout.cellPadY down.",
         "tableHead": "A head cell: on muted with a 1px border edge, its text a table's column head.",
         "inlineCode": "Code in a sentence in the code face: as a chip on muted (chip, the default), as the face alone (plain), or on a faint wash with no fill in a table (wash).",
@@ -125,6 +125,11 @@
             "type": "boolean",
             "default": false,
             "does": "Holds paragraphs, lists, quotes and headings to reading-measure; tables, code, diagrams, math and parts keep the full width."
+        },
+        "measureAlign": {
+            "values": ["start", "center"],
+            "default": "start",
+            "does": "With measure: start keeps the prose at the pane's start beside full-width blocks; center stands the prose, code, diagrams and math in a reading column in the middle, and lets a table grow past it, centered, to the pane's width."
         },
         "parts": {"type": "node", "does": "The app's own parts by ID, drawn where the text has <!-- part:ID -->."},
         "partMarker": {"type": "text", "default": "part", "does": "The word a part's marker starts with."},

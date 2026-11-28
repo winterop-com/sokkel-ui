@@ -736,6 +736,8 @@ const PROSE = cn(
     '[&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-2.5 [&_th]:py-1 [&_th]:text-left',
     '[&_td]:border [&_td]:border-border [&_td]:px-2.5 [&_td]:py-1',
     '[&_:not(pre)>code]:font-mono',
+    // A value in a cell is never split; the cell's prose wraps instead, and the table scrolls when even that is too wide.
+    '[&_td_code]:whitespace-nowrap [&_th_code]:whitespace-nowrap',
     '[&_.mermaid-block]:my-3 [&_[data-slot=code-block]]:my-3',
     '[&_.katex-display]:my-3 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:py-1',
     '[&_.katex-error]:font-mono',
@@ -755,6 +757,20 @@ export type MarkdownInlineCode = 'chip' | 'plain' | 'wash'
  */
 /** Paragraphs, lists, quotes and headings held to the reading measure; tables, code, diagrams, math and parts keep the full width. */
 const MEASURE = '[&>:is(p,ul,ol,dl,blockquote,h1,h2,h3,h4,h5,h6)]:max-w-(--reading-measure)'
+
+/** How a measured text stands in its pane: at the start, or centered. */
+export type MarkdownMeasureAlign = 'start' | 'center'
+
+/**
+ * Centered: the prose, code, diagrams and math in a reading column in the middle, and a table
+ * centered and as wide as its columns ask, up to the pane, since a table is not read along its lines.
+ */
+const MEASURE_CENTER = cn(
+    '[--reading-column:var(--reading-measure)]',
+    '[&>:is(p,ul,ol,dl,blockquote,h1,h2,h3,h4,h5,h6,hr,[data-slot=code-block],.mermaid-block,.katex-display)]:mx-auto',
+    '[&>:is(p,ul,ol,dl,blockquote,h1,h2,h3,h4,h5,h6,hr,[data-slot=code-block],.mermaid-block,.katex-display)]:max-w-(--reading-column)',
+    '[&>table]:mx-auto [&>table]:w-fit [&>table]:max-w-full',
+)
 
 const INLINE_CODE: Record<MarkdownInlineCode, string> = {
     chip: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1',
@@ -846,6 +862,11 @@ export interface MarkdownProps {
      * read in a wide pane. Off, every block takes the full width, as a message in a narrow column does.
      */
     measure?: boolean
+    /**
+     * Where a measured text stands: `start`, its prose at the pane's start beside full-width blocks;
+     * or `center`, a reading column in the middle, with tables growing past it to the pane's width.
+     */
+    measureAlign?: MarkdownMeasureAlign
     /** The app's own parts by ID, a map or a function, each drawn where the text has the marker `<!-- part:ID -->`. */
     parts?: MarkdownParts
     /** The word a part's marker starts with: `part` by default. */
@@ -1191,6 +1212,7 @@ export const MarkdownView = memo(function MarkdownView({
     inlineBracketMath = false,
     scale = 'message',
     measure = false,
+    measureAlign = 'start',
     parts,
     partMarker: word = 'part',
     links,
@@ -1318,7 +1340,7 @@ export const MarkdownView = memo(function MarkdownView({
                 !inline && PROSE_TYPE,
                 HEADINGS[scale],
                 INLINE_CODE[inlineCode],
-                measure && !inline && MEASURE,
+                measure && !inline && (measureAlign === 'center' ? MEASURE_CENTER : MEASURE),
                 caret && streaming && CARET,
                 className,
             )}
