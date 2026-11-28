@@ -1,5 +1,3 @@
-'use client'
-
 import { format } from 'date-fns'
 import { CalendarDays, ListChecks, MessageSquare, MoreHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'

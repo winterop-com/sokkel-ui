@@ -1,5 +1,3 @@
-'use client'
-
 import { Combobox } from '@base-ui/react'
 import { Check, Search } from 'lucide-react'
 import { useRef, useState, type ReactNode, type Ref } from 'react'

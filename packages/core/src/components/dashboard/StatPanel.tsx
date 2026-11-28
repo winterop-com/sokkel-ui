@@ -1,5 +1,3 @@
-'use client'
-
 import { ArrowDownRight, ArrowUpRight, Info, MoreHorizontal, RotateCw } from 'lucide-react'
 import { useId, type CSSProperties, type ReactNode } from 'react'
 

@@ -1,5 +1,3 @@
-'use client'
-
 import { differenceInCalendarDays, format } from 'date-fns'
 import { TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'

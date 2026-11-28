@@ -1,5 +1,3 @@
-'use client'
-
 import { ArrowRight, RotateCw } from 'lucide-react'
 import { useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 

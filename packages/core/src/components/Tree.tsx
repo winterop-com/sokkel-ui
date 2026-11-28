@@ -1,5 +1,3 @@
-'use client'
-
 import { ChevronRight, Ellipsis, RotateCw, type LucideIcon } from 'lucide-react'
 import {
     useCallback,

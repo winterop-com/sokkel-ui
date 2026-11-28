@@ -1,5 +1,3 @@
-'use client'
-
 import { useContext, useEffect, useMemo, useState } from 'react'
 
 import { useWords, type WordsPart } from '../lib/words'

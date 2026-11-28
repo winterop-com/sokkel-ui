@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, useRef } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'

@@ -1,5 +1,3 @@
-'use client'
-
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { Fragment, useContext, type ReactNode } from 'react'
 

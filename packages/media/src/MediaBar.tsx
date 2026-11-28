@@ -1,5 +1,3 @@
-'use client'
-
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { usePanelSize } from '@winterop-com/sokkel-ui/hooks/use-panel-size'

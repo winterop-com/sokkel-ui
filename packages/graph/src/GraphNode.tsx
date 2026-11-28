@@ -1,5 +1,3 @@
-'use client'
-
 import { Handle, Position, useNodeId, useReactFlow, type Node, type NodeProps } from '@xyflow/react'
 import { Plus } from 'lucide-react'
 import { useContext, type ComponentType } from 'react'

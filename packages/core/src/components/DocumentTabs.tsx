@@ -1,5 +1,3 @@
-'use client'
-
 import { X, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 

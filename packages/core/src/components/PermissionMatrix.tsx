@@ -1,5 +1,3 @@
-'use client'
-
 import { Lock } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 

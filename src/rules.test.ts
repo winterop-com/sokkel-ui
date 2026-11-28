@@ -556,19 +556,6 @@ describe('the components', () => {
         }
         expect(missing, missing.join('\n')).toEqual([])
     })
-
-    it("that call a hook or make a context say 'use client' first, so a server component can render them", () => {
-        const missing = Object.values(SOURCES)
-            .flat()
-            .filter((path) => path.endsWith('.tsx') && !/\.(?:test|stories)\.tsx$/.test(path))
-            .filter((path) => {
-                const source = text(path)
-                const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
-                return /\b(?:use[A-Z]\w*|createContext|use)\s*[(<]/.test(code) && !source.startsWith("'use client'\n")
-            })
-            .map((path) => relative(ROOT, path))
-        expect(missing, missing.join('\n')).toEqual([])
-    })
 })
 
 describe('the stories', () => {

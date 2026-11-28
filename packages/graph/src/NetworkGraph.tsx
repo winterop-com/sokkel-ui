@@ -1,5 +1,3 @@
-'use client'
-
 import { Handle, Position, type Edge, type Node, type NodeProps, type NodeTypes } from '@xyflow/react'
 import { createContext, useContext, useEffect, useMemo, useState, type CSSProperties } from 'react'
 

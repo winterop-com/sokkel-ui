@@ -1,5 +1,3 @@
-'use client'
-
 import { X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 

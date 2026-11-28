@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'

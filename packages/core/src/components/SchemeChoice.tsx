@@ -1,5 +1,3 @@
-'use client'
-
 import { useWords, type WordsPart } from '../lib/words'
 import type { Scheme } from '../lib/appearance'
 import { Segmented } from './Segmented'

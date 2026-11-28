@@ -1,5 +1,3 @@
-'use client'
-
 import { useContext, useMemo, type ReactNode } from 'react'
 
 import { translateWords } from '../lib/catalog'

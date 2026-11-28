@@ -1,5 +1,3 @@
-'use client'
-
 import { CircleAlert, TriangleAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 

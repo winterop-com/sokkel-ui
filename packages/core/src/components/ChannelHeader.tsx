@@ -1,5 +1,3 @@
-'use client'
-
 import { IconButton } from './IconButton'
 import { ChevronDown, Hash, Lock, Users } from 'lucide-react'
 import type { ReactNode } from 'react'

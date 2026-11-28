@@ -1,5 +1,3 @@
-'use client'
-
 import type { ImageSource } from 'maplibre-gl'
 import { useEffect, useMemo, useRef } from 'react'
 

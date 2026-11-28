@@ -1,5 +1,3 @@
-'use client'
-
 import { Menu as MenuIcon } from 'lucide-react'
 import { Menu } from '@base-ui/react/menu'
 import type { ReactNode } from 'react'

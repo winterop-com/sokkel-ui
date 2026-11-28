@@ -1,5 +1,3 @@
-'use client'
-
 import { TriangleAlert } from 'lucide-react'
 import { useEffect, useRef, type ReactNode } from 'react'
 

@@ -1,5 +1,3 @@
-'use client'
-
 import { isSameDay } from 'date-fns'
 import { Fragment, type ReactNode } from 'react'
 

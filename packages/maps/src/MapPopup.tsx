@@ -1,5 +1,3 @@
-'use client'
-
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Feature } from 'geojson'
 import { X } from 'lucide-react'

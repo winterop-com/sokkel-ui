@@ -1,5 +1,3 @@
-'use client'
-
 import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, X, type LucideIcon } from 'lucide-react'
 import {
     Fragment,

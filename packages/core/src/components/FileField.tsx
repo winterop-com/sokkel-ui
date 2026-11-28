@@ -1,5 +1,3 @@
-'use client'
-
 import { CircleAlert, CloudUpload, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 

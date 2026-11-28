@@ -1,5 +1,3 @@
-'use client'
-
 import { Check, ChevronDown, CircleAlert, CloudUpload, RotateCw, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 

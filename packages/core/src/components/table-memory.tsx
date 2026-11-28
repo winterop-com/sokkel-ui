@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState, type RefObject } from 'react'
 
 import { useScrollMemory } from '../hooks/use-scroll-memory'

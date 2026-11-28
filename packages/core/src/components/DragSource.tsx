@@ -1,5 +1,3 @@
-'use client'
-
 import { GripVertical } from 'lucide-react'
 import { useEffect, useId, useState, type ReactNode } from 'react'
 

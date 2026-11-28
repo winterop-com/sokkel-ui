@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react'
 
 import { GripVertical } from 'lucide-react'

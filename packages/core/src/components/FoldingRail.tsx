@@ -1,5 +1,3 @@
-'use client'
-
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 

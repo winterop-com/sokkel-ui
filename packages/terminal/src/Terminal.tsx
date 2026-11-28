@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useRef, type ReactNode } from 'react'
 
 import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'

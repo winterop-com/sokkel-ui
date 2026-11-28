@@ -1,5 +1,3 @@
-'use client'
-
 import { Children, isValidElement, useContext, useMemo } from 'react'
 
 import { DragDrop, type DragDropProps } from './DragDrop'

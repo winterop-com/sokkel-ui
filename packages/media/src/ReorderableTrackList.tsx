@@ -1,5 +1,3 @@
-'use client'
-
 import { SortableGrip, SortableGroup, SortableItem } from '@winterop-com/sokkel-ui/Sortable'
 import { useWords, type WordMessages, type WordsPart } from '@winterop-com/sokkel-ui/lib/words'
 import { TrackList, type Track, type TrackListProps, type TrackListWords, type TrackRowProps } from './TrackList'

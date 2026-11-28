@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, type ReactNode } from 'react'
 
 import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'

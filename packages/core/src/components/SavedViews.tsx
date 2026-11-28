@@ -1,5 +1,3 @@
-'use client'
-
 import { Bookmark, ChevronDown, Pencil, Plus, Save, Trash2 } from 'lucide-react'
 import { useId, useRef, useState, type FormEvent } from 'react'
 

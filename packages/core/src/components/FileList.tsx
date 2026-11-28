@@ -1,5 +1,3 @@
-'use client'
-
 import { File, FileArchive, FileBraces, FileCode, FileImage, FileSpreadsheet, FileText, Folder, type LucideIcon } from 'lucide-react'
 import type { KeyboardEvent, ReactNode } from 'react'
 

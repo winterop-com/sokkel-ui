@@ -1,5 +1,3 @@
-'use client'
-
 import { Download, Info, Maximize2, MoreHorizontal } from 'lucide-react'
 import { Suspense, lazy, memo, useState, type ReactNode, type RefObject } from 'react'
 

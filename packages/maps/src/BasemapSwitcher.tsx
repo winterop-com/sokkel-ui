@@ -1,5 +1,3 @@
-'use client'
-
 import { Layers } from 'lucide-react'
 import { useEffect, useState } from 'react'
 

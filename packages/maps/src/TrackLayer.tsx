@@ -1,5 +1,3 @@
-'use client'
-
 import type { Feature, LineString, Point } from 'geojson'
 import type {
     ExpressionSpecification,

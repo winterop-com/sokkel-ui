@@ -1,5 +1,3 @@
-'use client'
-
 import { Search, X } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 

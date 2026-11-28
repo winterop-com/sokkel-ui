@@ -1,5 +1,3 @@
-'use client'
-
 import { format, isSameDay } from 'date-fns'
 import { Clock, MapPin, Users } from 'lucide-react'
 import type { ReactNode } from 'react'

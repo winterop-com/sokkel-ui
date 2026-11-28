@@ -1,5 +1,3 @@
-'use client'
-
 import { differenceInMinutes, isSameDay, startOfDay } from 'date-fns'
 import {
     Fragment,

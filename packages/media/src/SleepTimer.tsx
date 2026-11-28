@@ -1,5 +1,3 @@
-'use client'
-
 import { Moon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react'
 

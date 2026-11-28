@@ -1,5 +1,3 @@
-'use client'
-
 import { Apple, Car, Clock, Flag, Hand, Heart, Lightbulb, PawPrint, Smile, Volleyball, type LucideIcon } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactElement } from 'react'
 

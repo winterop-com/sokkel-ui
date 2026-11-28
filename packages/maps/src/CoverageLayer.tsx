@@ -1,5 +1,3 @@
-'use client'
-
 import type { Feature, LineString, Polygon } from 'geojson'
 import type { LayerSpecification } from 'maplibre-gl'
 import { useMemo, useRef } from 'react'

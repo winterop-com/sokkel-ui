@@ -1,5 +1,3 @@
-'use client'
-
 import { MoreHorizontal, Play, Volume2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 

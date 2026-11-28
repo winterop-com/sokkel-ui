@@ -1,5 +1,3 @@
-'use client'
-
 import { Eraser } from 'lucide-react'
 import type { ReactNode } from 'react'
 

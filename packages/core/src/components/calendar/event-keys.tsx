@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
 
 import { keyChange, type CalendarEventChange } from './event-change'

@@ -1,5 +1,3 @@
-'use client'
-
 import { MoreHorizontal, Pin, SmilePlus, ThumbsDown, ThumbsUp } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 

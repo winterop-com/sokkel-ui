@@ -1,5 +1,3 @@
-'use client'
-
 import { Check, Download, Pause, Play, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 

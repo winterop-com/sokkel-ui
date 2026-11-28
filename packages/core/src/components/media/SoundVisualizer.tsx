@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 
 import { useReducedMotion } from '../../hooks/use-reduced-motion'

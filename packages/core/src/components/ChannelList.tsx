@@ -1,5 +1,3 @@
-'use client'
-
 import { ChevronDown, Hash, Lock, Plus } from 'lucide-react'
 import { useContext, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 

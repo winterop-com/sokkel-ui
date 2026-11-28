@@ -1,5 +1,3 @@
-'use client'
-
 import { IconButton } from './IconButton'
 import {
     ArrowDownIcon,

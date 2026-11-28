@@ -1,5 +1,3 @@
-'use client'
-
 import * as React from 'react'
 import { cn } from '../../lib/cn'
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'

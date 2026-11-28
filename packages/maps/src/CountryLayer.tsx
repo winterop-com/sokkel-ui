@@ -1,5 +1,3 @@
-'use client'
-
 import type { FeatureCollection } from 'geojson'
 import { useMemo } from 'react'
 

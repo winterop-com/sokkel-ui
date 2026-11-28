@@ -1,5 +1,3 @@
-'use client'
-
 import { Avatar } from '@base-ui/react/avatar'
 import { ChevronsUpDown, Keyboard, LogIn, LogOut, Palette, Settings, User, type LucideIcon } from 'lucide-react'
 import { useContext } from 'react'

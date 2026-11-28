@@ -1,5 +1,3 @@
-'use client'
-
 import { Paperclip, Star } from 'lucide-react'
 
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'

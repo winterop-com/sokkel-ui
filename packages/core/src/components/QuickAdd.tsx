@@ -1,5 +1,3 @@
-'use client'
-
 import { CornerDownLeft, Plus } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 

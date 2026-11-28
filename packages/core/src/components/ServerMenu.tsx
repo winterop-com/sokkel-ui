@@ -1,5 +1,3 @@
-'use client'
-
 import { ChevronDown, CircleAlert, PlugZap, RefreshCw, ServerCrash } from 'lucide-react'
 import type { ReactNode } from 'react'
 

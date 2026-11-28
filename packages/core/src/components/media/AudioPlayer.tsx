@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useEffect, useRef, useState, type Ref } from 'react'
 
 import { useWords, type WordsPart } from '../../lib/words'

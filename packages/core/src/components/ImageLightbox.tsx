@@ -1,5 +1,3 @@
-'use client'
-
 import { Dialog } from '@base-ui/react/dialog'
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from 'react'

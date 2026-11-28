@@ -1,5 +1,3 @@
-'use client'
-
 import { Autocomplete } from '@base-ui/react/autocomplete'
 import { Plus, Send, SquareTerminal, X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react'

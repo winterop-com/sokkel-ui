@@ -1,5 +1,3 @@
-'use client'
-
 import { Clock } from 'lucide-react'
 
 import { fitSeconds, formatTime, isBefore, readTime, timesOfDay, type TimeFormat } from '../lib/dates'

@@ -1,5 +1,3 @@
-'use client'
-
 import type { NodeTypes } from '@xyflow/react'
 import { useMemo, useState } from 'react'
 

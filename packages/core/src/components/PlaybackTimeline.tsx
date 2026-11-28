@@ -1,5 +1,3 @@
-'use client'
-
 import { Pause, Play, StepBack, StepForward } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 

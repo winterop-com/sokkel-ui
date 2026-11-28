@@ -1,5 +1,3 @@
-'use client'
-
 import * as React from 'react'
 import { cn } from '../../lib/cn'
 import { HOLDS_INVALID_EDGE } from '../../lib/issue-edge'

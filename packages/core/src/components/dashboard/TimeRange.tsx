@@ -1,5 +1,3 @@
-'use client'
-
 import { CalendarRange, ChevronDown, Pause, Play, RefreshCw } from 'lucide-react'
 import { lazy, Suspense, useId, useRef, useState } from 'react'
 import type { DateRange } from 'react-day-picker'

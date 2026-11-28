@@ -1,5 +1,3 @@
-'use client'
-
 import { addDays, differenceInCalendarDays, endOfMonth, isSameDay, isSameMonth, startOfMonth } from 'date-fns'
 import { Fragment, useId, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 

@@ -1,5 +1,3 @@
-'use client'
-
 import { AudioLines, FileText, Film, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 

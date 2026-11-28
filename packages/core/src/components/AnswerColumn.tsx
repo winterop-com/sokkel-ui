@@ -1,5 +1,3 @@
-'use client'
-
 import { RotateCcw, Square, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 

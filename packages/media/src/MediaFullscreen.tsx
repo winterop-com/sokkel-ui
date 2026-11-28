@@ -1,5 +1,3 @@
-'use client'
-
 import { AudioLines, MicVocal, Minimize2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'

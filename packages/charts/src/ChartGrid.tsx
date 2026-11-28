@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, type ComponentProps, type Ref } from 'react'
 import type { EChartsCoreOption } from 'echarts/core'
 

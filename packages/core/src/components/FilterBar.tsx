@@ -1,5 +1,3 @@
-'use client'
-
 import { ListFilter, Plus } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 

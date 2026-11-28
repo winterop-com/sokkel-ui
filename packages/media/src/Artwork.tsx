@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useId, useRef, useState } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'

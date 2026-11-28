@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useReducedMotion } from '@winterop-com/sokkel-ui/hooks/use-reduced-motion'

@@ -1,5 +1,3 @@
-'use client'
-
 import { Ellipsis } from 'lucide-react'
 import { Fragment, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 

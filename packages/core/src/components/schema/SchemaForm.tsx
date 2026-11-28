@@ -1,5 +1,3 @@
-'use client'
-
 import { IconButton } from '../IconButton'
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'

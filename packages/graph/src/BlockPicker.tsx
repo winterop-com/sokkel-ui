@@ -1,5 +1,3 @@
-'use client'
-
 import { Search } from 'lucide-react'
 import { useEffect, useId, useState, type KeyboardEvent } from 'react'
 

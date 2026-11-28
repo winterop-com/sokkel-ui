@@ -1,5 +1,3 @@
-'use client'
-
 import { memo, useEffect, useState } from 'react'
 
 import { MarkdownView, type MarkdownProps, type MathEngine } from './markdown-view'
