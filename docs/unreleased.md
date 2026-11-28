@@ -41,3 +41,5 @@ release and empties it.
 - `Rating`: a rating in stars, chosen as a radio group or shown filled to a fraction.
 - `Tour`: a guided tour of a page, a step at a time beside the element each points at, cut out of a
   dimmed page.
+- `NotificationInbox`: a bell that counts the unread and opens the list of notices, with Mark all as
+  read.
