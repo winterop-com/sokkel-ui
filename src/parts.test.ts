@@ -126,6 +126,7 @@ import { CAMERA_CONTROL_WORDS, CameraControl, type CameraControlProps, type Came
 import { COLOR_FIELD_WORDS, COLOR_PICKER_WORDS, ColorField, ColorPicker } from '@winterop-com/sokkel-ui/ColorField'
 import { TAGS_FIELD_WORDS, TagsField, type TagsFieldProps } from '@winterop-com/sokkel-ui/TagsField'
 import { Meter, MeterLabel, MeterValue, type MeterProps } from '@winterop-com/sokkel-ui/primitives/meter'
+import { RATING_WORDS, Rating } from '@winterop-com/sokkel-ui/Rating'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -872,6 +873,7 @@ const FILL: Record<string, string | number> = {
     count: 3,
     saturation: 70,
     brightness: 85,
+    stars: '3.6',
     action: 'Remove',
     from: 1,
     to: 50,
@@ -11764,6 +11766,61 @@ const METER_ADAPTER: Adapter = {
     ],
 }
 
+// Rating
+
+const RATING = source('components/Rating.tsx')
+
+const RATING_ADAPTER: Adapter = {
+    wordObjects: { RATING_WORDS },
+    complete: ['RATING_WORDS'],
+    words: {
+        star: ['RATING_WORDS.star', (said: (count: number, total: number) => string, fill) => said(Number(fill.count), Number(fill.total))],
+        rated: [
+            'RATING_WORDS.rated',
+            (said: (stars: string, total: number) => string, fill) => said(String(fill.stars), Number(fill.total)),
+        ],
+    },
+    options: { size: propValues(RATING, 'RatingProps', 'size') },
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the rating states no effects'),
+    keys: {
+        Tab: () => {
+            const radios = draw(Rating, { label: 'Export', defaultValue: 3, onValueChange: noop }).filter(
+                (element) => element.attrs.type === 'radio',
+            )
+            return radios.length === 5 && radios.every((radio) => radio.tag === 'input') ? true : 'the stars are not five radio inputs'
+        },
+        'ArrowRight, ArrowLeft (a star has focus)': () => {
+            const drawn = draw(Rating, { label: 'Export', defaultValue: 3, onValueChange: noop })
+            const names = new Set(drawn.filter((element) => element.attrs.type === 'radio').map((radio) => radio.attrs.name))
+            // Radios sharing one name: a browser moves the choice along them with the arrow keys.
+            return names.size === 1 ? true : 'the stars are not one radio group'
+        },
+    },
+    more: () => {
+        const told: number[] = []
+        const pressed = live(
+            createElement(Rating, { label: 'Export', defaultValue: 3, onValueChange: (value) => told.push(value) }),
+            (box) => {
+                const radios = [...box.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
+                act(() => radios[4].click())
+                act(() => radios[4].click())
+                return told.join(' ')
+            },
+        )
+        const shown = draw(Rating, { label: 'Average', value: 3.6 })[0]
+        return [
+            check('options.onValueChange (a star picks, the picked again takes it to none)', '5 0', pressed),
+            check(
+                'anatomy.fraction (shown as one image)',
+                'img Rated 3.6 of 5',
+                `${String(shown?.attrs.role)} ${String(shown?.attrs['aria-label'])}`,
+            ),
+        ]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12822,6 +12879,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'color-field': COLOR_FIELD_ADAPTER,
     'tags-field': TAGS_FIELD_ADAPTER,
     meter: METER_ADAPTER,
+    rating: RATING_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,
