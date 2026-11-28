@@ -1,0 +1,88 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "rating",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "d513a36"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A rating in stars: chosen as a radio group, or shown, filled to the fraction an average has.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/Rating.tsx"]},
+    "anatomy": {
+        "container": "A row of max stars, 2 apart.",
+        "star": "A star outline (md 20 square, sm 14): given, filled and stroked in warning; not given, stroked in muted-foreground at 40 percent. As a choice each star is a radio button padded 2, rounded by radius-mini.",
+        "fraction": "Shown, each star filled from its start to the part of it the value covers, so 3.6 fills three and three fifths."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "label": {"type": "text", "does": "What the stars rate: the group's name."},
+        "value": {"type": "number", "does": "The stars given, from 0; shown, it may be a fraction."},
+        "onValueChange": {
+            "type": "callback",
+            "does": "Makes it a choice: called with the stars picked, or 0 when the picked count is pressed again."
+        },
+        "max": {"type": "number", "default": 5, "does": "How many stars there are."},
+        "size": {"values": ["sm", "md"], "default": "md", "does": "Stars 14 or 20 square."},
+        "disabled": {"type": "boolean", "default": false, "does": "Turns the choice off."}
+    },
+    "sizes": {"sm": {"width": 14, "height": 14}, "md": {"width": 20, "height": 20}},
+    "states": {
+        "rest": {"means": "The stars given filled."},
+        "hover": {
+            "means": "The pointer over a star of a choice: it and those before it filled at 70 percent.",
+            "reached": "pointer over, with onValueChange"
+        },
+        "focus": {
+            "means": "Keyboard focus on a star: the focus ring around it.",
+            "reached": "Tab, with onValueChange",
+            "on": "keyboard"
+        },
+        "disabled": {"means": "Turned off: at the disabled opacity.", "reached": "disabled"}
+    },
+    "pieces": {
+        "star": {
+            "rest": {"ink": "warning", "note": "Given; not given, muted-foreground at 40 percent."},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the stars given, or the first."},
+        {
+            "keys": ["ArrowRight", "ArrowLeft"],
+            "does": "Gives one star more or one fewer, as a radio group moves.",
+            "when": "a star has focus"
+        }
+    ],
+    "words": {
+        "star": {"one": "{count} of {total} star", "other": "{count} of {total} stars"},
+        "rated": "Rated {stars} of {total}"
+    },
+    "messages": {
+        "star": {"id": "rating.star", "en": "{count, plural, one {# of {total} star} other {# of {total} stars}}"},
+        "rated": {"id": "rating.rated", "en": "Rated {stars} of {total}"}
+    },
+    "samples": {
+        "star": [
+            {"with": {"count": 1, "total": 5}, "says": "1 of 5 star"},
+            {"with": {"count": 3, "total": 5}, "says": "3 of 5 stars"}
+        ],
+        "rated": [{"with": {"stars": "3.6", "total": 5}, "says": "Rated 3.6 of 5"}]
+    },
+    "appText": {"label": "What the stars rate."},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}
