@@ -1,0 +1,101 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "camera-control",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "1ad1d7d"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "The controls of a camera that turns and zooms: a pad of eight directions around a home button, a zoom in and out beside it, and the camera's presets under them. A direction or a zoom acts for as long as it is held.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/CameraControl.tsx"]},
+    "anatomy": {
+        "container": "A column 12 apart: the pad and the zoom in a row 12 apart, then the presets.",
+        "pad": "A grid of three by three icon buttons (parts' button, secondary, icon size) 4 apart on muted/60, padded 6, rounded by radius-surface: up and left, up, up and right; left, home (ghost), right; down and left, down, down and right, each an arrow pointing its way and named by its word.",
+        "zoom": "With onZoom: a column of two icon buttons (secondary) 4 apart, zoom in over zoom out.",
+        "presets": "With presets: a row of small buttons (outline; the one the camera stands at secondary) 4 apart, wrapping, each the preset's name."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "onMove": {
+            "type": "callback",
+            "does": "Called with a direction (pan and tilt, each -1, 0 or 1) while one is held, and nothing once it is let go."
+        },
+        "onZoom": {"type": "callback", "does": "Called with 1 or -1 while a zoom is held, and 0 once it is let go."},
+        "onHome": {"type": "callback", "does": "Called by the home button."},
+        "presets": {"type": "rows", "does": "The places the camera keeps, each with its id and name."},
+        "preset": {"type": "text", "does": "The preset the camera stands at."},
+        "onPreset": {"type": "callback", "does": "Called with a preset's id when it is pressed."},
+        "disabled": {"type": "boolean", "default": false, "does": "Turns every control off."}
+    },
+    "sizes": {"container": {"gap": 12}, "pad": {"padX": 6, "padY": 6, "gap": 4, "radius": "radius-surface"}},
+    "states": {
+        "rest": {"means": "Every control ready."},
+        "held": {
+            "means": "A direction or a zoom held: the camera told to turn or zoom until it is let go.",
+            "reached": "pointer down on it, or an arrow key down on the pad"
+        },
+        "disabled": {"means": "Every control off.", "reached": "disabled"},
+        "focus": {"means": "Keyboard focus on the pad or a button: the focus ring.", "reached": "Tab", "on": "keyboard"}
+    },
+    "pieces": {
+        "pad": {
+            "rest": {"ground": "muted/60", "radius": "radius-surface"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches the pad, the home button, the zoom and each preset in turn."},
+        {
+            "keys": ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+            "does": "Turns the camera that way while held, and stops it when let go.",
+            "when": "the pad has focus"
+        }
+    ],
+    "words": {
+        "pad": "Pan and tilt",
+        "up": "Tilt up",
+        "down": "Tilt down",
+        "left": "Pan left",
+        "right": "Pan right",
+        "upLeft": "Up and left",
+        "upRight": "Up and right",
+        "downLeft": "Down and left",
+        "downRight": "Down and right",
+        "home": "Home",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "presets": "Presets"
+    },
+    "messages": {
+        "pad": {"id": "cameraControl.pad", "en": "Pan and tilt"},
+        "up": {"id": "cameraControl.up", "en": "Tilt up"},
+        "down": {"id": "cameraControl.down", "en": "Tilt down"},
+        "left": {"id": "cameraControl.left", "en": "Pan left"},
+        "right": {"id": "cameraControl.right", "en": "Pan right"},
+        "upLeft": {"id": "cameraControl.upLeft", "en": "Up and left"},
+        "upRight": {"id": "cameraControl.upRight", "en": "Up and right"},
+        "downLeft": {"id": "cameraControl.downLeft", "en": "Down and left"},
+        "downRight": {"id": "cameraControl.downRight", "en": "Down and right"},
+        "home": {"id": "cameraControl.home", "en": "Home"},
+        "zoomIn": {"id": "cameraControl.zoomIn", "en": "Zoom in"},
+        "zoomOut": {"id": "cameraControl.zoomOut", "en": "Zoom out"},
+        "presets": {"id": "cameraControl.presets", "en": "Presets"}
+    },
+    "appText": {"preset": "Each preset's name."},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}
