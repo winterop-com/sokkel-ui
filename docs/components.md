@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 292 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 293 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -239,6 +239,7 @@ in (`geo`).
 | **ChipBar** | `@winterop-com/sokkel-ui/ChipBar` | A row of chips with one chosen, such as topics over a feed. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-chip-bar--few) |
 | **ChoiceList** | `@winterop-com/sokkel-ui/ChoiceList` | Pick one of a few choices, each a row with its radio, its name and a line saying what it means. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-choice-list--described) |
 | **CodeField** | `@winterop-com/sokkel-ui/CodeField` | The field a thing's code is typed in. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pages--runs-list) |
+| **ColorField**, ColorPicker | `@winterop-com/sokkel-ui/ColorField` | A color typed (six or three hex digits after `#`, or `rgb(r, g, b)`) or picked: the value is always `#rrggbb`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-color-field--plain) |
 | **ComputedField** | `@winterop-com/sokkel-ui/ComputedField` | An answer a form works out itself rather than asks: its label with a note that it is worked out, the value read only in the place an input would take, and under it why it is what it is, with the rule in the code face. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-answers--computed) |
 | **CronField** | `@winterop-com/sokkel-ui/CronField` | A cron expression typed in, read back in words under it, with the next runs it makes listed after a given time, in a time zone. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 | **DateField** | `@winterop-com/sokkel-ui/DateField` | A date typed in one format, with a calendar beside it to pick from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-date-field--plain) |

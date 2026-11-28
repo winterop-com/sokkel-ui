@@ -30,3 +30,6 @@ release and empties it.
   corners (dragged, or moved with the arrow keys) and drawn anew point by point.
 - `CameraControl`: a pan, tilt and zoom pad that acts while held (pointer or arrow keys), a home
   button, and the camera's presets.
+- `ColorField` and `ColorPicker`: a color typed as hex or `rgb()` or picked from an area of
+  saturation and brightness, a hue strip and swatches, kept as `#rrggbb`; `lib/color-value` reads
+  and converts colors.
