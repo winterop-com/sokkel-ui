@@ -125,6 +125,7 @@ import { PICTURE_ZONES_WORDS, PictureZones, type PictureZone, type PictureZonesP
 import { CAMERA_CONTROL_WORDS, CameraControl, type CameraControlProps, type CameraMove } from '@winterop-com/sokkel-ui/CameraControl'
 import { COLOR_FIELD_WORDS, COLOR_PICKER_WORDS, ColorField, ColorPicker } from '@winterop-com/sokkel-ui/ColorField'
 import { TAGS_FIELD_WORDS, TagsField, type TagsFieldProps } from '@winterop-com/sokkel-ui/TagsField'
+import { Meter, MeterLabel, MeterValue, type MeterProps } from '@winterop-com/sokkel-ui/primitives/meter'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11726,6 +11727,43 @@ const TAGS_FIELD_ADAPTER: Adapter = {
     },
 }
 
+// Meter
+
+const METER = source('components/ui/meter.tsx')
+const meterDrawn = (props: Partial<MeterProps> = {}) =>
+    draw(Meter, { value: 50, ...props }, createElement(MeterLabel, null, 'Disk'), createElement(MeterValue, null))
+const meterTone = (props: Partial<MeterProps>) =>
+    meterDrawn(props).find((element) => element.attrs['data-slot'] === 'meter')?.attrs['data-tone']
+
+const METER_ADAPTER: Adapter = {
+    wordObjects: {},
+    complete: [],
+    words: {},
+    options: { optimum: unionIn(METER, 'MeterOptimum') },
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the meter states no effects'),
+    keys: {},
+    more: () => [
+        check(
+            'states (rest, good, warning, critical)',
+            'none good warning critical',
+            [
+                meterTone({}),
+                meterTone({ value: 40, low: 70, high: 90 }),
+                meterTone({ value: 80, low: 70, high: 90 }),
+                meterTone({ value: 95, low: 70, high: 90 }),
+            ].join(' '),
+        ),
+        check('options.optimum (high turns the scale around)', 'critical', meterTone({ value: 10, low: 20, high: 50, optimum: 'high' })),
+        check(
+            'anatomy.value (a whole percent without a format)',
+            '50%',
+            meterDrawn().find((element) => element.attrs['data-slot'] === 'meter-value')?.text,
+        ),
+    ],
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12783,6 +12821,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'camera-control': CAMERA_CONTROL_ADAPTER,
     'color-field': COLOR_FIELD_ADAPTER,
     'tags-field': TAGS_FIELD_ADAPTER,
+    meter: METER_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,
