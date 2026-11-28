@@ -25,7 +25,7 @@ export interface Notice {
 
 export interface NotificationInboxWords {
     /** The bell's name, by how many are unread. */
-    bell: (unread: number) => string
+    bell: (count: number) => string
     /** The inbox's title. */
     title: string
     markAllRead: string
@@ -36,7 +36,7 @@ export interface NotificationInboxWords {
 }
 
 export const NOTIFICATION_INBOX_WORDS: NotificationInboxWords = {
-    bell: (unread) => (unread === 0 ? 'Notifications' : `Notifications, ${unread.toLocaleString('en-US')} unread`),
+    bell: (count) => (count === 0 ? 'Notifications' : `Notifications, ${count.toLocaleString('en-US')} unread`),
     title: 'Notifications',
     markAllRead: 'Mark all as read',
     empty: 'You are all caught up',
@@ -47,12 +47,12 @@ export const NOTIFICATION_INBOX_WORDS: NotificationInboxWords = {
 export const NOTIFICATION_INBOX_PART: WordsPart<NotificationInboxWords> = {
     id: 'notificationInbox',
     words: NOTIFICATION_INBOX_WORDS,
-    args: { bell: 'unread' },
+    args: { bell: 'count' },
 }
 
 /** A notification inbox's phrases as ICU messages in English, for the catalog. */
 export const NOTIFICATION_INBOX_MESSAGES: WordMessages<NotificationInboxWords> = {
-    bell: '{unread, plural, =0 {Notifications} other {Notifications, # unread}}',
+    bell: '{count, plural, =0 {Notifications} other {Notifications, # unread}}',
 }
 
 export interface NotificationInboxProps {
