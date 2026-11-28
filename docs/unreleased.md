@@ -39,3 +39,5 @@ release and empties it.
   `optimum` give the bar a tone (`meterTone`). An app that draws it adds `sources/primitives/meter.css`
   to its styles, as for the other primitives no part draws.
 - `Rating`: a rating in stars, chosen as a radio group or shown filled to a fraction.
+- `Tour`: a guided tour of a page, a step at a time beside the element each points at, cut out of a
+  dimmed page.

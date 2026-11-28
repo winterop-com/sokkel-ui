@@ -372,6 +372,10 @@
             "types": "./dist/components/Rating.d.ts",
             "import": "./dist/components/Rating.js"
         },
+        "./Tour": {
+            "types": "./dist/components/Tour.d.ts",
+            "import": "./dist/components/Tour.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"

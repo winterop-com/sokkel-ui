@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 296 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 297 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -360,6 +360,7 @@ in (`geo`).
 | **ShortcutsDialog** | `@winterop-com/sokkel-ui/ShortcutsDialog` | Every keyboard shortcut, grouped, each with its keys drawn as keys: the keys bound with `useShortcuts` (in the nearest `Shell`, or the page's) that have a label, written as this device writes them, then the `groups` given for keys the app answers itself. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-controls--theme) |
 | **SplitButton** | `@winterop-com/sokkel-ui/SplitButton` | The main action and a menu of other ways to do it, joined as one control: Run now beside Run with options and Run from a step. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-split-button--variants) |
 | **StarButton** | `@winterop-com/sokkel-ui/StarButton` | A favorite toggle: an outlined star in the quiet ink that fills in the accent once starred, the button pressed while it is. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-star-button--off) |
+| **Tour** | `@winterop-com/sokkel-ui/Tour` | A guided tour of a page: one step at a time, each a card beside the part of the page it is about, that part cut out of a dimmed page and ringed, the rest of the page held still under the dim. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tour--welcome) |
 | **TypedConfirmDialog** | `@winterop-com/sokkel-ui/TypedConfirmDialog` | A confirm for what cannot be undone: the verb stays shut until the item's code is typed out exactly. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 
 ### Chat and messaging
