@@ -512,6 +512,16 @@ export function labelTail(label: string): number {
     return label.length - word <= TAIL_MAX ? word : label.length - TAIL_CHARS
 }
 
+/**
+ * Where a middle cut may start its tail, longest first: `labelTail`'s split, then each word after it,
+ * so a row too narrow for the whole tail keeps its last word or two rather than cutting at the end.
+ */
+export function tailStarts(label: string, from: number): number[] {
+    const starts = [from]
+    for (let at = label.indexOf(' ', from + 1); at > 0 && at < label.length - 1; at = label.indexOf(' ', at + 1)) starts.push(at)
+    return starts
+}
+
 /** Part of a label with the query's marks that fall in it. */
 function MarkedPart({ text, from, to, query }: { text: string; from: number; to: number; query: string }) {
     const ranges = literalRanges(text, query)
@@ -535,7 +545,8 @@ let measuring: CanvasRenderingContext2D | null | undefined
 
 /** A text's width in an element's font, or undefined where nothing can measure it. */
 function textWidth(text: string, like: HTMLElement): number | undefined {
-    if (measuring === undefined) {
+    // Only a context got is kept: where none can be had now, the next call asks again.
+    if (measuring === undefined || measuring === null) {
         try {
             measuring = document.createElement('canvas').getContext('2d')
         } catch {
@@ -573,7 +584,10 @@ function headCut(head: string, room: number, like: HTMLElement): number | undefi
 function TreeLabel({ label, query, cut, trail }: { label: string; query: string; cut: 'end' | 'middle'; trail?: string }) {
     const [ref, clamped] = useClamped<HTMLSpanElement>()
     const [trailRef, trailClamped] = useClamped<HTMLSpanElement>()
-    const tail = cut === 'middle' ? labelTail(label) : 0
+    const split = cut === 'middle' ? labelTail(label) : 0
+    // A shorter tail than the split, taken when the whole one leaves the head too little room.
+    const [shorter, setShorter] = useState<{ label: string; at: number } | undefined>(undefined)
+    const tail = shorter !== undefined && shorter.label === label ? shorter.at : split
     const [endCut, setEndCut] = useState(false)
     // Where the head is cut before its ellipsis, so the tail follows the ellipsis with no gap.
     const [headEnd, setHeadEnd] = useState<number | undefined>(undefined)
@@ -590,17 +604,25 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
     useLayoutEffect(() => {
         const outer = box.current
         const tailNode = tailText.current
-        if (tail === 0 || outer === null || tailNode === null) return
+        if (split === 0 || outer === null || tailNode === null) return
         const measure = () => {
             // The room the label has, from the row and not from the label, which the cut narrows.
             const room = outer.clientWidth * (trail === undefined ? 1 : 2 / 3)
             if (room === 0) return
-            const tailWidth = tailNode.getBoundingClientRect().width
-            // Measured in the tail's font, which the head shares, so the answer holds whichever cut is drawn.
-            const kept = room < tailWidth + headMin() ? undefined : headCut(label.slice(0, tail), room - tailWidth - 0.5, tailNode)
-            const narrow = room < tailWidth + headMin() || (kept !== undefined && kept < HEAD_MIN_CHARS)
-            setEndCut(narrow)
-            setHeadEnd(narrow ? undefined : kept)
+            // The longest tail that leaves the head its least room; measured in the tail's font, which the head shares.
+            for (const at of tailStarts(label, split)) {
+                const tailWidth = textWidth(label.slice(at), tailNode) ?? (at === tail ? tailNode.getBoundingClientRect().width : undefined)
+                if (tailWidth === undefined || room < tailWidth + headMin()) continue
+                const kept = headCut(label.slice(0, at), room - tailWidth - 0.5, tailNode)
+                if (kept !== undefined && kept < HEAD_MIN_CHARS) continue
+                setShorter(at === split ? undefined : { label, at })
+                setEndCut(false)
+                setHeadEnd(kept)
+                return
+            }
+            setShorter(undefined)
+            setEndCut(true)
+            setHeadEnd(undefined)
         }
         measure()
         void document.fonts?.ready.then(measure)
@@ -608,7 +630,7 @@ function TreeLabel({ label, query, cut, trail }: { label: string; query: string;
         const observer = new ResizeObserver(measure)
         observer.observe(outer)
         return () => observer.disconnect()
-    }, [tail, label, endCut, trail])
+    }, [split, tail, label, endCut, trail])
     const whole = trail === undefined ? label : `${label} \u2014 ${trail}`
     const cutShort = clamped || headEnd !== undefined || trailClamped
     const [hovered, setHovered] = useState(false)

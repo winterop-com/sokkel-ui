@@ -5,6 +5,7 @@ import {
     dropPart,
     isBranch,
     labelTail,
+    tailStarts,
     moveTreeNode,
     staleLoads,
     tabStop,
@@ -305,5 +306,16 @@ describe('labelTail', () => {
         expect(labelTail('The Sandpiper')).toBe(3)
         expect(labelTail('Bergen')).toBe(0)
         expect(labelTail('Oslo: 1')).toBe(4)
+    })
+})
+
+describe('tailStarts', () => {
+    test('offers the split, then each word after it, so a narrow row keeps the last word or two', () => {
+        const label = 'Claude code hooks and automation in depth'
+        expect(tailStarts(label, labelTail(label)).map((at) => label.slice(at))).toEqual([' automation in depth', ' in depth', ' depth'])
+    })
+
+    test("never starts a tail inside a word, and gives a one-word tail's split alone", () => {
+        expect(tailStarts('Sync inventory', labelTail('Sync inventory')).map((at) => 'Sync inventory'.slice(at))).toEqual([' inventory'])
     })
 })

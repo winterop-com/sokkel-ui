@@ -371,6 +371,41 @@ function Sheets({ cut }: { cut: 'end' | 'middle' }) {
     )
 }
 
+/** Notes that share a long start and have no separator, so only their last words tell them apart. */
+const NOTES: TreeNode[] = [
+    'Nightly export of the harbor inventory in depth',
+    'Nightly export of the harbor orders from scratch',
+    'Nightly export of the harbor sites week by week',
+    'Nightly export of the harbor vessels and their tracks',
+    'Nightly export of the harbor zones by region',
+    'Nightly export of the harbor sensors at the quay',
+].map((label, index) => ({ id: `note-${String(index)}`, label }))
+
+function Notes() {
+    const [note, setNote] = useState('note-0')
+    return (
+        <Rail
+            mark={<TidevannMark />}
+            name="Tidevann"
+            groups={[{ id: 'work', entries: [{ id: 'notes', label: 'Notes', icon: FileText, href: '#notes', active: true }] }]}
+            body={{
+                title: 'Notes',
+                content: (
+                    <Tree
+                        label="Notes"
+                        nodes={NOTES}
+                        cut="middle"
+                        selected={[note]}
+                        onSelect={([id]) => {
+                            if (id !== undefined) setNote(id)
+                        }}
+                    />
+                ),
+            }}
+        />
+    )
+}
+
 const meta: Meta = { title: 'Patterns/Tree', parameters: { frame: 'padded' } }
 export default meta
 
@@ -434,6 +469,22 @@ export const LongLabelsMiddle: StoryObj = {
         <TooltipProvider>
             <Row gap="none" align="stretch" className="h-svh bg-background">
                 <Sheets cut="middle" />
+            </Row>
+        </TooltipProvider>
+    ),
+}
+/**
+ * Notes that share a long start and have no separator, cut in the middle in a narrow rail: where the
+ * whole end does not fit beside the head, each keeps its last word or two, so the series still tells
+ * apart ("Nightly exp… in depth").
+ */
+export const LongTitlesMiddle: StoryObj = {
+    name: 'Long titles, middle',
+    parameters: { frame: 'none' },
+    render: () => (
+        <TooltipProvider>
+            <Row gap="none" align="stretch" className="h-svh bg-background">
+                <Notes />
             </Row>
         </TooltipProvider>
     ),
