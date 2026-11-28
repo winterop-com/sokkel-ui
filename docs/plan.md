@@ -1434,6 +1434,10 @@ that element cut out of the page dimmed in the scrim and outlined in primary, th
 under the dim; the card says where the tour is and moves back and on, and Skip tour, the last
 step's Done or Escape end it. A step with no target stands in the middle. The app keeps whether
 the tour has been seen.
+`NotificationInbox` is what the app has told the viewer, behind a bell that counts the unread
+(`Count`): a popover listing the notices as the app orders them, each with its tone's mark, title,
+line and time, the unread on a wash with a dot; a press hands a notice to the app to open and mark
+read, Mark all as read clears the count, and an empty inbox says so.
 
 ## Graphs
 

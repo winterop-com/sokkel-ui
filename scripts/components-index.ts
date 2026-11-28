@@ -360,6 +360,7 @@ const CORE_AREAS: Record<string, string> = {
     TagsField: 'Forms and inputs',
     Rating: 'Forms and inputs',
     Tour: 'Actions, dialogs and feedback',
+    NotificationInbox: 'Actions, dialogs and feedback',
     TreeSelect: 'Forms and inputs',
     UnsavedChanges: 'Forms and inputs',
     SignIn: 'Forms and inputs',
