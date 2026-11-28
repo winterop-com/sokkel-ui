@@ -344,6 +344,10 @@
             "types": "./dist/components/CameraWall.d.ts",
             "import": "./dist/components/CameraWall.js"
         },
+        "./DetectionTimeline": {
+            "types": "./dist/components/DetectionTimeline.d.ts",
+            "import": "./dist/components/DetectionTimeline.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"

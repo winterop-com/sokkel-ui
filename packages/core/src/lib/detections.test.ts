@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { detectionAt, detectionTrail, type Detection } from './detections'
+import { detectionAt, detectionSpans, detectionTrail, type Detection } from './detections'
 
 const WALKER: Detection = {
     id: 'p-1',
@@ -50,5 +50,19 @@ describe('detectionTrail', () => {
     it('is empty while it is nowhere, or with no seconds to draw', () => {
         expect(detectionTrail(WALKER, 0.5, 1)).toEqual([])
         expect(detectionTrail(WALKER, 1.2, 0)).toEqual([])
+    })
+})
+
+describe('detectionSpans', () => {
+    it('splits a detection at a gap longer than the gap, each stretch held past its last sample', () => {
+        expect(detectionSpans([WALKER])).toEqual([
+            { id: 'p-1', label: 'person', affiliation: undefined, start: 1, end: 2 },
+            { id: 'p-1', label: 'person', affiliation: undefined, start: 4, end: 4.5 },
+        ])
+    })
+
+    it('orders the stretches of several detections by their start', () => {
+        const other: Detection = { id: 'v-2', samples: [{ t: 2.5, x: 0, y: 0, w: 0.1, h: 0.1 }] }
+        expect(detectionSpans([WALKER, other]).map((span) => `${span.id}@${String(span.start)}`)).toEqual(['p-1@1', 'v-2@2.5', 'p-1@4'])
     })
 })

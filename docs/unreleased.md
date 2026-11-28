@@ -20,3 +20,6 @@ release and empties it.
 - `CameraWall`: cameras side by side, each with its name, state, detection count and an alert ring;
   the focused one first and two tiles across. A tile plays `src` muted or draws the app's
   `picture`.
+- `DetectionTimeline`: where things were seen over a video, alerts on a lane of their own and a lane
+  per label, with a playhead and presses that seek; `detectionSpans` (`lib/detections`) makes its
+  spans of detections.
