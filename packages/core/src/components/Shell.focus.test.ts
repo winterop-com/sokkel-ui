@@ -13,6 +13,7 @@ function heading({
     const blurs: (() => void)[] = []
     const node = {
         focused: false,
+        focusOptions: undefined as FocusOptions | undefined,
         shown,
         textContent: text,
         set tabIndex(value: number) {
@@ -25,8 +26,9 @@ function heading({
         setAttribute: (name: string, value: string) => attributes.set(name, value),
         getAttribute: (name: string) => attributes.get(name) ?? null,
         addEventListener: (_type: string, listener: () => void) => blurs.push(listener),
-        focus: () => {
+        focus: (options?: FocusOptions) => {
             node.focused = true
+            node.focusOptions = options
         },
         attributes,
         blur: () => blurs.forEach((listener) => listener()),
@@ -46,6 +48,12 @@ describe('focusHeading', () => {
         expect(h1.attributes.get('tabindex')).toBe('-1')
         h1.blur()
         expect(h1.attributes.has('tabindex')).toBe(false)
+    })
+
+    it('leaves the page where it is scrolled, so a restored scroll holds', () => {
+        const h1 = heading()
+        focusHeading(area(h1))
+        expect(h1.focusOptions).toEqual({ preventScroll: true })
     })
 
     it('leaves a heading that was focusable already as it was', () => {
