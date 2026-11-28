@@ -1,0 +1,89 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "detection-timeline",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "628dfb9"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "Where things were seen over a video, as a playback bar marked with them: the spans that call for a look on a lane of their own, a lane per kind of thing, a playhead at the moment shown and the time along the foot; presses seek the player.",
+    "sources": {
+        "sokkel-ui": ["packages/core/src/components/DetectionTimeline.tsx", "packages/core/src/lib/detections.ts"]
+    },
+    "anatomy": {
+        "container": "A grid of two columns, the lanes' names then their tracks, 12 apart across and 4 down, at text.xs.",
+        "lane": "One row: its name (the label, or Alerts at 500 in critical-ink) in muted-foreground cut with an ellipsis, then a track 20 tall on muted/60 rounded by radius-mini. The alerts' lane comes first when any span is an alert; then a lane per label, in the order first seen or as labels gives them.",
+        "span": "A stretch on its lane from its start to its end over the video's length, 4 in from the track's top and bottom, no narrower than 4, rounded by radius-mini at 85 percent: critical on the alerts' lane, else its affiliation's track color, or primary without one.",
+        "playhead": "With time: a line 2 wide in foreground across each track, 2 past its top and bottom, at the moment shown.",
+        "axis": "Under the tracks: about six ticks on a step a reader counts in (1, 2, 5, 10, 15 or 30 seconds, then minutes), each the time at text.2xs in muted-foreground, the first at the start and the last held inside the end."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "spans": {
+            "type": "rows",
+            "does": "The stretches seen: each with its id, label, affiliation, start, end and whether it is an alert."
+        },
+        "duration": {"type": "number", "does": "How long the video is, in seconds."},
+        "time": {"type": "number", "does": "The playhead, in seconds."},
+        "onSeek": {
+            "type": "callback",
+            "does": "Makes spans buttons that seek to their start, and a press on a lane seek to that moment."
+        },
+        "labels": {"type": "rows", "does": "Which labels get lanes, in this order."}
+    },
+    "sizes": {
+        "container": {"gap": 4, "text": "text.xs"},
+        "lane": {"height": 20, "radius": "radius-mini"},
+        "playhead": {"width": 2}
+    },
+    "states": {
+        "rest": {"means": "The lanes with their spans."},
+        "hover": {
+            "means": "The pointer over a span that is a button: at full strength.",
+            "reached": "pointer over, with onSeek"
+        },
+        "focus": {
+            "means": "Keyboard focus on a span: the focus ring around it.",
+            "reached": "Tab, with onSeek",
+            "on": "keyboard"
+        }
+    },
+    "pieces": {
+        "lane": {"rest": {"ground": "muted/60", "radius": "radius-mini"}},
+        "span": {
+            "rest": {
+                "ground": "primary",
+                "radius": "radius-mini",
+                "note": "critical on the alerts' lane; else track-<affiliation>, or primary."
+            }
+        },
+        "playhead": {"rest": {"ground": "foreground"}}
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches each span in turn when the timeline seeks."},
+        {"keys": ["Enter"], "does": "Seeks to the span's start.", "when": "a span has focus"}
+    ],
+    "words": {"timeline": "Detections over time", "alerts": "Alerts", "seek": "Go to {name} at {time}"},
+    "messages": {
+        "timeline": {"id": "detectionTimeline.timeline", "en": "Detections over time"},
+        "alerts": {"id": "detectionTimeline.alerts", "en": "Alerts"},
+        "seek": {"id": "detectionTimeline.seek", "en": "Go to {name} at {time}"}
+    },
+    "samples": {"seek": [{"with": {"name": "person p-23", "time": "0:04"}, "says": "Go to person p-23 at 0:04"}]},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

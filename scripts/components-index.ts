@@ -411,6 +411,7 @@ const CORE_AREAS: Record<string, string> = {
     DetectionOverlay: 'Data display',
     VideoFollow: 'Data display',
     CameraWall: 'Data display',
+    DetectionTimeline: 'Data display',
     TaskCard: 'Data display',
     UptimeBar: 'Data display',
     StatusWall: 'Data display',

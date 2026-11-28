@@ -1394,6 +1394,11 @@ video's shape with its name, its state (live, recording, offline, connecting), h
 finder sees in it and a critical ring on one that calls for a look, as many columns as fit; the
 focused camera comes first, two tiles across and two down where there is the room. A tile plays its
 `src` muted, or draws the app's `picture`, such as a player with a `DetectionOverlay`.
+`DetectionTimeline` is a playback bar marked with where things were seen: the spans that call for a
+look on a lane of their own in the critical color, then a lane per label, each span in its
+affiliation's track color, a playhead and the video's time along the foot; a press on a span seeks to
+its start and a press on a lane to that moment. `detectionSpans` (`lib/detections`) makes the spans
+of detections, split where the finder lost one for longer than the gap.
 
 ## Graphs
 

@@ -119,6 +119,7 @@ import { TRACK_CARD_WORDS, TrackCard, type TrackCardProps } from '@winterop-com/
 import { DETECTION_OVERLAY_WORDS, DetectionOverlay, type DetectionOverlayProps } from '@winterop-com/sokkel-ui/DetectionOverlay'
 import { VIDEO_FOLLOW_WORDS, VideoFollow, type VideoFollowProps } from '@winterop-com/sokkel-ui/VideoFollow'
 import { CAMERA_WALL_WORDS, CameraWall, type CameraWallProps } from '@winterop-com/sokkel-ui/CameraWall'
+import { DETECTION_TIMELINE_WORDS, DetectionTimeline, type DetectionTimelineProps } from '@winterop-com/sokkel-ui/DetectionTimeline'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11290,6 +11291,66 @@ const CAMERA_WALL_ADAPTER: Adapter = {
     },
 }
 
+// Detection timeline
+
+const DETECTION_TIMELINE_PROPS: DetectionTimelineProps = {
+    duration: 12,
+    time: 4,
+    spans: [
+        { id: 'p-1', label: 'person', start: 0, end: 5, alert: true },
+        { id: 'p-2', label: 'person', start: 1, end: 9 },
+        { id: 'v-3', label: 'vehicle', affiliation: 'neutral', start: 2, end: 6 },
+    ],
+}
+const detectionTimeline = (props: Partial<DetectionTimelineProps> = {}) =>
+    draw(DetectionTimeline, { ...DETECTION_TIMELINE_PROPS, ...props })
+const timelineSpans = (elements: El[]) => elements.filter((element) => element.attrs['data-slot'] === 'detection-span')
+
+const DETECTION_TIMELINE_ADAPTER: Adapter = {
+    wordObjects: { DETECTION_TIMELINE_WORDS },
+    complete: ['DETECTION_TIMELINE_WORDS'],
+    words: {
+        timeline: 'DETECTION_TIMELINE_WORDS.timeline',
+        alerts: 'DETECTION_TIMELINE_WORDS.alerts',
+        seek: [
+            'DETECTION_TIMELINE_WORDS.seek',
+            (said: (name: string, time: string) => string, fill) => said(String(fill.name), String(fill.time)),
+        ],
+    },
+    options: {},
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the detection timeline states no effects'),
+    keys: {
+        Tab: () => {
+            const spans = timelineSpans(detectionTimeline({ onSeek: noop }))
+            if (spans.length !== 3 || !spans.every((span) => span.tag === 'button' && focusable(span)))
+                return 'each span is not a button in the tab order with onSeek'
+            return timelineSpans(detectionTimeline()).every((span) => span.tag === 'span') ? true : 'a span takes focus with no onSeek'
+        },
+        'Enter (a span has focus)': () => {
+            const sought: number[] = []
+            return live(
+                createElement(DetectionTimeline, { ...DETECTION_TIMELINE_PROPS, onSeek: (seconds) => sought.push(seconds) }),
+                (box) => {
+                    const spans = [...box.querySelectorAll<HTMLElement>('[data-slot="detection-span"]')]
+                    // A native button: a browser presses it on Enter, and the press is a click.
+                    if (spans.some((span) => span.tagName !== 'BUTTON')) return 'a span is not a native button, which Enter presses'
+                    act(() => spans[2].click())
+                    return sought.join(' ') === '2' ? true : `pressing the vehicle's span sought ${sought.join(', ')}`
+                },
+            )
+        },
+    },
+    more: () => {
+        const drawn = detectionTimeline()
+        const lanes = drawn
+            .filter((element) => element.attrs['data-slot'] === 'detection-lane')
+            .map((lane) => drawn.find((element) => element.parent === lane && element.tag === 'span')?.text)
+        return [check('anatomy.lane (the alerts first, then a lane per label)', 'Alerts person vehicle', lanes.join(' '))]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12341,6 +12402,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'detection-overlay': DETECTION_OVERLAY_ADAPTER,
     'video-follow': VIDEO_FOLLOW_ADAPTER,
     'camera-wall': CAMERA_WALL_ADAPTER,
+    'detection-timeline': DETECTION_TIMELINE_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,

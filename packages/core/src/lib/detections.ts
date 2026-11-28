@@ -105,3 +105,40 @@ function firstAfter(samples: readonly DetectionSample[], time: number): number {
 function between(from: number, to: number, share: number): number {
     return from + (to - from) * share
 }
+
+/** A stretch of a video in which one detection was seen, in seconds. */
+export interface DetectionSpan {
+    id: string
+    label?: string
+    affiliation?: TrackAffiliation
+    start: number
+    end: number
+}
+
+/**
+ * The stretches in which each detection was seen: from a sample to the last one before a gap longer
+ * than `gap`, each held `hold` past its last sample, as `detectionAt` shows them. Ordered by start.
+ */
+export function detectionSpans(detections: readonly Detection[], timing: DetectionTiming = {}): DetectionSpan[] {
+    const hold = timing.hold ?? HOLD
+    const gap = timing.gap ?? GAP
+    const spans: DetectionSpan[] = []
+    for (const detection of detections) {
+        let start: number | undefined
+        let last = 0
+        const close = () => {
+            if (start !== undefined)
+                spans.push({ id: detection.id, label: detection.label, affiliation: detection.affiliation, start, end: last + hold })
+        }
+        for (const sample of detection.samples) {
+            if (start === undefined) start = sample.t
+            else if (sample.t - last > gap) {
+                close()
+                start = sample.t
+            }
+            last = sample.t
+        }
+        close()
+    }
+    return spans.sort((a, b) => a.start - b.start)
+}
