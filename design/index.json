@@ -292,6 +292,7 @@
         {"id": "track-card", "file": "parts/track-card.json", "status": "preview"},
         {"id": "track-glyph", "file": "parts/track-glyph.json", "status": "preview"},
         {"id": "track-roster", "file": "parts/track-roster.json", "status": "preview"},
+        {"id": "detection-overlay", "file": "parts/detection-overlay.json", "status": "preview"},
         {"id": "zone-layer", "file": "parts/zone-layer.json", "status": "preview"},
         {"id": "letter", "file": "parts/letter.json", "status": "stable"},
         {"id": "detail-pane", "file": "parts/detail-pane.json", "status": "stable"},

@@ -116,6 +116,7 @@ import { FRESHNESS_WORDS, Freshness, freshnessTick, type FreshnessProps } from '
 import { PLAYBACK_TIMELINE_WORDS, PlaybackTimeline, scrubTime, type PlaybackTimelineProps } from '@winterop-com/sokkel-ui/PlaybackTimeline'
 import { TASK_CARD_WORDS, TASK_STATES, TaskCard, taskStatuses, type TaskCardProps } from '@winterop-com/sokkel-ui/TaskCard'
 import { TRACK_CARD_WORDS, TrackCard, type TrackCardProps } from '@winterop-com/sokkel-ui/TrackCard'
+import { DETECTION_OVERLAY_WORDS, DetectionOverlay, type DetectionOverlayProps } from '@winterop-com/sokkel-ui/DetectionOverlay'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11093,6 +11094,74 @@ const TRACK_ROSTER_ADAPTER: Adapter = {
     },
 }
 
+// Detection overlay
+
+const DETECTION_OVERLAY = source('components/DetectionOverlay.tsx')
+const DETECTION_PROPS: DetectionOverlayProps = {
+    time: 1,
+    detections: [
+        { id: 'p-1', label: 'person', samples: [{ t: 1, x: 0.1, y: 0.2, w: 0.1, h: 0.3, confidence: 0.9 }] },
+        { id: 'v-2', label: 'vehicle', affiliation: 'neutral', samples: [{ t: 1, x: 0.5, y: 0.5, w: 0.2, h: 0.2 }] },
+    ],
+}
+const detectionOverlay = (props: Partial<DetectionOverlayProps> = {}) => draw(DetectionOverlay, { ...DETECTION_PROPS, ...props })
+const detectionMarks = (elements: El[]) => elements.filter((element) => element.attrs['data-slot'] === 'detection')
+
+const DETECTION_OVERLAY_ADAPTER: Adapter = {
+    wordObjects: { DETECTION_OVERLAY_WORDS },
+    complete: ['DETECTION_OVERLAY_WORDS'],
+    words: { detections: 'DETECTION_OVERLAY_WORDS.detections', detection: 'DETECTION_OVERLAY_WORDS.detection' },
+    options: { look: unionIn(DETECTION_OVERLAY, 'DetectionLook') },
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the detection overlay states no effects'),
+    keys: {
+        Tab: () => {
+            const marks = detectionMarks(detectionOverlay({ onSelect: noop }))
+            if (marks.length !== 2 || !marks.every((mark) => mark.tag === 'button' && focusable(mark)))
+                return 'each mark is not a button in the tab order with onSelect'
+            return detectionMarks(detectionOverlay()).every((mark) => mark.tag === 'span') ? true : 'a mark with no onSelect takes focus'
+        },
+        'Enter (a mark has focus)': () => {
+            const chosen: (string | undefined)[] = []
+            return live(
+                createElement(DetectionOverlay, { ...DETECTION_PROPS, selected: 'v-2', onSelect: (id) => chosen.push(id) }),
+                (box) => {
+                    const marks = [...box.querySelectorAll<HTMLElement>('[data-slot="detection"]')]
+                    // A native button: a browser presses it on Enter, and the press is a click.
+                    if (marks.some((mark) => mark.tagName !== 'BUTTON')) return 'a mark is not a native button, which Enter presses'
+                    act(() => marks[0].click())
+                    act(() => marks[1].click())
+                    return chosen.join(' ') === 'p-1 '
+                        ? true
+                        : `pressing a mark, then the selected one, chose ${chosen.map(String).join(', ')}`
+                },
+            )
+        },
+    },
+    more: () => {
+        const tags = detectionOverlay({ ids: true }).filter(
+            (element) => element.text.includes('person') || element.text.includes('vehicle'),
+        )
+        const looks = (['box', 'brackets', 'marker'] as const).map(
+            (look) => detectionMarks(detectionOverlay({ look }))[0]?.attrs['data-look'],
+        )
+        return [
+            check(
+                'anatomy.tag (label, id with ids, then a whole percent)',
+                'person p-1 90%',
+                tags.find((tag) => tag.text.startsWith('person'))?.text,
+            ),
+            check('options.look (each look drawn)', 'box brackets marker', looks.join(' ')),
+            check(
+                'options.time (a detection shown only where its samples are)',
+                '2 0',
+                `${String(detectionMarks(detectionOverlay()).length)} ${String(detectionMarks(detectionOverlay({ time: 5 })).length)}`,
+            ),
+        ]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12141,6 +12210,7 @@ const ADAPTERS: Record<string, Adapter> = {
     freshness: FRESHNESS_ADAPTER,
     'track-card': TRACK_CARD_ADAPTER,
     'track-roster': TRACK_ROSTER_ADAPTER,
+    'detection-overlay': DETECTION_OVERLAY_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,

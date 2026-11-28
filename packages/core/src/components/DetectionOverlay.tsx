@@ -157,6 +157,7 @@ function DetectionMark({ detection, box, look, tag, name, isSelected, stepsBack,
             type={onPress === undefined ? undefined : 'button'}
             aria-label={onPress === undefined ? undefined : name}
             aria-pressed={onPress === undefined ? undefined : isSelected}
+            data-slot="detection"
             data-selected={isSelected || undefined}
             data-look={look}
             onClick={
