@@ -580,11 +580,12 @@ Should:
   and the roles of `Banner`, `Problem`, `PageState` and the alert written down.
 - **One naming.** One value callback, one selection callback, one dismissal (`onOpenChange`), one
   size scale, finished in the 1.0 window.
-- **`'use client'`** on the components that use hooks.
+- **Plain values out of client modules.** Every component module that calls a hook starts with
+  `'use client'` (checked by `src/rules.test.ts`), which hides its plain exports (the `*_WORDS`
+  constants, helpers such as `checkTree`) from server code; move them into modules of their own.
 - **Tests** for the parts heavy in logic: `DataTable` paging, server mode, selection and keys,
   `MediaBar`, `SchemaForm`, `Search`, the board's drag, the core hooks.
 - **CI installs the packed tarballs** into each example's `web/`, not the workspace link.
-- **Stories** for parts no story shows directly (`ProgressRing`, `ChatTyping`, `PresenceDot`).
 - **Logical sides** (start and end, not left and right) and a right-to-left story, if wanted.
 
 ## Later

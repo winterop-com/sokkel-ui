@@ -1,3 +1,5 @@
+'use client'
+
 import { Avatar } from '@base-ui/react/avatar'
 import { useState } from 'react'
 

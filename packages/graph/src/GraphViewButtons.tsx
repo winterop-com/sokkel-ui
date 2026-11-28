@@ -1,3 +1,5 @@
+'use client'
+
 import { Scan, ZoomIn, ZoomOut } from 'lucide-react'
 import { Children, type ComponentProps, type ReactNode } from 'react'
 

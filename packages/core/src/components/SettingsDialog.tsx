@@ -1,3 +1,5 @@
+'use client'
+
 import { ChevronLeft, XIcon } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 

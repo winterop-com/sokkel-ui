@@ -1,3 +1,5 @@
+'use client'
+
 import { Tabs as TabsPrimitive } from '@base-ui/react/tabs'
 import type { LucideIcon } from 'lucide-react'
 import { useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'

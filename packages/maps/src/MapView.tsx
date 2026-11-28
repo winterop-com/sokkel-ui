@@ -1,3 +1,5 @@
+'use client'
+
 import type { Feature } from 'geojson'
 import { Download, Expand, Globe, LocateFixed, Map as MapIcon, Minus, Plus, Shrink } from 'lucide-react'
 import type { Map as MapLibreMap, MapGeoJSONFeature, PaddingOptions, PointLike, StyleSpecification } from 'maplibre-gl'

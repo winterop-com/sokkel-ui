@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo } from 'react'
 
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'

@@ -1,3 +1,5 @@
+'use client'
+
 import { Children, createContext, useContext, type MouseEvent, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

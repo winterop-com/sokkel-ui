@@ -1,3 +1,5 @@
+'use client'
+
 import { Search, X } from 'lucide-react'
 import { useRef, type AriaAttributes, type ComponentProps, type Ref } from 'react'
 

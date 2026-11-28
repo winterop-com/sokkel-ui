@@ -1,3 +1,5 @@
+'use client'
+
 import type { DragEndEvent, DragMoveEvent } from '@dnd-kit/core'
 import { ChevronRight } from 'lucide-react'
 import {

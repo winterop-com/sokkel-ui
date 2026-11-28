@@ -1,3 +1,5 @@
+'use client'
+
 import { IconButton } from './IconButton'
 import { ChevronRight, Ellipsis, FileText, MessageSquareText, SmilePlus } from 'lucide-react'
 import { isValidElement, memo, useState, type CSSProperties, type ReactNode } from 'react'

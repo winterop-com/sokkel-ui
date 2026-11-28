@@ -1,3 +1,5 @@
+'use client'
+
 import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

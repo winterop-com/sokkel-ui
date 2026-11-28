@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * What `DataTable` draws its rows' drag with, loaded the first time a table with `onReorder` or a
  * `dragKind` is drawn: the rows dragged on the engine by their grips, and where a row lands among

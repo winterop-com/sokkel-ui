@@ -1,3 +1,5 @@
+'use client'
+
 import { Paperclip } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 

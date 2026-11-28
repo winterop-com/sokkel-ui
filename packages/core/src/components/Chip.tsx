@@ -1,3 +1,5 @@
+'use client'
+
 import { ArrowUpRight, ChevronDown, X } from 'lucide-react'
 import type { ComponentProps, KeyboardEvent, MouseEvent, ReactNode } from 'react'
 

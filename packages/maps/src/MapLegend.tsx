@@ -1,3 +1,5 @@
+'use client'
+
 import { List, X } from 'lucide-react'
 import { useLayoutEffect, useState } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'

@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * The tree's drag layer, which `Tree` loads the first time it is drawn with `onMove` or `onDrop`:
  * its rows dragged on the engine, and the places they and other parts' things land.

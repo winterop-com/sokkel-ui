@@ -1,3 +1,5 @@
+'use client'
+
 import { IconButton } from './IconButton'
 import { ArrowUp, Check, CircleAlert, FileText, Mic, Paperclip, Play, Plus, Square, X } from 'lucide-react'
 import { lazy, Suspense, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react'

@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 
 import { RUN_STATUS_MAP, resolveStatus, STATUS_CSS, STATUS_INK_CSS, type StatusColor, type StatusMap } from '../lib/status'

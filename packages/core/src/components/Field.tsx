@@ -1,3 +1,5 @@
+'use client'
+
 import { useContext, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

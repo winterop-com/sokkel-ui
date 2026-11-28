@@ -1,3 +1,5 @@
+'use client'
+
 import { MoreHorizontal, X } from 'lucide-react'
 import { useRef, type ReactNode } from 'react'
 

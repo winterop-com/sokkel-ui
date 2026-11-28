@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * What `ClipTimeline` moves and trims its clips with, loaded the first time one is drawn with
  * `onClipsChange` or `onDrop`: each clip and each of its edges as a thing on the drag engine, and

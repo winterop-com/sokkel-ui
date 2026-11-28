@@ -1,3 +1,5 @@
+'use client'
+
 import { useRef } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'

@@ -1,3 +1,5 @@
+'use client'
+
 import { Suspense, lazy, useMemo } from 'react'
 
 import type { DataColumn } from '@winterop-com/sokkel-ui/DataTable'

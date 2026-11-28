@@ -1,3 +1,5 @@
+'use client'
+
 import { Eye, EyeOff } from 'lucide-react'
 import type { ReactNode } from 'react'
 

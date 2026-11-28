@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * What `RunTimeline` shifts a lane's upcoming runs with, loaded the first time one is drawn with
  * `onShift`: the runs as one thing on the drag engine, carried sideways along the lane.

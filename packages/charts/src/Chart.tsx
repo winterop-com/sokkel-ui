@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo, useState, type Ref } from 'react'
 
 import { useLocale, useWords } from '@winterop-com/sokkel-ui/lib/words'

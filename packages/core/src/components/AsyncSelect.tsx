@@ -1,3 +1,5 @@
+'use client'
+
 import { Combobox } from '@base-ui/react'
 import { Check, ChevronsUpDown, Plus, RotateCw, Search, X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type UIEvent } from 'react'

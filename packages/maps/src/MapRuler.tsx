@@ -1,3 +1,5 @@
+'use client'
+
 import type { Feature, FeatureCollection } from 'geojson'
 import { Ruler } from 'lucide-react'
 import type { GeoJSONSource } from 'maplibre-gl'

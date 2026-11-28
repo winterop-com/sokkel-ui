@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useContext, useId, useMemo } from 'react'
 
 import { DragDrop, DragGrip, useDragItem, type DragData, type DragHandleProps } from '@winterop-com/sokkel-ui/DragDrop'

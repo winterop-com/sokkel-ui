@@ -1,3 +1,5 @@
+'use client'
+
 import type { Feature, MultiPolygon, Polygon } from 'geojson'
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl'
 import { useMemo } from 'react'

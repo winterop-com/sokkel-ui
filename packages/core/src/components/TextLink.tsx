@@ -1,3 +1,5 @@
+'use client'
+
 import { ArrowUpRight } from 'lucide-react'
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode } from 'react'
 

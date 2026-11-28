@@ -1,3 +1,5 @@
+'use client'
+
 import { Cog, Database } from 'lucide-react'
 import { useMemo, useState } from 'react'
 

@@ -1,3 +1,5 @@
+'use client'
+
 import { CircleAlert, CircleCheck, Network, Redo2, Scan, Undo2, ZoomIn, ZoomOut } from 'lucide-react'
 import { Children, type ComponentProps, type ReactNode } from 'react'
 

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { PersonAvatar, type Presence } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { PersonAvatar, PresenceDot, type Presence } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PORTRAITS } from '../fixtures/portraits'
 
@@ -56,6 +56,21 @@ export const Presences: StoryObj = {
                     {PRESENCE.map((person) => (
                         <PersonAvatar key={person.name} name={person.name} size={size} presence={person.presence} />
                     ))}
+                </Row>
+            ))}
+        </Stack>
+    ),
+}
+
+/** The dot alone, as a member list or a menu sets it beside a name: active, away and offline. */
+export const Dot: StoryObj = {
+    name: 'Presence dot',
+    render: () => (
+        <Stack gap="sm" className="p-6">
+            {PRESENCE.slice(0, 3).map((person) => (
+                <Row key={person.name} gap="sm">
+                    <PresenceDot presence={person.presence} />
+                    <span className="text-sm">{person.name}</span>
                 </Row>
             ))}
         </Stack>

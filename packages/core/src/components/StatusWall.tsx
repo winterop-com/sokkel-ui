@@ -1,3 +1,5 @@
+'use client'
+
 import type { CSSProperties, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'

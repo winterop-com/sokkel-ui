@@ -1,3 +1,5 @@
+'use client'
+
 import { SmilePlus } from 'lucide-react'
 import { useState, type KeyboardEvent, type ReactElement, type ReactNode } from 'react'
 

@@ -1,3 +1,5 @@
+'use client'
+
 import { Maximize2, Music, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
 import {
     cloneElement,

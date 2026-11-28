@@ -1,3 +1,5 @@
+'use client'
+
 import { ChevronRight, CircleAlert, Info, Lightbulb, MessageSquareWarning, TriangleAlert, type LucideIcon } from 'lucide-react'
 import {
     Children,

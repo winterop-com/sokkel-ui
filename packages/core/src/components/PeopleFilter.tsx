@@ -1,3 +1,5 @@
+'use client'
+
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'

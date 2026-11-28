@@ -1,3 +1,5 @@
+'use client'
+
 import { useId, useState, type HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'

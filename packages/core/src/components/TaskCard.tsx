@@ -1,3 +1,5 @@
+'use client'
+
 import { ArrowRight } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 

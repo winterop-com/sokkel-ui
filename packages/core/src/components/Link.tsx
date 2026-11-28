@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useCallback, useContext, useMemo, type AnchorHTMLAttributes, type ReactNode, type Ref } from 'react'
 
 /** What a link is drawn from: an anchor's own attributes, its ref among them. */

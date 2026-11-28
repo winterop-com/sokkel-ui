@@ -1,3 +1,5 @@
+'use client'
+
 import { Ellipsis, Maximize, Minimize, PictureInPicture2, Play, RefreshCw, RotateCcw, RotateCw } from 'lucide-react'
 import {
     useCallback,

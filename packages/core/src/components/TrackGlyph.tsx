@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from '../lib/cn'
 import { TRACK_COLORS, TRACK_NAMES_PART, TRACK_OUTLINES, type TrackAffiliation, type TrackKind, type TrackNameWords } from '../lib/tracks'
 import { useWords } from '../lib/words'

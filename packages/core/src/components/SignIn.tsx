@@ -1,3 +1,5 @@
+'use client'
+
 import { ArrowRight, CircleAlert, Eye, EyeOff, Globe, KeyRound, Lock, User } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 

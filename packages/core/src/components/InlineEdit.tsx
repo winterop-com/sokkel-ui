@@ -1,3 +1,5 @@
+'use client'
+
 import { PencilIcon } from 'lucide-react'
 import { useEffect, useReducer, useRef, useState, type ReactNode } from 'react'
 

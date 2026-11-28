@@ -1,3 +1,5 @@
+'use client'
+
 import '@xterm/xterm/css/xterm.css'
 
 import { FitAddon } from '@xterm/addon-fit'

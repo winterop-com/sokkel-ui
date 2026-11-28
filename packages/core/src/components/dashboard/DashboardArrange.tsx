@@ -1,3 +1,5 @@
+'use client'
+
 import type { DragEndEvent, DragMoveEvent } from '@dnd-kit/core'
 import { Plus, Settings2, StretchHorizontal, X } from 'lucide-react'
 import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'

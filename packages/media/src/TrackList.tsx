@@ -1,3 +1,5 @@
+'use client'
+
 import { Play, Volume2 } from 'lucide-react'
 import * as React from 'react'
 import { Fragment, lazy, memo, Suspense, useRef, useState, type ComponentProps, type ComponentType, type ReactNode, type Ref } from 'react'

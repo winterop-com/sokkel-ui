@@ -1,3 +1,5 @@
+'use client'
+
 import '@xyflow/react/dist/base.css'
 
 import {

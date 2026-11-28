@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo, type CSSProperties } from 'react'
 
 import { ansiCss, parseAnsi, type AnsiStyle } from '../lib/ansi'

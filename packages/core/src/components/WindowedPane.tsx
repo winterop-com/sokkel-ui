@@ -1,3 +1,5 @@
+'use client'
+
 import { Maximize2, X } from 'lucide-react'
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 

@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * What the week and month views move their events with, loaded the first time one is drawn with
  * `onEventMove`: the events on the drag engine, and the days as the places they land on.

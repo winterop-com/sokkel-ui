@@ -1,3 +1,5 @@
+'use client'
+
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'

@@ -1,3 +1,5 @@
+'use client'
+
 import { CircleAlert, Loader2, RotateCw, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 

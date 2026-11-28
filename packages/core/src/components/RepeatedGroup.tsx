@@ -1,3 +1,5 @@
+'use client'
+
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
 import { useContext, useId, type ReactNode } from 'react'
 

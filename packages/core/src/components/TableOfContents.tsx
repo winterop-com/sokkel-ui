@@ -1,3 +1,5 @@
+'use client'
+
 import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 

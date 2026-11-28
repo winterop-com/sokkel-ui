@@ -1,3 +1,5 @@
+'use client'
+
 import { CircleAlert, ListChecks, Wrench } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 

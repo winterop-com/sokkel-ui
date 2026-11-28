@@ -1,3 +1,5 @@
+'use client'
+
 import type { ReactNode } from 'react'
 
 import { DEFAULT_TEXT_SIZE, type ThemeOption, type ThemeSettings } from '../lib/appearance'

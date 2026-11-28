@@ -1,3 +1,5 @@
+'use client'
+
 import type { EChartsCoreOption, EChartsType } from 'echarts/core'
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 

@@ -1,3 +1,5 @@
+'use client'
+
 import { Brain } from 'lucide-react'
 import { useState } from 'react'
 

@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { useWords, type WordsPart } from '../lib/words'

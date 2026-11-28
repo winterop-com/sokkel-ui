@@ -1,3 +1,5 @@
+'use client'
+
 import { Field } from './Field'
 import { Input } from './ui/input'
 import { useWords, type WordsPart } from '../lib/words'

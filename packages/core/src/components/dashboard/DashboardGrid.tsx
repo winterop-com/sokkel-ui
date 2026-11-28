@@ -1,3 +1,5 @@
+'use client'
+
 import { Clock, Maximize2, MoreHorizontal, RotateCw } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 

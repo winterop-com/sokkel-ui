@@ -1,3 +1,5 @@
+'use client'
+
 import { useScheme } from '../hooks/use-scheme'
 import type { Scheme } from '../lib/appearance'
 import { ThemeToggle } from './ThemeToggle'

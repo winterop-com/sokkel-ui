@@ -1,3 +1,5 @@
+'use client'
+
 import { ChevronDown } from 'lucide-react'
 import { useLayoutEffect, useRef, useState } from 'react'
 

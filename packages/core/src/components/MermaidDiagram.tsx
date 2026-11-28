@@ -1,3 +1,5 @@
+'use client'
+
 import { Code2, Image } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 

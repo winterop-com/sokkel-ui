@@ -1,3 +1,5 @@
+'use client'
+
 import type { ReactNode } from 'react'
 
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'

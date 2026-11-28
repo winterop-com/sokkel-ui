@@ -1,3 +1,5 @@
+'use client'
+
 import { ChevronUp, Ellipsis, Hand, Mic, MicOff, PhoneOff, ScreenShare, SmilePlus, Video, VideoOff } from 'lucide-react'
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactElement, type ReactNode } from 'react'
 

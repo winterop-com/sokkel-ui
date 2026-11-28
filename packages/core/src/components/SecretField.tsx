@@ -1,3 +1,5 @@
+'use client'
+
 import { Eye, EyeOff, KeyRound } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type HTMLInputAutoCompleteAttribute, type ReactNode } from 'react'
 

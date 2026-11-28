@@ -1,3 +1,5 @@
+'use client'
+
 import { CornerDownLeft } from 'lucide-react'
 import { useId, useState } from 'react'
 import { createPortal } from 'react-dom'

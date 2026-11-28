@@ -93,7 +93,10 @@ app does: `hooks/use-panel-size`, `hooks/use-clamped`, `hooks/use-theme-name`, `
 `scripts/components-index.ts` lists each private module with the reason; `src/rules.test.ts` fails
 a module in neither the map nor that list, a private module in the map, an import of a path the
 map does not export from the packages, the stories, the examples, the tools or the docs, and a
-component without its `<Component>Props`.
+component without its `<Component>Props`. A component module that calls a hook or makes a context
+starts with `'use client'`, which the build keeps on each module's file, so a React server
+component can render it; `src/rules.test.ts` fails one that does not. The directive covers the
+module's plain exports too, so server code reads those through a client component.
 
 Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
 also its tokens), with no stories, story fixtures or tests. Each package's `styles.css` (every

@@ -1,3 +1,5 @@
+'use client'
+
 import { format, isSameDay } from 'date-fns'
 
 import { cn } from '../../lib/cn'

@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * `SchemaForm`'s key/value table for an object of any keys whose values are each one scalar, such
  * as headers, query parameters or environment variables.

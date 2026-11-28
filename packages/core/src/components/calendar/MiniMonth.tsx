@@ -1,3 +1,5 @@
+'use client'
+
 import { addMonths, format, isSameDay, isSameMonth, isWithinInterval, startOfDay } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 

@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type SyntheticEvent } from 'react'
 
 import { cn } from '../lib/cn'

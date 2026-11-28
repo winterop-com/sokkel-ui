@@ -1,3 +1,5 @@
+'use client'
+
 import { Hand, MicOff } from 'lucide-react'
 import type { ReactNode } from 'react'
 

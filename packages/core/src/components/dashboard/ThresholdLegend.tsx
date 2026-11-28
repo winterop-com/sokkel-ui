@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from '../../lib/cn'
 import { formatValue, tokenVar, type Threshold } from './thresholds'
 import { useLocale, useWords, type WordsPart } from '../../lib/words'

@@ -1,3 +1,5 @@
+'use client'
+
 import { Navigation2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'

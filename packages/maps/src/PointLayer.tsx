@@ -1,3 +1,5 @@
+'use client'
+
 import type { FeatureCollection } from 'geojson'
 import type { ExpressionSpecification, GeoJSONSource, LayerSpecification, Map as MapLibreMap, MapMouseEvent } from 'maplibre-gl'
 import { useEffect, useMemo, useState } from 'react'

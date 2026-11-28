@@ -1,3 +1,5 @@
+'use client'
+
 import { CircleAlert, Square, Volume2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 

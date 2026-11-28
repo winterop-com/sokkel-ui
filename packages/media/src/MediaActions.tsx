@@ -1,3 +1,5 @@
+'use client'
+
 import { Ellipsis, ThumbsDown, ThumbsUp } from 'lucide-react'
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 

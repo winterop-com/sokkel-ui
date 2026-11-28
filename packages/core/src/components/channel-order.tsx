@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * What `ChannelList` puts a section's entries in order with, loaded the first time a list with a
  * section that has `onMove` is drawn: the entries as sortable items, dragged as a whole.

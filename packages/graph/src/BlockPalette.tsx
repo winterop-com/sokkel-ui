@@ -1,3 +1,5 @@
+'use client'
+
 import { Box } from 'lucide-react'
 import { useState, type DragEvent } from 'react'
 

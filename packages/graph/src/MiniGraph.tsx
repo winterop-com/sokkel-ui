@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'

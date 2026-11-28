@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * What `DragSource` drags with, loaded the first time one is drawn with a drag: the thing on the
  * engine, inside the `DragDrop` the app draws around it and its targets.

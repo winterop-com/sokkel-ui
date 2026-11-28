@@ -1,3 +1,5 @@
+'use client'
+
 import { AudioLines, Eye, EyeOff, Film, Lock, LockOpen, Type, Volume2, VolumeX, type LucideIcon } from 'lucide-react'
 import {
     useEffect,

@@ -1,3 +1,5 @@
+'use client'
+
 import { ArrowRight, SearchIcon, type LucideIcon } from 'lucide-react'
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 

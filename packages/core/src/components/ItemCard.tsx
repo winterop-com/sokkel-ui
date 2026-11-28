@@ -1,3 +1,5 @@
+'use client'
+
 import { Check, MoreHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 

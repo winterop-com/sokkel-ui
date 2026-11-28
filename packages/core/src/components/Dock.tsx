@@ -1,3 +1,5 @@
+'use client'
+
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useRef, type ComponentProps, type ReactNode } from 'react'
 

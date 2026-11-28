@@ -1,3 +1,5 @@
+'use client'
+
 import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 import { FormBar } from './FormBar'
 import { Button } from './ui/button'

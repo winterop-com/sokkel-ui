@@ -1,3 +1,5 @@
+'use client'
+
 import { PencilLine, Pin, PinOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 

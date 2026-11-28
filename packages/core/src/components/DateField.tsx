@@ -1,3 +1,5 @@
+'use client'
+
 import { CalendarDays } from 'lucide-react'
 
 import { formatDate, isBefore, isoDate, ISO_DATE, readDate, type DateFormat } from '../lib/dates'

@@ -1,3 +1,5 @@
+'use client'
+
 import { Menu, PanelRight } from 'lucide-react'
 import {
     Fragment,
