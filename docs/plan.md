@@ -1375,6 +1375,16 @@ the line between who does it and to what, and its actions. `PlaybackTimeline` lo
 over an activity strip in plain SVG, on the same axis `RunTimeline` draws (`lib/time-axis` and its
 private ticks and lines), so there is one way to draw a time axis.
 
+Tracks seen on video are drawn by `DetectionOverlay`, in `VideoPlayer`'s `picture`: a layer over
+the area the video is drawn in, inside any bars, whose contents read the video through
+`useVideoPicture` and its time frame by frame through `useVideoTime` (`media/video-picture`). The
+app runs the finder, whatever it is, and hands each detection in as samples (`lib/detections`: its
+track's id, label, affiliation and boxes in shares of the picture at video times); the overlay never
+looks at the picture. A box glides between samples no further apart than `gap`, holds `hold` after
+the last, may trail its path, and wears its affiliation's track color, so a detection reads as its
+track does on a map. Its looks are the whole box, corner brackets that hide less of what is inside,
+and a marker for a crowd; the selected one is heavier and the rest step back.
+
 ## Graphs
 
 Their own package, `@winterop-com/sokkel-ui-graph`, so an app that draws no graph installs neither

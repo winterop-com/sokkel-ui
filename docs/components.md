@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 284 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 286 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -292,6 +292,7 @@ in (`geo`).
 | **Count** | `@winterop-com/sokkel-ui/Count` | A count of what is waiting, such as unread messages, on the critical color, or with `tone="quiet"` how many entries a group holds. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-marks--counts) |
 | **DataTable**, TableCellFill, DataTableGroup | `@winterop-com/sokkel-ui/DataTable` | A table for rows of any number: sorting, selection with a bulk bar, a column menu, child rows, column widths, and the keyboard. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data-table--short-list) |
 | **DescriptionList**, DescriptionListGroup | `@winterop-com/sokkel-ui/DescriptionList` | Facts about one thing as terms and values: a run's state and duration, a service's base URL. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-inline-code--in-text) |
+| **DetectionOverlay** | `@winterop-com/sokkel-ui/DetectionOverlay` | What a finder sees in a video, drawn over the picture: each detection's box at the moment shown, with a tag at its top edge saying what it is and how sure the finder was, in the color of its affiliation as a map draws its track (the primary color without one). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detection-overlay--looks) |
 | **Dot** | `@winterop-com/sokkel-ui/Dot` | A small round mark for a label, a calendar, a legend entry or a state: filled in a kind color, any CSS color or a state's color from the status map, or hollow, a ring in the tone's ink for a state not known (or in the strong border, with no tone, for something not started). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-marks--counts) |
 | **DueText** | `@winterop-com/sokkel-ui/DueText` | A date toned by how near it is: one that has passed in the critical ink and one that is near in the warning ink, both in medium weight, and any other in the muted ink (or the surrounding color with `quiet={false}`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-due-text--dates) |
 | **Freshness** | `@winterop-com/sokkel-ui/Freshness` | How fresh a reading is, as a console says it of a track or a sensor: "Live" while it is just in, then "3 s ago", "2 min ago", drawn quieter once it is stale and in the warning tone once it is lost, with the time of the reading in its tooltip. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-freshness--states) |
@@ -460,6 +461,7 @@ in (`geo`).
 | **PlayButton**, TransportButton, Position, RateMenu, SkipGlyph, LiveMark, VolumeControl, VolumeGlyph | `@winterop-com/sokkel-ui/media/MediaControls` | The play button at the center of the transport, the one filled control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-watch-layout--beside) |
 | **SoundVisualizer** | `@winterop-com/sokkel-ui/media/SoundVisualizer` | A live picture of what is playing, read from a media element or a stream through Web Audio and drawn on a canvas: a spectrum of bars, an area, a wave or a ring. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-sound-visualizer--at-rest) |
 | **SpeakButton** | `@winterop-com/sokkel-ui/media/SpeakButton` | A button that reads a text aloud with audio the app fetches on demand: the first press calls `load`, the button spins while it answers, and the audio plays; a press while it plays stops it, and a press while it loads stops the fetch. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-speak-button--icon) |
+| **VideoPictureLayer** | `@winterop-com/sokkel-ui/media/video-picture` | The layer `VideoPlayer` lays over its picture's drawn area, handing what it holds the video. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detection-overlay--looks) (in DetectionOverlay) |
 | **VideoPlayer** | `@winterop-com/sokkel-ui/media/VideoPlayer` | A video with the library's controls over it: play and pause, a seek bar with what has loaded, the time, volume, playback speed, captions, picture in picture and fullscreen. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |
 
 ### Schema

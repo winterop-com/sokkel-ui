@@ -62,6 +62,7 @@ import {
     type VideoError,
     type VideoSource,
 } from './video-source'
+import { VideoPictureLayer } from './video-picture'
 import { readVideoStats, type VideoStats } from './video-stats'
 
 export type { VideoError, VideoErrorKind, VideoSource, VideoSourceAttach, VideoSourceReport, VideoSourceStats } from './video-source'
@@ -299,6 +300,14 @@ export interface VideoPlayerProps {
      */
     overlay?: ReactNode
     /**
+     * What the app draws on the picture itself, such as `DetectionOverlay`: laid over the area the
+     * video is drawn in (inside any bars a picture of another shape leaves), under the controls and
+     * kept in full screen. What it holds reads the video through `useVideoPicture` and its time
+     * through `useVideoTime`, from `components/media/video-picture`; only what it makes pressable
+     * takes the pointer, so a press elsewhere on the picture still plays or pauses.
+     */
+    picture?: ReactNode
+    /**
      * What the app draws over the whole picture, such as `UpNext` from the media package once the
      * video has ended: centered on the picture dimmed behind it, kept in full screen. While it
      * stands the controls are hidden and out of reach and the player answers no keys of its own,
@@ -447,6 +456,7 @@ export function VideoPlayer({
     retries = 3,
     stallAfter = 8000,
     overlay,
+    picture,
     cover,
     actions,
     defaultControlsVisible = false,
@@ -1227,6 +1237,10 @@ export function VideoPlayer({
             </video>
 
             <div aria-hidden className="absolute inset-0" onPointerUp={onPicturePointerUp} onDoubleClick={toggleFullscreen} />
+
+            {picture !== undefined && picture !== null && picture !== false && (
+                <VideoPictureLayer video={video}>{picture}</VideoPictureLayer>
+            )}
 
             {cue !== '' && (
                 <div
