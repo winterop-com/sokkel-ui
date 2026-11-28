@@ -117,6 +117,7 @@ import { PLAYBACK_TIMELINE_WORDS, PlaybackTimeline, scrubTime, type PlaybackTime
 import { TASK_CARD_WORDS, TASK_STATES, TaskCard, taskStatuses, type TaskCardProps } from '@winterop-com/sokkel-ui/TaskCard'
 import { TRACK_CARD_WORDS, TrackCard, type TrackCardProps } from '@winterop-com/sokkel-ui/TrackCard'
 import { DETECTION_OVERLAY_WORDS, DetectionOverlay, type DetectionOverlayProps } from '@winterop-com/sokkel-ui/DetectionOverlay'
+import { VIDEO_FOLLOW_WORDS, VideoFollow, type VideoFollowProps } from '@winterop-com/sokkel-ui/VideoFollow'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11162,6 +11163,52 @@ const DETECTION_OVERLAY_ADAPTER: Adapter = {
     },
 }
 
+// Video follow
+
+const VIDEO_FOLLOW_PROPS: VideoFollowProps = {
+    time: 1,
+    onRelease: noop,
+    detection: { id: 'p-1', label: 'person', samples: [{ t: 1, x: 0.4, y: 0.4, w: 0.1, h: 0.2 }] },
+}
+const videoFollow = (props: Partial<VideoFollowProps> = {}) => draw(VideoFollow, { ...VIDEO_FOLLOW_PROPS, ...props })
+
+const VIDEO_FOLLOW_ADAPTER: Adapter = {
+    wordObjects: { VIDEO_FOLLOW_WORDS },
+    complete: ['VIDEO_FOLLOW_WORDS'],
+    words: {
+        following: ['VIDEO_FOLLOW_WORDS.following', (said: (name: string) => string, fill) => said(String(fill.name))],
+        lost: ['VIDEO_FOLLOW_WORDS.lost', (said: (name: string) => string, fill) => said(String(fill.name))],
+        release: 'VIDEO_FOLLOW_WORDS.release',
+    },
+    options: {},
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('video follow states no effects'),
+    keys: {
+        Tab: () => {
+            const button = videoFollow().find((element) => element.tag === 'button')
+            return button !== undefined && focusable(button) ? true : 'the release button is not in the tab order'
+        },
+        'Enter (the release button has focus)': () => {
+            let released = 0
+            return live(createElement(VideoFollow, { ...VIDEO_FOLLOW_PROPS, onRelease: () => (released += 1) }), (box) => {
+                const button = box.querySelector<HTMLElement>('button')
+                // A native button: a browser presses it on Enter, and the press is a click.
+                if (button === null) return 'there is no native release button, which Enter presses'
+                act(() => button.click())
+                return released === 1 ? true : 'pressing the release button did not call onRelease'
+            })
+        },
+    },
+    more: () => {
+        const said = (elements: El[]) => elements.find((element) => element.attrs['data-slot'] === 'video-follow')?.text
+        return [
+            check('states.rest (the banner names what it follows)', 'Following person p-1', said(videoFollow())),
+            check('states.lost (no sample within hold of the moment)', 'Lost person p-1', said(videoFollow({ time: 5 }))),
+        ]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12211,6 +12258,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'track-card': TRACK_CARD_ADAPTER,
     'track-roster': TRACK_ROSTER_ADAPTER,
     'detection-overlay': DETECTION_OVERLAY_ADAPTER,
+    'video-follow': VIDEO_FOLLOW_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,
