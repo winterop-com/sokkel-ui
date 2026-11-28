@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.37.1** is the latest release (2026-11-27): 0.37.0 as it was meant to ship, which stopped at
+- **0.37.2** is the latest release (2026-11-28): thirteen new parts in preview, for tracks on
+  video (`DetectionOverlay`, `VideoFollow`, `CameraWall`, `DetectionTimeline`, `DetectionGallery`,
+  `PictureZones`, `CameraControl`) and the gaps against other libraries (`ColorField`,
+  `TagsField`, the meter, `Rating`, `Tour`, `NotificationInbox`); a rail entry that is a press,
+  and `Shell`'s `paletteWidth`; contract 0.37.2.
+- **0.37.1** (2026-11-27): 0.37.0 as it was meant to ship, which stopped at
   its size check and published nothing; the tree row's fade is one mask rule; contract 0.37.1.
 - **0.37.0** (2026-11-26, not published): `\[...\]` inside a sentence is escaped brackets
   (breaking; `inlineBracketMath` keeps math for chat replies); a cut tree label shows a tooltip on
