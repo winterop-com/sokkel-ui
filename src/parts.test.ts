@@ -120,6 +120,7 @@ import { DETECTION_OVERLAY_WORDS, DetectionOverlay, type DetectionOverlayProps }
 import { VIDEO_FOLLOW_WORDS, VideoFollow, type VideoFollowProps } from '@winterop-com/sokkel-ui/VideoFollow'
 import { CAMERA_WALL_WORDS, CameraWall, type CameraWallProps } from '@winterop-com/sokkel-ui/CameraWall'
 import { DETECTION_TIMELINE_WORDS, DetectionTimeline, type DetectionTimelineProps } from '@winterop-com/sokkel-ui/DetectionTimeline'
+import { DETECTION_GALLERY_WORDS, DetectionGallery, type DetectionGalleryProps } from '@winterop-com/sokkel-ui/DetectionGallery'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11351,6 +11352,74 @@ const DETECTION_TIMELINE_ADAPTER: Adapter = {
     },
 }
 
+// Detection gallery
+
+const DETECTION_GALLERY = source('components/DetectionGallery.tsx')
+const DETECTION_GALLERY_PROPS: DetectionGalleryProps = {
+    sightings: [
+        {
+            id: 's-1',
+            label: 'person',
+            when: '14:02:04',
+            image: 'frame.jpg',
+            box: { x: 0.4, y: 0.4, w: 0.05, h: 0.2 },
+            confidence: 0.9,
+            alert: true,
+        },
+        { id: 's-2', label: 'vehicle', affiliation: 'neutral', when: '14:02:06', image: 'frame.jpg' },
+    ],
+}
+const detectionGallery = (props: Partial<DetectionGalleryProps> = {}) => draw(DetectionGallery, { ...DETECTION_GALLERY_PROPS, ...props })
+const sightingTiles = (elements: El[]) => elements.filter((element) => element.attrs['data-slot'] === 'sighting')
+
+const DETECTION_GALLERY_ADAPTER: Adapter = {
+    wordObjects: { DETECTION_GALLERY_WORDS },
+    complete: ['DETECTION_GALLERY_WORDS'],
+    words: {
+        open: [
+            'DETECTION_GALLERY_WORDS.open',
+            (said: (name: string, when: string) => string, fill) => said(String(fill.name), String(fill.when)),
+        ],
+    },
+    options: { min: propValues(DETECTION_GALLERY, 'DetectionGalleryProps', 'min') },
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the detection gallery states no effects'),
+    keys: {
+        Tab: () => {
+            const tiles = sightingTiles(detectionGallery({ onSelect: noop }))
+            if (tiles.length !== 2 || !tiles.every((tile) => tile.tag === 'button' && focusable(tile)))
+                return 'each tile is not a button in the tab order with onSelect'
+            return sightingTiles(detectionGallery()).every((tile) => tile.tag === 'div') ? true : 'a tile takes focus with no onSelect'
+        },
+        'Enter (a tile has focus)': () => {
+            const picked: string[] = []
+            return live(createElement(DetectionGallery, { ...DETECTION_GALLERY_PROPS, onSelect: (id) => picked.push(id) }), (box) => {
+                const tiles = [...box.querySelectorAll<HTMLElement>('[data-slot="sighting"]')]
+                // A native button: a browser presses it on Enter, and the press is a click.
+                if (tiles.some((tile) => tile.tagName !== 'BUTTON')) return 'a tile is not a native button, which Enter presses'
+                act(() => tiles[1].click())
+                return picked.join(' ') === 's-2' ? true : `pressing the second tile picked ${picked.join(', ')}`
+            })
+        },
+    },
+    more: () => {
+        const tiles = sightingTiles(detectionGallery({ selected: 's-2' }))
+        return [
+            check(
+                'states.alert (an alert sighting is marked)',
+                's-1',
+                tiles.find((tile) => tile.attrs['data-alert'] !== undefined) === tiles[0] ? 's-1' : 'none',
+            ),
+            check(
+                'states.selected (the chosen sighting is marked)',
+                's-2',
+                tiles.find((tile) => tile.attrs['data-selected'] !== undefined) === tiles[1] ? 's-2' : 'none',
+            ),
+        ]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12403,6 +12472,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'video-follow': VIDEO_FOLLOW_ADAPTER,
     'camera-wall': CAMERA_WALL_ADAPTER,
     'detection-timeline': DETECTION_TIMELINE_ADAPTER,
+    'detection-gallery': DETECTION_GALLERY_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,
