@@ -1,0 +1,105 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "picture-zones",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "5539aa9"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "The parts of a picture a finder watches, drawn over it: regions as tinted shapes and tripwires as lines, each in its tone and named; a viewer picks one, reshapes it by its corners, or draws a new one point by point.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/PictureZones.tsx"]},
+    "anatomy": {
+        "container": "A layer over the picture, taking no presses itself; inside a video player's picture it moves with the view.",
+        "region": "A closed shape through its points (in shares of the picture), filled in its tone at 12 percent and stroked 2 wide in it; picked, filled at 25 percent and stroked 3 wide.",
+        "line": "A line through its points, 2 wide in its tone, dashed 6 on and 4 off; picked, solid and 3 wide.",
+        "name": "The zone's name over its first point, 4 above it: text.2xs 500 in terminal-foreground on terminal/80, padded 4 across, rounded by radius-mini.",
+        "handle": "With onChange, on each corner of the picked zone: a dot 12 across in terminal-foreground ringed 2 wide in terminal, centered on the corner.",
+        "draw": "With draw: a layer over the whole picture taking presses, a crosshair pointer, the hint at its bottom start (as the name's chip), each point added a dot 8 across in primary, and the path so far dashed 4 on and 3 off in primary."
+    },
+    "standsOn": {"default": "terminal"},
+    "options": {
+        "zones": {"type": "rows", "does": "Each zone: its id, name, kind (region or line), points and tone."},
+        "selected": {"type": "text", "does": "The zone picked."},
+        "onSelect": {
+            "type": "callback",
+            "does": "Makes each zone pressable: a press picks it, or lets the picked one go."
+        },
+        "onChange": {
+            "type": "callback",
+            "does": "Makes the picked zone's corners handles to drag or move with the arrow keys."
+        },
+        "draw": {"values": ["region", "line"], "does": "Draws a new zone of this kind, point by point."},
+        "onDrawn": {
+            "type": "callback",
+            "does": "Called with a drawn zone's points once it has enough: three for a region, two for a line."
+        },
+        "onDrawCancel": {"type": "callback", "does": "Called when drawing is given up."}
+    },
+    "sizes": {"handle": {"width": 12, "height": 12}, "name": {"padX": 4, "text": "text.2xs", "radius": "radius-mini"}},
+    "states": {
+        "rest": {"means": "Each zone in its tone."},
+        "selected": {"means": "The zone picked: heavier, its handles shown with onChange.", "reached": "selected"},
+        "drawing": {"means": "A new zone being drawn: presses add points.", "reached": "draw"},
+        "focus": {
+            "means": "Keyboard focus on a handle or the drawing layer: the focus ring.",
+            "reached": "Tab",
+            "on": "keyboard"
+        }
+    },
+    "pieces": {
+        "region": {
+            "rest": {"ground": "primary/12", "edge": "primary", "note": "In its tone: primary, warning or critical."}
+        },
+        "name": {
+            "rest": {
+                "ground": "terminal/80",
+                "ink": "terminal-foreground",
+                "text": "text.2xs",
+                "weight": 500,
+                "radius": "radius-mini"
+            }
+        },
+        "handle": {
+            "rest": {"ground": "terminal-foreground", "edge": "terminal"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
+        }
+    },
+    "keyboard": [
+        {"keys": ["Tab"], "does": "Reaches each handle of the picked zone in turn, or the drawing layer."},
+        {
+            "keys": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+            "does": "Moves the corner a hundredth of the picture; with Shift, five.",
+            "when": "a handle has focus"
+        },
+        {"keys": ["Enter"], "does": "Finishes the zone being drawn.", "when": "drawing"},
+        {"keys": ["Escape"], "does": "Gives up the zone being drawn.", "when": "drawing"}
+    ],
+    "words": {
+        "zones": "Zones",
+        "point": "Point {place} of {zone}",
+        "drawing": "Click to add points, then press Enter to finish"
+    },
+    "messages": {
+        "zones": {"id": "pictureZones.zones", "en": "Zones"},
+        "point": {"id": "pictureZones.point", "en": "Point {place, number} of {zone}"},
+        "drawing": {"id": "pictureZones.drawing", "en": "Click to add points, then press Enter to finish"}
+    },
+    "samples": {"point": [{"with": {"zone": "Quay", "place": 2}, "says": "Point 2 of Quay"}]},
+    "appText": {"name": "The zone's name."},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

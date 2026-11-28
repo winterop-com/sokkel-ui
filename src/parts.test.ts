@@ -121,6 +121,7 @@ import { VIDEO_FOLLOW_WORDS, VideoFollow, type VideoFollowProps } from '@wintero
 import { CAMERA_WALL_WORDS, CameraWall, type CameraWallProps } from '@winterop-com/sokkel-ui/CameraWall'
 import { DETECTION_TIMELINE_WORDS, DetectionTimeline, type DetectionTimelineProps } from '@winterop-com/sokkel-ui/DetectionTimeline'
 import { DETECTION_GALLERY_WORDS, DetectionGallery, type DetectionGalleryProps } from '@winterop-com/sokkel-ui/DetectionGallery'
+import { PICTURE_ZONES_WORDS, PictureZones, type PictureZone, type PictureZonesProps } from '@winterop-com/sokkel-ui/PictureZones'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11420,6 +11421,111 @@ const DETECTION_GALLERY_ADAPTER: Adapter = {
     },
 }
 
+// Picture zones
+
+const PICTURE_ZONES_PROPS: PictureZonesProps = {
+    zones: [
+        {
+            id: 'quay',
+            name: 'Quay',
+            kind: 'region',
+            points: [
+                [0.1, 0.1],
+                [0.4, 0.1],
+                [0.4, 0.4],
+            ],
+        },
+        {
+            id: 'gate',
+            name: 'Gate line',
+            kind: 'line',
+            tone: 'critical',
+            points: [
+                [0.5, 0.2],
+                [0.5, 0.8],
+            ],
+        },
+    ],
+}
+const pictureZones = (props: Partial<PictureZonesProps> = {}) => draw(PictureZones, { ...PICTURE_ZONES_PROPS, ...props })
+const zoneHandles = (elements: El[]) => elements.filter((element) => element.attrs['data-slot'] === 'zone-handle')
+
+const PICTURE_ZONES_ADAPTER: Adapter = {
+    wordObjects: { PICTURE_ZONES_WORDS },
+    complete: ['PICTURE_ZONES_WORDS'],
+    words: {
+        zones: 'PICTURE_ZONES_WORDS.zones',
+        point: [
+            'PICTURE_ZONES_WORDS.point',
+            (said: (zone: string, place: number) => string, fill) => said(String(fill.zone), Number(fill.place)),
+        ],
+        drawing: 'PICTURE_ZONES_WORDS.drawing',
+    },
+    options: { draw: ['region', 'line'] },
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('picture zones state no effects'),
+    keys: {
+        Tab: () => {
+            const handles = zoneHandles(pictureZones({ selected: 'quay', onChange: noop }))
+            if (handles.length !== 3 || !handles.every((handle) => handle.tag === 'button' && focusable(handle)))
+                return "the picked zone's corners are not buttons in the tab order"
+            return zoneHandles(pictureZones({ selected: 'quay' })).length === 0 ? true : 'handles show with no onChange'
+        },
+        'ArrowLeft, ArrowRight, ArrowUp, ArrowDown (a handle has focus)': () => {
+            let changed: PictureZone[] = []
+            return live(
+                createElement(PictureZones, { ...PICTURE_ZONES_PROPS, selected: 'quay', onChange: (zones) => (changed = zones) }),
+                (box) => {
+                    const handle = box.querySelector<HTMLElement>('[data-slot="zone-handle"]')
+                    if (handle === null) return 'there is no handle'
+                    act(() => {
+                        handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+                    })
+                    const moved = changed.find((zone) => zone.id === 'quay')?.points[0]
+                    return moved !== undefined && Math.abs(moved[0] - 0.11) < 1e-9 && moved[1] === 0.1
+                        ? true
+                        : `ArrowRight moved the corner to ${String(moved)}`
+                },
+            )
+        },
+        'Enter (drawing)': () => {
+            let drawn: number | undefined
+            return live(
+                createElement(PictureZones, { ...PICTURE_ZONES_PROPS, draw: 'line', onDrawn: (points) => (drawn = points.length) }),
+                (box) => {
+                    const layer = box.querySelector<HTMLElement>('[data-slot="zone-draw"]')
+                    if (layer === null) return 'there is no drawing layer'
+                    act(() => {
+                        layer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+                    })
+                    return drawn === undefined ? true : 'Enter finished a line with too few points'
+                },
+            )
+        },
+        'Escape (drawing)': () => {
+            let cancelled = 0
+            return live(
+                createElement(PictureZones, { ...PICTURE_ZONES_PROPS, draw: 'region', onDrawCancel: () => (cancelled += 1) }),
+                (box) => {
+                    const layer = box.querySelector<HTMLElement>('[data-slot="zone-draw"]')
+                    if (layer === null) return 'there is no drawing layer'
+                    act(() => {
+                        layer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+                    })
+                    return cancelled === 1 ? true : 'Escape did not give up drawing'
+                },
+            )
+        },
+    },
+    more: () => {
+        const names = pictureZones()
+            .filter((element) => element.attrs['data-slot'] === 'zone-name')
+            .map((element) => element.text)
+        return [check('anatomy.name (each zone named)', 'Quay Gate line', names.join(' '))]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12473,6 +12579,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'camera-wall': CAMERA_WALL_ADAPTER,
     'detection-timeline': DETECTION_TIMELINE_ADAPTER,
     'detection-gallery': DETECTION_GALLERY_ADAPTER,
+    'picture-zones': PICTURE_ZONES_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,

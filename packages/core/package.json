@@ -352,6 +352,10 @@
             "types": "./dist/components/DetectionGallery.d.ts",
             "import": "./dist/components/DetectionGallery.js"
         },
+        "./PictureZones": {
+            "types": "./dist/components/PictureZones.d.ts",
+            "import": "./dist/components/PictureZones.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"

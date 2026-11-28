@@ -26,3 +26,5 @@ release and empties it.
 - `DetectionGallery`: each sighting as a tile cropped from its frame around what was found, with its
   confidence, label, place and time, a preview on hover and an alert ring; `cropAround` and
   `cropBackground` (`lib/detections`) do the cropping.
+- `PictureZones`: regions and tripwire lines over a picture, picked with a press, reshaped by their
+  corners (dragged, or moved with the arrow keys) and drawn anew point by point.

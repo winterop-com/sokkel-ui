@@ -1404,6 +1404,11 @@ taken in the browser from the frame and the box the app hands in (`cropAround` a
 in `lib/detections`), so the app needs no crops of its own; how sure the finder was over its corner,
 what it is, where and when under it, a short preview played while the pointer rests on it, and an
 alert ring. With `onSelect` a tile is a button, such as to seek the player to the moment.
+`PictureZones` draws the parts of a picture a finder watches over it, in shares of the picture as the
+boxes are: regions as tinted shapes and tripwires as dashed lines, in a tone (primary, warning,
+critical), each named at its first point. A zone is picked with a press; the picked one's corners are
+handles a viewer drags or moves with the arrow keys; `draw` adds a zone point by point, finished with
+Enter or a double press. In a player's `picture` the zones move with the view.
 
 ## Graphs
 
