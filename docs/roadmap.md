@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.37.3** is the latest release (2026-11-28): the shell focuses a new page's heading without
+- **0.37.4** is the latest release (2026-11-28): a tree's middle cut keeps the last words of a
+  label whose whole end does not fit; markdown keeps code in a table cell whole, and with
+  `measureAlign="center"` centers its reading column and lets a table grow past it; contract 0.37.4.
+- **0.37.3** (2026-11-28): the shell focuses a new page's heading without
   scrolling to it, so a page `useScrollMemory` restores on Back keeps its place; contract 0.37.3.
 - **0.37.2** (2026-11-28): thirteen new parts in preview, for tracks on
   video (`DetectionOverlay`, `VideoFollow`, `CameraWall`, `DetectionTimeline`, `DetectionGallery`,
