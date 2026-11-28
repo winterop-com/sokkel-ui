@@ -1,0 +1,71 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "tour",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "5cd2547"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A guided tour of a page: one step at a time, each a card beside the part of the page it is about, that part cut out of a dimmed page and outlined.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/Tour.tsx", "packages/core/src/components/ui/popover.tsx"]},
+    "anatomy": {
+        "spotlight": "Over the page: the step's target cut out of a dim in scrim, 4 around it, rounded by radius-control and outlined 2 in primary; it moves to each step's target. A step with no target, or one not on the page, dims the whole page. The page under the dim takes no presses.",
+        "card": "A popover 320 wide, 12 from the target on its side (bottom by default, flipped where there is no room), or in the middle of the page without a target: a column 12 apart.",
+        "head": "The step's title (the popover's title), and at the line's end where the tour is at text.xs in muted-foreground.",
+        "body": "The step's words, as the popover's description.",
+        "actions": "Skip tour (ghost, small) at the start; at the end Back (outline, small) from the second step, then Next (small), or Done on the last."
+    },
+    "standsOn": {"default": "popover"},
+    "options": {
+        "steps": {"type": "rows", "does": "Each step: its target's selector, title, words and side."},
+        "open": {"type": "boolean", "does": "Whether the tour is showing."},
+        "onOpenChange": {"type": "callback", "does": "Called with false when the tour ends: done, skipped, or Escape."},
+        "step": {"type": "number", "does": "The step shown, from 0."},
+        "onStepChange": {"type": "callback", "does": "Called with the step moved to."}
+    },
+    "sizes": {"card": {"width": 320, "gap": 12}},
+    "states": {
+        "rest": {"means": "A step shown beside its target."},
+        "centered": {
+            "means": "A step with no target: the card in the middle, the whole page dimmed.",
+            "reached": "a step without a target, or one not on the page"
+        }
+    },
+    "pieces": {
+        "spotlight": {"rest": {"edge": "primary", "radius": "radius-control", "note": "The dim around it in scrim."}}
+    },
+    "keyboard": [
+        {
+            "keys": ["Enter"],
+            "does": "Moves on, or ends the tour on the last step: the focus starts on Next.",
+            "when": "the card is open"
+        },
+        {"keys": ["Escape"], "does": "Ends the tour.", "when": "the card is open"}
+    ],
+    "words": {"progress": "{step} of {steps}", "back": "Back", "next": "Next", "done": "Done", "skip": "Skip tour"},
+    "messages": {
+        "progress": {"id": "tour.progress", "en": "{step, number} of {steps, number}"},
+        "back": {"id": "tour.back", "en": "Back"},
+        "next": {"id": "tour.next", "en": "Next"},
+        "done": {"id": "tour.done", "en": "Done"},
+        "skip": {"id": "tour.skip", "en": "Skip tour"}
+    },
+    "samples": {"progress": [{"with": {"step": 2, "steps": 4}, "says": "2 of 4"}]},
+    "appText": {"title": "Each step's title.", "body": "Each step's words."},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

@@ -127,6 +127,7 @@ import { COLOR_FIELD_WORDS, COLOR_PICKER_WORDS, ColorField, ColorPicker } from '
 import { TAGS_FIELD_WORDS, TagsField, type TagsFieldProps } from '@winterop-com/sokkel-ui/TagsField'
 import { Meter, MeterLabel, MeterValue, type MeterProps } from '@winterop-com/sokkel-ui/primitives/meter'
 import { RATING_WORDS, Rating } from '@winterop-com/sokkel-ui/Rating'
+import { TOUR_WORDS, Tour } from '@winterop-com/sokkel-ui/Tour'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -874,6 +875,8 @@ const FILL: Record<string, string | number> = {
     saturation: 70,
     brightness: 85,
     stars: '3.6',
+    step: 2,
+    steps: 4,
     action: 'Remove',
     from: 1,
     to: 50,
@@ -11821,6 +11824,66 @@ const RATING_ADAPTER: Adapter = {
     },
 }
 
+// Tour
+
+const TOUR_STEPS = [
+    { title: 'Welcome', body: 'A short look around.' },
+    { title: 'Start a job', body: 'New starts a job now.' },
+]
+/** A tour drawn in the page, with the steps and ends it told. */
+const liveTour = <T>(look: (box: HTMLElement, told: string[]) => T) => {
+    const told: string[] = []
+    return live(
+        createElement(Tour, {
+            steps: TOUR_STEPS,
+            open: true,
+            onOpenChange: (open) => told.push(open ? 'open' : 'end'),
+            onStepChange: (step) => told.push(`step ${String(step)}`),
+        }),
+        (box) => look(box, told),
+    )
+}
+
+const TOUR_ADAPTER: Adapter = {
+    wordObjects: { TOUR_WORDS },
+    complete: ['TOUR_WORDS'],
+    words: {
+        progress: [
+            'TOUR_WORDS.progress',
+            (said: (step: number, steps: number) => string, fill) => said(Number(fill.step), Number(fill.steps)),
+        ],
+        back: 'TOUR_WORDS.back',
+        next: 'TOUR_WORDS.next',
+        done: 'TOUR_WORDS.done',
+        skip: 'TOUR_WORDS.skip',
+    },
+    options: {},
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the tour states no effects'),
+    keys: {
+        'Enter (the card is open)': () =>
+            liveTour((_, told) => {
+                const next = [...document.querySelectorAll<HTMLButtonElement>('[data-slot="tour-step"] button')].find(
+                    (button) => button.textContent === 'Next',
+                )
+                // A native button: a browser presses it on Enter, and the press is a click.
+                if (next === undefined) return 'there is no Next button'
+                act(() => next.click())
+                return told.join(', ') === 'step 1' ? true : `Next told ${told.join(', ')}`
+            }),
+        'Escape (the card is open)': () =>
+            liveTour((_, told) => {
+                const card = document.querySelector<HTMLElement>('[data-slot="tour-step"]')
+                if (card === null) return 'there is no card'
+                act(() => {
+                    card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+                })
+                return told.includes('end') ? true : `Escape told ${told.join(', ') || 'nothing'}`
+            }),
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12880,6 +12943,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'tags-field': TAGS_FIELD_ADAPTER,
     meter: METER_ADAPTER,
     rating: RATING_ADAPTER,
+    tour: TOUR_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,
