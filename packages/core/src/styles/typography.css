@@ -104,3 +104,14 @@
         font-size-adjust: none;
     }
 }
+
+/*
+ * The reading column of a centered markdown text: the measure resolved once, at the text's own size,
+ * and inherited as that length, so a heading in a larger face centers on the same column as the
+ * paragraphs around it.
+ */
+@property --reading-column {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 0px;
+}

@@ -105,6 +105,20 @@ describe('Markdown links', () => {
         expect(renderToStaticMarkup(<Markdown content="Some text." measure inline />)).not.toContain('reading-measure')
     })
 
+    it('centers the reading column only with measureAlign center, the tables growing past it', () => {
+        const centered = renderToStaticMarkup(<Markdown content="Some text." measure measureAlign="center" />)
+        expect(centered).toContain('[&amp;&gt;table]:w-fit')
+        expect(centered).toContain('[&amp;&gt;table]:max-w-full')
+        expect(renderToStaticMarkup(<Markdown content="Some text." measure />)).not.toContain('[&amp;&gt;table]:w-fit')
+        expect(renderToStaticMarkup(<Markdown content="Some text." measureAlign="center" />)).not.toContain('[&amp;&gt;table]:w-fit')
+    })
+
+    it('keeps code in a table cell on one line', () => {
+        expect(renderToStaticMarkup(<Markdown content="| a |\n| --- |\n| `sync-inventory-v3` |" />)).toContain(
+            '[&amp;_td_code]:whitespace-nowrap',
+        )
+    })
+
     it('keeps a link to a place in the page in it, and opens any other in a new tab', () => {
         const html = renderToStaticMarkup(<Markdown content="See [Steps](#steps) and [the docs](https://example.org/docs)." />)
         expect(html).toMatch(/<a [^>]*href="#steps"(?![^>]*target)[^>]*>Steps<\/a>/)
