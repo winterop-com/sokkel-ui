@@ -1418,6 +1418,10 @@ places the camera keeps as presets. The library sends nothing to a camera; the a
 as `#rrggbb` (`lib/color-value` reads and converts), a swatch of it at the frame's end opening a
 `ColorPicker`: an area of saturation and brightness in the hue (arrow keys move its mark), a hue
 strip, and the app's swatches. The hue holds while the color is gray, so dragging through gray keeps it.
+`TagsField` holds several short values as chips in one frame: Enter or a comma adds what is typed,
+Backspace in an empty input takes the last off, each chip removes itself, and the suggestions that
+hold the text are offered under it as a listbox the arrow keys move through. A tag in already, or
+one past `max`, is not added and the field says why with its issue mark.
 
 ## Graphs
 
