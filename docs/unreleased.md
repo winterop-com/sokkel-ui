@@ -28,3 +28,5 @@ release and empties it.
   `cropBackground` (`lib/detections`) do the cropping.
 - `PictureZones`: regions and tripwire lines over a picture, picked with a press, reshaped by their
   corners (dragged, or moved with the arrow keys) and drawn anew point by point.
+- `CameraControl`: a pan, tilt and zoom pad that acts while held (pointer or arrow keys), a home
+  button, and the camera's presets.

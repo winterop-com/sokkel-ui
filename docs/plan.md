@@ -1409,6 +1409,10 @@ boxes are: regions as tinted shapes and tripwires as dashed lines, in a tone (pr
 critical), each named at its first point. A zone is picked with a press; the picked one's corners are
 handles a viewer drags or moves with the arrow keys; `draw` adds a zone point by point, finished with
 Enter or a double press. In a player's `picture` the zones move with the view.
+`CameraControl` turns and zooms a camera as its own controls do: a pad of eight directions around a
+home button, each acting for as long as it is held (`onMove` with the direction, then `null`), the
+arrow keys doing the same while the pad has focus; a zoom in and out held the same way; and the
+places the camera keeps as presets. The library sends nothing to a camera; the app does.
 
 ## Graphs
 

@@ -518,8 +518,7 @@ to `plan.md` when it ships.
 - **Tracks on video, and the parts other libraries have.** Found missing on 2026-11-28 against
   shadcn/ui, Base UI and Mantine, and against what video tracking consoles show. Each is one round,
   its own PR and its spec. `DetectionOverlay`, `VideoFollow`, `CameraWall`, `DetectionTimeline`,
-  `DetectionGallery` and `PictureZones` are in (2026-11-28); still to come:
-    - pan, tilt and zoom: a pad with zoom and presets;
+  `DetectionGallery`, `PictureZones` and `CameraControl` are in (2026-11-28); still to come:
     - a color field and picker, a tags input, a meter, a rating, a guided tour, and a notification
       inbox.
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at

@@ -356,6 +356,10 @@
             "types": "./dist/components/PictureZones.d.ts",
             "import": "./dist/components/PictureZones.js"
         },
+        "./CameraControl": {
+            "types": "./dist/components/CameraControl.d.ts",
+            "import": "./dist/components/CameraControl.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"
