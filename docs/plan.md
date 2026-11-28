@@ -1422,6 +1422,10 @@ strip, and the app's swatches. The hue holds while the color is gray, so draggin
 Backspace in an empty input takes the last off, each chip removes itself, and the suggestions that
 hold the text are offered under it as a listbox the arrow keys move through. A tag in already, or
 one past `max`, is not added and the field says why with its issue mark.
+The `meter` primitive (Base UI's Meter) is how much of something there is on a known scale, beside
+`Progress` for work under way: with `low` and `high` its bar is good, in the warning tone or
+critical (`meterTone`), turned around with `optimum="high"` for a scale whose full end is good, and
+its value said as a whole percent unless the app writes it.
 
 ## Graphs
 
