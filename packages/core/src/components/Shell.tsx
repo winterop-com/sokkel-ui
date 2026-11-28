@@ -196,7 +196,8 @@ export function focusHeading(area: ParentNode | null, before: HeadingMarks = [])
         heading.setAttribute('data-focus-quiet', '')
         heading.addEventListener('blur', () => heading.removeAttribute('data-focus-quiet'), { once: true })
     }
-    heading.focus()
+    // The page keeps its scroll: a page restored by useScrollMemory is not pulled back to its heading.
+    heading.focus({ preventScroll: true })
     return true
 }
 
