@@ -1,0 +1,115 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "color-field",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "e0420cc"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "A color typed (six or three hex digits after #, or rgb(r, g, b)) or picked, kept as #rrggbb: a field with a swatch of the color at its end that opens a picker of saturation and brightness, hue and swatches.",
+    "sources": {
+        "sokkel-ui": [
+            "packages/core/src/components/ColorField.tsx",
+            "packages/core/src/lib/color-value.ts",
+            "packages/core/src/components/entry.tsx"
+        ]
+    },
+    "anatomy": {
+        "container": "A field as the other typed fields draw it (parts/text-field's frame, label, help and issues), its placeholder #rrggbb.",
+        "swatch": "At the frame's end, the picker's button: a square 16 across in the color, rounded by radius-mini, ringed 1 inside in foreground at 20 percent; empty, the ring alone.",
+        "picker": "Under the frame in a popover padded 12: a column 224 wide, 12 apart, of the area, the hue strip and the swatches.",
+        "area": "144 tall, rounded by radius-control: the hue at full saturation under a fade to black upward from the foot and a fade from white at the start, so across is saturation and up is brightness; its mark a dot 14 across in the color, edged 2 in background, ringed 1 in foreground at 40 percent.",
+        "hue": "A strip 12 tall, rounded full, through the hues around the circle; its thumb a dot 16 across in the hue at full saturation, edged as the area's mark.",
+        "swatches": "With swatches: a grid of eight columns 6 apart of squares in each swatch's color, rounded by radius-control, ringed 1 inside in foreground at 15 percent; the one that is the value ringed 2 in foreground, offset 2 in popover."
+    },
+    "standsOn": {"default": "background", "swatches": "popover"},
+    "options": {
+        "value": {"type": "text", "does": "The color as #rrggbb, or none."},
+        "onValueChange": {
+            "type": "callback",
+            "does": "Called with each color typed that reads or picked, and none when emptied."
+        },
+        "swatches": {"type": "rows", "does": "Colors to pick with one press, each with its name."},
+        "required": {"type": "boolean", "default": false, "does": "A required field has no clear button."},
+        "open": {"type": "boolean", "does": "Whether the picker is open."}
+    },
+    "sizes": {
+        "swatch": {"width": 16, "height": 16, "radius": "radius-mini"},
+        "area": {"height": 144, "radius": "radius-control"},
+        "hue": {"height": 12}
+    },
+    "states": {
+        "rest": {"means": "The color written and shown in its swatch."},
+        "open": {
+            "means": "The picker open under the frame.",
+            "reached": "the swatch pressed, or Alt and the down arrow in the input"
+        },
+        "unreadable": {
+            "means": "Text that is not a color: the value kept as it was, the issue said once the field is left.",
+            "reached": "typing text that does not read"
+        },
+        "focus": {
+            "means": "Keyboard focus on the area, the hue thumb or a swatch: the focus ring.",
+            "reached": "Tab",
+            "on": "keyboard"
+        }
+    },
+    "pieces": {
+        "area": {
+            "rest": {"radius": "radius-control"},
+            "focus": {"ring": {"color": "ring", "width": "focus-ring-width"}}
+        },
+        "swatches": {"rest": {"radius": "radius-control"}}
+    },
+    "keyboard": [
+        {"keys": ["Alt", "ArrowDown"], "does": "Opens the picker.", "when": "the input has focus"},
+        {
+            "keys": ["ArrowLeft", "ArrowRight"],
+            "does": "Less or more saturation, a hundredth; with Shift, a tenth.",
+            "when": "the area has focus"
+        },
+        {
+            "keys": ["ArrowUp", "ArrowDown"],
+            "does": "More or less brightness, a hundredth; with Shift, a tenth.",
+            "when": "the area has focus"
+        }
+    ],
+    "words": {
+        "unreadable": "Enter a color",
+        "example": "Write six hex digits after #, or rgb(r, g, b).",
+        "pick": "Choose a color",
+        "clear": "Clear",
+        "area": "Saturation and brightness",
+        "areaValue": "Saturation {saturation}%, brightness {brightness}%",
+        "hue": "Hue",
+        "swatches": "Swatches"
+    },
+    "messages": {
+        "unreadable": {"id": "colorField.unreadable", "en": "Enter a color"},
+        "example": {"id": "colorField.example", "en": "Write six hex digits after #, or rgb(r, g, b)."},
+        "pick": {"id": "colorField.pick", "en": "Choose a color"},
+        "clear": {"id": "colorField.clear", "en": "Clear"},
+        "area": {"id": "colorPicker.area", "en": "Saturation and brightness"},
+        "areaValue": {"id": "colorPicker.areaValue", "en": "Saturation {saturation}%, brightness {brightness}%"},
+        "hue": {"id": "colorPicker.hue", "en": "Hue"},
+        "swatches": {"id": "colorPicker.swatches", "en": "Swatches"}
+    },
+    "samples": {"areaValue": [{"with": {"saturation": 70, "brightness": 85}, "says": "Saturation 70%, brightness 85%"}]},
+    "appText": {"label": "The field's label.", "swatch": "Each swatch's name."},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}

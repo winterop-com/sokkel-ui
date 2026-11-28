@@ -123,6 +123,7 @@ import { DETECTION_TIMELINE_WORDS, DetectionTimeline, type DetectionTimelineProp
 import { DETECTION_GALLERY_WORDS, DetectionGallery, type DetectionGalleryProps } from '@winterop-com/sokkel-ui/DetectionGallery'
 import { PICTURE_ZONES_WORDS, PictureZones, type PictureZone, type PictureZonesProps } from '@winterop-com/sokkel-ui/PictureZones'
 import { CAMERA_CONTROL_WORDS, CameraControl, type CameraControlProps, type CameraMove } from '@winterop-com/sokkel-ui/CameraControl'
+import { COLOR_FIELD_WORDS, COLOR_PICKER_WORDS, ColorField, ColorPicker } from '@winterop-com/sokkel-ui/ColorField'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -867,6 +868,8 @@ const focusable = (element: El | undefined) => element !== undefined && !('disab
 /** The values a sample fills a word's slots with. */
 const FILL: Record<string, string | number> = {
     count: 3,
+    saturation: 70,
+    brightness: 85,
     action: 'Remove',
     from: 1,
     to: 50,
@@ -11579,6 +11582,68 @@ const CAMERA_CONTROL_ADAPTER: Adapter = {
     },
 }
 
+// Color field
+
+const COLOR_FIELD_ADAPTER: Adapter = {
+    wordObjects: { COLOR_FIELD_WORDS, COLOR_PICKER_WORDS },
+    complete: ['COLOR_PICKER_WORDS'],
+    words: {
+        unreadable: 'COLOR_FIELD_WORDS.unreadable',
+        example: 'COLOR_FIELD_WORDS.example',
+        pick: 'COLOR_FIELD_WORDS.pick',
+        clear: 'COLOR_FIELD_WORDS.clear',
+        area: 'COLOR_PICKER_WORDS.area',
+        areaValue: [
+            'COLOR_PICKER_WORDS.areaValue',
+            (said: (saturation: number, brightness: number) => string, fill) => said(Number(fill.saturation), Number(fill.brightness)),
+        ],
+        hue: 'COLOR_PICKER_WORDS.hue',
+        swatches: 'COLOR_PICKER_WORDS.swatches',
+    },
+    options: {},
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the color field states no effects'),
+    keys: {
+        'Alt, ArrowDown (the input has focus)': () =>
+            live(createElement(ColorField, { id: 'c', label: 'Color', defaultValue: '#1e90ff' }), (box) => {
+                const input = box.querySelector<HTMLInputElement>('input')
+                if (input === null) return 'there is no input'
+                act(() => {
+                    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', altKey: true, bubbles: true }))
+                })
+                const trigger = box.querySelector<HTMLElement>('[aria-label="Choose a color"]')
+                return trigger?.getAttribute('aria-expanded') === 'true' ? true : 'Alt and the down arrow did not open the picker'
+            }),
+        'ArrowLeft, ArrowRight (the area has focus)': () => {
+            const told: string[] = []
+            return live(createElement(ColorPicker, { value: '#808080', onValueChange: (value) => told.push(value) }), (box) => {
+                const area = box.querySelector<HTMLElement>('[data-slot="color-area"]')
+                if (area === null) return 'there is no area'
+                act(() => {
+                    area.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true, bubbles: true }))
+                })
+                return told.length === 1 && told[0] !== '#808080' ? true : `ArrowRight with Shift told ${told.join(', ')}`
+            })
+        },
+        'ArrowUp, ArrowDown (the area has focus)': () => {
+            const told: string[] = []
+            return live(createElement(ColorPicker, { value: '#808080', onValueChange: (value) => told.push(value) }), (box) => {
+                const area = box.querySelector<HTMLElement>('[data-slot="color-area"]')
+                if (area === null) return 'there is no area'
+                act(() => {
+                    area.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', shiftKey: true, bubbles: true }))
+                })
+                return told[0] === '#9a9a9a' ? true : `ArrowUp with Shift told ${told.join(', ')}`
+            })
+        },
+    },
+    more: () => {
+        const input = draw(ColorField, { id: 'c', label: 'Color', defaultValue: '#1e90ff' }).find((element) => element.tag === 'input')
+        return [check('options.value (written as #rrggbb)', '#1e90ff', input?.attrs.value)]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12634,6 +12699,7 @@ const ADAPTERS: Record<string, Adapter> = {
     'detection-gallery': DETECTION_GALLERY_ADAPTER,
     'picture-zones': PICTURE_ZONES_ADAPTER,
     'camera-control': CAMERA_CONTROL_ADAPTER,
+    'color-field': COLOR_FIELD_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,
