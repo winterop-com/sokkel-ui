@@ -6,23 +6,27 @@ import { useWords, type WordMessages, type WordsPart } from '../lib/words'
 
 export interface RatingWords {
     /** A star as a choice, by its count and the most there are. */
-    star: (count: number, max: number) => string
-    /** A rating shown, not chosen, by its value and the most there are. */
-    rated: (value: string, max: number) => string
+    star: (count: number, total: number) => string
+    /** A rating shown, not chosen, by its stars and the most there are. */
+    rated: (stars: string, total: number) => string
 }
 
 export const RATING_WORDS: RatingWords = {
-    star: (count, max) => `${count.toLocaleString('en-US')} of ${max.toLocaleString('en-US')} ${count === 1 ? 'star' : 'stars'}`,
-    rated: (value, max) => `Rated ${value} of ${max.toLocaleString('en-US')}`,
+    star: (count, total) => `${count.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} ${count === 1 ? 'star' : 'stars'}`,
+    rated: (stars, total) => `Rated ${stars} of ${total.toLocaleString('en-US')}`,
 }
 
 /** Where a catalog holds a rating's words, and the arguments its phrases name. */
-export const RATING_PART: WordsPart<RatingWords> = { id: 'rating', words: RATING_WORDS, args: { star: 'count max', rated: 'value max' } }
+export const RATING_PART: WordsPart<RatingWords> = {
+    id: 'rating',
+    words: RATING_WORDS,
+    args: { star: 'count total', rated: 'stars total' },
+}
 
 /** A rating's phrases as ICU messages in English, for the catalog. */
 export const RATING_MESSAGES: WordMessages<RatingWords> = {
-    star: '{count, plural, one {# of {max} star} other {# of {max} stars}}',
-    rated: 'Rated {value} of {max}',
+    star: '{count, plural, one {# of {total} star} other {# of {total} stars}}',
+    rated: 'Rated {stars} of {total}',
 }
 
 export interface RatingProps {
