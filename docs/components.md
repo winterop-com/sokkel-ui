@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 295 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 296 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -259,6 +259,7 @@ in (`geo`).
 | **PeriodPicker** | `@winterop-com/sokkel-ui/PeriodPicker` | The period a report is made for: the recent periods of its type, newest first, each with its id in the code face, and Other period last, which opens a field where any id is typed. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-period-picker--empty) |
 | **PermissionMatrix** | `@winterop-com/sokkel-ui/PermissionMatrix` | Roles against permissions as a grid of checkboxes, drawn by `DataTable`: a column per role, a row per permission, the rows grouped by what they act on, each group's head counting what every role holds of it and folding the group. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **QuickAdd** | `@winterop-com/sokkel-ui/QuickAdd` | The field at the top of a list that adds a row: type, press Enter, and the field empties for the next one. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-quick-add--field) |
+| **Rating** | `@winterop-com/sokkel-ui/Rating` | A rating in stars. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-rating--choice) |
 | **RepeatedGroup** | `@winterop-com/sokkel-ui/RepeatedGroup` | A group of fields asked again for each of several things in a hand-composed form, such as a run's steps or a household's people: the group's name with Add, then each row in a box with its number, Move up, Move down and Remove, and its fields. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-repeated-group--one-control) |
 | **SaveBar** | `@winterop-com/sokkel-ui/SaveBar` | The bar pinned to the foot of a page while its edits are not yet saved: how many there are at the left, Discard and Save at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **SavedViews** | `@winterop-com/sokkel-ui/SavedViews` | The saved views of a listing: a menu that names the chosen view, lists the others to pick, and saves the listing now as a new view, renames the chosen one or deletes it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-saved-views--chosen) |

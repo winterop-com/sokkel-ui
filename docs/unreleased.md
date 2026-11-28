@@ -38,3 +38,4 @@ release and empties it.
 - `primitives/meter`: `Meter` with its label, track, indicator and value; `low`, `high` and
   `optimum` give the bar a tone (`meterTone`). An app that draws it adds `sources/primitives/meter.css`
   to its styles, as for the other primitives no part draws.
+- `Rating`: a rating in stars, chosen as a radio group or shown filled to a fraction.

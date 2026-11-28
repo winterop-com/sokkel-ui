@@ -793,6 +793,8 @@
     "rail.places": "All places",
     "rail.resize": "Resize the navigation",
     "rail.unread": "Unread",
+    "rating.rated": "Rated {value} of {max}",
+    "rating.star": "{count, plural, one {# of {max} star} other {# of {max} stars}}",
     "reactionBar.label": "Reactions",
     "reactionBar.more": "More reactions",
     "reactionChips.count": "{label}, {count}",

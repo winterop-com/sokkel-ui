@@ -368,6 +368,10 @@
             "types": "./dist/components/TagsField.d.ts",
             "import": "./dist/components/TagsField.js"
         },
+        "./Rating": {
+            "types": "./dist/components/Rating.d.ts",
+            "import": "./dist/components/Rating.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"
