@@ -4157,7 +4157,7 @@ const SHELL_ADAPTER: Adapter = {
         openPalette: 'SHELL_WORDS.openPalette',
         openShortcuts: 'SHELL_WORDS.openShortcuts',
     },
-    options: { railMode: propValues(SHELL, 'ShellProps', 'railMode') },
+    options: { railMode: propValues(SHELL, 'ShellProps', 'railMode'), paletteWidth: propValues(SHELL, 'ShellProps', 'paletteWidth') },
     size: (size, key) => {
         if (size !== 'panelToggle')
             return skip(

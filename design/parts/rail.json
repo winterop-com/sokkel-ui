@@ -38,7 +38,7 @@
         "collapse": "The control at the expanded head's end: narrows the rail to its icons, or in the drawer closes the drawer.",
         "groupTitle": "A group's title over its entries, upper case. A group without a title stands at the top.",
         "groupRule": "A collapsed rail's rule in a group title's place.",
-        "entry": "One place in the expanded rail: its mark (an icon, a color dot, or nothing for a rail of text), its label, an optional description under the label, and at its end a count, an unread dot or a parent's chevron. The active one wears a bar at its start over a wash.",
+        "entry": "One place in the expanded rail: its mark (an icon, a color dot, or nothing for a rail of text), its label, an optional description under the label, and at its end a count, an unread dot or a parent's chevron. The active one wears a bar at its start over a wash. An entry that is a press (onSelect, no href) draws the same face as a button, pressed while active, in the strip and the collapsed and expanded rail alike.",
         "description": "An entry's second line, under its label, saying what the place holds; it wraps.",
         "count": "How many wait at a place, at the expanded row's end.",
         "cornerCount": "A count at an icon's upper corner, in a collapsed rail and a strip, cut out of the rail's ground.",
@@ -61,7 +61,7 @@
     "options": {
         "groups": {
             "type": "rows",
-            "does": "The places: [{ id, title?, entries, onReorder? }], each entry { id, label, description?, icon?, href?, active?, count?, unread?, dot?, keywords?, entries?, drop? }. Data, the same on every target; the palette lists them too.",
+            "does": "The places: [{ id, title?, entries, onReorder? }], each entry { id, label, description?, icon?, href?, onSelect?, active?, count?, unread?, dot?, keywords?, entries?, drop? }. Data, the same on every target; the palette lists them too. An entry with onSelect in place of href is a press, not a place: a button that changes no address.",
             "sokkel-ui": "Rail groups (RailGroup, RailEntry)"
         },
         "variant": {
@@ -296,9 +296,9 @@
             "sokkel-ui": "focus-visible: every control of the rail (the home link, the head's control, the collapsed mark, an expanded, icon or strip entry, a parent's chevron button) draws the button's own focus look, a 2px ring outline 2 off; the edge shows its line."
         },
         "active": {
-            "means": "The entry of the place shown; a parent folded over the active entry wears it too.",
+            "means": "The entry of the place shown; a parent folded over the active entry wears it too. A press entry wears it while active, as pressed.",
             "reached": "the route (an entry's active)",
-            "sokkel-ui": "aria-current=page"
+            "sokkel-ui": "aria-current=page; aria-pressed on a press entry"
         },
         "holding": {
             "means": "A parent unfolded over the active entry: its label set apart while its child wears the accent.",

@@ -65,6 +65,11 @@
             "sokkel-ui": "Shell top, ShellTop, useShellTrail"
         },
         "palette": {"type": "rows", "does": "The command groups; without them no palette."},
+        "paletteWidth": {
+            "values": ["sm", "md", "lg"],
+            "default": "sm",
+            "does": "How wide the palette opens (parts/command-palette's width): wider for rows that say more than a command's name."
+        },
         "panel": {"type": "node", "does": "A side panel."},
         "panelStrip": {
             "type": "boolean",
