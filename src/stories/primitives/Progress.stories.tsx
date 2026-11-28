@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Progress, ProgressLabel, ProgressValue } from '@winterop-com/sokkel-ui/primitives/progress'
+import { ProgressRing } from '@winterop-com/sokkel-ui/primitives/progress-ring'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Surface } from '@winterop-com/sokkel-ui/Section'
 
@@ -59,6 +60,31 @@ export const States: StoryObj = {
                     <ProgressValue />
                 </Progress>
             </Stack>
+        </Stack>
+    ),
+}
+
+/**
+ * The ring that stands where a bar has no room, as on an upload in a list: empty, under way, nearly
+ * done and done, then at a larger size beside its label. It fills clockwise from the top.
+ */
+export const Ring: StoryObj = {
+    render: () => (
+        <Stack gap="xl" className="max-w-md">
+            <Row gap="lg">
+                {[0, 0.25, 0.6, 0.95, 1].map((value) => (
+                    <Stack key={value} gap="xs" align="center">
+                        <ProgressRing value={value} label="Upload progress" />
+                        <Caption>{Math.round(value * 100)}%</Caption>
+                    </Stack>
+                ))}
+            </Row>
+            <Row gap="sm">
+                <ProgressRing value={0.42} label="orders-2026-08.csv" className="size-6" />
+                <span className="text-sm">
+                    Uploading <span className="font-mono">orders-2026-08.csv</span>
+                </span>
+            </Row>
         </Stack>
     ),
 }

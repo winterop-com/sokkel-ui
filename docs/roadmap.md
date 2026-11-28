@@ -580,11 +580,13 @@ Should:
   and the roles of `Banner`, `Problem`, `PageState` and the alert written down.
 - **One naming.** One value callback, one selection callback, one dismissal (`onOpenChange`), one
   size scale, finished in the 1.0 window.
-- **`'use client'`** on the components that use hooks.
+- **`'use client'`** on the components that use hooks. The directive covers a whole module, and
+  223 such modules also export plain values (866 of them: 397 `*_WORDS` and `*_PART`, 4
+  `*Variants`, the rest constants and helpers), which server code then cannot read; those move
+  into server-safe modules first (2026-11-28, #851).
 - **Tests** for the parts heavy in logic: `DataTable` paging, server mode, selection and keys,
   `MediaBar`, `SchemaForm`, `Search`, the board's drag, the core hooks.
 - **CI installs the packed tarballs** into each example's `web/`, not the workspace link.
-- **Stories** for parts no story shows directly (`ProgressRing`, `ChatTyping`, `PresenceDot`).
 - **Logical sides** (start and end, not left and right) and a right-to-left story, if wanted.
 
 ## Later

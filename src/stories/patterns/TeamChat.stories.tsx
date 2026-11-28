@@ -3,7 +3,7 @@ import { Check, Ellipsis, FileText, Hash, MessageSquare, Pin, Rocket, Search, Us
 import { useState, type ReactNode } from 'react'
 
 import { ChannelHeader, type ChannelHeaderAction, type ChannelHeaderTab } from '@winterop-com/sokkel-ui/ChannelHeader'
-import { ChatDay, ChatMessage, ChatNewDivider, type ChatPerson } from '@winterop-com/sokkel-ui/ChatMessage'
+import { ChatDay, ChatMessage, ChatNewDivider, ChatTyping, type ChatPerson } from '@winterop-com/sokkel-ui/ChatMessage'
 import { Conversation, ConversationStart, ThreadView } from '@winterop-com/sokkel-ui/Conversation'
 import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
 import { MessageComposer } from '@winterop-com/sokkel-ui/MessageComposer'
@@ -169,6 +169,22 @@ export const Edited: StoryObj = {
             <ChatMessage author="linus" time="09:53" continued edited {...BAR}>
                 Plain text works the same.
             </ChatMessage>
+        </Ground>
+    ),
+}
+
+/** Who is writing now, under the last message: one person, two, and several. */
+export const Typing: StoryObj = {
+    render: () => (
+        <Ground>
+            <ChatMessage author="grace" image={GRACE.image} time="09:47" {...BAR}>
+                <Markdown content="Probably. juniper switched its export to `nb-NO` on Monday." />
+            </ChatMessage>
+            <Stack gap="xs">
+                <ChatTyping>linus is typing</ChatTyping>
+                <ChatTyping>ada and margaret are typing</ChatTyping>
+                <ChatTyping>Several people are typing</ChatTyping>
+            </Stack>
         </Ground>
     ),
 }
