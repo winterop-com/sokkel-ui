@@ -1429,6 +1429,11 @@ its value said as a whole percent unless the app writes it.
 `Rating` is a rating in stars: with `onValueChange` a radio group the arrow keys move along, lit up
 to the star under the pointer, and pressing the stars given takes it back to none; without it a
 rating shown, filled to the fraction an average has and said as one image.
+`Tour` walks a page one step at a time: each step a card beside the element its selector finds,
+that element cut out of the page dimmed in the scrim and outlined in primary, the page held still
+under the dim; the card says where the tour is and moves back and on, and Skip tour, the last
+step's Done or Escape end it. A step with no target stands in the middle. The app keeps whether
+the tour has been seen.
 
 ## Graphs
 
