@@ -35,3 +35,6 @@ release and empties it.
   and converts colors.
 - `TagsField`: several short values as chips in one field, added with Enter or a comma, with
   suggestions as the viewer types, a `max`, and duplicates refused.
+- `primitives/meter`: `Meter` with its label, track, indicator and value; `low`, `high` and
+  `optimum` give the bar a tone (`meterTone`). An app that draws it adds `sources/primitives/meter.css`
+  to its styles, as for the other primitives no part draws.

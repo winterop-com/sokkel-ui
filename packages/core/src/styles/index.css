@@ -24,6 +24,7 @@
 @source not '../components/ui/item.tsx';
 @source not '../components/ui/menubar.tsx';
 @source not '../components/ui/message-scroller.tsx';
+@source not '../components/ui/meter.tsx';
 @source not '../components/ui/navigation-menu.tsx';
 @source not '../components/ui/pagination.tsx';
 @source not '../components/ui/questionnaire.tsx';

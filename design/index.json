@@ -301,6 +301,7 @@
         {"id": "camera-control", "file": "parts/camera-control.json", "status": "preview"},
         {"id": "color-field", "file": "parts/color-field.json", "status": "preview"},
         {"id": "tags-field", "file": "parts/tags-field.json", "status": "preview"},
+        {"id": "meter", "file": "parts/meter.json", "status": "preview"},
         {"id": "zone-layer", "file": "parts/zone-layer.json", "status": "preview"},
         {"id": "letter", "file": "parts/letter.json", "status": "stable"},
         {"id": "detail-pane", "file": "parts/detail-pane.json", "status": "stable"},

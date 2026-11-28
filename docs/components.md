@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 294 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 295 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -101,6 +101,7 @@ in (`geo`).
 | **Card**, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter | `@winterop-com/sokkel-ui/primitives/card` | A card: a bordered surface on the card's ground, with a header, content and a footer as its slots. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-card--variants) |
 | **Empty**, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent | `@winterop-com/sokkel-ui/primitives/empty` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-empty--variants) |
 | **Item**, ItemGroup, ItemSeparator, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemHeader, ItemFooter | `@winterop-com/sokkel-ui/primitives/item` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-item--variants) |
+| **Meter**, MeterTrack, MeterIndicator, MeterLabel, MeterValue | `@winterop-com/sokkel-ui/primitives/meter` | How much of something there is on a known scale, as a bar: a disk filled, a quota used, a battery left; for work under way use `Progress`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-meter--tones) |
 | **Progress**, ProgressTrack, ProgressIndicator, ProgressLabel, ProgressValue | `@winterop-com/sokkel-ui/primitives/progress` | A bar of how far something has come. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-progress--variants) |
 | **ProgressRing** | `@winterop-com/sokkel-ui/primitives/progress-ring` | How far a piece of work has come, drawn as a ring that fills clockwise from the top: an upload, a download. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-progress--variants) |
 | **Separator** | `@winterop-com/sokkel-ui/primitives/separator` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-separator--variants) |

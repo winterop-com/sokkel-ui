@@ -1168,6 +1168,10 @@
             "types": "./dist/components/ui/menubar.d.ts",
             "import": "./dist/components/ui/menubar.js"
         },
+        "./primitives/meter": {
+            "types": "./dist/components/ui/meter.d.ts",
+            "import": "./dist/components/ui/meter.js"
+        },
         "./primitives/message": {
             "types": "./dist/components/ui/message.d.ts",
             "import": "./dist/components/ui/message.js"

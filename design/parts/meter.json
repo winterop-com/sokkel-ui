@@ -1,0 +1,81 @@
+{
+    "$schema": "../schema/part.schema.json",
+    "id": "meter",
+    "kind": "part",
+    "status": "preview",
+    "renderers": {
+        "sokkel-ui": {"state": "built", "as_of": "d81fba4"},
+        "sokkel-egui": {"state": "missing", "as_of": "5532f68", "note": "Not built yet."},
+        "sokkel-tui": {"state": "missing", "as_of": "b99664f", "note": "Not in sokkel-tui's reports as of b99664f."}
+    },
+    "summary": "How much of something there is on a known scale, as a bar: a disk filled, a quota used, a battery left. With bounds the bar takes a tone: good, warning or critical.",
+    "sources": {"sokkel-ui": ["packages/core/src/components/ui/meter.tsx"]},
+    "anatomy": {
+        "container": "A row wrapping, 12 apart across and 6 down: the label and the value on the first line, the track under them across the whole width.",
+        "label": "At text.sm 500.",
+        "value": "At the line's end at text.sm in muted-foreground, tabular; in warning-ink in the warning tone, at 500 in critical-ink when critical. Without a format, the share as a whole percent.",
+        "track": "6 tall, rounded full, on muted.",
+        "indicator": "The track filled from its start to the value over the scale, rounded full: primary without bounds, else good, warning or critical."
+    },
+    "standsOn": {"default": "background"},
+    "options": {
+        "value": {"type": "number", "does": "How much there is."},
+        "min": {"type": "number", "default": 0, "does": "The scale's start."},
+        "max": {"type": "number", "default": 100, "does": "The scale's end."},
+        "low": {"type": "number", "does": "Where the scale stops being good."},
+        "high": {"type": "number", "does": "Where the scale turns critical."},
+        "optimum": {
+            "values": ["low", "high"],
+            "default": "low",
+            "does": "Which end is good: low, so a fuller bar reads worse, or high."
+        },
+        "format": {"type": "callback", "does": "Writes the value; a whole percent of the scale by default."}
+    },
+    "sizes": {"track": {"height": 6}, "label": {"text": "text.sm"}},
+    "states": {
+        "rest": {"means": "No bounds: the bar in primary.", "reached": "neither low nor high"},
+        "good": {
+            "means": "Within the good end: the bar in good.",
+            "reached": "up to low (with optimum high, from high up)"
+        },
+        "warning": {
+            "means": "Between the bounds: the bar in warning, the value in warning-ink.",
+            "reached": "between low and high"
+        },
+        "critical": {
+            "means": "Past the bad bound: the bar in critical, the value in critical-ink.",
+            "reached": "past high (with optimum high, under low)"
+        }
+    },
+    "pieces": {
+        "track": {"rest": {"ground": "muted"}},
+        "indicator": {
+            "rest": {"ground": "primary"},
+            "good": {"ground": "good"},
+            "warning": {"ground": "warning"},
+            "critical": {"ground": "critical"}
+        },
+        "value": {
+            "rest": {"ink": "muted-foreground", "text": "text.sm"},
+            "warning": {"ink": "warning-ink"},
+            "critical": {"ink": "critical-ink", "weight": 500}
+        }
+    },
+    "keyboard": [],
+    "words": {},
+    "appText": {"label": "What is measured."},
+    "drift": [
+        {
+            "renderer": "sokkel-egui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of 5532f68: no such part."
+        },
+        {
+            "renderer": "sokkel-tui",
+            "what": "not built yet",
+            "spec": "This spec.",
+            "today": "As of b99664f its reports name no such part."
+        }
+    ]
+}
