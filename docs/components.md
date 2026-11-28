@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 286 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 287 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -326,6 +326,7 @@ in (`geo`).
 | **TrackRoster** | `@winterop-com/sokkel-ui/TrackRoster` | The tracks a console watches, as one list: a `DataTable` list of `TrackCard` rows gathered under their affiliations' heads, friend first, each head with its count and folding its group. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-track-roster--list) |
 | **Tree** | `@winterop-com/sokkel-ui/Tree` | A hierarchy a reader opens a level at a time: regions, folders, teams. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |
 | **UptimeBar** | `@winterop-com/sokkel-ui/UptimeBar` | A thing's record over the last days as a row of bars, one a day, oldest at the left and today at the right: a service's uptime on a status page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-uptime-bar--steady) |
+| **VideoFollow** | `@winterop-com/sokkel-ui/VideoFollow` | Keeps a video's view on one detection, as `MapFollow` keeps a map on one track: inside a `VideoPlayer` (in its `overlay`, where the banner stands) the player comes in to the part of the picture around the detection and moves with it frame by frame, and the banner says what is followed, with a button that lets it go. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-video-follow--following) |
 
 ### Actions, dialogs and feedback
 
@@ -461,7 +462,7 @@ in (`geo`).
 | **PlayButton**, TransportButton, Position, RateMenu, SkipGlyph, LiveMark, VolumeControl, VolumeGlyph | `@winterop-com/sokkel-ui/media/MediaControls` | The play button at the center of the transport, the one filled control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-watch-layout--beside) |
 | **SoundVisualizer** | `@winterop-com/sokkel-ui/media/SoundVisualizer` | A live picture of what is playing, read from a media element or a stream through Web Audio and drawn on a canvas: a spectrum of bars, an area, a wave or a ring. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-sound-visualizer--at-rest) |
 | **SpeakButton** | `@winterop-com/sokkel-ui/media/SpeakButton` | A button that reads a text aloud with audio the app fetches on demand: the first press calls `load`, the button spins while it answers, and the audio plays; a press while it plays stops it, and a press while it loads stops the fetch. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-speak-button--icon) |
-| **VideoPictureLayer** | `@winterop-com/sokkel-ui/media/video-picture` | The layer `VideoPlayer` lays over its picture's drawn area, handing what it holds the video. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detection-overlay--looks) (in DetectionOverlay) |
+| **VideoPictureProvider**, VideoPictureLayer | `@winterop-com/sokkel-ui/media/video-picture` | Hands what is drawn over a picture its video and view; `VideoPlayer` wraps all it draws in one. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detection-overlay--looks) (in DetectionOverlay) |
 | **VideoPlayer** | `@winterop-com/sokkel-ui/media/VideoPlayer` | A video with the library's controls over it: play and pause, a seek bar with what has loaded, the time, volume, playback speed, captions, picture in picture and fullscreen. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |
 
 ### Schema

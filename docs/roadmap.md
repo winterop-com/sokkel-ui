@@ -517,8 +517,7 @@ to `plan.md` when it ships.
 
 - **Tracks on video, and the parts other libraries have.** Found missing on 2026-11-28 against
   shadcn/ui, Base UI and Mantine, and against what video tracking consoles show. Each is one round,
-  its own PR and its spec. `DetectionOverlay` is in (2026-11-28); still to come:
-    - following a target on video: its crop on its card, and the view held on it;
+  its own PR and its spec. `DetectionOverlay` and `VideoFollow` are in (2026-11-28); still to come:
     - a camera wall: a grid of feeds, each with its state and detections, one taken large;
     - a detection timeline: a playback bar marked where things were seen, alerts apart from
       detections, filtered by kind;

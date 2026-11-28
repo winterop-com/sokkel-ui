@@ -1383,7 +1383,12 @@ track's id, label, affiliation and boxes in shares of the picture at video times
 looks at the picture. A box glides between samples no further apart than `gap`, holds `hold` after
 the last, may trail its path, and wears its affiliation's track color, so a detection reads as its
 track does on a map. Its looks are the whole box, corner brackets that hide less of what is inside,
-and a marker for a crowd; the selected one is heavier and the rest step back.
+and a marker for a crowd; the selected one is heavier and the rest step back. `VideoFollow`, in the player's
+`overlay`, keeps the view on one detection as `MapFollow` keeps a map on one track: the player comes
+in on the part of the picture around it (`room` times its size, never closer than a fifth of the
+picture) through the view the picture context offers (`useVideoView`), eased and moving with it, the
+picture layer moving with the picture; while the finder has lost it the view holds where it was last
+seen and the banner says so.
 
 ## Graphs
 

@@ -1,11 +1,49 @@
-import { createContext, useContext, useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { createContext, useContext, useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 
-/** The video a `VideoPlayer` draws its `picture` layer over, for what is drawn there to read. */
-const VideoPictureContext = createContext<HTMLVideoElement | null>(null)
+/**
+ * A part of the picture, in shares of its size from its top left corner: `x` and `w` of its width,
+ * `y` and `h` of its height, each from 0 to 1.
+ */
+export interface PictureRegion {
+    x: number
+    y: number
+    w: number
+    h: number
+}
 
-/** The `<video>` element of the `VideoPlayer` whose `picture` layer this is drawn in, or `null` outside one. */
+/** What a `VideoPlayer` hands what it draws over its picture: the video, and a way to frame part of it. */
+export interface VideoPictureValue {
+    video: HTMLVideoElement | null
+    /**
+     * Fills the player with a part of the picture, eased there, the picture never leaving an edge
+     * of the player bare that it covered; `null` shows the whole picture again. What the `picture`
+     * layer draws moves with it; the controls, captions and `overlay` stay where they are.
+     */
+    setView: (region: PictureRegion | null) => void
+}
+
+const NONE: VideoPictureValue = { video: null, setView: () => undefined }
+
+const VideoPictureContext = createContext<VideoPictureValue>(NONE)
+
+export interface VideoPictureProviderProps {
+    value: VideoPictureValue
+    children: ReactNode
+}
+
+/** Hands what is drawn over a picture its video and view; `VideoPlayer` wraps all it draws in one. */
+export function VideoPictureProvider({ value, children }: VideoPictureProviderProps) {
+    return <VideoPictureContext value={value}>{children}</VideoPictureContext>
+}
+
+/** The `<video>` element of the `VideoPlayer` this is drawn in (its `picture` or its `overlay`), or `null` outside one. */
 export function useVideoPicture(): HTMLVideoElement | null {
-    return useContext(VideoPictureContext)
+    return useContext(VideoPictureContext).video
+}
+
+/** The `setView` of the `VideoPlayer` this is drawn in; it does nothing outside one. */
+export function useVideoView(): (region: PictureRegion | null) => void {
+    return useContext(VideoPictureContext).setView
 }
 
 /**
@@ -99,23 +137,39 @@ function usePictureRect(video: HTMLVideoElement | null): CSSProperties {
     return rect
 }
 
+/**
+ * The CSS transform that fills `room` with `region` of a picture drawn at `picture` in it: scaled up
+ * (never down) about the top left corner and moved so the region's middle is the room's middle,
+ * held so the picture leaves bare no edge it covered, and centered on an axis it does not fill.
+ */
+export function viewTransform(
+    room: { width: number; height: number },
+    picture: { left: number; top: number; width: number; height: number },
+    region: PictureRegion,
+): string {
+    if (picture.width <= 0 || picture.height <= 0 || region.w <= 0 || region.h <= 0) return ''
+    const scale = Math.max(1, Math.min(room.width / (region.w * picture.width), room.height / (region.h * picture.height)))
+    const axis = (size: number, start: number, length: number, at: number, extent: number) => {
+        const wanted = size / 2 - scale * (start + (at + extent / 2) * length)
+        if (scale * length <= size) return (size - scale * length) / 2 - scale * start
+        return Math.min(-scale * start, Math.max(size - scale * (start + length), wanted))
+    }
+    const x = axis(room.width, picture.left, picture.width, region.x, region.w)
+    const y = axis(room.height, picture.top, picture.height, region.y, region.h)
+    return `translate(${String(x)}px, ${String(y)}px) scale(${String(scale)})`
+}
+
 export interface VideoPictureLayerProps {
-    video: RefObject<HTMLVideoElement | null>
+    video: HTMLVideoElement | null
     children: ReactNode
 }
 
-/** The layer `VideoPlayer` lays over its picture's drawn area, handing what it holds the video. */
+/** The layer `VideoPlayer` lays over its picture's drawn area. */
 export function VideoPictureLayer({ video, children }: VideoPictureLayerProps) {
-    const [element, setElement] = useState<HTMLVideoElement | null>(null)
-    useEffect(() => {
-        setElement(video.current)
-    }, [video])
-    const rect = usePictureRect(element)
+    const rect = usePictureRect(video)
     return (
-        <VideoPictureContext value={element}>
-            <div data-slot="video-picture" className="pointer-events-none absolute z-1" style={rect}>
-                {children}
-            </div>
-        </VideoPictureContext>
+        <div data-slot="video-picture" className="pointer-events-none absolute z-1" style={rect}>
+            {children}
+        </div>
     )
 }

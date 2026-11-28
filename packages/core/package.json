@@ -336,6 +336,10 @@
             "types": "./dist/components/DetectionOverlay.d.ts",
             "import": "./dist/components/DetectionOverlay.js"
         },
+        "./VideoFollow": {
+            "types": "./dist/components/VideoFollow.d.ts",
+            "import": "./dist/components/VideoFollow.js"
+        },
         "./ImageLightbox": {
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"

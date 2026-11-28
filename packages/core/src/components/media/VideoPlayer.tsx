@@ -3,6 +3,7 @@ import {
     useCallback,
     useEffect,
     useImperativeHandle,
+    useMemo,
     useLayoutEffect,
     useRef,
     useState,
@@ -62,7 +63,14 @@ import {
     type VideoError,
     type VideoSource,
 } from './video-source'
-import { VideoPictureLayer } from './video-picture'
+import {
+    containedRect,
+    VideoPictureLayer,
+    VideoPictureProvider,
+    viewTransform,
+    type PictureRegion,
+    type VideoPictureValue,
+} from './video-picture'
 import { readVideoStats, type VideoStats } from './video-stats'
 
 export type { VideoError, VideoErrorKind, VideoSource, VideoSourceAttach, VideoSourceReport, VideoSourceStats } from './video-source'
@@ -560,9 +568,31 @@ export function VideoPlayer({
     const filled = useRef(false)
     const sourceKey = source === undefined ? undefined : (source.id ?? source)
 
+    // The video as state, for the parts drawn over it; and the box that holds the picture and what is drawn on it, which a view scales.
+    const [pictureVideo, setPictureVideo] = useState<HTMLVideoElement | null>(null)
+    const viewBox = useRef<HTMLDivElement | null>(null)
+    const pictureValue = useMemo<VideoPictureValue>(
+        () => ({
+            video: pictureVideo,
+            setView: (region: PictureRegion | null) => {
+                const box = viewBox.current
+                if (box === null) return
+                if (region === null || pictureVideo === null) {
+                    box.style.transform = ''
+                    return
+                }
+                const room = { width: pictureVideo.clientWidth, height: pictureVideo.clientHeight }
+                const drawn = containedRect(room, { width: pictureVideo.videoWidth, height: pictureVideo.videoHeight })
+                box.style.transform = viewTransform(room, drawn, region)
+            },
+        }),
+        [pictureVideo],
+    )
+
     const attach = useCallback(
         (element: HTMLVideoElement | null) => {
             video.current = element
+            setPictureVideo(element)
             if (typeof videoRef === 'function') videoRef(element)
             else if (videoRef !== undefined && videoRef !== null) videoRef.current = element
         },
@@ -1188,338 +1218,350 @@ export function VideoPlayer({
     const chosenQuality = qualities.find((one) => one.value === quality) ?? qualities[0]
 
     return (
-        <div
-            ref={root}
-            data-slot="video-player"
-            data-playing={state.playing || undefined}
-            data-controls={covered ? 'covered' : shown ? 'shown' : 'hidden'}
-            data-trouble={trouble?.phase}
-            tabIndex={0}
-            onKeyDown={onKeyDown}
-            onPointerMove={(event) => {
-                if (event.pointerType !== 'touch') reveal()
-            }}
-            onPointerLeave={() => {
-                if (state.playing) {
-                    clearTimeout(timer.current)
-                    setActive(false)
-                }
-            }}
-            onFocus={reveal}
-            className={cn(
-                // A double press on the picture goes full screen, so nothing over it is selectable.
-                '@container relative isolate aspect-video w-full overflow-hidden rounded-surface bg-terminal text-terminal-foreground outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 data-[controls=hidden]:data-playing:cursor-none',
-                fullscreen && 'aspect-auto rounded-none',
-                className,
-            )}
-        >
-            <video
-                ref={attach}
-                src={source === undefined ? src : undefined}
-                poster={poster}
-                autoPlay={autoPlay}
-                loop={loop}
-                muted={startMuted}
-                preload={preload}
-                crossOrigin={crossOrigin}
-                playsInline
-                className="absolute inset-0 size-full object-contain"
-            >
-                {tracks.map((track, index) => (
-                    <track
-                        key={`${String(index)}-${track.src}`}
-                        src={track.src}
-                        label={track.label}
-                        srcLang={track.lang}
-                        kind={track.kind ?? 'subtitles'}
-                    />
-                ))}
-            </video>
-
-            <div aria-hidden className="absolute inset-0" onPointerUp={onPicturePointerUp} onDoubleClick={toggleFullscreen} />
-
-            {picture !== undefined && picture !== null && picture !== false && (
-                <VideoPictureLayer video={video}>{picture}</VideoPictureLayer>
-            )}
-
-            {cue !== '' && (
-                <div
-                    className={cn(
-                        'pointer-events-none absolute inset-x-0 z-1 flex justify-center px-4 transition-[bottom] duration-base',
-                        shown ? 'bottom-16' : 'bottom-[max(1rem,2.5cqw)]',
-                    )}
-                >
-                    <p className="max-w-[85%] text-center whitespace-pre-line" style={cueCss.text}>
-                        <span className="rounded-mini box-decoration-clone px-[0.3em] py-[0.05em]" style={cueCss.box}>
-                            {cue}
-                        </span>
-                    </p>
-                </div>
-            )}
-
-            {trouble === null && !covered && !state.started && !state.playing && !shown && (
-                <Button
-                    size="icon-lg"
-                    aria-label={words.play}
-                    onClick={toggle}
-                    className="absolute top-1/2 left-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-surface bg-terminal/70 text-terminal-foreground shadow-pop backdrop-blur-sm hover:bg-terminal/85 [&_svg:not([class*='size-'])]:size-6"
-                >
-                    <Play className="translate-x-px fill-current" aria-hidden />
-                </Button>
-            )}
-
-            {trouble !== null && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
-                    <div
-                        role={trouble.phase === 'failed' ? 'alert' : 'status'}
-                        className="pointer-events-auto flex max-w-full flex-col items-center gap-2 rounded-surface bg-terminal/75 px-4 py-3 text-center text-sm text-terminal-foreground shadow-pop backdrop-blur-sm"
-                    >
-                        {trouble.phase === 'retrying' ? (
-                            <p className="flex items-center gap-2">
-                                <Spinner aria-hidden />
-                                {words.retrying}
-                            </p>
-                        ) : (
-                            <>
-                                <p>{trouble.unsupported ? words.unsupported : words.failed}</p>
-                                {!trouble.unsupported && (
-                                    <Button variant="ghost" size="sm" onClick={retry} className={ON_PICTURE}>
-                                        <RefreshCw aria-hidden />
-                                        {words.retry}
-                                    </Button>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
-
+        <VideoPictureProvider value={pictureValue}>
             <div
-                ref={controls}
-                inert={covered}
-                className={cn(
-                    'absolute inset-x-0 bottom-0 bg-linear-to-t from-terminal/90 via-terminal/55 to-transparent px-2 pt-10 pb-1.5 transition-opacity duration-base @lg:px-3',
-                    shown ? 'opacity-100' : 'pointer-events-none opacity-0',
-                )}
-                onPointerEnter={() => {
-                    setHeld(true)
+                ref={root}
+                data-slot="video-player"
+                data-playing={state.playing || undefined}
+                data-controls={covered ? 'covered' : shown ? 'shown' : 'hidden'}
+                data-trouble={trouble?.phase}
+                tabIndex={0}
+                onKeyDown={onKeyDown}
+                onPointerMove={(event) => {
+                    if (event.pointerType !== 'touch') reveal()
                 }}
                 onPointerLeave={() => {
-                    setHeld(false)
+                    if (state.playing) {
+                        clearTimeout(timer.current)
+                        setActive(false)
+                    }
                 }}
-                onFocus={() => {
-                    setHeld(true)
-                }}
-                onBlur={(event) => {
-                    if (!event.currentTarget.contains(event.relatedTarget)) setHeld(false)
-                }}
+                onFocus={reveal}
+                className={cn(
+                    // A double press on the picture goes full screen, so nothing over it is selectable.
+                    '@container relative isolate aspect-video w-full overflow-hidden rounded-surface bg-terminal text-terminal-foreground outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 data-[controls=hidden]:data-playing:cursor-none',
+                    fullscreen && 'aspect-auto rounded-none',
+                    className,
+                )}
             >
-                <div className="px-1">
-                    <Position
-                        tone="overlay"
-                        at={at}
-                        duration={state.duration}
-                        buffered={state.buffered}
-                        label={words.seek}
-                        onSeek={seekTo}
-                        onScrub={setScrub}
-                    />
+                <div
+                    ref={viewBox}
+                    data-slot="video-view"
+                    className="absolute inset-0 origin-top-left transition-transform duration-base ease-out motion-reduce:transition-none"
+                >
+                    <video
+                        ref={attach}
+                        src={source === undefined ? src : undefined}
+                        poster={poster}
+                        autoPlay={autoPlay}
+                        loop={loop}
+                        muted={startMuted}
+                        preload={preload}
+                        crossOrigin={crossOrigin}
+                        playsInline
+                        className="absolute inset-0 size-full object-contain"
+                    >
+                        {tracks.map((track, index) => (
+                            <track
+                                key={`${String(index)}-${track.src}`}
+                                src={track.src}
+                                label={track.label}
+                                srcLang={track.lang}
+                                kind={track.kind ?? 'subtitles'}
+                            />
+                        ))}
+                    </video>
+
+                    <div aria-hidden className="absolute inset-0" onPointerUp={onPicturePointerUp} onDoubleClick={toggleFullscreen} />
+
+                    {picture !== undefined && picture !== null && picture !== false && (
+                        <VideoPictureLayer video={pictureVideo}>{picture}</VideoPictureLayer>
+                    )}
                 </div>
-                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-                    <div className="flex min-w-0 items-center">
-                        {title !== undefined && (
-                            <span className="hidden truncate px-1.5 text-sm font-medium text-terminal-foreground @md:inline">{title}</span>
+
+                {cue !== '' && (
+                    <div
+                        className={cn(
+                            'pointer-events-none absolute inset-x-0 z-1 flex justify-center px-4 transition-[bottom] duration-base',
+                            shown ? 'bottom-16' : 'bottom-[max(1rem,2.5cqw)]',
                         )}
+                    >
+                        <p className="max-w-[85%] text-center whitespace-pre-line" style={cueCss.text}>
+                            <span className="rounded-mini box-decoration-clone px-[0.3em] py-[0.05em]" style={cueCss.box}>
+                                {cue}
+                            </span>
+                        </p>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <TransportButton tone="overlay" label={words.back} onClick={() => seekTo(at - SKIP)}>
-                            <RotateCcw aria-hidden />
-                        </TransportButton>
-                        <PlayButton tone="overlay" playing={state.playing} onToggle={toggle} words={words} />
-                        <TransportButton tone="overlay" label={words.forward} onClick={() => seekTo(at + SKIP)}>
-                            <RotateCw aria-hidden />
-                        </TransportButton>
+                )}
+
+                {trouble === null && !covered && !state.started && !state.playing && !shown && (
+                    <Button
+                        size="icon-lg"
+                        aria-label={words.play}
+                        onClick={toggle}
+                        className="absolute top-1/2 left-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-surface bg-terminal/70 text-terminal-foreground shadow-pop backdrop-blur-sm hover:bg-terminal/85 [&_svg:not([class*='size-'])]:size-6"
+                    >
+                        <Play className="translate-x-px fill-current" aria-hidden />
+                    </Button>
+                )}
+
+                {trouble !== null && (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
+                        <div
+                            role={trouble.phase === 'failed' ? 'alert' : 'status'}
+                            className="pointer-events-auto flex max-w-full flex-col items-center gap-2 rounded-surface bg-terminal/75 px-4 py-3 text-center text-sm text-terminal-foreground shadow-pop backdrop-blur-sm"
+                        >
+                            {trouble.phase === 'retrying' ? (
+                                <p className="flex items-center gap-2">
+                                    <Spinner aria-hidden />
+                                    {words.retrying}
+                                </p>
+                            ) : (
+                                <>
+                                    <p>{trouble.unsupported ? words.unsupported : words.failed}</p>
+                                    {!trouble.unsupported && (
+                                        <Button variant="ghost" size="sm" onClick={retry} className={ON_PICTURE}>
+                                            <RefreshCw aria-hidden />
+                                            {words.retry}
+                                        </Button>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
-                    <div className="flex min-w-0 items-center justify-end gap-0.5">
-                        <div className="hidden @3xl:block">
-                            <VolumeControl
-                                tone="overlay"
-                                level={level}
-                                muted={state.muted}
-                                onMutedChange={() => toggleMute()}
-                                onVolumeChange={setVolume}
-                                words={words}
-                            />
+                )}
+
+                <div
+                    ref={controls}
+                    inert={covered}
+                    className={cn(
+                        'absolute inset-x-0 bottom-0 bg-linear-to-t from-terminal/90 via-terminal/55 to-transparent px-2 pt-10 pb-1.5 transition-opacity duration-base @lg:px-3',
+                        shown ? 'opacity-100' : 'pointer-events-none opacity-0',
+                    )}
+                    onPointerEnter={() => {
+                        setHeld(true)
+                    }}
+                    onPointerLeave={() => {
+                        setHeld(false)
+                    }}
+                    onFocus={() => {
+                        setHeld(true)
+                    }}
+                    onBlur={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget)) setHeld(false)
+                    }}
+                >
+                    <div className="px-1">
+                        <Position
+                            tone="overlay"
+                            at={at}
+                            duration={state.duration}
+                            buffered={state.buffered}
+                            label={words.seek}
+                            onSeek={seekTo}
+                            onScrub={setScrub}
+                        />
+                    </div>
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+                        <div className="flex min-w-0 items-center">
+                            {title !== undefined && (
+                                <span className="hidden truncate px-1.5 text-sm font-medium text-terminal-foreground @md:inline">
+                                    {title}
+                                </span>
+                            )}
                         </div>
-                        <div className="@3xl:hidden">
-                            <VolumeControl
-                                tone="overlay"
-                                compact
-                                level={level}
-                                muted={state.muted}
-                                onMutedChange={() => toggleMute()}
-                                onVolumeChange={setVolume}
-                                words={words}
-                            />
+                        <div className="flex items-center gap-1.5">
+                            <TransportButton tone="overlay" label={words.back} onClick={() => seekTo(at - SKIP)}>
+                                <RotateCcw aria-hidden />
+                            </TransportButton>
+                            <PlayButton tone="overlay" playing={state.playing} onToggle={toggle} words={words} />
+                            <TransportButton tone="overlay" label={words.forward} onClick={() => seekTo(at + SKIP)}>
+                                <RotateCw aria-hidden />
+                            </TransportButton>
                         </div>
-                        {tracks.length > 0 && (
-                            <CaptionsMenu
-                                tracks={tracks}
-                                track={caption}
-                                onTrackChange={(index) => {
-                                    choose({ ...chosenOf(choice), track: index < 0 ? null : captionTrackKey(tracks[index]) })
-                                }}
-                                style={captions}
-                                onStyleChange={(change) => {
-                                    choose({ ...chosenOf(choice), ...change })
-                                }}
-                                words={words}
-                                container={menuRoom}
-                                onOpenChange={setMenuOpen}
-                            />
-                        )}
-                        {rates.length > 1 && (
-                            <RateMenu
-                                tone="overlay"
-                                size="md"
-                                rate={state.rate}
-                                rates={rates}
-                                onRateChange={setRate}
-                                label={words.speed}
-                                container={menuRoom}
-                                onOpenChange={setMenuOpen}
-                                className="hidden @md:inline-flex"
-                            />
-                        )}
-                        {qualities.length > 1 && chosenQuality !== undefined && (
-                            <DropdownMenu onOpenChange={setMenuOpen}>
-                                <DropdownMenuTrigger
-                                    render={
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            aria-label={`${words.quality}: ${chosenQuality.label}`}
-                                            className={cn(
-                                                'w-auto min-w-8 px-1.5 font-mono text-xs tabular-nums',
-                                                ON_PICTURE,
-                                                'hidden @md:inline-flex',
-                                            )}
-                                        />
-                                    }
-                                >
-                                    {chosenQuality.label}
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent container={menuRoom} side="top" align="end" className="w-auto min-w-24">
-                                    <DropdownMenuRadioGroup
-                                        value={chosenQuality.value}
-                                        onValueChange={(value: string) => onQualityChange?.(value)}
-                                    >
-                                        {qualities.map((option) => (
-                                            <DropdownMenuRadioItem key={option.value} value={option.value} closeOnClick>
-                                                <span className="flex-1">{option.label}</span>
-                                                {option.detail !== undefined && (
-                                                    <span className="text-muted-foreground">{option.detail}</span>
+                        <div className="flex min-w-0 items-center justify-end gap-0.5">
+                            <div className="hidden @3xl:block">
+                                <VolumeControl
+                                    tone="overlay"
+                                    level={level}
+                                    muted={state.muted}
+                                    onMutedChange={() => toggleMute()}
+                                    onVolumeChange={setVolume}
+                                    words={words}
+                                />
+                            </div>
+                            <div className="@3xl:hidden">
+                                <VolumeControl
+                                    tone="overlay"
+                                    compact
+                                    level={level}
+                                    muted={state.muted}
+                                    onMutedChange={() => toggleMute()}
+                                    onVolumeChange={setVolume}
+                                    words={words}
+                                />
+                            </div>
+                            {tracks.length > 0 && (
+                                <CaptionsMenu
+                                    tracks={tracks}
+                                    track={caption}
+                                    onTrackChange={(index) => {
+                                        choose({ ...chosenOf(choice), track: index < 0 ? null : captionTrackKey(tracks[index]) })
+                                    }}
+                                    style={captions}
+                                    onStyleChange={(change) => {
+                                        choose({ ...chosenOf(choice), ...change })
+                                    }}
+                                    words={words}
+                                    container={menuRoom}
+                                    onOpenChange={setMenuOpen}
+                                />
+                            )}
+                            {rates.length > 1 && (
+                                <RateMenu
+                                    tone="overlay"
+                                    size="md"
+                                    rate={state.rate}
+                                    rates={rates}
+                                    onRateChange={setRate}
+                                    label={words.speed}
+                                    container={menuRoom}
+                                    onOpenChange={setMenuOpen}
+                                    className="hidden @md:inline-flex"
+                                />
+                            )}
+                            {qualities.length > 1 && chosenQuality !== undefined && (
+                                <DropdownMenu onOpenChange={setMenuOpen}>
+                                    <DropdownMenuTrigger
+                                        render={
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                aria-label={`${words.quality}: ${chosenQuality.label}`}
+                                                className={cn(
+                                                    'w-auto min-w-8 px-1.5 font-mono text-xs tabular-nums',
+                                                    ON_PICTURE,
+                                                    'hidden @md:inline-flex',
                                                 )}
-                                            </DropdownMenuRadioItem>
-                                        ))}
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
-                        {(rates.length > 1 || (qualities.length > 1 && chosenQuality !== undefined)) && (
-                            <DropdownMenu onOpenChange={setMenuOpen}>
-                                <DropdownMenuTrigger
-                                    render={
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            aria-label={words.more}
-                                            className={cn(ON_PICTURE, 'inline-flex @md:hidden')}
-                                        />
-                                    }
+                                            />
+                                        }
+                                    >
+                                        {chosenQuality.label}
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent container={menuRoom} side="top" align="end" className="w-auto min-w-24">
+                                        <DropdownMenuRadioGroup
+                                            value={chosenQuality.value}
+                                            onValueChange={(value: string) => onQualityChange?.(value)}
+                                        >
+                                            {qualities.map((option) => (
+                                                <DropdownMenuRadioItem key={option.value} value={option.value} closeOnClick>
+                                                    <span className="flex-1">{option.label}</span>
+                                                    {option.detail !== undefined && (
+                                                        <span className="text-muted-foreground">{option.detail}</span>
+                                                    )}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            {(rates.length > 1 || (qualities.length > 1 && chosenQuality !== undefined)) && (
+                                <DropdownMenu onOpenChange={setMenuOpen}>
+                                    <DropdownMenuTrigger
+                                        render={
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                aria-label={words.more}
+                                                className={cn(ON_PICTURE, 'inline-flex @md:hidden')}
+                                            />
+                                        }
+                                    >
+                                        <Ellipsis aria-hidden />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent container={menuRoom} side="top" align="end" className="w-auto min-w-40">
+                                        {rates.length > 1 && (
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuLabel>{words.speed}</DropdownMenuLabel>
+                                                <DropdownMenuRadioGroup
+                                                    value={String(state.rate)}
+                                                    onValueChange={(value: string) => setRate(Number(value))}
+                                                >
+                                                    {rates.map((rate) => (
+                                                        <DropdownMenuRadioItem key={rate} value={String(rate)} closeOnClick>
+                                                            {formatRate(rate)}
+                                                        </DropdownMenuRadioItem>
+                                                    ))}
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuGroup>
+                                        )}
+                                        {rates.length > 1 && qualities.length > 1 && chosenQuality !== undefined && (
+                                            <DropdownMenuSeparator />
+                                        )}
+                                        {qualities.length > 1 && chosenQuality !== undefined && (
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuLabel>{words.quality}</DropdownMenuLabel>
+                                                <DropdownMenuRadioGroup
+                                                    value={chosenQuality.value}
+                                                    onValueChange={(value: string) => onQualityChange?.(value)}
+                                                >
+                                                    {qualities.map((option) => (
+                                                        <DropdownMenuRadioItem key={option.value} value={option.value} closeOnClick>
+                                                            <span className="flex-1">{option.label}</span>
+                                                            {option.detail !== undefined && (
+                                                                <span className="text-muted-foreground">{option.detail}</span>
+                                                            )}
+                                                        </DropdownMenuRadioItem>
+                                                    ))}
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuGroup>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            {actions !== undefined && actions !== null && actions !== false && (
+                                <div className="hidden @md:contents">{actions}</div>
+                            )}
+                            {pipSupported && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={pictureInPicture ? words.exitPictureInPicture : words.pictureInPicture}
+                                    aria-pressed={pictureInPicture}
+                                    onClick={togglePictureInPicture}
+                                    className={cn(ON_PICTURE, 'hidden @sm:inline-flex')}
                                 >
-                                    <Ellipsis aria-hidden />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent container={menuRoom} side="top" align="end" className="w-auto min-w-40">
-                                    {rates.length > 1 && (
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>{words.speed}</DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup
-                                                value={String(state.rate)}
-                                                onValueChange={(value: string) => setRate(Number(value))}
-                                            >
-                                                {rates.map((rate) => (
-                                                    <DropdownMenuRadioItem key={rate} value={String(rate)} closeOnClick>
-                                                        {formatRate(rate)}
-                                                    </DropdownMenuRadioItem>
-                                                ))}
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    )}
-                                    {rates.length > 1 && qualities.length > 1 && chosenQuality !== undefined && <DropdownMenuSeparator />}
-                                    {qualities.length > 1 && chosenQuality !== undefined && (
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>{words.quality}</DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup
-                                                value={chosenQuality.value}
-                                                onValueChange={(value: string) => onQualityChange?.(value)}
-                                            >
-                                                {qualities.map((option) => (
-                                                    <DropdownMenuRadioItem key={option.value} value={option.value} closeOnClick>
-                                                        <span className="flex-1">{option.label}</span>
-                                                        {option.detail !== undefined && (
-                                                            <span className="text-muted-foreground">{option.detail}</span>
-                                                        )}
-                                                    </DropdownMenuRadioItem>
-                                                ))}
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    )}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
-                        {actions !== undefined && actions !== null && actions !== false && (
-                            <div className="hidden @md:contents">{actions}</div>
-                        )}
-                        {pipSupported && (
+                                    <PictureInPicture2 aria-hidden />
+                                </Button>
+                            )}
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                aria-label={pictureInPicture ? words.exitPictureInPicture : words.pictureInPicture}
-                                aria-pressed={pictureInPicture}
-                                onClick={togglePictureInPicture}
-                                className={cn(ON_PICTURE, 'hidden @sm:inline-flex')}
+                                aria-label={fullscreen ? words.exitFullscreen : words.fullscreen}
+                                onClick={toggleFullscreen}
+                                className={ON_PICTURE}
                             >
-                                <PictureInPicture2 aria-hidden />
+                                {fullscreen ? <Minimize aria-hidden /> : <Maximize aria-hidden />}
                             </Button>
-                        )}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={fullscreen ? words.exitFullscreen : words.fullscreen}
-                            onClick={toggleFullscreen}
-                            className={ON_PICTURE}
-                        >
-                            {fullscreen ? <Minimize aria-hidden /> : <Maximize aria-hidden />}
-                        </Button>
+                        </div>
                     </div>
                 </div>
+
+                {covered && (
+                    <div
+                        data-slot="video-cover"
+                        className="absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-terminal/75 p-2 backdrop-blur-sm @lg:p-3"
+                    >
+                        {cover}
+                    </div>
+                )}
+
+                {overlay !== undefined && overlay !== null && overlay !== false && (
+                    <div className="pointer-events-none absolute top-0 left-0 z-10 flex max-h-full max-w-full p-2 *:pointer-events-auto @lg:p-3">
+                        {overlay}
+                    </div>
+                )}
             </div>
-
-            {covered && (
-                <div
-                    data-slot="video-cover"
-                    className="absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-terminal/75 p-2 backdrop-blur-sm @lg:p-3"
-                >
-                    {cover}
-                </div>
-            )}
-
-            {overlay !== undefined && overlay !== null && overlay !== false && (
-                <div className="pointer-events-none absolute top-0 left-0 z-10 flex max-h-full max-w-full p-2 *:pointer-events-auto @lg:p-3">
-                    {overlay}
-                </div>
-            )}
-        </div>
+        </VideoPictureProvider>
     )
 }
