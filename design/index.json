@@ -304,6 +304,7 @@
         {"id": "meter", "file": "parts/meter.json", "status": "preview"},
         {"id": "rating", "file": "parts/rating.json", "status": "preview"},
         {"id": "tour", "file": "parts/tour.json", "status": "preview"},
+        {"id": "notification-inbox", "file": "parts/notification-inbox.json", "status": "preview"},
         {"id": "zone-layer", "file": "parts/zone-layer.json", "status": "preview"},
         {"id": "letter", "file": "parts/letter.json", "status": "stable"},
         {"id": "detail-pane", "file": "parts/detail-pane.json", "status": "stable"},

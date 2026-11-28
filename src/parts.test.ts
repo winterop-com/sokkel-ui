@@ -128,6 +128,7 @@ import { TAGS_FIELD_WORDS, TagsField, type TagsFieldProps } from '@winterop-com/
 import { Meter, MeterLabel, MeterValue, type MeterProps } from '@winterop-com/sokkel-ui/primitives/meter'
 import { RATING_WORDS, Rating } from '@winterop-com/sokkel-ui/Rating'
 import { TOUR_WORDS, Tour } from '@winterop-com/sokkel-ui/Tour'
+import { NOTIFICATION_INBOX_WORDS, NotificationInbox, type NotificationInboxProps } from '@winterop-com/sokkel-ui/NotificationInbox'
 import {
     STATUS_WALL_WORDS,
     StatusTile,
@@ -11884,6 +11885,62 @@ const TOUR_ADAPTER: Adapter = {
     },
 }
 
+// Notification inbox
+
+const INBOX_PROPS: NotificationInboxProps = {
+    notices: [
+        { id: 'n-1', title: 'nightly-export failed', when: '4 min ago', tone: 'critical', unread: true },
+        { id: 'n-2', title: 'rebuild-index succeeded', when: 'Yesterday', tone: 'good' },
+    ],
+}
+
+const NOTIFICATION_INBOX_ADAPTER: Adapter = {
+    wordObjects: { NOTIFICATION_INBOX_WORDS },
+    complete: ['NOTIFICATION_INBOX_WORDS'],
+    words: {
+        bell: ['NOTIFICATION_INBOX_WORDS.bell', (said: (count: number) => string, fill) => said(Number(fill.count))],
+        title: 'NOTIFICATION_INBOX_WORDS.title',
+        markAllRead: 'NOTIFICATION_INBOX_WORDS.markAllRead',
+        empty: 'NOTIFICATION_INBOX_WORDS.empty',
+        unread: 'NOTIFICATION_INBOX_WORDS.unread',
+    },
+    options: {},
+    size: () => skip('a preview part: its sizes are not checked yet'),
+    paint: () => skip('a preview part: its paints are not checked yet'),
+    effect: () => skip('the notification inbox states no effects'),
+    keys: {
+        'Enter (the bell or a notice has focus)': () => {
+            const opened: string[] = []
+            return live(createElement(NotificationInbox, { ...INBOX_PROPS, defaultOpen: true, onOpen: (id) => opened.push(id) }), () => {
+                const notices = [...document.querySelectorAll<HTMLButtonElement>('[data-slot="notice"]')]
+                // A native button: a browser presses it on Enter, and the press is a click.
+                if (notices.length !== 2 || notices.some((notice) => notice.tagName !== 'BUTTON'))
+                    return 'the notices are not native buttons'
+                act(() => notices[0].click())
+                return opened.join(' ') === 'n-1' ? true : `pressing the first notice opened ${opened.join(', ')}`
+            })
+        },
+        'Escape (the inbox is open)': () => {
+            const told: boolean[] = []
+            return live(
+                createElement(NotificationInbox, { ...INBOX_PROPS, defaultOpen: true, onOpenChange: (open) => told.push(open) }),
+                () => {
+                    const panel = document.querySelector<HTMLElement>('[data-slot="notification-inbox"]')
+                    if (panel === null) return 'there is no panel'
+                    act(() => {
+                        panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+                    })
+                    return told.includes(false) ? true : 'Escape did not close the inbox'
+                },
+            )
+        },
+    },
+    more: () => {
+        const bell = draw(NotificationInbox, INBOX_PROPS).find((element) => element.attrs['data-slot'] === 'notification-bell')
+        return [check('anatomy.bell (named by the unread)', 'Notifications, 1 unread', bell?.attrs['aria-label'])]
+    },
+}
+
 // Playback timeline
 
 const PLAYBACK_PROPS: PlaybackTimelineProps = {
@@ -12944,6 +13001,7 @@ const ADAPTERS: Record<string, Adapter> = {
     meter: METER_ADAPTER,
     rating: RATING_ADAPTER,
     tour: TOUR_ADAPTER,
+    'notification-inbox': NOTIFICATION_INBOX_ADAPTER,
     'task-card': TASK_CARD_ADAPTER,
     'playback-timeline': PLAYBACK_TIMELINE_ADAPTER,
     'status-wall': STATUS_WALL_ADAPTER,
