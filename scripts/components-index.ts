@@ -413,6 +413,7 @@ const CORE_AREAS: Record<string, string> = {
     CameraWall: 'Data display',
     DetectionTimeline: 'Data display',
     DetectionGallery: 'Data display',
+    PictureZones: 'Data display',
     TaskCard: 'Data display',
     UptimeBar: 'Data display',
     StatusWall: 'Data display',

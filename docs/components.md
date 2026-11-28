@@ -52,7 +52,7 @@ disaster and weather warning feeds into incidents (`events`) and the answers of 
 checks into statuses (`checks`), and gives the geodesy and grid references a map console works
 in (`geo`).
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 290 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 291 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 20 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -310,6 +310,7 @@ in (`geo`).
 | **MetaLine** | `@winterop-com/sokkel-ui/MetaLine` | Small facts about a thing on one line, joined by a separator: an artist and a year, a count of views and an age. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-meta-line--facts) |
 | **PersonAvatar**, PresenceDot | `@winterop-com/sokkel-ui/PersonAvatar` | A person as a badge of their picture, or of their initials on a wash of their color: an assignee, an attendee, an author. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-avatar--sizes) |
 | **PersonRow** | `@winterop-com/sokkel-ui/PersonRow` | A person as a row names them: their picture, their username in the code face over a second line (an email, a team), and an optional `aside` at the row's end, such as their role or a control that changes it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-row--people) |
+| **PictureZones** | `@winterop-com/sokkel-ui/PictureZones` | The parts of a picture a finder watches, drawn over it: regions as tinted shapes and tripwires as lines, each in its tone with its name at its first point. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-picture-zones--zones) |
 | **PlaybackTimeline** | `@winterop-com/sokkel-ui/PlaybackTimeline` | A time to look back at what happened, such as the tracks on a map an hour ago: an axis with day and hour ticks on the zone's clock, the live edge marked, a strip of activity over it (counts in plain SVG bars), and a playhead to drag or move with the keys. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-playback-timeline--live) |
 | **ProfileRow** | `@winterop-com/sokkel-ui/ProfileRow` | Someone a page is about, in one line: their picture, their name over a short fact (followers, a team, a role) and an action beside them, such as Follow. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-profile-row--person) |
 | **RelativeTime** | `@winterop-com/sokkel-ui/RelativeTime` | A time said relative to now, "3 minutes ago", with the exact instant on hover and on focus. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-relative-time--distances) |
